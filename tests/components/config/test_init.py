@@ -17,7 +17,7 @@ def test_config_setup(hass, loop):
 
 
 @asyncio.coroutine
-def test_load_on_demand_already_loaded(hass, test_client):
+def test_load_on_demand_already_loaded(hass, aiohttp_client):
     """Test getting suites."""
     mock_component(hass, 'zwave')
 
@@ -34,7 +34,7 @@ def test_load_on_demand_already_loaded(hass, test_client):
 
 
 @asyncio.coroutine
-def test_load_on_demand_on_load(hass, test_client):
+def test_load_on_demand_on_load(hass, aiohttp_client):
     """Test getting suites."""
     with patch.object(config, 'SECTIONS', []), \
             patch.object(config, 'ON_DEMAND', ['zwave']):

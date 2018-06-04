@@ -37,8 +37,8 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the Ring component."""
     conf = config[DOMAIN]
-    username = conf.get(CONF_USERNAME)
-    password = conf.get(CONF_PASSWORD)
+    username = conf[CONF_USERNAME]
+    password = conf[CONF_PASSWORD]
 
     try:
         from ring_doorbell import Ring

@@ -6,14 +6,13 @@ https://home-assistant.io/components/weather.ecobee/
 """
 from homeassistant.components import ecobee
 from homeassistant.components.weather import (
-    WeatherEntity, ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME)
+    WeatherEntity, ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME)
 from homeassistant.const import (TEMP_FAHRENHEIT)
 
 
 DEPENDENCIES = ['ecobee']
 
-ATTR_FORECAST_CONDITION = 'condition'
-ATTR_FORECAST_TEMP_LOW = 'templow'
 ATTR_FORECAST_TEMP_HIGH = 'temphigh'
 ATTR_FORECAST_PRESSURE = 'pressure'
 ATTR_FORECAST_VISIBILITY = 'visibility'

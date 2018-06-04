@@ -12,12 +12,13 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_NAME, CONF_HOST, CONF_PORT, CONF_TYPE, STATE_ON)
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_RGB_COLOR,
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, EFFECT_WHITE, FLASH_LONG,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH,
-    SUPPORT_RGB_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
+    SUPPORT_COLOR, SUPPORT_TRANSITION, Light, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.color import color_temperature_mired_to_kelvin
+from homeassistant.util.color import (
+    color_temperature_mired_to_kelvin, color_hs_to_RGB)
 from homeassistant.helpers.restore_state import async_get_last_state
 
 REQUIREMENTS = ['limitlessled==1.1.0']
@@ -40,19 +41,19 @@ LED_TYPE = ['rgbw', 'rgbww', 'white', 'bridge-led', 'dimmer']
 
 EFFECT_NIGHT = 'night'
 
-RGB_BOUNDARY = 40
+MIN_SATURATION = 10
 
-WHITE = [255, 255, 255]
+WHITE = [0, 0]
 
 SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
                               SUPPORT_TRANSITION)
 SUPPORT_LIMITLESSLED_DIMMER = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
-                            SUPPORT_FLASH | SUPPORT_RGB_COLOR |
+                            SUPPORT_FLASH | SUPPORT_COLOR |
                             SUPPORT_TRANSITION)
 SUPPORT_LIMITLESSLED_RGBWW = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
                               SUPPORT_EFFECT | SUPPORT_FLASH |
-                              SUPPORT_RGB_COLOR | SUPPORT_TRANSITION)
+                              SUPPORT_COLOR | SUPPORT_TRANSITION)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_BRIDGES): vol.All(cv.ensure_list, [
@@ -141,10 +142,9 @@ def state(new_state):
             from limitlessled.pipeline import Pipeline
             pipeline = Pipeline()
             transition_time = DEFAULT_TRANSITION
-            # Stop any repeating pipeline.
-            if self.repeating:
-                self.repeating = False
+            if self._effect == EFFECT_COLORLOOP:
                 self.group.stop()
+            self._effect = None
             # Set transition time.
             if ATTR_TRANSITION in kwargs:
                 transition_time = int(kwargs[ATTR_TRANSITION])
@@ -182,11 +182,11 @@ class LimitlessLEDGroup(Light):
 
         self.group = group
         self.config = config
-        self.repeating = False
         self._is_on = False
         self._brightness = None
         self._temperature = None
         self._color = None
+        self._effect = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -196,7 +196,7 @@ class LimitlessLEDGroup(Light):
             self._is_on = (last_state.state == STATE_ON)
             self._brightness = last_state.attributes.get('brightness')
             self._temperature = last_state.attributes.get('color_temp')
-            self._color = last_state.attributes.get('rgb_color')
+            self._color = last_state.attributes.get('hs_color')
 
     @property
     def should_poll(self):
@@ -221,6 +221,9 @@ class LimitlessLEDGroup(Light):
     @property
     def brightness(self):
         """Return the brightness property."""
+        if self._effect == EFFECT_NIGHT:
+            return 1
+
         return self._brightness
 
     @property
@@ -239,14 +242,22 @@ class LimitlessLEDGroup(Light):
         return self._temperature
 
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color property."""
+        if self._effect == EFFECT_NIGHT:
+            return None
+
         return self._color
 
     @property
     def supported_features(self):
         """Flag supported features."""
         return self._supported
+
+    @property
+    def effect(self):
+        """Return the current effect for this light."""
+        return self._effect
 
     @property
     def effect_list(self):
@@ -269,6 +280,7 @@ class LimitlessLEDGroup(Light):
         if kwargs.get(ATTR_EFFECT) == EFFECT_NIGHT:
             if EFFECT_NIGHT in self._effect_list:
                 pipeline.night_light()
+                self._effect = EFFECT_NIGHT
             return
 
         pipeline.on()
@@ -282,17 +294,17 @@ class LimitlessLEDGroup(Light):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             args['brightness'] = self.limitlessled_brightness()
 
-        if ATTR_RGB_COLOR in kwargs and self._supported & SUPPORT_RGB_COLOR:
-            self._color = kwargs[ATTR_RGB_COLOR]
+        if ATTR_HS_COLOR in kwargs and self._supported & SUPPORT_COLOR:
+            self._color = kwargs[ATTR_HS_COLOR]
             # White is a special case.
-            if min(self._color) > 256 - RGB_BOUNDARY:
+            if self._color[1] < MIN_SATURATION:
                 pipeline.white()
                 self._color = WHITE
             else:
                 args['color'] = self.limitlessled_color()
 
         if ATTR_COLOR_TEMP in kwargs:
-            if self._supported & SUPPORT_RGB_COLOR:
+            if self._supported & SUPPORT_COLOR:
                 pipeline.white()
             self._color = WHITE
             if self._supported & SUPPORT_COLOR_TEMP:
@@ -313,7 +325,7 @@ class LimitlessLEDGroup(Light):
         if ATTR_EFFECT in kwargs and self._effect_list:
             if kwargs[ATTR_EFFECT] == EFFECT_COLORLOOP:
                 from limitlessled.presets import COLORLOOP
-                self.repeating = True
+                self._effect = EFFECT_COLORLOOP
                 pipeline.append(COLORLOOP)
             if kwargs[ATTR_EFFECT] == EFFECT_WHITE:
                 pipeline.white()
@@ -333,6 +345,6 @@ class LimitlessLEDGroup(Light):
         return self._brightness / 255
 
     def limitlessled_color(self):
-        """Convert Home Assistant RGB list to Color tuple."""
+        """Convert Home Assistant HS list to RGB Color tuple."""
         from limitlessled import Color
-        return Color(*tuple(self._color))
+        return Color(*color_hs_to_RGB(*tuple(self._color)))

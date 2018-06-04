@@ -86,6 +86,8 @@ class TeslaSensor(TeslaDevice, Entity):
                 self._unit = LENGTH_MILES
             else:
                 self._unit = LENGTH_KILOMETERS
+                self.current_value /= 0.621371
+                self.current_value = round(self.current_value, 2)
         else:
             self.current_value = self.tesla_device.get_value()
             if self.tesla_device.bin_type == 0x5:
@@ -95,3 +97,5 @@ class TeslaSensor(TeslaDevice, Entity):
                     self._unit = LENGTH_MILES
                 else:
                     self._unit = LENGTH_KILOMETERS
+                    self.current_value /= 0.621371
+                    self.current_value = round(self.current_value, 2)

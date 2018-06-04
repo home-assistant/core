@@ -2,166 +2,154 @@
 
 This includes tests for all mock object types.
 """
+from datetime import datetime, timedelta
+from unittest.mock import patch, Mock
 
-from unittest.mock import patch
-
-# pylint: disable=unused-import
-from pyhap.loader import get_serv_loader, get_char_loader  # noqa F401
+import pytest
 
 from homeassistant.components.homekit.accessories import (
-    set_accessory_info, add_preload_service, override_properties,
-    HomeAccessory, HomeBridge)
+    debounce, HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
-    SERV_ACCESSORY_INFO, SERV_BRIDGING_STATE,
-    CHAR_MODEL, CHAR_MANUFACTURER, CHAR_NAME, CHAR_SERIAL_NUMBER)
-
-from tests.mock.homekit import (
-    get_patch_paths, mock_preload_service,
-    MockTypeLoader, MockAccessory, MockService, MockChar)
-
-PATH_SERV = 'pyhap.loader.get_serv_loader'
-PATH_CHAR = 'pyhap.loader.get_char_loader'
-PATH_ACC, _ = get_patch_paths()
+    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, CHAR_FIRMWARE_REVISION,
+    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER,
+    MANUFACTURER, SERV_ACCESSORY_INFO)
+from homeassistant.const import __version__, ATTR_NOW, EVENT_TIME_CHANGED
+import homeassistant.util.dt as dt_util
 
 
-@patch(PATH_CHAR, return_value=MockTypeLoader('char'))
-@patch(PATH_SERV, return_value=MockTypeLoader('service'))
-def test_add_preload_service(mock_serv, mock_char):
-    """Test method add_preload_service.
+async def test_debounce(hass):
+    """Test add_timeout decorator function."""
+    def demo_func(*args):
+        nonlocal arguments, counter
+        counter += 1
+        arguments = args
 
-    The methods 'get_serv_loader' and 'get_char_loader' are mocked.
-    """
-    acc = MockAccessory('Accessory')
-    serv = add_preload_service(acc, 'TestService',
-                               ['TestChar', 'TestChar2'],
-                               ['TestOptChar', 'TestOptChar2'])
+    arguments = None
+    counter = 0
+    mock = Mock(hass=hass, debounce={})
 
-    assert serv.display_name == 'TestService'
-    assert len(serv.characteristics) == 2
-    assert len(serv.opt_characteristics) == 2
+    debounce_demo = debounce(demo_func)
+    assert debounce_demo.__name__ == 'demo_func'
+    now = datetime(2018, 1, 1, 20, 0, 0, tzinfo=dt_util.UTC)
 
-    acc.services = []
-    serv = add_preload_service(acc, 'TestService')
+    with patch('homeassistant.util.dt.utcnow', return_value=now):
+        await hass.async_add_job(debounce_demo, mock, 'value')
+    hass.bus.async_fire(
+        EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
+    await hass.async_block_till_done()
+    assert counter == 1
+    assert len(arguments) == 2
 
-    assert not serv.characteristics
-    assert not serv.opt_characteristics
+    with patch('homeassistant.util.dt.utcnow', return_value=now):
+        await hass.async_add_job(debounce_demo, mock, 'value')
+        await hass.async_add_job(debounce_demo, mock, 'value')
 
-    acc.services = []
-    serv = add_preload_service(acc, 'TestService',
-                               'TestChar', 'TestOptChar')
-
-    assert len(serv.characteristics) == 1
-    assert len(serv.opt_characteristics) == 1
-
-    assert serv.characteristics[0].display_name == 'TestChar'
-    assert serv.opt_characteristics[0].display_name == 'TestOptChar'
-
-
-def test_override_properties():
-    """Test override of characteristic properties with MockChar."""
-    char = MockChar('TestChar')
-    new_prop = {1: 'Test', 2: 'Demo'}
-    override_properties(char, new_prop)
-
-    assert char.properties == new_prop
+    hass.bus.async_fire(
+        EVENT_TIME_CHANGED, {ATTR_NOW: now + timedelta(seconds=3)})
+    await hass.async_block_till_done()
+    assert counter == 2
 
 
-def test_set_accessory_info():
-    """Test setting of basic accessory information with MockAccessory."""
-    acc = MockAccessory('Accessory')
-    set_accessory_info(acc, 'name', 'model', 'manufacturer', '0000')
+async def test_home_accessory(hass, hk_driver):
+    """Test HomeAccessory class."""
+    entity_id = 'homekit.accessory'
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
 
+    acc = HomeAccessory(hass, hk_driver, 'Home Accessory',
+                        entity_id, 2, None)
+    assert acc.hass == hass
+    assert acc.display_name == 'Home Accessory'
+    assert acc.aid == 2
+    assert acc.category == 1  # Category.OTHER
     assert len(acc.services) == 1
-    serv = acc.services[0]
-
+    serv = acc.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
-    assert len(serv.characteristics) == 4
-    chars = serv.characteristics
+    assert serv.get_characteristic(CHAR_NAME).value == 'Home Accessory'
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER
+    assert serv.get_characteristic(CHAR_MODEL).value == 'Homekit'
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == \
+        'homekit.accessory'
 
-    assert chars[0].display_name == CHAR_NAME
-    assert chars[0].value == 'name'
-    assert chars[1].display_name == CHAR_MODEL
-    assert chars[1].value == 'model'
-    assert chars[2].display_name == CHAR_MANUFACTURER
-    assert chars[2].value == 'manufacturer'
-    assert chars[3].display_name == CHAR_SERIAL_NUMBER
-    assert chars[3].value == '0000'
+    hass.states.async_set(entity_id, 'on')
+    await hass.async_block_till_done()
+    with patch('homeassistant.components.homekit.accessories.'
+               'HomeAccessory.update_state') as mock_update_state:
+        await hass.async_add_job(acc.run)
+        await hass.async_block_till_done()
+        state = hass.states.get(entity_id)
+        mock_update_state.assert_called_with(state)
+
+        hass.states.async_remove(entity_id)
+        await hass.async_block_till_done()
+        assert mock_update_state.call_count == 1
+
+    with pytest.raises(NotImplementedError):
+        acc.update_state('new_state')
+
+    # Test model name from domain
+    entity_id = 'test_model.demo'
+    acc = HomeAccessory('hass', hk_driver, 'test_name', entity_id, 2, None)
+    serv = acc.services[0]  # SERV_ACCESSORY_INFO
+    assert serv.get_characteristic(CHAR_MODEL).value == 'Test Model'
 
 
-@patch(PATH_ACC, side_effect=mock_preload_service)
-def test_home_accessory(mock_pre_serv):
-    """Test initializing a HomeAccessory object."""
-    acc = HomeAccessory('TestAccessory', 'test.accessory', 'WINDOW')
-
-    assert acc.display_name == 'TestAccessory'
-    assert acc.category == 13  # Category.WINDOW
-    assert len(acc.services) == 1
-
-    serv = acc.services[0]
+def test_home_bridge(hk_driver):
+    """Test HomeBridge class."""
+    bridge = HomeBridge('hass', hk_driver)
+    assert bridge.hass == 'hass'
+    assert bridge.display_name == BRIDGE_NAME
+    assert bridge.category == 2  # Category.BRIDGE
+    assert len(bridge.services) == 1
+    serv = bridge.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
-    char_model = serv.get_characteristic(CHAR_MODEL)
-    assert char_model.get_value() == 'test.accessory'
+    assert serv.get_characteristic(CHAR_NAME).value == BRIDGE_NAME
+    assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == __version__
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER
+    assert serv.get_characteristic(CHAR_MODEL).value == BRIDGE_MODEL
+    assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == \
+        BRIDGE_SERIAL_NUMBER
+
+    bridge = HomeBridge('hass', hk_driver, 'test_name')
+    assert bridge.display_name == 'test_name'
+    assert len(bridge.services) == 1
+    serv = bridge.services[0]  # SERV_ACCESSORY_INFO
+
+    # setup_message
+    bridge.setup_message()
 
 
-@patch(PATH_ACC, side_effect=mock_preload_service)
-def test_home_bridge(mock_pre_serv):
-    """Test initializing a HomeBridge object."""
-    bridge = HomeBridge('TestBridge', 'test.bridge', b'123-45-678')
+def test_home_driver():
+    """Test HomeDriver class."""
+    ip_address = '127.0.0.1'
+    port = 51826
+    path = '.homekit.state'
+    pin = b'123-45-678'
 
-    assert bridge.display_name == 'TestBridge'
-    assert bridge.pincode == b'123-45-678'
-    assert len(bridge.services) == 2
+    with patch('pyhap.accessory_driver.AccessoryDriver.__init__') \
+            as mock_driver:
+        driver = HomeDriver('hass', address=ip_address, port=port,
+                            persist_file=path)
 
-    assert bridge.services[0].display_name == SERV_ACCESSORY_INFO
-    assert bridge.services[1].display_name == SERV_BRIDGING_STATE
+    mock_driver.assert_called_with(address=ip_address, port=port,
+                                   persist_file=path)
+    driver.state = Mock(pincode=pin)
 
-    char_model = bridge.services[0].get_characteristic(CHAR_MODEL)
-    assert char_model.get_value() == 'test.bridge'
+    # pair
+    with patch('pyhap.accessory_driver.AccessoryDriver.pair') as mock_pair, \
+        patch('homeassistant.components.homekit.accessories.'
+              'dismiss_setup_message') as mock_dissmiss_msg:
+        driver.pair('client_uuid', 'client_public')
 
+    mock_pair.assert_called_with('client_uuid', 'client_public')
+    mock_dissmiss_msg.assert_called_with('hass')
 
-def test_mock_accessory():
-    """Test attributes and functions of a MockAccessory."""
-    acc = MockAccessory('TestAcc')
-    serv = MockService('TestServ')
-    acc.add_service(serv)
+    # unpair
+    with patch('pyhap.accessory_driver.AccessoryDriver.unpair') \
+        as mock_unpair, \
+        patch('homeassistant.components.homekit.accessories.'
+              'show_setup_message') as mock_show_msg:
+        driver.unpair('client_uuid')
 
-    assert acc.display_name == 'TestAcc'
-    assert len(acc.services) == 1
-
-    assert acc.get_service('TestServ') == serv
-    assert acc.get_service('NewServ').display_name == 'NewServ'
-    assert len(acc.services) == 2
-
-
-def test_mock_service():
-    """Test attributes and functions of a MockService."""
-    serv = MockService('TestServ')
-    char = MockChar('TestChar')
-    opt_char = MockChar('TestOptChar')
-    serv.add_characteristic(char)
-    serv.add_opt_characteristic(opt_char)
-
-    assert serv.display_name == 'TestServ'
-    assert len(serv.characteristics) == 1
-    assert len(serv.opt_characteristics) == 1
-
-    assert serv.get_characteristic('TestChar') == char
-    assert serv.get_characteristic('TestOptChar') == opt_char
-    assert serv.get_characteristic('NewChar').display_name == 'NewChar'
-    assert len(serv.characteristics) == 2
-
-
-def test_mock_char():
-    """Test attributes and functions of a MockChar."""
-    def callback_method(value):
-        """Provide a callback options for 'set_value' method."""
-        assert value == 'With callback'
-
-    char = MockChar('TestChar')
-    char.set_value('Value')
-
-    assert char.display_name == 'TestChar'
-    assert char.get_value() == 'Value'
-
-    char.setter_callback = callback_method
-    char.set_value('With callback')
+    mock_unpair.assert_called_with('client_uuid')
+    mock_show_msg.assert_called_with('hass', pin)

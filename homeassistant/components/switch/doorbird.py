@@ -22,6 +22,14 @@ SWITCHES = {
         },
         "time": datetime.timedelta(seconds=3)
     },
+    "open_door_2": {
+        "name": "Open Door 2",
+        "icon": {
+            True: "lock-open",
+            False: "lock"
+        },
+        "time": datetime.timedelta(seconds=3)
+    },
     "light_on": {
         "name": "Light On",
         "icon": {
@@ -80,6 +88,8 @@ class DoorBirdSwitch(SwitchDevice):
         """Power the relay."""
         if self._switch == "open_door":
             self._state = self._device.open_door()
+        elif self._switch == "open_door_2":
+            self._state = self._device.open_door(2)
         elif self._switch == "light_on":
             self._state = self._device.turn_light_on()
 

@@ -222,7 +222,7 @@ class YamahaDevice(MediaPlayerDevice):
 
     @property
     def zone_id(self):
-        """Return an zone_id to ensure 1 media player per zone."""
+        """Return a zone_id to ensure 1 media player per zone."""
         return '{0}:{1}'.format(self.receiver.ctrl_url, self._zone)
 
     @property

@@ -5,22 +5,19 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.tplink/
 """
 import logging
-import colorsys
 import time
 
 import voluptuous as vol
 
 from homeassistant.const import (CONF_HOST, CONF_NAME)
 from homeassistant.components.light import (
-    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_KELVIN, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_RGB_COLOR, PLATFORM_SCHEMA)
+    Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR_TEMP, SUPPORT_COLOR, PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
-
-from typing import Tuple
 
 REQUIREMENTS = ['pyHS100==0.3.0']
 
@@ -56,22 +53,6 @@ def brightness_from_percentage(percent):
     return (percent*255.0)/100.0
 
 
-# Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
-# pylint: disable=invalid-sequence-index
-def rgb_to_hsv(rgb: Tuple[float, float, float]) -> Tuple[int, int, int]:
-    """Convert RGB tuple (values 0-255) to HSV (degrees, %, %)."""
-    hue, sat, value = colorsys.rgb_to_hsv(rgb[0]/255, rgb[1]/255, rgb[2]/255)
-    return int(hue * 360), int(sat * 100), int(value * 100)
-
-
-# Travis-CI runs too old astroid https://github.com/PyCQA/pylint/issues/1212
-# pylint: disable=invalid-sequence-index
-def hsv_to_rgb(hsv: Tuple[float, float, float]) -> Tuple[int, int, int]:
-    """Convert HSV tuple (degrees, %, %) to RGB (values 0-255)."""
-    red, green, blue = colorsys.hsv_to_rgb(hsv[0]/360, hsv[1]/100, hsv[2]/100)
-    return int(red * 255), int(green * 255), int(blue * 255)
-
-
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
@@ -83,7 +64,7 @@ class TPLinkSmartBulb(Light):
         self._available = True
         self._color_temp = None
         self._brightness = None
-        self._rgb = None
+        self._hs = None
         self._supported_features = 0
         self._emeter_params = {}
 
@@ -109,14 +90,15 @@ class TPLinkSmartBulb(Light):
         if ATTR_COLOR_TEMP in kwargs:
             self.smartbulb.color_temp = \
                 mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-        if ATTR_KELVIN in kwargs:
-            self.smartbulb.color_temp = kwargs[ATTR_KELVIN]
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
-            self.smartbulb.brightness = brightness_to_percentage(brightness)
-        if ATTR_RGB_COLOR in kwargs:
-            rgb = kwargs.get(ATTR_RGB_COLOR)
-            self.smartbulb.hsv = rgb_to_hsv(rgb)
+
+        brightness = brightness_to_percentage(
+            kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255))
+        if ATTR_HS_COLOR in kwargs:
+            hue, sat = kwargs.get(ATTR_HS_COLOR)
+            hsv = (int(hue), int(sat), brightness)
+            self.smartbulb.hsv = hsv
+        elif ATTR_BRIGHTNESS in kwargs:
+            self.smartbulb.brightness = brightness
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
@@ -133,9 +115,9 @@ class TPLinkSmartBulb(Light):
         return self._brightness
 
     @property
-    def rgb_color(self):
-        """Return the color in RGB."""
-        return self._rgb
+    def hs_color(self):
+        """Return the color."""
+        return self._hs
 
     @property
     def is_on(self):
@@ -168,8 +150,9 @@ class TPLinkSmartBulb(Light):
                     self._color_temp = kelvin_to_mired(
                         self.smartbulb.color_temp)
 
-            if self._supported_features & SUPPORT_RGB_COLOR:
-                self._rgb = hsv_to_rgb(self.smartbulb.hsv)
+            if self._supported_features & SUPPORT_COLOR:
+                hue, sat, _ = self.smartbulb.hsv
+                self._hs = (hue, sat)
 
             if self.smartbulb.has_emeter:
                 self._emeter_params[ATTR_CURRENT_POWER_W] = '{:.1f}'.format(
@@ -203,4 +186,4 @@ class TPLinkSmartBulb(Light):
         if self.smartbulb.is_variable_color_temp:
             self._supported_features += SUPPORT_COLOR_TEMP
         if self.smartbulb.is_color:
-            self._supported_features += SUPPORT_RGB_COLOR
+            self._supported_features += SUPPORT_COLOR

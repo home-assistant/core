@@ -693,6 +693,141 @@ def test_unknown_sensor(hass):
     yield from discovery_test(device, hass, expected_endpoints=0)
 
 
+async def test_thermostat(hass):
+    """Test thermostat discovery."""
+    device = (
+        'climate.test_thermostat',
+        'cool',
+        {
+            'operation_mode': 'cool',
+            'temperature': 70.0,
+            'target_temp_high': 80.0,
+            'target_temp_low': 60.0,
+            'current_temperature': 75.0,
+            'friendly_name': "Test Thermostat",
+            'supported_features': 1 | 2 | 4 | 128,
+            'operation_list': ['heat', 'cool', 'auto', 'off'],
+            'min_temp': 50,
+            'max_temp': 90,
+            'unit_of_measurement': TEMP_FAHRENHEIT,
+        }
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance['endpointId'] == 'climate#test_thermostat'
+    assert appliance['displayCategories'][0] == 'THERMOSTAT'
+    assert appliance['friendlyName'] == "Test Thermostat"
+
+    assert_endpoint_capabilities(
+        appliance,
+        'Alexa.ThermostatController',
+        'Alexa.TemperatureSensor',
+    )
+
+    properties = await reported_properties(
+        hass, 'climate#test_thermostat')
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'thermostatMode', 'COOL')
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'targetSetpoint',
+        {'value': 70.0, 'scale': 'FAHRENHEIT'})
+    properties.assert_equal(
+        'Alexa.TemperatureSensor', 'temperature',
+        {'value': 75.0, 'scale': 'FAHRENHEIT'})
+
+    call, _ = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'SetTargetTemperature',
+        'climate#test_thermostat', 'climate.set_temperature',
+        hass,
+        payload={'targetSetpoint': {'value': 69.0, 'scale': 'FAHRENHEIT'}}
+    )
+    assert call.data['temperature'] == 69.0
+
+    msg = await assert_request_fails(
+        'Alexa.ThermostatController', 'SetTargetTemperature',
+        'climate#test_thermostat', 'climate.set_temperature',
+        hass,
+        payload={'targetSetpoint': {'value': 0.0, 'scale': 'CELSIUS'}}
+    )
+    assert msg['event']['payload']['type'] == 'TEMPERATURE_VALUE_OUT_OF_RANGE'
+
+    call, _ = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'SetTargetTemperature',
+        'climate#test_thermostat', 'climate.set_temperature',
+        hass,
+        payload={
+            'targetSetpoint': {'value': 70.0, 'scale': 'FAHRENHEIT'},
+            'lowerSetpoint': {'value': 293.15, 'scale': 'KELVIN'},
+            'upperSetpoint': {'value': 30.0, 'scale': 'CELSIUS'},
+        }
+    )
+    assert call.data['temperature'] == 70.0
+    assert call.data['target_temp_low'] == 68.0
+    assert call.data['target_temp_high'] == 86.0
+
+    msg = await assert_request_fails(
+        'Alexa.ThermostatController', 'SetTargetTemperature',
+        'climate#test_thermostat', 'climate.set_temperature',
+        hass,
+        payload={
+            'lowerSetpoint': {'value': 273.15, 'scale': 'KELVIN'},
+            'upperSetpoint': {'value': 75.0, 'scale': 'FAHRENHEIT'},
+        }
+    )
+    assert msg['event']['payload']['type'] == 'TEMPERATURE_VALUE_OUT_OF_RANGE'
+
+    msg = await assert_request_fails(
+        'Alexa.ThermostatController', 'SetTargetTemperature',
+        'climate#test_thermostat', 'climate.set_temperature',
+        hass,
+        payload={
+            'lowerSetpoint': {'value': 293.15, 'scale': 'FAHRENHEIT'},
+            'upperSetpoint': {'value': 75.0, 'scale': 'CELSIUS'},
+        }
+    )
+    assert msg['event']['payload']['type'] == 'TEMPERATURE_VALUE_OUT_OF_RANGE'
+
+    call, _ = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'AdjustTargetTemperature',
+        'climate#test_thermostat', 'climate.set_temperature',
+        hass,
+        payload={'targetSetpointDelta': {'value': -10.0, 'scale': 'KELVIN'}}
+    )
+    assert call.data['temperature'] == 52.0
+
+    msg = await assert_request_fails(
+        'Alexa.ThermostatController', 'AdjustTargetTemperature',
+        'climate#test_thermostat', 'climate.set_temperature',
+        hass,
+        payload={'targetSetpointDelta': {'value': 20.0, 'scale': 'CELSIUS'}}
+    )
+    assert msg['event']['payload']['type'] == 'TEMPERATURE_VALUE_OUT_OF_RANGE'
+
+    call, _ = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'SetThermostatMode',
+        'climate#test_thermostat', 'climate.set_operation_mode',
+        hass,
+        payload={'thermostatMode': {'value': 'HEAT'}}
+    )
+    assert call.data['operation_mode'] == 'heat'
+
+    call, _ = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'SetThermostatMode',
+        'climate#test_thermostat', 'climate.set_operation_mode',
+        hass,
+        payload={'thermostatMode': 'HEAT'}
+    )
+
+    assert call.data['operation_mode'] == 'heat'
+    msg = await assert_request_fails(
+        'Alexa.ThermostatController', 'SetThermostatMode',
+        'climate#test_thermostat', 'climate.set_operation_mode',
+        hass,
+        payload={'thermostatMode': {'value': 'INVALID'}}
+    )
+    assert msg['event']['payload']['type'] == 'UNSUPPORTED_THERMOSTAT_MODE'
+
+
 @asyncio.coroutine
 def test_exclude_filters(hass):
     """Test exclusion filters."""
@@ -951,42 +1086,6 @@ def test_api_set_color_rgb(hass):
 
 
 @asyncio.coroutine
-def test_api_set_color_xy(hass):
-    """Test api set color process."""
-    request = get_new_request(
-        'Alexa.ColorController', 'SetColor', 'light#test')
-
-    # add payload
-    request['directive']['payload']['color'] = {
-        'hue': '120',
-        'saturation': '0.612',
-        'brightness': '0.342',
-    }
-
-    # setup test devices
-    hass.states.async_set(
-        'light.test', 'off', {
-            'friendly_name': "Test light",
-            'supported_features': 64,
-        })
-
-    call_light = async_mock_service(hass, 'light', 'turn_on')
-
-    msg = yield from smart_home.async_handle_message(
-        hass, DEFAULT_CONFIG, request)
-    yield from hass.async_block_till_done()
-
-    assert 'event' in msg
-    msg = msg['event']
-
-    assert len(call_light) == 1
-    assert call_light[0].data['entity_id'] == 'light.test'
-    assert call_light[0].data['xy_color'] == (0.23, 0.585)
-    assert call_light[0].data['brightness'] == 18
-    assert msg['header']['name'] == 'Response'
-
-
-@asyncio.coroutine
 def test_api_set_color_temperature(hass):
     """Test api set color temperature process."""
     request = get_new_request(
@@ -1199,10 +1298,10 @@ def test_unsupported_domain(hass):
 
 
 @asyncio.coroutine
-def do_http_discovery(config, hass, test_client):
+def do_http_discovery(config, hass, aiohttp_client):
     """Submit a request to the Smart Home HTTP API."""
     yield from async_setup_component(hass, alexa.DOMAIN, config)
-    http_client = yield from test_client(hass.http.app)
+    http_client = yield from aiohttp_client(hass.http.app)
 
     request = get_new_request('Alexa.Discovery', 'Discover')
     response = yield from http_client.post(
@@ -1213,7 +1312,7 @@ def do_http_discovery(config, hass, test_client):
 
 
 @asyncio.coroutine
-def test_http_api(hass, test_client):
+def test_http_api(hass, aiohttp_client):
     """With `smart_home:` HTTP API is exposed."""
     config = {
         'alexa': {
@@ -1221,7 +1320,7 @@ def test_http_api(hass, test_client):
         }
     }
 
-    response = yield from do_http_discovery(config, hass, test_client)
+    response = yield from do_http_discovery(config, hass, aiohttp_client)
     response_data = yield from response.json()
 
     # Here we're testing just the HTTP view glue -- details of discovery are
@@ -1230,12 +1329,12 @@ def test_http_api(hass, test_client):
 
 
 @asyncio.coroutine
-def test_http_api_disabled(hass, test_client):
+def test_http_api_disabled(hass, aiohttp_client):
     """Without `smart_home:`, the HTTP API is disabled."""
     config = {
         'alexa': {}
     }
-    response = yield from do_http_discovery(config, hass, test_client)
+    response = yield from do_http_discovery(config, hass, aiohttp_client)
 
     assert response.status == 404
 

@@ -1,4 +1,4 @@
-"""Implements a base class for all IHC devices."""
+"""Implementation of a base class for all IHC devices."""
 import asyncio
 from xml.etree.ElementTree import Element
 
@@ -6,7 +6,7 @@ from homeassistant.helpers.entity import Entity
 
 
 class IHCDevice(Entity):
-    """Base class for all ihc devices.
+    """Base class for all IHC devices.
 
     All IHC devices have an associated IHC resource. IHCDevice handled the
     registration of the IHC controller callback when the IHC resource changes.
@@ -31,13 +31,13 @@ class IHCDevice(Entity):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Add callback for ihc changes."""
+        """Add callback for IHC changes."""
         self.ihc_controller.add_notify_event(
             self.ihc_id, self.on_ihc_change, True)
 
     @property
     def should_poll(self) -> bool:
-        """No polling needed for ihc devices."""
+        """No polling needed for IHC devices."""
         return False
 
     @property
@@ -58,7 +58,7 @@ class IHCDevice(Entity):
         }
 
     def on_ihc_change(self, ihc_id, value):
-        """Callback when ihc resource changes.
+        """Callback when IHC resource changes.
 
         Derived classes must overwrite this to do device specific stuff.
         """

@@ -12,14 +12,15 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_INCLUDE, CONF_EXCLUDE, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_RADIUS)
+from homeassistant.const import (CONF_API_KEY, CONF_INCLUDE, CONF_EXCLUDE,
+                                 CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
+                                 ATTR_ATTRIBUTION, ATTR_LATITUDE,
+                                 ATTR_LONGITUDE, CONF_RADIUS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['spotcrime==1.0.2']
+REQUIREMENTS = ['spotcrime==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,6 +35,7 @@ SCAN_INTERVAL = timedelta(minutes=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_RADIUS): vol.Coerce(float),
+    vol.Required(CONF_API_KEY): cv.string,
     vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
     vol.Optional(CONF_DAYS, default=DEFAULT_DAYS): cv.positive_int,
@@ -49,28 +51,31 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     name = config[CONF_NAME]
     radius = config[CONF_RADIUS]
+    api_key = config[CONF_API_KEY]
     days = config.get(CONF_DAYS)
     include = config.get(CONF_INCLUDE)
     exclude = config.get(CONF_EXCLUDE)
 
     add_devices([SpotCrimeSensor(
         name, latitude, longitude, radius, include,
-        exclude, days)], True)
+        exclude, api_key, days)], True)
 
 
 class SpotCrimeSensor(Entity):
     """Representation of a Spot Crime Sensor."""
 
     def __init__(self, name, latitude, longitude, radius,
-                 include, exclude, days):
+                 include, exclude, api_key, days):
         """Initialize the Spot Crime sensor."""
         import spotcrime
         self._name = name
         self._include = include
         self._exclude = exclude
+        self.api_key = api_key
         self.days = days
         self._spotcrime = spotcrime.SpotCrime(
-            (latitude, longitude), radius, None, None, self.days)
+            (latitude, longitude), radius, self._include,
+            self._exclude, self.api_key, self.days)
         self._attributes = None
         self._state = None
         self._previous_incidents = set()

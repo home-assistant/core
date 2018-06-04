@@ -13,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.components.http import HomeAssistantView
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['DoorBirdPy==0.1.2']
+REQUIREMENTS = ['DoorBirdPy==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +22,7 @@ DOMAIN = 'doorbird'
 API_URL = '/api/{}'.format(DOMAIN)
 
 CONF_DOORBELL_EVENTS = 'doorbell_events'
+CONF_CUSTOM_URL = 'hass_url_override'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -29,6 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_DOORBELL_EVENTS): cv.boolean,
+        vol.Optional(CONF_CUSTOM_URL): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -61,9 +63,17 @@ def setup(hass, config):
         # Provide an endpoint for the device to call to trigger events
         hass.http.register_view(DoorbirdRequestView())
 
+        # Get the URL of this server
+        hass_url = hass.config.api.base_url
+
+        # Override it if another is specified in the component configuration
+        if config[DOMAIN].get(CONF_CUSTOM_URL):
+            hass_url = config[DOMAIN].get(CONF_CUSTOM_URL)
+            _LOGGER.info("DoorBird will connect to this instance via %s",
+                         hass_url)
+
         # This will make HA the only service that gets doorbell events
-        url = '{}{}/{}'.format(
-            hass.config.api.base_url, API_URL, SENSOR_DOORBELL)
+        url = '{}{}/{}'.format(hass_url, API_URL, SENSOR_DOORBELL)
         device.reset_notifications()
         device.subscribe_notification(SENSOR_DOORBELL, url)
 

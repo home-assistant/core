@@ -21,6 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import dt as dt_util
 from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import helpers as ga_h
+from homeassistant.components.google_assistant import const as ga_c
 
 from . import http_api, iot
 from .const import CONFIG_DIR, DOMAIN, SERVERS
@@ -37,6 +38,7 @@ CONF_FILTER = 'filter'
 CONF_GOOGLE_ACTIONS = 'google_actions'
 CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
+CONF_GOOGLE_ACTIONS_SYNC_URL = 'google_actions_sync_url'
 
 DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
@@ -51,7 +53,8 @@ ALEXA_ENTITY_SCHEMA = vol.Schema({
 
 GOOGLE_ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string])
+    vol.Optional(CONF_ALIASES): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(ga_c.CONF_ROOM_HINT): cv.string,
 })
 
 ASSISTANT_SCHEMA = vol.Schema({
@@ -75,6 +78,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_USER_POOL_ID): str,
         vol.Optional(CONF_REGION): str,
         vol.Optional(CONF_RELAYER): str,
+        vol.Optional(CONF_GOOGLE_ACTIONS_SYNC_URL): str,
         vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
         vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
     }),
@@ -110,7 +114,7 @@ class Cloud:
 
     def __init__(self, hass, mode, alexa, google_actions,
                  cognito_client_id=None, user_pool_id=None, region=None,
-                 relayer=None):
+                 relayer=None, google_actions_sync_url=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
@@ -128,6 +132,7 @@ class Cloud:
             self.user_pool_id = user_pool_id
             self.region = region
             self.relayer = relayer
+            self.google_actions_sync_url = google_actions_sync_url
 
         else:
             info = SERVERS[mode]
@@ -136,6 +141,7 @@ class Cloud:
             self.user_pool_id = info['user_pool_id']
             self.region = info['region']
             self.relayer = info['relayer']
+            self.google_actions_sync_url = info['google_actions_sync_url']
 
     @property
     def is_logged_in(self):
