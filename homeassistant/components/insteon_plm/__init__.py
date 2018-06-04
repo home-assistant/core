@@ -24,6 +24,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'insteon_plm'
 
+CONF_HUB_USERNAME = 'username'
+CONF_HUB_PASSWORD = 'password'
 CONF_OVERRIDE = 'device_override'
 CONF_ADDRESS = 'address'
 CONF_CAT = 'cat'
@@ -122,6 +124,8 @@ def async_setup(hass, config):
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
     host = conf.get(CONF_HOST)
+    username = conf.get(CONF_HUB_USERNAME)
+    password = conf.get(CONF_HUB_PASSWORD)
     overrides = conf.get(CONF_OVERRIDE, [])
     x10_devices = conf.get(CONF_X10, [])
     x10_all_units_off_housecode = conf.get(CONF_X10_ALL_UNITS_OFF)
@@ -231,6 +235,8 @@ def async_setup(hass, config):
         conn = yield from insteonplm.Connection.create(
             host=host,
             port=port,
+            username=username,
+            password=password,
             loop=hass.loop,
             workdir=hass.config.config_dir)
     else:
