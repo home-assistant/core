@@ -45,12 +45,9 @@ class MyStromView(HomeAssistantView):
     @asyncio.coroutine
     def _handle(self, hass, data):
         """Handle requests to the myStrom endpoint."""
-        button_action = None
-        parameter_list = list(data.keys())
-        for parameter in parameter_list:
-            if parameter in self.supported_actions:
-                button_action = parameter
-                break
+        button_action = next((
+            parameter for parameter in data
+            if parameter in self.supported_actions), None)
 
         if button_action is None:
             _LOGGER.error(
