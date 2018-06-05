@@ -725,7 +725,7 @@ pyairvisual==1.0.0
 pyalarmdotcom==0.3.2
 
 # homeassistant.components.arlo
-pyarlo==0.1.3
+pyarlo==0.1.4
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.1.5
