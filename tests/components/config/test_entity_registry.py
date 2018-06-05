@@ -1,7 +1,6 @@
 """Test entity_registry API."""
 import pytest
 
-from homeassistant.setup import async_setup_component
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.components.config import entity_registry
 from tests.common import mock_registry, MockEntity, MockEntityPlatform
