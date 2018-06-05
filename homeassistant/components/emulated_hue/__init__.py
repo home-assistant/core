@@ -44,7 +44,7 @@ CONF_ENTITY_HIDDEN = 'hidden'
 
 TYPE_ALEXA = 'alexa'
 TYPE_GOOGLE = 'google_home'
-TYPE_SLEEPCYCLE = 'sleepcycle'
+TYPE_SLEEPCYCLE = 'sleep_cycle'
 
 DEFAULT_LISTEN_PORT = 8300
 DEFAULT_UPNP_BIND_MULTICAST = True
