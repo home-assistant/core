@@ -100,7 +100,7 @@ class SimulatedSensor(Entity):
         else:
             periodic = amp * (math.sin((2*math.pi*time_delta/period) + phase))
         noise = self._random.gauss(mu=0, sigma=fwhm)
-        return mean + periodic + noise
+        return round(mean + periodic + noise, 3)
 
     async def async_update(self):
         """Update the sensor."""
