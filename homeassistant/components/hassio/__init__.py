@@ -178,7 +178,7 @@ def async_setup(hass, config):
 
     if 'frontend' in hass.config.components:
         yield from hass.components.frontend.async_register_built_in_panel(
-            'hassio', 'Hass.io', 'mdi:home-assistant')
+            'hassio', 'Hass.io', 'hass:home-assistant')
 
     if 'http' in config:
         yield from hassio.update_hass_api(config['http'])
