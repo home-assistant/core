@@ -268,7 +268,7 @@ class Config(object):
 
         return is_default_exposed or expose
 
-    def entities_response_wrapper(self, json_response):
+    def json_response_dummy_wrapper(self, json_response):
         """Wrapper, adds dummy mac address for sleepcycle."""
         if self.type == TYPE_SLEEPCYCLE:
             return {'lights': json_response,
