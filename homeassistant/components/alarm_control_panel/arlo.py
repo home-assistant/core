@@ -87,17 +87,11 @@ class ArloBaseStation(AlarmControlPanel):
     def update(self):
         """Update the state of the device."""
         _LOGGER.info("Updating Arlo Alarm Control Panel %s" % self.name)
-        # PyArlo sometimes returns None for mode. So retry 3 times before
-        # returning None.
-        num_retries = 3
-        i = 0
-        while i < num_retries:
-            mode = self._base_station.mode
-            if mode:
-                self._state = self._get_state_from_mode(mode)
-                return
-            i += 1
-        self._state = None
+        mode = self._base_station.mode
+        if mode:
+            self._state = self._get_state_from_mode(mode)
+        else:
+            self._state = None
 
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):
@@ -137,4 +131,4 @@ class ArloBaseStation(AlarmControlPanel):
             return STATE_ALARM_ARMED_HOME
         elif mode == self._away_mode_name:
             return STATE_ALARM_ARMED_AWAY
-        return None
+        return mode
