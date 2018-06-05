@@ -84,6 +84,7 @@ SERVICE_HANDLERS = {
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
     'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
+    'freebox': ('device_tracker', 'freebox'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
