@@ -122,7 +122,6 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
 
     async def async_get_events(self, start_date, end_date):
         """Get all events in a specific time frame."""
-        print("EEE")
         return await self.data.async_get_events(start_date, end_date)
 
 
@@ -164,7 +163,6 @@ class WebDavCalendarData(object):
 
             event_list.append(data)
 
-        print(event_list)
         return event_list
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -176,7 +174,6 @@ class WebDavCalendarData(object):
             dt.start_of_local_day(),
             dt.start_of_local_day() + timedelta(days=1)
         )
-
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
