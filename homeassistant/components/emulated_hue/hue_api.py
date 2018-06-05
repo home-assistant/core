@@ -105,7 +105,8 @@ class HueAllLightsStateView(HomeAssistantView):
                 json_response[number] = entity_to_json(
                     self.config, entity, state, brightness)
 
-        return self.json(self.config.json_response_dummy_wrapper(json_response))
+        json_response = self.config.json_response_dummy_wrapper(json_response)
+        return self.json(json_response)
 
 
 class HueOneLightStateView(HomeAssistantView):
