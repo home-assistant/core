@@ -86,7 +86,7 @@ class ArloBaseStation(AlarmControlPanel):
 
     def update(self):
         """Update the state of the device."""
-        _LOGGER.info("Updating Arlo Alarm Control Panel %s" % self.name)
+        _LOGGER.info("Updating Arlo Alarm Control Panel %s", self.name)
         mode = self._base_station.mode
         if mode:
             self._state = self._get_state_from_mode(mode)
