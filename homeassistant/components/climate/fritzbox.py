@@ -94,10 +94,9 @@ class FritzboxThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self._target_temperature == ON_API_TEMPERATURE:
-            return ON_REPORT_SET_TEMPERATURE
-        if self._target_temperature == OFF_API_TEMPERATURE:
-            return OFF_REPORT_SET_TEMPERATURE
+        if self._target_temperature in (ON_API_TEMPERATURE,
+                                        OFF_API_TEMPERATURE):
+            return None
         return self._target_temperature
 
     def set_temperature(self, **kwargs):

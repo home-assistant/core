@@ -66,10 +66,10 @@ class TestFritzboxClimate(unittest.TestCase):
         self.assertEqual(19.5, self.thermostat.target_temperature)
 
         self.thermostat._target_temperature = 126.5
-        self.assertEqual(0.0, self.thermostat.target_temperature)
+        self.assertEqual(None, self.thermostat.target_temperature)
 
         self.thermostat._target_temperature = 127.0
-        self.assertEqual(30.0, self.thermostat.target_temperature)
+        self.assertEqual(None, self.thermostat.target_temperature)
 
     @patch.object(FritzboxThermostat, 'set_operation_mode')
     def test_set_temperature_operation_mode(self, mock_set_op):
