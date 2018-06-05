@@ -24,8 +24,8 @@ CONF_STATION = 'station'
 
 DEPENDENCIES = ['netatmo']
 
-# NetAtmo Data is uploaded to server every 10 minutes
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
+# NetAtmo Data is uploaded to server every 5 minutes
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=300)
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS, None,
@@ -76,11 +76,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             # Iterate each module
             for module_name, monitored_conditions in\
                     config[CONF_MODULES].items():
-                # Test if module exist """
+                # Test if module exists
                 if module_name not in data.get_module_names():
-                    _LOGGER.error('Module name: "%s" not found', module_name)
+                    _LOGGER.error('Module name "%s" not found', module_name)
                     continue
-                # Only create sensor for monitored """
+                # Only create sensors for monitored properties
                 for variable in monitored_conditions:
                     dev.append(NetAtmoSensor(data, module_name, variable))
         else:
