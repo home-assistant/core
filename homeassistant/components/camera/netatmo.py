@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
-    import lnetatmo
+    import pyatmo
     try:
         data = CameraData(netatmo.NETATMO_AUTH, home)
         for camera_name in data.get_camera_names():
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     continue
             add_devices([NetatmoCamera(data, camera_name, home,
                                        camera_type, verify_ssl)])
-    except lnetatmo.NoDevice:
+    except pyatmo.NoDevice:
         return None
 
 
