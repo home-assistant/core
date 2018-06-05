@@ -797,7 +797,7 @@ pymailgunner==1.4
 pymediaroom==0.5
 
 # homeassistant.components.media_player.xiaomi_tv
-pymitv==1.0.0
+pymitv==1.4.0
 
 # homeassistant.components.mochad
 pymochad==0.2.0
