@@ -11,6 +11,19 @@ from homeassistant.components.frontend import (
     CONF_EXTRA_HTML_URL_ES5)
 from homeassistant.components import websocket_api as wapi
 
+from tests.common import mock_coro
+
+
+CONFIG_THEMES = {
+    DOMAIN: {
+        CONF_THEMES: {
+            'happy': {
+                'primary-color': 'red'
+            }
+        }
+    }
+}
+
 
 @pytest.fixture
 def mock_http_client(hass, aiohttp_client):
@@ -101,68 +114,109 @@ def test_states_routes(mock_http_client):
     assert resp.status == 200
 
 
-@asyncio.coroutine
-def test_themes_api(mock_http_client_with_themes):
+async def test_themes_api(hass, hass_ws_client):
     """Test that /api/themes returns correct data."""
-    resp = yield from mock_http_client_with_themes.get('/api/themes')
-    json = yield from resp.json()
-    assert json['default_theme'] == 'default'
-    assert json['themes'] == {'happy': {'primary-color': 'red'}}
+    assert await async_setup_component(hass, 'frontend', CONFIG_THEMES)
+    client = await hass_ws_client(hass)
+
+    await client.send_json({
+        'id': 5,
+        'type': 'frontend/get_themes',
+    })
+    msg = await client.receive_json()
+
+    assert msg['result']['default_theme'] == 'default'
+    assert msg['result']['themes'] == {'happy': {'primary-color': 'red'}}
 
 
-@asyncio.coroutine
-def test_themes_set_theme(hass, mock_http_client_with_themes):
+async def test_themes_set_theme(hass, hass_ws_client):
     """Test frontend.set_theme service."""
-    yield from hass.services.async_call(DOMAIN, 'set_theme', {'name': 'happy'})
-    yield from hass.async_block_till_done()
-    resp = yield from mock_http_client_with_themes.get('/api/themes')
-    json = yield from resp.json()
-    assert json['default_theme'] == 'happy'
+    assert await async_setup_component(hass, 'frontend', CONFIG_THEMES)
+    client = await hass_ws_client(hass)
 
-    yield from hass.services.async_call(
-        DOMAIN, 'set_theme', {'name': 'default'})
-    yield from hass.async_block_till_done()
-    resp = yield from mock_http_client_with_themes.get('/api/themes')
-    json = yield from resp.json()
-    assert json['default_theme'] == 'default'
+    await hass.services.async_call(
+        DOMAIN, 'set_theme', {'name': 'happy'}, blocking=True)
+
+    await client.send_json({
+        'id': 5,
+        'type': 'frontend/get_themes',
+    })
+    msg = await client.receive_json()
+
+    assert msg['result']['default_theme'] == 'happy'
+
+    await hass.services.async_call(
+        DOMAIN, 'set_theme', {'name': 'default'}, blocking=True)
+
+    await client.send_json({
+        'id': 6,
+        'type': 'frontend/get_themes',
+    })
+    msg = await client.receive_json()
+
+    assert msg['result']['default_theme'] == 'default'
 
 
-@asyncio.coroutine
-def test_themes_set_theme_wrong_name(hass, mock_http_client_with_themes):
+async def test_themes_set_theme_wrong_name(hass, hass_ws_client):
     """Test frontend.set_theme service called with wrong name."""
-    yield from hass.services.async_call(DOMAIN, 'set_theme', {'name': 'wrong'})
-    yield from hass.async_block_till_done()
-    resp = yield from mock_http_client_with_themes.get('/api/themes')
-    json = yield from resp.json()
-    assert json['default_theme'] == 'default'
+    assert await async_setup_component(hass, 'frontend', CONFIG_THEMES)
+    client = await hass_ws_client(hass)
+
+    await hass.services.async_call(
+        DOMAIN, 'set_theme', {'name': 'wrong'}, blocking=True)
+
+    await client.send_json({
+        'id': 5,
+        'type': 'frontend/get_themes',
+    })
+
+    msg = await client.receive_json()
+
+    assert msg['result']['default_theme'] == 'default'
 
 
-@asyncio.coroutine
-def test_themes_reload_themes(hass, mock_http_client_with_themes):
+async def test_themes_reload_themes(hass, hass_ws_client):
     """Test frontend.reload_themes service."""
+    assert await async_setup_component(hass, 'frontend', CONFIG_THEMES)
+    client = await hass_ws_client(hass)
+
     with patch('homeassistant.components.frontend.load_yaml_config_file',
                return_value={DOMAIN: {
                    CONF_THEMES: {
                        'sad': {'primary-color': 'blue'}
                    }}}):
-        yield from hass.services.async_call(DOMAIN, 'set_theme',
-                                            {'name': 'happy'})
-        yield from hass.services.async_call(DOMAIN, 'reload_themes')
-        yield from hass.async_block_till_done()
-        resp = yield from mock_http_client_with_themes.get('/api/themes')
-        json = yield from resp.json()
-        assert json['themes'] == {'sad': {'primary-color': 'blue'}}
-        assert json['default_theme'] == 'default'
+        await hass.services.async_call(
+            DOMAIN, 'set_theme', {'name': 'happy'}, blocking=True)
+        await hass.services.async_call(DOMAIN, 'reload_themes', blocking=True)
+
+    await client.send_json({
+        'id': 5,
+        'type': 'frontend/get_themes',
+    })
+
+    msg = await client.receive_json()
+
+    assert msg['result']['themes'] == {'sad': {'primary-color': 'blue'}}
+    assert msg['result']['default_theme'] == 'default'
 
 
-@asyncio.coroutine
-def test_missing_themes(mock_http_client):
+async def test_missing_themes(hass, hass_ws_client):
     """Test that themes API works when themes are not defined."""
-    resp = yield from mock_http_client.get('/api/themes')
-    assert resp.status == 200
-    json = yield from resp.json()
-    assert json['default_theme'] == 'default'
-    assert json['themes'] == {}
+    await async_setup_component(hass, 'frontend')
+
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'frontend/get_themes',
+    })
+
+    msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
+    assert msg['result']['default_theme'] == 'default'
+    assert msg['result']['themes'] == {}
 
 
 @asyncio.coroutine
@@ -204,3 +258,23 @@ async def test_get_panels(hass, hass_ws_client):
     assert msg['result']['map']['url_path'] == 'map'
     assert msg['result']['map']['icon'] == 'mdi:account-location'
     assert msg['result']['map']['title'] == 'Map'
+
+
+async def test_get_translations(hass, hass_ws_client):
+    """Test get_translations command."""
+    await async_setup_component(hass, 'frontend')
+    client = await hass_ws_client(hass)
+
+    with patch('homeassistant.components.frontend.async_get_translations',
+               side_effect=lambda hass, lang: mock_coro({'lang': lang})):
+        await client.send_json({
+            'id': 5,
+            'type': 'frontend/get_translations',
+            'language': 'nl',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
+    assert msg['result'] == {'resources': {'lang': 'nl'}}
