@@ -57,15 +57,15 @@ class WorxLandroidSensor(Entity):
         """Return the name of the sensor."""
         if self.sensor == 'battery':
             return 'WorxLandroid - Battery'
-            
+
         # sensor state
         elif self.sensor == 'state':
             return 'WorxLandroid - State'
-            
+
         # sensor error
         elif self.sensor == 'error':
             return 'WorxLandroid - Error'
-            
+
         # sensor battery charger state
         elif self.sensor == 'battchargestate':
             return 'WorxLandroid - BatteryChargerState'
@@ -122,12 +122,12 @@ class WorxLandroidSensor(Entity):
             # sensor error
             elif self.sensor == 'error':
                 self._state = data['message']
-                #self._state = 'no' if self.get_error(data) is None else 'yes'
-                
+#                self._state = 'no' if self.get_error(data) is None else 'yes'
+
             # sensor battery charger state
             elif self.sensor == 'battchargestate':
                 self._state = data['batteryChargerState']
-                
+
         else:
             if self.sensor == 'error':
                 self._state = 'no'
@@ -136,30 +136,30 @@ class WorxLandroidSensor(Entity):
     def icon(self):
         """Icon to use in the frontend."""
         if self.sensor == 'battery':
-            
+
             if self._state == '100':
                 return 'mdi:battery'
-            
+
             elif self._state > '80':
                 return 'mdi:battery-80'
-            
+
             elif self._state > '60':
                 return 'mdi:battery-60'
-            
+
             elif self._state > '40':
                 return 'mdi:battery-40'
-            
+
             elif self._state > '20':
                 return 'mdi:battery-20'
-                
+
         # sensor state
         elif self.sensor == 'state':
             return 'mdi:robot-vacuum'
-            
+
         # sensor error
         elif self.sensor == 'error':
             return 'mdi:alert-circle-outline'
-            
+
         # sensor battery charger state
         elif self.sensor == 'battchargestate':
             return 'mdi:battery-charging-30'
