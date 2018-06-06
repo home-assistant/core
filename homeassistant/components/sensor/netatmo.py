@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.netatmo/
 """
 import logging
 from datetime import timedelta
+from time import time
 
 import voluptuous as vol
 
@@ -50,7 +51,8 @@ SENSOR_TYPES = {
     'rf_status': ['Radio', '', 'mdi:signal', None],
     'rf_status_lvl': ['Radio_lvl', '', 'mdi:signal', None],
     'wifi_status': ['Wifi', '', 'mdi:wifi', None],
-    'wifi_status_lvl': ['Wifi_lvl', 'dBm', 'mdi:wifi', None]
+    'wifi_status_lvl': ['Wifi_lvl', 'dBm', 'mdi:wifi', None],
+    'lastupdate': ['Last Update', 's', '', None],
 }
 
 MODULE_SCHEMA = vol.Schema({
@@ -76,11 +78,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             # Iterate each module
             for module_name, monitored_conditions in\
                     config[CONF_MODULES].items():
-                # Test if module exist """
+                # Test if module exists
                 if module_name not in data.get_module_names():
                     _LOGGER.error('Module name: "%s" not found', module_name)
                     continue
-                # Only create sensor for monitored """
+                # Only create sensors for monitored properties
                 for variable in monitored_conditions:
                     dev.append(NetAtmoSensor(data, module_name, variable))
         else:
@@ -285,6 +287,8 @@ class NetAtmoSensor(Entity):
                 self._state = "High"
             elif data['wifi_status'] <= 55:
                 self._state = "Full"
+        elif self.type == 'lastupdate':
+            self._state = int(time() - data['When'])
 
 
 class NetAtmoData(object):
