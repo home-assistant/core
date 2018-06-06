@@ -1,8 +1,8 @@
 """
-Exposes a Sisyphus Kinetic Art Table as a light.
+Support for the light on the Sisyphus Kinetic Art Table.
 
-Turning the switch off will sleep the table; turning it on will wake it up.
-Brightness controls the table light brightness.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/light.sisyphus/
 """
 import logging
 
@@ -35,18 +35,10 @@ class SisyphusLight(Light):
         """
         self._name = name
         self._table = table
-        self._initialized = False
 
-    def update(self):
-        """Lazily initializes the table."""
-        if not self._initialized:
-            # We wait until update before adding the listener because
-            # otherwise there's a race condition by which this entity
-            # might not have had its hass field set, and thus
-            # the schedule_update_ha_state call will fail
-            self._table.add_listener(
-                lambda: self.schedule_update_ha_state(False))
-            self._initialized = True
+    async def async_added_to_hass(self):
+        self._table.add_listener(
+            lambda: self.schedule_update_ha_state(False))
 
     @property
     def name(self):

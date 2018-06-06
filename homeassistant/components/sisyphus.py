@@ -1,17 +1,19 @@
 """
-Enables control of Sisyphus Kinetic Art Tables.
+Support for controlling Sisyphus Kinetic Art Tables.
 
-Each table is exposed as a light and a media player.
+For more details about this component, please refer to the documentation at
+https://home-assistant.io/components/sisyphus/
 """
 import logging
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP
 )
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
 REQUIREMENTS = ['sisyphus-control==2.0.0']
@@ -21,20 +23,18 @@ _LOGGER = logging.getLogger(__name__)
 DATA_SISYPHUS = 'sisyphus'
 DOMAIN = 'sisyphus'
 
-AUTODETECT_SCHEMA = vol.Schema({
-    DOMAIN: {},
-}, extra=vol.ALLOW_EXTRA)
+AUTODETECT_SCHEMA = vol.Schema({})
 
-TABLES_SCHEMA = vol.Schema({
-    DOMAIN: [
-        {
-            vol.Required(CONF_NAME): cv.string,
-            vol.Required(CONF_HOST): cv.string,
-        },
-    ],
-}, extra=vol.ALLOW_EXTRA)
+TABLE_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+})
 
-CONFIG_SCHEMA = vol.Any(AUTODETECT_SCHEMA, TABLES_SCHEMA)
+TABLES_SCHEMA = vol.Schema([TABLE_SCHEMA])
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Any(AUTODETECT_SCHEMA, TABLES_SCHEMA),
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
@@ -52,12 +52,12 @@ async def async_setup(hass, config):
         _LOGGER.debug("Connected to %s at %s", name, host)
 
         hass.async_add_job(async_load_platform(
-            hass, 'light', 'sisyphus', {
+            hass, 'light', DOMAIN, {
                 CONF_NAME: name,
             }, config
         ))
         hass.async_add_job(async_load_platform(
-            hass, 'media_player', 'sisyphus', {
+            hass, 'media_player', DOMAIN, {
                 CONF_NAME: name,
                 CONF_HOST: host,
             }, config
@@ -68,8 +68,7 @@ async def async_setup(hass, config):
             await add_table(ip_address)
     else:  # TABLES_SCHEMA
         for conf in table_configs:
-            if conf.get(CONF_HOST) is not None:
-                await add_table(conf.get(CONF_HOST), conf.get(CONF_NAME))
+            await add_table(conf.get(CONF_HOST), conf.get(CONF_NAME))
 
     async def close_tables(*args):
         """Close all table objects."""

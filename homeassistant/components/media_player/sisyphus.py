@@ -1,7 +1,8 @@
 """
-Exposes the Sisyphus Kinetic Art Table as a media player.
+Support for track controls on the Sisyphus Kinetic Art Table.
 
-Media controls work as one would expect. Volume controls table speed.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.sisyphus/
 """
 import logging
 
@@ -25,13 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['sisyphus']
 
 MEDIA_TYPE_TRACK = "sisyphus_track"
-
-# Features that are always available, regardless of the state of the table
-ALWAYS_FEATURES = \
-    SUPPORT_VOLUME_MUTE \
-    | SUPPORT_VOLUME_SET \
-    | SUPPORT_TURN_OFF \
-    | SUPPORT_TURN_ON
 
 
 # pylint: disable=unused-argument
@@ -136,21 +130,16 @@ class SisyphusPlayer(MediaPlayerDevice):
 
     @property
     def supported_features(self):
-        """Return the features supported by this table in its current state."""
-        if self.state == STATE_PLAYING:
-            features = ALWAYS_FEATURES | SUPPORT_PAUSE
-
-            if self._table.active_playlist:
-                features |= SUPPORT_SHUFFLE_SET
-                current_track_index = self._get_current_track_index()
-                if current_track_index > 0:
-                    features |= SUPPORT_PREVIOUS_TRACK
-                if current_track_index < len(self._table.tracks) - 1:
-                    features |= SUPPORT_NEXT_TRACK
-
-            return features
-
-        return ALWAYS_FEATURES | SUPPORT_PLAY
+        """Return the features supported by this table."""
+        return SUPPORT_VOLUME_MUTE \
+            | SUPPORT_VOLUME_SET \
+            | SUPPORT_TURN_OFF \
+            | SUPPORT_TURN_ON \
+            | SUPPORT_PAUSE \
+            | SUPPORT_SHUFFLE_SET \
+            | SUPPORT_PREVIOUS_TRACK \
+            | SUPPORT_NEXT_TRACK \
+            | SUPPORT_PLAY
 
     @property
     def media_image_url(self):
