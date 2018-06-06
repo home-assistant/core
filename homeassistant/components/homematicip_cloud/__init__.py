@@ -16,13 +16,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
-from homeassistant import config_entries, data_entry_flow
+
+from .const import DOMAIN, CONF_ACCESSPOINT, CONF_AUTHTOKEN, CONF_NAME
 
 REQUIREMENTS = ['homematicip==0.9.4']
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = 'homematicip_cloud'
 
 COMPONENTS = [
     'sensor',
@@ -31,11 +30,6 @@ COMPONENTS = [
     'light',
     'climate',
 ]
-
-CONF_NAME = 'name'
-CONF_ACCESSPOINT = 'accesspoint'
-CONF_AUTHTOKEN = 'authtoken'
-CONF_PIN = 'pin'
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN, default=[]): vol.All(cv.ensure_list, [vol.Schema({
@@ -127,71 +121,6 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     _LOGGER.error("async_unload_entry")
-
-
-@config_entries.HANDLERS.register(DOMAIN)
-class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
-    """Config flow HomematicIP Cloud."""
-
-    VERSION = 1
-
-    def __init__(self):
-        """Initialize HomematicIP Cloud configuration flow."""
-        _LOGGER.error("config_flow init")
-
-    async def async_step_init(self, user_input=None):
-        """Handle a flow start."""
-        _LOGGER.error("config_flow step_init")
-        errors = {}
-
-        if user_input is not None:
-            _LOGGER.error("config_flow step_init")
-            if user_input[CONF_ACCESSPOINT]:
-                apid = user_input[CONF_ACCESSPOINT].replace('-', '').upper()
-                if user_input[CONF_AUTHTOKEN]:
-                    # Add existing accespoint with SGTIN and auth token
-                    return self.async_create_entry(
-                        title=apid,
-                        data={
-                            'name': user_input[CONF_NAME],
-                            'accesspoint': apid,
-                            'authtoken': user_input[CONF_AUTHTOKEN],
-                        }
-                    )
-                # Init home and go to step link
-                # TO BE IMPLEMENTED
-                return await self.async_step_link()
-            return
-
-        return self.async_show_form(
-            step_id='init',
-            data_schema=vol.Schema({
-                vol.Required(CONF_ACCESSPOINT): str,
-                vol.Optional(CONF_PIN): str,
-                vol.Optional(CONF_NAME): str,
-                vol.Optional(CONF_AUTHTOKEN): str,
-            }),
-            errors=errors,
-        )
-
-    async def async_step_link(self, user_input=None):
-        """Attempt to link with the HomematicIP Cloud accesspoint."""
-        errors = {}
-        _LOGGER.error("config_flow step_link")
-
-        return self.async_show_form(step_id='link', errors=errors)
-
-    async def _entry_from_accesspoint(self, home):
-        """Return a config entry from an initialized homematicip instance."""
-        return self.async_create_entry(
-            title=home.id.replace('-', '').upper(),
-            data={
-                'name': home.label,
-                'accesspoint': home.id.replace('-', '').upper(),
-                # pylint: disable=protected-access
-                'authtoken': home._connection._auth_token,
-            }
-        )
 
 
 class HomematicipConnector:
