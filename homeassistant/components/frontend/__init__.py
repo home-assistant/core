@@ -96,6 +96,15 @@ WS_TYPE_GET_PANELS = 'get_panels'
 SCHEMA_GET_PANELS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_GET_PANELS,
 })
+WS_TYPE_GET_THEMES = 'frontend/get_themes'
+SCHEMA_GET_THEMES = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_GET_THEMES,
+})
+WS_TYPE_GET_TRANSLATIONS = 'frontend/get_translations'
+SCHEMA_GET_TRANSLATIONS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_GET_TRANSLATIONS,
+    vol.Required('language'): str,
+})
 
 
 class Panel:
@@ -195,7 +204,12 @@ async def async_setup(hass, config):
         client = None
 
     hass.components.websocket_api.async_register_command(
-        WS_TYPE_GET_PANELS, websocket_handle_get_panels, SCHEMA_GET_PANELS)
+        WS_TYPE_GET_PANELS, websocket_get_panels, SCHEMA_GET_PANELS)
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_GET_THEMES, websocket_get_themes, SCHEMA_GET_THEMES)
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_GET_TRANSLATIONS, websocket_get_translations,
+        SCHEMA_GET_TRANSLATIONS)
     hass.http.register_view(ManifestJSONView)
 
     conf = config.get(DOMAIN, {})
@@ -262,16 +276,14 @@ async def async_setup(hass, config):
     for url in conf.get(CONF_EXTRA_HTML_URL_ES5, []):
         add_extra_html_url(hass, url, True)
 
-    async_setup_themes(hass, conf.get(CONF_THEMES))
-
-    hass.http.register_view(TranslationsView)
+    _async_setup_themes(hass, conf.get(CONF_THEMES))
 
     return True
 
 
-def async_setup_themes(hass, themes):
+@callback
+def _async_setup_themes(hass, themes):
     """Set up themes data and services."""
-    hass.http.register_view(ThemesView)
     hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
     if themes is None:
         hass.data[DATA_THEMES] = {}
@@ -400,40 +412,6 @@ class ManifestJSONView(HomeAssistantView):
         return web.Response(text=msg, content_type="application/manifest+json")
 
 
-class ThemesView(HomeAssistantView):
-    """View to return defined themes."""
-
-    requires_auth = False
-    url = '/api/themes'
-    name = 'api:themes'
-
-    @callback
-    def get(self, request):
-        """Return themes."""
-        hass = request.app['hass']
-
-        return self.json({
-            'themes': hass.data[DATA_THEMES],
-            'default_theme': hass.data[DATA_DEFAULT_THEME],
-        })
-
-
-class TranslationsView(HomeAssistantView):
-    """View to return backend defined translations."""
-
-    url = '/api/translations/{language}'
-    name = 'api:translations'
-
-    async def get(self, request, language):
-        """Return translations."""
-        hass = request.app['hass']
-
-        resources = await async_get_translations(hass, language)
-        return self.json({
-            'resources': resources,
-        })
-
-
 def _is_latest(js_option, request):
     """
     Return whether we should serve latest untranspiled code.
@@ -467,7 +445,7 @@ def _is_latest(js_option, request):
 
 
 @callback
-def websocket_handle_get_panels(hass, connection, msg):
+def websocket_get_panels(hass, connection, msg):
     """Handle get panels command.
 
     Async friendly.
@@ -480,3 +458,33 @@ def websocket_handle_get_panels(hass, connection, msg):
 
     connection.to_write.put_nowait(websocket_api.result_message(
         msg['id'], panels))
+
+
+@callback
+def websocket_get_themes(hass, connection, msg):
+    """Handle get themes command.
+
+    Async friendly.
+    """
+    connection.to_write.put_nowait(websocket_api.result_message(msg['id'], {
+        'themes': hass.data[DATA_THEMES],
+        'default_theme': hass.data[DATA_DEFAULT_THEME],
+    }))
+
+
+@callback
+def websocket_get_translations(hass, connection, msg):
+    """Handle get translations command.
+
+    Async friendly.
+    """
+    async def send_translations():
+        """Send a camera still."""
+        resources = await async_get_translations(hass, msg['language'])
+        connection.send_message_outside(websocket_api.result_message(
+            msg['id'], {
+                'resources': resources,
+            }
+        ))
+
+    hass.async_add_job(send_translations())
