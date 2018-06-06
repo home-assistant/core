@@ -1,5 +1,6 @@
 """
 Support for Worx Landroid mower.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.worxlandroid/
 """
@@ -32,12 +33,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the Worx Landroid sensors."""
     for typ in ('battery', 'state', 'error', 'battchargestate'):
         async_add_devices([WorxLandroidSensor(typ, config)])
+
 
 class WorxLandroidSensor(Entity):
     """Implementation of a Worx Landroid sensor."""
