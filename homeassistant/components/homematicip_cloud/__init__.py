@@ -16,6 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
+from homeassistant import config_entries, data_entry_flow
 
 REQUIREMENTS = ['homematicip==0.9.4']
 
@@ -94,6 +95,49 @@ async def async_setup(hass, config):
 
         hass.loop.create_task(_hmip.connect())
     return True
+
+async def async_setup_entry(hass, entry):
+    """Set up a bridge from a config entry."""
+    _LOGGER.error("async_setup_entry")
+    return await bridge.async_setup()
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    _LOGGER.error("async_unload_entry")
+
+
+@config_entries.HANDLERS.register(DOMAIN)
+class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
+    """HomematicIP Cloud config flow."""
+
+    VERSION = 1
+
+    def __init__(self):
+        """Initialize HomematicIP Cloud configuration flow."""
+        _LOGGER.error("config_flow init")
+
+    async def async_step_init(self, user_input=None):
+        """Handle a flow start."""
+        _LOGGER.error("config_flow step_init")
+        errors = {}
+
+        if user_input is not None:
+            _LOGGER.error("config_flow step_init user_input: %s", user_input)
+            return
+
+        return self.async_show_form(
+            step_id='init',
+            data_schema=vol.Schema({
+                vol.Optional(CONF_NAME): str,
+                vol.Required(CONF_ACCESSPOINT): str,
+                vol.Optional(CONF_AUTHTOKEN): str,
+            }),
+            errors=errors,
+        )
+
+    async def async_step_link(self, user_input=None):
+        """Attempt to link with the HomematicIP Cloud accesspoint."""
+        _LOGGER.error("config_flow step_link")
 
 
 class HomematicipConnector:

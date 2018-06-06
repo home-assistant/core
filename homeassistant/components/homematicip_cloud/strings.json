@@ -1,0 +1,31 @@
+{
+  "config": {
+    "title": "HomematicIP Accesspoint",
+    "step": {
+      "init": {
+        "title": "Pick HomematicIP Accesspoint",
+        "data": {
+          "accesspoint": "accesspoint",
+          "name": "",
+          "authtoken": ""
+        }
+      },
+      "link": {
+        "title": "Link Accesspoint",
+        "description": "Press the button on the accesspoint to register HomematicIP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)"
+      }
+    },
+    "error": {
+      "register_failed": "Failed to register, please try again",
+      "linking": "Unknown linking error occurred."
+    },
+    "abort": {
+      "discover_timeout": "Unable to discover Hue bridges",
+      "no_bridges": "No Philips Hue bridges discovered",
+      "all_configured": "All Philips Hue bridges are already configured",
+      "unknown": "Unknown error occurred",
+      "cannot_connect": "Unable to connect to the bridge",
+      "already_configured": "Bridge is already configured"
+    }
+  }
+}
