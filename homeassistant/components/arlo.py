@@ -80,7 +80,7 @@ def setup(hass, config):
     def hub_refresh(event_time):
         """Call ArloHub to refresh information."""
         _LOGGER.info("Updating Arlo Hub component")
-        hass.data[DATA_ARLO].hub.update(update_cameras=True,
+        hass.data[DATA_ARLO].update(update_cameras=True,
                                         update_base_station=True)
         dispatcher_send(hass, SIGNAL_UPDATE_ARLO)
 
