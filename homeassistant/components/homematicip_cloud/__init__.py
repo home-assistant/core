@@ -35,6 +35,7 @@ COMPONENTS = [
 CONF_NAME = 'name'
 CONF_ACCESSPOINT = 'accesspoint'
 CONF_AUTHTOKEN = 'authtoken'
+CONF_PIN = 'pin'
 
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN, default=[]): vol.All(cv.ensure_list, [vol.Schema({
@@ -71,24 +72,22 @@ async def async_setup(hass, config):
     hass.data.setdefault(DOMAIN, {})
     accesspoints = config.get(DOMAIN, [])
     for conf in accesspoints:
+        apid = conf[CONF_ACCESSPOINT].replace('-', '').upper()
+        if apid in hass.data[DOMAIN]:
+            _LOGGER.error('Accesspoint already loaded, %s.', apid)
+            continue
+
         _websession = async_get_clientsession(hass)
         _hmip = HomematicipConnector(hass, conf, _websession)
         try:
             await _hmip.init()
         except HmipConnectionError:
-            _LOGGER.error('Failed to connect to the HomematicIP server, %s.',
-                          conf.get(CONF_ACCESSPOINT))
+            _LOGGER.error('Failed to connect to the HomematicIP, %s', apid)
             return False
 
-        home = _hmip.home
-        home.name = conf.get(CONF_NAME)
-        home.label = HMIP_ACCESS_POINT
-        home.modelType = HMIP_HUB
-
-        hass.data[DOMAIN][home.id] = home
-        _LOGGER.info('Connected to the HomematicIP server, %s.',
-                     conf.get(CONF_ACCESSPOINT))
-        homeid = {ATTR_HOME_ID: home.id}
+        hass.data[DOMAIN][apid] = _hmip.home
+        _LOGGER.info('Connected to the HomematicIP, %s.', apid)
+        homeid = {ATTR_HOME_ID: apid}
         for component in COMPONENTS:
             hass.async_add_job(async_load_platform(hass, component, DOMAIN,
                                                    homeid, config))
@@ -96,10 +95,34 @@ async def async_setup(hass, config):
         hass.loop.create_task(_hmip.connect())
     return True
 
+
 async def async_setup_entry(hass, entry):
     """Set up a bridge from a config entry."""
-    _LOGGER.error("async_setup_entry")
-    return await bridge.async_setup()
+    from homematicip.base.base_connection import HmipConnectionError
+
+    apid = entry.data[CONF_ACCESSPOINT].replace('-', '').upper()
+    if apid in hass.data[DOMAIN]:
+        _LOGGER.error('Accesspoint already loaded, %s.', apid)
+        return False
+
+    _websession = async_get_clientsession(hass)
+    _hmip = HomematicipConnector(hass, entry.data, _websession)
+    try:
+        await _hmip.init()
+    except HmipConnectionError:
+        _LOGGER.error('Failed to connect to the HomematicIP, %s.', apid)
+        return False
+
+    hass.data[DOMAIN][apid] = _hmip.home
+    _LOGGER.info('Connected to the HomematicIP, %s.', apid)
+    homeid = {ATTR_HOME_ID: apid}
+    for component in COMPONENTS:
+        hass.async_add_job(async_load_platform(hass, component, DOMAIN,
+                                               homeid, entry.data))
+
+    hass.loop.create_task(_hmip.connect())
+    return True
+
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
@@ -108,7 +131,7 @@ async def async_unload_entry(hass, entry):
 
 @config_entries.HANDLERS.register(DOMAIN)
 class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
-    """HomematicIP Cloud config flow."""
+    """Config flow HomematicIP Cloud."""
 
     VERSION = 1
 
@@ -122,14 +145,30 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
         errors = {}
 
         if user_input is not None:
-            _LOGGER.error("config_flow step_init user_input: %s", user_input)
+            _LOGGER.error("config_flow step_init")
+            if user_input[CONF_ACCESSPOINT]:
+                apid = user_input[CONF_ACCESSPOINT].replace('-', '').upper()
+                if user_input[CONF_AUTHTOKEN]:
+                    # Add existing accespoint with SGTIN and auth token
+                    return self.async_create_entry(
+                        title=apid,
+                        data={
+                            'name': user_input[CONF_NAME],
+                            'accesspoint': apid,
+                            'authtoken': user_input[CONF_AUTHTOKEN],
+                        }
+                    )
+                # Init home and go to step link
+                # TO BE IMPLEMENTED
+                return await self.async_step_link()
             return
 
         return self.async_show_form(
             step_id='init',
             data_schema=vol.Schema({
-                vol.Optional(CONF_NAME): str,
                 vol.Required(CONF_ACCESSPOINT): str,
+                vol.Optional(CONF_PIN): str,
+                vol.Optional(CONF_NAME): str,
                 vol.Optional(CONF_AUTHTOKEN): str,
             }),
             errors=errors,
@@ -137,7 +176,22 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_link(self, user_input=None):
         """Attempt to link with the HomematicIP Cloud accesspoint."""
+        errors = {}
         _LOGGER.error("config_flow step_link")
+
+        return self.async_show_form(step_id='link', errors=errors)
+
+    async def _entry_from_accesspoint(self, home):
+        """Return a config entry from an initialized homematicip instance."""
+        return self.async_create_entry(
+            title=home.id.replace('-', '').upper(),
+            data={
+                'name': home.label,
+                'accesspoint': home.id.replace('-', '').upper(),
+                # pylint: disable=protected-access
+                'authtoken': home._connection._auth_token,
+            }
+        )
 
 
 class HomematicipConnector:
@@ -152,12 +206,15 @@ class HomematicipConnector:
         self._retry_task = None
         self._tries = 0
         self._accesspoint = config.get(CONF_ACCESSPOINT)
-        _authtoken = config.get(CONF_AUTHTOKEN)
 
         self.home = AsyncHome(hass.loop, websession)
-        self.home.set_auth_token(_authtoken)
+        self.home.set_auth_token(config.get(CONF_AUTHTOKEN))
 
         self.home.on_update(self.async_update)
+        self.home.name = config.get(CONF_NAME)
+        self.home.label = HMIP_ACCESS_POINT
+        self.home.modelType = HMIP_HUB
+
         self._accesspoint_connected = True
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.close())
@@ -281,9 +338,9 @@ class HomematicipGenericDevice(Entity):
     def name(self):
         """Return the name of the generic device."""
         name = self._device.label
-        if self._home.name is not None:
+        if (self._home.name is not None and self._home.name != ''):
             name = "{} {}".format(self._home.name, name)
-        if self.post is not None:
+        if (self.post is not None and self.post != ''):
             name = "{} {}".format(name, self.post)
         return name
 
