@@ -19,7 +19,7 @@ DEPENDENCIES = ['netgear_lte']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(ATTR_TARGET): cv.string,
+    vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -39,6 +39,7 @@ class NetgearNotifyService(BaseNotificationService):
 
     async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        target = kwargs.get(ATTR_TARGET, self.phone)
-        if target is not None and message:
-            await self.lte_data.eternalegypt.sms(target, message)
+        targets = kwargs.get(ATTR_TARGET, self.phone)
+        if targets and message:
+            for target in targets:
+                await self.lte_data.eternalegypt.sms(target, message)
