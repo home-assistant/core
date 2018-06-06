@@ -58,14 +58,15 @@ def setup(hass, config):
             return False
 
         # assign refresh period to base station thread
-        try:
-            if arlo.base_stations:
-                arlo_base_station = arlo.base_stations[0]
-                arlo_base_station.refresh_rate = scan_interval.total_seconds()
-        except (AttributeError, IndexError):
+        arlo_base_station = next((
+            station for station in arlo.base_stations), None)
+
+        if arlo_base_station is None:
             return False
 
-        hass.data[DATA_ARLO] = ArloHub(arlo)
+        arlo_base_station.refresh_rate = scan_interval.total_seconds()
+        hass.data[DATA_ARLO] = arlo
+
     except (ConnectTimeout, HTTPError) as ex:
         _LOGGER.error("Unable to connect to Netgear Arlo: %s", str(ex))
         hass.components.persistent_notification.create(
@@ -89,11 +90,3 @@ def setup(hass, config):
     # register scan interval for ArloHub
     track_time_interval(hass, hub_refresh, scan_interval)
     return True
-
-
-class ArloHub(object):
-    """Representation of the base Arlo hub component."""
-
-    def __init__(self, hub):
-        """Initialize the entity."""
-        self.hub = hub

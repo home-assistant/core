@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanel, PLATFORM_SCHEMA)
@@ -40,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Arlo Alarm Control Panels."""
-    arlo = hass.data[DATA_ARLO].hub
+    arlo = hass.data[DATA_ARLO]
 
     if not arlo.base_stations:
         return
@@ -69,15 +70,15 @@ class ArloBaseStation(AlarmControlPanel):
         """Return icon."""
         return ICON
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
 
+    @callback
     def _update_callback(self):
         """Call update method."""
-        self.schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state()
 
     @property
     def state(self):
@@ -86,7 +87,7 @@ class ArloBaseStation(AlarmControlPanel):
 
     def update(self):
         """Update the state of the device."""
-        _LOGGER.info("Updating Arlo Alarm Control Panel %s", self.name)
+        _LOGGER.debug("Updating Arlo Alarm Control Panel %s", self.name)
         mode = self._base_station.mode
         if mode:
             self._state = self._get_state_from_mode(mode)

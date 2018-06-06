@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Arlo IP Camera."""
-    arlo = hass.data.get(DATA_ARLO).hub
+    arlo = hass.data[DATA_ARLO]
     if not arlo:
         return False
 
@@ -142,11 +142,6 @@ class ArloCam(Camera):
         return DEFAULT_BRAND
 
     @property
-    def should_poll(self):
-        """Camera should poll periodically."""
-        return False
-
-    @property
     def motion_detection_enabled(self):
         """Return the camera motion detection status."""
         return self._motion_status
@@ -154,7 +149,7 @@ class ArloCam(Camera):
     def set_base_station_mode(self, mode):
         """Set the mode in the base station."""
         # Get the list of base stations identified by library
-        base_stations = self.hass.data.get(DATA_ARLO).hub.base_stations
+        base_stations = self.hass.data[DATA_ARLO].base_stations
 
         # Some Arlo cameras does not have base station
         # So check if there is base station detected first
