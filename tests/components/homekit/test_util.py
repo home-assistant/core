@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant.core import State
 from homeassistant.components.homekit.const import (
     CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE)
+    FEATURE_PLAY_PAUSE, TYPE_OUTLET)
 from homeassistant.components.homekit.util import (
     convert_to_float, density_to_air_quality, dismiss_setup_message,
     show_setup_message, temperature_to_homekit, temperature_to_states,
@@ -15,7 +15,7 @@ from homeassistant.components.homekit.util import validate_entity_config \
 from homeassistant.components.persistent_notification import (
     ATTR_MESSAGE, ATTR_NOTIFICATION_ID, DOMAIN)
 from homeassistant.const import (
-    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, STATE_UNKNOWN,
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, STATE_UNKNOWN,
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import async_mock_service
@@ -30,7 +30,8 @@ def test_validate_entity_config():
                     {CONF_FEATURE: 'invalid_feature'}]}},
                {'media_player.test': {CONF_FEATURE_LIST: [
                     {CONF_FEATURE: FEATURE_ON_OFF},
-                    {CONF_FEATURE: FEATURE_ON_OFF}]}}, ]
+                    {CONF_FEATURE: FEATURE_ON_OFF}]}},
+               {'switch.test': {CONF_TYPE: 'invalid_type'}}]
 
     for conf in configs:
         with pytest.raises(vol.Invalid):
@@ -56,6 +57,8 @@ def test_validate_entity_config():
     assert vec({'media_player.demo': config}) == \
         {'media_player.demo': {CONF_FEATURE_LIST:
                                {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
+    assert vec({'switch.demo': {CONF_TYPE: TYPE_OUTLET}}) == \
+        {'switch.demo': {CONF_TYPE: TYPE_OUTLET}}
 
 
 def test_validate_media_player_features():
