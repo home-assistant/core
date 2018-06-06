@@ -311,8 +311,9 @@ def test_unknown_command(websocket_client):
         'type': 'unknown_command',
     })
 
-    msg = yield from websocket_client.receive()
-    assert msg.type == WSMsgType.close
+    msg = yield from websocket_client.receive_json()
+    assert not msg['success']
+    assert msg['error']['code'] == wapi.ERR_UNKNOWN_COMMAND
 
 
 async def test_auth_with_token(hass, aiohttp_client, hass_access_token):
