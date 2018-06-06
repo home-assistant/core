@@ -133,19 +133,28 @@ class TestUVCSetup(unittest.TestCase):
 
     @mock.patch.object(uvc, 'UnifiVideoCamera')
     @mock.patch('uvcclient.nvr.UVCRemote')
-    def test_setup_nvr_errors(self, mock_remote, mock_uvc):
-        """Test for NVR errors."""
-        errors = [nvr.NotAuthorized, nvr.NvrError,
-                  requests.exceptions.ConnectionError]
+    def setup_nvr_errors(self, error, mock_remote, mock_uvc):
+        """Setup test for NVR errors."""
         config = {
             'platform': 'uvc',
             'nvr': 'foo',
             'key': 'secret',
         }
-        for error in errors:
-            mock_remote.return_value.index.side_effect = error
-            assert setup_component(self.hass, 'camera', config)
-            assert not mock_uvc.called
+        mock_remote.return_value.index.side_effect = error
+        assert setup_component(self.hass, 'camera', {'camera': config})
+        assert not mock_uvc.called
+
+    def test_setup_nvr_error_notauthorized(self):
+        """Test for error: nvr.NotAuthorized"""
+        self.setup_nvr_errors(nvr.NotAuthorized)
+
+    def test_setup_nvr_error_nvrerror(self):
+        """Test for error: nvr.NvrError"""
+        self.setup_nvr_errors(nvr.NvrError)
+
+    def test_setup_nvr_error_connectionerror(self):
+        """Test for error: requests.exceptions.ConnectionError"""
+        self.setup_nvr_errors(requests.exceptions.ConnectionError)
 
 
 class TestUVC(unittest.TestCase):
