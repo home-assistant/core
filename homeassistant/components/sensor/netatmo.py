@@ -25,8 +25,8 @@ CONF_STATION = 'station'
 
 DEPENDENCIES = ['netatmo']
 
-# NetAtmo Data is uploaded to server every 10 minutes
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
+# This is the NetAtmo data upload interval in seconds
+NETATMO_UPDATE_INTERVAL = 600
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS, None,
@@ -300,14 +300,15 @@ class NetAtmoData(object):
         self.data = None
         self.station_data = None
         self.station = station
+        self.update = Throttle(timedelta(seconds= \
+                          NETATMO_UPDATE_INTERVAL))(self._update)
 
     def get_module_names(self):
         """Return all module available on the API as a list."""
         self.update()
         return self.data.keys()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    def _update(self):
         """Call the Netatmo API to update the data."""
         import pyatmo
         self.station_data = pyatmo.WeatherStationData(self.auth)
@@ -317,3 +318,22 @@ class NetAtmoData(object):
                 station=self.station, exclude=3600)
         else:
             self.data = self.station_data.lastData(exclude=3600)
+
+        newinterval = 0
+        for module in self.data.keys():
+            if 'When' in self.data[module]:
+                newinterval = self.data[module]['When']
+                break
+        if newinterval:
+            # Try and estimate when fresh data will be available
+            newinterval += NETATMO_UPDATE_INTERVAL - time()
+            if newinterval >= NETATMO_UPDATE_INTERVAL - 30:
+                newinterval = NETATMO_UPDATE_INTERVAL
+            elif newinterval < NETATMO_UPDATE_INTERVAL / 2:
+                # Never hammer the NetAtmo API more than
+                # twice per update interval
+                newinterval = NETATMO_UPDATE_INTERVAL / 2
+            _LOGGER.info("NetAtmo refresh interval reset to %d seconds", \
+                         newinterval)
+            self.update = Throttle(timedelta(seconds=newinterval), \
+                                   immediate_throttle=True)(self._update)
