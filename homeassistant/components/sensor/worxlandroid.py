@@ -1,6 +1,5 @@
 """
 Support for Worx Landroid mower.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.worxlandroid/
 """
@@ -33,30 +32,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
-ERROR_STATE = [
-    'blade-blocked',
-    'repositioning-error',
-    'wire-bounced',
-    'blade-blocked',
-    'outside-wire',
-    'mower-lifted',
-    'alarm-6',
-    'upside-down',
-    'alarm-8',
-    'collision-sensor-blocked',
-    'mower-tilted',
-    'charge-error',
-    'battery-error'
-]
-
-
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices,
                          discovery_info=None):
     """Set up the Worx Landroid sensors."""
-    for typ in ('battery', 'state'):
+    for typ in ('battery', 'state', 'error', 'battchargestate'):
         async_add_devices([WorxLandroidSensor(typ, config)])
-
 
 class WorxLandroidSensor(Entity):
     """Implementation of a Worx Landroid sensor."""
@@ -74,7 +55,20 @@ class WorxLandroidSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'worxlandroid-{}'.format(self.sensor)
+        if self.sensor == 'battery':
+            return 'WorxLandroid - Battery'
+            
+        # sensor state
+        elif self.sensor == 'state':
+            return 'WorxLandroid - State'
+            
+        # sensor error
+        elif self.sensor == 'error':
+            return 'WorxLandroid - Error'
+            
+        # sensor battery charger state
+        elif self.sensor == 'battchargestate':
+            return 'WorxLandroid - BatteryChargerState'
 
     @property
     def state(self):
@@ -121,43 +115,51 @@ class WorxLandroidSensor(Entity):
             if self.sensor == 'battery':
                 self._state = data['perc_batt']
 
-            # sensor error
-            elif self.sensor == 'error':
-                self._state = 'no' if self.get_error(data) is None else 'yes'
-
             # sensor state
             elif self.sensor == 'state':
-                self._state = self.get_state(data)
+                self._state = data['state']
 
+            # sensor error
+            elif self.sensor == 'error':
+                self._state = data['message']
+                #self._state = 'no' if self.get_error(data) is None else 'yes'
+                
+            # sensor battery charger state
+            elif self.sensor == 'battchargestate':
+                self._state = data['batteryChargerState']
+                
         else:
             if self.sensor == 'error':
                 self._state = 'no'
 
-    @staticmethod
-    def get_error(obj):
-        """Get the mower error."""
-        for i, err in enumerate(obj['allarmi']):
-            if i != 2:  # ignore wire bounce errors
-                if err == 1:
-                    return ERROR_STATE[i]
-
-        return None
-
-    def get_state(self, obj):
-        """Get the state of the mower."""
-        state = self.get_error(obj)
-
-        if state is None:
-            state_obj = obj['settaggi']
-
-            if state_obj[14] == 1:
-                return 'manual-stop'
-            elif state_obj[5] == 1 and state_obj[13] == 0:
-                return 'charging'
-            elif state_obj[5] == 1 and state_obj[13] == 1:
-                return 'charging-complete'
-            elif state_obj[15] == 1:
-                return 'going-home'
-            return 'mowing'
-
-        return state
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        if self.sensor == 'battery':
+            
+            if self._state == '100':
+                return 'mdi:battery'
+            
+            elif self._state > '80':
+                return 'mdi:battery-80'
+            
+            elif self._state > '60':
+                return 'mdi:battery-60'
+            
+            elif self._state > '40':
+                return 'mdi:battery-40'
+            
+            elif self._state > '20':
+                return 'mdi:battery-20'
+                
+        # sensor state
+        elif self.sensor == 'state':
+            return 'mdi:robot-vacuum'
+            
+        # sensor error
+        elif self.sensor == 'error':
+            return 'mdi:alert-circle-outline'
+            
+        # sensor battery charger state
+        elif self.sensor == 'battchargestate':
+            return 'mdi:battery-charging-30'
