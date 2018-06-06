@@ -316,11 +316,11 @@ class Throttle(object):
 
             try:
                 if force or utcnow() - throttle[1] > self.min_time:
-                    result = method(*args, **kwargs)
                     throttle[1] = utcnow()
+                    result = method(*args, **kwargs)
                     return result
-
                 return throttled_value()
+
             finally:
                 throttle[0].release()
 
