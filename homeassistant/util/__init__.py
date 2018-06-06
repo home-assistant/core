@@ -248,16 +248,23 @@ class Throttle(object):
     Pass keyword argument `no_throttle=True` to the wrapped method to make
     the call not throttled.
 
+    Initialize the decorator with the optional `immediate_throttle=True`
+    argument to ensure that the wrapped method is not called until the
+    first `min_time` interval has passed. This option overrides the above
+    `no_throttle` argument.
+
     Decorator takes in an optional second timedelta interval to throttle the
     'no_throttle' calls.
 
     Adds a datetime attribute `last_call` to the method.
     """
 
-    def __init__(self, min_time, limit_no_throttle=None):
+    def __init__(self, min_time, limit_no_throttle=None,
+                 immediate_throttle=False):
         """Initialize the throttle."""
         self.min_time = min_time
         self.limit_no_throttle = limit_no_throttle
+        self.immediate_throttle = immediate_throttle
 
     def __call__(self, method):
         """Caller for the throttle."""
@@ -311,10 +318,16 @@ class Throttle(object):
             if not throttle[0].acquire(False):
                 return throttled_value()
 
-            # Check if method is never called or no_throttle is given
-            force = kwargs.pop('no_throttle', False) or not throttle[1]
-
             try:
+                if self.immediate_throttle:
+                    # This only applies the very first time
+                    throttle[1] = utcnow()
+                    self.immediate_throttle = False
+                    return throttled_value()
+
+                # Check if method is never called or no_throttle is given
+                force = kwargs.pop('no_throttle', False) or not throttle[1]
+
                 if force or utcnow() - throttle[1] > self.min_time:
                     throttle[1] = utcnow()
                     result = method(*args, **kwargs)
