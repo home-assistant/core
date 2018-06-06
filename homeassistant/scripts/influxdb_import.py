@@ -19,6 +19,7 @@ def run(script_args: List) -> int:
     from homeassistant.helpers import state as state_helper
     from homeassistant.core import State
     from homeassistant.core import HomeAssistantError
+    from homeassistant.exceptions import InvalidStateError
 
     parser = argparse.ArgumentParser(
         description="import data to influxDB.")
@@ -174,7 +175,7 @@ def run(script_args: List) -> int:
 
             try:
                 state = State.from_dict(event_data.get('new_state'))
-            except HomeAssistantError:
+            except (HomeAssistantError, InvalidStateError) as e:
                 invalid_points.append(event_data)
 
             if not state:
