@@ -272,8 +272,7 @@ class AxisDeviceEvent(Entity):
 
     def _update_callback(self):
         """Update the sensor's state, if needed."""
-        self.update()
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     @property
     def name(self):
