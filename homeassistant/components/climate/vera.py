@@ -101,10 +101,6 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         if power:
             return convert(power, float, 0.0)
 
-    def update(self):
-        """Handle state updates."""
-        self._state = self.vera_device.get_hvac_mode()
-
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
