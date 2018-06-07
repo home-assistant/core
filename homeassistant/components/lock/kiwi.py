@@ -104,5 +104,7 @@ class KiwiLock(LockDevice):
             _LOGGER.error("failed to open door")
         else:
             self._state = STATE_UNLOCKED
-            async_call_later(self.hass, UNLOCK_MAINTAIN_TIME,
-                             self.clear_unlock_state)
+            self.hass.add_job(
+                async_call_later, self.hass, UNLOCK_MAINTAIN_TIME,
+                self.clear_unlock_state
+            )
