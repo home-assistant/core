@@ -29,7 +29,7 @@ from homeassistant.const import (STATE_ON, STATE_OFF, STATE_UNKNOWN,
 
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['stream_magic==0.14']
+REQUIREMENTS = ['stream_magic==0.16']
 DOMAIN = 'cambridgeaudio'
 _LOGGER = logging.getLogger(__name__)
 
@@ -104,7 +104,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if discovery_info is not None:
             addr = discovery_info.get('host')
             port = discovery_info.get('port')
-            name = discovery_info.get('name')
+
+            # if a name was set in the config, use it
+            if name is None:
+                name = discovery_info.get('name')
+
             scpd_url = discovery_info.get('ssdp_description')
             if addr not in KNOWN_HOSTS:
                 smdevice = cadevice.StreamMagicDevice(addr, port,
@@ -146,6 +150,7 @@ class CADevice(MediaPlayerDevice):
         self._album = None
         self._trackno = None
         self._title = None
+        self._tracklen = None
         self._position = None
 
     @property
@@ -216,7 +221,7 @@ class CADevice(MediaPlayerDevice):
     @property
     def media_position(self):
         """Return position of current playing media in seconds."""
-        pass
+        return self._position
 
     @property
     def volume_level(self):
@@ -248,8 +253,15 @@ class CADevice(MediaPlayerDevice):
             self._state = STATE_IDLE
 
     def media_seek(self, position):
-        """Jump to the specified position within the current track."""
-        pass
+        """Jump to the specified percent position within the current track."""
+        abs_pos = round(self._to_seconds(self._tracklen) * (position/100), 2)
+        abs_pos_h = int(abs_pos / 3600)
+        abs_pos_m = int((abs_pos % 3600) / 60)
+        abs_pos_s = int((abs_pos % 3600) % 60)
+        abs_pos = '{:01d}:{:02d}:{:02d}'.format(abs_pos_h,
+                                                abs_pos_m,
+                                                abs_pos_s)
+        self._smdevice.trnsprt_seek(abs_pos)
 
     def media_stop(self):
         """Stop playing the current media."""
@@ -275,7 +287,7 @@ class CADevice(MediaPlayerDevice):
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle play."""
-        pass
+        self._smdevice.set_shuffle(shuffle)
 
     def set_volume_level(self, volume):
         """Set the current volume level. This only works in pre-amp mode."""
@@ -293,6 +305,11 @@ class CADevice(MediaPlayerDevice):
         if self._smdevice.get_power_state() == 'idle':
             self._smdevice.power_on()
             self._pwstate = STATE_ON
+
+    def _to_seconds(self, timespec):
+        """Helper function to translate a h:mm:ss time spec into seconds."""
+        hours, minutes, seconds = timespec.split(':')
+        return int(hours) * 60 + int(minutes) * 60 + int(seconds)
 
     def update(self):
         """Fetch new state data from the media_player."""
@@ -328,6 +345,13 @@ class CADevice(MediaPlayerDevice):
                 self._album = dev.get_current_track_info()['album']
                 self._trackno = dev.get_current_track_info()['origTrackNo']
                 self._title = dev.get_current_track_info()['trackTitle']
+                self._tracklen = dev.get_current_track_info()['trackLength']
+
+                # get the current playback position as percentage of the track
+                pos = dev.get_current_track_info()['currentPos']
+                pos = self._to_seconds(pos)
+                tracklen = self._to_seconds(self._tracklen)
+                self._position = "{:.1f}".format(float(pos / tracklen * 100))
             elif self._audio_source == "internet radio":
                 self._artist = dev.get_playback_details()['artist']
                 self._album = dev.get_playback_details()['stream']
