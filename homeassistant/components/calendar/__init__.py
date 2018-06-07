@@ -6,7 +6,7 @@ https://home-assistant.io/components/calendar/
 """
 import asyncio
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 import re
 
 from homeassistant.components.google import (
@@ -205,9 +205,14 @@ class CalendarEventView(http.HomeAssistantView):
 
     async def get(self, request):
         """Return calendar events."""
-        if hasattr(self.device, "update"):
-            self.device.update()
-        elif hasattr(self.device, "async_update"):
-            await self.device.async_update()
-        _event_list = getattr(self.device.data, "event_list", [])
-        return self.json(_event_list)
+        start = request.query.get('start')
+        end = request.query.get('end')
+        if None in (start, end):
+            return []
+        try:
+            start_date = datetime.fromtimestamp(float(start))
+            end_date = datetime.fromtimestamp(float(end))
+        except (ValueError, AttributeError):
+            return []
+        event_list = await self.device.async_get_events(start_date, end_date)
+        return self.json(event_list)

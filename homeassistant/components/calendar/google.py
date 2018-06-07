@@ -51,6 +51,10 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
 
         super().__init__(hass, data)
 
+    async def async_get_events(self, start_date, end_date):
+        """Get all events in a specific time frame."""
+        return await self.data.async_get_events(start_date, end_date)
+
 
 class GoogleCalendarData(object):
     """Class to utilize calendar service object to get next event."""
@@ -63,11 +67,8 @@ class GoogleCalendarData(object):
         self.search = search
         self.ignore_availability = ignore_availability
         self.event = None
-        self._event_list = []
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data."""
+    def _prepare_query(self):
         from httplib2 import ServerNotFoundError
 
         try:
@@ -75,12 +76,37 @@ class GoogleCalendarData(object):
         except ServerNotFoundError:
             _LOGGER.warning("Unable to connect to Google, using cached data")
             return False
-
         params = dict(DEFAULT_GOOGLE_SEARCH_PARAMS)
-        params['timeMin'] = dt.now().isoformat('T')
         params['calendarId'] = self.calendar_id
         if self.search:
             params['q'] = self.search
+
+        return service, params
+
+    async def async_get_events(self, start_date, end_date):
+        """Get all events in a specific time frame."""
+        service, params = self._prepare_query()
+        params['timeMin'] = start_date.isoformat('T')
+        params['timeMax'] = end_date.isoformat('T')
+
+        events = service.events()  # pylint: disable=no-member
+        result = events.list(**params).execute()
+        items = result.get('items', [])
+        event_list = []
+        for item in items:
+            if (not self.ignore_availability
+                    and 'transparency' in item.keys()):
+                if item['transparency'] == 'opaque':
+                    event_list.append(item)
+            else:
+                event_list.append(item)
+        return event_list
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data."""
+        service, params = self._prepare_query()
+        params['timeMin'] = dt.now().isoformat('T')
 
         events = service.events()  # pylint: disable=no-member
         result = events.list(**params).execute()
@@ -92,18 +118,11 @@ class GoogleCalendarData(object):
             if (not self.ignore_availability
                     and 'transparency' in item.keys()):
                 if item['transparency'] == 'opaque':
-                    self._event_list.append(item)
-                    if new_event is None:
-                        new_event = item
-            else:
-                self._event_list.append(item)
-                if new_event is None:
                     new_event = item
+                    break
+            else:
+                new_event = item
+                break
 
         self.event = new_event
         return True
-
-    @property
-    def event_list(self):
-        """Return calendar event list."""
-        return self._event_list

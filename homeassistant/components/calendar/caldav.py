@@ -120,6 +120,11 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         attributes = super().device_state_attributes
         return attributes
 
+    async def async_get_events(self, start_date, end_date):
+        """Get all events in a specific time frame."""
+        print("EEE")
+        return await self.data.async_get_events(start_date, end_date)
+
 
 class WebDavCalendarData(object):
     """Class to utilize the calendar dav client object to get next event."""
@@ -130,26 +135,13 @@ class WebDavCalendarData(object):
         self.include_all_day = include_all_day
         self.search = search
         self.event = None
-        self._event_list = []
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Get the latest data."""
-        # We have to retrieve the results for the whole day as the server
-        # won't return events that have already started
-        results = self.calendar.date_search(
-            dt.start_of_local_day(),
-            dt.start_of_local_day() + timedelta(days=1)
-        )
-
+    async def async_get_events(self, start_date, end_date):
+        """Get all events in a specific time frame."""
         # Get event list from the current calendar
-        # Should we let users chose nb day before/after today ?
-        event_list = self.calendar.date_search(
-            dt.start_of_local_day() - timedelta(days=10),
-            dt.start_of_local_day() + timedelta(days=31)
-        )
-        self._event_list = []
-        for event in event_list:
+        vevent_list = self.calendar.date_search(start_date, end_date)
+        event_list = []
+        for event in vevent_list:
             vevent = event.instance.vevent
             data = {
                 "uid": vevent.uid.value,
@@ -170,7 +162,21 @@ class WebDavCalendarData(object):
             data['start'] = _get_date(data['start']).isoformat()
             data['end'] = _get_date(data['end']).isoformat()
 
-            self._event_list.append(data)
+            event_list.append(data)
+
+        print(event_list)
+        return event_list
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Get the latest data."""
+        # We have to retrieve the results for the whole day as the server
+        # won't return events that have already started
+        results = self.calendar.date_search(
+            dt.start_of_local_day(),
+            dt.start_of_local_day() + timedelta(days=1)
+        )
+
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
@@ -264,8 +270,3 @@ class WebDavCalendarData(object):
             enddate = obj.dtstart.value + timedelta(days=1)
 
         return enddate
-
-    @property
-    def event_list(self):
-        """Return calendar event list."""
-        return self._event_list
