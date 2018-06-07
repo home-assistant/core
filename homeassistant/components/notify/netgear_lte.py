@@ -19,7 +19,7 @@ DEPENDENCIES = ['netgear_lte']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
+    vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
