@@ -22,15 +22,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'ebusd'
 CONF_CIRCUIT = 'circuit'
-CONF_TIME = 0
+CACHE_TTL = 900
 
 BASE_COMMAND = 'ebusctl read -m {2} -c {0} {1}'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
-SCAN_INTERVAL = timedelta(seconds=30)
 
 SENSOR_TYPES = {
-    'hc1ActualFlowTempDesired': ['Hc1ActualFlowTempDesired','°C', 'mdi:thermometer', 'decimal'],
+    'hc1ActualFlowTempDesired': ['Hc1ActualFlowTempDesired', '°C', 'mdi:thermometer', 'decimal'],
     'hc1MaxFlowTempDesired': ['Hc1MaxFlowTempDesired', '°C', 'mdi:thermometer', 'decimal'],
     'hc1MinFlowTempDesired': ['Hc1MinFlowTempDesired', '°C', 'mdi:thermometer', 'decimal'],
     'hc1PumpStatus': ['Hc1PumpStatus', None, 'mdi:toggle-switch', 'switch'],
@@ -66,7 +65,6 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CIRCUIT): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TIME, default=0): cv.positive_int,
     vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
@@ -75,14 +73,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Ebusd..."""
     name = config.get(CONF_NAME)
     circuit = config.get(CONF_CIRCUIT)
-    time = config.get(CONF_TIME)
-    data = EbusdData(circuit,time)
-			
-    dev = []
-    for variable in config[CONF_MONITORED_VARIABLES]:
-        dev.append(Ebusd(data, variable, name))
-
-    add_devices(dev)
+    data = EbusdData(circuit)
+    try:
+        subprocess.check_output('ebusctl state', shell=True, timeout=5)
+	
+        dev = []
+        for variable in config[CONF_MONITORED_VARIABLES]:
+            dev.append(Ebusd(data, variable, name))
+        
+        add_devices(dev)
+    except subprocess.CalledProcessError:
+        _LOGGER.error("ebusd not available")
+        return
 
 
 def timer_format(string):
@@ -94,41 +96,33 @@ def timer_format(string):
     return ' - '.join(r)
 
 
-def switch_format(value):
-    if value == 1:
-        return STATE_ON
-    return STATE_OFF
-
-
 class EbusdData(object):
     """Get the latest data from Ebusd."""
 
-    def __init__(self, circuit, time):
+    def __init__(self, circuit):
         """Initialize the data object."""
         self._circuit = circuit
-        self._time = time
-        self.value = None
-    
+        self.value = {}
+
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, name):
         """Call the Ebusd API to update the data."""
-        command = BASE_COMMAND.format(self._circuit, name, self._time)
+        command = BASE_COMMAND.format(self._circuit, name, CACHE_TTL)
         try:
             _LOGGER.debug("Receiving data from ebusdctl for %s: %s", name, command)
-            r = subprocess.check_output(command,shell=True, timeout=8)
+            r = subprocess.check_output(command, shell=True, timeout=8)
             command_result = r.strip().decode('utf-8')
-            if command_result == 'Element not found':
+            if 'not found' in command_result:
                 _LOGGER.warning('Element not found: %s', name)
-                self.value = None
+                raise RuntimeError('Element not found')
             else:
-                self.value = command_result
-                return True
+                self.value[name] = command_result
         except subprocess.CalledProcessError:
             _LOGGER.error("Command failed: %s", command)
-            return False
+            raise RuntimeError('Command failed')
         except subprocess.TimeoutExpired:
-            _LOGGER.error("Timeout for command: %s", command)
-            return False
+            _LOGGER.error("Timeout expired for command: %s", command)
+            raise RuntimeError('Timeout expired')
 
 
 class Ebusd(Entity):
@@ -137,7 +131,6 @@ class Ebusd(Entity):
     def __init__(self, data, sensor_type, name):
         """Initialize the sensor."""
         self._state = None
-        self._last_updated = None
         self._client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
@@ -165,24 +158,16 @@ class Ebusd(Entity):
         """Return the unit of measurement."""
         return self._unit_of_measurement
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of this device."""
-        attr = {}
-        if self._last_updated is not None:
-            attr['lastUpdated'] = self._last_updated
-        return attr
-
     def update(self):
         """Fetch new state data for the sensor."""
-        if self._last_updated is None or (datetime.now() - self._last_updated) > timedelta(minutes=15):
-            update_result = self.data.update(self._name)
-
-        if update_result is True:
-            if self._type == 'switch':
-                self._state = switch_format(self.data.value)
-            elif self._type == 'time-schedule':
-                self._state = timer_format(self.data.value)
-            elif self._type == 'decimal':
-                self._state = format(float(self.data.value), '.1f')
-            self._last_updated = datetime.now()
+        try:
+            self.data.update(self._name)
+            if self._name in self.data.value:
+                if self._type == 'switch':
+                    self._state = STATE_ON if self.data.value[self._name] == 1 else STATE_OFF
+                elif self._type == 'time-schedule':
+                    self._state = timer_format(self.data.value[self._name])
+                elif self._type == 'decimal':
+                    self._state = format(float(self.data.value[self._name]), '.1f')
+        except RuntimeError:
+            _LOGGER.debug("EbusdData.update exception")
