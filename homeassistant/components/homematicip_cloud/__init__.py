@@ -18,6 +18,8 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
 
 from .const import DOMAIN, CONF_ACCESSPOINT, CONF_AUTHTOKEN, CONF_NAME
+# Loading the config flow file will register the flow
+from .config_flow import HomematicipCloudFlowHandler
 
 REQUIREMENTS = ['homematicip==0.9.4']
 
@@ -76,11 +78,12 @@ async def async_setup(hass, config):
         try:
             await _hmip.init()
         except HmipConnectionError:
-            _LOGGER.error('Failed to connect to the HomematicIP, %s', apid)
+            _LOGGER.error('Failed to connect to the HomematicIP server, %s',
+                          apid)
             return False
 
         hass.data[DOMAIN][apid] = _hmip.home
-        _LOGGER.info('Connected to the HomematicIP, %s.', apid)
+        _LOGGER.info('Connected to the HomematicIP server, %s.', apid)
         homeid = {ATTR_HOME_ID: apid}
         for component in COMPONENTS:
             hass.async_add_job(async_load_platform(hass, component, DOMAIN,
@@ -104,11 +107,11 @@ async def async_setup_entry(hass, entry):
     try:
         await _hmip.init()
     except HmipConnectionError:
-        _LOGGER.error('Failed to connect to the HomematicIP, %s.', apid)
+        _LOGGER.error('Failed to connect to the HomematicIP sever, %s.', apid)
         return False
 
     hass.data[DOMAIN][apid] = _hmip.home
-    _LOGGER.info('Connected to the HomematicIP, %s.', apid)
+    _LOGGER.info('Connected to HomematicIP server, %s.', apid)
     homeid = {ATTR_HOME_ID: apid}
     for component in COMPONENTS:
         hass.async_add_job(async_load_platform(hass, component, DOMAIN,
@@ -120,7 +123,8 @@ async def async_setup_entry(hass, entry):
 
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
-    _LOGGER.error("async_unload_entry")
+    _LOGGER.error("async_unload_entry not implemented yet")
+    return False
 
 
 class HomematicipConnector:
