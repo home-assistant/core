@@ -311,6 +311,9 @@ omit =
     homeassistant/components/wink/*
     homeassistant/components/*/wink.py
 
+    homeassistant/components/wirelesstag.py
+    homeassistant/components/*/wirelesstag.py
+
     homeassistant/components/xiaomi_aqara.py
     homeassistant/components/*/xiaomi_aqara.py
 
