@@ -18,6 +18,12 @@ DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_RSSI_LEVEL = 'rssi_level'
+ATTR_STATUS = 'status'
+ATTR_LOCK_TIMER = 'priority_lock_timer'
+ATTR_LOCK_LEVEL = 'priority_lock_level'
+ATTR_LOCK_ORIG = 'priority_lock_originator'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Tahoma switches."""
@@ -35,15 +41,22 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
         """Initialize the switch."""
         super().__init__(tahoma_device, controller)
         self._state = STATE_OFF
+        self._skip_update = False
 
     def update(self):
         """Update method."""
+        # Postpone the immediate state check for changes that take time.
+        if self._skip_update:
+            self._skip_update = False
+            return
+
         self.controller.get_states([self.tahoma_device])
         if self.tahoma_device.type == 'io:OnOffLightIOComponent':
             if self.tahoma_device.active_states['core:OnOffState'] == 'on':
                 self._state = STATE_ON
             else:
                 self._state = STATE_OFF
+        _LOGGER.debug("Update %s, state: %s", self._name, self._state)
 
     @property
     def device_class(self):
@@ -59,8 +72,7 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
             self.toggle()
         else:
             self.apply_action('on')
-            # FIXME: State immediately overwritten by update function.
-            # How to deferre update, till REST request is done?
+            self._skip_update = True
             self._state = STATE_ON
 
     def turn_off(self, **kwargs):
@@ -70,8 +82,7 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
             return
         else:
             self.apply_action('off')
-            # FIXME: State immediately overwritten by update function.
-            # How to deferre update, till REST request is done?
+            self._skip_update = True
             self._state = STATE_OFF
 
     def toggle(self, **kwargs):
@@ -83,7 +94,6 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
         """Get whether the switch is in on state."""
         if self.tahoma_device.type == 'rts:GarageDoor4TRTSComponent':
             return False
-        _LOGGER.debug("Is on (%s): %s", self._name, self._state)
         return bool(self._state == STATE_ON)
 
     @property
@@ -94,24 +104,21 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
         if super_attr is not None:
             attr.update(super_attr)
 
-        if 'core:OnOffState' in self.tahoma_device.active_states:
-            attr['On Off'] = self.tahoma_device.active_states[
-                'core:OnOffState']
-        if 'core:PriorityLockTimerState' in self.tahoma_device.active_states:
-            attr['Priority Lock Timer'] = \
-                self.tahoma_device.active_states['core:PriorityLockTimerState']
         if 'core:RSSILevelState' in self.tahoma_device.active_states:
-            attr['RSSI Level'] = self.tahoma_device.active_states[
-                'core:RSSILevelState']
+            attr[ATTR_RSSI_LEVEL] = \
+                self.tahoma_device.active_states['core:RSSILevelState']
         if 'core:StatusState' in self.tahoma_device.active_states:
-            attr['Status'] = self.tahoma_device.active_states[
-                'core:StatusState']
+            attr[ATTR_STATUS] = \
+                self.tahoma_device.active_states['core:StatusState']
+        if 'core:PriorityLockTimerState' in self.tahoma_device.active_states:
+            attr[ATTR_LOCK_TIMER] = \
+                self.tahoma_device.active_states['core:PriorityLockTimerState']
         if 'io:PriorityLockLevelState' in self.tahoma_device.active_states:
-            attr['Priority Lock Level'] = \
+            attr[ATTR_LOCK_LEVEL] = \
                 self.tahoma_device.active_states['io:PriorityLockLevelState']
         if 'io:PriorityLockOriginatorState' in \
                 self.tahoma_device.active_states:
-            attr['Priority Lock Originator'] = \
+            attr[ATTR_LOCK_ORIG] = \
                 self.tahoma_device.active_states[
                     'io:PriorityLockOriginatorState']
         return attr
