@@ -216,7 +216,7 @@ class ZhongHongClimate(ClimateDevice):
 
         operation_mode = kwargs.get(ATTR_OPERATION_MODE)
         if operation_mode is not None:
-            self._device.set_operation_mode(operation_mode)
+            self.set_operation_mode(operation_mode)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
