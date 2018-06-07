@@ -5,9 +5,6 @@ import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
 
-from homematicip.home import Home
-from homematicip.auth import Auth
-
 from .const import DOMAIN, _LOGGER, CONF_ACCESSPOINT, CONF_PIN, CONF_NAME
 
 
@@ -25,6 +22,9 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
+        from homematicip.home import Home
+        from homematicip.auth import Auth
+
         errors = {}
 
         if user_input is not None:
