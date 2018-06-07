@@ -268,7 +268,7 @@ class GenericThermostat(ClimateDevice):
             return self._min_temp
 
         # get default temp from super class
-        return ClimateDevice.min_temp.fget(self)
+        return super().min_temp
 
     @property
     def max_temp(self):
@@ -278,7 +278,7 @@ class GenericThermostat(ClimateDevice):
             return self._max_temp
 
         # Get default temp from super class
-        return ClimateDevice.max_temp.fget(self)
+        return super().max_temp
 
     @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):
