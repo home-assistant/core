@@ -17,7 +17,10 @@ DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=120)
+
+ATTR_RSSI_LEVEL = 'rssi_level'
+ATTR_STATUS = 'status'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -54,6 +57,21 @@ class TahomaSensor(TahomaDevice, Entity):
         elif self.tahoma_device.type == 'Humidity Sensor':
             return '%'
 
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the sensor."""
+        attr = {}
+        if 'core:RSSILevelState' in self.tahoma_device.active_states:
+            attr[ATTR_RSSI_LEVEL] = \
+                self.tahoma_device.active_states['core:RSSILevelState']
+        if 'core:SensorDefectState' in self.tahoma_device.active_states:
+            attr[ATTR_BATTERY_LEVEL] = \
+                self.tahoma_device.active_states['core:SensorDefectState']
+        if 'core:StatusState' in self.tahoma_device.active_states:
+            attr[ATTR_STATUS] = \
+                self.tahoma_device.active_states['core:StatusState']
+        return attr
+
     def update(self):
         """Update the state."""
         self.controller.get_states([self.tahoma_device])
@@ -64,17 +82,4 @@ class TahomaSensor(TahomaDevice, Entity):
             self.current_value = self.tahoma_device.active_states[
                 'core:ContactState']
 
-    @property
-    def state_attributes(self):
-        """Return the state attributes of the sensor."""
-        attr = {}
-        if 'core:RSSILevelState' in self.tahoma_device.active_states:
-            attr['RSSI Level'] = self.tahoma_device.active_states[
-                'core:RSSILevelState']
-        if 'core:SensorDefectState' in self.tahoma_device.active_states:
-            attr[ATTR_BATTERY_LEVEL] = self.tahoma_device.active_states[
-                'core:SensorDefectState']
-        if 'core:StatusState' in self.tahoma_device.active_states:
-            attr['Status'] = self.tahoma_device.active_states[
-                'core:StatusState']
-        return attr
+        _LOGGER.debug("Update %s, value: %d", self._name, self.current_value)

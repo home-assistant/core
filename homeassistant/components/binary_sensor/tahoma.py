@@ -36,8 +36,11 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
 
     def __init__(self, tahoma_device, controller):
         """Initialize the sensor."""
-        self._state = None
         super().__init__(tahoma_device, controller)
+
+        self._state = None
+        self._icon = None
+        self._battery = None
 
     @property
     def is_on(self):
@@ -54,8 +57,15 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
     @property
     def icon(self):
         """Icon for device by its type."""
-        if self.is_on:
-            return "mdi:fire"
+        return self._icon
+
+    @property
+    def state_attributes(self):
+        """Return the state attributes of the sensor."""
+        attr = {}
+        if self._battery is not None:
+            attr[ATTR_BATTERY_LEVEL] = self._battery
+        return attr
 
     def update(self):
         """Update the state."""
@@ -67,12 +77,18 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
             else:
                 self._state = STATE_ON
 
-    @property
-    def state_attributes(self):
-        """Return the state attributes of the sensor."""
-        attr = {}
         if 'core:SensorDefectState' in self.tahoma_device.active_states:
             # Set to 'lowBattery' for low battery warning.
-            attr[ATTR_BATTERY_LEVEL] = self.tahoma_device.active_states[
+            self._battery = self.tahoma_device.active_states[
                 'core:SensorDefectState']
-        return attr
+        else:
+            self._battery = None
+
+        if self._state == STATE_ON:
+            self._icon = "mdi:fire"
+        elif self._battery == 'lowBattery':
+            self._icon = "mdi:battery-alert"
+        else:
+            self._icon = None
+
+        _LOGGER.debug("Update %s, state: %s", self._name, self._state)

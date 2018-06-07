@@ -14,6 +14,15 @@ DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_CLOSURE = 'closure'
+ATTR_MEM_POS = 'memorized_position'
+ATTR_RSSI_LEVEL = 'rssi_level'
+ATTR_OPEN_CLOSE = 'open_close'
+ATTR_STATUS = 'status'
+ATTR_LOCK_TIMER = 'priority_lock_timer'
+ATTR_LOCK_LEVEL = 'priority_lock_level'
+ATTR_LOCK_ORIG = 'priority_lock_originator'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tahoma covers."""
@@ -99,7 +108,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
             else:
                 self._closed = False
 
-        _LOGGER.debug("update(%s): position: %d", self._name, self._position)
+        _LOGGER.debug("Update %s, position: %d", self._name, self._position)
 
     @property
     def current_cover_position(self):
@@ -131,26 +140,25 @@ class TahomaCover(TahomaDevice, CoverDevice):
             attr.update(super_attr)
 
         if self._closure is not None:
-            attr['Closure'] = self._closure
+            attr[ATTR_CLOSURE] = self._closure
         if 'core:Memorized1PositionState' in self.tahoma_device.active_states:
-            attr['Memorized Position'] = \
-                self.tahoma_device.active_states[
-                    'core:Memorized1PositionState']
+            attr[ATTR_MEM_POS] = self.tahoma_device.active_states[
+                'core:Memorized1PositionState']
         if 'core:RSSILevelState' in self.tahoma_device.active_states:
-            attr['RSSI Level'] = self.tahoma_device.active_states[
+            attr[ATTR_RSSI_LEVEL] = self.tahoma_device.active_states[
                 'core:RSSILevelState']
         if 'core:OpenClosedState' in self.tahoma_device.active_states:
-            attr['Open Closed'] = self.tahoma_device.active_states[
+            attr[ATTR_OPEN_CLOSE] = self.tahoma_device.active_states[
                 'core:OpenClosedState']
-        # if 'core:StatusState' in self.tahoma_device.active_states:
-        #    attr['Status'] = self.tahoma_device.active_states[
-        #        'core:StatusState']
+        if 'core:StatusState' in self.tahoma_device.active_states:
+            attr[ATTR_STATUS] = self.tahoma_device.active_states[
+                'core:StatusState']
         if self._lock_timer is not None:
-            attr['Priority Lock Timer'] = self._lock_timer
+            attr[ATTR_LOCK_TIMER] = self._lock_timer
         if self._lock_level is not None:
-            attr['Priority Lock Level'] = self._lock_level
+            attr[ATTR_LOCK_LEVEL] = self._lock_level
         if self._lock_originator is not None:
-            attr['Priority Lock Originator'] = self._lock_originator
+            attr[ATTR_LOCK_ORIG] = self._lock_originator
         return attr
 
     @property
