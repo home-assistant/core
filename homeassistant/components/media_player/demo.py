@@ -8,8 +8,8 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST, SUPPORT_PLAY,
-    SUPPORT_SHUFFLE_SET, MediaPlayerDevice)
+    SUPPORT_SELECT_SOURCE, SUPPORT_SELECT_SOUND_MODE, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_PLAY, SUPPORT_SHUFFLE_SET, MediaPlayerDevice)
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 import homeassistant.util.dt as dt_util
 
@@ -28,22 +28,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 YOUTUBE_COVER_URL_FORMAT = 'https://img.youtube.com/vi/{}/hqdefault.jpg'
+SOUND_MODE_LIST = ['Dummy Music', 'Dummy Movie']
+DEFAULT_SOUND_MODE = 'Dummy Music'
 
 YOUTUBE_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | \
-    SUPPORT_SHUFFLE_SET
+    SUPPORT_SHUFFLE_SET | SUPPORT_SELECT_SOUND_MODE
 
 MUSIC_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_CLEAR_PLAYLIST | \
     SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_SELECT_SOUND_MODE
 
 NETFLIX_PLAYER_SUPPORT = \
     SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_SHUFFLE_SET | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_SELECT_SOUND_MODE
 
 
 class AbstractDemoPlayer(MediaPlayerDevice):
@@ -58,6 +62,8 @@ class AbstractDemoPlayer(MediaPlayerDevice):
         self._volume_level = 1.0
         self._volume_muted = False
         self._shuffle = False
+        self._sound_mode_list = SOUND_MODE_LIST
+        self._sound_mode = DEFAULT_SOUND_MODE
 
     @property
     def should_poll(self):
@@ -88,6 +94,16 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def shuffle(self):
         """Boolean if shuffling is enabled."""
         return self._shuffle
+
+    @property
+    def sound_mode(self):
+        """Return the current sound mode."""
+        return self._sound_mode
+
+    @property
+    def sound_mode_list(self):
+        """Return a list of available sound modes."""
+        return self._sound_mode_list
 
     def turn_on(self):
         """Turn the media player on."""
@@ -122,6 +138,11 @@ class AbstractDemoPlayer(MediaPlayerDevice):
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle mode."""
         self._shuffle = shuffle
+        self.schedule_update_ha_state()
+
+    def select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        self._sound_mode = sound_mode
         self.schedule_update_ha_state()
 
 
