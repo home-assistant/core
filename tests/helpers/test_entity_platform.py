@@ -16,7 +16,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, MockPlatform, fire_time_changed, mock_registry,
-    MockEntity, MockEntityPlatform, MockConfigEntry, mock_coro)
+    MockEntity, MockEntityPlatform, MockConfigEntry)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
