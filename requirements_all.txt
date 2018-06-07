@@ -438,6 +438,9 @@ hydrawiser==0.1.1
 # homeassistant.components.sensor.htu21d
 # i2csense==0.0.4
 
+# homeassistant.components.watson_iot
+ibmiotf==0.3.4
+
 # homeassistant.components.light.iglo
 iglo==1.2.7
 
