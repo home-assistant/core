@@ -173,6 +173,10 @@ class DenonDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
+        if self._power == 'OFF':
+            return STATE_OFF
+        elif self._power == 'ON':
+            return self._state or STATE_ON
         return self._state
 
     @property
