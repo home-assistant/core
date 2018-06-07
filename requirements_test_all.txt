@@ -81,7 +81,7 @@ hbmqtt==0.9.2
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180603.0
+home-assistant-frontend==20180607.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
