@@ -95,7 +95,7 @@ aiohue==1.5.0
 aioimaplib==0.7.13
 
 # homeassistant.components.light.lifx
-aiolifx==0.6.1
+aiolifx==0.6.3
 
 # homeassistant.components.light.lifx
 aiolifx_effects==0.1.2
