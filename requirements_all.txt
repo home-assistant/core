@@ -291,6 +291,9 @@ enocean==0.40
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
 
+# homeassistant.components.netgear_lte
+eternalegypt==0.0.1
+
 # homeassistant.components.keyboard_remote
 # evdev==0.6.1
 
