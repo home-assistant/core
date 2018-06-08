@@ -46,12 +46,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PATH): cv.string
 })
 
-SERVICE_TO_METHOD = {
-    SERVICE_LOCAL_GIT_PULL: {
-        'method': 'async_git_pull',
-        'schema': LOCAL_GIT_PULL_SERVICE_SCHEMA},
-}
-
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_entities, discovery_info=None):
