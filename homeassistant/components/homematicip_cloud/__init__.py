@@ -19,7 +19,7 @@ from homeassistant.core import callback
 
 from .const import DOMAIN, CONF_ACCESSPOINT, CONF_AUTHTOKEN, CONF_NAME
 # Loading the config flow file will register the flow
-from .config_flow import HomematicipCloudFlowHandler
+from .config_flow import HomematicipCloudFlowHandler    # noqa: F401
 
 REQUIREMENTS = ['homematicip==0.9.4']
 
