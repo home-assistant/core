@@ -50,7 +50,7 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
 
                 error_code = json.loads(res.text)['errorCode']
                 if error_code == 'INVALID_PIN':
-                    errors['base'] = 'invalid_pin'
+                    errors[CONF_PIN] = 'invalid_pin'
                 else:
                     errors['base'] = 'register_failed'
 
