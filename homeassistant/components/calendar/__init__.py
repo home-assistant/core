@@ -6,9 +6,9 @@ https://home-assistant.io/components/calendar/
 """
 import asyncio
 import logging
-from datetime import timedelta, datetime
-import dateutil.parser
+from datetime import timedelta
 import re
+import dateutil.parser
 
 from homeassistant.components.google import (
     CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
