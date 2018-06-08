@@ -123,6 +123,9 @@ omit =
     homeassistant/components/homematicip_cloud.py
     homeassistant/components/*/homematicip_cloud.py
 
+    homeassistant/components/hydrawise.py
+    homeassistant/components/*/hydrawise.py
+
     homeassistant/components/ihc/*
     homeassistant/components/*/ihc.py
 
@@ -216,7 +219,7 @@ omit =
     homeassistant/components/raincloud.py
     homeassistant/components/*/raincloud.py
 
-    homeassistant/components/rainmachine.py
+    homeassistant/components/rainmachine/*
     homeassistant/components/*/rainmachine.py
 
     homeassistant/components/raspihats.py
@@ -382,6 +385,7 @@ omit =
     homeassistant/components/cover/myq.py
     homeassistant/components/cover/opengarage.py
     homeassistant/components/cover/rpi_gpio.py
+    homeassistant/components/cover/ryobi_gdo.py
     homeassistant/components/cover/scsgate.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
@@ -443,6 +447,7 @@ omit =
     homeassistant/components/light/lifx_legacy.py
     homeassistant/components/light/lifx.py
     homeassistant/components/light/limitlessled.py
+    homeassistant/components/light/lw12wifi.py
     homeassistant/components/light/mystrom.py
     homeassistant/components/light/nanoleaf_aurora.py
     homeassistant/components/light/osramlightify.py
@@ -518,9 +523,10 @@ omit =
     homeassistant/components/notify/aws_sqs.py
     homeassistant/components/notify/ciscospark.py
     homeassistant/components/notify/clickatell.py
-    homeassistant/components/notify/clicksend_tts.py
     homeassistant/components/notify/clicksend.py
+    homeassistant/components/notify/clicksend_tts.py
     homeassistant/components/notify/discord.py
+    homeassistant/components/notify/flock.py
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/gntp.py
     homeassistant/components/notify/group.py
@@ -533,7 +539,6 @@ omit =
     homeassistant/components/notify/message_bird.py
     homeassistant/components/notify/mycroft.py
     homeassistant/components/notify/nfandroidtv.py
-    homeassistant/components/notify/nma.py
     homeassistant/components/notify/prowl.py
     homeassistant/components/notify/pushbullet.py
     homeassistant/components/notify/pushetta.py
@@ -620,6 +625,7 @@ omit =
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/influxdb.py
+    homeassistant/components/sensor/iperf3.py
     homeassistant/components/sensor/irish_rail_transport.py
     homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lacrosse.py

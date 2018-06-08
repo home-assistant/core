@@ -59,7 +59,6 @@ class TestComponentZone(unittest.TestCase):
         assert self.hass.config.latitude == state.attributes['latitude']
         assert self.hass.config.longitude == state.attributes['longitude']
         assert not state.attributes.get('passive', False)
-        assert 'test_home' in self.hass.data[zone.DOMAIN]
 
     def test_setup(self):
         """Test a successful setup."""
@@ -79,8 +78,6 @@ class TestComponentZone(unittest.TestCase):
         assert info['longitude'] == state.attributes['longitude']
         assert info['radius'] == state.attributes['radius']
         assert info['passive'] == state.attributes['passive']
-        assert 'test_zone' in self.hass.data[zone.DOMAIN]
-        assert 'test_home' in self.hass.data[zone.DOMAIN]
 
     def test_setup_zone_skips_home_zone(self):
         """Test that zone named Home should override hass home zone."""
@@ -94,8 +91,17 @@ class TestComponentZone(unittest.TestCase):
         assert len(self.hass.states.entity_ids('zone')) == 1
         state = self.hass.states.get('zone.home')
         assert info['name'] == state.name
-        assert 'home' in self.hass.data[zone.DOMAIN]
-        assert 'test_home' not in self.hass.data[zone.DOMAIN]
+
+    def test_setup_name_can_be_same_on_multiple_zones(self):
+        """Test that zone named Home should override hass home zone."""
+        info = {
+            'name': 'Test Zone',
+            'latitude': 1.1,
+            'longitude': -2.2,
+        }
+        assert setup.setup_component(
+            self.hass, zone.DOMAIN, {'zone': [info, info]})
+        assert len(self.hass.states.entity_ids('zone')) == 3
 
     def test_setup_registered_zone_skips_home_zone(self):
         """Test that config entry named home should override hass home zone."""
@@ -105,7 +111,6 @@ class TestComponentZone(unittest.TestCase):
         entry.add_to_hass(self.hass)
         assert setup.setup_component(self.hass, zone.DOMAIN, {'zone': None})
         assert len(self.hass.states.entity_ids('zone')) == 0
-        assert not self.hass.data[zone.DOMAIN]
 
     def test_setup_registered_zone_skips_configured_zone(self):
         """Test if config entry will override configured zone."""
@@ -123,8 +128,6 @@ class TestComponentZone(unittest.TestCase):
         assert len(self.hass.states.entity_ids('zone')) == 1
         state = self.hass.states.get('zone.test_zone')
         assert not state
-        assert 'test_zone' not in self.hass.data[zone.DOMAIN]
-        assert 'test_home' in self.hass.data[zone.DOMAIN]
 
     def test_active_zone_skips_passive_zones(self):
         """Test active and passive zones."""
