@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY, ClimateDevice, DOMAIN, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE,
-    SUPPORT_ON_OFF, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
+    SUPPORT_ON_OFF)
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -246,13 +246,13 @@ class SensiboClimate(ClimateDevice):
     def min_temp(self):
         """Return the minimum temperature."""
         return self._temperatures_list[0] \
-            if self._temperatures_list else DEFAULT_MIN_TEMP
+            if self._temperatures_list else super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         return self._temperatures_list[-1] \
-            if self._temperatures_list else DEFAULT_MAX_TEMP
+            if self._temperatures_list else super().max_temp
 
     @property
     def unique_id(self):
