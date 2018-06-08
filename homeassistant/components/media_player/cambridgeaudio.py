@@ -150,7 +150,7 @@ class CADevice(MediaPlayerDevice):
         self._album = None
         self._trackno = None
         self._title = None
-        self._tracklen = None
+        self._duration = None
         self._position = None
 
     @property
@@ -204,7 +204,7 @@ class CADevice(MediaPlayerDevice):
         return self._artist
 
     @property
-    def media_album(self):
+    def media_album_name(self):
         """Return album of current playing media."""
         return self._album
 
@@ -221,7 +221,16 @@ class CADevice(MediaPlayerDevice):
     @property
     def media_position(self):
         """Return position of current playing media in seconds."""
+        if self._state is not STATE_PLAYING:
+            return None
         return self._position
+
+    @property
+    def media_duration(self):
+        """Return the duration of current playing media in seconds."""
+        if self._state is not STATE_PLAYING:
+            return None
+        return self._duration
 
     @property
     def volume_level(self):
@@ -236,11 +245,13 @@ class CADevice(MediaPlayerDevice):
         """Skip to the next track, when in media player mode."""
         if self._audio_source == "media player":
             self._smdevice.trnsprt_next()
+            self.schedule_update_ha_state()
 
     def media_previous_track(self):
         """Skip to the previous track, when in media player mode."""
         if self._audio_source == "media player":
             self._smdevice.trnsprt_prev()
+            self.schedule_update_ha_state()
 
     def media_pause(self):
         """Pause playing the current media."""
@@ -254,7 +265,7 @@ class CADevice(MediaPlayerDevice):
 
     def media_seek(self, position):
         """Jump to the specified percent position within the current track."""
-        abs_pos = round(self._to_seconds(self._tracklen) * (position/100), 2)
+        abs_pos = round(self._to_seconds(self._duration) * (position/100), 2)
         abs_pos_h = int(abs_pos / 3600)
         abs_pos_m = int((abs_pos % 3600) / 60)
         abs_pos_s = int((abs_pos % 3600) % 60)
@@ -284,6 +295,7 @@ class CADevice(MediaPlayerDevice):
     def select_source(self, source):
         """Switch to the selected internet radio preset."""
         self._smdevice.play_preset(self._sources_reverse[source])
+        self.schedule_update_ha_state()
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle play."""
@@ -306,7 +318,8 @@ class CADevice(MediaPlayerDevice):
             self._smdevice.power_on()
             self._pwstate = STATE_ON
 
-    def _to_seconds(self, timespec):
+    @staticmethod
+    def _to_seconds(timespec):
         """Helper function to translate a h:mm:ss time spec into seconds."""
         hours, minutes, seconds = timespec.split(':')
         return int(hours) * 60 + int(minutes) * 60 + int(seconds)
@@ -345,13 +358,16 @@ class CADevice(MediaPlayerDevice):
                 self._album = dev.get_current_track_info()['album']
                 self._trackno = dev.get_current_track_info()['origTrackNo']
                 self._title = dev.get_current_track_info()['trackTitle']
-                self._tracklen = dev.get_current_track_info()['trackLength']
 
-                # get the current playback position as percentage of the track
-                pos = dev.get_current_track_info()['currentPos']
-                pos = self._to_seconds(pos)
-                tracklen = self._to_seconds(self._tracklen)
-                self._position = "{:.1f}".format(float(pos / tracklen * 100))
+                # track position in seconds
+                self._position = dev.get_current_track_info()['currentPos']
+                self._position = self._to_seconds(self._position)
+                # self._position = "{:.1f}".format(float(pos / tracklen * 100))
+
+                # track length in seconds
+                self._duration = dev.get_current_track_info()['trackLength']
+                self._duration = self._to_seconds(self._duration)
+
             elif self._audio_source == "internet radio":
                 self._artist = dev.get_playback_details()['artist']
                 self._album = dev.get_playback_details()['stream']
