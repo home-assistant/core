@@ -4,11 +4,11 @@ This component provides HA sensor for Netgear Arlo IP cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.arlo/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.arlo import (
     CONF_ATTRIBUTION, DEFAULT_BRAND, DATA_ARLO, SIGNAL_UPDATE_ARLO)
@@ -74,15 +74,15 @@ class ArloSensor(Entity):
         """Return the name of this camera."""
         return self._name
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
 
+    @callback
     def _update_callback(self):
         """Call update method."""
-        self.schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
 
     @property
     def state(self):

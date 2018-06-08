@@ -4,7 +4,6 @@ Support for Arlo Alarm Control Panels.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.arlo/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -78,7 +77,7 @@ class ArloBaseStation(AlarmControlPanel):
     @callback
     def _update_callback(self):
         """Call update method."""
-        self.async_schedule_update_ha_state()
+        self.async_schedule_update_ha_state(True)
 
     @property
     def state(self):
@@ -94,18 +93,15 @@ class ArloBaseStation(AlarmControlPanel):
         else:
             self._state = None
 
-    @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         self._base_station.mode = DISARMED
 
-    @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None):
         """Send arm away command. Uses custom mode."""
         self._base_station.mode = self._away_mode_name
 
-    @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code=None):
         """Send arm home command. Uses custom mode."""
         self._base_station.mode = self._home_mode_name
 

@@ -4,11 +4,11 @@ Support for Netgear Arlo IP cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.arlo/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.arlo import (
     DEFAULT_BRAND, DATA_ARLO, SIGNAL_UPDATE_ARLO)
@@ -78,18 +78,17 @@ class ArloCam(Camera):
         """Return a still image response from the camera."""
         return self._camera.last_image_from_cache
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
             self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
 
+    @callback
     def _update_callback(self):
         """Call update method."""
-        self.schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state(True)
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
         video = self._camera.last_video
@@ -101,13 +100,13 @@ class ArloCam(Camera):
             return
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
-        yield from stream.open_camera(
+        await stream.open_camera(
             video.video_url, extra_cmd=self._ffmpeg_arguments)
 
-        yield from async_aiohttp_proxy_stream(
+        await async_aiohttp_proxy_stream(
             self.hass, request, stream,
             'multipart/x-mixed-replace;boundary=ffserver')
-        yield from stream.close()
+        await stream.close()
 
     @property
     def name(self):
