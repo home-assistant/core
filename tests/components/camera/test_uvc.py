@@ -146,16 +146,16 @@ class TestUVCSetup(unittest.TestCase):
         assert not mock_uvc.called
 
     def test_setup_nvr_error_during_indexing_notauthorized(self):
-        """Test for error: nvr.NotAuthorized"""
+        """Test for error: nvr.NotAuthorized."""
         self.setup_nvr_errors_during_indexing(nvr.NotAuthorized)
 
     def test_setup_nvr_error_during_indexing_nvrerror(self):
-        """Test for error: nvr.NvrError"""
+        """Test for error: nvr.NvrError."""
         self.setup_nvr_errors_during_indexing(nvr.NvrError)
         self.assertRaises(PlatformNotReady)
 
     def test_setup_nvr_error_during_indexing_connectionerror(self):
-        """Test for error: requests.exceptions.ConnectionError"""
+        """Test for error: requests.exceptions.ConnectionError."""
         self.setup_nvr_errors_during_indexing(
             requests.exceptions.ConnectionError)
         self.assertRaises(PlatformNotReady)
@@ -177,16 +177,16 @@ class TestUVCSetup(unittest.TestCase):
         assert not mock_uvc.called
 
     def test_setup_nvr_error_during_initialization_notauthorized(self):
-        """Test for error: nvr.NotAuthorized"""
+        """Test for error: nvr.NotAuthorized."""
         self.setup_nvr_errors_during_initialization(nvr.NotAuthorized)
 
     def test_setup_nvr_error_during_initialization_nvrerror(self):
-        """Test for error: nvr.NvrError"""
+        """Test for error: nvr.NvrError."""
         self.setup_nvr_errors_during_initialization(nvr.NvrError)
         self.assertRaises(PlatformNotReady)
 
     def test_setup_nvr_error_during_initialization_connectionerror(self):
-        """Test for error: requests.exceptions.ConnectionError"""
+        """Test for error: requests.exceptions.ConnectionError."""
         self.setup_nvr_errors_during_initialization(
             requests.exceptions.ConnectionError)
         self.assertRaises(PlatformNotReady)
