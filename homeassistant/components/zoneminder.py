@@ -65,6 +65,7 @@ def setup(hass, config):
     ZM['username'] = username
     ZM['password'] = password
     ZM['path_zms'] = conf.get(CONF_PATH_ZMS)
+    ZM['ssl_verification'] = ssl_verification
 
     hass.data[DOMAIN] = ZM
 
@@ -82,14 +83,14 @@ def login():
     if ZM['password']:
         login_post['password'] = ZM['password']
 
-    req = requests.post(ZM['url'] + '/index.php', data=login_post, verify=ssl_verification)
+    req = requests.post(ZM['url'] + '/index.php', data=login_post, verify=ZM['ssl_verification'])
     ZM['cookies'] = req.cookies
 
     # Login calls returns a 200 response on both failure and success.
     # The only way to tell if you logged in correctly is to issue an api call.
     req = requests.get(
         ZM['url'] + 'api/host/getVersion.json', cookies=ZM['cookies'],
-        timeout=DEFAULT_TIMEOUT, verify=ssl_verification)
+        timeout=DEFAULT_TIMEOUT, verify=ZM['ssl_verification'])
 
     if not req.ok:
         _LOGGER.error("Connection error logging into ZoneMinder")
@@ -105,7 +106,7 @@ def _zm_request(method, api_url, data=None):
     for _ in range(LOGIN_RETRIES):
         req = requests.request(
             method, urljoin(ZM['url'], api_url), data=data,
-            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT, verify=ssl_verification)
+            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT, ZM['ssl_verification'])
 
         if not req.ok:
             login()
