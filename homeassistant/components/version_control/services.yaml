@@ -1,0 +1,15 @@
+# Describes the format for available calendar services
+
+local_git_pull:
+  description: Perform git pull command on local Git repository.
+  fields:
+    entity_id:
+      description: Entity id representing a specific local Git repository.
+      example: 'version_control.hass_config'
+    remote:
+      description: Remote is a string representing the remote to pull from.
+      example: 'origin'
+    reset:
+      description: Reset is a boolean indicating if a git reset should be performed.
+      example: 'False'
+
