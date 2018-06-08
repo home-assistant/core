@@ -28,6 +28,7 @@ from homeassistant.const import (STATE_ON, STATE_OFF, STATE_UNKNOWN,
                                  CONF_HOST, CONF_NAME, CONF_COMMAND_OFF)
 
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['stream_magic==0.16']
 DOMAIN = 'cambridgeaudio'
@@ -152,6 +153,7 @@ class CADevice(MediaPlayerDevice):
         self._title = None
         self._duration = None
         self._position = None
+        self._position_updated_at = None
 
     @property
     def name(self):
@@ -231,6 +233,15 @@ class CADevice(MediaPlayerDevice):
         if self._state is not STATE_PLAYING:
             return None
         return self._duration
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        if self._state in [STATE_PLAYING, STATE_PAUSED]:
+            return self._position_updated_at
 
     @property
     def volume_level(self):
@@ -367,6 +378,8 @@ class CADevice(MediaPlayerDevice):
                 # track length in seconds
                 self._duration = dev.get_current_track_info()['trackLength']
                 self._duration = self._to_seconds(self._duration)
+
+                self._position_updated_at = dt_util.utcnow()
 
             elif self._audio_source == "internet radio":
                 self._artist = dev.get_playback_details()['artist']
