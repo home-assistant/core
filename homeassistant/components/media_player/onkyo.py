@@ -32,6 +32,9 @@ SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
+SUPPORT_ONKYO_WO_VOLUME = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+
 KNOWN_HOSTS = []  # type: List[str]
 DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
                    'video1': 'Video 1', 'video2': 'Video 2',
@@ -270,7 +273,8 @@ class OnkyoDeviceZone(OnkyoDevice):
     def __init__(self, zone, receiver, sources, name=None):
         """Initialize the Zone with the zone identifier."""
         self._zone = zone
-        super().__init__(receiver, sources, name)
+        self._supports_volume = True
+        super(OnkyoDeviceZone, self).__init__(receiver, sources, name)
 
     def update(self):
         """Get the latest state from the device."""
@@ -289,8 +293,17 @@ class OnkyoDeviceZone(OnkyoDevice):
         current_source_raw = self.command(
             'zone{}.selector=query'.format(self._zone))
 
+        # If we received a source value, but not a volume value
+        # it's likely this zone permanently does not support volume.
+        if current_source_raw and not volume_raw:
+            self._supports_volume = False
+
         if not (volume_raw and mute_raw and current_source_raw):
             return
+
+        # It's possible for some players to have zones set to HDMI with
+        # no sound control. In this case, the string `N/A` is returned.
+        self._supports_volume = isinstance(volume_raw[1], (float, int))
 
         # eiscp can return string or tuple. Make everything tuples.
         if isinstance(current_source_raw[1], str):
@@ -307,7 +320,16 @@ class OnkyoDeviceZone(OnkyoDevice):
                 self._current_source = '_'.join(
                     [i for i in current_source_tuples[1]])
         self._muted = bool(mute_raw[1] == 'on')
-        self._volume = volume_raw[1] / 80.0
+
+        if self._supports_volume:
+            self._volume = volume_raw[1] / 80.0
+
+    @property
+    def supported_features(self):
+        """Return media player features that are supported."""
+        if self._supports_volume:
+            return SUPPORT_ONKYO
+        return SUPPORT_ONKYO_WO_VOLUME
 
     def turn_off(self):
         """Turn the media player off."""
