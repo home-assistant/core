@@ -156,11 +156,11 @@ class OpenWeatherMapWeather(WeatherEntity):
                     ATTR_FORECAST_TIME: entry.get_reference_time('unix') * 1000,
                     ATTR_FORECAST_TEMP: round(entry.get_temperature('celsius').get('day')),
                     ATTR_FORECAST_TEMP_LOW: round(entry.get_temperature('celsius').get('night')),
-					ATTR_FORECAST_WIND_SPEED: round(entry.get_wind().get('speed')),
-					ATTR_FORECAST_WIND_BEARING: round(entry.get_wind().get('deg')),
+                    ATTR_FORECAST_WIND_SPEED: round(entry.get_wind().get('speed')),
+                    ATTR_FORECAST_WIND_BEARING: round(entry.get_wind().get('deg')),
                     ATTR_FORECAST_CONDITION:
                         [k for k, v in CONDITION_CLASSES.items()
-                          if entry.get_weather_code() in v][0]
+                            if entry.get_weather_code() in v][0]
                 })
             else:
                 data.append({
@@ -169,7 +169,7 @@ class OpenWeatherMapWeather(WeatherEntity):
                     ATTR_FORECAST_PRECIPITATION: entry.get_rain().get('3h'),
                     ATTR_FORECAST_CONDITION:
                         [k for k, v in CONDITION_CLASSES.items()
-                          if entry.get_weather_code() in v][0]
+                            if entry.get_weather_code() in v][0]
                 })
         return data
 
