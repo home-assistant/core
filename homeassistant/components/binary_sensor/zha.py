@@ -187,8 +187,8 @@ class Switch(zha.Entity, BinarySensorDevice):
                 if args[0] == 0xff:
                     rate = 10  # Should read default move rate
                 self._entity.move_level(-rate if args[0] else rate)
-            elif command_id == 0x0002:  # step
-                # Step (technically shouldn't change on/off)
+            elif command_id in (0x0002, 0x0006):  # step, -with_on_off
+                # Step (technically may change on/off)
                 self._entity.move_level(-args[1] if args[0] else args[1])
 
         def attribute_update(self, attrid, value):
@@ -203,13 +203,18 @@ class Switch(zha.Entity, BinarySensorDevice):
     def __init__(self, **kwargs):
         """Initialize Switch."""
         super().__init__(**kwargs)
-        self._state = True
-        self._level = 255
+        self._state = False
+        self._level = 0
         from zigpy.zcl.clusters import general
         self._out_listeners = {
             general.OnOff.cluster_id: self.OnOffListener(self),
             general.LevelControl.cluster_id: self.LevelListener(self),
         }
+
+    @property
+    def should_poll(self) -> bool:
+        """Let zha handle polling."""
+        return False
 
     @property
     def is_on(self) -> bool:

@@ -26,7 +26,7 @@ async def test_debounce(hass):
 
     arguments = None
     counter = 0
-    mock = Mock(hass=hass)
+    mock = Mock(hass=hass, debounce={})
 
     debounce_demo = debounce(demo_func)
     assert debounce_demo.__name__ == 'demo_func'
@@ -50,13 +50,14 @@ async def test_debounce(hass):
     assert counter == 2
 
 
-async def test_home_accessory(hass):
+async def test_home_accessory(hass, hk_driver):
     """Test HomeAccessory class."""
     entity_id = 'homekit.accessory'
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, 'Home Accessory', entity_id, 2, None)
+    acc = HomeAccessory(hass, hk_driver, 'Home Accessory',
+                        entity_id, 2, None)
     assert acc.hass == hass
     assert acc.display_name == 'Home Accessory'
     assert acc.aid == 2
@@ -75,6 +76,7 @@ async def test_home_accessory(hass):
     with patch('homeassistant.components.homekit.accessories.'
                'HomeAccessory.update_state') as mock_update_state:
         await hass.async_add_job(acc.run)
+        await hass.async_block_till_done()
         state = hass.states.get(entity_id)
         mock_update_state.assert_called_with(state)
 
@@ -86,14 +88,15 @@ async def test_home_accessory(hass):
         acc.update_state('new_state')
 
     # Test model name from domain
-    acc = HomeAccessory('hass', 'test_name', 'test_model.demo', 2, None)
+    entity_id = 'test_model.demo'
+    acc = HomeAccessory('hass', hk_driver, 'test_name', entity_id, 2, None)
     serv = acc.services[0]  # SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_MODEL).value == 'Test Model'
 
 
-def test_home_bridge():
+def test_home_bridge(hk_driver):
     """Test HomeBridge class."""
-    bridge = HomeBridge('hass')
+    bridge = HomeBridge('hass', hk_driver)
     assert bridge.hass == 'hass'
     assert bridge.display_name == BRIDGE_NAME
     assert bridge.category == 2  # Category.BRIDGE
@@ -107,7 +110,7 @@ def test_home_bridge():
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == \
         BRIDGE_SERIAL_NUMBER
 
-    bridge = HomeBridge('hass', 'test_name')
+    bridge = HomeBridge('hass', hk_driver, 'test_name')
     assert bridge.display_name == 'test_name'
     assert len(bridge.services) == 1
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
@@ -118,7 +121,6 @@ def test_home_bridge():
 
 def test_home_driver():
     """Test HomeDriver class."""
-    bridge = HomeBridge('hass')
     ip_address = '127.0.0.1'
     port = 51826
     path = '.homekit.state'
@@ -126,9 +128,11 @@ def test_home_driver():
 
     with patch('pyhap.accessory_driver.AccessoryDriver.__init__') \
             as mock_driver:
-        driver = HomeDriver('hass', bridge, ip_address, port, path)
+        driver = HomeDriver('hass', address=ip_address, port=port,
+                            persist_file=path)
 
-    mock_driver.assert_called_with(bridge, ip_address, port, path)
+    mock_driver.assert_called_with(address=ip_address, port=port,
+                                   persist_file=path)
     driver.state = Mock(pincode=pin)
 
     # pair

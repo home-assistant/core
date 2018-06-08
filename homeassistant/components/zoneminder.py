@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD, CONF_USERNAME)
+    CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,6 +20,7 @@ CONF_PATH_ZMS = 'path_zms'
 DEFAULT_PATH = '/zm/'
 DEFAULT_PATH_ZMS = '/zm/cgi-bin/nph-zms'
 DEFAULT_SSL = False
+DEFAULT_VERIFY_SSL = True
 DEFAULT_TIMEOUT = 10
 DOMAIN = 'zoneminder'
 
@@ -31,6 +32,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
         vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
         # This should match PATH_ZMS in ZoneMinder settings.
         vol.Optional(CONF_PATH_ZMS, default=DEFAULT_PATH_ZMS): cv.string,
@@ -55,12 +57,15 @@ def setup(hass, config):
     url = urljoin(server_origin, conf[CONF_PATH])
     username = conf.get(CONF_USERNAME, None)
     password = conf.get(CONF_PASSWORD, None)
+    
+    ssl_verification = conf.get(CONF_VERIFY_SSL)
 
     ZM['server_origin'] = server_origin
     ZM['url'] = url
     ZM['username'] = username
     ZM['password'] = password
     ZM['path_zms'] = conf.get(CONF_PATH_ZMS)
+    ZM['ssl_verification'] = ssl_verification
 
     hass.data[DOMAIN] = ZM
 
@@ -78,14 +83,14 @@ def login():
     if ZM['password']:
         login_post['password'] = ZM['password']
 
-    req = requests.post(ZM['url'] + '/index.php', data=login_post)
+    req = requests.post(ZM['url'] + '/index.php', data=login_post, verify=ZM['ssl_verification'])
     ZM['cookies'] = req.cookies
 
     # Login calls returns a 200 response on both failure and success.
     # The only way to tell if you logged in correctly is to issue an api call.
     req = requests.get(
         ZM['url'] + 'api/host/getVersion.json', cookies=ZM['cookies'],
-        timeout=DEFAULT_TIMEOUT)
+        timeout=DEFAULT_TIMEOUT, verify=ZM['ssl_verification'])
 
     if not req.ok:
         _LOGGER.error("Connection error logging into ZoneMinder")
@@ -101,7 +106,7 @@ def _zm_request(method, api_url, data=None):
     for _ in range(LOGIN_RETRIES):
         req = requests.request(
             method, urljoin(ZM['url'], api_url), data=data,
-            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT)
+            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT, verify=ZM['ssl_verification'])
 
         if not req.ok:
             login()

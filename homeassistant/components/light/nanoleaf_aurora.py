@@ -17,12 +17,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import color as color_util
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
+from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['nanoleaf==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Aurora'
+
+DATA_NANOLEAF_AURORA = 'nanoleaf_aurora'
+
+CONFIG_FILE = '.nanoleaf_aurora.conf'
 
 ICON = 'mdi:triangle-outline'
 
@@ -39,31 +44,59 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Nanoleaf Aurora device."""
     import nanoleaf
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    token = config.get(CONF_TOKEN)
+    import nanoleaf.setup
+    if DATA_NANOLEAF_AURORA not in hass.data:
+        hass.data[DATA_NANOLEAF_AURORA] = dict()
+
+    token = ''
+    if discovery_info is not None:
+        host = discovery_info['host']
+        name = discovery_info['hostname']
+        # if device already exists via config, skip discovery setup
+        if host in hass.data[DATA_NANOLEAF_AURORA]:
+            return
+        _LOGGER.info("Discovered a new Aurora: %s", discovery_info)
+        conf = load_json(hass.config.path(CONFIG_FILE))
+        if conf.get(host, {}).get('token'):
+            token = conf[host]['token']
+    else:
+        host = config[CONF_HOST]
+        name = config[CONF_NAME]
+        token = config[CONF_TOKEN]
+
+    if not token:
+        token = nanoleaf.setup.generate_auth_token(host)
+        if not token:
+            _LOGGER.error("Could not generate the auth token, did you press "
+                          "and hold the power button on %s"
+                          "for 5-7 seconds?", name)
+            return
+        conf = load_json(hass.config.path(CONFIG_FILE))
+        conf[host] = {'token': token}
+        save_json(hass.config.path(CONFIG_FILE), conf)
+
     aurora_light = nanoleaf.Aurora(host, token)
-    aurora_light.hass_name = name
 
     if aurora_light.on is None:
         _LOGGER.error(
             "Could not connect to Nanoleaf Aurora: %s on %s", name, host)
         return
 
-    add_devices([AuroraLight(aurora_light)], True)
+    hass.data[DATA_NANOLEAF_AURORA][host] = aurora_light
+    add_devices([AuroraLight(aurora_light, name)], True)
 
 
 class AuroraLight(Light):
     """Representation of a Nanoleaf Aurora."""
 
-    def __init__(self, light):
+    def __init__(self, light, name):
         """Initialize an Aurora light."""
         self._brightness = None
         self._color_temp = None
         self._effect = None
         self._effects_list = None
         self._light = light
-        self._name = light.hass_name
+        self._name = name
         self._hs_color = None
         self._state = None
 
