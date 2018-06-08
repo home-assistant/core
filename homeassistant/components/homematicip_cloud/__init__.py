@@ -33,12 +33,11 @@ COMPONENTS = [
     'climate',
 ]
 
-# All parameter are optional in order to support config entry loading
 CONFIG_SCHEMA = vol.Schema({
     vol.Optional(DOMAIN, default=[]): vol.All(cv.ensure_list, [vol.Schema({
         vol.Optional(CONF_NAME): vol.Any(cv.string),
-        vol.Optional(CONF_ACCESSPOINT): cv.string,
-        vol.Optional(CONF_AUTHTOKEN): cv.string,
+        vol.Required(CONF_ACCESSPOINT): cv.string,
+        vol.Required(CONF_AUTHTOKEN): cv.string,
     })]),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -68,10 +67,6 @@ async def async_setup(hass, config):
 
     hass.data.setdefault(DOMAIN, {})
     accesspoints = config.get(DOMAIN, [])
-
-    # Load homematicip_cloud even not accesspoints are defined
-    if accesspoints == [{}]:
-        return True
 
     for conf in accesspoints:
         apid = conf[CONF_ACCESSPOINT].replace('-', '').upper()
