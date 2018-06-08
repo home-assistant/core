@@ -20,7 +20,10 @@ DEPENDENCIES = ['rainmachine']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass,
+                               config,
+                               async_add_devices,
+                               discovery_info=None):
     """Set up the RainMachine Switch platform."""
     if discovery_info is None:
         return
@@ -33,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         binary_sensors.append(
             RainMachineBinarySensor(rainmachine, sensor_type, name, icon))
 
-    add_devices(binary_sensors, True)
+    async_add_devices(binary_sensors, True)
 
 
 class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
@@ -79,7 +82,7 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
         async_dispatcher_connect(self.hass, DATA_UPDATE_TOPIC,
                                  self.update_data)
 
-    def update(self):
+    async def async_update(self):
         """Update the state."""
         if self._sensor_type == TYPE_FREEZE:
             self._state = self.rainmachine.restrictions['current']['freeze']

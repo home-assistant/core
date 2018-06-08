@@ -7,13 +7,13 @@ https://home-assistant.io/components/switch.rainmachine/
 import logging
 
 from homeassistant.components.rainmachine import (
-    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ZONE_RUN,
-    PROGRAM_UPDATE_TOPIC, RainMachineEntity)
+    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DATA_UPDATE_TOPIC, DEFAULT_ZONE_RUN,
+    RainMachineEntity)
 from homeassistant.const import ATTR_ID
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, dispatcher_send)
+    async_dispatcher_connect, async_dispatcher_send)
 
 DEPENDENCIES = ['rainmachine']
 
@@ -108,7 +108,10 @@ VEGETATION_MAP = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass,
+                               config,
+                               async_add_devices,
+                               discovery_info=None):
     """Set up the RainMachine Switch platform."""
     if discovery_info is None:
         return
@@ -120,21 +123,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rainmachine = hass.data[DATA_RAINMACHINE]
 
     entities = []
-    for program in rainmachine.client.programs.all().get('programs', {}):
+
+    programs = await rainmachine.client.programs.all()
+    for program in programs:
         if not program.get('active'):
             continue
 
         _LOGGER.debug('Adding program: %s', program)
         entities.append(RainMachineProgram(rainmachine, program))
 
-    for zone in rainmachine.client.zones.all().get('zones', {}):
+    zones = await rainmachine.client.zones.all()
+    for zone in zones:
         if not zone.get('active'):
             continue
 
         _LOGGER.debug('Adding zone: %s', zone)
         entities.append(RainMachineZone(rainmachine, zone, zone_run_time))
 
-    add_devices(entities, True)
+    async_add_devices(entities, True)
 
 
 class RainMachineSwitch(RainMachineEntity, SwitchDevice):
@@ -167,6 +173,16 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
             self._switch_type,
             self._rainmachine_entity_id)
 
+    @callback
+    def _program_updated(self):
+        """Update state, trigger updates."""
+        self.async_schedule_update_ha_state(True)
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(self.hass, DATA_UPDATE_TOPIC,
+                                 self._program_updated)
+
 
 class RainMachineProgram(RainMachineSwitch):
     """A RainMachine program."""
@@ -185,34 +201,36 @@ class RainMachineProgram(RainMachineSwitch):
         """Return a list of active zones associated with this program."""
         return [z for z in self._obj['wateringTimes'] if z['active']]
 
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
-        from regenmaschine.exceptions import RainMachineError
+        from regenmaschine.errors import RequestError
 
         try:
-            self.rainmachine.client.programs.stop(self._rainmachine_entity_id)
-            dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
-        except RainMachineError as exc_info:
-            _LOGGER.error('Unable to turn off program "%s"', self.unique_id)
-            _LOGGER.debug(exc_info)
+            await self.rainmachine.client.programs.stop(
+                self._rainmachine_entity_id)
+            async_dispatcher_send(self.hass, DATA_UPDATE_TOPIC)
+        except RequestError as err:
+            _LOGGER.error('Unable to turn off program "%s": %s',
+                          self.unique_id, str(err))
 
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the program on."""
-        from regenmaschine.exceptions import RainMachineError
+        from regenmaschine.errors import RequestError
 
         try:
-            self.rainmachine.client.programs.start(self._rainmachine_entity_id)
-            dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
-        except RainMachineError as exc_info:
-            _LOGGER.error('Unable to turn on program "%s"', self.unique_id)
-            _LOGGER.debug(exc_info)
+            await self.rainmachine.client.programs.start(
+                self._rainmachine_entity_id)
+            async_dispatcher_send(self.hass, DATA_UPDATE_TOPIC)
+        except RequestError as err:
+            _LOGGER.error('Unable to turn on program "%s": %s',
+                          self.unique_id, str(err))
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update info for the program."""
-        from regenmaschine.exceptions import RainMachineError
+        from regenmaschine.errors import RequestError
 
         try:
-            self._obj = self.rainmachine.client.programs.get(
+            self._obj = await self.rainmachine.client.programs.get(
                 self._rainmachine_entity_id)
 
             self._attrs.update({
@@ -221,10 +239,9 @@ class RainMachineProgram(RainMachineSwitch):
                 ATTR_STATUS: PROGRAM_STATUS_MAP[self._obj.get('status')],
                 ATTR_ZONES: ', '.join(z['name'] for z in self.zones)
             })
-        except RainMachineError as exc_info:
-            _LOGGER.error('Unable to update info for program "%s"',
-                          self.unique_id)
-            _LOGGER.debug(exc_info)
+        except RequestError as err:
+            _LOGGER.error('Unable to update info for program "%s": %s',
+                          self.unique_id, str(err))
 
 
 class RainMachineZone(RainMachineSwitch):
@@ -242,47 +259,38 @@ class RainMachineZone(RainMachineSwitch):
         """Return whether the zone is running."""
         return bool(self._obj.get('state'))
 
-    @callback
-    def _program_updated(self):
-        """Update state, trigger updates."""
-        self.async_schedule_update_ha_state(True)
-
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        async_dispatcher_connect(self.hass, PROGRAM_UPDATE_TOPIC,
-                                 self._program_updated)
-
-    def turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
-        from regenmaschine.exceptions import RainMachineError
+        from regenmaschine.errors import RequestError
 
         try:
-            self.rainmachine.client.zones.stop(self._rainmachine_entity_id)
-        except RainMachineError as exc_info:
-            _LOGGER.error('Unable to turn off zone "%s"', self.unique_id)
-            _LOGGER.debug(exc_info)
+            await self.rainmachine.client.zones.stop(
+                self._rainmachine_entity_id)
+        except RequestError as err:
+            _LOGGER.error('Unable to turn off zone "%s": %s', self.unique_id,
+                          str(err))
 
-    def turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
-        from regenmaschine.exceptions import RainMachineError
+        from regenmaschine.errors import RequestError
 
         try:
-            self.rainmachine.client.zones.start(self._rainmachine_entity_id,
-                                                self._run_time)
-        except RainMachineError as exc_info:
-            _LOGGER.error('Unable to turn on zone "%s"', self.unique_id)
-            _LOGGER.debug(exc_info)
+            await self.rainmachine.client.zones.start(
+                self._rainmachine_entity_id, self._run_time)
+        except RequestError as err:
+            _LOGGER.error('Unable to turn on zone "%s": %s', self.unique_id,
+                          str(err))
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update info for the zone."""
-        from regenmaschine.exceptions import RainMachineError
+        from regenmaschine.errors import RequestError
 
         try:
-            self._obj = self.rainmachine.client.zones.get(
+            self._obj = await self.rainmachine.client.zones.get(
                 self._rainmachine_entity_id)
 
-            self._properties_json = self.rainmachine.client.zones.get(
-                self._rainmachine_entity_id, properties=True)
+            self._properties_json = await self.rainmachine.client.zones.get(
+                self._rainmachine_entity_id, details=True)
 
             self._attrs.update({
                 ATTR_ID: self._obj['uid'],
@@ -308,7 +316,6 @@ class RainMachineZone(RainMachineSwitch):
                 ATTR_VEGETATION_TYPE:
                     VEGETATION_MAP.get(self._obj.get('type')),
             })
-        except RainMachineError as exc_info:
-            _LOGGER.error('Unable to update info for zone "%s"',
-                          self.unique_id)
-            _LOGGER.debug(exc_info)
+        except RequestError as err:
+            _LOGGER.error('Unable to update info for zone "%s": %s',
+                          self.unique_id, str(err))

@@ -17,7 +17,10 @@ DEPENDENCIES = ['rainmachine']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass,
+                               config,
+                               async_add_devices,
+                               discovery_info=None):
     """Set up the RainMachine Switch platform."""
     if discovery_info is None:
         return
@@ -30,7 +33,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(
             RainMachineSensor(rainmachine, sensor_type, name, icon, unit))
 
-    add_devices(sensors, True)
+    async_add_devices(sensors, True)
 
 
 class RainMachineSensor(RainMachineEntity):
@@ -82,7 +85,7 @@ class RainMachineSensor(RainMachineEntity):
         async_dispatcher_connect(self.hass, DATA_UPDATE_TOPIC,
                                  self.update_data)
 
-    def update(self):
+    async def async_update(self):
         """Update the sensor's state."""
         self._state = self.rainmachine.restrictions['global'][
             'freezeProtectTemp']
