@@ -4,110 +4,107 @@ Support gathering system information of hosts which are running netdata.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.netdata/
 """
-import logging
 from datetime import timedelta
-from urllib.parse import urlsplit
+import logging
 
-import requests
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_NAME, CONF_RESOURCES)
+    CONF_HOST, CONF_ICON, CONF_NAME, CONF_PORT, CONF_RESOURCES)
+from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
+
+REQUIREMENTS = ['netdata==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = 'api/v1'
-_REALTIME = 'before=0&after=-1&options=seconds'
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
+
+CONF_ELEMENT = 'element'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Netdata'
-DEFAULT_PORT = '19999'
+DEFAULT_PORT = 19999
 
-SCAN_INTERVAL = timedelta(minutes=1)
+DEFAULT_ICON = 'mdi:desktop-classic'
 
-SENSOR_TYPES = {
-    'memory_free': ['RAM Free', 'MiB', 'system.ram', 'free', 1],
-    'memory_used': ['RAM Used', 'MiB', 'system.ram', 'used', 1],
-    'memory_cached': ['RAM Cached', 'MiB', 'system.ram', 'cached', 1],
-    'memory_buffers': ['RAM Buffers', 'MiB', 'system.ram', 'buffers', 1],
-    'swap_free': ['Swap Free', 'MiB', 'system.swap', 'free', 1],
-    'swap_used': ['Swap Used', 'MiB', 'system.swap', 'used', 1],
-    'processes_running': ['Processes Running', 'Count', 'system.processes',
-                          'running', 0],
-    'processes_blocked': ['Processes Blocked', 'Count', 'system.processes',
-                          'blocked', 0],
-    'system_load': ['System Load', '15 min', 'system.load', 'load15', 2],
-    'system_io_in': ['System IO In', 'Count', 'system.io', 'in', 0],
-    'system_io_out': ['System IO Out', 'Count', 'system.io', 'out', 0],
-    'ipv4_in': ['IPv4 In', 'kb/s', 'system.ipv4', 'received', 0],
-    'ipv4_out': ['IPv4 Out', 'kb/s', 'system.ipv4', 'sent', 0],
-    'disk_free': ['Disk Free', 'GiB', 'disk_space._', 'avail', 2],
-    'cpu_iowait': ['CPU IOWait', '%', 'system.cpu', 'iowait', 1],
-    'cpu_user': ['CPU User', '%', 'system.cpu', 'user', 1],
-    'cpu_system': ['CPU System', '%', 'system.cpu', 'system', 1],
-    'cpu_softirq': ['CPU SoftIRQ', '%', 'system.cpu', 'softirq', 1],
-    'cpu_guest': ['CPU Guest', '%', 'system.cpu', 'guest', 1],
-    'uptime': ['Uptime', 's', 'system.uptime', 'uptime', 0],
-    'packets_received': ['Packets Received', 'packets/s', 'ipv4.packets',
-                         'received', 0],
-    'packets_sent': ['Packets Sent', 'packets/s', 'ipv4.packets',
-                     'sent', 0],
-    'connections': ['Active Connections', 'Count',
-                    'netfilter.conntrack_sockets', 'connections', 0]
-}
+RESOURCE_SCHEMA = vol.Any({
+    vol.Required(CONF_ELEMENT): cv.string,
+    vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
+    vol.Optional(CONF_NAME): cv.string,
+})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_RESOURCES, default=['memory_free']):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Required(CONF_RESOURCES): vol.Schema({cv.string: RESOURCE_SCHEMA}),
 })
 
 
-# pylint: disable=unused-variable
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up the Netdata sensor."""
+    from netdata import Netdata
+
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    url = 'http://{}:{}'.format(host, port)
-    data_url = '{}/{}/data?chart='.format(url, _RESOURCE)
     resources = config.get(CONF_RESOURCES)
 
-    values = {}
-    for key, value in sorted(SENSOR_TYPES.items()):
-        if key in resources:
-            values.setdefault(value[2], []).append(key)
+    session = async_get_clientsession(hass)
+    netdata = NetdataData(Netdata(host, hass.loop, session, port=port))
+    await netdata.async_update()
+
+    if netdata.api.metrics is None:
+        raise PlatformNotReady
 
     dev = []
-    for chart in values:
-        rest_url = '{}{}&{}'.format(data_url, chart, _REALTIME)
-        rest = NetdataData(rest_url)
-        rest.update()
-        for sensor_type in values[chart]:
-            dev.append(NetdataSensor(rest, name, sensor_type))
+    for entry, data in resources.items():
+        sensor = entry
+        element = data[CONF_ELEMENT]
+        sensor_name = icon = None
+        try:
+            resource_data = netdata.api.metrics[sensor]
+            unit = '%' if resource_data['units'] == 'percentage' else \
+                resource_data['units']
+            if data is not None:
+                sensor_name = data.get(CONF_NAME)
+                icon = data.get(CONF_ICON)
+        except KeyError:
+            _LOGGER.error("Sensor is not available: %s", sensor)
+            continue
 
-    add_devices(dev, True)
+        dev.append(NetdataSensor(
+            netdata, name, sensor, sensor_name, element, icon, unit))
+
+    async_add_devices(dev, True)
 
 
 class NetdataSensor(Entity):
     """Implementation of a Netdata sensor."""
 
-    def __init__(self, rest, name, sensor_type):
+    def __init__(
+            self, netdata, name, sensor, sensor_name, element, icon, unit):
         """Initialize the Netdata sensor."""
-        self.rest = rest
-        self.type = sensor_type
-        self._name = '{} {}'.format(name, SENSOR_TYPES[self.type][0])
-        self._precision = SENSOR_TYPES[self.type][4]
-        self._unit_of_measurement = SENSOR_TYPES[self.type][1]
+        self.netdata = netdata
+        self._state = None
+        self._sensor = sensor
+        self._element = element
+        self._sensor_name = self._sensor if sensor_name is None else \
+            sensor_name
+        self._name = name
+        self._icon = icon
+        self._unit_of_measurement = unit
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._name
+        return '{} {}'.format(self._name, self._sensor_name)
 
     @property
     def unit_of_measurement(self):
@@ -115,43 +112,44 @@ class NetdataSensor(Entity):
         return self._unit_of_measurement
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return self._icon
+
+    @property
     def state(self):
         """Return the state of the resources."""
-        value = self.rest.data
-
-        if value is not None:
-            netdata_id = SENSOR_TYPES[self.type][3]
-            if netdata_id in value:
-                return "{0:.{1}f}".format(value[netdata_id], self._precision)
-        return None
+        return self._state
 
     @property
     def available(self):
         """Could the resource be accessed during the last update call."""
-        return self.rest.available
+        return self.netdata.available
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data from Netdata REST API."""
-        self.rest.update()
+        await self.netdata.async_update()
+        resource_data = self.netdata.api.metrics.get(self._sensor)
+        self._state = round(
+            resource_data['dimensions'][self._element]['value'], 2)
 
 
 class NetdataData(object):
     """The class for handling the data retrieval."""
 
-    def __init__(self, resource):
+    def __init__(self, api):
         """Initialize the data object."""
-        self._resource = resource
-        self.data = None
+        self.api = api
         self.available = True
 
-    def update(self):
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def async_update(self):
         """Get the latest data from the Netdata REST API."""
+        from netdata.exceptions import NetdataError
+
         try:
-            response = requests.get(self._resource, timeout=5)
-            det = response.json()
-            self.data = {k: v for k, v in zip(det['labels'], det['data'][0])}
+            await self.api.get_allmetrics()
             self.available = True
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Connection error: %s", urlsplit(self._resource)[1])
-            self.data = None
+        except NetdataError:
+            _LOGGER.error("Unable to retrieve data from Netdata")
             self.available = False
