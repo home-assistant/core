@@ -300,8 +300,8 @@ class NetAtmoData(object):
         self.data = None
         self.station_data = None
         self.station = station
-        self.update = Throttle(timedelta(seconds= \
-                          NETATMO_UPDATE_INTERVAL))(self._update)
+        throttling = timedelta(seconds=NETATMO_UPDATE_INTERVAL)
+        self.update = Throttle(throttling)(self._update)
 
     def get_module_names(self):
         """Return all module available on the API as a list."""
@@ -320,7 +320,7 @@ class NetAtmoData(object):
             self.data = self.station_data.lastData(exclude=3600)
 
         newinterval = 0
-        for module in self.data.keys():
+        for module in self.data:
             if 'When' in self.data[module]:
                 newinterval = self.data[module]['When']
                 break
@@ -333,7 +333,7 @@ class NetAtmoData(object):
                 # Never hammer the NetAtmo API more than
                 # twice per update interval
                 newinterval = NETATMO_UPDATE_INTERVAL / 2
-            _LOGGER.info("NetAtmo refresh interval reset to %d seconds", \
+            _LOGGER.info("NetAtmo refresh interval reset to %d seconds",
                          newinterval)
-            self.update = Throttle(timedelta(seconds=newinterval), \
+            self.update = Throttle(timedelta(seconds=newinterval),
                                    immediate_throttle=True)(self._update)
