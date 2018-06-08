@@ -168,7 +168,6 @@ class RainCloudEntity(Entity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'current_time': self.data.current_time,
             'identifier': self.data.serial,
         }
 

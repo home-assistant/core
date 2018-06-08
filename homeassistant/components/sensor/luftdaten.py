@@ -4,7 +4,6 @@ Support for Luftdaten sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.luftdaten/
 """
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -19,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['luftdaten==0.1.3']
+REQUIREMENTS = ['luftdaten==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up the Luftdaten sensor."""
     from luftdaten import Luftdaten
 
@@ -71,7 +70,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     session = async_get_clientsession(hass)
     luftdaten = LuftdatenData(Luftdaten(sensor_id, hass.loop, session))
 
-    yield from luftdaten.async_update()
+    await luftdaten.async_update()
 
     if luftdaten.data is None:
         _LOGGER.error("Sensor is not available: %s", sensor_id)

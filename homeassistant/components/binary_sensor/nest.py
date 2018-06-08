@@ -7,27 +7,36 @@ https://home-assistant.io/components/binary_sensor.nest/
 from itertools import chain
 import logging
 
-from homeassistant.components.binary_sensor import (BinarySensorDevice)
-from homeassistant.components.sensor.nest import NestSensor
+from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.components.nest import DATA_NEST, NestSensorDevice
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.components.nest import DATA_NEST
 
 DEPENDENCIES = ['nest']
 
-BINARY_TYPES = ['online']
+BINARY_TYPES = {'online': 'connectivity'}
 
-CLIMATE_BINARY_TYPES = [
-    'fan',
-    'is_using_emergency_heat',
-    'is_locked',
-    'has_leaf',
-]
+CLIMATE_BINARY_TYPES = {
+    'fan': None,
+    'is_using_emergency_heat': 'heat',
+    'is_locked': None,
+    'has_leaf': None,
+}
 
-CAMERA_BINARY_TYPES = [
-    'motion_detected',
-    'sound_detected',
-    'person_detected',
-]
+CAMERA_BINARY_TYPES = {
+    'motion_detected': 'motion',
+    'sound_detected': 'sound',
+    'person_detected': 'occupancy',
+}
+
+STRUCTURE_BINARY_TYPES = {
+    'away': None,
+    # 'security_state', # pending python-nest update
+}
+
+STRUCTURE_BINARY_STATE_MAP = {
+    'away': {'away': True, 'home': False},
+    'security_state': {'deter': True, 'ok': False},
+}
 
 _BINARY_TYPES_DEPRECATED = [
     'hvac_ac_state',
@@ -40,8 +49,8 @@ _BINARY_TYPES_DEPRECATED = [
     'hvac_emer_heat_state',
 ]
 
-_VALID_BINARY_SENSOR_TYPES = BINARY_TYPES + CLIMATE_BINARY_TYPES \
-    + CAMERA_BINARY_TYPES
+_VALID_BINARY_SENSOR_TYPES = {**BINARY_TYPES, **CLIMATE_BINARY_TYPES,
+                              **CAMERA_BINARY_TYPES, **STRUCTURE_BINARY_TYPES}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +77,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error(wstr)
 
     sensors = []
+    for structure in nest.structures():
+        sensors += [NestBinarySensor(structure, None, variable)
+                    for variable in conditions
+                    if variable in STRUCTURE_BINARY_TYPES]
     device_chain = chain(nest.thermostats(),
                          nest.smoke_co_alarms(),
                          nest.cameras())
@@ -88,11 +101,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensors += [NestActivityZoneSensor(structure,
                                                    device,
                                                    activity_zone)]
-
     add_devices(sensors, True)
 
 
-class NestBinarySensor(NestSensor, BinarySensorDevice):
+class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
     """Represents a Nest binary sensor."""
 
     @property
@@ -100,9 +112,19 @@ class NestBinarySensor(NestSensor, BinarySensorDevice):
         """Return true if the binary sensor is on."""
         return self._state
 
+    @property
+    def device_class(self):
+        """Return the device class of the binary sensor."""
+        return _VALID_BINARY_SENSOR_TYPES.get(self.variable)
+
     def update(self):
         """Retrieve latest state."""
-        self._state = bool(getattr(self.device, self.variable))
+        value = getattr(self.device, self.variable)
+        if self.variable in STRUCTURE_BINARY_TYPES:
+            self._state = bool(STRUCTURE_BINARY_STATE_MAP
+                               [self.variable][value])
+        else:
+            self._state = bool(value)
 
 
 class NestActivityZoneSensor(NestBinarySensor):
@@ -115,9 +137,9 @@ class NestActivityZoneSensor(NestBinarySensor):
         self._name = "{} {} activity".format(self._name, self.zone.name)
 
     @property
-    def name(self):
-        """Return the name of the nest, if any."""
-        return self._name
+    def device_class(self):
+        """Return the device class of the binary sensor."""
+        return 'motion'
 
     def update(self):
         """Retrieve latest state."""
