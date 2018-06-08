@@ -77,23 +77,6 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
                                 }})
         )
 
-    @mock.patch('logging.Logger.error')
-    def test_setup_valid_conf_with_error(self, log_mock):
-        """Test set up generic_thermostat with valid config values."""
-        self.assertTrue(
-            setup_component(self.hass, 'climate',
-                            {'climate': {
-                                'platform': 'generic_thermostat',
-                                'name': 'test',
-                                'target_temp_high': 21.1,
-                                'target_temp_low': 21,
-                                'heater_control': ENT_SWITCH_HEAT,
-                                'ac_control': ENT_SWITCH_AC,
-                                'target_sensor': ENT_SENSOR
-                                }})
-        )
-        self.assertEqual(log_mock.call_count, 1)
-
 
 class TestGenericThermostatHeaterSwitching(unittest.TestCase):
     """Test the Generic thermostat heater switching.
