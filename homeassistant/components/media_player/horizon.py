@@ -184,6 +184,9 @@ class HorizonDevice(MediaPlayerDevice):
         try:
             self._client.connect()
             self._client.authorize()
-        except (AuthenticationError, OSError) as msg:
-            _LOGGER.error("Connection to %s failed: %s", self._name, msg)
-            return False
+        except AuthenticationError as msg:
+            _LOGGER.error("Authentication to %s failed: %s", self._name, msg)
+        except OSError as msg:
+            # occurs if horizon box is offline
+            _LOGGER.error("Reconnect to %s failed: %s", self._name, msg)
+            raise PlatformNotReady
