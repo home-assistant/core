@@ -8,6 +8,7 @@ from datetime import timedelta
 import logging
 
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 _LOGGER = logging.getLogger(__name__)
 
