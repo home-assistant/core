@@ -49,3 +49,17 @@ onvif_ptz:
     zoom:
       description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
       example: "ZOOM_IN"
+
+turn_off:
+  description: Turn off camera.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.living_room'
+
+turn_on:
+  description: Turn on camera.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.living_room'
