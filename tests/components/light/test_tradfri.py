@@ -268,7 +268,7 @@ async def test_incorrect_security_code(hass, mock_gateway, mock_api):
             as notify_error:
         await setup_gateway(hass, mock_gateway, mock_api,
                             generate_psk=psk_error)
-        notify_error.assert_called()
+        assert len(notify_error.mock_calls) > 0
 
 
 def mock_light(test_features={}, test_state={}, n=0):
@@ -328,7 +328,7 @@ async def test_light_observed(hass, mock_gateway, mock_api):
     light = mock_light()
     mock_gateway.mock_devices.append(light)
     await setup_gateway(hass, mock_gateway, mock_api)
-    light.observe.assert_called()
+    assert len(light.observe.mock_calls) > 0
 
 
 async def test_light_available(hass, mock_gateway, mock_api):
@@ -400,7 +400,7 @@ async def test_turn_on(hass,
 
     # Check that the light is observed.
     mock_func = light.observe
-    mock_func.assert_called()
+    assert len(mock_func.mock_calls) > 0
     _, callkwargs = mock_func.call_args
     assert 'callback' in callkwargs
     # Callback function to refresh light state.
@@ -448,7 +448,7 @@ async def test_turn_off(hass, mock_gateway, mock_api):
 
     # Check that the light is observed.
     mock_func = light.observe
-    mock_func.assert_called()
+    assert len(mock_func.mock_calls) > 0
     _, callkwargs = mock_func.call_args
     assert 'callback' in callkwargs
     # Callback function to refresh light state.
