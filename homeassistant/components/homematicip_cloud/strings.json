@@ -17,10 +17,12 @@
     },
     "error": {
       "register_failed": "Failed to register, please try again.",
-      "invalid_pin": "Invalid PIN, please try again."
+      "invalid_pin": "Invalid PIN, please try again.",
+      "timeout_button": "Blue button press timeout, please try again."
     },
     "abort": {
-      "unknown": "Unknown error occurred."
+      "unknown": "Unknown error occurred.",
+      "conection_aborted": "Could not connect to HMIP server"
     }
   }
 }

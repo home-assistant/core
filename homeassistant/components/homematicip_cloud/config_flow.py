@@ -1,9 +1,11 @@
 """Config flow to configure HomematicIP Cloud."""
+import asyncio
 import json
 
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.helpers import aiohttp_client
 
 from .const import DOMAIN, _LOGGER, CONF_ACCESSPOINT, CONF_PIN, CONF_NAME
 
@@ -22,8 +24,8 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
-        from homematicip.home import Home
-        from homematicip.auth import Auth
+        from homematicip.async.auth import AsyncAuth
+        from homematicip.base.base_connection import HmipConnectionError
 
         errors = {}
 
@@ -34,25 +36,26 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
                 _LOGGER.info("Create new authtoken for %s", self.hmip_apid)
 
                 # Create new authtoken for the accesspoint
-                # Threaded version needs to be migrated to async
-                home = Home()
-                home.init(self.hmip_apid)
-                self.hmip_auth = Auth(home)
+                websession = aiohttp_client.async_get_clientsession(self.hass)
+                self.hmip_auth = AsyncAuth(self.hass.loop, websession)
+                try:
+                    await self.hmip_auth.init(self.hmip_apid)
+                except HmipConnectionError:
+                    return self.async_abort(reason='conection_aborted')
                 if user_input[CONF_PIN]:
                     self.hmip_auth.pin = user_input[CONF_PIN]
-                res = self.hmip_auth.connectionRequest(self.hmip_apid,
-                                                       'HomeAssistant')
-
-                # Connection established
-                if res.status_code == 200:
+                try:
+                    state = await self.hmip_auth.connectionRequest(
+                        'HomeAssistant')
+                except HmipConnectionError:
+                    if state['errorCode'] == 'INVALID_PIN':
+                        errors[CONF_PIN] = 'invalid_pin'
+                    else:
+                        errors['base'] = 'register_failed'
+                else:
+                    # Connection established
                     _LOGGER.info("Connection established")
                     return await self.async_step_link()
-
-                error_code = json.loads(res.text)['errorCode']
-                if error_code == 'INVALID_PIN':
-                    errors[CONF_PIN] = 'invalid_pin'
-                else:
-                    errors['base'] = 'register_failed'
 
         return self.async_show_form(
             step_id='init',
@@ -66,22 +69,38 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_link(self, user_input=None):
         """Attempt to link with the HomematicIP Cloud accesspoint."""
+        from homematicip.base.base_connection import HmipConnectionError
+
         errors = {}
+
         _LOGGER.info("Wait for hardware button acknowledg")
-
         # Wait for blue button pressed
-        if self.hmip_auth.isRequestAcknowledged():
-            authtoken = self.hmip_auth.requestAuthToken()
-            self.hmip_auth.confirmAuthToken(authtoken)
+        wait = 30
+        state = False
+        while (not state and wait >= 0):
+            try:
+                state = await self.hmip_auth.isRequestAcknowledged()
+            except HmipConnectionError:
+                wait = wait - 1
+            await asyncio.sleep(1)
+        if wait == 0:
+            error['base'] = 'timeout_button'
 
-            _LOGGER.info("Register new config entry")
-            return self.async_create_entry(
-                title=self.hmip_apid,
-                data={
-                    'accesspoint': self.hmip_apid.replace('-', '').upper(),
-                    'authtoken': authtoken,
-                    'name': self.hmip_name
-                }
-            )
+        if state:
+            try:
+                authtoken = await self.hmip_auth.requestAuthToken()
+                await self.hmip_auth.confirmAuthToken(authtoken)
+            except HmipConnectionError:
+                return self.async_abort(reason='conection_aborted')
+            else:
+                _LOGGER.info("Register new config entry")
+                return self.async_create_entry(
+                    title=self.hmip_apid,
+                    data={
+                        'accesspoint': self.hmip_apid.replace('-', '').upper(),
+                        'authtoken': authtoken,
+                        'name': self.hmip_name
+                        }
+                )
 
         return self.async_show_form(step_id='link', errors=errors)
