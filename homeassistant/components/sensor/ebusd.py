@@ -7,13 +7,13 @@ https://github.com/john30/ebusd
 from datetime import timedelta
 from datetime import datetime
 import logging
-import subprocess
+import socket
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_MONITORED_VARIABLES, STATE_ON, STATE_OFF, STATE_UNKNOWN)
+    CONF_NAME, CONF_HOST, CONF_PORT, CONF_MONITORED_VARIABLES, STATE_ON, STATE_OFF, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -21,10 +21,11 @@ from homeassistant.util import Throttle
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'ebusd'
+DEFAULT_PORT = 8888
 CONF_CIRCUIT = 'circuit'
 CACHE_TTL = 900
 
-BASE_COMMAND = 'ebusctl read -m {2} -c {0} {1}'
+BASE_COMMAND = 'read -m {2} -c {0} {1}\n'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
@@ -64,6 +65,8 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CIRCUIT): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_MONITORED_VARIABLES, default=[]): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
@@ -73,17 +76,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Ebusd..."""
     name = config.get(CONF_NAME)
     circuit = config.get(CONF_CIRCUIT)
-    data = EbusdData(circuit)
+    server_address = (config.get(CONF_HOST), config.get(CONF_PORT))
+
     try:
-        subprocess.check_output('ebusctl state', shell=True, timeout=5)
-	
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        data = EbusdData(server_address, circuit)
+
+        sock.settimeout(5)
+        sock.connect(server_address)
+        sock.close()
+
         dev = []
         for variable in config[CONF_MONITORED_VARIABLES]:
             dev.append(Ebusd(data, variable, name))
         
         add_devices(dev)
-    except subprocess.CalledProcessError:
-        _LOGGER.error("ebusd not available")
+    except socket.timeout:
+        _LOGGER.error("socket timeout error")
+        return
+    except socket.error:
+        _LOGGER.error("socket error")
         return
 
 
@@ -99,30 +111,38 @@ def timer_format(string):
 class EbusdData(object):
     """Get the latest data from Ebusd."""
 
-    def __init__(self, circuit):
+    def __init__(self, address, circuit):
         """Initialize the data object."""
         self._circuit = circuit
+        self._address = address
         self.value = {}
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, name):
         """Call the Ebusd API to update the data."""
         command = BASE_COMMAND.format(self._circuit, name, CACHE_TTL)
+
         try:
-            _LOGGER.debug("Receiving data from ebusdctl for %s: %s", name, command)
-            r = subprocess.check_output(command, shell=True, timeout=8)
-            command_result = r.strip().decode('utf-8')
+            _LOGGER.debug("Opening socket connection to ebusd %s: %s", name, command)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            sock.connect(self._address)
+
+            sock.sendall(command.encode())
+            command_result = sock.recv(256).decode('utf-8').rstrip()
             if 'not found' in command_result:
                 _LOGGER.warning('Element not found: %s', name)
                 raise RuntimeError('Element not found')
             else:
                 self.value[name] = command_result
-        except subprocess.CalledProcessError:
-            _LOGGER.error("Command failed: %s", command)
+        except socket.timeout:
+            _LOGGER.error("socket timeout error")
+            raise RuntimeError('socket timeout')
+        except socket.error:
+            _LOGGER.error()
             raise RuntimeError('Command failed')
-        except subprocess.TimeoutExpired:
-            _LOGGER.error("Timeout expired for command: %s", command)
-            raise RuntimeError('Timeout expired')
+        finally:
+            sock.close()
 
 
 class Ebusd(Entity):
