@@ -167,9 +167,9 @@ class GitLabData(object):
 
         try:
             with Gitlab(
-                    url=self._url,
-                    private_token=self._token,
-                    ssl_verify=self._verify_ssl
+                url=self._url,
+                private_token=self._token,
+                ssl_verify=self._verify_ssl
             ) as gitlab:
                 self.project = gitlab.projects.get(id=self._project)
 
@@ -197,5 +197,5 @@ class GitLabData(object):
                 sort='desc'
             )
 
-            if len(branch_pipelines) > 0:
+            if branch_pipelines:
                 self.pipeline = branch_pipelines[0]
