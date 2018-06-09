@@ -868,7 +868,7 @@ pykwb==0.0.8
 pylacrosse==0.3.1
 
 # homeassistant.components.sensor.lastfm
-pylast==2.2.0
+pylast==2.3.0
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
