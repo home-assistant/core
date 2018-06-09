@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send, \
     async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-nest==4.0.1']
+REQUIREMENTS = ['python-nest==4.0.2']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
