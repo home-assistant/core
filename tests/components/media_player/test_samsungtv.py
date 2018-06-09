@@ -29,7 +29,15 @@ DISCOVERY_INFO = {
 }
 
 
-class PackageException(Exception):
+class AccessDenied(Exception):
+    """Dummy Exception."""
+
+
+class ConnectionClosed(Exception):
+    """Dummy Exception."""
+
+
+class UnhandledResponse(Exception):
     """Dummy Exception."""
 
 
@@ -45,9 +53,9 @@ class TestSamsungTv(unittest.TestCase):
         self.hass.block_till_done()
         self.device = SamsungTVDevice(**WORKING_CONFIG)
         self.device._exceptions_class = mock.Mock()
-        self.device._exceptions_class.UnhandledResponse = PackageException
-        self.device._exceptions_class.AccessDenied = PackageException
-        self.device._exceptions_class.ConnectionClosed = PackageException
+        self.device._exceptions_class.UnhandledResponse = UnhandledResponse
+        self.device._exceptions_class.AccessDenied = AccessDenied
+        self.device._exceptions_class.ConnectionClosed = ConnectionClosed
 
     def tearDown(self):
         """Tear down test data."""
@@ -123,22 +131,46 @@ class TestSamsungTv(unittest.TestCase):
     def test_send_key_broken_pipe(self):
         """Testing broken pipe Exception."""
         _remote = mock.Mock()
-        self.device.get_remote = mock.Mock()
         _remote.control = mock.Mock(
-            side_effect=BrokenPipeError("Boom"))
-        self.device.get_remote.return_value = _remote
-        self.device.send_key("HELLO")
+            side_effect=BrokenPipeError('Boom'))
+        self.device.get_remote = mock.Mock(return_value=_remote)
+        self.device.send_key('HELLO')
+        self.assertIsNone(self.device._remote)
+        self.assertEqual(STATE_ON, self.device._state)
+
+    def test_send_key_connection_closed_retry_succeed(self):
+        """Test retry on connection closed."""
+        _remote = mock.Mock()
+        _remote.control = mock.Mock(side_effect=[
+            self.device._exceptions_class.ConnectionClosed('Boom'),
+            mock.DEFAULT])
+        self.device.get_remote = mock.Mock(return_value=_remote)
+        command = 'HELLO'
+        self.device.send_key(command)
+        self.assertEqual(STATE_ON, self.device._state)
+        # verify that _remote.control() get called twice because of retry logic
+        expected = [mock.call(command),
+                    mock.call(command)]
+        self.assertEqual(expected, _remote.control.call_args_list)
+
+    def test_send_key_unhandled_response(self):
+        """Testing unhandled response exception."""
+        _remote = mock.Mock()
+        _remote.control = mock.Mock(
+            side_effect=self.device._exceptions_class.UnhandledResponse('Boom')
+        )
+        self.device.get_remote = mock.Mock(return_value=_remote)
+        self.device.send_key('HELLO')
         self.assertIsNone(self.device._remote)
         self.assertEqual(STATE_ON, self.device._state)
 
     def test_send_key_os_error(self):
         """Testing broken pipe Exception."""
         _remote = mock.Mock()
-        self.device.get_remote = mock.Mock()
         _remote.control = mock.Mock(
-            side_effect=OSError("Boom"))
-        self.device.get_remote.return_value = _remote
-        self.device.send_key("HELLO")
+            side_effect=OSError('Boom'))
+        self.device.get_remote = mock.Mock(return_value=_remote)
+        self.device.send_key('HELLO')
         self.assertIsNone(self.device._remote)
         self.assertEqual(STATE_OFF, self.device._state)
 
