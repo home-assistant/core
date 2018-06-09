@@ -13,8 +13,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_CHANNEL,
     SUPPORT_NEXT_TRACK, SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE)
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK)
 from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF,
                                  STATE_PAUSED, STATE_PLAYING)
 from homeassistant.exceptions import PlatformNotReady
@@ -31,9 +30,9 @@ DEFAULT_PORT = 5900
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 
-SUPPORT_UM_HORIZON = SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PREVIOUS_TRACK | SUPPORT_SELECT_SOURCE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+SUPPORT_HORIZON = SUPPORT_NEXT_TRACK | SUPPORT_PAUSE | SUPPORT_PLAY | \
+                  SUPPORT_PLAY_MEDIA | SUPPORT_PREVIOUS_TRACK | \
+                  SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -76,116 +75,6 @@ class HorizonDevice(MediaPlayerDevice):
         self._name = name
         self._state = False
         self._keys = keys
-        self._source_list = {1: 'Das Erste HD', 2: 'ZDF HD', 3: 'RTL HD',
-                             4: 'Sat.1 HD', 5: 'ProSieben HD', 6: 'VOX HD',
-                             7: 'kabel eins HD', 8: 'RTL2 HD', 9: '3Sat HD',
-                             10: 'arte HD', 11: 'ServusTV HD',
-                             20: 'WDR Köln HD', 31: 'hr-fernsehen HD',
-                             32: 'BR Fernsehen Süd HD',
-                             34: 'MDR Thüringen HD',
-                             37: 'NDR Niedersachsen HD', 42: 'rbb Berlin HD',
-                             43: 'SR Fernsehen HD', 46: 'SWR BW HD',
-                             50: 'Baden TV HD*', 51: 'Baden TV Süd HD*',
-                             56: 'L-TV HD*', 58: 'Regio TV AA HD*',
-                             59: 'Regio TV BB HD*', 61: 'Regio TV LB HD*',
-                             62: 'Regio TV Ost HD*', 63: 'Regio TV S HD*',
-                             64: 'Regio TV Süd HD*',
-                             65: 'Regio TV Ulm HD*', 66: 'Regio TV West HD*',
-                             69: 'RNF HD*', 102: 'QVC HD',
-                             103: 'HSE24 HD', 104: 'Sonnenklar TV HD',
-                             105: '1-2-3.TV HD', 106: 'Juwelo TV HD',
-                             109: 'QVC2 HD', 110: 'HSE24 Extra HD',
-                             111: 'QVC Style HD', 120: 'DMAX HD',
-                             122: 'TLC HD',
-                             126: 'Bibel TV HD', 140: 'NatGeo HD',
-                             141: 'Spiegel TV Wissen HD',
-                             142: 'Discovery Channel HD', 143: 'History HD',
-                             144: 'PLANET HD', 145: 'NAT GEO WILD HD',
-                             146: 'Animal Planet HD', 384: 'NRWision*',
-                             391: 'Offener Kanal*', 394: 'Rhein-Main TV*',
-                             366: 'Regio TV West*', 367: 'RIK Reutlingen*',
-                             368: 'RIK tv*', 369: 'RNF*', 370: 'RTF 1*',
-                             371: 'SF1*', 372: 'SF2*', 373: 'TeleBasel*',
-                             382: 'Lokalprogramm*',
-                             399: 'Unitymedia Schnupperkanal',
-                             400: 'Unitymedia Videothek',
-                             401: 'Unitymedia Infokanal',
-                             402: 'QVC', 403: 'HSE24', 404: 'sonnenklar.TV',
-                             405: '1-2-3.tv', 406: 'Juwelo',
-                             407: 'Channel21', 408: 'SparhandyTV', 409: 'QVC2',
-                             410: 'HSE24 EXTRA', 411: 'QVC Style',
-                             412: 'HSE24 TREND', 414: 'Astro TV', 420: 'DMAX',
-                             421: 'ZDFinfo', 422: 'TLC',
-                             423: 'kabel eins Doku', 424: 'N24 Doku',
-                             425: 'ARD alpha', 426: 'Bibel TV',
-                             427: 'DIE NEUE ZEIT TV', 429: 'K-TV',
-                             430: 'SonLife', 432: 'God.TV', 433: 'HEALTH TV',
-                             434: 'Hope Channel', 435: 'Welt der Wunder',
-                             440: 'NATIONAL GEOGRAPHIC (1',
-                             441: 'SPIEGEL TV Wissen',
-                             442: 'Discovery Channel', 443: 'HISTORY',
-                             444: 'PLANET',
-                             445: 'NatGeo Wild', 600: 'TRT Türk',
-                             601: 'Habertürk', 604: 'ATV Avrupa',
-                             606: 'CNN Türk',
-                             663: 'DM SAT', 607: 'EURO STAR', 608: 'Kanal 7',
-                             609: 'NTV Avrupa', 610: 'Power Türk TV',
-                             611: 'SHOW TURK', 612: 'TV 8', 623: 'KAZAKH TV',
-                             672: 'TV Crne Gore Sat', 673: 'Hayat TV',
-                             625: 'OstWest', 626: 'Telebom / Tele Dom',
-                             677: 'Klan Kosova', 633: 'Mediaset',
-                             634: 'Rai Uno', 635: 'Rai Due',
-                             637: 'Rai News 24', 638: 'Rai Storia',
-                             682: 'TV5MONDE Europe', 683: 'TF 1*',
-                             685: 'France 2', 644: 'itvn', 687: 'France 3',
-                             645: 'TV Polonia', 646: 'TV Silesia',
-                             649: 'Record Internacional', 651: '24Horas',
-                             652: 'RTPi', 653: 'TVE Internacional',
-                             700: 'Sky 1 HD', 701: 'Sky Atlantic HD',
-                             702: 'Fox HD (S)', 703: 'TNT Serie HD (S)',
-                             704: 'NatGeo HD (S)', 705: 'Nat Geo Wild HD',
-                             706: 'Discovery HD (S)', 709: 'Sky 1',
-                             710: 'Sky Krimi', 711: 'Sky Atlantic',
-                             712: 'Fox Serie (S)', 713: 'TNT Serie (S)',
-                             714: 'RTL Crime (S)', 715: 'Syfy (S)',
-                             716: '13th Street (S)', 717: 'RTL Passion (S)',
-                             718: 'Beate-Uhse.TV', 719: 'Heimatkanal',
-                             720: 'Goldstar TV', 724: 'Classica',
-                             766: 'Sky Sport 1', 725: 'Discovery Channel (S)',
-                             726: 'National Geographic (S)',
-                             731: 'NatGeo Wild', 772: 'Sky Sport 7',
-                             732: 'Sky Cinema Action HD',
-                             733: 'Disney Cinemagic HD', 734: 'Sky Cinema',
-                             735: 'Sky Cinema +1', 736: 'Sky Cinema +24',
-                             737: 'Sky Cinema Hits',
-                             738: 'Sky Cinema Action',
-                             739: 'Sky Cinema Family',
-                             740: 'Sky Cinema Comedy',
-                             741: 'Sky Cinema Emotion',
-                             742: 'Sky Cinema Nostalgie',
-                             743: 'Disney Cinemagic',
-                             801: '1LIVE', 802: '1LIVE diggi', 803: 'WDRcosmo',
-                             804: 'KIRAKA', 805: 'WDR 2 Rheinland',
-                             806: 'WDR 3', 807: 'WDR 4', 808: 'WDR 5',
-                             809: 'WDR Event', 810: 'DASDING',
-                             811: 'WDR Rhein und Ruhr', 812: 'SWRinfo',
-                             813: 'SWR1 BW', 814: 'SWR1 RP', 815: 'SWR2',
-                             816: 'SWR3', 817: 'SWR4 BW', 818: 'SWR4 RP',
-                             819: 'hr1', 820: 'hr2', 821: 'hr3',
-                             822: 'hr4', 823: 'hr-iNFO', 824: 'YOU FM',
-                             825: 'B5 aktuell', 826: 'B5 plus',
-                             827: 'Bayern 1', 828: 'Bayern 2', 829: 'BAYERN 3',
-                             830: 'BAYERN plus', 833: 'BR-KLASSIK',
-                             890: 'Radio Seefunk*',
-                             966: 'BBC World Service (2)', 834: 'MDR JUMP',
-                             835: 'MDR KLASSIK',
-                             836: 'MDR KULTUR', 837: 'MDR S-ANHALT',
-                             839: 'MDR SPUTNIK', 840: 'MDR THÜRINGEN',
-                             841: 'MDR1 SACHSEN', 842: 'NDR 1 Nieders.',
-                             843: 'NDR 1 Radio MV', 844: 'NDR 2',
-                             845: 'NDR 90', 846: 'NDR Blue', 847: 'NDR Info',
-                             848: 'NDR Info Spez.', 849: 'NDR Kultur',
-                             850: 'NDR Plus'}
 
     @property
     def name(self):
@@ -208,14 +97,9 @@ class HorizonDevice(MediaPlayerDevice):
         return self._keys
 
     @property
-    def source_list(self):
-        """List of available (german) TV channels (names only)."""
-        return [self._source_list[c] for c in sorted(self._source_list.keys())]
-
-    @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_UM_HORIZON
+        return SUPPORT_HORIZON
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -271,19 +155,6 @@ class HorizonDevice(MediaPlayerDevice):
         else:
             _LOGGER.error("Invalid type %s or channel %d. Supported type: %s",
                           media_type, media_id, MEDIA_TYPE_CHANNEL)
-
-    def select_source(self, source):
-        """Select a channel."""
-        if str(source).isdigit():
-            digits = str(source)
-        else:
-            digits = [str(k) for k, v
-                      in self._source_list.items()
-                      if v == source]
-
-        if digits is not None:
-            self._select_channel("".join(digits))
-            self._state = STATE_PLAYING
 
     def _select_channel(self, channel):
         """Select a channel (taken from einder library, thx)."""
