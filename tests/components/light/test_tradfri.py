@@ -325,7 +325,6 @@ async def test_light(hass, mock_gateway, mock_api):
 
 async def test_light_observed(hass, mock_gateway, mock_api):
     """Test that lights are correctly observed."""
-
     light = mock_light()
     mock_gateway.mock_devices.append(light)
     await setup_gateway(hass, mock_gateway, mock_api)
