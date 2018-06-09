@@ -1,6 +1,7 @@
 """The tests for the local_git component."""
 import unittest
 from unittest.mock import Mock
+from unittest.mock import patch
 
 from homeassistant.const import (STATE_UNKNOWN)
 
@@ -19,6 +20,14 @@ TEST_CONFIG = {
 TEST_BRANCH_NAME = 'master'
 TEST_COMMIT_HEXSHA = 'test_hexsha'
 TEST_COMMIT_TITLE = 'test_summary'
+TEST_PATH = 'test_repo'
+TEST_REMOTE = 'test_remote'
+
+TEST_SERVICE_DATA = {
+    local_git.ATTR_ENTITY_ID: '{}.test_name'.format(local_git.DOMAIN),
+    local_git.ATTR_REMOTE: TEST_REMOTE,
+    local_git.ATTR_RESET: True
+}
 
 
 class TestLocalGit(unittest.TestCase):
@@ -40,6 +49,9 @@ class TestLocalGit(unittest.TestCase):
             setup_component(self.hass, 'version_control', TEST_CONFIG)
         )
 
+        assert self.hass.services.has_service(
+            local_git.DOMAIN, local_git.SERVICE_LOCAL_GIT_PULL)
+
         add_devices = Mock()
         local_git.setup_platform(
             self.hass, TEST_CONFIG['version_control'], add_devices
@@ -53,7 +65,25 @@ class TestLocalGit(unittest.TestCase):
         )
         self.assertEqual(1, len(self.hass.states.all()))
 
-    def test_valid_gitrepo_values(self):
+    @patch('homeassistant.components.version_control.local_git.GitRepo')
+    @patch('homeassistant.components.version_control.local_git._LOGGER')
+    @MockDependency('git')
+    def test_setup_exception_handling(self, mock_logging, mock_gitrepo,
+                                      mock_git):
+        """Test platform setup exception."""
+        add_devices = Mock()
+        exception = local_git.VersionControlException('test')
+        mock_gitrepo.side_effect = exception
+
+        self.assertFalse(
+            local_git.setup_platform(
+                self.hass, TEST_CONFIG['version_control'], add_devices)
+        )
+
+        mock_logging.error.assert_called_with(exception)
+
+    @MockDependency('git')
+    def test_valid_gitrepo_values(self, mock_git):
         """Test valid GitRepo values."""
         entity = self._createTestEntity(
             is_bare=False,
@@ -85,7 +115,8 @@ class TestLocalGit(unittest.TestCase):
             entity.device_state_attributes[local_git.ATTR_STATUS]
         )
 
-    def test_bare_gitrepo_values(self):
+    @MockDependency('git')
+    def test_bare_gitrepo_values(self, mock_git):
         """Test bare GitRepo values."""
         entity = self._createTestEntity(
             is_bare=True,
@@ -117,7 +148,8 @@ class TestLocalGit(unittest.TestCase):
             entity.device_state_attributes[local_git.ATTR_STATUS]
         )
 
-    def test_gitrepo_values_with_invalid_branch(self):
+    @MockDependency('git')
+    def test_gitrepo_values_with_invalid_branch(self, mock_git):
         """Test GitRepo values with invalid branch."""
         entity = self._createTestEntity(
             is_bare=False,
@@ -148,7 +180,8 @@ class TestLocalGit(unittest.TestCase):
             entity.device_state_attributes[local_git.ATTR_STATUS]
         )
 
-    def test_dirty_gitrepo_values(self):
+    @MockDependency('git')
+    def test_dirty_gitrepo_values(self, mock_git):
         """Test dirty GitRepo values."""
         entity = self._createTestEntity(
             is_bare=False,
@@ -178,11 +211,83 @@ class TestLocalGit(unittest.TestCase):
             entity.device_state_attributes[local_git.ATTR_STATUS]
         )
 
+    @MockDependency('git')
+    def test_valid_repo_git_pull_with_reset(self, mock_git):
+        """Test successful setup."""
+        entity = self._createTestEntity(
+            is_bare=False,
+            is_valid=True,
+            is_dirty=False
+        )
+
+        entity.git_pull(TEST_REMOTE, reset=True)
+        entity._repo.git.reset.assert_called()
+
+    @patch('homeassistant.components.version_control.local_git._LOGGER')
+    @MockDependency('git')
+    def test_valid_repo_git_pull_with_nonexisting_remote(
+            self, mock_logging, mock_git):
+        """Test successful setup."""
+        mock_git.Remote().exists.return_value = False
+
+        entity = self._createTestEntity(
+            is_bare=False,
+            is_valid=True,
+            is_dirty=False
+        )
+
+        self.assertFalse(entity.git_pull("fake{}".format(TEST_REMOTE)))
+        mock_logging.error.assert_called()
+
+    @MockDependency('git')
+    def test_valid_repo_git_pull_without_reset(self, mock_git):
+        """Test successful setup."""
+        entity = self._createTestEntity(
+            is_bare=False,
+            is_valid=True,
+            is_dirty=False
+        )
+
+        entity.git_pull(TEST_REMOTE, reset=False)
+        entity._repo.git.reset.assert_not_called()
+
+    @patch('homeassistant.components.version_control.local_git.GitRepo.git_pull')  # noqa
+    @MockDependency('git')
+    def test_service_git_pull(self, mock_git_repo, mock_git):
+        """Test successful setup."""
+        self.assertTrue(
+            setup_component(self.hass, 'version_control', TEST_CONFIG)
+        )
+
+        add_devices = Mock()
+        local_git.setup_platform(
+            self.hass, TEST_CONFIG['version_control'], add_devices
+        )
+
+        assert self.hass.services.has_service(
+            domain=local_git.DOMAIN,
+            service=local_git.SERVICE_LOCAL_GIT_PULL
+        )
+        self.hass.services.call(
+            domain=local_git.DOMAIN,
+            service=local_git.SERVICE_LOCAL_GIT_PULL,
+            service_data=TEST_SERVICE_DATA
+        )
+        self.hass.block_till_done()
+        self.assertTrue(mock_git_repo.called)
+        self.assertTrue(
+            all(
+                item in TEST_SERVICE_DATA.items()
+                for item in mock_git_repo.call_args[1].items()
+            )
+        )
+
     @staticmethod
     def _createTestEntity(is_bare: bool, is_valid: bool, is_dirty: bool):
         """Create a test GitRepo entity based on input parameters."""
         entity = local_git.GitRepo(
-            TEST_CONFIG['version_control'][local_git.CONF_NAME], repo=Mock()
+            name=TEST_CONFIG['version_control'][local_git.CONF_NAME],
+            path=TEST_PATH
         )
 
         entity._repo.bare = is_bare
