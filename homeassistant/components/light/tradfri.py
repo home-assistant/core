@@ -30,6 +30,7 @@ TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
 SUPPORTED_FEATURES = SUPPORT_TRANSITION
 SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
+
 async def async_setup_platform(hass, config,
                                async_add_devices, discovery_info=None):
     """Set up the IKEA Tradfri Light platform."""
