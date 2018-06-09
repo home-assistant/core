@@ -161,32 +161,38 @@ class HorizonDevice(MediaPlayerDevice):
 
     def _select_channel(self, channel):
         """Select a channel (taken from einder library, thx)."""
-        for i in str(channel):
-            key = int(i) + 0xe300
-            self._send_key(key)
+        self._send(channel=channel)
 
     def _send_key(self, key):
         """Send a key to the Horizon device."""
-        try:
-            self._client.send_key(key)
-        except OSError as msg:
-            _LOGGER.error("%s disconnected: %s", self._name, msg)
-            self._reconnect()
-            self._client.send_key(key)
+        self._send(key=key)
 
-    def _reconnect(self):
-        """Reconnecting to the Horizon after a disconnect."""
+    def _send(self, key=None, channel=None):
+        """Send a key to the Horizon device."""
         from einder.exceptions import AuthenticationError
 
-        # graceful disconnect
-        self._client.disconnect()
-
         try:
-            self._client.connect()
-            self._client.authorize()
-        except AuthenticationError as msg:
-            _LOGGER.error("Authentication to %s failed: %s", self._name, msg)
+            if key:
+                self._client.send_key(key)
+            elif channel:
+                self._client.select_channel(channel)
         except OSError as msg:
-            # occurs if horizon box is offline
-            _LOGGER.error("Reconnect to %s failed: %s", self._name, msg)
-            raise PlatformNotReady
+            _LOGGER.error("%s disconnected: %s. Trying to reconnect...",
+                          self._name, msg)
+
+            # for reconnect, first gracefully disconnect
+            self._client.disconnect()
+
+            try:
+                self._client.connect()
+                self._client.authorize()
+            except AuthenticationError as msg:
+                _LOGGER.error("Authentication to %s failed: %s", self._name,
+                              msg)
+                return
+            except OSError as msg:
+                # occurs if horizon box is offline
+                _LOGGER.error("Reconnect to %s failed: %s", self._name, msg)
+                raise PlatformNotReady
+
+            self._send(key=key, channel=channel)
