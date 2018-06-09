@@ -1,38 +1,45 @@
 """
-Component to display the current fuel prices at a NSW fuel station.
+Sensor platform to display the current fuel prices at a NSW fuel station.
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/nsw_fuel_station/
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.nsw_fuel_station/
 """
 import datetime
-from typing import Optional
-import voluptuous as vol
 
-from homeassistant.components.light import PLATFORM_SCHEMA
+import voluptuous as vol
+from typing import Optional
+
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components.light import PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['nsw-fuel-api-client==1.0.7']
+REQUIREMENTS = ['nsw-fuel-api-client==1.0.8']
+
+ATTR_STATION_ID = 'station_id'
+ATTR_STATION_NAME = 'station_name'
 
 CONF_STATION_ID = 'station_id'
 CONF_STATION_NAME = 'station_name'
 CONF_FUEL_TYPES = 'fuel_types'
-CONF_DEFAULT_FUEL_TYPES = ["E10", "U91", "E85", "P95", "P98", "DL",
+CONF_ALLOWED_FUEL_TYPES = ["E10", "U91", "E85", "P95", "P98", "DL",
                            "PDL", "B20", "LPG", "CNG", "EV"]
+CONF_DEFAULT_FUEL_TYPES = ["E10", "U91"]
+CONF_ATTRIBUTION = "Data provided by NSW Government FuelCheck"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_ID): cv.positive_int,
     vol.Required(CONF_STATION_NAME): cv.string,
     vol.Optional(CONF_FUEL_TYPES, default=CONF_DEFAULT_FUEL_TYPES):
-        vol.All(cv.ensure_list, [cv.string]),
+        vol.All(cv.ensure_list, [vol.In(CONF_ALLOWED_FUEL_TYPES)]),
 })
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(hours=1)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the NSW Fuel Station component."""
+    """Set up the NSW Fuel Station sensor."""
     from nsw_fuel import FuelCheckClient
 
     station_id = config[CONF_STATION_ID]
@@ -50,7 +57,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for fuel_type in fuel_types
         if fuel_type in available_fuel_types
     ])
-    return True
 
 
 class StationPriceData(object):
@@ -92,7 +98,7 @@ class StationPriceSensor(Entity):
     @property
     def name(self) -> str:
         """Return the name of the sensor."""
-        return 'NSW Fuel Station {} {}'.format(
+        return '{} {}'.format(
             self._station_data.station_name, self._fuel_type)
 
     @property
@@ -102,13 +108,16 @@ class StationPriceSensor(Entity):
         if price_info:
             return price_info.price
 
+        return None
+
     @property
     def device_state_attributes(self) -> dict:
         """Return the state attributes of the device."""
-        attr = {}
-        attr['Station ID'] = self._station_data.station_id
-        attr['Station Name'] = self._station_data.station_name
-        return attr
+        return {
+            ATTR_STATION_ID: self._station_data.station_id,
+            ATTR_STATION_NAME: self._station_data.station_name,
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION
+        }
 
     @property
     def unit_of_measurement(self) -> str:
