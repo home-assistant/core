@@ -38,6 +38,7 @@ MAX_PENDING_MSG = 512
 ERR_ID_REUSE = 1
 ERR_INVALID_FORMAT = 2
 ERR_NOT_FOUND = 3
+ERR_UNKNOWN_COMMAND = 4
 
 TYPE_AUTH = 'auth'
 TYPE_AUTH_INVALID = 'auth_invalid'
@@ -353,8 +354,11 @@ class ActiveConnection:
                         'Identifier values have to increase.'))
 
                 elif msg['type'] not in handlers:
-                    # Unknown command
-                    break
+                    self.log_error(
+                        'Received invalid command: {}'.format(msg['type']))
+                    self.to_write.put_nowait(error_message(
+                        cur_id, ERR_UNKNOWN_COMMAND,
+                        'Unknown command.'))
 
                 else:
                     handler, schema = handlers[msg['type']]

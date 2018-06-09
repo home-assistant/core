@@ -97,7 +97,7 @@ omit =
     homeassistant/components/*/envisalink.py
 
     homeassistant/components/fritzbox.py
-    homeassistant/components/*/fritzbox.py
+    homeassistant/components/switch/fritzbox.py
 
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
@@ -200,6 +200,9 @@ omit =
 
     homeassistant/components/netatmo.py
     homeassistant/components/*/netatmo.py
+
+    homeassistant/components/netgear_lte.py
+    homeassistant/components/*/netgear_lte.py
 
     homeassistant/components/octoprint.py
     homeassistant/components/*/octoprint.py
@@ -311,6 +314,9 @@ omit =
     homeassistant/components/wink/*
     homeassistant/components/*/wink.py
 
+    homeassistant/components/wirelesstag.py
+    homeassistant/components/*/wirelesstag.py
+
     homeassistant/components/xiaomi_aqara.py
     homeassistant/components/*/xiaomi_aqara.py
 
@@ -397,6 +403,7 @@ omit =
     homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/ddwrt.py
+    homeassistant/components/device_tracker/freebox.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/google_maps.py
     homeassistant/components/device_tracker/gpslogger.py
@@ -749,6 +756,7 @@ omit =
     homeassistant/components/tts/picotts.py
     homeassistant/components/vacuum/mqtt.py
     homeassistant/components/vacuum/roomba.py
+    homeassistant/components/watson_iot.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/darksky.py
