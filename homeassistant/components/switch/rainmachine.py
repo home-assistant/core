@@ -39,20 +39,11 @@ ATTR_VEGETATION_TYPE = 'vegetation_type'
 ATTR_ZONES = 'zones'
 
 DAYS = [
-    'Monday',
-    'Tuesday',
-    'Wednesday',
-    'Thursday',
-    'Friday',
-    'Saturday',
+    'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday',
     'Sunday'
 ]
 
-PROGRAM_STATUS_MAP = {
-    0: 'Not Running',
-    1: 'Running',
-    2: 'Queued'
-}
+PROGRAM_STATUS_MAP = {0: 'Not Running', 1: 'Running', 2: 'Queued'}
 
 SOIL_TYPE_MAP = {
     0: 'Not Set',
@@ -167,8 +158,7 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
         return '{0}_{1}_{2}'.format(
-            self.rainmachine.device_mac.replace(':', ''),
-            self._switch_type,
+            self.rainmachine.device_mac.replace(':', ''), self._switch_type,
             self._rainmachine_entity_id)
 
     @callback
@@ -196,8 +186,8 @@ class RainMachineProgram(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, PROGRAM_UPDATE_TOPIC,
-                                 self._program_updated)
+        async_dispatcher_connect(
+            self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
@@ -208,8 +198,9 @@ class RainMachineProgram(RainMachineSwitch):
                 self._rainmachine_entity_id)
             async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         except RequestError as err:
-            _LOGGER.error('Unable to turn off program "%s": %s',
-                          self.unique_id, str(err))
+            _LOGGER.error(
+                'Unable to turn off program "%s": %s', self.unique_id,
+                str(err))
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the program on."""
@@ -220,8 +211,8 @@ class RainMachineProgram(RainMachineSwitch):
                 self._rainmachine_entity_id)
             async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         except RequestError as err:
-            _LOGGER.error('Unable to turn on program "%s": %s',
-                          self.unique_id, str(err))
+            _LOGGER.error(
+                'Unable to turn on program "%s": %s', self.unique_id, str(err))
 
     async def async_update(self) -> None:
         """Update info for the program."""
@@ -238,8 +229,9 @@ class RainMachineProgram(RainMachineSwitch):
                 ATTR_ZONES: ', '.join(z['name'] for z in self.zones)
             })
         except RequestError as err:
-            _LOGGER.error('Unable to update info for program "%s": %s',
-                          self.unique_id, str(err))
+            _LOGGER.error(
+                'Unable to update info for program "%s": %s', self.unique_id,
+                str(err))
 
 
 class RainMachineZone(RainMachineSwitch):
@@ -259,10 +251,10 @@ class RainMachineZone(RainMachineSwitch):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, PROGRAM_UPDATE_TOPIC,
-                                 self._program_updated)
-        async_dispatcher_connect(self.hass, ZONE_UPDATE_TOPIC,
-                                 self._program_updated)
+        async_dispatcher_connect(
+            self.hass, PROGRAM_UPDATE_TOPIC, self._program_updated)
+        async_dispatcher_connect(
+            self.hass, ZONE_UPDATE_TOPIC, self._program_updated)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the zone off."""
@@ -272,8 +264,8 @@ class RainMachineZone(RainMachineSwitch):
             await self.rainmachine.client.zones.stop(
                 self._rainmachine_entity_id)
         except RequestError as err:
-            _LOGGER.error('Unable to turn off zone "%s": %s', self.unique_id,
-                          str(err))
+            _LOGGER.error(
+                'Unable to turn off zone "%s": %s', self.unique_id, str(err))
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn the zone on."""
@@ -283,8 +275,8 @@ class RainMachineZone(RainMachineSwitch):
             await self.rainmachine.client.zones.start(
                 self._rainmachine_entity_id, self._run_time)
         except RequestError as err:
-            _LOGGER.error('Unable to turn on zone "%s": %s', self.unique_id,
-                          str(err))
+            _LOGGER.error(
+                'Unable to turn on zone "%s": %s', self.unique_id, str(err))
 
     async def async_update(self) -> None:
         """Update info for the zone."""
@@ -298,19 +290,24 @@ class RainMachineZone(RainMachineSwitch):
                 self._rainmachine_entity_id, details=True)
 
             self._attrs.update({
-                ATTR_ID: self._obj['uid'],
-                ATTR_AREA: self._properties_json.get('waterSense').get('area'),
-                ATTR_CURRENT_CYCLE: self._obj.get('cycle'),
+                ATTR_ID:
+                    self._obj['uid'],
+                ATTR_AREA:
+                    self._properties_json.get('waterSense').get('area'),
+                ATTR_CURRENT_CYCLE:
+                    self._obj.get('cycle'),
                 ATTR_FIELD_CAPACITY:
-                    self._properties_json.get(
-                        'waterSense').get('fieldCapacity'),
-                ATTR_NO_CYCLES: self._obj.get('noOfCycles'),
+                    self._properties_json.get('waterSense')
+                    .get('fieldCapacity'),
+                ATTR_NO_CYCLES:
+                    self._obj.get('noOfCycles'),
                 ATTR_PRECIP_RATE:
-                    self._properties_json.get(
-                        'waterSense').get('precipitationRate'),
-                ATTR_RESTRICTIONS: self._obj.get('restriction'),
-                ATTR_SLOPE: SLOPE_TYPE_MAP.get(
-                    self._properties_json.get('slope')),
+                    self._properties_json.get('waterSense')
+                    .get('precipitationRate'),
+                ATTR_RESTRICTIONS:
+                    self._obj.get('restriction'),
+                ATTR_SLOPE:
+                    SLOPE_TYPE_MAP.get(self._properties_json.get('slope')),
                 ATTR_SOIL_TYPE:
                     SOIL_TYPE_MAP.get(self._properties_json.get('sun')),
                 ATTR_SPRINKLER_TYPE:
@@ -322,5 +319,6 @@ class RainMachineZone(RainMachineSwitch):
                     VEGETATION_MAP.get(self._obj.get('type')),
             })
         except RequestError as err:
-            _LOGGER.error('Unable to update info for zone "%s": %s',
-                          self.unique_id, str(err))
+            _LOGGER.error(
+                'Unable to update info for zone "%s": %s', self.unique_id,
+                str(err))

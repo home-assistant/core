@@ -80,8 +80,8 @@ class RainMachineSensor(RainMachineEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC,
-                                 self._update_data)
+        async_dispatcher_connect(
+            self.hass, SENSOR_UPDATE_TOPIC, self._update_data)
 
     async def async_update(self):
         """Update the sensor's state."""
