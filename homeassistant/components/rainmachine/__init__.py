@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['regenmaschine==1.0.1']
+REQUIREMENTS = ['regenmaschine==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -156,7 +156,7 @@ async def async_setup(hass, config):
     async def refresh_sensors(event_time):
         """Refresh RainMachine sensor data."""
         _LOGGER.debug('Updating RainMachine sensor data')
-        await hass.data[DATA_RAINMACHINE].async_update()
+        await rainmachine.async_update()
         async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
 
     async_track_time_interval(hass, refresh_sensors, DEFAULT_SCAN_INTERVAL)
