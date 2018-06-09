@@ -1021,6 +1021,9 @@ python-forecastio==1.4.0
 # homeassistant.components.gc100
 python-gc100==1.0.3a
 
+# homeassistant.components.version_control.gitlab
+python-gitlab==1.4.0
+
 # homeassistant.components.sensor.hp_ilo
 python-hpilo==3.9
 

@@ -10,9 +10,11 @@ https://home-assistant.io/components/version_control.local_git/
 import logging
 
 import voluptuous as vol
-from homeassistant.components.version_control import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.components.version_control import (
+    ATTR_BRANCH_NAME, ATTR_COMMIT_TITLE, DOMAIN, PLATFORM_SCHEMA)
+
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_NAME, CONF_PATH, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, CONF_NAME, CONF_PATH, STATE_PROBLEM, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
@@ -20,20 +22,20 @@ REQUIREMENTS = ['gitpython==2.1.9']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_NAME = 'name'
 ATTR_PATH = 'path'
+ATTR_STATUS = 'status'
 ATTR_REMOTE = 'remote'
 ATTR_RESET = 'reset'
 ATTR_ACTIVE_COMMIT_SUMMARY = 'commit_summary'
 
-SERVICE_LOCAL_GIT_PULL = 'local_git_pull'
-
 DATA_LOCAL_GIT = 'local_git'
 
-STATE_BARE = 'bare'
-STATE_CLEAN = 'clean'
-STATE_DIRTY = 'dirty'
-STATE_INVALID = 'empty'
+SERVICE_LOCAL_GIT_PULL = 'local_git_pull'
+
+STATUS_BARE = 'bare'
+STATUS_CLEAN = 'clean'
+STATUS_DIRTY = 'dirty'
+STATUS_INVALID = 'invalid'
 
 LOCAL_GIT_PULL_SERVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
@@ -51,23 +53,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Git repository sensor."""
     from git import Repo
+    from git import exc as git_exceptions
 
     if hass.data.get(DATA_LOCAL_GIT) is None:
         hass.data[DATA_LOCAL_GIT] = []
 
     entities = []
 
-    repository = Repo(config.get(CONF_PATH))
-
-    local_git_repo = GitRepo(name=config.get(CONF_NAME), repo=repository)
-    local_git_repo_activebranch = GitRepoActiveBranch(
-        name=config.get(CONF_NAME), repo=repository)
-    local_git_repo_activecommit = GitRepoActiveCommit(
-        name=config.get(CONF_NAME), repo=repository)
+    try:
+        local_git_repo = GitRepo(
+            name=config.get(CONF_NAME),
+            repo=Repo(config.get(CONF_PATH))
+        )
+    except git_exceptions.NoSuchPathError:
+        _LOGGER.error("No such path: {}", config.get(CONF_PATH))
+        return False
+    except git_exceptions.InvalidGitRepositoryError:
+        _LOGGER.error("No Git repository found in {}", config.get(CONF_PATH))
+        return False
 
     entities.append(local_git_repo)
-    entities.append(local_git_repo_activebranch)
-    entities.append(local_git_repo_activecommit)
 
     hass.data[DATA_LOCAL_GIT].append(local_git_repo)
     add_entities(entities, update_before_add=True)
@@ -124,28 +129,57 @@ class GitRepo(GitRepoAttribute):
         self._name = "{}".format(name)
         self._path = self._repo.working_dir
 
+        self._commit_title = None
+        self._branch_name = None
+        self._commit_title = None
+        self._status = None
+        self._state = STATE_UNKNOWN
+
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
+        attributes = {
             ATTR_PATH: self._path,
+            ATTR_STATUS: self._status
         }
+
+        # Add additional attributes.
+        if self._branch_name is not None:
+            attributes[ATTR_BRANCH_NAME] = self._branch_name
+
+        if self._commit_title is not None:
+            attributes[ATTR_COMMIT_TITLE] = self._commit_title
+
+        return attributes
 
     def update(self):
         """Retrieve latest state."""
         if self._repo.bare:
-            self._state = STATE_BARE
+            self._status = STATUS_BARE
+            self._state = STATE_PROBLEM
+            return
+
+        self._branch_name = self._repo.active_branch.name
+
+        if not self._repo.active_branch.is_valid():
+            self._status = STATUS_INVALID
+            self._state = STATE_PROBLEM
             return
 
         if self._repo.is_dirty(untracked_files=True):
-            self._state = STATE_DIRTY
-            return
+            self._status = STATUS_DIRTY
+        else:
+            self._status = STATUS_CLEAN
 
-        if not self._repo.active_branch.is_valid():
-            self._state = STATE_INVALID
-            return
+        try:
+            self._state = self._repo.head.commit.hexsha
+        except ValueError:
+            self._state = STATE_UNKNOWN
 
-        self._state = STATE_CLEAN
+        try:
+            self._commit_title = self._repo.head.commit.summary
+        except ValueError:
+            self._commit_title = None
 
     def git_pull(self, remote, reset=False):
         """Pull data from a git remote."""
@@ -161,42 +195,3 @@ class GitRepo(GitRepoAttribute):
             self._repo.git.reset('--hard')
 
         git_remote.pull()
-
-
-class GitRepoActiveBranch(GitRepoAttribute):
-    """Representation of an active branch in a local Git Repo."""
-
-    def __init__(self, name, repo):
-        """Create a new local Git repo Active Branch entity."""
-        GitRepoAttribute.__init__(self, name, repo)
-        self._name = "{} Active Branch".format(name)
-
-    def update(self):
-        """Retrieve latest state."""
-        self._state = self._repo.active_branch.name
-
-
-class GitRepoActiveCommit(GitRepoAttribute):
-    """Representation of an active commit in a local Git Repo."""
-
-    def __init__(self, name, repo):
-        """Create a new local Git repo Active Commit entity."""
-        GitRepoAttribute.__init__(self, name, repo)
-        self._name = "{} Active Commit".format(name)
-        self._summary = None
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_ACTIVE_COMMIT_SUMMARY: self._summary,
-        }
-
-    def update(self):
-        """Retrieve latest state."""
-        if not self._repo.active_branch.is_valid():
-            self._state = STATE_INVALID
-            return
-
-        self._state = self._repo.head.commit.hexsha
-        self._summary = self._repo.head.commit.summary

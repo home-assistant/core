@@ -16,6 +16,10 @@ TEST_CONFIG = {
     }
 }
 
+TEST_BRANCH_NAME = 'master'
+TEST_COMMIT_HEXSHA = 'test_hexsha'
+TEST_COMMIT_TITLE = 'test_summary'
+
 
 class TestLocalGit(unittest.TestCase):
     """Test the local_git platform."""
@@ -47,30 +51,18 @@ class TestLocalGit(unittest.TestCase):
                 add_devices.call_args[0][0][0],
                 local_git.GitRepo)
         )
-        self.assertTrue(
-            isinstance(
-                add_devices.call_args[0][0][1],
-                local_git.GitRepoActiveBranch)
-        )
-        self.assertTrue(
-            isinstance(
-                add_devices.call_args[0][0][2],
-                local_git.GitRepoActiveCommit)
-        )
-        self.assertEqual(3, len(self.hass.states.all()))
+        self.assertEqual(1, len(self.hass.states.all()))
 
-    def test_setup_invalid_path(self):
-        """Test setup with invalid path."""
-        add_entities = Mock()
-
-        with self.assertRaises(Exception):
-            local_git.setup_platform(self.hass, self.config, add_entities)
-
-    def test_gitrepo_with_values(self):
-        """Test GitRepo with values."""
-        entity = local_git.GitRepo(
-            TEST_CONFIG['version_control'][local_git.CONF_NAME], repo=Mock()
+    def test_valid_gitrepo_values(self):
+        """Test valid GitRepo values."""
+        entity = self._createTestEntity(
+            is_bare=False,
+            is_valid=True,
+            is_dirty=False
         )
+
+        self.assertEqual(STATE_UNKNOWN, entity.state)
+
         entity.update()
 
         self.assertEqual(
@@ -79,89 +71,125 @@ class TestLocalGit(unittest.TestCase):
             ),
             entity.name
         )
+        self.assertEqual(TEST_COMMIT_HEXSHA, entity.state)
+        self.assertEqual(
+            TEST_BRANCH_NAME,
+            entity.device_state_attributes[local_git.ATTR_BRANCH_NAME]
+        )
+        self.assertEqual(
+            TEST_COMMIT_TITLE,
+            entity.device_state_attributes[local_git.ATTR_COMMIT_TITLE]
+        )
+        self.assertEqual(
+            local_git.STATUS_CLEAN,
+            entity.device_state_attributes[local_git.ATTR_STATUS]
+        )
 
-    def test_gitrepo_activebranch_with_values(self):
-        """Test GitRepoActiveBranch with values."""
-        branch_name = 'master'
-        entity = local_git.GitRepoActiveBranch(
+    def test_bare_gitrepo_values(self):
+        """Test bare GitRepo values."""
+        entity = self._createTestEntity(
+            is_bare=True,
+            is_valid=True,
+            is_dirty=False
+        )
+
+        self.assertEqual(STATE_UNKNOWN, entity.state)
+
+        entity.update()
+
+        self.assertEqual(
+            "{}".format(
+                TEST_CONFIG['version_control'][local_git.CONF_NAME]
+            ),
+            entity.name
+        )
+        self.assertEqual(local_git.STATE_PROBLEM, entity.state)
+        self.assertNotIn(
+            local_git.ATTR_BRANCH_NAME,
+            entity.device_state_attributes
+        )
+        self.assertNotIn(
+            local_git.ATTR_COMMIT_TITLE,
+            entity.device_state_attributes
+        )
+        self.assertEqual(
+            local_git.STATUS_BARE,
+            entity.device_state_attributes[local_git.ATTR_STATUS]
+        )
+
+    def test_gitrepo_values_with_invalid_branch(self):
+        """Test GitRepo values with invalid branch."""
+        entity = self._createTestEntity(
+            is_bare=False,
+            is_valid=False,
+            is_dirty=False
+        )
+
+        self.assertEqual(STATE_UNKNOWN, entity.state)
+        entity.update()
+
+        self.assertEqual(
+            "{}".format(
+                TEST_CONFIG['version_control'][local_git.CONF_NAME]
+            ),
+            entity.name
+        )
+        self.assertEqual(local_git.STATE_PROBLEM, entity.state)
+        self.assertEqual(
+            TEST_BRANCH_NAME,
+            entity.device_state_attributes[local_git.ATTR_BRANCH_NAME]
+        )
+        self.assertNotIn(
+            local_git.ATTR_COMMIT_TITLE,
+            entity.device_state_attributes
+        )
+        self.assertEqual(
+            local_git.STATUS_INVALID,
+            entity.device_state_attributes[local_git.ATTR_STATUS]
+        )
+
+    def test_dirty_gitrepo_values(self):
+        """Test dirty GitRepo values."""
+        entity = self._createTestEntity(
+            is_bare=False,
+            is_valid=True,
+            is_dirty=True
+        )
+        self.assertEqual(STATE_UNKNOWN, entity.state)
+        entity.update()
+
+        self.assertEqual(
+            "{}".format(
+                TEST_CONFIG['version_control'][local_git.CONF_NAME]
+            ),
+            entity.name
+        )
+        self.assertEqual(TEST_COMMIT_HEXSHA, entity.state)
+        self.assertEqual(
+            TEST_BRANCH_NAME,
+            entity.device_state_attributes[local_git.ATTR_BRANCH_NAME]
+        )
+        self.assertEqual(
+            TEST_COMMIT_TITLE,
+            entity.device_state_attributes[local_git.ATTR_COMMIT_TITLE]
+        )
+        self.assertEqual(
+            local_git.STATUS_DIRTY,
+            entity.device_state_attributes[local_git.ATTR_STATUS]
+        )
+
+    @staticmethod
+    def _createTestEntity(is_bare: bool, is_valid: bool, is_dirty: bool):
+        """Create a test GitRepo entity based on input parameters."""
+        entity = local_git.GitRepo(
             TEST_CONFIG['version_control'][local_git.CONF_NAME], repo=Mock()
         )
-        entity._repo.active_branch.name = branch_name
 
-        self.assertEqual(
-            "{} Active Branch".format(
-                TEST_CONFIG['version_control'][local_git.CONF_NAME]
-            ),
-            entity.name
-        )
-        self.assertEqual(STATE_UNKNOWN, entity.state)
+        entity._repo.bare = is_bare
+        entity._repo.is_dirty.return_value = is_dirty
+        entity._repo.active_branch.name = TEST_BRANCH_NAME
+        entity._repo.active_branch.is_valid.return_value = is_valid
+        entity._repo.head.commit.hexsha = TEST_COMMIT_HEXSHA
+        entity._repo.head.commit.summary = TEST_COMMIT_TITLE
 
-        entity.update()
-
-        self.assertEqual(branch_name, entity.state)
-
-    def test_gitrepo_activecommit_values_with_valid_branch(self):
-        """Test GitRepoActiveCommit values with valid branch."""
-        commit_hexsha = 'test_hexsha'
-        commit_summary = 'test_summary'
-
-        entity = local_git.GitRepoActiveCommit(
-            TEST_CONFIG['version_control'][local_git.CONF_NAME], repo=Mock()
-        )
-        entity._repo.active_branch.is_valid.return_value = True
-        entity._repo.head.commit.hexsha = commit_hexsha
-        entity._repo.head.commit.summary = commit_summary
-
-        self.assertEqual(
-            "{} Active Commit".format(
-                TEST_CONFIG['version_control'][local_git.CONF_NAME]
-            ),
-            entity.name
-        )
-        self.assertEqual(STATE_UNKNOWN, entity.state)
-        self.assertEqual(
-            None,
-            entity.device_state_attributes[
-                local_git.ATTR_ACTIVE_COMMIT_SUMMARY
-            ]
-        )
-
-        entity.update()
-
-        self.assertEqual(commit_hexsha, entity.state)
-        self.assertEqual(
-            commit_summary,
-            entity.device_state_attributes[
-                local_git.ATTR_ACTIVE_COMMIT_SUMMARY
-            ]
-        )
-
-    def test_gitrepo_activebranch_values_with_invalid_branch(self):
-        """Test GitRepoActiveCommit values with invalid branch."""
-        entity = local_git.GitRepoActiveCommit(
-            TEST_CONFIG['version_control'][local_git.CONF_NAME], repo=Mock())
-        entity._repo.active_branch.is_valid.return_value = False
-
-        self.assertEqual(
-            "{} Active Commit".format(
-                TEST_CONFIG['version_control'][local_git.CONF_NAME]
-            ),
-            entity.name
-        )
-        self.assertEqual(STATE_UNKNOWN, entity.state)
-        self.assertEqual(
-            None,
-            entity.device_state_attributes[
-                local_git.ATTR_ACTIVE_COMMIT_SUMMARY
-            ]
-        )
-
-        entity.update()
-
-        self.assertEqual(local_git.STATE_INVALID, entity.state)
-        self.assertEqual(
-            None,
-            entity.device_state_attributes[
-                local_git.ATTR_ACTIVE_COMMIT_SUMMARY
-            ]
-        )
+        return entity

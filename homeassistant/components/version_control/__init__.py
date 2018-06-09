@@ -16,7 +16,10 @@ DOMAIN = 'version_control'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
-SCAN_INTERVAL = timedelta(seconds=600)
+SCAN_INTERVAL = timedelta(minutes=5)
+
+ATTR_BRANCH_NAME = 'branch_name'
+ATTR_COMMIT_TITLE = 'commit_title'
 
 
 async def async_setup(hass, config):
@@ -36,3 +39,9 @@ async def async_setup_entry(hass, entry):
 async def async_unload_entry(hass, entry):
     """Unload a config entry."""
     return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
+class VersionControlException(Exception):
+    """Simple Exception class that can be explicitly caught."""
+
+    pass
