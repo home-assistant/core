@@ -332,8 +332,8 @@ async def test_light_observed(hass, mock_gateway, mock_api):
     light.observe.assert_called()
 
 
-async def test_available(hass, mock_gateway, mock_api):
-    """Test available property."""
+async def test_light_available(hass, mock_gateway, mock_api):
+    """Test light available property."""
     light = mock_light({'state': True}, n=1)
     light.reachable = True
 
@@ -492,7 +492,7 @@ def mock_group(test_state={}, n=0):
 
 
 async def test_group(hass, mock_gateway, mock_api):
-    """Test that lights are correctly added."""
+    """Test that groups are correctly added."""
     mock_gateway.mock_groups.append(mock_group())
     state = {'state': True, 'dimmer': 100}
     mock_gateway.mock_groups.append(mock_group(state, 1))
@@ -509,7 +509,7 @@ async def test_group(hass, mock_gateway, mock_api):
 
 
 async def test_group_turn_on(hass, mock_gateway, mock_api):
-    """Test turning off a light."""
+    """Test turning on a group."""
     group = mock_group()
     group2 = mock_group(n=1)
     group3 = mock_group(n=2)
@@ -536,7 +536,7 @@ async def test_group_turn_on(hass, mock_gateway, mock_api):
 
 
 async def test_group_turn_off(hass, mock_gateway, mock_api):
-    """Test turning off a light."""
+    """Test turning off a group."""
     group = mock_group({'state': True})
     mock_gateway.mock_groups.append(group)
     await setup_gateway(hass, mock_gateway, mock_api)
