@@ -82,19 +82,9 @@ class HorizonDevice(MediaPlayerDevice):
         return self._name
 
     @property
-    def client(self):
-        """Return the Horizon client object."""
-        return self._client
-
-    @property
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def keys(self):
-        """Return the predefined keys."""
-        return self._keys
 
     @property
     def supported_features(self):
