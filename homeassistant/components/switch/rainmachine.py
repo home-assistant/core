@@ -7,8 +7,8 @@ https://home-assistant.io/components/switch.rainmachine/
 import logging
 
 from homeassistant.components.rainmachine import (
-    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DATA_UPDATE_TOPIC, DEFAULT_ZONE_RUN,
-    RainMachineEntity)
+    CONF_ZONE_RUN_TIME, DATA_RAINMACHINE, DEFAULT_ZONE_RUN,
+    PROGRAM_UPDATE_TOPIC, ZONE_UPDATE_TOPIC, RainMachineEntity)
 from homeassistant.const import ATTR_ID
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
@@ -178,11 +178,6 @@ class RainMachineSwitch(RainMachineEntity, SwitchDevice):
         """Update state, trigger updates."""
         self.async_schedule_update_ha_state(True)
 
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        async_dispatcher_connect(self.hass, DATA_UPDATE_TOPIC,
-                                 self._program_updated)
-
 
 class RainMachineProgram(RainMachineSwitch):
     """A RainMachine program."""
@@ -201,6 +196,11 @@ class RainMachineProgram(RainMachineSwitch):
         """Return a list of active zones associated with this program."""
         return [z for z in self._obj['wateringTimes'] if z['active']]
 
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(self.hass, PROGRAM_UPDATE_TOPIC,
+                                 self._program_updated)
+
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the program off."""
         from regenmaschine.errors import RequestError
@@ -208,7 +208,7 @@ class RainMachineProgram(RainMachineSwitch):
         try:
             await self.rainmachine.client.programs.stop(
                 self._rainmachine_entity_id)
-            async_dispatcher_send(self.hass, DATA_UPDATE_TOPIC)
+            async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         except RequestError as err:
             _LOGGER.error('Unable to turn off program "%s": %s',
                           self.unique_id, str(err))
@@ -220,7 +220,7 @@ class RainMachineProgram(RainMachineSwitch):
         try:
             await self.rainmachine.client.programs.start(
                 self._rainmachine_entity_id)
-            async_dispatcher_send(self.hass, DATA_UPDATE_TOPIC)
+            async_dispatcher_send(self.hass, PROGRAM_UPDATE_TOPIC)
         except RequestError as err:
             _LOGGER.error('Unable to turn on program "%s": %s',
                           self.unique_id, str(err))
@@ -258,6 +258,13 @@ class RainMachineZone(RainMachineSwitch):
     def is_on(self) -> bool:
         """Return whether the zone is running."""
         return bool(self._obj.get('state'))
+
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(self.hass, PROGRAM_UPDATE_TOPIC,
+                                 self._program_updated)
+        async_dispatcher_connect(self.hass, ZONE_UPDATE_TOPIC,
+                                 self._program_updated)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Turn the zone off."""

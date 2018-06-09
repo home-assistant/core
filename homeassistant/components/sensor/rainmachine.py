@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.rainmachine/
 import logging
 
 from homeassistant.components.rainmachine import (
-    DATA_RAINMACHINE, DATA_UPDATE_TOPIC, SENSORS, RainMachineEntity)
+    DATA_RAINMACHINE, SENSOR_UPDATE_TOPIC, SENSORS, RainMachineEntity)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -76,14 +76,14 @@ class RainMachineSensor(RainMachineEntity):
         return self._unit
 
     @callback
-    def update_data(self):
+    def _update_data(self):
         """Update the state."""
         self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, DATA_UPDATE_TOPIC,
-                                 self.update_data)
+        async_dispatcher_connect(self.hass, SENSOR_UPDATE_TOPIC,
+                                 self._update_data)
 
     async def async_update(self):
         """Update the sensor's state."""

@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['regenmaschine==1.0.0']
+REQUIREMENTS = ['regenmaschine==1.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,9 @@ DOMAIN = 'rainmachine'
 NOTIFICATION_ID = 'rainmachine_notification'
 NOTIFICATION_TITLE = 'RainMachine Component Setup'
 
-DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
+PROGRAM_UPDATE_TOPIC = '{0}_program_update'.format(DOMAIN)
+SENSOR_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
+ZONE_UPDATE_TOPIC = '{0}_zone_update'.format(DOMAIN)
 
 CONF_PROGRAM_ID = 'program_id'
 CONF_ZONE_ID = 'zone_id'
@@ -116,7 +118,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 async def async_setup(hass, config):
     """Set up the RainMachine component."""
-    from regenmaschine import Client, RequestError
+    from regenmaschine import Client
+    from regenmaschine.errors import RequestError
 
     conf = config[DOMAIN]
     ip_address = conf[CONF_IP_ADDRESS]
@@ -150,39 +153,39 @@ async def async_setup(hass, config):
             discovery.async_load_platform(hass, component, DOMAIN, schema,
                                           config))
 
-    async def refresh(event_time):
-        """Refresh RainMachine data."""
+    async def refresh_sensors(event_time):
+        """Refresh RainMachine sensor data."""
         _LOGGER.debug('Updating RainMachine data')
         await hass.data[DATA_RAINMACHINE].async_update()
-        async_dispatcher_send(hass, DATA_UPDATE_TOPIC)
+        async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
 
-    async_track_time_interval(hass, refresh, DEFAULT_SCAN_INTERVAL)
+    async_track_time_interval(hass, refresh_sensors, DEFAULT_SCAN_INTERVAL)
 
     async def start_program(service):
         """Start a particular program."""
         await rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
-        async_dispatcher_send(hass, DATA_UPDATE_TOPIC)
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
     async def start_zone(service):
         """Start a particular zone for a certain amount of time."""
         await rainmachine.client.zones.start(service.data[CONF_ZONE_ID],
                                              service.data[CONF_ZONE_RUN_TIME])
-        async_dispatcher_send(hass, DATA_UPDATE_TOPIC)
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
     async def stop_all(service):
         """Stop all watering."""
         await rainmachine.client.watering.stop_all()
-        async_dispatcher_send(hass, DATA_UPDATE_TOPIC)
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
     async def stop_program(service):
         """Stop a program."""
         await rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
-        async_dispatcher_send(hass, DATA_UPDATE_TOPIC)
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
     async def stop_zone(service):
         """Stop a zone."""
         await rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
-        async_dispatcher_send(hass, DATA_UPDATE_TOPIC)
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
     for service, method, schema in [
             ('start_program', start_program, SERVICE_START_PROGRAM_SCHEMA),
