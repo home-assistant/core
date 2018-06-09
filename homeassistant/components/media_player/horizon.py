@@ -149,12 +149,15 @@ class HorizonDevice(MediaPlayerDevice):
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play media / switch to channel."""
-        if MEDIA_TYPE_CHANNEL == media_type and isinstance(int(media_id), int):
-            self._select_channel(media_id)
-            self._state = STATE_PLAYING
+        if MEDIA_TYPE_CHANNEL == media_type:
+            try:
+                self._select_channel(int(media_id))
+                self._state = STATE_PLAYING
+            except ValueError:
+                _LOGGER.error("Invalid channel: %s", media_id)
         else:
-            _LOGGER.error("Invalid type %s or channel %d. Supported type: %s",
-                          media_type, media_id, MEDIA_TYPE_CHANNEL)
+            _LOGGER.error("Invalid media type %s. Supported type: %s",
+                          media_type, MEDIA_TYPE_CHANNEL)
 
     def _select_channel(self, channel):
         """Select a channel (taken from einder library, thx)."""
