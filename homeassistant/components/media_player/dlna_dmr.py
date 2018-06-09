@@ -220,15 +220,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([device])
 
 
-@asyncio.coroutine
-def fetch_headers(hass, url, headers):
+async def fetch_headers(hass, url, headers):
     """Fetch headers from URL, first by trying HEAD, then by trying a GET."""
     # try a HEAD request to the source
     src_response = None
     try:
         session = async_get_clientsession(hass)
-        src_response = yield from session.head(url, headers=headers)
-        yield from src_response.release()
+        src_response = await session.head(url, headers=headers)
+        await src_response.release()
     except aiohttp.ClientError:
         pass
 
@@ -237,8 +236,8 @@ def fetch_headers(hass, url, headers):
 
     # try a GET request to the source, but ignore all the data
     session = async_get_clientsession(hass)
-    src_response = yield from session.get(url, headers=headers)
-    yield from src_response.release()
+    src_response = await session.get(url, headers=headers)
+    await src_response.release()
 
     return src_response.headers
 
@@ -261,15 +260,14 @@ class UpnpNotifyView(HomeAssistantView):
         handler = request_handler_factory(self, self.async_notify)
         router.add_route('notify', UpnpNotifyView.url, handler)
 
-    @asyncio.coroutine
-    def async_notify(self, request):
+    async def async_notify(self, request):
         """Callback method for NOTIFY requests."""
         if 'SID' not in request.headers:
             return aiohttp.web.Response(status=422)
 
         headers = request.headers
         sid = headers['SID']
-        body = yield from request.text()
+        body = await request.text()
 
         # find UpnpService by SID
         if sid not in self._registered_services:
@@ -366,8 +364,7 @@ class PickyDeviceProxyView(HomeAssistantView):
         base_url = self.hass.config.api.base_url
         return urllib.parse.urljoin(base_url, self.url)
 
-    @asyncio.coroutine
-    def async_head(self, request, **args):
+    async def async_head(self, request, **args):
         """Handle HEAD request."""
         url = None
         if 'key' in args:
@@ -377,7 +374,7 @@ class PickyDeviceProxyView(HomeAssistantView):
         else:
             return aiohttp.web.Response(body="Missing URL", status=422)
 
-        src_headers = yield from fetch_headers(self.hass, url, request.headers)
+        src_headers = await fetch_headers(self.hass, url, request.headers)
         headers = {
             'Accept-Ranges': 'bytes',
             'transferMode.dlna.org': self.DLNA_TRANSFER_MODE,
@@ -386,8 +383,7 @@ class PickyDeviceProxyView(HomeAssistantView):
         headers.update(src_headers)
         return aiohttp.web.Response(headers=headers)
 
-    @asyncio.coroutine
-    def async_get(self, request, **args):
+    async def async_get(self, request, **args):
         """Handle GET request."""
         url = None
         if 'key' in args:
@@ -399,8 +395,8 @@ class PickyDeviceProxyView(HomeAssistantView):
 
         # get data from source
         session = async_get_clientsession(self.hass)
-        src_response = yield from session.get(url, headers=request.headers)
-        src_data = yield from src_response.read()
+        src_response = await session.get(url, headers=request.headers)
+        src_data = await src_response.read()
 
         headers = {
             'Accept-Ranges': 'bytes',
@@ -438,18 +434,17 @@ class HassUpnpRequester(object):
         """Initializer."""
         self.hass = hass
 
-    @asyncio.coroutine
-    def async_http_request(self, method, url, headers=None, body=None):
+    async def async_http_request(self, method, url, headers=None, body=None):
         """Do a HTTP request."""
         session = async_get_clientsession(self.hass)
         with async_timeout.timeout(5, loop=self.hass.loop):
-            response = yield from session.request(method,
-                                                  url,
-                                                  headers=headers,
-                                                  data=body)
-            response_body = yield from response.text()
-            yield from response.release()
-        yield from asyncio.sleep(0.25)
+            response = await session.request(method,
+                                             url,
+                                             headers=headers,
+                                             data=body)
+            response_body = await response.text()
+            await response.release()
+        await asyncio.sleep(0.25)
 
         return response.status, response.headers, response_body
 
@@ -478,10 +473,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
         """Device is available."""
         return self._is_connected
 
-    @asyncio.coroutine
-    def _async_on_hass_stop(self, event):
+    async def _async_on_hass_stop(self, event):
         """Event handler on HASS stop."""
-        yield from self.async_unsubscribe_all()
+        await self.async_unsubscribe_all()
 
     def _service(self, service_type):
         """Get UpnpService by service_type or alias."""
@@ -491,8 +485,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         service_type = SERVICE_TYPES.get(service_type, service_type)
         return self._device.service(service_type)
 
-    @asyncio.coroutine
-    def async_unsubscribe_all(self):
+    async def async_unsubscribe_all(self):
         """
         Disconnect from device.
 
@@ -506,14 +499,13 @@ class DlnaDmrDevice(MediaPlayerDevice):
                 sid = service.subscription_sid
                 if sid:
                     self._notify_view.unregister_service(sid)
-                    yield from service.async_unsubscribe(True)
+                    await service.async_unsubscribe(True)
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 pass
 
-    @asyncio.coroutine
-    def _async_init_device(self):
+    async def _async_init_device(self):
         """Fetch and init services."""
-        self._device = yield from self._factory.async_create_device(self._url)
+        self._device = await self._factory.async_create_device(self._url)
 
         # set name
         if self.name is None or self.name == DEFAULT_NAME:
@@ -524,16 +516,15 @@ class DlnaDmrDevice(MediaPlayerDevice):
         for service in self._device.services.values():
             service.on_state_variable_change = self.on_state_variable_change
 
-            sid = yield from service.async_subscribe(callback_url)
+            sid = await service.async_subscribe(callback_url)
             if sid:
                 self._notify_view.register_service(sid, service)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve the latest data."""
         if not self._device:
             try:
-                yield from self._async_init_device()
+                await self._async_init_device()
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 # Not yet seen alive, leave for now, gracefully
                 return
@@ -544,29 +535,28 @@ class DlnaDmrDevice(MediaPlayerDevice):
             if avt_service:
                 get_transport_info_action = \
                     avt_service.action('GetTransportInfo')
-                state = yield from self._async_poll_transport_info(
+                state = await self._async_poll_transport_info(
                     get_transport_info_action)
-                yield from asyncio.sleep(0.25)
+                await asyncio.sleep(0.25)
 
                 if state == STATE_PLAYING or state == STATE_PAUSED:
                     # playing something... get position info
                     get_position_info_action = avt_service.action(
                         'GetPositionInfo')
-                    yield from self._async_poll_position_info(
+                    await self._async_poll_position_info(
                         get_position_info_action)
             else:
-                yield from self._device.async_ping()
+                await self._device.async_ping()
 
             self._is_connected = True
         except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
             _LOGGER.debug('%s.async_update(): error on update: %s', self, ex)
             self._is_connected = False
-            yield from self.async_unsubscribe_all()
+            await self.async_unsubscribe_all()
 
-    @asyncio.coroutine
-    def _async_poll_transport_info(self, action):
+    async def _async_poll_transport_info(self, action):
         """Update transport info from device."""
-        result = yield from action.async_call(InstanceID=0)
+        result = await action.async_call(InstanceID=0)
 
         # set/update state_variable 'TransportState'
         service = action.service
@@ -579,10 +569,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
         return self.state
 
-    @asyncio.coroutine
-    def _async_poll_position_info(self, action):
+    async def _async_poll_position_info(self, action):
         """Update position info."""
-        result = yield from action.async_call(InstanceID=0)
+        result = await action.async_call(InstanceID=0)
 
         service = action.service
         track_duration = service.state_variable('CurrentTrackDuration')
@@ -660,9 +649,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         max_value = override_max or state_variable.max_value or 100
         return min(value / max_value, 1.0)
 
-    @asyncio.coroutine
     @requires_action('RC', 'SetVolume')
-    def async_set_volume_level(self, action, volume):
+    async def async_set_volume_level(self, action, volume):
         """Set volume level, range 0..1."""
         # pylint: disable=arguments-differ
         argument = action.argument('DesiredVolume')
@@ -672,9 +660,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
         max_ = override_max or state_variable.max_value or 100
         desired_volume = int(min_ + volume * (max_ - min_))
 
-        yield from action.async_call(InstanceID=0,
-                                     Channel='Master',
-                                     DesiredVolume=desired_volume)
+        await action.async_call(InstanceID=0,
+                                Channel='Master',
+                                DesiredVolume=desired_volume)
 
     @property
     @requires_state_variable('RC', 'Mute')
@@ -688,40 +676,35 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
         return value
 
-    @asyncio.coroutine
     @requires_action('RC', 'SetMute')
-    def async_mute_volume(self, action, mute):
+    async def async_mute_volume(self, action, mute):
         """Mute the volume."""
         # pylint: disable=arguments-differ
         desired_mute = bool(mute)
-        yield from action.async_call(InstanceID=0,
-                                     Channel='Master',
-                                     DesiredMute=desired_mute)
+        await action.async_call(InstanceID=0,
+                                Channel='Master',
+                                DesiredMute=desired_mute)
 
-    @asyncio.coroutine
     @requires_action('AVT', 'Pause')
-    def async_media_pause(self, action):
+    async def async_media_pause(self, action):
         """Send pause command."""
         # pylint: disable=arguments-differ
-        yield from action.async_call(InstanceID=0)
+        await action.async_call(InstanceID=0)
 
-    @asyncio.coroutine
     @requires_action('AVT', 'Play')
-    def async_media_play(self, action):
+    async def async_media_play(self, action):
         """Send play command."""
         # pylint: disable=arguments-differ
-        yield from action.async_call(InstanceID=0, Speed='1')
+        await action.async_call(InstanceID=0, Speed='1')
 
-    @asyncio.coroutine
     @requires_action('AVT', 'Stop')
-    def async_media_stop(self, action):
+    async def async_media_stop(self, action):
         """Send stop command."""
         # pylint: disable=arguments-differ
-        yield from action.async_call(InstanceID=0)
+        await action.async_call(InstanceID=0)
 
-    @asyncio.coroutine
     @requires_action('AVT', 'SetAVTransportURI')
-    def async_play_media(self, action, media_type, media_id, **kwargs):
+    async def async_play_media(self, action, media_type, media_id, **kwargs):
         """Play a piece of media."""
         # pylint: disable=arguments-differ
         picky_device = self._additional_configuration.get(CONF_PICKY_DEVICE,
@@ -736,9 +719,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
             req_src_headers = {
                 'GetContentFeatures.dlna.org': '1'
             }
-            src_headers = yield from fetch_headers(self.hass,
-                                                   media_id,
-                                                   req_src_headers)
+            src_headers = await fetch_headers(self.hass,
+                                              media_id,
+                                              req_src_headers)
 
             if 'Content-Type' in src_headers:
                 media_info['mime_type'] = src_headers['Content-Type']
@@ -783,28 +766,26 @@ class DlnaDmrDevice(MediaPlayerDevice):
   <res protocolInfo="http-get:*:{mime_type}:{dlna_features}">{media_url}</res>
 </item>
 </DIDL-Lite>""".format(**media_info)
-        yield from action.async_call(InstanceID=0,
-                                     CurrentURI=media_id,
-                                     CurrentURIMetaData=meta_data)
-        yield from asyncio.sleep(0.25)
+        await action.async_call(InstanceID=0,
+                                CurrentURI=media_id,
+                                CurrentURIMetaData=meta_data)
+        await asyncio.sleep(0.25)
 
         # send play command
-        yield from self.async_media_play()
-        yield from asyncio.sleep(0.25)
+        await self.async_media_play()
+        await asyncio.sleep(0.25)
 
-    @asyncio.coroutine
     @requires_action('AVT', 'Previous')
-    def async_media_previous_track(self, action):
+    async def async_media_previous_track(self, action):
         """Send previous track command."""
         # pylint: disable=arguments-differ
-        yield from action.async_call(InstanceID=0)
+        await action.async_call(InstanceID=0)
 
-    @asyncio.coroutine
     @requires_action('AVT', 'Next')
-    def async_media_next_track(self, action):
+    async def async_media_next_track(self, action):
         """Send next track command."""
         # pylint: disable=arguments-differ
-        yield from action.async_call(InstanceID=0)
+        await action.async_call(InstanceID=0)
 
     @property
     @requires_state_variable('AVT', 'CurrentTrackMetaData')
