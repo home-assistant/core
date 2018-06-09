@@ -189,7 +189,7 @@ class SmappeeSensor(Entity):
             data = self._smappee.sensor_consumption[self._location_id]\
                 .get(int(sensor_id))
             if data:
-                tempdata = data.get('records');
+                tempdata = data.get('records')
                 if tempdata:
                     consumption = tempdata[-1]
                     _LOGGER.debug("%s (%s) %s",
