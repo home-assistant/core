@@ -1,5 +1,6 @@
 """
 Support for the OpenWeatherMap (OWM) service.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.openweathermap/
 """
@@ -12,8 +13,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
-    CONF_API_KEY, CONF_MODE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, STATE_UNKNOWN,
-    TEMP_CELSIUS)
+    CONF_API_KEY, CONF_MODE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
+    STATE_UNKNOWN, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -121,7 +122,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the pressure."""
-        return round(self.data.get_pressure().get('press'))
+        return self.data.get_pressure().get('press')
 
     @property
     def humidity(self):
@@ -131,7 +132,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return round(self.data.get_wind().get('speed'), 1)
+        return self.data.get_wind().get('speed')
 
     @property
     def wind_bearing(self):
@@ -140,7 +141,12 @@ class OpenWeatherMapWeather(WeatherEntity):
 
     @property
     def attribution(self):
-        """Return the attribution. Passing different attributes to correctly display the time in the frontend weather card"""
+        """
+        Return the attribution.
+
+        Passing different attributes to correctly display
+        the time in the frontend weather card.
+        """
         if self._mode == 'daily':
             return ATTRIBUTION_DAILY
         else:
@@ -153,20 +159,28 @@ class OpenWeatherMapWeather(WeatherEntity):
         for entry in self.forecast_data.get_weathers():
             if self._mode == 'daily':
                 data.append({
-                    ATTR_FORECAST_TIME: entry.get_reference_time('unix') * 1000,
-                    ATTR_FORECAST_TEMP: round(entry.get_temperature('celsius').get('day')),
-                    ATTR_FORECAST_TEMP_LOW: round(entry.get_temperature('celsius').get('night')),
-                    ATTR_FORECAST_WIND_SPEED: round(entry.get_wind().get('speed')),
-                    ATTR_FORECAST_WIND_BEARING: round(entry.get_wind().get('deg')),
+                    ATTR_FORECAST_TIME:
+                        entry.get_reference_time('unix') * 1000,
+                    ATTR_FORECAST_TEMP:
+                        entry.get_temperature('celsius').get('day'),
+                    ATTR_FORECAST_TEMP_LOW:
+                        entry.get_temperature('celsius').get('night'),
+                    ATTR_FORECAST_WIND_SPEED:
+                        entry.get_wind().get('speed'),
+                    ATTR_FORECAST_WIND_BEARING:
+                        entry.get_wind().get('deg'),
                     ATTR_FORECAST_CONDITION:
                         [k for k, v in CONDITION_CLASSES.items()
                             if entry.get_weather_code() in v][0]
                 })
             else:
                 data.append({
-                    ATTR_FORECAST_TIME: entry.get_reference_time('unix') * 1000,
-                    ATTR_FORECAST_TEMP: round(entry.get_temperature('celsius').get('temp')),
-                    ATTR_FORECAST_PRECIPITATION: entry.get_rain().get('3h'),
+                    ATTR_FORECAST_TIME:
+                        entry.get_reference_time('unix') * 1000,
+                    ATTR_FORECAST_TEMP:
+                        entry.get_temperature('celsius').get('temp'),
+                    ATTR_FORECAST_PRECIPITATION:
+                        entry.get_rain().get('3h'),
                     ATTR_FORECAST_CONDITION:
                         [k for k, v in CONDITION_CLASSES.items()
                             if entry.get_weather_code() in v][0]
@@ -217,9 +231,13 @@ class WeatherData(object):
 
         try:
             if self._mode == 'daily':
-                fcd = self.owm.daily_forecast_at_coords(self.latitude, self.longitude, 15)
+                fcd = self.owm.daily_forecast_at_coords(
+                    self.latitude, self.longitude, 15
+                )
             else:
-                fcd = self.owm.three_hours_forecast_at_coords(self.latitude, self.longitude)
+                fcd = self.owm.three_hours_forecast_at_coords(
+                    self.latitude, self.longitude
+                )
         except APICallError:
             _LOGGER.error("Exception when calling OWM web API "
                           "to update forecast")
