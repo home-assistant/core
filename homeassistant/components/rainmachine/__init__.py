@@ -155,7 +155,7 @@ async def async_setup(hass, config):
 
     async def refresh_sensors(event_time):
         """Refresh RainMachine sensor data."""
-        _LOGGER.debug('Updating RainMachine data')
+        _LOGGER.debug('Updating RainMachine sensor data')
         await hass.data[DATA_RAINMACHINE].async_update()
         async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
 
