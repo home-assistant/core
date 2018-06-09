@@ -52,8 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Git repository sensor."""
-    from git import Repo
-    from git import exc as git_exceptions
+    import git
 
     if hass.data.get(DATA_LOCAL_GIT) is None:
         hass.data[DATA_LOCAL_GIT] = []
@@ -63,13 +62,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     try:
         local_git_repo = GitRepo(
             name=config.get(CONF_NAME),
-            repo=Repo(config.get(CONF_PATH))
+            repo=git.Repo(config.get(CONF_PATH))
         )
-    except git_exceptions.NoSuchPathError:
-        _LOGGER.error("No such path: {}", config.get(CONF_PATH))
+    except git.exc.NoSuchPathError:
+        _LOGGER.error("No such path: %s", config.get(CONF_PATH))
         return False
-    except git_exceptions.InvalidGitRepositoryError:
-        _LOGGER.error("No Git repository found in {}", config.get(CONF_PATH))
+    except git.exc.InvalidGitRepositoryError:
+        _LOGGER.error("No Git repository found in %s", config.get(CONF_PATH))
         return False
 
     entities.append(local_git_repo)
@@ -183,12 +182,15 @@ class GitRepo(GitRepoAttribute):
 
     def git_pull(self, remote, reset=False):
         """Pull data from a git remote."""
-        from git import Remote
-        git_remote = Remote(repo=self._repo, name=remote)
+        import git
+        git_remote = git.Remote(repo=self._repo, name=remote)
 
         if not git_remote.exists():
-            _LOGGER.error("{}: Remote {} does not exist!".format(
-                SERVICE_LOCAL_GIT_PULL, remote))
+            _LOGGER.error(
+                "%s: Remote %s does not exist!",
+                SERVICE_LOCAL_GIT_PULL,
+                remote
+            )
             return False
 
         if reset:
