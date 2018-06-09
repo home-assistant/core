@@ -5,9 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nsw_fuel_station/
 """
 import datetime
+import logging
+from typing import Optional
 
 import voluptuous as vol
-from typing import Optional
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.light import PLATFORM_SCHEMA
@@ -15,7 +16,9 @@ from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['nsw-fuel-api-client==1.0.8']
+REQUIREMENTS = ['nsw-fuel-api-client==1.0.9']
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_STATION_ID = 'station_id'
 ATTR_STATION_NAME = 'station_name'
@@ -37,6 +40,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(hours=1)
 
+NOTIFICATION_ID = 'nsw_fuel_station_notification'
+NOTIFICATION_TITLE = 'NSW Fuel Station Sensor Setup'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the NSW Fuel Station sensor."""
@@ -49,6 +55,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     client = FuelCheckClient()
     station_data = StationPriceData(client, station_id, station_name)
     station_data.update()
+
+    if station_data.error is not None:
+        message = (
+            'Error: {}. Check the logs for additional information.'
+        ).format(station_data.error)
+
+        hass.components.persistent_notification.create(
+            message,
+            title=NOTIFICATION_TITLE,
+            notification_id=NOTIFICATION_ID)
+        return False
 
     available_fuel_types = station_data.get_available_fuel_types()
 
@@ -69,11 +86,20 @@ class StationPriceData(object):
 
         self._client = client
         self._data = None
+        self.error = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the internal data using the API client."""
-        self._data = self._client.get_fuel_prices_for_station(self.station_id)
+        from nsw_fuel import FuelCheckError
+
+        try:
+            self._data = self._client.get_fuel_prices_for_station(
+                self.station_id)
+        except FuelCheckError as exc:
+            self.error = str(exc)
+            _LOGGER.exception(
+                'Failed to fetch NSW Fuel station price data', exc_info=exc)
 
     def for_fuel_type(self, fuel_type: str):
         """Return the price of the given fuel type."""
