@@ -176,7 +176,7 @@ def setup(request):
 
 
 @pytest.fixture
-def mock_gateway(hass):
+def mock_gateway():
     """Mock a Tradfri gateway."""
     def get_devices():
         """Return mock devices."""
@@ -229,7 +229,8 @@ async def setup_gateway(hass, mock_gateway, mock_api,
             patch('pytradfri.api.aiocoap_api.APIFactory.request', mock_api), \
             patch('pytradfri.Gateway', return_value=mock_gateway), \
             patch.object(tradfri, 'load_json', return_value=known_hosts), \
-            patch.object(hass.components.configurator, 'request_config', request_config):
+            patch.object(hass.components.configurator, 'request_config',
+                         request_config):
 
         await async_setup_component(hass, tradfri.DOMAIN,
                                     {
@@ -250,7 +251,7 @@ async def test_setup_gateway_known_host(hass, mock_gateway, mock_api):
     """Test gateway setup with a known host."""
     await setup_gateway(hass, mock_gateway, mock_api,
                         known_hosts={
-                            'mock-host':{
+                            'mock-host': {
                                 'identity': 'mock',
                                 'key': 'mock-key'
                                 }
@@ -263,7 +264,8 @@ async def test_incorrect_security_code(hass, mock_gateway, mock_api):
         """Raise RequestError when called."""
         raise RequestError
 
-    with patch.object(hass.components.configurator, 'async_notify_errors') as notify_error:
+    with patch.object(hass.components.configurator, 'async_notify_errors') \
+            as notify_error:
         await setup_gateway(hass, mock_gateway, mock_api,
                             generate_psk=psk_error)
         notify_error.assert_called()
@@ -319,6 +321,7 @@ async def test_light(hass, mock_gateway, mock_api):
     assert lamp_1.state == 'on'
     assert lamp_1.attributes['brightness'] == 100
     assert lamp_1.attributes['hs_color'] == (0.549, 0.153)
+
 
 async def test_light_observed(hass, mock_gateway, mock_api):
     """Test that lights are correctly observed."""
