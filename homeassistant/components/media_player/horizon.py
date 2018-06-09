@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
     SUPPORT_SELECT_SOURCE)
 from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF,
                                  STATE_PAUSED, STATE_PLAYING)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util as util
 
@@ -53,9 +54,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         client = Client(host, port=port)
-    except (AuthenticationError, OSError) as msg:
+    except AuthenticationError as msg:
+        _LOGGER.error("Authentication to %s at %s failed: %s", name, host, msg)
+        return
+    except OSError as msg:
+        # occurs if horizon box is offline
         _LOGGER.error("Connection to %s at %s failed: %s", name, host, msg)
-        return False
+        raise PlatformNotReady
 
     _LOGGER.info("Connection to %s at %s established", name, host)
 
