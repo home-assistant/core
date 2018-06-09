@@ -72,8 +72,8 @@ class TestNSWFuelStation(unittest.TestCase):
                 'sensor': VALID_CONFIG}))
 
         fake_entities = [
-            'nsw_fuel_station_my_fake_station_p95',
-            'nsw_fuel_station_my_fake_station_e10'
+            'my_fake_station_p95',
+            'my_fake_station_e10'
         ]
 
         for entity_id in fake_entities:
@@ -88,6 +88,6 @@ class TestNSWFuelStation(unittest.TestCase):
             self.hass, sensor.DOMAIN, {'sensor': VALID_CONFIG}))
 
         self.assertEqual('140.0', self.hass.states.get(
-            'sensor.nsw_fuel_station_my_fake_station_e10').state)
+            'sensor.my_fake_station_e10').state)
         self.assertEqual('150.0', self.hass.states.get(
-            'sensor.nsw_fuel_station_my_fake_station_p95').state)
+            'sensor.my_fake_station_p95').state)
