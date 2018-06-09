@@ -1,5 +1,5 @@
 """
-Support for monitoring a remote Gitlab git repository.
+Support for monitoring a remote GitLab git repository.
 
 Creates entities that breakout information about
 the specified repository.
@@ -50,14 +50,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Git repository sensor."""
+    """Set up the GitLab repository sensor."""
     if hass.data.get(DATA_GITLAB) is None:
         hass.data[DATA_GITLAB] = []
 
     entities = []
 
     try:
-        gitlab_data = GitlabData(
+        gitlab_data = GitLabData(
             url=config.get(CONF_URL),
             token=config.get(CONF_TOKEN),
             verify_ssl=config.get(CONF_VERIFY_SSL),
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error(error)
         return False
 
-    gitlab_repo = GitlabRepo(
+    gitlab_repo = GitLabRepo(
         name=config.get(CONF_NAME), gitlab_data=gitlab_data
     )
 
@@ -78,11 +78,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities, update_before_add=True)
 
 
-class GitlabRepo(Entity):
-    """Representation of Gitlab repo entity."""
+class GitLabRepo(Entity):
+    """Representation of GitLab repo entity."""
 
     def __init__(self, name, gitlab_data):
-        """Create a new local Git repo attribute."""
+        """Create a new GitLab repo attribute."""
         self._branch_name = None
         self._commit_title = None
         self._name = name
@@ -99,7 +99,7 @@ class GitlabRepo(Entity):
 
     @property
     def name(self):
-        """Return the name of the Gitlab repo entity."""
+        """Return the name of the GitLab repo entity."""
         return self._name
 
     @property
@@ -123,7 +123,7 @@ class GitlabRepo(Entity):
         return attributes
 
     def update(self):
-        """Get the latest data from Gitlab and updates the state."""
+        """Get the latest data from GitLab and updates the state."""
         # Call the API for new data. Each sensor will re-trigger this
         # same exact call, but that's fine. Results should be cached for
         # a short period of time to prevent hitting API limits.
@@ -142,8 +142,8 @@ class GitlabRepo(Entity):
             self._pipeline_status = self.gitlab_data.pipeline.status
 
 
-class GitlabData(object):
-    """Gets the latest project data from Gitlab."""
+class GitLabData(object):
+    """Gets the latest project data from GitLab."""
 
     def __init__(self, url, token, verify_ssl, project, branch):
         """Initialize the data object."""
@@ -161,7 +161,7 @@ class GitlabData(object):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Get the latest data from Gitlab."""
+        """Get the latest data from GitLab."""
         from gitlab import Gitlab
         from gitlab import exceptions as gitlab_exceptions
 
@@ -176,7 +176,7 @@ class GitlabData(object):
         except (gitlab_exceptions.GitlabGetError,
                 gitlab_exceptions.GitlabAuthenticationError) as error:
             raise VersionControlException(
-                "Unable to init Gitlab project {}, {}".format(
+                "Unable to init GitLab project {}, {}".format(
                     self._project, str(error.error_message))
             )
 

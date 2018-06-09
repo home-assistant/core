@@ -1,4 +1,4 @@
-"""The tests for the gitlab component."""
+"""The tests for the GitLab component."""
 import unittest
 from unittest.mock import Mock
 from unittest.mock import patch
@@ -26,14 +26,14 @@ TEST_PROJECT_NAME = 'test/project'
 
 
 class TestGitlab(unittest.TestCase):
-    """Test the gitlab platform."""
+    """Test the GitLab platform."""
 
     def setUp(self):
         """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
         self.config = TEST_CONFIG
 
-    @patch('homeassistant.components.version_control.gitlab.GitlabData')
+    @patch('homeassistant.components.version_control.gitlab.GitLabData')
     @patch('homeassistant.components.version_control.gitlab._LOGGER')
     @MockDependency('gitlab')
     def test_setup_exception_handling(
@@ -70,12 +70,12 @@ class TestGitlab(unittest.TestCase):
         self.assertTrue(
             isinstance(
                 add_devices.call_args[0][0][0],
-                gitlab.GitlabRepo)
+                gitlab.GitLabRepo)
         )
         self.assertEqual(1, len(self.hass.states.all()))
 
     def test_valid_gitlabrepo_values_with_pipeline(self):
-        """Test valid Gitlab repo values with pipeline."""
+        """Test valid GitLab repo values with pipeline."""
         entity = self._createTestEntity(
             with_pipeline=True
         )
@@ -109,7 +109,7 @@ class TestGitlab(unittest.TestCase):
         )
 
     def test_valid_gitlabrepo_values_without_pipeline(self):
-        """Test valid Gitlab repo values without pipeline."""
+        """Test valid GitLab repo values without pipeline."""
         entity = self._createTestEntity(
             with_pipeline=False
         )
@@ -144,8 +144,8 @@ class TestGitlab(unittest.TestCase):
 
     @staticmethod
     def _createTestEntity(with_pipeline: bool):
-        """Create a test GitlabRepo entity based on input parameters."""
-        entity = gitlab.GitlabRepo(
+        """Create a test GitLabRepo entity based on input parameters."""
+        entity = gitlab.GitLabRepo(
             name=TEST_CONFIG['version_control'][gitlab.CONF_NAME],
             gitlab_data=Mock()
         )
