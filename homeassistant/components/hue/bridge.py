@@ -124,9 +124,21 @@ class HueBridge(object):
             (group for group in self.api.groups.values()
              if group.name == group_name), None)
 
-        scene_id = next(
-            (scene.id for scene in self.api.scenes.values()
-             if scene.name == scene_name), None)
+        # The same scene name can exist in multiple groups.
+        # In this case, activate first scene that contains the
+        # the exact same light IDs as the group
+        scenes = []
+        for scene in self.api.scenes.values():
+            if scene.name == scene_name:
+                scenes.append(scene)
+        if len(scenes) == 1:
+            scene_id = scenes[0].id
+        else:
+            group_lights = sorted(group.lights)
+            for scene in scenes:
+                if group_lights == scene.lights:
+                    scene_id = scene.id
+                    break
 
         # If we can't find it, fetch latest info.
         if not updated and (group is None or scene_id is None):

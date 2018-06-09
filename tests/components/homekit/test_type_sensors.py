@@ -8,13 +8,14 @@ from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 
-async def test_temperature(hass):
+async def test_temperature(hass, hk_driver):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.temperature'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = TemperatureSensor(hass, 'Temperature', entity_id, 2, None)
+    acc = TemperatureSensor(hass, hk_driver, 'Temperature',
+                            entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -40,13 +41,13 @@ async def test_temperature(hass):
     assert acc.char_temp.value == 24
 
 
-async def test_humidity(hass):
+async def test_humidity(hass, hk_driver):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.humidity'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = HumiditySensor(hass, 'Humidity', entity_id, 2, None)
+    acc = HumiditySensor(hass, hk_driver, 'Humidity', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -63,13 +64,14 @@ async def test_humidity(hass):
     assert acc.char_humidity.value == 20
 
 
-async def test_air_quality(hass):
+async def test_air_quality(hass, hk_driver):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.air_quality'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = AirQualitySensor(hass, 'Air Quality', entity_id, 2, None)
+    acc = AirQualitySensor(hass, hk_driver, 'Air Quality',
+                           entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -94,13 +96,13 @@ async def test_air_quality(hass):
     assert acc.char_quality.value == 5
 
 
-async def test_co2(hass):
+async def test_co2(hass, hk_driver):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.co2'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = CarbonDioxideSensor(hass, 'CO2', entity_id, 2, None)
+    acc = CarbonDioxideSensor(hass, hk_driver, 'CO2', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -129,13 +131,13 @@ async def test_co2(hass):
     assert acc.char_detected.value == 0
 
 
-async def test_light(hass):
+async def test_light(hass, hk_driver):
     """Test if accessory is updated after state change."""
     entity_id = 'sensor.light'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = LightSensor(hass, 'Light', entity_id, 2, None)
+    acc = LightSensor(hass, hk_driver, 'Light', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -152,7 +154,7 @@ async def test_light(hass):
     assert acc.char_light.value == 300
 
 
-async def test_binary(hass):
+async def test_binary(hass, hk_driver):
     """Test if accessory is updated after state change."""
     entity_id = 'binary_sensor.opening'
 
@@ -160,7 +162,7 @@ async def test_binary(hass):
                           {ATTR_DEVICE_CLASS: 'opening'})
     await hass.async_block_till_done()
 
-    acc = BinarySensor(hass, 'Window Opening', entity_id, 2, None)
+    acc = BinarySensor(hass, hk_driver, 'Window Opening', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -193,7 +195,7 @@ async def test_binary(hass):
     assert acc.char_detected.value == 0
 
 
-async def test_binary_device_classes(hass):
+async def test_binary_device_classes(hass, hk_driver):
     """Test if services and characteristics are assigned correctly."""
     entity_id = 'binary_sensor.demo'
 
@@ -202,6 +204,7 @@ async def test_binary_device_classes(hass):
                               {ATTR_DEVICE_CLASS: device_class})
         await hass.async_block_till_done()
 
-        acc = BinarySensor(hass, 'Binary Sensor', entity_id, 2, None)
+        acc = BinarySensor(hass, hk_driver, 'Binary Sensor',
+                           entity_id, 2, None)
         assert acc.get_service(service).display_name == service
         assert acc.char_detected.display_name == char

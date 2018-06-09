@@ -175,6 +175,12 @@ ffmpeg:
         example: 'binary_sensor.ffmpeg_noise'
 
 logger:
+  set_default_level:
+    description: Set the default log level for components.
+    fields:
+      level:
+        description: Default severity level. Possible values are notset, debug, info, warn, warning, error, fatal, critical
+        example: 'debug'
   set_level:
     description: Set log level for components.
 
@@ -556,3 +562,17 @@ xiaomi_aqara:
       device_id:
         description: Hardware address of the device to remove.
         example: 158d0000000000
+
+shopping_list:
+  add_item:
+    description: Adds an item to the shopping list.
+    fields:
+      name:
+        description: The name of the item to add.
+        example: Beer
+  complete_item:
+    description: Marks an item as completed in the shopping list. It does not remove the item.
+    fields:
+      name:
+        description: The name of the item to mark as completed.
+        example: Beer

@@ -187,8 +187,8 @@ class Switch(zha.Entity, BinarySensorDevice):
                 if args[0] == 0xff:
                     rate = 10  # Should read default move rate
                 self._entity.move_level(-rate if args[0] else rate)
-            elif command_id == 0x0002:  # step
-                # Step (technically shouldn't change on/off)
+            elif command_id in (0x0002, 0x0006):  # step, -with_on_off
+                # Step (technically may change on/off)
                 self._entity.move_level(-args[1] if args[0] else args[1])
 
         def attribute_update(self, attrid, value):

@@ -48,7 +48,7 @@ def test_auth_required_forward_request(hassio_client):
 @pytest.mark.parametrize(
     'build_type', [
         'es5/index.html', 'es5/hassio-app.html', 'latest/index.html',
-        'latest/hassio-app.html'
+        'latest/hassio-app.html', 'es5/some-chunk.js', 'es5/app.js',
     ])
 def test_forward_request_no_auth_for_panel(hassio_client, build_type):
     """Test no auth needed for ."""

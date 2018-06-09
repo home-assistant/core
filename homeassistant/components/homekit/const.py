@@ -8,11 +8,19 @@ HOMEKIT_NOTIFY_ID = 4663548
 # #### Config ####
 CONF_AUTO_START = 'auto_start'
 CONF_ENTITY_CONFIG = 'entity_config'
+CONF_FEATURE = 'feature'
+CONF_FEATURE_LIST = 'feature_list'
 CONF_FILTER = 'filter'
 
 # #### Config Defaults ####
 DEFAULT_AUTO_START = True
 DEFAULT_PORT = 51827
+
+# #### Features ####
+FEATURE_ON_OFF = 'on_off'
+FEATURE_PLAY_PAUSE = 'play_pause'
+FEATURE_PLAY_STOP = 'play_stop'
+FEATURE_TOGGLE_MUTE = 'toggle_mute'
 
 # #### HomeKit Component Services ####
 SERVICE_HOMEKIT_START = 'start'
@@ -23,11 +31,9 @@ BRIDGE_NAME = 'Home Assistant Bridge'
 BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
 MANUFACTURER = 'Home Assistant'
 
-# #### Media Player Modes ####
-ON_OFF = 'on_off'
-PLAY_PAUSE = 'play_pause'
-PLAY_STOP = 'play_stop'
-TOGGLE_MUTE = 'toggle_mute'
+# #### Switch Types ####
+TYPE_OUTLET = 'outlet'
+TYPE_SWITCH = 'switch'
 
 # #### Services ####
 SERV_ACCESSORY_INFO = 'AccessoryInformation'
@@ -44,6 +50,7 @@ SERV_LIGHTBULB = 'Lightbulb'
 SERV_LOCK = 'LockMechanism'
 SERV_MOTION_SENSOR = 'MotionSensor'
 SERV_OCCUPANCY_SENSOR = 'OccupancySensor'
+SERV_OUTLET = 'Outlet'
 SERV_SECURITY_SYSTEM = 'SecuritySystem'
 SERV_SMOKE_SENSOR = 'SmokeSensor'
 SERV_SWITCH = 'Switch'
@@ -82,6 +89,7 @@ CHAR_MODEL = 'Model'
 CHAR_MOTION_DETECTED = 'MotionDetected'
 CHAR_NAME = 'Name'
 CHAR_OCCUPANCY_DETECTED = 'OccupancyDetected'
+CHAR_OUTLET_IN_USE = 'OutletInUse'
 CHAR_ON = 'On'
 CHAR_POSITION_STATE = 'PositionState'
 CHAR_ROTATION_DIRECTION = 'RotationDirection'

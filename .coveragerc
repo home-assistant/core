@@ -97,7 +97,7 @@ omit =
     homeassistant/components/*/envisalink.py
 
     homeassistant/components/fritzbox.py
-    homeassistant/components/*/fritzbox.py
+    homeassistant/components/switch/fritzbox.py
 
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
@@ -122,6 +122,9 @@ omit =
 
     homeassistant/components/homematicip_cloud.py
     homeassistant/components/*/homematicip_cloud.py
+
+    homeassistant/components/hydrawise.py
+    homeassistant/components/*/hydrawise.py
 
     homeassistant/components/ihc/*
     homeassistant/components/*/ihc.py
@@ -198,6 +201,9 @@ omit =
     homeassistant/components/netatmo.py
     homeassistant/components/*/netatmo.py
 
+    homeassistant/components/netgear_lte.py
+    homeassistant/components/*/netgear_lte.py
+
     homeassistant/components/octoprint.py
     homeassistant/components/*/octoprint.py
 
@@ -216,7 +222,7 @@ omit =
     homeassistant/components/raincloud.py
     homeassistant/components/*/raincloud.py
 
-    homeassistant/components/rainmachine.py
+    homeassistant/components/rainmachine/*
     homeassistant/components/*/rainmachine.py
 
     homeassistant/components/raspihats.py
@@ -308,6 +314,9 @@ omit =
     homeassistant/components/wink/*
     homeassistant/components/*/wink.py
 
+    homeassistant/components/wirelesstag.py
+    homeassistant/components/*/wirelesstag.py
+
     homeassistant/components/xiaomi_aqara.py
     homeassistant/components/*/xiaomi_aqara.py
 
@@ -383,6 +392,7 @@ omit =
     homeassistant/components/cover/myq.py
     homeassistant/components/cover/opengarage.py
     homeassistant/components/cover/rpi_gpio.py
+    homeassistant/components/cover/ryobi_gdo.py
     homeassistant/components/cover/scsgate.py
     homeassistant/components/device_tracker/actiontec.py
     homeassistant/components/device_tracker/aruba.py
@@ -394,6 +404,7 @@ omit =
     homeassistant/components/device_tracker/bt_home_hub_5.py
     homeassistant/components/device_tracker/cisco_ios.py
     homeassistant/components/device_tracker/ddwrt.py
+    homeassistant/components/device_tracker/freebox.py
     homeassistant/components/device_tracker/fritz.py
     homeassistant/components/device_tracker/google_maps.py
     homeassistant/components/device_tracker/gpslogger.py
@@ -520,9 +531,10 @@ omit =
     homeassistant/components/notify/aws_sqs.py
     homeassistant/components/notify/ciscospark.py
     homeassistant/components/notify/clickatell.py
-    homeassistant/components/notify/clicksend_tts.py
     homeassistant/components/notify/clicksend.py
+    homeassistant/components/notify/clicksend_tts.py
     homeassistant/components/notify/discord.py
+    homeassistant/components/notify/flock.py
     homeassistant/components/notify/free_mobile.py
     homeassistant/components/notify/gntp.py
     homeassistant/components/notify/group.py
@@ -543,6 +555,7 @@ omit =
     homeassistant/components/notify/rest.py
     homeassistant/components/notify/rocketchat.py
     homeassistant/components/notify/sendgrid.py
+    homeassistant/components/notify/simplepush.py
     homeassistant/components/notify/slack.py
     homeassistant/components/notify/smtp.py
     homeassistant/components/notify/stride.py
@@ -743,6 +756,7 @@ omit =
     homeassistant/components/tts/picotts.py
     homeassistant/components/vacuum/mqtt.py
     homeassistant/components/vacuum/roomba.py
+    homeassistant/components/watson_iot.py
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/darksky.py

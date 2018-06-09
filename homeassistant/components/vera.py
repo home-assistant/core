@@ -148,12 +148,10 @@ class VeraDevice(Entity):
             slugify(vera_device.name), vera_device.device_id)
 
         self.controller.register(vera_device, self._update_callback)
-        self.update()
 
     def _update_callback(self, _device):
         """Update the state."""
-        self.update()
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     @property
     def name(self):

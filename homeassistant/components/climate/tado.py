@@ -9,6 +9,7 @@ import logging
 from homeassistant.const import (PRECISION_TENTHS, TEMP_CELSIUS)
 from homeassistant.components.climate import (
     ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE)
+from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.components.tado import DATA_TADO
 
@@ -230,18 +231,14 @@ class TadoClimate(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        if self._min_temp:
-            return self._min_temp
-        # get default temp from super class
-        return super().min_temp
+        return convert_temperature(self._min_temp, self._unit,
+                                   self.hass.config.units.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        if self._max_temp:
-            return self._max_temp
-        #  Get default temp from super class
-        return super().max_temp
+        return convert_temperature(self._max_temp, self._unit,
+                                   self.hass.config.units.temperature_unit)
 
     def update(self):
         """Update the state of this climate device."""

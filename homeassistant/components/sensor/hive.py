@@ -10,7 +10,7 @@ from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['hive']
 
-FRIENDLY_NAMES = {'Hub_OnlineStatus': 'Hub Status',
+FRIENDLY_NAMES = {'Hub_OnlineStatus': 'Hive Hub Status',
                   'Hive_OutsideTemperature': 'Outside Temperature'}
 DEVICETYPE_ICONS = {'Hub_OnlineStatus': 'mdi:switch',
                     'Hive_OutsideTemperature': 'mdi:thermometer'}
