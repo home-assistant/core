@@ -4,7 +4,9 @@ For more details about this component, please refer to the documentation at
 https://www.home-assistant.io/components/binary_sensor.uptimerobot
 """
 import logging
+
 import voluptuous as vol
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_API_KEY
@@ -32,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     if not monitors or monitors.get('stat') != 'ok':
         _LOGGER.error('Error connecting to uptime robot.')
-        return False
+        return
 
     for monitor in monitors['monitors']:
         devices.append(UptimeRobotBinarySensor(
@@ -40,7 +42,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             name=monitor['friendly_name'], target=monitor['url']))
 
     add_devices(devices, True)
-    return True
 
 
 class UptimeRobotBinarySensor(BinarySensorDevice):
@@ -82,6 +83,6 @@ class UptimeRobotBinarySensor(BinarySensorDevice):
         monitor = self._up_robot.getMonitors(self._apikey, self._monitorid)
         if not monitor or monitor.get('stat') != 'ok':
             _LOGGER.debug("Failed to get new state, trying again later.")
-            return False
+            return
         status = monitor['monitors'][0]['status']
         self._state = 1 if status == 2 else 0
