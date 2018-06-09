@@ -54,6 +54,18 @@ SERVICE_TYPES = {
     'AVT': 'urn:schemas-upnp-org:service:AVTransport:1',
 }
 
+DIDL_TEMPLATE = """
+<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
+           xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
+           xmlns:dc="http://purl.org/dc/elements/1.1/"
+           xmlns:sec="http://www.sec.co.kr/">
+<item id="0" parentID="0" restricted="1">
+  <dc:title>Home Assistant</dc:title>
+  <upnp:class>{upnp_class}</upnp:class>
+  <res protocolInfo="http-get:*:{mime_type}:{dlna_features}">{media_url}</res>
+</item>
+</DIDL-Lite>"""
+
 HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
     'music': 'object.item.audioItem',
     'tvshow': 'object.item.videoItem',
@@ -755,17 +767,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
                     PickyDeviceProxyView.DLNA_CONTENT_FEATURES.replace('17',
                                                                        '00')
 
-        meta_data = """
-<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
-           xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
-           xmlns:dc="http://purl.org/dc/elements/1.1/"
-           xmlns:sec="http://www.sec.co.kr/">
-<item id="0" parentID="0" restricted="1">
-  <dc:title>Home Assistant</dc:title>
-  <upnp:class>{upnp_class}</upnp:class>
-  <res protocolInfo="http-get:*:{mime_type}:{dlna_features}">{media_url}</res>
-</item>
-</DIDL-Lite>""".format(**media_info)
+        meta_data = DIDL_TEMPLATE.format(**media_info)
         await action.async_call(InstanceID=0,
                                 CurrentURI=media_id,
                                 CurrentURIMetaData=meta_data)
