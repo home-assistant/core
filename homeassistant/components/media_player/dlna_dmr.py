@@ -34,13 +34,11 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 REQUIREMENTS = ['async-upnp-client==0.10.0']
 
 DEFAULT_NAME = 'DLNA_DMR'
-CONF_MAX_VOLUME = 'max_volume'
 CONF_PICKY_DEVICE = 'picky_device'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_MAX_VOLUME): cv.positive_int,
     vol.Optional(CONF_PICKY_DEVICE): cv.boolean,
 })
 
@@ -212,7 +210,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         is_picky = is_samsung and is_tv
 
     cfg_extra = {
-        CONF_MAX_VOLUME: config.get(CONF_MAX_VOLUME),
         CONF_PICKY_DEVICE: config.get(CONF_PICKY_DEVICE) or is_picky,
     }
 
@@ -657,8 +654,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
             _LOGGER.debug('%s.volume_level(): Got no value', self)
             return None
 
-        override_max = self._additional_configuration.get('max_volume', None)
-        max_value = override_max or state_variable.max_value or 100
+        max_value = state_variable.max_value or 100
         return min(value / max_value, 1.0)
 
     @requires_action('RC', 'SetVolume')
@@ -668,8 +664,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         argument = action.argument('DesiredVolume')
         state_variable = argument.related_state_variable
         min_ = state_variable.min_value or 0
-        override_max = self._additional_configuration.get('max_volume', None)
-        max_ = override_max or state_variable.max_value or 100
+        max_ = state_variable.max_value or 100
         desired_volume = int(min_ + volume * (max_ - min_))
 
         await action.async_call(InstanceID=0,
