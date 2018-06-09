@@ -111,9 +111,11 @@ class GitRepo(Entity):
         try:
             self._repo = git.Repo(self._path)
         except NoSuchPathError:
-            raise VersionControlException("No such path: %s" % self._path)
+            raise VersionControlException(
+                "No such path: %s" % self._path)
         except InvalidGitRepositoryError:
-            raise VersionControlException("No Git repository found in %s" % self._path)
+            raise VersionControlException(
+                "No Git repository found in %s" % self._path)
 
     @property
     def should_poll(self):
