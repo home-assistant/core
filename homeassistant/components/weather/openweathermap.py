@@ -148,9 +148,10 @@ class OpenWeatherMapWeather(WeatherEntity):
         the time in the frontend weather card.
         """
         if self._mode == 'daily':
-            return ATTRIBUTION_DAILY
+            result = ATTRIBUTION_DAILY
         else:
-            return ATTRIBUTION_HOURLY
+            result = ATTRIBUTION_HOURLY
+        return result
 
     @property
     def forecast(self):
@@ -171,7 +172,7 @@ class OpenWeatherMapWeather(WeatherEntity):
                         entry.get_wind().get('deg'),
                     ATTR_FORECAST_CONDITION:
                         [k for k, v in CONDITION_CLASSES.items()
-                            if entry.get_weather_code() in v][0]
+                         if entry.get_weather_code() in v][0]
                 })
             else:
                 data.append({
@@ -183,7 +184,7 @@ class OpenWeatherMapWeather(WeatherEntity):
                         entry.get_rain().get('3h'),
                     ATTR_FORECAST_CONDITION:
                         [k for k, v in CONDITION_CLASSES.items()
-                            if entry.get_weather_code() in v][0]
+                         if entry.get_weather_code() in v][0]
                 })
         return data
 
