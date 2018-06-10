@@ -39,7 +39,8 @@ PATH_CUSTOM_COMPONENTS = 'custom_components'
 PACKAGE_COMPONENTS = 'homeassistant.components'
 
 
-def set_component(hass, comp_name: str, component: ModuleType) -> None:
+def set_component(hass, comp_name: str,
+                  component: Optional[ModuleType]) -> None:
     """Set a component in the cache.
 
     Async friendly.
