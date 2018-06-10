@@ -36,7 +36,7 @@ DEFAULT_NAME = 'DLNA_DMR'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 NS = {
@@ -190,7 +190,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if config.get(CONF_URL) is not None:
         url = config.get(CONF_URL)
-        name = config.get(CONF_NAME)
+        name = config.get(CONF_NAME, DEFAULT_NAME)
     elif discovery_info is not None:
         url = discovery_info['ssdp_description']
         name = discovery_info['name']
@@ -201,6 +201,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.async_run_job(start_notify_view, hass)
 
+    # create device
     from async_upnp_client import UpnpFactory
     requester = HassUpnpRequester(hass)
     factory = UpnpFactory(requester)
