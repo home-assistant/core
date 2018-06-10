@@ -13,8 +13,8 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION, ATTR_FORECAST_PRECIPITATION, ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
-    CONF_API_KEY, CONF_MODE, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME,
-    STATE_UNKNOWN, TEMP_CELSIUS)
+    CONF_API_KEY, TEMP_CELSIUS, CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE,
+    CONF_NAME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
@@ -25,8 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTR_FORECAST_WIND_SPEED = 'wind_speed'
 ATTR_FORECAST_WIND_BEARING = 'wind_bearing'
 
-ATTRIBUTION_DAILY = "Weather data provided by OpenWeatherMap"
-ATTRIBUTION_HOURLY = "Data provided by OpenWeatherMap"
+ATTRIBUTION = 'Data provided by OpenWeatherMap'
 
 FORECAST_MODE = ['hourly', 'daily']
 
@@ -55,9 +54,9 @@ CONDITION_CLASSES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_MODE, default='hourly'): vol.In(FORECAST_MODE),
     vol.Optional(CONF_LATITUDE): cv.latitude,
     vol.Optional(CONF_LONGITUDE): cv.longitude,
+    vol.Optional(CONF_MODE, default='hourly'): vol.In(FORECAST_MODE),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -141,17 +140,8 @@ class OpenWeatherMapWeather(WeatherEntity):
 
     @property
     def attribution(self):
-        """
-        Return the attribution.
-
-        Passing different attributes to correctly display
-        the time in the frontend weather card.
-        """
-        if self._mode == 'daily':
-            result = ATTRIBUTION_DAILY
-        else:
-            result = ATTRIBUTION_HOURLY
-        return result
+        """Return the attribution."""
+        return ATTRIBUTION
 
     @property
     def forecast(self):
