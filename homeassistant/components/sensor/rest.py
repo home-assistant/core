@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         raise PlatformNotReady
 
     # Must update the sensor now (including fetching the rest resource) to
-    # ensure its updating its state.
+    # ensure it's updating its state.
     add_devices([RestSensor(
         hass, rest, name, unit, value_template, json_attrs, force_update
     )], True)
