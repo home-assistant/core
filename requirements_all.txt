@@ -1033,7 +1033,7 @@ python-nest==4.0.0
 python-nmap==0.6.1
 
 # homeassistant.components.notify.pushover
-python-pushover==0.3
+python-pushover==0.4
 
 # homeassistant.components.sensor.ripple
 python-ripple-api==0.0.3
