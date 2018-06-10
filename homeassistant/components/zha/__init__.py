@@ -430,7 +430,7 @@ class ZHAEvent(object):
         self._cluster.add_listener(self)
         self._ieee = discovery_info['endpoint'].device.ieee
         self._ieeetail = ''.join(['%02x' % (o, ) for o in self._ieee[-4:]])
-        self._domain = domain;
+        self._domain = domain
         if discovery_info['manufacturer'] and discovery_info['model'] is not \
                 None:
             self._id = "{}.{}_{}_{}_{}{}".format(
@@ -513,7 +513,7 @@ class ZHALevelEvent(ZHAEvent):
                                 EventOrigin.remote)
         self._level = level
         self._hass.bus.fire(LEVEL_CHANGE_EVENT_KEY, {DEVICE: self._id,
-                                LEVEL: self._level}, EventOrigin.remote)
+                                    LEVEL: self._level}, EventOrigin.remote)
 
 
 async def _discover_endpoint_info(endpoint):
