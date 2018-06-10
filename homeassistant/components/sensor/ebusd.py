@@ -59,6 +59,7 @@ SENSOR_TYPES = {
     'Zone1TimerFriday': ['z1Timer.Friday', None, 'mdi:timer', 'time-schedule'],
     'Zone1TimerSaturday': ['z1Timer.Saturday', None, 'mdi:timer', 'time-schedule'],
     'Zone1TimerSunday': ['z1Timer.Sunday', None, 'mdi:timer', 'time-schedule'],
+    'Zone1OperativeMode': ['z1OpMode', None, 'mdi:math-compass', 'op-mode'],
     'ContinuosHeating': ['ContinuosHeating', '°C', 'mdi:weather-snowy', 'decimal'],
     'PowerEnergyConsumptionLastMonth': ['PrEnergySumHcLastMonth', 'kWh', 'mdi:flash', 'decimal'],
     'PowerEnergyConsumptionThisMonth': ['PrEnergySumHcThisMonth', 'kWh', 'mdi:flash', 'decimal']
@@ -214,5 +215,7 @@ class Ebusd(Entity):
                     self._state = timer_format(self.data.value[self._name])
                 elif self._type == 'decimal':
                     self._state = format(float(self.data.value[self._name]), '.1f')
+                elif self._type == 'op-mode':
+                    self._state = self.data.value[self._name]
         except RuntimeError:
             _LOGGER.debug("EbusdData.update exception")
