@@ -221,7 +221,7 @@ class TestLocalGit(unittest.TestCase):
         )
 
         entity.git_pull(TEST_REMOTE, reset=True)
-        entity._repo.git.reset.assert_called()
+        assert entity._repo.git.reset.called
 
     @patch('homeassistant.components.version_control.local_git._LOGGER')
     @MockDependency('git')
@@ -237,7 +237,7 @@ class TestLocalGit(unittest.TestCase):
         )
 
         self.assertFalse(entity.git_pull("fake{}".format(TEST_REMOTE)))
-        mock_logging.error.assert_called()
+        assert mock_logging.error.called
 
     @MockDependency('git')
     def test_valid_repo_git_pull_without_reset(self, mock_git):
@@ -294,7 +294,12 @@ class TestLocalGit(unittest.TestCase):
         entity._repo.is_dirty.return_value = is_dirty
         entity._repo.active_branch.name = TEST_BRANCH_NAME
         entity._repo.active_branch.is_valid.return_value = is_valid
-        entity._repo.head.commit.hexsha = TEST_COMMIT_HEXSHA
-        entity._repo.head.commit.summary = TEST_COMMIT_TITLE
+
+        if is_valid:
+            entity._repo.head.commit.hexsha = TEST_COMMIT_HEXSHA
+            entity._repo.head.commit.summary = TEST_COMMIT_TITLE
+        else:
+            entity._repo.head.commit.hexsha.side_effect = ValueError()
+            entity._repo.head.commit.summary.side_effect = ValueError()
 
         return entity
