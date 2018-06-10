@@ -329,9 +329,9 @@ class DenonDevice(MediaPlayerDevice):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         attributes = {}
-        if self._sound_mode_raw is not None and self._sound_mode_support\
-         and self._power == 'ON':
-            attributes[ATTR_SOUND_MODE_RAW] = self._sound_mode_raw
+        if (self._sound_mode_raw is not None and self._sound_mode_support and
+            self._power == 'ON'):
+              attributes[ATTR_SOUND_MODE_RAW] = self._sound_mode_raw
         return attributes
 
     def media_play_pause(self):
