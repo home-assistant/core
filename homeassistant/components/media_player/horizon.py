@@ -46,9 +46,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from einder import Client, keys
     from einder.exceptions import AuthenticationError
 
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    port = config.get(CONF_PORT)
+    host = config[CONF_HOST]
+    name = config[CONF_NAME]
+    port = config[CONF_PORT]
 
     try:
         client = Client(host, port=port)
