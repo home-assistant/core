@@ -31,7 +31,6 @@ DEFAULT_SOUND_MODE = True
 CONF_SHOW_ALL_SOURCES = 'show_all_sources'
 CONF_ZONES = 'zones'
 CONF_SOUND_MODE = 'sound_mode'
-CONF_SOUND_MODE_DICT = 'sound_mode_dict'
 CONF_VALID_ZONES = ['Zone2', 'Zone3']
 CONF_INVALID_ZONES_ERR = 'Invalid Zone (expected Zone2 or Zone3)'
 KEY_DENON_CACHE = 'denonavr_hosts'
@@ -55,7 +54,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_SOUND_MODE, default=DEFAULT_SOUND_MODE): cv.boolean,
-    vol.Optional(CONF_SOUND_MODE_DICT): vol.Schema({str: list}),
     vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES):
         cv.boolean,
     vol.Optional(CONF_ZONES):
@@ -93,7 +91,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Get config option for sound mode
     sound_mode_support = config.get(CONF_SOUND_MODE)
-    sound_mode_dict = config.get(CONF_SOUND_MODE_DICT)
 
     # Start assignment of host and name
     new_hosts = []
@@ -129,8 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 add_zones=add_zones)
             for new_zone in new_device.zones.values():
                 receivers.append(DenonDevice(new_zone,
-                                             sound_mode_support,
-                                             sound_mode_dict))
+                                             sound_mode_support))
             cache.add(host)
             _LOGGER.info("Denon receiver at host %s initialized", host)
 
@@ -142,7 +138,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DenonDevice(MediaPlayerDevice):
     """Representation of a Denon Media Player Device."""
 
-    def __init__(self, receiver, sound_mode_support, sound_mode_dict):
+    def __init__(self, receiver, sound_mode_support):
         """Initialize the device."""
         self._receiver = receiver
         self._name = self._receiver.name
@@ -164,11 +160,7 @@ class DenonDevice(MediaPlayerDevice):
         if sound_mode_support:
             self._sound_mode = self._receiver.sound_mode
             self._sound_mode_raw = self._receiver.sound_mode_raw
-            if sound_mode_dict is None:
-                self._sound_mode_list = self._receiver.sound_mode_list
-            else:
-                self._receiver.set_sound_mode_dict(sound_mode_dict)
-                self._sound_mode_list = list(sound_mode_dict)
+            self._sound_mode_list = self._receiver.sound_mode_list
         else:
             self._sound_mode = None
             self._sound_mode_raw = None
