@@ -52,9 +52,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     if entity.available and entity.entity_id in entity_ids]
         for camera in entities:
             if service.service == SERVICE_TURN_ON:
-                hass.async_add_job(camera.set_is_recording, True)
+                camera.is_recording = True
             elif service.service == SERVICE_TURN_OFF:
-                hass.async_add_job(camera.set_is_recording, False)
+                camera.is_recording = False
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, service_handler,
@@ -98,7 +98,8 @@ class NestCamera(Camera):
         """Return true if the device is recording."""
         return self._is_streaming
 
-    def set_is_recording(self, is_recording):
+    @is_recording.setter
+    def is_recording(self, is_recording):
         """Turn on/off camera streaming."""
         _LOGGER.debug("turning %s %s streaming",
                       ("off", "on")[is_recording], self.device)
