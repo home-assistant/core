@@ -70,8 +70,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if rest.data is None:
         raise PlatformNotReady
 
+    # No need to update the sensor now because it will determine its state
+    # based in the rest resource that has just been retrieved.
     add_devices([RestBinarySensor(
-        hass, rest, name, device_class, value_template)], True)
+        hass, rest, name, device_class, value_template)])
 
 
 class RestBinarySensor(BinarySensorDevice):

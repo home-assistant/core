@@ -4,8 +4,6 @@ Support for RESTful API sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.rest/
 """
-from datetime import timedelta
-
 import logging
 import json
 
@@ -23,7 +21,6 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +31,6 @@ DEFAULT_FORCE_UPDATE = False
 
 CONF_JSON_ATTRS = 'json_attributes'
 METHODS = ['POST', 'GET']
-
-# Minimum time between updates from the source.
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -86,6 +80,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if rest.data is None:
         raise PlatformNotReady
 
+    # Must update the sensor now (including fetching the rest resource) to
+    # ensure its updating its state.
     add_devices([RestSensor(
         hass, rest, name, unit, value_template, json_attrs, force_update
     )], True)
@@ -177,7 +173,6 @@ class RestData(object):
         self._verify_ssl = verify_ssl
         self.data = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from REST service with provided method."""
         _LOGGER.debug("Updating from %s", self._request.url)
