@@ -599,5 +599,5 @@ nest:
         description: Optional ETA window. Default is 1 minute.
         example: 0:5
       trip_id:
-        description: Optional the identity of a trip. Use same trip_id will update the estimation for a trip.
+        description: Optional identity of a trip. Using the same trip_ID will update the estimation.
         example: trip_back_home
