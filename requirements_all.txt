@@ -279,6 +279,9 @@ dsmr_parser==0.11
 # homeassistant.components.sensor.dweet
 dweepy==0.3.0
 
+# homeassistant.components.media_player.horizon
+einder==0.3.1
+
 # homeassistant.components.sensor.eliqonline
 eliqonline==1.0.14
 
