@@ -33,8 +33,8 @@ DEVICE_SWITCHES = {'05': {'A': 'PIO'},
                    '3A': {'A': 'PIO.A',
                           'B': 'PIO.B'}}
 
-DEVICE_SWITCH_ON = "1"
-DEVICE_SWITCH_OFF = "0"
+DEVICE_SWITCH_ON = '1'
+DEVICE_SWITCH_OFF = '0'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAMES): {cv.string: cv.string},
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the one wire Switches."""
     base_dir = config.get(CONF_MOUNT_DIR)
     devs = []
-    device_names = config.get('names', {})
+    device_names = config.get(CONF_NAMES, {})
 
     for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
         with open(family_file_path, "r") as family_file:
@@ -91,24 +91,22 @@ class OneWireSwitch(SwitchDevice):
                             self._device_file)
         except OSError:
             _LOGGER.warning("Error reading switch file %s", self._device_file)
-        return False
+        return None
 
     def _write_value_raw(self, value):
         """Write the value to the switch."""
         if value not in [DEVICE_SWITCH_ON, DEVICE_SWITCH_OFF]:
             _LOGGER.error("Error in setting wrong value %s", value)
-            return False
+            return None
         try:
             with open(self._device_file, 'w') as ds_device_file:
                 ds_device_file.write(value)
-            return True
         except FileNotFoundError:
             _LOGGER.warning("1Wire switch file not found: %s",
                             self._device_file)
         except OSError:
             _LOGGER.warning("Error writing switch file %s",
                             self._device_file)
-        return False
 
     @property
     def name(self):
@@ -127,7 +125,6 @@ class OneWireSwitch(SwitchDevice):
             self._state = value == DEVICE_SWITCH_ON
         else:
             self._state = None
-        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
