@@ -160,6 +160,7 @@ async def async_setup_nest(hass, nest, config, pin=None):
     def set_mode(service):
         """
         Set the home/away mode for a Nest structure.
+
         You can set optional eta information when set mode to away.
         """
         if ATTR_STRUCTURE in service.data:
