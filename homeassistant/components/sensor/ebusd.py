@@ -25,42 +25,43 @@ DEFAULT_PORT = 8888
 CONF_CIRCUIT = 'circuit'
 CACHE_TTL = 900
 
-BASE_COMMAND = 'read -m {2} -c {0} {1}\n'
+READ_COMMAND = 'read -m {2} -c {0} {1}\n'
+WRITE_COMMAND = 'write -c {0} {1} {2}\n'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
 
 SENSOR_TYPES = {
-    'hc1ActualFlowTempDesired': ['Hc1ActualFlowTempDesired', '°C', 'mdi:thermometer', 'decimal'],
-    'hc1MaxFlowTempDesired': ['Hc1MaxFlowTempDesired', '°C', 'mdi:thermometer', 'decimal'],
-    'hc1MinFlowTempDesired': ['Hc1MinFlowTempDesired', '°C', 'mdi:thermometer', 'decimal'],
-    'hc1PumpStatus': ['Hc1PumpStatus', None, 'mdi:toggle-switch', 'switch'],
-    'hc1SummerTempLimit': ['Hc1SummerTempLimit', '°C', 'mdi:weather-sunny', 'decimal'],
-    'holidayTemp': ['HolidayTemp', '°C', 'mdi:thermometer', 'decimal'],
-    'hwcTempDesired': ['HwcTempDesired', '°C', 'mdi:thermometer', 'decimal'],
-    'hwcTimerMonday': ['hwcTimer.Monday', None, 'mdi:timer', 'time-schedule'],
-    'hwcTimerTuesday': ['hwcTimer.Tuesday', None, 'mdi:timer', 'time-schedule'],
-    'hwcTimerWednesday': ['hwcTimer.Wednesday', None, 'mdi:timer', 'time-schedule'],
-    'hwcTimerThursday': ['hwcTimer.Thursday', None, 'mdi:timer', 'time-schedule'],
-    'hwcTimerFriday': ['hwcTimer.Friday', None, 'mdi:timer', 'time-schedule'],
-    'hwcTimerSaturday': ['hwcTimer.Saturday', None, 'mdi:timer', 'time-schedule'],
-    'hwcTimerSunday': ['hwcTimer.Sunday', None, 'mdi:timer', 'time-schedule'],
-    'waterPressure': ['WaterPressure', 'bar', 'mdi:water-pump', 'decimal'],
-    'z1RoomZoneMapping': ['z1RoomZoneMapping', None, 'mdi:label', 'decimal'],
-    'z1NightTemp': ['z1NightTemp', '°C', 'mdi:weather-night', 'decimal'],
-    'z1DayTemp': ['z1DayTemp', '°C', 'mdi:weather-sunny', 'decimal'],
-    'z1HolidayTemp': ['z1HolidayTemp', '°C', 'mdi:thermometer', 'decimal'],
-    'z1RoomTemp': ['z1RoomTemp', '°C', 'mdi:thermometer', 'decimal'],
-    'z1ActualRoomTempDesired': ['z1ActualRoomTempDesired', '°C', 'mdi:thermometer', 'decimal'],
-    'z1TimerMonday': ['z1Timer.Monday', None, 'mdi:timer', 'time-schedule'],
-    'z1TimerTuesday': ['z1Timer.Tuesday', None, 'mdi:timer', 'time-schedule'],
-    'z1TimerWednesday': ['z1Timer.Wednesday', None, 'mdi:timer', 'time-schedule'],
-    'z1TimerThursday': ['z1Timer.Thursday', None, 'mdi:timer', 'time-schedule'],
-    'z1TimerFriday': ['z1Timer.Friday', None, 'mdi:timer', 'time-schedule'],
-    'z1TimerSaturday': ['z1Timer.Saturday', None, 'mdi:timer', 'time-schedule'],
-    'z1TimerSunday': ['z1Timer.Sunday', None, 'mdi:timer', 'time-schedule'],
-    'continuosHeating': ['ContinuosHeating', '°C', 'mdi:weather-snowy', 'decimal'],
-    'prEnergySumHcLastMonth': ['PrEnergySumHcLastMonth', 'kWh', 'mdi:flash', 'decimal'],
-    'prEnergySumHcThisMonth': ['PrEnergySumHcThisMonth', 'kWh', 'mdi:flash', 'decimal']
+    'ActualFlowTemperatureDesired': ['Hc1ActualFlowTempDesired', '°C', 'mdi:thermometer', 'decimal'],
+    'MaxFlowTemperatureDesired': ['Hc1MaxFlowTempDesired', '°C', 'mdi:thermometer', 'decimal'],
+    'MinFlowTemperatureDesired': ['Hc1MinFlowTempDesired', '°C', 'mdi:thermometer', 'decimal'],
+    'PumpStatus': ['Hc1PumpStatus', None, 'mdi:toggle-switch', 'switch'],
+    'Hc1SummerTemperatureLimit': ['Hc1SummerTempLimit', '°C', 'mdi:weather-sunny', 'decimal'],
+    'HolidayTemperature': ['HolidayTemp', '°C', 'mdi:thermometer', 'decimal'],
+    'HWTemperatureDesired': ['HwcTempDesired', '°C', 'mdi:thermometer', 'decimal'],
+    'HWTimerMonday': ['hwcTimer.Monday', None, 'mdi:timer', 'time-schedule'],
+    'HWTimerTuesday': ['hwcTimer.Tuesday', None, 'mdi:timer', 'time-schedule'],
+    'HWTimerWednesday': ['hwcTimer.Wednesday', None, 'mdi:timer', 'time-schedule'],
+    'HWTimerThursday': ['hwcTimer.Thursday', None, 'mdi:timer', 'time-schedule'],
+    'HWTimerFriday': ['hwcTimer.Friday', None, 'mdi:timer', 'time-schedule'],
+    'HWTimerSaturday': ['hwcTimer.Saturday', None, 'mdi:timer', 'time-schedule'],
+    'HWTimerSunday': ['hwcTimer.Sunday', None, 'mdi:timer', 'time-schedule'],
+    'WaterPressure': ['WaterPressure', 'bar', 'mdi:water-pump', 'decimal'],
+    'Zone1RoomZoneMapping': ['z1RoomZoneMapping', None, 'mdi:label', 'decimal'],
+    'Zone1NightTemperature': ['z1NightTemp', '°C', 'mdi:weather-night', 'decimal'],
+    'Zone1DayTemperature': ['z1DayTemp', '°C', 'mdi:weather-sunny', 'decimal'],
+    'Zone1HolidayTemperature': ['z1HolidayTemp', '°C', 'mdi:thermometer', 'decimal'],
+    'Zone1RoomTemperature': ['z1RoomTemp', '°C', 'mdi:thermometer', 'decimal'],
+    'Zone1ActualRoomTemperatureDesired': ['z1ActualRoomTempDesired', '°C', 'mdi:thermometer', 'decimal'],
+    'Zone1TimerMonday': ['z1Timer.Monday', None, 'mdi:timer', 'time-schedule'],
+    'Zone1TimerTuesday': ['z1Timer.Tuesday', None, 'mdi:timer', 'time-schedule'],
+    'Zone1TimerWednesday': ['z1Timer.Wednesday', None, 'mdi:timer', 'time-schedule'],
+    'Zone1TimerThursday': ['z1Timer.Thursday', None, 'mdi:timer', 'time-schedule'],
+    'Zone1TimerFriday': ['z1Timer.Friday', None, 'mdi:timer', 'time-schedule'],
+    'Zone1TimerSaturday': ['z1Timer.Saturday', None, 'mdi:timer', 'time-schedule'],
+    'Zone1TimerSunday': ['z1Timer.Sunday', None, 'mdi:timer', 'time-schedule'],
+    'ContinuosHeating': ['ContinuosHeating', '°C', 'mdi:weather-snowy', 'decimal'],
+    'PowerEnergyConsumptionLastMonth': ['PrEnergySumHcLastMonth', 'kWh', 'mdi:flash', 'decimal'],
+    'PowerEnergyConsumptionThisMonth': ['PrEnergySumHcThisMonth', 'kWh', 'mdi:flash', 'decimal']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -89,8 +90,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev = []
         for variable in config[CONF_MONITORED_VARIABLES]:
             dev.append(Ebusd(data, variable, name))
-        
+
         add_devices(dev)
+        hass.services.register('sensor', 'ebusd_write', data.write)
     except socket.timeout:
         _LOGGER.error("socket timeout error")
         return
@@ -120,7 +122,7 @@ class EbusdData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, name):
         """Call the Ebusd API to update the data."""
-        command = BASE_COMMAND.format(self._circuit, name, CACHE_TTL)
+        command = READ_COMMAND.format(self._circuit, name, CACHE_TTL)
 
         try:
             _LOGGER.debug("Opening socket connection to ebusd %s: %s", name, command)
@@ -141,6 +143,29 @@ class EbusdData(object):
         except socket.error:
             _LOGGER.error()
             raise RuntimeError('Command failed')
+        finally:
+            sock.close()
+
+    def write(self, call):
+        """Call write methon on ebusd"""
+        name = call.data.get('name')
+        value = call.data.get('value')
+        command = WRITE_COMMAND.format(self._circuit, name, value)
+
+        try:
+            _LOGGER.debug("Opening socket connection to ebusd %s: %s", name, command)
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(5)
+            sock.connect(self._address)
+
+            sock.sendall(command.encode())
+            command_result = sock.recv(256).decode('utf-8').rstrip()
+            if not 'done' in command_result:
+                _LOGGER.warning('Write command failed: %s', name)
+        except socket.timeout:
+            _LOGGER.error("socket timeout error")
+        except socket.error:
+            _LOGGER.error()
         finally:
             sock.close()
 
