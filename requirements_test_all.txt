@@ -19,7 +19,7 @@ requests_mock==1.5
 
 
 # homeassistant.components.homekit
-HAP-python==2.1.0
+HAP-python==2.2.2
 
 # homeassistant.components.notify.html5
 PyJWT==1.6.0
@@ -44,7 +44,7 @@ apns2==0.3.0
 caldav==0.5.0
 
 # homeassistant.components.sensor.coinmarketcap
-coinmarketcap==4.2.1
+coinmarketcap==5.0.3
 
 # homeassistant.components.device_tracker.upc_connect
 defusedxml==0.5.0
@@ -81,7 +81,7 @@ hbmqtt==0.9.2
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180531.0
+home-assistant-frontend==20180608.0b0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -168,7 +168,7 @@ pyupnp-async==0.1.0.2
 pywebpush==1.6.0
 
 # homeassistant.components.python_script
-restrictedpython==4.0b3
+restrictedpython==4.0b4
 
 # homeassistant.components.rflink
 rflink==0.0.37
@@ -188,7 +188,7 @@ somecomfort==0.5.2
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.7
+sqlalchemy==1.2.8
 
 # homeassistant.components.statsd
 statsd==3.2.1
