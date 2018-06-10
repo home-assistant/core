@@ -41,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Horizon platform."""
     from einder import Client, keys
@@ -73,7 +72,7 @@ class HorizonDevice(MediaPlayerDevice):
         """Initialize the remote."""
         self._client = client
         self._name = name
-        self._state = False
+        self._state = None
         self._keys = keys
 
     @property
@@ -183,6 +182,6 @@ class HorizonDevice(MediaPlayerDevice):
             except OSError as msg:
                 # occurs if horizon box is offline
                 _LOGGER.error("Reconnect to %s failed: %s", self._name, msg)
-                raise PlatformNotReady
+                return
 
             self._send(key=key, channel=channel)
