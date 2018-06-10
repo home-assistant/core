@@ -105,6 +105,11 @@ class SnapcastGroupDevice(MediaPlayerDevice):
         }.get(self._group.stream_status, STATE_UNKNOWN)
 
     @property
+    def unique_id(self):
+        """Return the ID of snapcast group."""
+        return '{}{}'.format(GROUP_PREFIX, self._group.identifier)
+
+    @property
     def name(self):
         """Return the name of the device."""
         return '{}{}'.format(GROUP_PREFIX, self._group.identifier)
@@ -184,6 +189,11 @@ class SnapcastClientDevice(MediaPlayerDevice):
         """Initialize the Snapcast client device."""
         client.set_callback(self.schedule_update_ha_state)
         self._client = client
+
+    @property
+    def unique_id(self):
+        """Return the ID of this snapcast client."""
+        return '{}{}'.format(CLIENT_PREFIX, self._client.identifier)
 
     @property
     def name(self):
