@@ -116,7 +116,8 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
                     else:
                         _LOGGER.warning("JSON result was not a dictionary")
                 except ValueError:
-                    _LOGGER.warning("MQTT payload could not be parsed as JSON, %s", payload)
+                    _LOGGER.warning("MQTT payload could not be parsed as JSON"
+                                    ", %s", payload)
 
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
