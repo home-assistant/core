@@ -331,15 +331,17 @@ class ApplicationListener:
             if discovery_info['new_join']:
                 await safe(cluster.bind())
                 await safe(cluster.configure_reporting(0, 0, 600, 1))
-            self._hass.data[DATA_ZHA_EVENT].append(ZHASwitchEvent(self._hass,
-                                                    cluster, discovery_info))
+            self._hass.data[DATA_ZHA_EVENT].append(
+                ZHASwitchEvent(self._hass, cluster, discovery_info)
+            )
         if LevelControl.cluster_id in out_clusters:
             cluster = out_clusters[LevelControl.cluster_id]
             if discovery_info['new_join']:
                 await safe(cluster.bind())
                 await safe(cluster.configure_reporting(0, 1, 600, 1))
-            self._hass.data[DATA_ZHA_EVENT].append(ZHALevelEvent(self._hass,
-                                                    cluster, discovery_info))
+            self._hass.data[DATA_ZHA_EVENT].append(
+                ZHALevelEvent(self._hass, cluster, discovery_info)
+            )
 
 
 class Entity(entity.Entity):
@@ -461,14 +463,23 @@ class ZHASwitchEvent(ZHAEvent):
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         if command_id in (0x0000, 0x0040):
-            self._hass.bus.fire(OFF_EVENT_KEY, {DEVICE: self._id},
-                                EventOrigin.remote)
+            self._hass.bus.fire(
+                OFF_EVENT_KEY,
+                {DEVICE: self._id},
+                EventOrigin.remote
+            )
         elif command_id in (0x0001, 0x0041, 0x0042):
-            self._hass.bus.fire(ON_EVENT_KEY, {DEVICE: self._id},
-                                EventOrigin.remote)
+            self._hass.bus.fire(
+                ON_EVENT_KEY,
+                {DEVICE: self._id},
+                EventOrigin.remote
+            )
         elif command_id == 0x0002:
-            self._hass.bus.fire(TOGGLE_EVENT_KEY, {DEVICE: self._id},
-                                EventOrigin.remote)
+            self._hass.bus.fire(
+                TOGGLE_EVENT_KEY,
+                {DEVICE: self._id},
+                EventOrigin.remote
+            )
 
 
 class ZHALevelEvent(ZHAEvent):
@@ -506,14 +517,23 @@ class ZHALevelEvent(ZHAEvent):
     def set_level(self, level):
         """Set the level."""
         if level == 0 and self._level > 0:
-            self._hass.bus.fire(OFF_EVENT_KEY, {DEVICE: self._id},
-                                EventOrigin.remote)
+            self._hass.bus.fire(
+                OFF_EVENT_KEY,
+                {DEVICE: self._id},
+                EventOrigin.remote
+            )
         elif level > 0 and self._level == 0:
-            self._hass.bus.fire(ON_EVENT_KEY, {DEVICE: self._id},
-                                EventOrigin.remote)
+            self._hass.bus.fire(
+                ON_EVENT_KEY,
+                {DEVICE: self._id},
+                EventOrigin.remote
+            )
         self._level = level
-        self._hass.bus.fire(LEVEL_CHANGE_EVENT_KEY, {DEVICE: self._id,
-                                    LEVEL: self._level}, EventOrigin.remote)
+        self._hass.bus.fire(
+            LEVEL_CHANGE_EVENT_KEY,
+            {DEVICE: self._id, LEVEL: self._level},
+            EventOrigin.remote
+        )
 
 
 async def _discover_endpoint_info(endpoint):
