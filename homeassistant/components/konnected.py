@@ -57,6 +57,7 @@ _SWITCH_SCHEMA = vol.All(
     }), cv.has_at_least_one_key(CONF_PIN, CONF_ZONE)
 )
 
+# pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema({
