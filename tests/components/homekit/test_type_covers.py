@@ -28,13 +28,13 @@ def cls():
     patcher.stop()
 
 
-async def test_garage_door_open_close(hass, cls):
+async def test_garage_door_open_close(hass, hk_driver, cls):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.garage_door'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = cls.garage(hass, 'Garage Door', entity_id, 2, None)
+    acc = cls.garage(hass, hk_driver, 'Garage Door', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -85,13 +85,13 @@ async def test_garage_door_open_close(hass, cls):
     assert acc.char_target_state.value == 0
 
 
-async def test_window_set_cover_position(hass, cls):
+async def test_window_set_cover_position(hass, hk_driver, cls):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.window'
 
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
-    acc = cls.window(hass, 'Cover', entity_id, 2, None)
+    acc = cls.window(hass, hk_driver, 'Cover', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -133,13 +133,13 @@ async def test_window_set_cover_position(hass, cls):
     assert acc.char_target_position.value == 75
 
 
-async def test_window_open_close(hass, cls):
+async def test_window_open_close(hass, hk_driver, cls):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.window'
 
     hass.states.async_set(entity_id, STATE_UNKNOWN,
                           {ATTR_SUPPORTED_FEATURES: 0})
-    acc = cls.window_basic(hass, 'Cover', entity_id, 2, None)
+    acc = cls.window_basic(hass, hk_driver, 'Cover', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     assert acc.aid == 2
@@ -196,13 +196,13 @@ async def test_window_open_close(hass, cls):
     assert acc.char_position_state.value == 2
 
 
-async def test_window_open_close_stop(hass, cls):
+async def test_window_open_close_stop(hass, hk_driver, cls):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.window'
 
     hass.states.async_set(entity_id, STATE_UNKNOWN,
                           {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP})
-    acc = cls.window_basic(hass, 'Cover', entity_id, 2, None)
+    acc = cls.window_basic(hass, hk_driver, 'Cover', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     # Set from HomeKit
