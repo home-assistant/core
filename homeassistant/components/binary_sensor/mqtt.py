@@ -6,6 +6,8 @@ https://home-assistant.io/components/binary_sensor.mqtt/
 """
 import asyncio
 import logging
+import json
+from typing import Optional
 
 import voluptuous as vol
 
@@ -24,7 +26,8 @@ import homeassistant.helpers.config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MQTT Binary sensor'
-
+CONF_JSON_ATTRS = 'json_attributes'
+CONF_UNIQUE_ID = 'unique_id'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_FORCE_UPDATE = False
@@ -36,7 +39,11 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
+    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    # Integrations shouldn't never expose unique_id through configuration
+    # this here is an exception because MQTT is a msg transport, not a protocol
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -61,7 +68,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_OFF),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-        value_template
+        value_template,
+        config.get(CONF_JSON_ATTRS),
+        config.get(CONF_UNIQUE_ID),
     )])
 
 
@@ -70,7 +79,8 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
 
     def __init__(self, name, state_topic, availability_topic, device_class,
                  qos, force_update, payload_on, payload_off, payload_available,
-                 payload_not_available, value_template):
+                 payload_not_available, value_template, json_attributes,
+                 unique_id: Optional[str]):
         """Initialize the MQTT binary sensor."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -83,6 +93,9 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
         self._qos = qos
         self._force_update = force_update
         self._template = value_template
+        self._json_attributes = set(json_attributes)
+        self._unique_id = unique_id
+        self._attributes = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -92,9 +105,23 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
         @callback
         def state_message_received(topic, payload, qos):
             """Handle a new received MQTT state message."""
+            if self._json_attributes:
+                self._attributes = {}
+                try:
+                    json_dict = json.loads(payload)
+                    if isinstance(json_dict, dict):
+                        attrs = {k: json_dict[k] for k in
+                                 self._json_attributes & json_dict.keys()}
+                        self._attributes = attrs
+                    else:
+                        _LOGGER.warning("JSON result was not a dictionary")
+                except ValueError:
+                    _LOGGER.warning("MQTT payload could not be parsed as JSON")
+                    _LOGGER.debug("Erroneous JSON: %s", payload)
+
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
-                    payload)
+                    payload, self._state)
             if payload == self._payload_on:
                 self._state = True
             elif payload == self._payload_off:
@@ -103,7 +130,6 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
                 _LOGGER.warning('No matching payload found'
                                 ' for entity: %s with state_topic: %s',
                                 self._name, self._state_topic)
-                return
 
             self.async_schedule_update_ha_state()
 
@@ -134,3 +160,13 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
     def force_update(self):
         """Force update."""
         return self._force_update
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
