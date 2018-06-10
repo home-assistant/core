@@ -325,14 +325,14 @@ class ApplicationListener:
                 await safe(cluster.bind())
                 await safe(cluster.configure_reporting(0, 0, 600, 1))
             self._hass.data[DATA_ZHA_EVENT].append(ZHASwitchEvent(self._hass,
-                                                                  cluster, discovery_info))
+                                                    cluster, discovery_info))
         if LevelControl.cluster_id in out_clusters:
             cluster = out_clusters[LevelControl.cluster_id]
             if discovery_info['new_join']:
                 await safe(cluster.bind())
                 await safe(cluster.configure_reporting(0, 1, 600, 1))
             self._hass.data[DATA_ZHA_EVENT].append(ZHALevelEvent(self._hass,
-                                                                 cluster, discovery_info))
+                                                    cluster, discovery_info))
 
 
 class Entity(entity.Entity):
@@ -505,7 +505,7 @@ class ZHALevelEvent(ZHAEvent):
                                 EventOrigin.remote)
         self._level = level
         self._hass.bus.fire('zha.level_change', {'device': self._id,
-                                                 'level': self._level}, EventOrigin.remote)
+                                'level': self._level}, EventOrigin.remote)
 
 
 async def _discover_endpoint_info(endpoint):
