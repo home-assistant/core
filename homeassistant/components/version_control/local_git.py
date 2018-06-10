@@ -168,15 +168,8 @@ class GitRepo(Entity):
         else:
             self._status = STATUS_CLEAN
 
-        try:
-            self._state = self._repo.head.commit.hexsha
-        except ValueError:
-            self._state = STATE_UNKNOWN
-
-        try:
-            self._commit_title = self._repo.head.commit.summary
-        except ValueError:
-            self._commit_title = None
+        self._state = self._repo.head.commit.hexsha
+        self._commit_title = self._repo.head.commit.summary
 
     def git_pull(self, remote, reset=False):
         """Pull data from a git remote."""

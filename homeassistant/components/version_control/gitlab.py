@@ -172,7 +172,6 @@ class GitLabData(object):
                 ssl_verify=self._verify_ssl
             ) as gitlab:
                 self.project = gitlab.projects.get(id=self._project)
-
         except (gitlab_exceptions.GitlabGetError,
                 gitlab_exceptions.GitlabAuthenticationError) as error:
             raise VersionControlException(
