@@ -23,7 +23,14 @@ REQUIREMENTS = [
 ]
 
 DOMAIN = 'zha'
+SWITCH = 'switch'
+DEVICE = 'device'
+LEVEL = 'level'
 DATA_ZHA_EVENT = 'zha_events'
+OFF_EVENT_KEY = 'zha.off'
+ON_EVENT_KEY = 'zha.on'
+TOGGLE_EVENT_KEY = 'zha.toggle'
+LEVEL_CHANGE_EVENT_KEY = 'zha.level_change'
 
 
 class RadioType(enum.Enum):
@@ -416,17 +423,18 @@ class ZHAEvent(object):
     instead of a sensor entity in hass.
     """
 
-    def __init__(self, hass, cluster, discovery_info):
+    def __init__(self, hass, cluster, domain, discovery_info):
         """Register callback that will be used for signals."""
         self._hass = hass
         self._cluster = cluster
         self._cluster.add_listener(self)
         self._ieee = discovery_info['endpoint'].device.ieee
         self._ieeetail = ''.join(['%02x' % (o, ) for o in self._ieee[-4:]])
+        self._domain = domain;
         if discovery_info['manufacturer'] and discovery_info['model'] is not \
                 None:
             self._id = "{}.{}_{}_{}_{}{}".format(
-                'zha',
+                self._domain,
                 slugify(discovery_info['manufacturer']),
                 slugify(discovery_info['model']),
                 self._ieeetail,
@@ -435,7 +443,7 @@ class ZHAEvent(object):
             )
         else:
             self._id = "{}.zha_{}_{}{}".format(
-                'zha',
+                self._domain,
                 self._ieeetail,
                 discovery_info['endpoint'].endpoint_id,
                 discovery_info.get('entity_suffix', '')
@@ -447,19 +455,19 @@ class ZHASwitchEvent(ZHAEvent):
 
     def __init__(self, hass, cluster, discovery_info):
         """Initialize Switch."""
-        super().__init__(hass, cluster, discovery_info)
+        super().__init__(hass, cluster, SWITCH, discovery_info)
 
     @callback
     def cluster_command(self, tsn, command_id, args):
         """Handle commands received to this cluster."""
         if command_id in (0x0000, 0x0040):
-            self._hass.bus.fire('zha.off', {'device': self._id},
+            self._hass.bus.fire(OFF_EVENT_KEY, {DEVICE: self._id},
                                 EventOrigin.remote)
         elif command_id in (0x0001, 0x0041, 0x0042):
-            self._hass.bus.fire('zha.on', {'device': self._id},
+            self._hass.bus.fire(ON_EVENT_KEY, {DEVICE: self._id},
                                 EventOrigin.remote)
         elif command_id == 0x0002:
-            self._hass.bus.fire('zha.toggle', {'device': self._id},
+            self._hass.bus.fire(TOGGLE_EVENT_KEY, {DEVICE: self._id},
                                 EventOrigin.remote)
 
 
@@ -468,7 +476,7 @@ class ZHALevelEvent(ZHAEvent):
 
     def __init__(self, hass, cluster, discovery_info):
         """Initialize Switch."""
-        super().__init__(hass, cluster, discovery_info)
+        super().__init__(hass, cluster, SWITCH, discovery_info)
         self._level = 0
 
     @callback
@@ -498,14 +506,14 @@ class ZHALevelEvent(ZHAEvent):
     def set_level(self, level):
         """Set the level."""
         if level == 0 and self._level > 0:
-            self._hass.bus.fire('zha.off', {'device': self._id},
+            self._hass.bus.fire(OFF_EVENT_KEY, {DEVICE: self._id},
                                 EventOrigin.remote)
         elif level > 0 and self._level == 0:
-            self._hass.bus.fire('zha.on', {'device': self._id},
+            self._hass.bus.fire(ON_EVENT_KEY, {DEVICE: self._id},
                                 EventOrigin.remote)
         self._level = level
-        self._hass.bus.fire('zha.level_change', {'device': self._id,
-                                'level': self._level}, EventOrigin.remote)
+        self._hass.bus.fire(LEVEL_CHANGE_EVENT_KEY, {DEVICE: self._id,
+                                LEVEL: self._level}, EventOrigin.remote)
 
 
 async def _discover_endpoint_info(endpoint):
