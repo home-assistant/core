@@ -430,23 +430,22 @@ class ZHAEvent(object):
         self._hass = hass
         self._cluster = cluster
         self._cluster.add_listener(self)
-        self._ieee = discovery_info['endpoint'].device.ieee
-        self._ieeetail = ''.join(['%02x' % (o, ) for o in self._ieee[-4:]])
-        self._domain = domain
+        ieee = discovery_info['endpoint'].device.ieee
+        ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
         if discovery_info['manufacturer'] and discovery_info['model'] is not \
                 None:
             self._id = "{}.{}_{}_{}_{}{}".format(
-                self._domain,
+                domain,
                 slugify(discovery_info['manufacturer']),
                 slugify(discovery_info['model']),
-                self._ieeetail,
+                ieeetail,
                 discovery_info['endpoint'].endpoint_id,
                 discovery_info.get('entity_suffix', '')
             )
         else:
             self._id = "{}.zha_{}_{}{}".format(
-                self._domain,
-                self._ieeetail,
+                domain,
+                ieeetail,
                 discovery_info['endpoint'].endpoint_id,
                 discovery_info.get('entity_suffix', '')
             )
