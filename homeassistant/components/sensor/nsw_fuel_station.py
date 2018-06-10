@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             message,
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
-        return False
+        return
 
     available_fuel_types = station_data.get_available_fuel_types()
 
@@ -98,7 +98,7 @@ class StationPriceData(object):
                 self.station_id)
         except FuelCheckError as exc:
             self.error = str(exc)
-            _LOGGER.exception(
+            _LOGGER.error(
                 'Failed to fetch NSW Fuel station price data', exc_info=exc)
 
     def for_fuel_type(self, fuel_type: str):
