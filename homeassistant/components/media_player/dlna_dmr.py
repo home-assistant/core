@@ -39,6 +39,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+SUPPORT_DLNA_DMR = \
+    SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
+    SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_PAUSE | \
+    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
+    SUPPORT_PLAY_MEDIA
+
 NS = {
     'didl_lite': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
     'dc': 'http://purl.org/dc/elements/1.1/',
@@ -455,51 +461,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        supported_features = 0
-
-        if not self._device:
-            return supported_features
-
-        rc_service = self._service('RC')
-        if rc_service:
-            if rc_service.state_variable('Mute'):
-                supported_features |= SUPPORT_VOLUME_MUTE
-            if rc_service.state_variable('Volume'):
-                supported_features |= SUPPORT_VOLUME_SET
-
-        avt_service = self._service('AVT')
-        if avt_service:
-            state_var = avt_service.state_variable('CurrentTransportActions')
-            if state_var:
-                value = state_var.value or ''
-                actions = value.split(',')
-                if 'Play' in actions:
-                    supported_features |= SUPPORT_PLAY
-                if 'Stop' in actions:
-                    supported_features |= SUPPORT_STOP
-                if 'Pause' in actions:
-                    supported_features |= SUPPORT_PAUSE
-
-            current_track_var = avt_service.state_variable('CurrentTrack')
-            num_tracks_var = avt_service.state_variable('NumberOfTracks')
-            if current_track_var and \
-               num_tracks_var and \
-               current_track_var.value is not None and \
-               num_tracks_var.value is not None:
-                current_track = current_track_var.value
-                num_tracks = num_tracks_var.value
-                if current_track > 1:
-                    supported_features |= SUPPORT_PREVIOUS_TRACK
-
-                if num_tracks > current_track:
-                    supported_features |= SUPPORT_NEXT_TRACK
-
-            play_media_action = avt_service.action('SetAVTransportURI')
-            play_action = avt_service.action('Play')
-            if play_media_action and play_action:
-                supported_features |= SUPPORT_PLAY_MEDIA
-
-        return supported_features
+        return SUPPORT_DLNA_DMR
 
     @property
     @requires_state_variable('RC', 'Volume')
