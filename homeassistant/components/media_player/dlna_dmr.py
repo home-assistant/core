@@ -196,7 +196,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if config.get(CONF_URL) is not None:
         url = config.get(CONF_URL)
-        name = config.get(CONF_NAME, DEFAULT_NAME)
+        name = config.get(CONF_NAME)
     elif discovery_info is not None:
         url = discovery_info['ssdp_description']
         name = discovery_info['name']
