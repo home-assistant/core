@@ -7,7 +7,6 @@ import logging
 import re
 import urllib.parse
 import xml.etree.ElementTree as ET
-from datetime import datetime
 from datetime import timedelta
 
 import aiohttp
@@ -34,12 +33,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 REQUIREMENTS = ['async-upnp-client==0.10.0']
 
 DEFAULT_NAME = 'DLNA_DMR'
-CONF_PICKY_DEVICE = 'picky_device'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_PICKY_DEVICE): cv.boolean,
 })
 
 NS = {
@@ -71,6 +68,15 @@ HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
     'episode': 'object.item.videoItem',
     'channel': 'object.item.videoItem',
     'playlist': 'object.item.playlist',
+}
+
+HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING = {
+    'music': 'audio/*',
+    'tvshow': 'video/*',
+    'video': 'video/*',
+    'episode': 'video/*',
+    'channel': 'video/*',
+    'playlist': 'playlist/*',
 }
 
 UPNP_DEVICE_MEDIA_RENDERER = 'urn:schemas-upnp-org:device:MediaRenderer:1'
@@ -173,19 +179,6 @@ def start_notify_view(hass):
     return view
 
 
-def start_proxy_view(hass):
-    """Register proxy view."""
-    hass_data = hass.data[__name__]
-    name = 'proxy_view'
-    if name in hass_data:
-        return hass_data[name]
-
-    view = PickyDeviceProxyView(hass)
-    hass_data[name] = view
-    hass.http.register_view(view)
-    return view
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up DLNA DMR platform."""
     if discovery_info and \
@@ -195,7 +188,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       discovery_info.get('ssdp_description'))
         return
 
-    is_picky = False
     if config.get(CONF_URL) is not None:
         url = config.get(CONF_URL)
         name = config.get(CONF_NAME)
@@ -203,27 +195,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         url = discovery_info['ssdp_description']
         name = discovery_info['name']
 
-        # Samsung TVs are particular picky with regard to their sources
-        manufacturer = discovery_info.get('manufacturer', '').lower()
-        is_samsung = 'samsung' in manufacturer
-        is_tv = 'tv' in discovery_info.get('name', '').lower()
-        is_picky = is_samsung and is_tv
-
-    cfg_extra = {
-        CONF_PICKY_DEVICE: config.get(CONF_PICKY_DEVICE) or is_picky,
-    }
-
     # set up our Views, if not already done so
     if __name__ not in hass.data:
         hass.data[__name__] = {}
 
     hass.async_run_job(start_notify_view, hass)
-    hass.async_run_job(start_proxy_view, hass)
 
     from async_upnp_client import UpnpFactory
     requester = HassUpnpRequester(hass)
     factory = UpnpFactory(requester)
-    device = DlnaDmrDevice(hass, url, name, factory, **cfg_extra)
+    device = DlnaDmrDevice(hass, url, name, factory)
 
     _LOGGER.debug("Adding device: %s", device)
     add_devices([device])
@@ -309,131 +290,6 @@ class UpnpNotifyView(HomeAssistantView):
         """Unregister service by SID."""
         if sid in self._registered_services:
             del self._registered_services[sid]
-
-
-class PickyDeviceProxyView(HomeAssistantView):
-    """View to serve device media."""
-
-    url = '/api/dlna_dmr.proxy/{key}'
-    proxy_path = '/api/dlna_dmr.proxy'
-
-    name = 'api:dlna_dmr:proxy'
-    requires_auth = False
-
-    DLNA_CONTENT_FEATURES = \
-        'DLNA.ORG_OP=01;' \
-        'DLNA.ORG_CI=0;' \
-        'DLNA.ORG_FLAGS=01700000000000000000000000000000'
-    DLNA_TRANSFER_MODE = 'Streaming'
-
-    def __init__(self, hass):
-        """Initializer."""
-        self.hass = hass
-        self._entries = {}
-
-    def register(self, router):
-        """Register the view with a router."""
-        handler = request_handler_factory(self, self.async_head)
-        router.add_route('head', self.url, handler)
-
-        handler = request_handler_factory(self, self.async_get)
-        router.add_route('get', self.url, handler)
-
-    def _prune_entries(self):
-        """Prune entries older than 24 hours."""
-        max_age = timedelta(hours=24)
-        now = datetime.now()
-
-        to_remove = []
-        for key, entry in self._entries.items():
-            age = now - entry['added_at']
-            if age > max_age:
-                to_remove.append(key)
-
-        for key in to_remove:
-            del self._entries[key]
-
-    def add_url(self, url):
-        """Add a new URL to the proxy, valid for 24 hours."""
-        self._prune_entries()
-
-        import hashlib
-        key = hashlib.sha256(url.encode('utf-8')).hexdigest()
-
-        self._entries[key] = {
-            'url': url,
-            'added_at': datetime.now(),
-        }
-
-        return key
-
-    @property
-    def callback_url(self):
-        """Full URL to be called by device/service."""
-        base_url = self.hass.config.api.base_url
-        return urllib.parse.urljoin(base_url, self.url)
-
-    async def async_head(self, request, **args):
-        """Handle HEAD request."""
-        url = None
-        if 'key' in args:
-            key = args['key']
-            entry = self._entries[key]
-            url = entry['url']
-        else:
-            return aiohttp.web.Response(body="Missing URL", status=422)
-
-        src_headers = await fetch_headers(self.hass, url, request.headers)
-        headers = {
-            'Accept-Ranges': 'bytes',
-            'transferMode.dlna.org': self.DLNA_TRANSFER_MODE,
-            'contentFeatures.dlna.org': self.DLNA_CONTENT_FEATURES,
-        }
-        headers.update(src_headers)
-        return aiohttp.web.Response(headers=headers)
-
-    async def async_get(self, request, **args):
-        """Handle GET request."""
-        url = None
-        if 'key' in args:
-            key = args['key']
-            entry = self._entries[key]
-            url = entry['url']
-        else:
-            return aiohttp.web.Response(body="Missing URL", status=422)
-
-        # get data from source
-        session = async_get_clientsession(self.hass)
-        src_response = await session.get(url, headers=request.headers)
-        src_data = await src_response.read()
-
-        headers = {
-            'Accept-Ranges': 'bytes',
-            'transferMode.dlna.org': self.DLNA_TRANSFER_MODE,
-            'contentFeatures.dlna.org': self.DLNA_CONTENT_FEATURES,
-        }
-        headers.update(src_response.headers)
-
-        if 'range' in request.headers:
-            range_ = request.headers['range']
-            parts = [int(x)
-                     for x in range_.replace('bytes=', '').split('-')
-                     if x]
-            from_ = parts[0]
-            to_ = parts[1] if len(parts) == 2 else len(src_data)
-            chunk_size = (to_ - from_)
-            headers['Content-Range'] = 'bytes {}-{}/{}'.format(from_,
-                                                               to_,
-                                                               len(src_data))
-            headers['Content-Length'] = str(chunk_size)
-            src_data = src_data[from_:to_]
-            return aiohttp.web.Response(body=src_data,
-                                        status=206,
-                                        headers=headers)
-
-        return aiohttp.web.Response(body=src_data,
-                                    status=200,
-                                    headers=headers)
 
 
 class HassUpnpRequester(object):
@@ -714,13 +570,15 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def async_play_media(self, action, media_type, media_id, **kwargs):
         """Play a piece of media."""
         # pylint: disable=arguments-differ
-        picky_device = self._additional_configuration.get(CONF_PICKY_DEVICE,
-                                                          False)
         media_info = {
             'media_url': media_id,
             'upnp_class': HOME_ASSISTANT_UPNP_CLASS_MAPPING[media_type],
+            'mime_type': HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING[media_type],
+            'dlna_features': 'DLNA.ORG_OP=01;DLNA.ORG_CI=0;'
+                             'DLNA.ORG_FLAGS=00000000000000000000000000000000',
         }
 
+        # do a HEAD/GET, to retrieve content-type/mime-type
         src_headers = None
         try:
             req_src_headers = {
@@ -739,29 +597,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         except aiohttp.ClientError:
             pass
 
-        is_dlna_source = src_headers and \
-            'contentFeatures.dlna.org' in src_headers
-        if not is_dlna_source:
-            if picky_device:
-                _LOGGER.debug('%s.async_play_media(): detected invalid source,'
-                              ' routing through proxy', self)
-
-                # get proxy url
-                proxy_view = self.hass.data[__name__]['proxy_view']
-                base_url = self.hass.config.api.base_url
-                proxy_url = urllib.parse.urljoin(
-                    base_url,
-                    PickyDeviceProxyView.proxy_path)
-
-                key = proxy_view.add_url(media_id)
-                media_info['media_url'] = '{}/{}'.format(proxy_url, key)
-                media_info['dlna_features'] = \
-                    PickyDeviceProxyView.DLNA_CONTENT_FEATURES
-            else:
-                media_info['dlna_features'] = \
-                    PickyDeviceProxyView.DLNA_CONTENT_FEATURES.replace('17',
-                                                                       '00')
-
+        # queue media
         meta_data = DIDL_TEMPLATE.format(**media_info)
         await action.async_call(InstanceID=0,
                                 CurrentURI=media_id,
