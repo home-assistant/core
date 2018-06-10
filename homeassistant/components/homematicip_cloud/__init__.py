@@ -133,7 +133,7 @@ class HomematicipConnector:
 
     def __init__(self, hass, config, websession):
         """Initialize HomematicIP cloud connection."""
-        from homematicip.async.home import AsyncHome
+        from homematicip.aio.home import AsyncHome
 
         self._hass = hass
         self._ws_close_requested = False

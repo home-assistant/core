@@ -1,6 +1,4 @@
 """Config flow to configure HomematicIP Cloud."""
-import asyncio
-
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
@@ -17,7 +15,6 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
 
     def __init__(self):
         """Initialize HomematicIP Cloud config flow."""
-        self.first_link = True
         self.hmip_auth = None
         self.hmip_apid = None
         self.hmip_name = None
@@ -54,7 +51,6 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
                 else:
                     # Connection established
                     _LOGGER.info("Connection established")
-                    self.first_link = True
                     return await self.async_step_link()
 
         return self.async_show_form(
@@ -72,24 +68,11 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
         from homematicip.base.base_connection import HmipConnectionError
         errors = {}
 
-        if self.first_link:
-            self.first_link = False
-            return self.async_show_form(step_id='link', errors=errors)
-
-        _LOGGER.info("Wait for hardware button acknowledg")
-        # Wait for blue button pressed
-        wait = 30
-        state = False
-        while (not state or wait >= 0):
-            try:
-                state = await self.hmip_auth.isRequestAcknowledged()
-            except HmipConnectionError:
-                wait = wait - 1
-            await asyncio.sleep(1)
-        if wait == 0:
-            errors['base'] = 'timeout_button'
-
-        if state:
+        try:
+            await self.hmip_auth.isRequestAcknowledged()
+        except HmipConnectionError:
+            errors['base'] = 'press_the_button'
+        else:
             try:
                 authtoken = await self.hmip_auth.requestAuthToken()
                 await self.hmip_auth.confirmAuthToken(authtoken)

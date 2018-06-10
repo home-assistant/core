@@ -12,12 +12,13 @@
       },
       "link": {
         "title": "Link Accesspoint",
-        "description": "Press the blue button on the accesspoint and the submit to register HomematicIP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)"
+        "description": "Press the blue button on the accesspoint and the submit button to register HomematicIP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_philips_hue.jpg)"
       }
     },
     "error": {
       "register_failed": "Failed to register, please try again.",
       "invalid_pin": "Invalid PIN, please try again.",
+      "press_the_button": "Please press the blue button.",
       "timeout_button": "Blue button press timeout, please try again."
     },
     "abort": {
