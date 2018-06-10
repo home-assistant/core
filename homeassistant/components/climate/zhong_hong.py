@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ]
 
     except Exception as exc:
-        _LOGGER.error("ZhongHong controller is not ready", exc_info=exc)
+        _LOGGER.error("ZhongHong controller is not ready: %s", str(exc))
         raise PlatformNotReady
 
     _LOGGER.debug("We got %s zhong_hong climate devices", len(devices))
