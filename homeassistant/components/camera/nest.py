@@ -24,6 +24,10 @@ DEPENDENCIES = ['nest']
 
 NEST_BRAND = 'Nest'
 
+SERVICE_NEST_TURN_ON = 'nest_' + SERVICE_TURN_ON
+
+SERVICE_NEST_TURN_OFF = 'nest_' + SERVICE_TURN_OFF
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
 CAMERA_TURN_ON_SCHEMA = vol.Schema({
@@ -51,17 +55,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         entities = [entity for entity in cameras
                     if entity.available and entity.entity_id in entity_ids]
         for camera in entities:
-            if service.service == SERVICE_TURN_ON:
+            if service.service == SERVICE_NEST_TURN_ON:
                 camera.is_recording = True
-            elif service.service == SERVICE_TURN_OFF:
+            elif service.service == SERVICE_NEST_TURN_OFF:
                 camera.is_recording = False
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, service_handler,
+        DOMAIN, SERVICE_NEST_TURN_ON, service_handler,
         schema=CAMERA_TURN_ON_SCHEMA)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, service_handler,
+        DOMAIN, SERVICE_NEST_TURN_OFF, service_handler,
         schema=CAMERA_TURN_OFF_SCHEMA)
 
 
