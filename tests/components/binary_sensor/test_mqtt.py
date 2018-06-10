@@ -198,7 +198,6 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual(None,
                          state.attributes.get('val'))
         self.assertTrue(mock_logger.warning.called)
-        self.assertTrue(mock_logger.debug.called)
 
     def test_update_with_json_attrs_and_template(self):
         """Test attributes get extracted from a JSON result."""
