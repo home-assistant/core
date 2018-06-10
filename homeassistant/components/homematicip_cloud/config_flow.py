@@ -1,6 +1,5 @@
 """Config flow to configure HomematicIP Cloud."""
 import asyncio
-import json
 
 import voluptuous as vol
 
@@ -18,15 +17,15 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
 
     def __init__(self):
         """Initialize HomematicIP Cloud config flow."""
+        self.first_link = True
         self.hmip_auth = None
         self.hmip_apid = None
         self.hmip_name = None
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
-        from homematicip.async.auth import AsyncAuth
+        from homematicip.aio.auth import AsyncAuth
         from homematicip.base.base_connection import HmipConnectionError
-
         errors = {}
 
         if user_input is not None:
@@ -55,6 +54,7 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
                 else:
                     # Connection established
                     _LOGGER.info("Connection established")
+                    self.first_link = True
                     return await self.async_step_link()
 
         return self.async_show_form(
@@ -70,21 +70,24 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
     async def async_step_link(self, user_input=None):
         """Attempt to link with the HomematicIP Cloud accesspoint."""
         from homematicip.base.base_connection import HmipConnectionError
-
         errors = {}
+
+        if self.first_link:
+            self.first_link = False
+            return self.async_show_form(step_id='link', errors=errors)
 
         _LOGGER.info("Wait for hardware button acknowledg")
         # Wait for blue button pressed
         wait = 30
         state = False
-        while (not state and wait >= 0):
+        while (not state or wait >= 0):
             try:
                 state = await self.hmip_auth.isRequestAcknowledged()
             except HmipConnectionError:
                 wait = wait - 1
             await asyncio.sleep(1)
         if wait == 0:
-            error['base'] = 'timeout_button'
+            errors['base'] = 'timeout_button'
 
         if state:
             try:
