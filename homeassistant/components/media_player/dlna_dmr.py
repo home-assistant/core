@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Support for DLNA DMR (Device Media Renderer)."""
+"""
+Support for DLNA DMR (Device Media Renderer).
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.dlna_dmr/
+"""
 
 import asyncio
 import functools
