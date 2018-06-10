@@ -49,13 +49,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     device_names = config.get(CONF_NAMES, {})
 
     for family_file_path in glob(os.path.join(base_dir, '*', 'family')):
-        with open(family_file_path, "r") as family_file:
+        with open(family_file_path, 'r') as family_file:
             family = family_file.read()
         if family in DEVICE_SWITCHES:
             switch_id = os.path.split(
                 os.path.split(family_file_path)[0])[1]
             for switch_key, switch_value in DEVICE_SWITCHES[family].items():
-                switch_id_complete = switch_id + "_" + switch_key
+                switch_id_complete = switch_id + '_' + switch_key
                 device_file = os.path.join(
                     os.path.split(family_file_path)[0], switch_value)
                 devs.append(OneWireSwitch(device_names.get(switch_id_complete,
@@ -91,7 +91,7 @@ class OneWireSwitch(SwitchDevice):
                             self._device_file)
         except OSError:
             _LOGGER.warning("Error reading switch file %s", self._device_file)
-        return None
+        return
 
     def _write_value_raw(self, value):
         """Write the value to the switch."""
