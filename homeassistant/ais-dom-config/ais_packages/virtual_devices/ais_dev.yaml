@@ -1,0 +1,348 @@
+homeassistant:
+  customize:
+    script.ais_change_host_name:
+      icon: mdi:alert
+    binary_sensor.ais_remote_mic:
+      friendly_name: Mikrofon w pilocie
+      custom_ui_state_card: state-card-ais-microphone
+      icon: mdi:microphone
+    binary_sensor.ais_remote_button:
+      friendly_name: Przycisk w pilocie
+    binary_sensor.selected_entity:
+      friendly_name: Aktualna Pozycja
+      icon: mdi:magnify
+    sensor.current_host_name:
+      friendly_name: Aktualna nazwa hosta
+      icon: mdi:information-variant
+    binary_sensor.secure_android_id:
+      friendly_name: Identyfikator urządzenia
+      icon: mdi:android
+    sensor.certification_info:
+      custom_ui_state_card: state-card-text
+    sensor.network_devices_info:
+      custom_ui_state_card: state-card-text
+    sensor.network_devices_info_value:
+      custom_ui_state_card: state-card-robot-disco
+    sensor.ssh_connection_info:
+      custom_ui_state_card: state-card-text
+    sensor.ftp_connection_info:
+      custom_ui_state_card: state-card-text
+    sensor.host_name_dev_info:
+      custom_ui_state_card: state-card-text
+    group.ais_devices_in_network:
+      icon: mdi:help-network
+    script.ais_scan_network_devices:
+      icon: mdi:robot
+    input_text.buttons_ais_remote:
+        custom_ui_state_card: state-card-tiles
+        config:
+          columns: 3
+          column_width: 110px
+          row_height: 22px
+          entities:
+            # - entity: script.ais_button_click
+            #   label: "OFF"
+            #   data: {code: '{"KeyCode":188}'}
+            #   icon: mdi:power
+            #   color: tomato
+            #   row: 1
+            #   column: 1
+            #   row_span: 2
+            # - entity: script.ais_button_click
+            #   label: "Mute"
+            #   data: {code: '{"KeyCode":164}'}
+            #   icon: mdi:volume-off
+            #   row: 1
+            #   column: 3
+            #   row_span: 2
+            # - entity: script.ais_button_click
+            #   label: Gesture
+            #   icon: mdi:mouse
+            #   row: 3
+            #   column: 1
+            #   row_span: 2
+            # - entity: script.ais_button_click
+            #   label: Menu
+            #   data: {code: '{"KeyCode":82}'}
+            #   icon: mdi:menu
+            #   row: 3
+            #   column: 3
+            #   row_span: 2
+            # this is fake key, it should be removed by power when
+            # the power will start to send code to app
+            - entity: script.ais_button_click
+              data: {code: '{"KeyCode":190}'}
+              row: 1
+              column: 1
+              icon: mdi:play-pause
+              color: tomato
+            # enf of the virtual / fake key
+            - entity: script.ais_button_click
+              label: "Up"
+              data: {code: '{"KeyCode":19}'}
+              icon: mdi:arrow-up
+              row: 1
+              column: 2
+              row_span: 2
+              color: silver
+            - entity: script.ais_button_click
+              data: {code: '{"KeyCode":21}'}
+              label: "Left"
+              icon: mdi:arrow-left
+              row: 3
+              column: 1
+              row_span: 2
+              color: silver
+            - entity: script.ais_button_click
+              data: {code: '{"KeyCode":23}'}
+              label: OK
+              row: 3
+              column: 2
+              row_span: 2
+              color: grey
+            - entity: script.ais_button_click
+              data: {code: '{"KeyCode":22}'}
+              label: "Right"
+              icon: mdi:arrow-right
+              row: 3
+              column: 3
+              row_span: 2
+              color: silver
+            - entity: script.ais_button_click
+              data: {code: '{"KeyCode":20}'}
+              label: "Down"
+              icon: mdi:arrow-down
+              row: 5
+              column: 2
+              row_span: 2
+              color: silver
+
+            - entity: script.ais_button_click
+              data: {code: '{"KeyCode":190}'}
+              label: "Home"
+              row: 7
+              column: 1
+              row_span: 2
+              icon: mdi:home
+            - entity: script.ais_button_click
+              data: {code: '{"KeyCode":4}'}
+              label: "Back"
+              row: 7
+              column: 3
+              row_span: 2
+              icon: mdi:backup-restore
+            - entity: script.ais_button_click
+              data: {code: '{"KeyCode":71}'}
+              label: "Mic"
+              row: 8
+              column: 2
+              row_span: 2
+              color: dodgerblue
+              color_on: red
+              color_off: green
+              icon: mdi:microphone-settings
+            # - entity: script.ais_button_click
+            #   data: {code: '{"KeyCode":24}'}
+            #   label: "Vol+"
+            #   icon: mdi:volume-plus
+            #   row: 15
+            #   column: 1
+            #   row_span: 2
+            # - entity: script.ais_button_click
+            #   data: {code: '{"KeyCode":92}'}
+            #   label: "PG+"
+            #   icon: mdi:arrow-up-drop-circle
+            #   row: 15
+            #   column: 3
+            #   row_span: 2
+            # - entity: script.ais_button_click
+            #   data: {code: '{"KeyCode":25}'}
+            #   label: "Vol-"
+            #   icon: mdi:volume-minus
+            #   row: 17
+            #   column: 1
+            #   row_span: 2
+            # - entity: script.ais_button_click
+            #   data: {code: '{"KeyCode":93}'}
+            #   label: "PG-"
+            #   icon: mdi:arrow-down-drop-circle
+            #   row: 17
+            #   column: 3
+            #   row_span: 2
+
+binary_sensor:
+  - platform: mqtt
+    state_topic: ais/mic/sensor
+    name: ais_remote_mic
+  - platform: mqtt
+    state_topic: ais/button/sensor
+    name: ais_remote_button
+  - platform: mqtt
+    state_topic: ais/button/sensor
+    name: selected_entity
+  - platform: mqtt
+    state_topic: ais/secure_android_id/sensor
+    name: secure_android_id
+
+
+sensor:
+  - platform: ais_android_cmd
+    name: current_host_name
+    command: "getprop net.hostname"
+  - platform: template
+    sensors:
+      certification_info:
+        value_template: To urządzenie do pełnego działania (komendy głosowe, synteza mowy) wymaga usług Google Android.
+                        Zarejestruj swoje urządzenie, przesyłając jego identyfikator do Google Android by bezpiecznie kożystać z pełnej funkcjonalności urządzenia.
+  - platform: template
+    sensors:
+      network_devices_info:
+        value_template: "Po wykryciu urządzenia możesz kliknąć w jego link by przejść do ustawień urządzenia.\n#UWAGA: Zmieniaj ustawienia urządzenia tylko gdy jesteś pewny, że wiesz co robisz!"
+  - platform: ais_device_search_mqtt
+    name: network_devices_info_value
+    state_topic: "stat/#"
+  - platform: template
+    sensors:
+      ssh_connection_info:
+        value_template: "Na urządzeniu działa serwer ssh, aby połączyć się do konsoli AIS dom należy:\n
+                        - pobrać autoryzowany klucz ssh (poniżej)\n
+                        - w swojej konsoli wpisać:\n\n
+                        @ssh ais-dom -p 8022 -i <ścieżka do klucza ssh>\n
+                        $*ais-dom to nazwa hosta systemu AIS dom"
+  - platform: template
+    sensors:
+      ftp_connection_info:
+        value_template: "Na urządzeniu działa też serwer ftp, umożliwiający wymianę plików (np. muzycznych), serwer dostępny jest pod adresem:\n
+                        @ftp://ais-dom:1024\n
+                        $*ais-dom to nazwa hosta systemu AIS dom"
+  - platform: template
+    sensors:
+      host_name_dev_info:
+        value_template: "ais-dom - z taką domyślną nazwą hosta komunikują się urządzenia w systemie AIS dom.\n
+                        Możesz zmienić nazwę hosta na inną ale pamiętaj, żeby zmienić też konfigurację urządzeń.\n
+                        # UWAGA: Żeby zmiana była widoczna wymagany będzie restart!"
+
+input_text:
+  new_host_name:
+    name: Nowa nazwa hosta
+    initial: ais-dom
+  buttons_ais_remote:
+    name: Buttons AIS Remote
+
+input_select:
+  assistant_voice:
+    name: "Głos:"
+    options:
+      - "Kobieta online"
+      - "Kobieta lokalnie"
+      - "Kobieta 1"
+      - "Kobieta 2"
+      - "Kobieta 3"
+      - "Mężczyzna 1"
+      - "Mężczyzna 2"
+      - "Mężczyzna 3"
+    icon: mdi:voice
+    initial: "Kobieta lokalnie"
+  tts_player:
+    name: 'Powiadamiaj dodatkowo:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:cellphone-message
+input_number:
+  assistant_rate:
+    name: "Szybkość mowy:"
+    min: 1
+    max: 20
+    step: 1
+    initial: 10
+  assistant_tone:
+    name: "Ton mowy:"
+    min: 1
+    max: 20
+    step: 1
+    initial: 10
+
+group:
+  ais_tts_configuration:
+    name: Zamiana tekstu na mowę
+    control: hidden
+    entities:
+      - input_select.assistant_voice
+      - input_number.assistant_rate
+      - input_number.assistant_tone
+      - input_select.tts_player
+  AIS Pilot:
+    name: Pilot
+    control: hidden
+    entities:
+      - input_text.buttons_ais_remote
+      - binary_sensor.ais_remote_mic
+      - binary_sensor.ais_remote_button
+      - binary_sensor.selected_entity
+  ais_host_rename:
+    name: Zmiana nazwy hosta
+    control: hidden
+    entities:
+      - sensor.host_name_dev_info
+      - sensor.current_host_name
+      - input_text.new_host_name
+      - script.ais_change_host_name
+  ais_android_certification:
+    name: Certyfikacja urządzenia
+    entities:
+      - sensor.certification_info
+      - script.ais_getsecure_android_id
+      - binary_sensor.secure_android_id
+      - weblink.uncertified_android_registration
+  ais_dev_ssh:
+    name: Zdalny dostęp
+    entities:
+      - sensor.ssh_connection_info
+      - weblink.klucz_ssh
+      - sensor.ftp_connection_info
+      - weblink.ftp_url
+
+  ais_devices_in_network:
+    name: Urządzenia w Twojej sieci
+    control: hidden
+    entities:
+      - sensor.network_devices_info
+      - sensor.network_devices_info_value
+      - script.ais_scan_network_devices
+
+script:
+  ais_button_click:
+    alias: 'Button Click'
+    sequence:
+      - service: ais_ai_service.process_code
+        data_template:
+          text: '{{ code + " "}}'
+  ais_getsecure_android_id:
+    alias: 'Pobierz identyfikator urządzenia'
+    sequence:
+      - service: ais_ai_service.say_it
+        data:
+          text: "Pobieram."
+      - service: ais_shell_command.execute_command
+        data_template:
+          command: "sudo settings get secure android_id"
+          entity_id: "binary_sensor.secure_android_id"
+          friendly_name: "Identyfikator urządzenia"
+          icon: "mdi:android"
+
+  ais_change_host_name:
+    alias: 'Zatwierdz zmianę nazwy hosta'
+    sequence:
+      - service: ais_ai_service.say_it
+        data:
+          text: "Aktualizuje nazwę hosta. Zrestartuj urządzenie żeby zobaczyć zmiany."
+      - service: ais_shell_command.change_host_name
+
+  ais_scan_network_devices:
+    alias: 'Wykryj dostępne urządzenia'
+    sequence:
+      - service: ais_ai_service.say_it
+        data:
+          text: "Skanuje sieć w poszukiwaniu urządzeń."
+      - service: ais_shell_command.scan_network_for_devices

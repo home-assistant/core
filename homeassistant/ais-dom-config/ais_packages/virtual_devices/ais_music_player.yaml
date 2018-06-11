@@ -1,0 +1,72 @@
+input_text:
+  ais_youtube_query:
+    name: Szukaj
+    initial: " "
+input_select:
+  ais_youtube_track_name:
+    name: 'Utwór:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:music
+  ais_music_player:
+    name: 'Głośnik:'
+    options:
+     - Podłączony głośnik
+    icon: mdi:speaker-wireless
+  ais_music_service:
+    name: 'Serwis muzyczny:'
+    options:
+      - "-"
+      - "YouTube"
+      - "Spotify"
+      - "Deezer"
+      - "Soundcloud"
+    initial: "-"
+    icon: mdi:shopping-music
+
+group:
+  music_player:
+    control: hidden
+    name: Muzyka
+    entities:
+      - input_select.ais_music_service
+      - input_text.ais_youtube_query
+      - input_select.ais_youtube_track_name
+      - input_select.ais_music_player
+
+automation:
+  - alias: 'Search YouTune Tracks'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_text.ais_youtube_query
+    condition:
+      condition: template
+      value_template: "{{ states.input_text.ais_youtube_query.state != ' ' }}"
+    action:
+      -  service: ais_yt_service.search
+         data_template:
+           query: "{{ states('input_text.ais_youtube_query') }}"
+
+  - alias: 'Select YouTube Track Name'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.ais_youtube_track_name
+    condition:
+      condition: template
+      value_template: "{{ states.input_select.ais_youtube_track_name.state != '-' }}"
+    action:
+      -  service: ais_yt_service.select_track_name
+         data_template:
+           name: "{{ states('input_select.ais_youtube_track_name') }}"
+  - alias: 'Select music player'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.ais_music_player
+    action:
+      - service: ais_cloud.select_media_player
+        data_template:
+          media_player_type: "Music"

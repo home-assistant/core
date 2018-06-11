@@ -1,0 +1,84 @@
+- id: 9e81aa10297f4463ab1e523b46132ad4
+  alias: On System Start
+  trigger:
+  - event: start
+    platform: homeassistant
+  action:
+  - delay: '10'
+  - data:
+      key: relaunch
+      val: true
+      ip: 127.0.0.1
+    service: ais_ai_service.publish_command_to_frame
+  - data:
+      name: ais
+    service: frontend.set_theme
+  - service: ais_cloud.get_players
+  hide_entity: true
+- alias: Keyboard Command Received
+  hide_entity: true
+  trigger:
+    platform: event
+    event_type: keyboard_remote_command_received
+  action:
+  - service: ais_ai_service.process_code
+    data_template:
+      code: '{{ trigger.event.data[''code''] }}'
+  id: 275e4b4dbe4d4fe3820ebc672fbe69c6
+- alias: Command Message Received
+  hide_entity: true
+  trigger:
+    platform: event
+    event_type: speech_text_received
+  action:
+  - service: ais_ai_service.process
+    data_template:
+      text: '{{ trigger.event.data[''text''] }}'
+  id: f6e61e93fc9a4af3957e81444bbaaf1a
+- alias: Command Message Received MQTT
+  hide_entity: true
+  trigger:
+    platform: mqtt
+    topic: ais/speech_command
+  action:
+  - service: ais_ai_service.process
+    data_template:
+      text: '{{ trigger.payload }}'
+  id: 007c9ff3517949c080ec0e7838dc539a
+- alias: Button Event Received MQTT
+  hide_entity: true
+  trigger:
+    platform: mqtt
+    topic: ais/key_command
+  action:
+  - service: ais_ai_service.process_code
+    data_template:
+      text: '{{ trigger.payload }}'
+  id: c9fe876e7953485ab36e8a4e017014d4
+- id: '1522134491340'
+  alias: Welcome in AIS dom - searching devices in network
+  trigger:
+  - event: start
+    platform: homeassistant
+  condition: []
+  action:
+  - alias: ''
+    data:
+      payload: 1
+      topic: cmnd/dom/SetOption19
+    service: mqtt.publish
+  - alias: ''
+    data:
+      text: Wykrywam urządzenia w sieci
+    service: ais_ai_service.say_it
+  - delay: '3'
+  - alias: ''
+    data: {}
+    service: ais_updater.check_version
+  - alias: ''
+    data: {}
+    service: ais_shell_command.scan_network_for_devices
+  - delay: '30'
+  - data:
+      text: Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?
+    service: ais_ai_service.say_it

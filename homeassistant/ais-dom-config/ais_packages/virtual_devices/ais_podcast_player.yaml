@@ -1,0 +1,82 @@
+#########################################################
+#                                                       #
+# This package creates a device which provides a audio  #
+# player of sorts in the front end, allowing to select  #
+# a radio station, or a google music playlist and play  #
+# them across the chromecasts, like a Sonos system      #
+#                                                       #
+#########################################################
+
+input_select:
+  podcast_type:
+    name: 'Typ podcasta:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:format-list-bulleted-type
+  podcast_name:
+    name: 'Audycja:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:itunes
+  podcast_track:
+    name: 'Odcinek:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:format-list-numbers
+  # odtwarzacze
+  podcast_player:
+    name: 'Głośnik:'
+    options:
+     - Podłączony głośnik
+    icon: mdi:speaker-wireless
+
+group:
+  podcast_player:
+    control: hidden
+    name: Podcasty
+    entities:
+      - input_select.podcast_type
+      - input_select.podcast_name
+      - input_select.podcast_track
+      - input_select.podcast_player
+
+automation:
+  - alias: 'Get Podcast Names'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.podcast_type
+    action:
+      -  service: ais_cloud.get_podcast_names
+         data_template:
+           podcast_type: "{{ states('input_select.podcast_type') }}"
+  - alias: 'Get Podcast Tracks'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.podcast_name
+    action:
+      -  service: ais_cloud.get_podcast_tracks
+         data_template:
+           podcast_name: "{{ states('input_select.podcast_name') }}"
+  - alias: 'Select Podcast Track'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.podcast_track
+    action:
+      -  service: ais_cloud.select_podcast_track
+         data_template:
+           podcast_track: "{{ states('input_select.podcast_track') }}"
+  - alias: 'Select podcast player'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.podcast_player
+    action:
+      - service: ais_cloud.select_media_player
+        data_template:
+          media_player_type: "Podcast"

@@ -1,0 +1,70 @@
+input_select:
+  book_autor:
+    name: Autor
+    options:
+     - "-"
+    icon: mdi:human-greeting
+  book_name:
+    name: Książka
+    options:
+     - "-"
+    icon: mdi:book-open-page-variant
+  book_chapter:
+    name: Rozdział
+    options:
+     - "-"
+    icon: mdi:bookmark-music
+  # odtwarzacze
+  book_player:
+    name: 'Głośnik:'
+    options:
+     - Podłączony głośnik
+    icon: mdi:speaker-wireless
+# OPTIONAL
+group:
+  audiobooks_player:
+    name: Audio Książki
+    entities:
+    - input_select.book_autor
+    - input_select.book_name
+    - input_select.book_chapter
+    - input_select.book_player
+
+# radio
+automation:
+  - alias: 'Get Books'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.book_autor
+    action:
+      -  service: ais_gm_service.get_books
+         data_template:
+           author: "{{ states('input_select.book_autor') }}"
+  - alias: 'Get Chapters'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.book_name
+    action:
+      -  service: ais_gm_service.get_chapters
+         data_template:
+           book: "{{ states('input_select.book_name') }}"
+  - alias: 'Select Book Chapter'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.book_chapter
+    action:
+      -  service: ais_gm_service.select_chapter
+         data_template:
+           book_chapter: "{{ states('input_select.book_chapter') }}"
+  - alias: 'Select Book Player'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.book_player
+    action:
+      - service: ais_cloud.select_media_player
+        data_template:
+          media_player_type: "Book"

@@ -1,25 +1,21 @@
 #!/usr/bin/env python3
-"""Home Assistant setup script."""
+"""AIS dom setup script."""
 from setuptools import setup, find_packages
 
 import homeassistant.const as hass_const
 
-PROJECT_NAME = 'Home Assistant'
-PROJECT_PACKAGE_NAME = 'homeassistant'
+PROJECT_NAME = 'AIS dom'
+PROJECT_PACKAGE_NAME = 'ais-dom'
 PROJECT_LICENSE = 'Apache License 2.0'
-PROJECT_AUTHOR = 'The Home Assistant Authors'
-PROJECT_COPYRIGHT = ' 2013-2018, {}'.format(PROJECT_AUTHOR)
-PROJECT_URL = 'https://home-assistant.io/'
-PROJECT_EMAIL = 'hello@home-assistant.io'
-PROJECT_DESCRIPTION = ('Open-source home automation platform '
-                       'running on Python 3.')
-PROJECT_LONG_DESCRIPTION = ('Home Assistant is an open-source '
-                            'home automation platform running on Python 3. '
-                            'Track and control all devices at home and '
-                            'automate control. '
-                            'Installation in less than a minute.')
+PROJECT_AUTHOR = 'Andrzej Raczkowski'
+PROJECT_COPYRIGHT = ' 2018, {}'.format(PROJECT_AUTHOR)
+PROJECT_URL = 'https://ai-speaker.com/'
+PROJECT_EMAIL = 'info@sviete.pl'
+PROJECT_DESCRIPTION = ('IOT hub and automation platform for AI-Spekaer.com'
+                       ' running on Home Assistant.')
+
 PROJECT_CLASSIFIERS = [
-    'Development Status :: 4 - Beta',
+    'Development Status :: 5 - Production/Stable',
     'Intended Audience :: End Users/Desktop',
     'Intended Audience :: Developers',
     'License :: OSI Approved :: Apache Software License',
@@ -29,31 +25,26 @@ PROJECT_CLASSIFIERS = [
     'Topic :: Home Automation'
 ]
 
-PROJECT_GITHUB_USERNAME = 'home-assistant'
-PROJECT_GITHUB_REPOSITORY = 'home-assistant'
-
 PYPI_URL = 'https://pypi.python.org/pypi/{}'.format(PROJECT_PACKAGE_NAME)
-GITHUB_PATH = '{}/{}'.format(
-    PROJECT_GITHUB_USERNAME, PROJECT_GITHUB_REPOSITORY)
-GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
+GITHUB_URL = 'https://github.com/sviete/home-assistant'
 
 DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, hass_const.__version__)
 
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'aiohttp==3.2.1',
-    'astral==1.6.1',
-    'async_timeout==3.0.0',
-    'attrs==18.1.0',
-    'certifi>=2018.04.16',
-    'jinja2>=2.10',
-    'pip>=8.0.3',
-    'pytz>=2018.04',
-    'pyyaml>=3.11,<4',
     'requests==2.18.4',
-    'typing>=3,<4',
+    'pyyaml>=3.11,<4',
+    'pytz>=2018.04',
+    'pip>=8.0.3',
+    'jinja2>=2.10',
     'voluptuous==0.11.1',
+    'typing>=3,<4',
+    'aiohttp==3.1.3',
+    'async_timeout==2.0.1',
+    'astral==1.6.1',
+    'certifi>=2018.04.16',
+    'attrs==18.1.0',
 ]
 
 MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))

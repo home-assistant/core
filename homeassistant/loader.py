@@ -78,7 +78,8 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
         cache = hass.data[DATA_KEY] = {}
 
     # First check custom, then built-in
-    potential_paths = ['custom_components.{}'.format(comp_or_platform),
+    potential_paths = ['homeassistant.ais_dom.{}'.format(comp_or_platform),
+                       'custom_components.{}'.format(comp_or_platform),
                        'homeassistant.components.{}'.format(comp_or_platform)]
 
     for path in potential_paths:

@@ -1,0 +1,38 @@
+homeassistant:
+  customize:
+    sensor.ais_knowledge_answer:
+      friendly_name: Odpowiedz
+      custom_ui_state_card: state-card-text
+
+input_text:
+  ais_knowledge_query:
+    name: Polecenie/Pytanie?
+    initial: " "
+    icon: mdi:comment-question-outline
+
+sensor:
+    - platform: ais_long_text
+      name: ais_knowledge_answer
+      package: homeassistant.ais_dom.ais_ai_service
+      method: get_tts_text
+
+group:
+  AIS Wyszukiwarka:
+    name: Asystentka
+    entities:
+      - input_text.ais_knowledge_query
+      - sensor.ais_knowledge_answer
+
+automation:
+  - alias: 'Ask the question'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_text.ais_knowledge_query
+    condition:
+      condition: template
+      value_template: "{{ states.input_text.ais_knowledge_query.state != '' }}"
+    action:
+      -  service: ais_ai_service.process
+         data_template:
+           text: "{{ states('input_text.ais_knowledge_query') }}"

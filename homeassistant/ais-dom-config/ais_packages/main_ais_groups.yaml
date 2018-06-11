@@ -1,0 +1,172 @@
+homeassistant:
+  customize:
+    group.dom_cloud:
+      friendly_name: "Usługi AIS dom"
+      order: 1
+    group.dom_system_version:
+      friendly_name: "Wersja systemu"
+      remote_group_view: Pomoc
+      order: 2
+    group.ais_wyszukiwarka:
+      order: 2
+      context_key_words: "asystent,asystentka"
+      context_answer: "Powiedz proszę jakie informację mam wyszukać?"
+      context_suffix: "Znajdź informacje o"
+      remote_group_view: Twój Dom
+    media_player.wbudowany_glosnik:
+      order: 3
+    group.all_switches:
+      order: 4
+      hidden: false
+      context_key_words: "przełaczniki,wszystkie przełączniki"
+      context_answer: "OK, wybrano wszystkie przełączniki. Możesz powiedzieć co włączyć lub nawigować pilotem by sprawdzać status oraz przełączać."
+      friendly_name: "Wszystkie przełączniki"
+      remote_group_view: Twój Dom
+    group.all_lights:
+      order: 5
+      hidden: false
+      context_key_words: "światła,wszystkie światła"
+      context_answer: "OK, wybrano wszystkie światła. Możesz powiedzieć co włączyć lub nawigować pilotem by sprawdzać status oraz przełączać."
+      friendly_name: "Wszystkie światła"
+      remote_group_view: Twój Dom
+    group.all_devices:
+      order: 5
+      hidden: false
+      context_key_words: "Urządzenia,wszystkie urządzenia"
+      context_answer: "OK, urządzenia"
+      friendly_name: "Wszystkie urządzenia"
+      remote_group_view: Twój Dom
+    group.all_automations:
+      order: 6
+      hidden: true
+      context_key_words: "automatyzacje,wszystkie automatyzacje"
+      context_answer: "OK, automatyzacje"
+      friendly_name: "Wszystkie automatyzacje"
+    group.audio_player:
+      order: 7
+      remote_group_view: Audio
+    group.radio_player:
+      context_key_words: "radio,radia,radia internetowe"
+      context_answer: "OK, powiedz jakiej stacji chcesz posłuchać lub wybierz pilotem typ radia i stację radiową"
+      context_suffix: "Radio"
+      remote_group_view: Audio
+      order: 8
+    group.podcast_player:
+      context_key_words: "podcast,podcasty,podkasty,podkast"
+      context_answer: "OK, powiedz jaką audycję mam włączyć lub wybierz pilotem typ, audycję i odcinek podcasta"
+      context_suffix: "Podcast"
+      remote_group_view: Audio
+      order: 9
+    group.music_player:
+      context_key_words: "youtube,muzyka,yt,tuba"
+      context_answer: "OK, powiedz jakiej muzyki chcesz posłuchać?"
+      context_suffix: "Muzyka"
+      remote_group_view: Audio
+      order: 10
+    group.audiobooks_player:
+      context_key_words: "książki,książka,audiobook,audiobooks"
+      context_answer: "OK, powiedz jakiej książki chcesz posłuchać lub wybierz pilotem autora, książkę i rozdział książki"
+      context_suffix: "Książka"
+      remote_group_view: Audio
+      order: 11
+    group.ais_rss_news:
+      order: 12
+      context_key_words: "wiadomości,informacje"
+      context_answer: "OK, powiedz jakie wiadomości Cię interesują lub wybierz pilotem kategorię, kanał i pozycję wuadomości"
+      remote_group_view: Audio
+    group.ais_pogoda:
+      remote_group_view: Twój Dom
+      order: 13
+    group.ais_pogoda_48:
+      order: 14
+      remote_group_view: Twój Dom
+    group.ais_help:
+      context_key_words: "pomoc,pomocy,help"
+      context_answer: "OK, powiedz w czym mogę pomóc lub wybierz pilotem odpowiedzi na najcześciej zadawane pytania"
+      remote_group_view: Pomoc
+      order: 15
+    group.system_status:
+      context_key_words: "system,status systemu"
+      context_answer: "OK, wybrano system. Możesz nawigować pilotem by uzyskać informację o statusie elementów systemu"
+      remote_group_view: Pomoc
+      order: 16
+    group.internet_status:
+      context_key_words: "internet,sieć"
+      context_answer: "OK, wybrano internet. Możesz nawigowac pilotem by uzyskać informację o statusie Twojej sieci."
+      remote_group_view: Pomoc
+      order: 17
+    group.ais_tts_configuration:
+      context_key_words: "głos"
+      context_answer: "OK, wybrano konfigurację zamiany tekstu na mowę"
+      remote_group_view: Ustawienia
+      order: 18
+
+
+group:
+  default_view:
+    view: yes
+    icon: mdi:home-outline
+    entities:
+      - sensor.time
+      - sensor.date_formated
+      - sun.sun
+      - sensor.temperatura_si7021
+      - sensor.wilgotnosc_si7021
+      - group.ais_wyszukiwarka
+      - group.audio_player
+      - sensor.pogoda_symbol
+      - group.all_switches
+      - group.all_lights
+      - group.all_automations
+  pogoda:
+    name: Pogoda
+    view: yes
+    icon: mdi:weather-partlycloudy
+    entities:
+      - group.day_info
+      - group.ais_pogoda
+      - group.ais_pogoda_48
+      # - weather.pogoda_z_openweathermap
+      # - sensor.airly_aqi
+      # - sensor.airly_pm10
+      # - sensor.airly_pm25
+  audio_player:
+    name: Odtwarzacz
+    entities:
+      - media_player.wbudowany_glosnik
+  news:
+    name: wiadomości
+    view: yes
+    icon: mdi:newspaper
+    entities:
+      - group.ais_tts_configuration
+      - group.ais_rss_news
+  audio:
+    name: audio
+    view: yes
+    icon:  mdi:music
+    entities:
+      - group.radio_player
+      - group.podcast_player
+      - group.music_player
+      - group.audiobooks_player
+  pomoc:
+      name: Pomoc
+      view: yes
+      icon: mdi:help
+      entities:
+        - group.dom_system_version
+        - group.ais_help
+        # - group.ais_android_certification
+        - group.dom_cloud
+  system:
+      name: System
+      view: yes
+      icon: mdi:console
+      entities:
+        - group.ais_pilot
+        - group.ais_dev_ssh
+        - group.ais_host_rename
+        - group.system_status
+        - group.internet_status
+        - group.ais_devices_in_network

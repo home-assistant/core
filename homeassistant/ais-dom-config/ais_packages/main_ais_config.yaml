@@ -1,0 +1,15 @@
+# AIS Service for AI
+# Allows you to issue voice commands
+# ais_ai_service: !include conversation.yaml
+# ais_knowledge_service:
+  # api_key: 123456789
+# ais_yt_service:
+# ais_shell_command:
+
+  # ------------------
+  # AI-Speaker part
+  # ------------------
+
+# ------------------
+
+# introduction:

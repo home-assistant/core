@@ -1,0 +1,151 @@
+homeassistant:
+  name: AIS dom
+  unit_system: metric
+  time_zone: Europe/Warsaw
+  packages: !include_dir_named ais_packages/
+
+# ais-dom cloud functionality
+ais_cloud:
+ais_cloud_sync:
+ais_ai_service:
+ais_knowledge_service:
+ais_shell_command:
+ais_yt_service:
+ais_updater:
+  include_used_components: false
+conversation:
+
+
+
+# for restore_state on input_select (radio stations etc.)
+recorder:
+  purge_keep_days: 5
+  include:
+    domains:
+      - sensor
+      - switch
+      - media_player
+  exclude:
+    entities:
+      - sensor.time
+      - sensor.since_last_boot_templated
+      - sensor.since_last_boot
+      - input_select.radio_type
+      - input_select.radio_station_name
+      - input_select.radio_player
+      - input_select.podcast_type
+      - input_select.podcast_name
+      - input_select.podcast_track
+      - input_select.podcast_player
+      - input_select.rss_news_category
+      - input_select.rss_news_channel
+      - input_select.rss_news_item
+      - input_select.rss_news_player
+      - input_select.ais_youtube_track_name
+      - input_select.ais_music_player
+      - input_select.book_autor
+      - input_select.book_name
+      - input_select.book_chapter
+      - input_select.book_player
+history:
+  include:
+    domains:
+      - sensor
+      - switch
+      - media_player
+  exclude:
+    entities:
+      - sensor.time
+      - sensor.since_last_boot_templated
+      - sensor.since_last_boot
+      - input_select.radio_type
+      - input_select.radio_station_name
+      - input_select.radio_player
+      - input_select.podcast_type
+      - input_select.podcast_name
+      - input_select.podcast_track
+      - input_select.podcast_player
+      - input_select.rss_news_category
+      - input_select.rss_news_channel
+      - input_select.rss_news_item
+      - input_select.rss_news_player
+      - input_select.ais_youtube_track_name
+      - input_select.ais_music_player
+      - input_select.book_autor
+      - input_select.book_name
+      - input_select.book_chapter
+      - input_select.book_player
+
+media_extractor:
+
+# Enables the frontend
+frontend:
+  # development_repo: /home/andrzej/Projects/home-assistant-polymer
+  javascript_version: latest
+  extra_html_url:
+    - /static/ais_dom/custom_ui/state-card-ais-microphone.html
+    - /static/ais_dom/custom_ui/state-card-tiles.html
+    - /static/ais_dom/custom_ui/state-card-text.html
+    - /static/ais_dom/custom_ui/state-card-robot-disco.html
+  extra_html_url_es5:
+    - /static/ais_dom/custom_ui/state-card-tiles_es5.html
+    - /static/ais_dom/custom_ui/state-card-ais-microphone.html
+    - /static/ais_dom/custom_ui/state-card-text.html
+    - /static/ais_dom/custom_ui/state-card-robot-disco.html
+  themes:
+    ais:
+      primary-color: "#FF9800"
+      light-primary-color: "#ffc947"
+      dark-primary-color: "#c66900"
+      text-primary-color: "#ffffff"
+      primary-background-color: "#4c4c4c"
+      sidebar-text_-_background: "#727272"
+      paper-card-background-color: "#323232"
+      paper-card-header-color: "var(--text-primary-color)"
+      secondary-background-color: "var(--primary-background-color)"
+      primary-text-color: "var(--text-primary-color)"
+      secondary-text-color: "var(--primary-color)"
+      paper-listbox-background-color: "var(--sidebar-text_-_background)"
+      paper-toggle-button-checked-ink-color: "var(--dark-primary-color)"
+      paper-toggle-button-checked-button-color: "var(--dark-primary-color)"
+      paper-toggle-button-checked-bar-color: "var(--dark-primary-color)"
+      paper-slider-knob-color: "var(--primary-color)"
+      paper-slider-knob-start-color: "var(--primary-color)"
+      paper-slider-pin-color: "var(--primary-color)"
+      paper-slider-active-color: "var(--primary-color)"
+      paper-slider-secondary-color: "var(--light-primary-color)"
+      paper-slider-container-color: "var(--sidebar-text_-_background)"
+      paper-progress-secondary-color: "var(--sidebar-text_-_background)"
+      paper-item-selected_-_background-color: "var(--primary-color)"
+      paper-item-icon_-_color: "var(--text-primary-color)"
+      paper-item-icon-color: "var(--sidebar-text_-_background)"
+      paper-item-icon-active-color: "var(--primary-color)"
+      paper-grey-50: "var(--sidebar-text_-_background)"
+      paper-grey-200: "var(--primary-background-color)"
+      label-badge-background-color: "var(--sidebar-text_-_background)"
+      label-badge-text-color: "var(--text-primary-color)"
+      label-badge-red: "var(--primary-color)"
+      label-badge-blue: "var(--light-primary-color)"
+      label-badge-green: "var(--dark-primary-color)"
+      label-badge-yellow: "var(--text-primary-color)"
+      label-badge-grey: "var(--paper-grey-500)"
+      table-row-background-color: "var(--paper-card-background-color)"
+      table-row-alternative-background-color: "var(--sidebar-text_-_background)"
+
+# Enables configuration UI
+config:
+
+http:
+   # api_password: xxx
+   base_url: localhost:8123
+   ssl_certificate: /data/data/pl.sviete.dom/files/home/AIS/servercert.pem
+   ssl_key: /data/data/pl.sviete.dom/files/home/AIS/privekey.pem
+
+
+# Track the sun
+sun:
+
+# AIS Service for AI
+# Allows you to issue voice commands
+mqtt: !include mqtt.yaml
+automation:  !include automations.yaml

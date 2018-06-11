@@ -1,0 +1,48 @@
+homeassistant:
+  customize:
+    weblink.cloud:
+      friendly_name: Przejdz do konfiguracji usług online
+    binary_sensor.ping_binary_sensor:
+      friendly_name: Status serwisu AIS dom
+      icon: mdi:cloud
+    weblink.upgrade_log:
+      friendly_name: Logi aktualizacji
+      icon: mdi:file-document
+    sensor.version_info:
+      friendly_name: Wersja
+      icon: mdi:update
+      custom_ui_state_card: state-card-text
+    script.ais_update_system:
+      icon: mdi:download
+
+binary_sensor:
+  - platform: ping
+    host: powiedz.co
+    count: 2
+    scan_interval: 30
+
+sensor:
+  - platform: mqtt
+    state_topic: ais/version/sensor
+    name: version_info
+
+group:
+  dom_cloud:
+    control: hidden
+    entities:
+      - binary_sensor.ping_binary_sensor
+      - weblink.cloud
+      - weblink.upgrade_log
+  dom_system_version:
+    control: hidden
+    entities:
+      - sensor.version_info
+
+script:
+  ais_update_system:
+    alias: 'Zainstaluj aktualizację'
+    sequence:
+      - service: ais_ai_service.say_it
+        data:
+          text: "Aktualizuje system do najnowszej wersji. Do usłyszenia."
+      - service: ais_shell_command.execute_upgrade

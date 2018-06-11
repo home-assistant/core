@@ -1,0 +1,32 @@
+# homeassistant:
+#   customize:
+#     sensor.airly_aqi:
+#       friendly_name: Jakość powietrza
+#     sensor.airly_pm10:
+#       friendly_name: PM10
+#     sensor.airly_pm25:
+#       friendly_name: PM25
+
+# sensor:
+#   - platform: rest
+#     name: Airly
+#     resource: https://airapi.airly.eu/v1/nearestSensor/measurements?latitude=51.1641896&longitude=16.5925834&maxDistance=1000
+#     headers:
+#       apikey: !secrets airly_apikey
+#       value_template: "{{ value_json['airQualityIndex'] }} {{ value_json['pm25'] }} {{ value_json['pm10'] }}"
+#
+#
+#   - platform: template
+#     sensors:
+#       airly_aqi:
+#         unit_of_measurement: "indeks"
+#         # value_template: "{{ states.sensor.airly.state.split(' ')[0] | round(0) }}"
+#         value_template: 0
+#       airly_pm25:
+#         unit_of_measurement: "μg/m3"
+#         # value_template: "{{ states.sensor.airly.state.split(' ')[1] | round(0) }}"
+#         value_template: 12.9
+#       airly_pm10:
+#         unit_of_measurement: "μg/m3"
+#         # value_template: "{{ states.sensor.airly.state.split(' ')[2] | round(0) }}"
+#         value_template: 1.3

@@ -1,0 +1,48 @@
+homeassistant:
+  customize:
+    sun.sun:
+      friendly_name: Pozycja słońca
+    sensor.time:
+      friendly_name: Godzina
+    sensor.date_formated:
+      friendly_name: Dzień
+
+sensor:
+  - platform: time_date
+    display_options:
+      - 'time'
+  - platform: template
+    sensors:
+      nextsunrise:
+        friendly_name: 'Wschód słońca'
+        value_template: "{{ as_timestamp(states.sun.sun.attributes.next_rising) | timestamp_custom('%D %-I:%M %P') }}"
+  - platform: template
+    sensors:
+      nextsunset:
+         friendly_name: 'Zachód słońca'
+         value_template: "{{ as_timestamp(states.sun.sun.attributes.next_setting) | timestamp_custom('%D %-I:%M %P') }}"
+  - platform: template
+    sensors:
+       dayofyear:
+         friendly_name: 'Numer dnia w roku'
+         value_template: "{{ now().strftime('%j') }}"
+  - platform: template
+    sensors:
+       weekofyear:
+         friendly_name: 'Numer tygodnia w roku'
+         value_template: "{{ now().strftime('%U') }}"
+  - platform: template
+    sensors:
+      date_formated:
+        friendly_name: 'Data'
+        value_template: >
+          {{ now().strftime('%d/%m/%Y')}}
+group:
+  day_info:
+    control: hidden
+    name: Kalendarium
+    entities:
+      - sensor.nextsunrise
+      - sensor.nextsunset
+      - sensor.dayofyear
+      - sensor.weekofyear

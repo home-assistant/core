@@ -1,0 +1,175 @@
+homeassistant:
+  customize:
+    weblink.faq:
+      friendly_name: Najczęściej zadawane pytania
+    weblink.aispeakercom:
+      friendly_name: Internetowa strona projektu
+    weblink.ftp_url:
+      friendly_name: Serwer FTP
+    weblink.githubsviete:
+      friendly_name: Kody źródłowe systemu
+    weblink.uncertified_android_registration:
+      friendly_name: "Rejestracja urządzenia w Google Android"
+    sensor.memory_free:
+      friendly_name: Dostępna pamięć RAM
+    sensor.since_last_boot_templated:
+      friendly_name: Czas od ostatniego uruchomienia
+      icon: mdi:camera-timer
+    sensor.internal_ip_address:
+      friendly_name: Wewnętrzny adres IP
+      icon: mdi:wifi
+    sensor.external_ip_address:
+      friendly_name: Zewnętrzny adres IP
+      icon: mdi:access-point-network
+    sensor.local_host_name:
+      friendly_name: Lokalna nazwa hosta
+      icon: mdi:dns
+    sensor.speedtest_download:
+      friendly_name: Prędkość pobierania
+    sensor.speedtest_upload:
+      friendly_name: Prędkość wysyłania
+    sensor.speedtest_ping:
+      friendly_name: Ping
+    sensor.uzycie_procesora:
+      icon: mdi:chip
+      friendly_name: Użycie procesora
+    sensor.uzycie_dysku:
+      icon: mdi:harddisk
+      friendly_name: Użycie dysku
+    sensor.wolna_pamiec:
+      icon: mdi:memory
+      friendly_name: Wolna pamięć
+
+sensor:
+  # - platform: speedtest
+  #   monitored_conditions:
+  #     - ping
+  #     - download
+  #     - upload
+  - platform: ais_android_cmd
+    command: getprop net.hostname
+    name: local_host_name
+    scan_interval: 360
+  - platform: command_line
+    command: python3 -c "import socket; print((([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
+              if not ip.startswith('127.')] or [[(s.connect(('8.8.8.8', 53)),
+              s.getsockname()[0], s.close()) for s in
+              [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]])
+              + ['no IP found'])[0])"
+    name: internal_ip_address
+    scan_interval: 360
+  - platform: command_line
+    command: curl ipinfo.io/ip
+    name: external_ip_address
+    scan_interval: 360
+  - platform: command_line
+    command: grep 'cpu ' /proc/stat | awk '{usage=($2+$4)*100/($2+$4+$5)} END {print usage}'
+    name: uzycie_procesora_val
+    scan_interval: 360
+  - platform: command_line
+    command: df ~ | awk '{ print $5 }' | tail -n 1 | sed 's/.$//'
+    name: uzycie_dysku_val
+    scan_interval: 360
+  - platform: command_line
+    command: free | grep Mem | awk '{usage=($4/$2)*100} END {print usage}'
+    name: wolna_pamiec_val
+    scan_interval: 360
+  - platform: systemmonitor
+    resources:
+      - type: since_last_boot
+  - platform: template
+    sensors:
+      uzycie_procesora:
+        value_template: "{{ states.sensor.uzycie_procesora_val.state | round() }}"
+        unit_of_measurement: '%'
+      uzycie_dysku:
+        value_template: "{{ states.sensor.uzycie_dysku_val.state | round() }}"
+        unit_of_measurement: '%'
+      wolna_pamiec:
+        value_template: "{{ states.sensor.wolna_pamiec_val.state | round() }}"
+        unit_of_measurement: '%'
+      since_last_boot_templated:
+        value_template: >-
+          {%- set slb = states.sensor.since_last_boot.state.split(' ') -%}
+          {%- set count = slb | length -%}
+          {%- set hms = slb[count - 1] -%}
+          {%- set hms_trimmed = hms.split('.')[0] -%}
+          {%- set hms_split = hms_trimmed.split(':') -%}
+          {%- set hours = hms_split[0] | int -%}
+          {%- set minutes = hms_split[1] | int -%}
+          {%- set seconds = hms_split[2] | int -%}
+
+          {%- if count == 3 -%}
+            {{ slb[0] ~ ' ' 'd.,' ' ' }}
+          {%- endif -%}
+          {%- if hours > 0 -%}
+              {{ hours }} godz.
+          {%- endif -%}
+          {%- if minutes > 0 -%}
+            {%- if hours > 0 -%}
+              {{ ', ' }}
+            {%- endif -%}
+              {{ minutes }} min.
+          {%- endif -%}
+          {%- if seconds > 0 -%}
+            {%- if hours > 0 or minutes > 0 -%}
+              {{ ', ' }}
+            {%- endif -%}
+              {{ seconds }} sek.
+          {%- endif -%}
+
+weblink:
+  entities:
+    - name: faq
+      url: https://github.com/sviete/AIS_DOM_FAQ
+      icon: mdi:information-variant
+    - name: githubsviete
+      url: https://github.com/sviete
+      icon: mdi:home-automation
+    - name: ai-speaker.com
+      url: https://ai-speaker.com
+      icon: mdi:audiobook
+    - name: klucz ssh
+      url: /local/id_rsa_ais
+      icon: mdi:console-line
+    - name: ftp_url
+      url: ftp://ais-dom:1024
+      icon: mdi:play-network
+    - name: uncertified_android_registration
+      url: https://www.google.com/android/uncertified/
+      icon: mdi:certificate
+    - name: cloud
+      url: https://powiedz.co/ords/f?p=1000:101
+      icon: mdi:open-in-new
+    - name: upgrade_log
+      url: /local/upgrade_log.txt
+      icon: mdi:file-document
+
+group:
+  AIS Help:
+    name: Przydatne linki
+    control: hidden
+    entities:
+      - weblink.faq
+      - weblink.aispeakercom
+      - weblink.githubsviete
+  System Status:
+    name: Status systemu
+    entities:
+      - sensor.uzycie_procesora
+      - sensor.uzycie_dysku
+      - sensor.wolna_pamiec
+      - sensor.since_last_boot_templated
+  Internet Status:
+    name: Informacje o sieci
+    entities:
+      - sensor.local_host_name
+      # - sensor.speedtest_download
+      # - sensor.speedtest_upload
+      # - sensor.speedtest_ping
+      - sensor.external_ip_address
+      - sensor.internal_ip_address
+  AIS Configurator:
+    name: Konfiguracja
+    entities:
+      - configurator.ais_dom_host

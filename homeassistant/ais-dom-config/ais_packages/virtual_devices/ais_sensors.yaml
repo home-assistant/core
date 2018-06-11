@@ -1,0 +1,19 @@
+homeassistant:
+  customize:
+    sensor.temperatura_si7021:
+      friendly_name: Temperatura
+    sensor.wilgotnosc_si7021:
+      friendly_name: Wilgotność
+sensor:
+  - platform: mqtt
+    name: "temperatura_si7021"
+    icon: "mdi:temperature-celsius"
+    state_topic: "tele/przelacznik_th/SENSOR"
+    value_template: "{{ value_json['SI7021'].Temperature | round(2)}}"
+    unit_of_measurement: "°C"
+  - platform: mqtt
+    name: "wilgotnosc_si7021"
+    icon: "mdi:water-percent"
+    state_topic: "tele/przelacznik_th/SENSOR"
+    value_template: "{{ value_json['SI7021'].Humidity | round(2)}}"
+    unit_of_measurement: "%"

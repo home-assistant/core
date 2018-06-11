@@ -1,0 +1,18 @@
+broker: 127.0.0.1
+# broker: 192.168.1.45
+port: 1883
+# client_id: Default is a random generated one.
+keepalive: 60
+discovery: true
+discovery_prefix: homeassistant
+protocol: 3.1
+birth_message:
+  topic: "tele/hass1/LWT"
+  payload: "Online"
+  qos: 1
+  retain: true
+will_message:
+  topic: "tele/hass1/LWT"
+  payload: "Offline"
+  qos: 1
+  retain: true

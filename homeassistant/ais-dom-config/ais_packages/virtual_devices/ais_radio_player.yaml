@@ -1,0 +1,81 @@
+#########################################################
+#                                                       #
+# This package creates a device which provides a audio  #
+# player of sorts in the front end, allowing to select  #
+# a radio station, or a google music playlist and play  #
+# them across the chromecasts, like a Sonos system      #
+#                                                       #
+#########################################################
+homeassistant:
+  customize:
+    media_player.wbudowany_glosnik:
+      friendly_name: "Podłączony głośnik"
+    # media_player.glosnik_1:
+    #   friendly_name: "Głośnik 1"
+    media_player.glosnik_2:
+      friendly_name: "Głośnik 2"
+
+input_select:
+  radio_type:
+    name: 'Typ radia:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:format-list-bulleted-type
+  radio_station_name:
+    name: 'Stacja:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:radio
+  radio_player:
+    name: 'Głośnik:'
+    options:
+     - Podłączony głośnik
+    icon: mdi:speaker-wireless
+
+
+media_player:
+  - platform: ais_exo_player
+    name: wbudowany_glosnik
+    ip_address: localhost
+
+group:
+  Radio Player:
+    control: hidden
+    name: Radia Internetowe
+    entities:
+      - input_select.radio_type
+      - input_select.radio_station_name
+      - input_select.radio_player
+
+# radio
+automation:
+  - alias: 'Get Radio Names'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.radio_type
+    action:
+      -  service: ais_cloud.get_radio_names
+         data_template:
+           radio_type: "{{ states('input_select.radio_type') }}"
+
+  - alias: 'Select Radio Name'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.radio_station_name
+    action:
+      -  service: ais_cloud.select_radio_name
+         data_template:
+           radio_name: "{{ states('input_select.radio_station_name') }}"
+  - alias: 'Select radio player'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.radio_player
+    action:
+      - service: ais_cloud.select_media_player
+        data_template:
+          media_player_type: "Radio"

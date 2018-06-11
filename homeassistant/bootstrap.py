@@ -201,16 +201,41 @@ async def async_from_config_file(config_path: str,
 
     async_enable_logging(hass, verbose, log_rotate_days, log_file,
                          log_no_color)
-
+    # ais config
+    ais_config = str(os.path.dirname(__file__))
+    ais_config += '/ais-dom-config/configuration.yaml'
     try:
         config_dict = await hass.async_add_job(
+            conf_util.load_yaml_config_file, ais_config)
+    except HomeAssistantError as err:
+        _LOGGER.error("Error loading %s: %s", ais_config, err)
+        return None
+    try:
+        user_config_dict = await hass.async_add_job(
             conf_util.load_yaml_config_file, config_path)
     except HomeAssistantError as err:
         _LOGGER.error("Error loading %s: %s", config_path, err)
-        return None
+        # return None
     finally:
         clear_secret_cache()
 
+    def dict_merge(dct, merge_dct):
+        """ Recursive dict merge. Inspired by :meth:``dict.update()``,
+        instead of updating only top-level keys, dict_merge recurses
+        down into dicts nested to an arbitrary depth, updating keys.
+        The ``merge_dct`` is merged into ``dct``.
+        :param dct: dict onto which the merge is executed
+        :param merge_dct: dct merged into dct
+        :return: None
+        """
+        import collections
+        for k, v in merge_dct.items():
+            if (k in dct and isinstance(dct[k], dict)
+                    and isinstance(merge_dct[k], collections.Mapping)):
+                dict_merge(dct[k], merge_dct[k])
+            else:
+                dct[k] = merge_dct[k]
+    dict_merge(user_config_dict, config_dict)
     hass = await async_from_config_dict(
         config_dict, hass, enable_log=False, skip_pip=skip_pip)
     return hass

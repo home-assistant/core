@@ -1,0 +1,84 @@
+homeassistant:
+  customize:
+    sensor.rss_news_text:
+      custom_ui_state_card: state-card-text
+
+input_select:
+  rss_news_category:
+    name: 'Kategoria:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:format-list-bulleted-type
+  rss_news_channel:
+    name: 'Kanał:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:newspaper
+  rss_news_item:
+    name: 'Pozycja:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:format-list-numbers
+  rss_news_player:
+    name: 'Głośnik:'
+    options:
+     - Podłączony głośnik
+    icon: mdi:speaker-wireless
+
+sensor:
+    - platform: ais_long_text
+      name: rss_news_text
+      package: homeassistant.ais_dom.ais_cloud
+      method: get_news_text
+
+group:
+  ais_rss_news:
+    control: hidden
+    name: Wiadomości
+    entities:
+      - input_select.rss_news_category
+      - input_select.rss_news_channel
+      - input_select.rss_news_item
+      - input_select.rss_news_player
+      - sensor.rss_news_text
+
+automation:
+  - alias: 'Get RSS News Channels'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.rss_news_category
+    action:
+      -  service: ais_cloud.get_rss_news_channels
+         data_template:
+           rss_news_category: "{{ states('input_select.rss_news_category') }}"
+  - alias: 'Get RSS News Items'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.rss_news_channel
+    action:
+      -  service: ais_cloud.get_rss_news_items
+         data_template:
+           rss_news_channel: "{{ states('input_select.rss_news_channel') }}"
+  - alias: 'Select RSS News Item'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.rss_news_item
+    action:
+      -  service: ais_cloud.select_rss_news_item
+         data_template:
+           rss_news_item: "{{ states('input_select.rss_news_item') }}"
+  - alias: 'Select rss news player'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.rss_news_player
+    action:
+      - service: ais_cloud.select_media_player
+        data_template:
+          media_player_type: "News"

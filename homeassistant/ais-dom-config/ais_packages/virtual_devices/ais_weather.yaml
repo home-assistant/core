@@ -1,0 +1,131 @@
+homeassistant:
+  customize:
+    sensor.pogoda_symbol:
+      friendly_name: Pogoda
+    sensor.pogoda_temperature:
+      friendly_name: Temperatura
+    sensor.pogoda_dewpoint_temperature:
+      friendly_name: Punkt rosy
+      icon: mdi:oil-temperature
+    sensor.pogoda_precipitation:
+      friendly_name: Opady
+      icon: mdi:weather-rainy
+    sensor.pogoda_wind_speed:
+      friendly_name: Prędkość wiatru
+      icon: mdi:weather-windy
+    sensor.pogoda_pressure:
+      friendly_name: Ciśnienie
+      icon: mdi:nature
+    sensor.pogoda_wind_direction:
+      friendly_name: Kierunek wiatru
+      icon: mdi:compass
+    sensor.pogoda_humidity:
+      friendly_name: Wilgotność
+      icon: mdi:water-percent
+    sensor.pogoda_fog:
+      friendly_name: Zamglenie
+      icon: mdi:weather-fog
+    sensor.pogoda_cloudiness:
+      friendly_name: Zachmurzenie
+      icon: mdi:weather-cloudy
+
+    sensor.prognoza_48_symbol:
+      friendly_name: Prognoza pogody
+      value_template: "Pogoda będzie OK"
+    sensor.prognoza_48_temperature:
+      friendly_name: Temperatura jutro
+    sensor.prognoza_48_dewpoint_temperature:
+      friendly_name: Punkt rosy jutro
+      icon: mdi:oil-temperature
+    sensor.prognoza_48_precipitation:
+      friendly_name: Opady jutro
+      icon: mdi:weather-rainy
+    sensor.prognoza_48_wind_speed:
+      friendly_name: Prędkość wiatru jutro
+      icon: mdi:weather-windy
+    sensor.prognoza_48_pressure:
+      friendly_name: Ciśnienie jutro
+      icon: mdi:nature
+    sensor.prognoza_48_wind_direction:
+      friendly_name: Kierunek wiatru jutro
+      icon: mdi:compass
+    sensor.prognoza_48_humidity:
+      friendly_name: Wilgotność jutro
+      icon: mdi:water-percent
+    sensor.prognoza_48_fog:
+      friendly_name: Zamglenie jutro
+      icon: mdi:weather-fog
+    sensor.prognoza_48_cloudiness:
+      friendly_name: Zachmurzenie jutro
+      icon: mdi:weather-cloudy
+
+# test new platform with ha-weather-card
+# weather:
+#   - platform: openweathermap
+#     api_key: eb80d4013431a9fc96530aa9844e16c7
+#     name: Pogoda z openweathermap
+
+sensor:
+  - platform: template
+    sensors:
+      pogoda_info:
+        friendly_name: "Informacja o pogodzie"
+        value_template: "Aktualna pogoda w Twojej lokalizacji:{{- ' ' -}}{%- for entity_id in states.group.ais_pogoda.attributes.entity_id -%}{% set parts = entity_id.split('.') -%}{%- if loop.first %}{% elif loop.last %} i {% else %}, {{- ' ' -}} {% endif -%} {{ states[parts[0]][parts[1]].name }} {{states(entity_id)}} {{ states[parts[0]][parts[1]].attributes.unit_of_measurement }}{%- endfor %}"
+  - platform: template
+    sensors:
+      prognoza_info:
+        friendly_name: "Informacja o prognozie pogody"
+        value_template: Prognoza pogody na jutro w Twojej lokalizacji:{{- ' ' -}}{%- for entity_id in states.group.ais_pogoda_48.attributes.entity_id -%}{% set parts = entity_id.split('.') -%}{%- if loop.first %}{% elif loop.last %} i {% else %}, {{- ' ' -}} {% endif -%} {{ states[parts[0]][parts[1]].name|replace("jutro","") }} {{states(entity_id)}} {{ states[parts[0]][parts[1]].attributes.unit_of_measurement }} {%- endfor %}
+  - platform: yr
+    name: Prognoza 48
+    forecast: 48
+    monitored_conditions:
+      - temperature
+      - symbol
+      - precipitation
+      - windSpeed
+      - pressure
+      - windDirection
+      - humidity
+      - fog
+      - cloudiness
+      - dewpointTemperature
+  - platform: yr
+    name: Pogoda
+    monitored_conditions:
+      - temperature
+      - symbol
+      - precipitation
+      - windSpeed
+      - pressure
+      - windDirection
+      - humidity
+      - fog
+      - cloudiness
+      - dewpointTemperature
+
+group:
+  ais_pogoda:
+    name: Aktualne warunki pogodowe
+    entities:
+      - sensor.pogoda_temperature
+      - sensor.pogoda_precipitation
+      - sensor.pogoda_wind_speed
+      - sensor.pogoda_pressure
+      - sensor.pogoda_wind_direction
+      - sensor.pogoda_humidity
+      - sensor.pogoda_fog
+      - sensor.pogoda_cloudiness
+      - sensor.pogoda_dewpoint_temperature
+  ais_pogoda_48:
+    name: Prognoza pogody na jutro
+    entities:
+      - sensor.prognoza_48_temperature
+      - sensor.prognoza_48_precipitation
+      - sensor.prognoza_48_wind_speed
+      - sensor.prognoza_48_pressure
+      - sensor.prognoza_48_wind_direction
+      - sensor.prognoza_48_humidity
+      - sensor.prognoza_48_fog
+      - sensor.prognoza_48_cloudiness
+      - sensor.prognoza_48_dewpoint_temperature

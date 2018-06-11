@@ -1,0 +1,283 @@
+# Describes the format for available media player services
+
+turn_on:
+  description: Turn a media player power on.
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn on.
+      example: 'media_player.living_room_chromecast'
+
+turn_off:
+  description: Turn a media player power off.
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn off.
+      example: 'media_player.living_room_chromecast'
+
+toggle:
+  description: Toggles a media player power state.
+  fields:
+    entity_id:
+      description: Name(s) of entities to toggle.
+      example: 'media_player.living_room_chromecast'
+
+volume_up:
+  description: Turn a media player volume up.
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn volume up on.
+      example: 'media_player.living_room_sonos'
+
+volume_down:
+  description: Turn a media player volume down.
+  fields:
+    entity_id:
+      description: Name(s) of entities to turn volume down on.
+      example: 'media_player.living_room_sonos'
+
+volume_mute:
+  description: Mute a media player's volume.
+  fields:
+    entity_id:
+      description: Name(s) of entities to mute.
+      example: 'media_player.living_room_sonos'
+    is_volume_muted:
+      description: True/false for mute/unmute.
+      example: true
+
+volume_set:
+  description: Set a media player's volume level.
+  fields:
+    entity_id:
+      description: Name(s) of entities to set volume level on.
+      example: 'media_player.living_room_sonos'
+    volume_level:
+      description: Volume level to set as float.
+      example: 0.6
+
+media_play_pause:
+  description: Toggle media player play/pause state.
+  fields:
+    entity_id:
+      description: Name(s) of entities to toggle play/pause state on.
+      example: 'media_player.living_room_sonos'
+
+media_play:
+  description: Send the media player the command for play.
+  fields:
+    entity_id:
+      description: Name(s) of entities to play on.
+      example: 'media_player.living_room_sonos'
+
+media_pause:
+  description: Send the media player the command for pause.
+  fields:
+    entity_id:
+      description: Name(s) of entities to pause on.
+      example: 'media_player.living_room_sonos'
+
+media_stop:
+  description: Send the media player the stop command.
+  fields:
+    entity_id:
+      description: Name(s) of entities to stop on.
+      example: 'media_player.living_room_sonos'
+
+media_next_track:
+  description: Send the media player the command for next track.
+  fields:
+    entity_id:
+      description: Name(s) of entities to send next track command to.
+      example: 'media_player.living_room_sonos'
+
+media_previous_track:
+  description: Send the media player the command for previous track.
+  fields:
+    entity_id:
+      description: Name(s) of entities to send previous track command to.
+      example: 'media_player.living_room_sonos'
+
+media_seek:
+  description: Send the media player the command to seek in current playing media.
+  fields:
+    entity_id:
+      description: Name(s) of entities to seek media on.
+      example: 'media_player.living_room_chromecast'
+    seek_position:
+      description: Position to seek to. The format is platform dependent.
+      example: 100
+
+play_media:
+  description: Send the media player the command for playing media.
+  fields:
+    entity_id:
+      description: Name(s) of entities to seek media on
+      example: 'media_player.living_room_chromecast'
+    media_content_id:
+      description: The ID of the content to play. Platform dependent.
+      example: 'https://home-assistant.io/images/cast/splash.png'
+    media_content_type:
+      description: The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST
+      example: 'MUSIC'
+
+select_source:
+  description: Send the media player the command to change input source.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change source on.
+      example: 'media_player.media_player.txnr535_0009b0d81f82'
+    source:
+      description: Name of the source to switch to. Platform dependent.
+      example: 'video1'
+
+clear_playlist:
+  description: Send the media player the command to clear players playlist.
+  fields:
+    entity_id:
+      description: Name(s) of entities to change source on.
+      example: 'media_player.living_room_chromecast'
+
+shuffle_set:
+  description: Set shuffling state.
+  fields:
+    entity_id:
+      description: Name(s) of entities to set.
+      example: 'media_player.spotify'
+    shuffle:
+      description: True/false for enabling/disabling shuffle.
+      example: true
+
+snapcast_snapshot:
+  description: Take a snapshot of the media player.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be snapshotted. Platform dependent.
+      example: 'media_player.living_room'
+
+snapcast_restore:
+  description: Restore a snapshot of the media player.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be restored. Platform dependent.
+      example: 'media_player.living_room'
+
+sonos_join:
+  description: Group player together.
+  fields:
+    master:
+      description: Entity ID of the player that should become the coordinator of the group.
+      example: 'media_player.living_room_sonos'
+    entity_id:
+      description: Name(s) of entities that will coordinate the grouping. Platform dependent.
+      example: 'media_player.living_room_sonos'
+
+sonos_unjoin:
+  description: Unjoin the player from a group.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be unjoined from their group. Platform dependent.
+      example: 'media_player.living_room_sonos'
+
+sonos_snapshot:
+  description: Take a snapshot of the media player.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be snapshot. Platform dependent.
+      example: 'media_player.living_room_sonos'
+    with_group:
+      description: True (default) or False. Snapshot with all group attributes.
+      example: 'true'
+
+sonos_restore:
+  description: Restore a snapshot of the media player.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will be restored. Platform dependent.
+      example: 'media_player.living_room_sonos'
+    with_group:
+      description: True (default) or False. Restore with all group attributes.
+      example: 'true'
+
+sonos_set_sleep_timer:
+  description: Set a Sonos timer.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will have a timer set.
+      example: 'media_player.living_room_sonos'
+    sleep_time:
+      description: Number of seconds to set the timer.
+      example: '900'
+
+sonos_clear_sleep_timer:
+  description: Clear a Sonos timer.
+  fields:
+    entity_id:
+      description: Name(s) of entities that will have the timer cleared.
+      example: 'media_player.living_room_sonos'
+
+
+soundtouch_play_everywhere:
+  description: Play on all Bose Soundtouch devices.
+  fields:
+    master:
+      description: Name of the master entity that will coordinate the grouping. Platform dependent. It is a shortcut for creating a multi-room zone with all devices
+      example: 'media_player.soundtouch_home'
+
+soundtouch_create_zone:
+  description: Create a Sountouch multi-room zone.
+  fields:
+    master:
+      description: Name of the master entity that will coordinate the multi-room zone. Platform dependent.
+      example: 'media_player.soundtouch_home'
+    slaves:
+      description: Name of slaves entities to add to the new zone.
+      example: 'media_player.soundtouch_bedroom'
+
+soundtouch_add_zone_slave:
+  description: Add a slave to a Sountouch multi-room zone.
+  fields:
+    master:
+      description: Name of the master entity that is coordinating the multi-room zone. Platform dependent.
+      example: 'media_player.soundtouch_home'
+    slaves:
+      description: Name of slaves entities to add to the existing zone.
+      example: 'media_player.soundtouch_bedroom'
+
+soundtouch_remove_zone_slave:
+  description: Remove a slave from the Sounttouch multi-room zone.
+  fields:
+    master:
+      description: Name of the master entity that is coordinating the multi-room zone. Platform dependent.
+      example: 'media_player.soundtouch_home'
+    slaves:
+      description: Name of slaves entities to remove from the existing zone.
+      example: 'media_player.soundtouch_bedroom'
+
+kodi_add_to_playlist:
+  description: Add music to the default playlist (i.e. playlistid=0).
+  fields:
+    entity_id:
+      description: Name(s) of the Kodi entities where to add the media.
+      example: 'media_player.living_room_kodi'
+    media_type:
+      description: Media type identifier. It must be one of SONG or ALBUM.
+      example: ALBUM
+    media_id:
+      description: Unique Id of the media entry to add (`songid` or albumid`). If not defined, `media_name` and `artist_name` are needed to search the Kodi music library.
+      example: 123456
+    media_name:
+      description: Optional media name for filtering media. Can be 'ALL' when `media_type` is 'ALBUM' and `artist_name` is specified, to add all songs from one artist.
+      example: 'Highway to Hell'
+    artist_name:
+      description: Optional artist name for filtering media.
+      example: 'AC/DC'
+
+kodi_call_method:
+  description: 'Call a Kodi JSONRPC API method with optional parameters. Results of the Kodi API call will be redirected in a Home Assistant event: `kodi_call_method_result`.'
+  fields:
+    entity_id:
+      description: Name(s) of the Kodi entities where to run the API method.
+      example: 'media_player.living_room_kodi'
+    method:
+      description: Name of the Kodi JSONRPC API method to be called.
+      example: 'VideoLibrary.GetRecentlyAddedEpisodes'
