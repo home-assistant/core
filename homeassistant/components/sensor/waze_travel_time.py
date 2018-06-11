@@ -29,6 +29,8 @@ ATTR_ROUTE = 'route'
 CONF_ATTRIBUTION = "Data provided by the Waze.com"
 CONF_DESTINATION = 'destination'
 CONF_ORIGIN = 'origin'
+CONF_INCL_FILTER = 'incl_filter'
+CONF_EXCL_FILTER = 'excl_filter'
 
 DEFAULT_NAME = 'Waze Travel Time'
 
@@ -43,6 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Required(CONF_REGION): vol.In(REGIONS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_INCL_FILTER): cv.string,
+    vol.Optional(CONF_EXCL_FILTER): cv.string,
 })
 
 TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
@@ -55,8 +59,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = config.get(CONF_NAME)
         origin = config.get(CONF_ORIGIN)
         region = config.get(CONF_REGION)
+        incl_filter = config.get(CONF_INCL_FILTER)
+        excl_filter = config.get(CONF_EXCL_FILTER)
 
-        sensor = WazeTravelTime(hass, name, origin, destination, region)
+        sensor = WazeTravelTime(hass, name, origin, destination, region, incl_filter, excl_filter)
         add_devices([sensor])
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
@@ -65,11 +71,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
-    def __init__(self, hass, name, origin, destination, region):
+    def __init__(self, hass, name, origin, destination, region, incl_filter, excl_filter):
         """Initialize the Waze travel time sensor."""
         self._hass = hass
         self._name = name
         self._region = region
+        self._incl_filter = incl_filter
+        self._excl_filter = excl_filter
         self._state = None
 
         if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
@@ -110,9 +118,6 @@ class WazeTravelTime(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the last update."""
-        if self._state is None:
-            return None
-
         res = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
         if 'duration' in self._state:
             res[ATTR_DURATION] = self._state['duration']
@@ -154,9 +159,10 @@ class WazeTravelTime(Entity):
     def _get_location_from_attributes(entity):
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
-        return "%s,%s" % (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+        return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
     def _resolve_zone(self, friendly_name):
+        """Get a lat/long from a zones friendly_name."""
         entities = self._hass.states.all()
         for entity in entities:
             if entity.domain == 'zone' and entity.name == friendly_name:
@@ -187,7 +193,16 @@ class WazeTravelTime(Entity):
                 params = WazeRouteCalculator.WazeRouteCalculator(
                     self._origin, self._destination, self._region)
                 routes = params.calc_all_routes_info()
-                route = next(iter(routes))
+                
+                if self._incl_filter is not None:
+                    routes = {k: v for k, v in routes.items() if
+                        self._incl_filter.lower() in k.lower()}
+
+                if self._excl_filter is not None:
+                    routes = {k: v for k, v in routes.items() if
+                        self._excl_filter.lower() not in k.lower()}
+
+                route = sorted(routes,key=(lambda key: routes[key][0]))[0]
                 duration, distance = routes[route]
                 route = bytes(route, 'ISO-8859-1').decode('UTF-8')
                 self._state = {
