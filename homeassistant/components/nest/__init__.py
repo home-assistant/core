@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 DATA_NEST = 'nest'
+DATA_NEST_CONFIG = 'nest_config'
 
 SIGNAL_NEST_UPDATE = 'nest_update'
 
@@ -104,7 +105,8 @@ async def async_setup(hass, config):
         pass
         # TODO import access token cache.
 
-    # TODO store config in hass.data for entry to use
+    # Store config to be used during entry setup
+    hass.data[DATA_NEST_CONFIG] = conf
 
     return True
 
@@ -113,26 +115,15 @@ async def async_setup_entry(hass, entry):
     """Setup Nest from a config entry."""
     from nest import Nest
 
-    # TODO: Use structure config from configuration.yaml
-
     nest = Nest(access_token=entry.data['tokens']['access_token'])
 
     _LOGGER.debug("proceeding with setup")
-    # conf = config[DOMAIN]
-    conf = {}
+    conf = hass.data.get(DATA_NEST_CONFIG, {})
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
 
-    # TEMP
-    config = {}
-
-    for component, discovered in [
-            ('climate', {}),
-            ('camera', {}),
-            ('sensor', conf.get(CONF_SENSORS, {})),
-            ('binary_sensor', conf.get(CONF_BINARY_SENSORS, {}))]:
-        _LOGGER.debug("proceeding with discovery -- %s", component)
-        hass.async_add_job(discovery.async_load_platform,
-                           hass, component, DOMAIN, discovered, config)
+    for component in 'climate', 'camera', 'sensor', 'binary_sensor':
+        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+            entry, component))
 
     def set_mode(service):
         """
