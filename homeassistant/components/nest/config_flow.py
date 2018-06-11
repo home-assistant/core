@@ -100,7 +100,7 @@ class NestFlowHandler(data_entry_flow.FlowHandler):
                     title='Nest (via {})'.format(flow['name']),
                     data={
                         'tokens': tokens,
-                        'flow_domain': flow['domain'],
+                        'impl_domain': flow['domain'],
                     },
                 )
             except asyncio.TimeoutError:
