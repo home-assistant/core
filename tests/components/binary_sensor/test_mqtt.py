@@ -4,6 +4,7 @@ import unittest
 import homeassistant.core as ha
 from homeassistant.setup import setup_component
 import homeassistant.components.binary_sensor as binary_sensor
+from unittest.mock import patch
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
@@ -115,6 +116,134 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.test')
         self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+    def test_unique_id(self):
+        """Test unique id option only creates one sensor per unique_id."""
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: [{
+                'platform': 'mqtt',
+                'name': 'Test 1',
+                'state_topic': 'test-topic',
+                'unique_id': 'TOTALLY_UNIQUE'
+            }, {
+                'platform': 'mqtt',
+                'name': 'Test 2',
+                'state_topic': 'test-topic',
+                'unique_id': 'TOTALLY_UNIQUE'
+            }]
+        })
+
+    @patch('homeassistant.components.binary_sensor.mqtt._LOGGER')
+    def test_setting_sensor_attribute_via_mqtt_json_message(self, mock_logger):
+        """Test the setting of attribute via MQTT with JSON payload."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'json_attributes': 'val'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', '{ "val": "100" }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+
+        self.assertEqual('100',
+                         state.attributes.get('val'))
+        self.assertTrue(mock_logger.warning.called)
+
+    @patch('homeassistant.components.binary_sensor.mqtt._LOGGER')
+    def test_update_with_json_attrs_not_dict(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'json_attributes': 'val'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', '[ "list", "of", "things"]')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+
+        self.assertEqual(None,
+                         state.attributes.get('val'))
+        self.assertTrue(mock_logger.warning.called)
+
+    @patch('homeassistant.components.binary_sensor.mqtt._LOGGER')
+    def test_update_with_json_attrs_bad_JSON(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'json_attributes': 'val'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', 'This is not JSON')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(None,
+                         state.attributes.get('val'))
+        self.assertTrue(mock_logger.warning.called)
+
+    def test_update_with_json_attrs_and_template(self):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'payload_on': "100",
+                'unit_of_measurement': 'fav unit',
+                'value_template': '{{ value_json.val }}',
+                'json_attributes': 'val'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', '{ "val": "100" }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+
+        self.assertEqual('100',
+                         state.attributes.get('val'))
+        self.assertEqual('on', state.state)
+
+    @patch('homeassistant.components.binary_sensor.mqtt._LOGGER')
+    def test_update_with_json_attrs_and_invalid_value(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'value_template': '{{ value_json.val }}',
+                'json_attributes': 'val'
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', '{ "val": "100" }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+
+        self.assertEqual('100',
+                         state.attributes.get('val'))
+        self.assertTrue(mock_logger.warning.called)
 
     def test_availability_by_custom_payload(self):
         """Test availability by custom payload with defined topic."""
