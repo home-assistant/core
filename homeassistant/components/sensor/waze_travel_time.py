@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         incl_filter = config.get(CONF_INCL_FILTER)
         excl_filter = config.get(CONF_EXCL_FILTER)
 
-        sensor = WazeTravelTime(hass, name, origin, destination, region, 
+        sensor = WazeTravelTime(hass, name, origin, destination, region,
                                 incl_filter, excl_filter)
         add_devices([sensor])
 
@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
-    def __init__(self, hass, name, origin, destination, region, 
+    def __init__(self, hass, name, origin, destination, region,
                  incl_filter, excl_filter):
         """Initialize the Waze travel time sensor."""
         self._hass = hass
@@ -201,11 +201,11 @@ class WazeTravelTime(Entity):
 
                 if self._incl_filter is not None:
                     routes = {k: v for k, v in routes.items() if
-                        self._incl_filter.lower() in k.lower()}
+                              self._incl_filter.lower() in k.lower()}
 
                 if self._excl_filter is not None:
                     routes = {k: v for k, v in routes.items() if
-                        self._excl_filter.lower() not in k.lower()}
+                              self._excl_filter.lower() not in k.lower()}
 
                 route = sorted(routes, key=(lambda key: routes[key][0]))[0]
                 duration, distance = routes[route]
