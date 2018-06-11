@@ -97,13 +97,9 @@ class NestFlowHandler(data_entry_flow.FlowHandler):
             try:
                 with async_timeout.timeout(10):
                     tokens = await flow['convert_code'](user_input['code'])
-                return self.async_create_entry(
-                    title='Nest (via {})'.format(flow['name']),
-                    data={
-                        'tokens': tokens,
-                        'impl_domain': flow['domain'],
-                    },
-                )
+                return self._entry_from_tokens(
+                    'Nest (via {})'.format(flow['name']), flow, tokens)
+
             except asyncio.TimeoutError:
                 errors['code'] = 'timeout'
             except CodeInvalid:
@@ -143,13 +139,14 @@ class NestFlowHandler(data_entry_flow.FlowHandler):
         tokens = await self.hass.async_add_job(
             load_json, info['nest_conf_path'])
 
-        return self._entry_from_tokens()
+        return self._entry_from_tokens(
+            'Nest (import from configuration.yaml)', flow, tokens)
 
     @callback
-    def _entry_from_tokens(self, flow, tokens):
+    def _entry_from_tokens(self, title, flow, tokens):
         """Create an entry from tokens."""
         return self.async_create_entry(
-            title='Nest (import from configuration.yaml)',
+            title=title,
             data={
                 'tokens': tokens,
                 'impl_domain': DOMAIN,
