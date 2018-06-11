@@ -634,6 +634,8 @@ def merge_packages_config(hass, config, packages,
 
             # The last merge type are sections that require recursive merging
             if comp_name in config:
+                if not comp_conf:
+                    continue  # Ensure we only do r-merge if we have to
                 _recursive_merge(pack_name, comp_name, config,
                                  conf=config[comp_name], package=comp_conf)
                 continue

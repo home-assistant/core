@@ -656,6 +656,14 @@ def test_merge_type_mismatch(merge_log_err, hass):
 
 def test_merge_once_only_keys(merge_log_err, hass):
     """Test if we have a merge for a comp that may occur only once. Keys."""
+    packages = {'pack_2': {'api': None}}
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+        'api': None,
+    }
+    config_util.merge_packages_config(hass, config, packages)
+    assert config['api'] == None
+
     packages = {'pack_2': {'api': {
         'key_3': 3,
     }}}
