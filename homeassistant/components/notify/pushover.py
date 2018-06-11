@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.pushover/
 """
 import logging
+import mimetypes
 import os
 import re
 import tempfile
@@ -99,7 +100,8 @@ class PushoverNotificationService(BaseNotificationService):
                 auth=file_data.get(ATTR_FILE_AUTH))
 
             if filename is not None:
-                file = (filename, open(filename, "rb"), "image/jpeg")
+                file = (filename, open(
+                    filename, "rb"), mimetypes.guess_type(filename))
 
         for target in targets:
             if target is not None:
