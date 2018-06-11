@@ -77,6 +77,22 @@ class TestSensorMQTT(unittest.TestCase):
         state = self.hass.states.get('binary_sensor.test')
         self.assertIsNone(state)
 
+    def test_unique_id(self):
+        """Test unique id option only creates one sensor per unique_id."""
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: [{
+                'platform': 'mqtt',
+                'name': 'Test 1',
+                'state_topic': 'test-topic',
+                'unique_id': 'TOTALLY_UNIQUE'
+            }, {
+                'platform': 'mqtt',
+                'name': 'Test 2',
+                'state_topic': 'test-topic',
+                'unique_id': 'TOTALLY_UNIQUE'
+            }]
+        })
+
     def test_availability_without_topic(self):
         """Test availability without defined availability topic."""
         self.assertTrue(setup_component(self.hass, binary_sensor.DOMAIN, {
