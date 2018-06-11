@@ -62,7 +62,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         incl_filter = config.get(CONF_INCL_FILTER)
         excl_filter = config.get(CONF_EXCL_FILTER)
 
-        sensor = WazeTravelTime(hass, name, origin, destination, region, incl_filter, excl_filter)
+        sensor = WazeTravelTime(hass, name, origin, destination, region, 
+                                incl_filter, excl_filter)
         add_devices([sensor])
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
@@ -71,7 +72,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
-    def __init__(self, hass, name, origin, destination, region, incl_filter, excl_filter):
+    def __init__(self, hass, name, origin, destination, region, 
+                 incl_filter, excl_filter):
         """Initialize the Waze travel time sensor."""
         self._hass = hass
         self._name = name
@@ -159,7 +161,10 @@ class WazeTravelTime(Entity):
     def _get_location_from_attributes(entity):
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
-        return "{},{}".format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
+        return "{},{}".format(
+            attr.get(ATTR_LATITUDE), 
+            attr.get(ATTR_LONGITUDE)
+        )
 
     def _resolve_zone(self, friendly_name):
         """Get a lat/long from a zones friendly_name."""
@@ -193,7 +198,7 @@ class WazeTravelTime(Entity):
                 params = WazeRouteCalculator.WazeRouteCalculator(
                     self._origin, self._destination, self._region)
                 routes = params.calc_all_routes_info()
-                
+
                 if self._incl_filter is not None:
                     routes = {k: v for k, v in routes.items() if
                         self._incl_filter.lower() in k.lower()}
@@ -202,7 +207,7 @@ class WazeTravelTime(Entity):
                     routes = {k: v for k, v in routes.items() if
                         self._excl_filter.lower() not in k.lower()}
 
-                route = sorted(routes,key=(lambda key: routes[key][0]))[0]
+                route = sorted(routes, key=(lambda key: routes[key][0]))[0]
                 duration, distance = routes[route]
                 route = bytes(route, 'ISO-8859-1').decode('UTF-8')
                 self._state = {
