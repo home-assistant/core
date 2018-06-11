@@ -229,11 +229,6 @@ class DenonDevice(MediaPlayerDevice):
         return self._sound_mode
 
     @property
-    def sound_mode_raw(self):
-        """Return the current raw sound mode."""
-        return self._sound_mode_raw
-
-    @property
     def sound_mode_list(self):
         """Return a list of available sound modes."""
         return self._sound_mode_list
