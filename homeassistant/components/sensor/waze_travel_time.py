@@ -162,7 +162,7 @@ class WazeTravelTime(Entity):
         """Get the lat/long string from an entities attributes."""
         attr = entity.attributes
         return "{},{}".format(
-            attr.get(ATTR_LATITUDE), 
+            attr.get(ATTR_LATITUDE),
             attr.get(ATTR_LONGITUDE)
         )
 
