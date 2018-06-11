@@ -149,6 +149,6 @@ class NestFlowHandler(data_entry_flow.FlowHandler):
             title=title,
             data={
                 'tokens': tokens,
-                'impl_domain': DOMAIN,
+                'impl_domain': flow['domain'],
             },
         )
