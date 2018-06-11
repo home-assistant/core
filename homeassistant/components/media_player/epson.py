@@ -76,12 +76,12 @@ async def async_setup_platform(
                     await device.select_cmode(cmode)
             await device.update()
     from epson_projector.const import (CMODE_LIST_SET)
-    EPSON_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    epson_schema = MEDIA_PLAYER_SCHEMA.extend({
         vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))
     })
     hass.services.async_register(
         DOMAIN, SERVICE_ATTR_CMODE, async_service_handler,
-        schema=EPSON_SCHEMA)
+        schema=epson_schema)
     return True
 
 
