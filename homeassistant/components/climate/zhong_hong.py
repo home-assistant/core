@@ -14,7 +14,6 @@ from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.const import (ATTR_TEMPERATURE, CONF_HOST, CONF_PORT,
                                  EVENT_HOMEASSISTANT_STOP, TEMP_CELSIUS)
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (async_dispatcher_connect,
                                               async_dispatcher_send)
