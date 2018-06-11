@@ -115,5 +115,5 @@ def async_setup(hass, config):
     # Only subscribe if you specified a topic.
     if sub_topic:
         yield from mqtt.async_subscribe(sub_topic, _event_receiver)
-    
+
     return True
