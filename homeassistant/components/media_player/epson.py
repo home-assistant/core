@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/media_player.epson/
 """
 import logging
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
     DOMAIN, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
@@ -16,7 +17,6 @@ from homeassistant.const import (
     STATE_ON)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 
 REQUIREMENTS = ['epson-projector==0.1.3']
 
@@ -115,7 +115,7 @@ class EpsonProjector(MediaPlayerDevice):
             self._state = STATE_ON
             cmode = await self._projector.get_property(CMODE)
             if cmode and cmode in CMODE_LIST:
-                self._cmode = CMODE_LIST.get(cmode, self._cmode).lower()
+                self._cmode = CMODE_LIST.get(cmode, self._cmode)
             source = await self._projector.get_property(SOURCE)
             if source and source in SOURCE_LIST:
                 self._source = SOURCE_LIST.get(source, self._source)
@@ -161,11 +161,6 @@ class EpsonProjector(MediaPlayerDevice):
     def source(self):
         """Get current input sources."""
         return self._source
-
-    @property
-    def cmode(self):
-        """Get CMODE/color mode from Epson."""
-        return self._cmode
 
     @property
     def volume_level(self):
