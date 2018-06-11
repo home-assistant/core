@@ -139,8 +139,15 @@ class NestFlowHandler(data_entry_flow.FlowHandler):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
-        tokens = await self.hass.async_add_job(load_json, info['nest_conf_path'])
+        flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
+        tokens = await self.hass.async_add_job(
+            load_json, info['nest_conf_path'])
 
+        return self._entry_from_tokens()
+
+    @callback
+    def _entry_from_tokens(self, flow, tokens):
+        """Create an entry from tokens."""
         return self.async_create_entry(
             title='Nest (import from configuration.yaml)',
             data={
