@@ -102,8 +102,11 @@ async def async_setup(hass, config):
     access_token_cache_file = hass.config.path(filename)
 
     if await hass.async_add_job(os.path.isfile, access_token_cache_file):
-        pass
-        # TODO import access token cache.
+        hass.async_add_job(hass.config_entries.flow.async_init(
+            DOMAIN, source='import', data={
+                'nest_conf_path': access_token_cache_file,
+            }
+        ))
 
     # Store config to be used during entry setup
     hass.data[DATA_NEST_CONFIG] = conf

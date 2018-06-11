@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.json import load_json
 
 from .const import DOMAIN
 
@@ -131,4 +132,19 @@ class NestFlowHandler(data_entry_flow.FlowHandler):
                 vol.Required('code'): str,
             }),
             errors=errors,
+        )
+
+    async def async_step_import(self, info):
+        """Import existing auth from Nest."""
+        if self.hass.config_entries.async_entries(DOMAIN):
+            return self.async_abort(reason='already_setup')
+
+        tokens = await self.hass.async_add_job(load_json, info['nest_conf_path'])
+
+        return self.async_create_entry(
+            title='Nest (import from configuration.yaml)',
+            data={
+                'tokens': tokens,
+                'impl_domain': DOMAIN,
+            },
         )
