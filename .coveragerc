@@ -75,8 +75,8 @@ omit =
 
     homeassistant/components/dominos.py
 
-	homeassistant/components/doorbird.py
-	homeassistant/components/*/doorbird.py
+    homeassistant/components/doorbird.py
+    homeassistant/components/*/doorbird.py
 
     homeassistant/components/dweet.py
     homeassistant/components/*/dweet.py
