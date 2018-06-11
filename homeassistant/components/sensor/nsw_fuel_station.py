@@ -96,8 +96,7 @@ class StationPriceData(object):
             except FuelCheckError as exc:
                 self.error = str(exc)
                 _LOGGER.error(
-                    'Failed to fetch NSW Fuel station reference data',
-                    exc_info=exc)
+                    'Failed to fetch NSW Fuel station reference data. %s', exc)
                 return
 
         try:
@@ -106,7 +105,7 @@ class StationPriceData(object):
         except FuelCheckError as exc:
             self.error = str(exc)
             _LOGGER.error(
-                'Failed to fetch NSW Fuel station price data', exc_info=exc)
+                'Failed to fetch NSW Fuel station price data. %s', exc)
 
     def for_fuel_type(self, fuel_type: str):
         """Return the price of the given fuel type."""
