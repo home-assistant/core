@@ -10,7 +10,6 @@ pyyaml>=3.11,<4
 requests==2.18.4
 typing>=3,<4
 voluptuous==0.11.1
-python-dateutil>=2.6.0
 
 # Breaks Python 3.6 and is not needed for our supported Python versions
 enum34==1000000000.0.0

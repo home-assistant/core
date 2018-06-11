@@ -54,7 +54,6 @@ REQUIRES = [
     'requests==2.18.4',
     'typing>=3,<4',
     'voluptuous==0.11.1',
-    'python-dateutil>=2.6.0',
 ]
 
 MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))

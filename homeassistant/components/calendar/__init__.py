@@ -8,7 +8,6 @@ import asyncio
 import logging
 from datetime import timedelta
 import re
-import dateutil.parser
 
 from homeassistant.components.google import (
     CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
@@ -211,8 +210,8 @@ class CalendarEventView(http.HomeAssistantView):
         if None in (start, end):
             return []
         try:
-            start_date = dateutil.parser.parse(start)
-            end_date = dateutil.parser.parse(end)
+            start_date = dt.parse_datetime(start)
+            end_date = dt.parse_datetime(end)
         except (ValueError, AttributeError):
             return []
         event_list = await self.device.async_get_events(start_date, end_date)

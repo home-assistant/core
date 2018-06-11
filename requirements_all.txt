@@ -11,7 +11,6 @@ pyyaml>=3.11,<4
 requests==2.18.4
 typing>=3,<4
 voluptuous==0.11.1
-python-dateutil>=2.6.0
 
 # homeassistant.components.nuimo_controller
 --only-binary=all https://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
