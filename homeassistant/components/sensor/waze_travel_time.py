@@ -55,6 +55,7 @@ TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Waze travel time sensor platform."""
     def run_setup(event):
+        """Set up the waze travel time sensor."""
         destination = config.get(CONF_DESTINATION)
         name = config.get(CONF_NAME)
         origin = config.get(CONF_ORIGIN)
@@ -220,4 +221,3 @@ class WazeTravelTime(Entity):
             except KeyError:
                 _LOGGER.error("Error retrieving data from server")
                 return
-
