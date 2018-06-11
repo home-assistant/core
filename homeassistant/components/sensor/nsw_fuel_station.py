@@ -16,7 +16,7 @@ from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['nsw-fuel-api-client==1.0.9']
+REQUIREMENTS = ['nsw-fuel-api-client==1.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +24,6 @@ ATTR_STATION_ID = 'station_id'
 ATTR_STATION_NAME = 'station_name'
 
 CONF_STATION_ID = 'station_id'
-CONF_STATION_NAME = 'station_name'
 CONF_FUEL_TYPES = 'fuel_types'
 CONF_ALLOWED_FUEL_TYPES = ["E10", "U91", "E85", "P95", "P98", "DL",
                            "PDL", "B20", "LPG", "CNG", "EV"]
@@ -33,7 +32,6 @@ CONF_ATTRIBUTION = "Data provided by NSW Government FuelCheck"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_ID): cv.positive_int,
-    vol.Required(CONF_STATION_NAME): cv.string,
     vol.Optional(CONF_FUEL_TYPES, default=CONF_DEFAULT_FUEL_TYPES):
         vol.All(cv.ensure_list, [vol.In(CONF_ALLOWED_FUEL_TYPES)]),
 })
@@ -49,11 +47,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from nsw_fuel import FuelCheckClient
 
     station_id = config[CONF_STATION_ID]
-    station_name = config[CONF_STATION_NAME]
     fuel_types = config[CONF_FUEL_TYPES]
 
     client = FuelCheckClient()
-    station_data = StationPriceData(client, station_id, station_name)
+    station_data = StationPriceData(client, station_id)
     station_data.update()
 
     if station_data.error is not None:
@@ -79,19 +76,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class StationPriceData(object):
     """An object to store and fetch the latest data for a given station."""
 
-    def __init__(self, client, station_id: int, station_name: str) -> None:
+    def __init__(self, client, station_id: int) -> None:
         """Initialize the sensor."""
         self.station_id = station_id
-        self.station_name = station_name
-
         self._client = client
         self._data = None
+        self._reference_data = None
         self.error = None
+        self._station_name = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update the internal data using the API client."""
         from nsw_fuel import FuelCheckError
+
+        if self._reference_data is None:
+            try:
+                self._reference_data = self._client.get_reference_data()
+            except FuelCheckError as exc:
+                self.error = str(exc)
+                _LOGGER.error(
+                    'Failed to fetch NSW Fuel station reference data', exc_info=exc)
+                return
 
         try:
             self._data = self._client.get_fuel_prices_for_station(
@@ -112,6 +118,18 @@ class StationPriceData(object):
         """Return the available fuel types for the station."""
         return [price.fuel_type for price in self._data]
 
+    def get_station_name(self) -> str:
+        if self._station_name is None:
+            name = None
+            if self._reference_data is not None:
+                name = next((station.name for station
+                             in self._reference_data.stations
+                             if station.code == self.station_id), None)
+
+            self._station_name = name or 'station {}'.format(self.station_id)
+
+        return self._station_name
+
 
 class StationPriceSensor(Entity):
     """Implementation of a sensor that reports the fuel price for a station."""
@@ -125,7 +143,7 @@ class StationPriceSensor(Entity):
     def name(self) -> str:
         """Return the name of the sensor."""
         return '{} {}'.format(
-            self._station_data.station_name, self._fuel_type)
+            self._station_data.get_station_name(), self._fuel_type)
 
     @property
     def state(self) -> Optional[float]:
@@ -141,7 +159,7 @@ class StationPriceSensor(Entity):
         """Return the state attributes of the device."""
         return {
             ATTR_STATION_ID: self._station_data.station_id,
-            ATTR_STATION_NAME: self._station_data.station_name,
+            ATTR_STATION_NAME: self._station_data.get_station_name(),
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION
         }
 
