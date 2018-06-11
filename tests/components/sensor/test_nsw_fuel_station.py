@@ -9,7 +9,6 @@ from tests.common import (
 
 VALID_CONFIG = {
     'platform': 'nsw_fuel_station',
-    'station_name': 'My Fake Station',
     'station_id': 350,
     'fuel_types': ['E10', 'P95'],
 }
@@ -26,6 +25,23 @@ class MockPrice():
         self.last_updated = last_updated
         self.price_unit = price_unit
         self.station_code = station_code
+
+
+class MockStation():
+    """Mock Station implementation."""
+
+    def __init__(self, name, code):
+        """Initialize a mock Station instance."""
+        self.name = name
+        self.code = code
+
+
+class MockGetReferenceDataResponse():
+    """Mock GetReferenceDataResponse implementation."""
+
+    def __init__(self, stations):
+        """Initialize a mock GetReferenceDataResponse instance."""
+        self.stations = stations
 
 
 class FuelCheckClientMock():
@@ -49,6 +65,14 @@ class FuelCheckClientMock():
                 station_code=350
             )
         ]
+
+    def get_reference_data(self):
+        """Return a fake reference data response."""
+        return MockGetReferenceDataResponse(
+            stations=[
+                MockStation(code=350, name="My Fake Station")
+            ]
+        )
 
 
 class TestNSWFuelStation(unittest.TestCase):
