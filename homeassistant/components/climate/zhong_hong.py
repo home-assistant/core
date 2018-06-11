@@ -44,15 +44,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     gw_addr = config.get(CONF_GATEWAY_ADDRRESS)
     hub = ZhongHongGateway(host, port, gw_addr)
-    try:
-        devices = [
-            ZhongHongClimate(hub, addr_out, addr_in)
-            for (addr_out, addr_in) in hub.discovery_ac()
-        ]
-
-    except Exception as exc:
-        _LOGGER.error("ZhongHong controller is not ready: %s", exc)
-        raise PlatformNotReady
+    devices = [
+        ZhongHongClimate(hub, addr_out, addr_in)
+        for (addr_out, addr_in) in hub.discovery_ac()
+    ]
 
     _LOGGER.debug("We got %s zhong_hong climate devices", len(devices))
 
@@ -104,10 +99,6 @@ class ZhongHongClimate(ClimateDevice):
         self._device.register_update_callback(self._after_update)
         self.is_initialized = True
         async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADDED)
-
-    def update(self):
-        """Update device status from hub."""
-        self._device.update()
 
     def _after_update(self, climate):
         """Callback to update state."""
