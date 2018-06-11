@@ -37,6 +37,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 REQUIREMENTS = ['async-upnp-client==0.10.0']
 
+DEPENDENCIES = ['http']
+
 DEFAULT_NAME = 'DLNA_DMR'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
