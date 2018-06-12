@@ -4,9 +4,11 @@ import logging
 from pyhap.const import CATEGORY_FAN
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION, ATTR_OSCILLATING, DIRECTION_FORWARD, DIRECTION_REVERSE,
-    DOMAIN, SERVICE_OSCILLATE, SERVICE_SET_DIRECTION, SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE)
+    ATTR_DIRECTION, ATTR_OSCILLATING, ATTR_SPEED,
+    DIRECTION_FORWARD, DIRECTION_REVERSE, DOMAIN,
+    SERVICE_OSCILLATE, SERVICE_SET_DIRECTION,
+    SERVICE_SET_SPEED, SUPPORT_DIRECTION, SUPPORT_OSCILLATE,
+    SUPPORT_SET_SPEED)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_TURN_OFF,
     SERVICE_TURN_ON, STATE_OFF, STATE_ON)
@@ -14,7 +16,8 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_SWING_MODE, SERV_FANV2)
+    CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_ROTATION_SPEED,
+    CHAR_SWING_MODE, SERV_FANV2)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +34,8 @@ class Fan(HomeAccessory):
         super().__init__(*args, category=CATEGORY_FAN)
         self._flag = {CHAR_ACTIVE: False,
                       CHAR_ROTATION_DIRECTION: False,
-                      CHAR_SWING_MODE: False}
+                      CHAR_SWING_MODE: False,
+                      CHAR_ROTATION_SPEED: False}
         self._state = 0
 
         self.chars = []
@@ -41,6 +45,8 @@ class Fan(HomeAccessory):
             self.chars.append(CHAR_ROTATION_DIRECTION)
         if features & SUPPORT_OSCILLATE:
             self.chars.append(CHAR_SWING_MODE)
+        if features & SUPPORT_SET_SPEED:
+            self.chars.append(CHAR_ROTATION_SPEED)
 
         serv_fan = self.add_preload_service(SERV_FANV2, self.chars)
         self.char_active = serv_fan.configure_char(
@@ -54,6 +60,11 @@ class Fan(HomeAccessory):
         if CHAR_SWING_MODE in self.chars:
             self.char_swing = serv_fan.configure_char(
                 CHAR_SWING_MODE, value=0, setter_callback=self.set_oscillating)
+
+        if CHAR_ROTATION_SPEED in self.chars:
+            self.char_speed = serv_fan.configure_char(
+                CHAR_ROTATION_SPEED, value=0,
+                setter_callback=self.set_speed)
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""
@@ -82,6 +93,13 @@ class Fan(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id,
                   ATTR_OSCILLATING: oscillating}
         self.hass.services.call(DOMAIN, SERVICE_OSCILLATE, params)
+
+    def set_speed(self, value):
+        """Set state if call came from HomeKit."""
+        _LOGGER.debug('%s: Set speed to %d', self.entity_id, value)
+        self._flag[CHAR_ROTATION_SPEED] = True
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_SPEED: value}
+        self.hass.services.call(DOMAIN, SERVICE_SET_SPEED, params)
 
     def update_state(self, new_state):
         """Update fan after state change."""
@@ -113,3 +131,11 @@ class Fan(HomeAccessory):
                 if self.char_swing.value != hk_oscillating:
                     self.char_swing.set_value(hk_oscillating)
             self._flag[CHAR_SWING_MODE] = False
+
+        # Handle Speed
+        if CHAR_ROTATION_SPEED in self.chars:
+            speed = new_state.attributes.get(ATTR_SPEED)
+            if not self._flag[CHAR_ROTATION_SPEED]:
+                if self.char_speed.value != speed:
+                    self.char_speed.set_value(speed)
+            self._flag[CHAR_ROTATION_SPEED] = False
