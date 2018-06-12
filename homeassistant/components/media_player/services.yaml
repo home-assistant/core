@@ -423,7 +423,7 @@ blackbird_set_all_zones:
       description: Name of source to switch to.
       example: 'Source 1'
 
-epson_cmode:
+epson_select_cmode:
   description: Select Color mode of Epson projector
   fields:
     entity_id:
