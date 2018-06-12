@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PATH, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.exceptions import PlatformNotReady
 
 REQUIREMENTS = ['aioftp==0.10.1']
 DEPENDENCIES = ['ffmpeg']
@@ -52,6 +53,7 @@ class YiCamera(Camera):
         """Initialize."""
         super().__init__()
         self._extra_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
+        self._ftp = None
         self._last_image = None
         self._last_url = None
         self._manager = hass.data[DATA_FFMPEG]
@@ -61,6 +63,8 @@ class YiCamera(Camera):
         self.path = config[CONF_PATH]
         self.user = config[CONF_USERNAME]
         self.passwd = config[CONF_PASSWORD]
+
+        hass.async_add_job(self._connect_to_client)
 
     @property
     def brand(self):
@@ -72,36 +76,44 @@ class YiCamera(Camera):
         """Return the name of this camera."""
         return self._name
 
-    async def _get_latest_video_url(self):
-        """Retrieve the latest video file from the customized Yi FTP server."""
+    async def _connect_to_client(self):
+        """Attempt to establish a connection via FTP."""
         from aioftp import Client, StatusCodeError
 
         ftp = Client()
         try:
             await ftp.connect(self.host)
             await ftp.login(self.user, self.passwd)
+            self._ftp = ftp
+        except StatusCodeError as err:
+            raise PlatformNotReady(err)
 
-            await ftp.change_directory(self.path)
+    async def _get_latest_video_url(self):
+        """Retrieve the latest video file from the customized Yi FTP server."""
+        from aioftp import StatusCodeError
+
+        try:
+            await self._ftp.change_directory(self.path)
             dirs = []
-            for path, attrs in await ftp.list():
+            for path, attrs in await self._ftp.list():
                 if attrs['type'] == 'dir' and '.' not in str(path):
                     dirs.append(path)
             latest_dir = dirs[-1]
-            await ftp.change_directory(latest_dir)
+            await self._ftp.change_directory(latest_dir)
 
             videos = []
-            for path, _ in await ftp.list():
+            for path, _ in await self._ftp.list():
                 videos.append(path)
             if not videos:
                 _LOGGER.info('Video folder "%s" empty; delaying', latest_dir)
-                return False
+                return None
 
             return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(
                 self.user, self.passwd, self.host, self.port, self.path,
                 latest_dir, videos[-1])
         except (ConnectionRefusedError, StatusCodeError) as err:
-            print('There was an issue: {0}'.format(err))
-            return
+            _LOGGER.error('Error while fetching video: %s', err)
+            return None
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
