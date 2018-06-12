@@ -52,8 +52,8 @@ AWAY_SCHEMA = vol.Schema({
     vol.Required(ATTR_HOME_MODE): vol.In([HOME_MODE_AWAY, HOME_MODE_HOME]),
     vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string),
     vol.Optional(ATTR_TRIP_ID): cv.string,
-    vol.Optional(ATTR_ETA): cv.time_period_str,
-    vol.Optional(ATTR_ETA_WINDOW): cv.time_period_str
+    vol.Optional(ATTR_ETA): cv.time_period,
+    vol.Optional(ATTR_ETA_WINDOW): cv.time_period
 })
 
 CONFIG_SCHEMA = vol.Schema({
