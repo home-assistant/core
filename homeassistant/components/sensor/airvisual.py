@@ -257,8 +257,8 @@ class AirVisualData(object):
         self.show_on_map = kwargs.get(CONF_SHOW_ON_MAP)
         self.state = kwargs.get(CONF_STATE)
 
-        self.async_update = Throttle(kwargs[CONF_SCAN_INTERVAL])(
-            self._async_update)
+        self.async_update = Throttle(
+            kwargs[CONF_SCAN_INTERVAL])(self._async_update)
 
     async def _async_update(self):
         """Update AirVisual data."""
