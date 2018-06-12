@@ -589,7 +589,7 @@ def test_merge(merge_log_err, hass):
     assert len(config['input_boolean']) == 2
     assert len(config['input_select']) == 1
     assert len(config['light']) == 3
-    assert config['wake_on_lan'] is None
+    assert isinstance(config['wake_on_lan'], OrderedDict)
 
 
 def test_merge_try_falsy(merge_log_err, hass):
@@ -662,7 +662,7 @@ def test_merge_once_only_keys(merge_log_err, hass):
         'api': None,
     }
     config_util.merge_packages_config(hass, config, packages)
-    assert config['api'] == None
+    assert config['api'] == OrderedDict()
 
     packages = {'pack_2': {'api': {
         'key_3': 3,
@@ -763,7 +763,7 @@ def test_merge_duplicate_keys(merge_log_err, hass):
     }
     config = {
         config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
-        'input_select': {'ib1': None},
+        'input_select': {'ib1': 1},
     }
     config_util.merge_packages_config(hass, config, packages)
 
