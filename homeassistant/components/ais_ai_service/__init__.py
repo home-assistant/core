@@ -219,6 +219,7 @@ def set_curr_group(hass, group):
     CURR_ENTITIE_POSITION = None
     if group is None:
         CURR_GROUP = get_curr_group()
+
         hass.states.async_set(
             'binary_sensor.selected_entity',
             CURR_GROUP['entity_id'])
@@ -1008,8 +1009,9 @@ def _process_code(hass, data, callback):
 def _process(hass, text, callback):
     """Process a line of text."""
     _LOGGER.info('Process text: ' + text)
+    # clear text
+    text = text.replace("&", " and ")
     global CURR_BUTTON_CODE
-    intent_resp = None
     s = False
     m = None
     found = False
@@ -1021,7 +1023,7 @@ def _process(hass, text, callback):
             for matcher in matchers:
                 match = matcher.match(text)
                 if match:
-                    # we havee a match
+                    # we have a match
                     found = True
                     m, s = yield from hass.helpers.intent.async_handle(
                         DOMAIN, intent_type,
@@ -1038,7 +1040,7 @@ def _process(hass, text, callback):
                     for matcher in matchers:
                         match = matcher.match(sufix + " " + text)
                         if match:
-                            # we havee a match
+                            # we have a match
                             found = True
                             m, s = yield from hass.helpers.intent.async_handle(
                                 DOMAIN, intent_type,
@@ -1046,7 +1048,7 @@ def _process(hass, text, callback):
                                  in match.groupdict().items()},
                                 sufix + " " + text)
                             # reset the curr button code
-                            # TODO the mic shoud send a button code too
+                            # TODO the mic should send a button code too
                             # in this case we will know if the call source
                             CURR_BUTTON_CODE = 0
                             break

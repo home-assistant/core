@@ -259,9 +259,9 @@ class AisCloudWS:
         return None
 
     def ask(self, question, org_answer):
-        rest_url = self.url + 'ask?question=' + question
+        rest_url = self.url + 'ask?question=' + question + " "
         rest_url += '&org_answer=' + org_answer
-        _LOGGER.error('rest_url: ' + str(rest_url))
+        _LOGGER.info('rest_url: ' + str(rest_url))
         ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
         return ws_resp
 
@@ -855,7 +855,7 @@ class AisColudData:
                 return
             player_name = self.hass.states.get(
                 'input_select.book_player').state
-            import homeassistant.components.ais_dom.ais_gm_service as gm
+            import homeassistant.components.ais_gm_service as gm
             for ch in gm.G_SELECTED_TRACKS:
                 if(ch["name"] == chapter_name):
                     _url = gm.G_GM_MOBILE_CLIENT_API.get_stream_url(ch["id"])

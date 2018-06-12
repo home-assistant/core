@@ -87,7 +87,7 @@ class GMusicData:
     """Class to hold audiobooks data."""
 
     def __init__(self, hass, config):
-        """Initialize the radio stations."""
+        """Initialize the books authors."""
         global G_GM_MOBILE_CLIENT_API
         self.hass = hass
         self.all_gm_tracks = []
@@ -100,7 +100,7 @@ class GMusicData:
             return False
         else:
             _LOGGER.info("OK - we are in Gmusic")
-            _LOGGER.info(
+            _LOGGER.error(
                 "devices: " + str(
                     G_GM_MOBILE_CLIENT_API.get_registered_devices()))
 
