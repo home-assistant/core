@@ -84,6 +84,9 @@ aiodns==1.1.1
 # homeassistant.components.device_tracker.freebox
 aiofreepybox==0.0.3
 
+# homeassistant.components.camera.yi
+aioftp==0.10.1
+
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
 aiohttp_cors==0.7.0
