@@ -123,6 +123,7 @@ async def async_setup_entry(hass, entry):
     _LOGGER.debug("proceeding with setup")
     conf = hass.data.get(DATA_NEST_CONFIG, {})
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
+    await hass.async_add_job(hass.data[DATA_NEST].initialize)
 
     for component in 'climate', 'camera', 'sensor', 'binary_sensor':
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
@@ -188,12 +189,12 @@ class NestDevice(object):
         """Init Nest Devices."""
         self.hass = hass
         self.nest = nest
+        self.local_structure = conf.get(CONF_STRUCTURE)
 
-        if CONF_STRUCTURE not in conf:
-            self.local_structure = [s.name for s in nest.structures]
-        else:
-            self.local_structure = conf[CONF_STRUCTURE]
-        _LOGGER.debug("Structures to include: %s", self.local_structure)
+    def initialize(self):
+        """Initialize Nest."""
+        if self.local_structure is None:
+            self.local_structure = [s.name for s in self.nest.structures]
 
     def structures(self):
         """Generate a list of structures."""
