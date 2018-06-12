@@ -98,7 +98,8 @@ class Fan(HomeAccessory):
         """Set state if call came from HomeKit."""
         _LOGGER.debug('%s: Set speed to %d', self.entity_id, value)
         self._flag[CHAR_ROTATION_SPEED] = True
-        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_SPEED: value}
+        speed = str(value)
+        params = {ATTR_ENTITY_ID: self.entity_id, ATTR_SPEED: speed}
         self.hass.services.call(DOMAIN, SERVICE_SET_SPEED, params)
 
     def update_state(self, new_state):
@@ -136,7 +137,7 @@ class Fan(HomeAccessory):
         if CHAR_ROTATION_SPEED in self.chars:
             speed = new_state.attributes.get(ATTR_SPEED)
             if not self._flag[CHAR_ROTATION_SPEED]:
-                hk_speed = str(speed)
+                hk_speed = float(speed)
                 if self.char_speed.value != hk_speed:
                     self.char_speed.set_value(hk_speed)
             self._flag[CHAR_ROTATION_SPEED] = False
