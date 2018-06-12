@@ -82,3 +82,6 @@
   - data:
       text: Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?
     service: ais_ai_service.say_it
+  - alias: ''
+    data: {}
+    service: ais_ai_service.prepare_remote_menu

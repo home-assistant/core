@@ -461,7 +461,7 @@ class AisColudData:
             # this name will be set after the list refresh
             self.audio_name = None
         # check if the change was done form remote
-        import homeassistant.ais_dom.ais_ai_service as ais_ai
+        import homeassistant.components.ais_ai_service as ais_ai
         if (ais_ai.CURR_ENTITIE == 'input_select.radio_type'
                 and ais_ai.CURR_BUTTON_CODE == 23):
             ais_ai.set_curr_entity(
@@ -530,7 +530,7 @@ class AisColudData:
                 "options": types})
 
     def get_podcast_names(self, call):
-        """Load podcast of the for the selected type."""
+        """Load podcasts names for the selected type."""
         if ("podcast_type" not in call.data):
             _LOGGER.error("No podcast_type")
             return []
@@ -556,7 +556,7 @@ class AisColudData:
                 "entity_id": "input_select.podcast_name",
                 "options": names})
         # check if the change was done form remote
-        import homeassistant.ais_dom.ais_ai_service as ais_ai
+        import homeassistant.components.ais_ai_service as ais_ai
         if (ais_ai.CURR_ENTITIE == 'input_select.podcast_type'
                 and ais_ai.CURR_BUTTON_CODE == 23):
             ais_ai.set_curr_entity(
@@ -641,7 +641,7 @@ class AisColudData:
                             "option": track["title"]})
                 else:
                     # check if the change was done form remote
-                    import homeassistant.ais_dom.ais_ai_service as ais_ai
+                    import homeassistant.components.ais_ai_service as ais_ai
                     if (ais_ai.CURR_ENTITIE
                             == 'input_select.podcast_name'
                             and ais_ai.CURR_BUTTON_CODE == 23):
@@ -989,7 +989,7 @@ class AisColudData:
                 "entity_id": "input_select.rss_news_channel",
                 "options": names})
         # check if the change was done form remote
-        import homeassistant.ais_dom.ais_ai_service as ais_ai
+        import homeassistant.components.ais_ai_service as ais_ai
         if (ais_ai.CURR_ENTITIE == 'input_select.rss_news_category'
                 and ais_ai.CURR_BUTTON_CODE == 23):
             ais_ai.set_curr_entity(
@@ -1080,7 +1080,7 @@ class AisColudData:
                             + " wiadomości, wybierz artykuł"
                         })
                     # check if the change was done form remote
-                    import homeassistant.ais_dom.ais_ai_service as ais_ai
+                    import homeassistant.components.ais_ai_service as ais_ai
                     if (ais_ai.CURR_ENTITIE
                             == 'input_select.rss_news_channel'
                             and ais_ai.CURR_BUTTON_CODE == 23):

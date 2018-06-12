@@ -10,7 +10,7 @@ import logging
 import json
 import os.path
 from operator import itemgetter
-from homeassistant.ais_dom import ais_cloud
+from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
 # DEPENDENCIES = ['group', 'http']
@@ -130,7 +130,7 @@ class GMusicData:
                 "entity_id": "input_select.book_name",
                 "options": sorted(books)})
         # check if the change was done form remote
-        import homeassistant.ais_dom.ais_ai_service as ais_ai
+        import homeassistant.components.ais_ai_service as ais_ai
         if ais_ai.CURR_ENTITIE == 'input_select.book_autor':
             ais_ai.set_curr_entity(
                 self.hass,
@@ -173,7 +173,7 @@ class GMusicData:
                 "entity_id": "input_select.book_chapter",
                 "options": t})
         # check if the change was done form remote
-        import homeassistant.ais_dom.ais_ai_service as ais_ai
+        import homeassistant.components.ais_ai_service as ais_ai
         if ais_ai.CURR_ENTITIE == 'input_select.book_name':
             ais_ai.set_curr_entity(
                 self.hass,

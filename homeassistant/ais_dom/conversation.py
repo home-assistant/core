@@ -208,7 +208,7 @@ class ConversationProcessView(http.HomeAssistantView):
     }))
     async def post(self, request, data):
         """Send a request for processing."""
-        from homeassistant.ais_dom import ais_ai_service as ais_ai_service
+        from homeassistant.components import ais_ai_service as ais_ai_service
         hass = request.app['hass']
 
         try:

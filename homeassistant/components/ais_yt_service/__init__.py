@@ -8,7 +8,7 @@ import voluptuous as vol
 import requests
 import json
 from homeassistant.helpers import config_validation as cv
-from homeassistant.ais_dom import ais_cloud
+from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
 URL_BASE = 'https://www.googleapis.com/youtube/v3/search'

@@ -13,7 +13,7 @@ input_text:
 sensor:
     - platform: ais_long_text
       name: ais_knowledge_answer
-      package: homeassistant.ais_dom.ais_ai_service
+      package: homeassistant.components.ais_ai_service
       method: get_tts_text
 
 group:

@@ -16,7 +16,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF,
     SERVICE_TURN_ON, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers import intent, config_validation as cv
-from homeassistant.ais_dom import ais_cloud
+from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 import homeassistant.components.mqtt as mqtt
 aisCloudWS = ais_cloud.AisCloudWS()
@@ -690,6 +690,16 @@ async def async_setup(hass, config):
     def process_command_from_frame(service):
         _process_command_from_frame(hass, service)
 
+    # fix for the problem on box with remote
+    def prepare_remote_menu(service):
+        get_groups(hass)
+        # register context intent
+        for menu in GROUP_ENTITIES:
+            context_key_words = menu['context_key_words']
+            if context_key_words is not None:
+                context_key_words = context_key_words.split(',')
+                async_register(hass, INTENT_CHANGE_CONTEXT, context_key_words)
+
     # register services
     hass.services.async_register(DOMAIN, 'process', process)
     hass.services.async_register(DOMAIN, 'process_code', process_code)
@@ -698,6 +708,8 @@ async def async_setup(hass, config):
         DOMAIN, 'publish_command_to_frame', publish_command_to_frame)
     hass.services.async_register(
         DOMAIN, 'process_command_from_frame', process_command_from_frame)
+    hass.services.async_register(
+        DOMAIN, 'prepare_remote_menu', prepare_remote_menu)
 
     hass.helpers.intent.async_register(GetTimeIntent())
     hass.helpers.intent.async_register(GetDateIntent())
@@ -811,15 +823,6 @@ async def async_setup(hass, config):
         'Informację na temat {item}', 'Co wiesz o {item}',
         'Co wiesz na temat {item}', 'Opowiedz o {item}',
         'Kim są {item}', 'Kto to {item}'])
-    # get groups to create the context dynamically
-    if (len(GROUP_ENTITIES) == 0):
-        get_groups(hass)
-    # register context intent
-    for menu in GROUP_ENTITIES:
-        context_key_words = menu['context_key_words']
-        if context_key_words is not None:
-            context_key_words = context_key_words.split(',')
-            async_register(hass, INTENT_CHANGE_CONTEXT, context_key_words)
     return True
 
 

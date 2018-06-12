@@ -37,11 +37,6 @@ def async_setup(hass, config):
         yield from _change_host_name(hass, service)
 
     @asyncio.coroutine
-    def connect_mob_to_mqtt(service):
-        """connect android mob app to mqtt"""
-        yield from _connect_mob_to_mqtt(hass, service)
-
-    @asyncio.coroutine
     def execute_command(service):
         yield from _execute_command(hass, service)
 
@@ -79,8 +74,6 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, 'execute_upgrade', execute_upgrade)
     hass.services.async_register(
-        DOMAIN, 'connect_mob_to_mqtt', connect_mob_to_mqtt)
-    hass.services.async_register(
         DOMAIN, 'key_event', key_event)
     hass.services.async_register(
         DOMAIN, 'scan_network_for_devices', scan_network_for_devices)
@@ -104,15 +97,6 @@ def _change_host_name(hass, call):
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
     # print process.returncode
-
-
-@asyncio.coroutine
-def _connect_mob_to_mqtt(hass, call):
-    import subprocess
-    command = '/data/data/pl.sviete.dom/.ais/connect_to_mqtt.sh'
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
-    process.wait()
-    _LOGGER.info("_connect_mob_to_mqtt, return: " + str(process.returncode))
 
 
 @asyncio.coroutine

@@ -1,0 +1,90 @@
+# Describes the format for available AIS cloud services
+
+get_players:
+  description: Serwis wyszukujący dostępne odtwarzacze w Twojej sieci, ten serwis uruchamiany jest automatycznie przy starcie systemu AIS dom.
+
+get_podcast_names:
+  description: Pobranie nazw podcastów dla wybranego typu
+  fields:
+    podcast_type:
+      description: Typ podcasta.
+      example: 'Humor'
+
+get_podcast_tracks:
+  description: Pobranie odcinków wybranego podcasta.
+  fields:
+    podcast_name:
+      description: Nazwa podcasta.
+      example: 'Home Assistant'
+
+get_podcast_types:
+  description: Pobranie typów podcastów
+
+get_radio_names:
+  description: Pobranie nazw stacji radiowych dla wybranego typu
+  fields:
+    radio_type:
+      description: Typ radia.
+      example: 'Informacyjne'
+
+get_radio_types:
+  description: Pobranie typów stacji radiowych
+
+get_rss_news_channels:
+  description: Pobranie kanałów z wiadomościami
+  fields:
+    rss_news_category:
+      description: Kategoria wiadomości.
+      example: 'Kultura'
+
+get_rss_news_items:
+  description: Pobranie wiadomości dla wybranego kanału
+  fields:
+    rss_news_channel:
+      description: Kanał wiadomości.
+      example: 'Kultura w RMF24'
+
+play_audio:
+  description: Odtwarzanie audio wybranego typu
+  fields:
+    audio_type:
+      description: Typ audio do odtwarzania.
+      example: 'Radio'
+    name:
+      description: Nazwa audio do odtwarzania.
+      example: 'Trójka'
+    stream_url:
+      description: Url do audio.
+      example: 'http://radio/program3/stream.mp3'
+    image_url:
+      description: Url do okładki.
+      example: 'http://radio/program3/image.png'
+
+select_media_player:
+  description: Wybranie / zmiana odtwarzacza audio
+  fields:
+    media_player_type:
+      description: Typ odtwarzacza.
+      example: 'Radio'
+
+select_podcast_track:
+  description: Wybranie odcinka podcasta
+  fields:
+    podcast_track:
+      description: Odcinek podcasta.
+      example: 'Odcinek 1'
+
+select_radio_name:
+  description: Wybranie stacji radiowej
+  fields:
+    radio_name:
+      description: Stacja radiowa.
+      example: 'Antyradio Katowice'
+
+select_rss_news_item:
+  description: Wybranie artykułu do przeczytania
+  fields:
+    rss_news_item:
+      description: Artykuł.
+      example: 'Klamka zapadła - Microsoft przejmuje GitHub'
+

@@ -1,0 +1,49 @@
+# Describes the format for available ADS services
+
+say_it:
+  description: Zamiana tekstu na mowę, czytanie tekstu.
+  fields:
+    text:
+      description: Tekst do przeczytania.
+      example: 'Cześć, jak się masz?'
+
+process:
+  description: Zamiana tekstu na komendę do wykonania.
+  fields:
+    text:
+      description: Tekst pynia/komendy.
+      example: 'Włącz radio RMF.'
+
+process_code:
+  description: Przetwarzanie kodu z pilota.
+  fields:
+    text:
+      description: Kod z pilota.
+      example: '23'
+
+process_command_from_frame:
+  description: Przetwarzanie wiadomości/komendy z aplikacji android.
+  fields:
+    topic:
+      description: Temat wiadomości.
+      example: 'ais/speech_command'
+    payload:
+      description: Wiadomość.
+      example: 'Jest godzina 12:15.'
+
+publish_command_to_frame:
+  description: Publikowanie komendy do aplikacji android.
+  fields:
+    key:
+      description: Akcja do wykonania.
+      example: 'playAudio'
+    val:
+      description: Wiadomość / dane do akcji.
+      example: 'https://test/audio.mp3'
+    ip:
+      description: Zwrotny adres IP do odpowiedzi.
+      example: '192.168.1.15'
+
+prepare_remote_menu:
+  description: Przygotowanie menu dostępnego z pilota na podstawie grup/encji w systemie.
+               Serwis wykonywany jest automatycznie po uruchomieniu systemu oraz po wykryciu/dodaniu nowych komponentów.

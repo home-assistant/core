@@ -4,7 +4,7 @@ AIS dom Cloud conection
 import asyncio
 import logging
 import homeassistant.core as ha
-from homeassistant.ais_dom import ais_cloud
+from homeassistant.components import ais_cloud
 from homeassistant.helpers.discovery import async_load_platform
 aisCloud = ais_cloud.AisCloudWS()
 DOMAIN = 'ais_cloud_sync'

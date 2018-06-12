@@ -9,7 +9,7 @@ import asyncio
 import logging
 import voluptuous as vol
 from homeassistant.helpers import config_validation as cv
-from homeassistant.ais_dom import ais_cloud
+from homeassistant.components import ais_cloud
 aisCloud = ais_cloud.AisCloudWS()
 # DEPENDENCIES = ['http']
 

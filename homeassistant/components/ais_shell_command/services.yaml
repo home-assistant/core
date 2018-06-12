@@ -1,0 +1,46 @@
+# Describes the format for available AIS cloud services
+change_host_name:
+  description: Zmiana nazwy hosta na nazwę podaną w polu tekstowym w aplikacji
+
+execute_command:
+  description: Wykonanie komendy w konsoli
+  fields:
+    command:
+      description: Komenda do wykonania
+      example: 'sudo settings get secure android_id'
+    entity_id:
+      description: Encja do wyświetlenia wyniku komendy
+      example: 'binary_sensor.secure_android_id'
+    friendly_name:
+      description: Nazwa encji wyniku komendy
+      example: 'binary_sensor.secure_android_id'
+    icon:
+      description: Ikona encji wyniku komendy
+      example: 'mdi:android'
+
+execute_script:
+  description: Uruchomienie skryptu w konsoli
+  fields:
+    script:
+      description: Skrypt do wykonania
+      example: '/data/data/pl.sviete.dom/.ais/upgrade_ais.sh'
+
+key_event:
+  description: Symulacja naciśnięcia przycisku w systemie
+  fields:
+    key_code:
+      description: kod przycisku
+      example: 'KEYCODE_BACK'
+
+scan_device:
+  description: Wykrywanie urządzeń - pobranie informacji o urządzeniu
+  fields:
+    url:
+      description: adres serwisu zwracającego informację o urządzeniu
+      example: 'http://192.168.1.44/cm?cmnd=status 5'
+
+scan_network_for_devices:
+  description: Wykrywanie urządzeń w sieci z raportowaniem wyników w aplikacji
+
+silen_scan_network_for_devices:
+  description: Wykrywanie urządzeń w sieci bez raportowania wyników w aplikacji

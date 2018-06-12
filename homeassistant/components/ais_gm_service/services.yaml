@@ -1,0 +1,21 @@
+# Describes the format for available AIS cloud services
+get_books:
+  description: Pobranie książek dla wybranego autora
+  fields:
+    author:
+      description: Autor
+      example: 'Remigiusz Mróz'
+
+get_chapters:
+  description: Pobranie rozdziałów wybranej książki
+  fields:
+    book:
+      description: Nazwa książki
+      example: 'Inwigilacja'
+
+select_chapter:
+  description: Wybranie rozdziału książki
+  fields:
+    book:
+      description: Nazwa rozdziału
+      example: 'Rozdział 1, DZIEJE POCZĄTKÓW ŚWIATA I LUDZKOŚCI.'

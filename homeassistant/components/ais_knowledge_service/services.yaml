@@ -1,0 +1,9 @@
+# Describes the format for available AIS cloud services
+ask:
+  description: Pytanie do bazy wiedzy
+  fields:
+    text:
+      description: Pytanie
+      example: 'Co to jest Google?'
+
+
