@@ -7,6 +7,7 @@ https://home-assistant.io/components/nest/
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import socket
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
@@ -19,7 +20,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send, \
     async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['python-nest==4.0.1']
+REQUIREMENTS = ['python-nest==4.0.2']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -36,14 +37,23 @@ CONF_CLIENT_SECRET = 'client_secret'
 
 ATTR_HOME_MODE = 'home_mode'
 ATTR_STRUCTURE = 'structure'
+ATTR_TRIP_ID = 'trip_id'
+ATTR_ETA = 'eta'
+ATTR_ETA_WINDOW = 'eta_window'
+
+HOME_MODE_AWAY = 'away'
+HOME_MODE_HOME = 'home'
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)
 })
 
 AWAY_SCHEMA = vol.Schema({
-    vol.Required(ATTR_HOME_MODE): cv.string,
-    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string)
+    vol.Required(ATTR_HOME_MODE): vol.In([HOME_MODE_AWAY, HOME_MODE_HOME]),
+    vol.Optional(ATTR_STRUCTURE): vol.All(cv.ensure_list, cv.string),
+    vol.Optional(ATTR_TRIP_ID): cv.string,
+    vol.Optional(ATTR_ETA): cv.time_period_str,
+    vol.Optional(ATTR_ETA_WINDOW): cv.time_period_str
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -148,7 +158,11 @@ async def async_setup_nest(hass, nest, config, pin=None):
                            hass, component, DOMAIN, discovered, config)
 
     def set_mode(service):
-        """Set the home/away mode for a Nest structure."""
+        """
+        Set the home/away mode for a Nest structure.
+
+        You can set optional eta information when set mode to away.
+        """
         if ATTR_STRUCTURE in service.data:
             structures = service.data[ATTR_STRUCTURE]
         else:
@@ -158,6 +172,19 @@ async def async_setup_nest(hass, nest, config, pin=None):
             if structure.name in structures:
                 _LOGGER.info("Setting mode for %s", structure.name)
                 structure.away = service.data[ATTR_HOME_MODE]
+
+                if service.data[ATTR_HOME_MODE] == HOME_MODE_AWAY \
+                        and ATTR_ETA in service.data:
+                    now = datetime.utcnow()
+                    eta_begin = now + service.data[ATTR_ETA]
+                    eta_window = service.data.get(ATTR_ETA_WINDOW,
+                                                  timedelta(minutes=1))
+                    eta_end = eta_begin + eta_window
+                    trip_id = service.data.get(
+                        ATTR_TRIP_ID, "trip_{}".format(int(now.timestamp())))
+                    _LOGGER.info("Setting eta for %s, eta window starts at "
+                                 "%s ends at %s", trip_id, eta_begin, eta_end)
+                    structure.set_eta(trip_id, eta_begin, eta_end)
             else:
                 _LOGGER.error("Invalid structure %s",
                               service.data[ATTR_STRUCTURE])
