@@ -7,9 +7,9 @@ https://home-assistant.io/components/binary_sensor.axis/
 from datetime import timedelta
 import logging
 
-from homeassistant.components.axis import AxisDeviceEvent
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_TRIGGER_TIME
+from homeassistant.const import (
+    ATTR_LOCATION, CONF_EVENT, CONF_NAME, CONF_TRIGGER_TIME)
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
@@ -23,45 +23,66 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities([AxisBinarySensor(hass, discovery_info)], True)
 
 
-class AxisBinarySensor(AxisDeviceEvent, BinarySensorDevice):
+class AxisBinarySensor(BinarySensorDevice):
     """Representation of a binary Axis event."""
 
     def __init__(self, hass, event_config):
         """Initialize the Axis binary sensor."""
         self.hass = hass
-        self._state = False
-        self._delay = event_config[CONF_TRIGGER_TIME]
+        self.axis_event = event_config[CONF_EVENT]
+        self.device_name = event_config[CONF_NAME]
+        self.delay = event_config[CONF_TRIGGER_TIME]
+        self.location = event_config[ATTR_LOCATION]
         self._timer = None
-        AxisDeviceEvent.__init__(self, event_config)
-
-    @property
-    def is_on(self):
-        """Return true if event is active."""
-        return self._state
-
-    def update(self):
-        """Get the latest data and update the state."""
-        self._state = self.axis_event.is_tripped
+        self.axis_event.callback = self._update_callback
 
     def _update_callback(self):
         """Update the sensor's state, if needed."""
-        self.update()
-
         if self._timer is not None:
             self._timer()
             self._timer = None
 
-        if self._delay > 0 and not self.is_on:
+        if self.delay > 0 and not self.is_on:
             # Set timer to wait until updating the state
             def _delay_update(now):
                 """Timer callback for sensor update."""
                 _LOGGER.debug("%s called delayed (%s sec) update",
-                              self._name, self._delay)
+                              self.name, self.delay)
                 self.schedule_update_ha_state()
                 self._timer = None
 
             self._timer = track_point_in_utc_time(
                 self.hass, _delay_update,
-                utcnow() + timedelta(seconds=self._delay))
+                utcnow() + timedelta(seconds=self.delay))
         else:
             self.schedule_update_ha_state()
+
+    @property
+    def is_on(self):
+        """Return true if event is active."""
+        return self.axis_event.is_tripped
+
+    @property
+    def name(self):
+        """Return the name of the event."""
+        return '{}_{}_{}'.format(
+            self.device_name, self.axis_event.event_type, self.axis_event.id)
+
+    @property
+    def device_class(self):
+        """Return the class of the event."""
+        return self.axis_event.event_class
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes of the event."""
+        attr = {}
+
+        attr[ATTR_LOCATION] = self.location
+
+        return attr

@@ -10,13 +10,11 @@ import voluptuous as vol
 
 from homeassistant.components.discovery import SERVICE_AXIS
 from homeassistant.const import (
-    ATTR_LOCATION, ATTR_TRIPPED, CONF_EVENT, CONF_HOST, CONF_INCLUDE,
+    ATTR_LOCATION, CONF_EVENT, CONF_HOST, CONF_INCLUDE,
     CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_TRIGGER_TIME, CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['axis==14']
@@ -176,11 +174,6 @@ def setup(hass, config):
             else:
                 # New device, create configuration request for UI
                 request_configuration(hass, config, name, host, serialnumber)
-        else:
-            # Device already registered, but on a different IP
-            device = AXIS_DEVICES[serialnumber]
-            device.config.host = host
-            dispatcher_send(hass, DOMAIN + '_' + device.name + '_new_ip', host)
 
     # Register discovery service
     discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
@@ -257,47 +250,3 @@ def setup_device(hass, config, device_config):
     if event_types:
         hass.add_job(device.start)
     return True
-
-
-class AxisDeviceEvent(Entity):
-    """Representation of a Axis device event."""
-
-    def __init__(self, event_config):
-        """Initialize the event."""
-        self.axis_event = event_config[CONF_EVENT]
-        self._name = '{}_{}_{}'.format(
-            event_config[CONF_NAME], self.axis_event.event_type,
-            self.axis_event.id)
-        self.location = event_config[ATTR_LOCATION]
-        self.axis_event.callback = self._update_callback
-
-    def _update_callback(self):
-        """Update the sensor's state, if needed."""
-        self.schedule_update_ha_state(True)
-
-    @property
-    def name(self):
-        """Return the name of the event."""
-        return self._name
-
-    @property
-    def device_class(self):
-        """Return the class of the event."""
-        return self.axis_event.event_class
-
-    @property
-    def should_poll(self):
-        """Return the polling state. No polling needed."""
-        return False
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the event."""
-        attr = {}
-
-        tripped = self.axis_event.is_tripped
-        attr[ATTR_TRIPPED] = 'True' if tripped else 'False'
-
-        attr[ATTR_LOCATION] = self.location
-
-        return attr
