@@ -82,10 +82,10 @@ class YiCamera(Camera):
             await ftp.login(self.user, self.passwd)
 
             await ftp.change_directory(self.path)
-            dirs = [
-                path async for path, attrs in ftp.list()
-                if attrs['type'] == 'dir' and '.' not in str(path)
-            ]
+            dirs = []
+            for path, attrs in await ftp.list():
+                if attrs['type'] == 'dir' and '.' not in str(path):
+                    dirs.append(path)
             latest_dir = dirs[-1]
             await ftp.change_directory(latest_dir)
 
