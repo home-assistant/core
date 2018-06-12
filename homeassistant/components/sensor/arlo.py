@@ -55,7 +55,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensors.append(ArloSensor(name, camera, sensor_type))
 
     add_devices(sensors, True)
-    return True
 
 
 class ArloSensor(Entity):

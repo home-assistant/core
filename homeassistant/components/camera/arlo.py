@@ -50,14 +50,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Arlo IP Camera."""
     arlo = hass.data[DATA_ARLO]
-    if not arlo:
-        return False
 
     cameras = []
     for camera in arlo.cameras:
         cameras.append(ArloCam(hass, camera, config))
 
-    add_devices(cameras, True)
+    add_devices(cameras)
 
 
 class ArloCam(Camera):
@@ -86,7 +84,7 @@ class ArloCam(Camera):
     @callback
     def _update_callback(self):
         """Call update method."""
-        self.async_schedule_update_ha_state(True)
+        self.async_schedule_update_ha_state()
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
