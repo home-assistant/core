@@ -91,13 +91,13 @@ class OneWireSwitch(SwitchDevice):
                             self._device_file)
         except OSError:
             _LOGGER.warning("Error reading switch file %s", self._device_file)
-        return
+        return None
 
     def _write_value_raw(self, value):
         """Write the value to the switch."""
         if value not in [DEVICE_SWITCH_ON, DEVICE_SWITCH_OFF]:
             _LOGGER.error("Error in setting wrong value %s", value)
-            return None
+            return
         try:
             with open(self._device_file, 'w') as ds_device_file:
                 ds_device_file.write(value)
