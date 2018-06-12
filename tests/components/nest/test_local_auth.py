@@ -4,7 +4,6 @@ from urllib.parse import parse_qsl
 
 import pytest
 
-import requests
 import requests_mock as rmock
 
 
