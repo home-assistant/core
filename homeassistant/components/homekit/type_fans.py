@@ -136,6 +136,7 @@ class Fan(HomeAccessory):
         if CHAR_ROTATION_SPEED in self.chars:
             speed = new_state.attributes.get(ATTR_SPEED)
             if not self._flag[CHAR_ROTATION_SPEED]:
-                if self.char_speed.value != speed:
-                    self.char_speed.set_value(speed)
+                hk_speed = str(speed)
+                if self.char_speed.value != hk_speed:
+                    self.char_speed.set_value(hk_speed)
             self._flag[CHAR_ROTATION_SPEED] = False
