@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SSL, default=False): cv.boolean
 })
 
-SERVICE_ATTR_CMODE = 'epson_select_cmode'
+SERVICE_SELECT_CMODE = 'epson_select_cmode'
 ATTR_CMODE = 'cmode'
 SUPPORT_CMODE = 33001
 
@@ -63,7 +63,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         else:
             devices = hass.data[DATA_EPSON]
         for device in devices:
-            if service.service == SERVICE_ATTR_CMODE:
+            if service.service == SERVICE_SELECT_CMODE:
                 cmode = service.data.get(ATTR_CMODE)
                 await device.select_cmode(cmode)
             await device.update()
@@ -72,7 +72,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         vol.Required(ATTR_CMODE): vol.All(cv.string, vol.Any(*CMODE_LIST_SET))
     })
     hass.services.async_register(
-        DOMAIN, SERVICE_ATTR_CMODE, async_service_handler,
+        DOMAIN, SERVICE_SELECT_CMODE, async_service_handler,
         schema=epson_schema)
 
 
