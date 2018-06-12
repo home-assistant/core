@@ -89,7 +89,9 @@ class YiCamera(Camera):
             latest_dir = dirs[-1]
             await ftp.change_directory(latest_dir)
 
-            videos = [path async for path, _ in ftp.list()]
+            videos = []
+            for path, _ in await ftp.list():
+                videos.append(path)
             if not videos:
                 _LOGGER.info('Video folder "%s" empty; delaying', latest_dir)
                 return False
