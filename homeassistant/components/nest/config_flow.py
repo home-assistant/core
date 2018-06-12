@@ -1,4 +1,4 @@
-"""Config flow to configure Philips Hue."""
+"""Config flow to configure Nest."""
 import asyncio
 from collections import OrderedDict
 import logging
@@ -54,7 +54,7 @@ class NestFlowHandler(data_entry_flow.FlowHandler):
     VERSION = 1
 
     def __init__(self):
-        """Initialize the Hue flow."""
+        """Initialize the Nest config flow."""
         self.flow_impl = None
 
     async def async_step_init(self, user_input=None):
