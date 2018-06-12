@@ -23,7 +23,7 @@ PROTECT_SENSOR_TYPES = ['co_status',
                         # color_status: "gray", "green", "yellow", "red"
                         'color_status']
 
-STRUCTURE_SENSOR_TYPES = ['eta']
+STRUCTURE_SENSOR_TYPES = ['eta', 'security_state']
 
 _VALID_SENSOR_TYPES = SENSOR_TYPES + TEMP_SENSOR_TYPES + PROTECT_SENSOR_TYPES \
                       + STRUCTURE_SENSOR_TYPES
