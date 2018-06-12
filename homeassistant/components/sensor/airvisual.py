@@ -12,8 +12,8 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_API_KEY,
-    CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS, CONF_STATE,
-    CONF_SHOW_ON_MAP)
+    CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
+    CONF_SCAN_INTERVAL, CONF_STATE, CONF_SHOW_ON_MAP)
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -29,13 +29,13 @@ ATTR_REGION = 'region'
 
 CONF_CITY = 'city'
 CONF_COUNTRY = 'country'
+
 DEFAULT_ATTRIBUTION = "Data provided by AirVisual"
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=10)
 
 MASS_PARTS_PER_MILLION = 'ppm'
 MASS_PARTS_PER_BILLION = 'ppb'
 VOLUME_MICROGRAMS_PER_CUBIC_METER = 'µg/m3'
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
 
 SENSOR_TYPE_LEVEL = 'air_pollution_level'
 SENSOR_TYPE_AQI = 'air_quality_index'
@@ -111,6 +111,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_LONGITUDE, 'coords'): cv.longitude,
     vol.Optional(CONF_SHOW_ON_MAP, default=True): cv.boolean,
     vol.Inclusive(CONF_STATE, 'city'): cv.string,
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+        cv.time_period
 })
 
 
@@ -137,7 +139,8 @@ async def async_setup_platform(
             city=city,
             state=state,
             country=country,
-            show_on_map=config[CONF_SHOW_ON_MAP])
+            show_on_map=config[CONF_SHOW_ON_MAP],
+            scan_interval=config[CONF_SCAN_INTERVAL])
     else:
         _LOGGER.debug(
             "Using latitude and longitude: %s, %s", latitude, longitude)
@@ -146,7 +149,8 @@ async def async_setup_platform(
             Client(config[CONF_API_KEY], websession),
             latitude=latitude,
             longitude=longitude,
-            show_on_map=config[CONF_SHOW_ON_MAP])
+            show_on_map=config[CONF_SHOW_ON_MAP],
+            scan_interval=config[CONF_SCAN_INTERVAL])
 
     await data.async_update()
 
@@ -253,8 +257,10 @@ class AirVisualData(object):
         self.show_on_map = kwargs.get(CONF_SHOW_ON_MAP)
         self.state = kwargs.get(CONF_STATE)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+        self.async_update = Throttle(kwargs[CONF_SCAN_INTERVAL])(
+            self._async_update)
+
+    async def _async_update(self):
         """Update AirVisual data."""
         from pyairvisual.errors import AirVisualError
 
