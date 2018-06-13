@@ -40,7 +40,10 @@ scan_device:
       example: 'http://192.168.1.44/cm?cmnd=status 5'
 
 scan_network_for_devices:
-  description: Wykrywanie urządzeń w sieci z raportowaniem wyników w aplikacji
+  description: Wykrywanie urządzeń w sieci z raportowaniem na bieżąco wyników w aplikacji
 
-silen_scan_network_for_devices:
-  description: Wykrywanie urządzeń w sieci bez raportowania wyników w aplikacji
+silent_scan_network_for_devices:
+  description: Wykrywanie urządzeń w sieci bez raportowania na bieżąco wyników w aplikacji
+
+show_network_devices_info:
+  description: Raport wykrytych urządzeń

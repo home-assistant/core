@@ -952,55 +952,55 @@ def _process_code(hass, data, callback):
         pass
     code = data["KeyCode"]
     _LOGGER.info("KeyCode: -> " + str(code))
-    # set the conde in global variabl
+    # set the code in global variable
     CURR_BUTTON_CODE = code
     # show the code in web app
     hass.states.set('binary_sensor.ais_remote_button', code)
     # decode Key Events
-    # codes acording to android.view.KeyEvent
+    # codes according to android.view.KeyEvent
     if code == 93:
         # PG- -> KEYCODE_PAGE_DOWN
         pass
-    if code == 92:
+    elif code == 92:
         # PG+ -> KEYCODE_PAGE_UP
         pass
-    if code == 4:
+    elif code == 4:
         # Back arrow -> KEYCODE_BACK
         pass
-    if code == 82:
+    elif code == 82:
         # Menu -> KEYCODE_MENU
         set_next_group_view()
         say_curr_group_view(hass)
-    if code == 164:
+    elif code == 164:
         # Mute -> KEYCODE_VOLUME_MUTE
         pass
-    if code == 71:
+    elif code == 71:
         # MIC DOWN -> KEYCODE_LEFT_BRACKET
         hass.states.set('binary_sensor.ais_remote_mic', 'on')
-    if code == 72:
+    elif code == 72:
         # MIC UP -> KEYCODE_RIGHT_BRACKET
         hass.states.set('binary_sensor.ais_remote_mic', 'off')
-    if code == 20:
+    elif code == 20:
         # Dpad down -> KEYCODE_DPAD_DOWN
         set_focus_on_down_entity(hass)
-    if code == 21:
+    elif code == 21:
         # Dpad left -> KEYCODE_DPAD_LEFT
         set_focus_on_prev_entity(hass)
-    if code == 22:
+    elif code == 22:
         # Dpad right -> KEYCODE_DPAD_RIGHT
         set_focus_on_next_entity(hass)
-    if code == 19:
+    elif code == 19:
         set_focus_on_up_entity(hass)
-    if code == 23:
+    elif code == 23:
         # Dpad center -> KEYCODE_DPAD_CENTER
         select_entity(hass)
-    if code == 25:
+    elif code == 25:
         # Volume down -> KEYCODE_VOLUME_DOWN
         pass
-    if code == 24:
+    elif code == 24:
         # Volume up -> KEYCODE_VOLUME_UP
         pass
-    if code == 190:
+    elif code == 190:
         # stop the audio -> KEYCODE_HOME
         hass.services.call('media_player', 'media_play_pause')
 

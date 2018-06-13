@@ -57,12 +57,16 @@ def async_setup(hass, config):
         yield from _scan_network_for_devices(hass, service)
 
     @asyncio.coroutine
-    def silen_scan_network_for_devices(service):
-        yield from _silen_scan_network_for_devices(hass, service)
+    def silent_scan_network_for_devices(service):
+        yield from _silent_scan_network_for_devices(hass, service)
 
     @asyncio.coroutine
     def scan_device(service):
         yield from _scan_device(hass, service)
+
+    @asyncio.coroutine
+    def show_network_devices_info(service):
+        yield from _show_network_devices_info(hass, service)
 
     # register services
     hass.services.async_register(
@@ -78,10 +82,12 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, 'scan_network_for_devices', scan_network_for_devices)
     hass.services.async_register(
-        DOMAIN, 'silen_scan_network_for_devices',
-        silen_scan_network_for_devices)
+        DOMAIN, 'silent_scan_network_for_devices',
+        silent_scan_network_for_devices)
     hass.services.async_register(
         DOMAIN, 'scan_device', scan_device)
+    hass.services.async_register(
+        DOMAIN, 'show_network_devices_info', show_network_devices_info)
     return True
 
 
@@ -188,18 +194,32 @@ def _execute_upgrade(hass, call):
 
 
 @asyncio.coroutine
-def _silen_scan_network_for_devices(hass, call):
-    # TODO - light versio of the scanning for devices
-    # this shoud works in background
-    # without calling the hass so many times...
+def _show_network_devices_info(hass, call):
     import homeassistant.ais_dom.sensor.ais_device_search_mqtt as dsm
-    from requests_futures.sessions import FuturesSession
-    session = FuturesSession()
+    info = dsm.get_text()
+    _LOGGER.error("info: " + str(info))
+    hass.async_add_job(
+        hass.states.async_set(
+            'sensor.network_devices_info_value', '', {
+                'custom_ui_state_card': 'state-card-robot-disco',
+                'text': info
+            })
+    )
+
+
+@asyncio.coroutine
+def _silent_scan_network_for_devices(hass, call):
+    # TODO
+    # this should works in background
+    # without calling the hass so many times...
+    # import homeassistant.ais_dom.sensor.ais_device_search_mqtt as dsm
+    # from requests_futures.sessions import FuturesSession
+    # session = FuturesSession()
     # clear the value
-    dsm.MQTT_DEVICES = []
-    dsm.NET_DEVICES = []
-    dsm.DOM_DEVICES = []
-    set_global_my_ip()
+    # dsm.MQTT_DEVICES = []
+    # dsm.NET_DEVICES = []
+    # dsm.DOM_DEVICES = []
+    # set_global_my_ip()
     # info about start scaning
     hass.states.async_set('sensor.network_devices_info_value', '', {
         'custom_ui_state_card': 'state-card-robot-disco',
@@ -210,53 +230,52 @@ def _silen_scan_network_for_devices(hass, call):
         'topic': 'cmnd/dom/status',
         'payload': 5
         })
-    for x in range(256):
-        rest_url = "http://{}.{}/cm?cmnd=status%205"
-        url = rest_url.format(GLOBAL_MY_IP.rsplit('.', 1)[0], str(x))
-        # search android devices
-        rest_url_a = "http://{}.{}:8122"
-        url_a = rest_url_a.format(GLOBAL_MY_IP.rsplit('.', 1)[0], str(x))
-
-        def bg_cb(sess, resp):
-            try:
-                # parse the json storing the result on the response object
-                json_ws_resp = resp.json()
-                hostname = json_ws_resp["StatusNET"]["Hostname"]
-                ip = json_ws_resp["StatusNET"]["IPAddress"]
-                dsm.NET_DEVICES.append("#" + hostname + ", " + ip + ':80')
-            except Exception:
-                pass
-
-        def bg_cb_a(sess, resp):
-            try:
-                # parse the json storing the result on the response object
-                json_ws_resp = resp.json()
-                model = json_ws_resp["Model"]
-                manufacturer = json_ws_resp["Manufacturer"]
-                ip = json_ws_resp["IPAddressIPv4"]
-                dsm.DOM_DEVICES.append(
-                    "#" + model + " " + manufacturer + ", " + ip + ':8123')
-                # add the device to the speakers lists
-                hass.async_add_job(
-                    hass.services.async_call(
-                        'ais_cloud', 'get_players', {
-                            'device_name':  model + " " + manufacturer
-                            + "(" + ip + ")",
-                            'device_ip': ip
-                        }))
-            except Exception:
-                pass
-        session.get(url, background_callback=bg_cb)
-        session.get(url_a, background_callback=bg_cb_a)
-    # show the resoult
-    info = dsm.get_text()
-    hass.async_add_job(
-        hass.states.async_set(
-            'sensor.network_devices_info_value', '', {
-                'custom_ui_state_card': 'state-card-robot-disco',
-                'text': info
-            })
-        )
+    # scan in loop
+    # for x in range(256):
+    #     try:
+    #         # search sonoff devices
+    #         rest_url = "http://{}.{}/cm?cmnd=status%205"
+    #         url = rest_url.format(GLOBAL_MY_IP.rsplit('.', 1)[0], str(x))
+    #         # search android devices
+    #         rest_url_a = "http://{}.{}:8122"
+    #         url_a = rest_url_a.format(GLOBAL_MY_IP.rsplit('.', 1)[0], str(x))
+    #
+    #         def bg_cb(sess, resp):
+    #             try:
+    #                 # parse the json storing the result on the response object
+    #                 json_ws_resp = resp.json()
+    #                 hostname = json_ws_resp["StatusNET"]["Hostname"]
+    #                 ip = json_ws_resp["StatusNET"]["IPAddress"]
+    #                 dsm.NET_DEVICES.append("#" + hostname + ", " + ip + ':80')
+    #                 _LOGGER.error("ip: " + str(ip))
+    #             except:
+    #                 _LOGGER.error("except bg_cb: ")
+    #
+    #         def bg_cb_a(sess, resp):
+    #             try:
+    #                 # parse the json storing the result on the response object
+    #                 json_ws_resp = resp.json()
+    #                 model = json_ws_resp["Model"]
+    #                 manufacturer = json_ws_resp["Manufacturer"]
+    #                 ip = json_ws_resp["IPAddressIPv4"]
+    #                 dsm.DOM_DEVICES.append(
+    #                     "#" + model + " " + manufacturer + ", " + ip + ':8123')
+    #                 _LOGGER.error("model: " + str(model))
+    #                 # add the device to the speakers lists
+    #                 hass.async_add_job(
+    #                     hass.services.async_call(
+    #                         'ais_cloud', 'get_players', {
+    #                             'device_name':  model + " " + manufacturer
+    #                             + "(" + ip + ")",
+    #                             'device_ip': ip
+    #                         }))
+    #             except:
+    #                 _LOGGER.error("Exception bg_cb_a: ")
+    #
+    #         session.get(url, background_callback=bg_cb)
+    #         session.get(url_a, background_callback=bg_cb_a)
+    #     except:
+    #         _LOGGER.error("x Exception: " + str(x))
 
 
 @asyncio.coroutine

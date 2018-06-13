@@ -132,6 +132,7 @@ async def async_setup(hass, config):
                 "You are on the latest version (%s) of Home Assistant", newest)
 
     # Update daily, start 1 hour after startup
+
     _dt = dt_util.utcnow() + timedelta(hours=1)
     event.async_track_utc_time_change(
         hass, check_new_version,
