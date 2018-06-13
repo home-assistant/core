@@ -25,7 +25,6 @@ from homeassistant.const import (
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
-from homeassistant.util.async_ import run_callback_threadsafe
 
 DEPENDENCIES = ('sonos',)
 
@@ -131,9 +130,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up Sonos from a config entry."""
     def add_devices(devices, update_before_add=False):
         """Sync version of async add devices."""
-        run_callback_threadsafe(
-            hass.loop, async_add_devices, list(devices), update_before_add
-        ).result()
+        hass.add_job(async_add_devices, devices, update_before_add)
 
     hass.add_job(_setup_platform, hass,
                  hass.data['sonos'].get('media_player', {}), add_devices, None)
