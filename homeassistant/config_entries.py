@@ -129,6 +129,7 @@ HANDLERS = Registry()
 FLOWS = [
     'deconz',
     'hue',
+    'nest',
     'zone',
 ]
 
