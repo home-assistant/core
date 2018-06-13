@@ -92,6 +92,9 @@ class TestSensorMQTT(unittest.TestCase):
                 'unique_id': 'TOTALLY_UNIQUE'
             }]
         })
+        fire_mqtt_message(self.hass, 'test-topic', 'payload')
+        self.hass.block_till_done()
+        assert len(self.hass.states.all()) == 1
 
     def test_availability_without_topic(self):
         """Test availability without defined availability topic."""
