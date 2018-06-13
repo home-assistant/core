@@ -192,6 +192,11 @@ class AirVisualSensor(Entity):
         return self._attrs
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(self.airvisual.pollution_info)
+
+    @property
     def icon(self):
         """Return the icon."""
         return self._icon
@@ -285,9 +290,4 @@ class AirVisualData(object):
             _LOGGER.error(
                 "Can't retrieve data for location: %s (%s)", location,
                 err)
-            self.city = None
-            self.country = None
-            self.latitude = None
-            self.longitude = None
             self.pollution_info = {}
-            self.state = None
