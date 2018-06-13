@@ -47,6 +47,7 @@ SERVICE_HOMEKIT = 'homekit'
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
     SERVICE_HUE: 'hue',
+    'sonos': 'sonos',
 }
 
 SERVICE_HANDLERS = {
@@ -68,7 +69,6 @@ SERVICE_HANDLERS = {
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
     'roku': ('media_player', 'roku'),
-    'sonos': ('media_player', 'sonos'),
     'yamaha': ('media_player', 'yamaha'),
     'logitech_mediaserver': ('media_player', 'squeezebox'),
     'directv': ('media_player', 'directv'),

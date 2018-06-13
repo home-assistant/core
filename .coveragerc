@@ -252,6 +252,9 @@ omit =
     homeassistant/components/smappee.py
     homeassistant/components/*/smappee.py
 
+    homeassistant/components/sonos/__init__.py
+    homeassistant/components/media_player/sonos.py
+
     homeassistant/components/tado.py
     homeassistant/components/*/tado.py
 
@@ -518,7 +521,6 @@ omit =
     homeassistant/components/media_player/russound_rnet.py
     homeassistant/components/media_player/snapcast.py
     homeassistant/components/media_player/songpal.py
-    homeassistant/components/media_player/sonos.py
     homeassistant/components/media_player/spotify.py
     homeassistant/components/media_player/squeezebox.py
     homeassistant/components/media_player/ue_smart_radio.py

@@ -25,8 +25,9 @@ from homeassistant.const import (
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
+from homeassistant.util.async_ import run_callback_threadsafe
 
-REQUIREMENTS = ['SoCo==0.14']
+DEPENDENCIES = ('sonos',)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
 SERVICE_UPDATE_ALARM = 'sonos_update_alarm'
 SERVICE_SET_OPTION = 'sonos_set_option'
 
-DATA_SONOS = 'sonos'
+DATA_SONOS = 'sonos_devices'
 
 SOURCE_LINEIN = 'Line-in'
 SOURCE_TV = 'TV'
@@ -118,6 +119,27 @@ class SonosData:
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Sonos platform.
+
+    Deprecated.
+    """
+    _LOGGER.warning('Loading Sonos via platform config is deprecated.')
+    _setup_platform(hass, config, add_devices, discovery_info)
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up Sonos from a config entry."""
+    def add_devices(devices, update_before_add=False):
+        """Sync version of async add devices."""
+        run_callback_threadsafe(
+            hass.loop, async_add_devices, list(devices), update_before_add
+        ).result()
+
+    hass.add_job(_setup_platform, hass,
+                 hass.data['sonos'].get('media_player', {}), add_devices, None)
+
+
+def _setup_platform(hass, config, add_devices, discovery_info):
     """Set up the Sonos platform."""
     import soco
     import soco.events
