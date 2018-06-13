@@ -9,6 +9,8 @@ import logging
 from datetime import timedelta
 import re
 
+from aiohttp import web
+
 from homeassistant.components.google import (
     CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -44,6 +46,14 @@ DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = '!!'
 
 
+def get_date(date):
+    """Get the dateTime from date or dateTime as a local."""
+    if 'date' in date:
+        return dt.start_of_local_day(dt.dt.datetime.combine(
+            dt.parse_date(date['date']), dt.dt.time.min))
+    return dt.as_local(dt.parse_datetime(date['dateTime']))
+
+
 # pylint: disable=too-many-instance-attributes
 class CalendarEventDevice(Entity):
     """A calendar event device."""
@@ -60,7 +70,6 @@ class CalendarEventDevice(Entity):
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self.entity_id = generate_entity_id(
             ENTITY_ID_FORMAT, self.dev_id, hass=hass)
-        self._event_list = []
 
         self._cal_data = {
             'all_day': False,
@@ -148,15 +157,8 @@ class CalendarEventDevice(Entity):
             self.cleanup()
             return
 
-        def _get_date(date):
-            """Get the dateTime from date or dateTime as a local."""
-            if 'date' in date:
-                return dt.start_of_local_day(dt.dt.datetime.combine(
-                    dt.parse_date(date['date']), dt.dt.time.min))
-            return dt.as_local(dt.parse_datetime(date['dateTime']))
-
-        start = _get_date(self.data.event['start'])
-        end = _get_date(self.data.event['end'])
+        start = get_date(self.data.event['start'])
+        end = get_date(self.data.event['end'])
 
         summary = self.data.event.get('summary', '')
 
@@ -203,12 +205,12 @@ class CalendarEventView(http.HomeAssistantView):
         start = request.query.get('start')
         end = request.query.get('end')
         if None in (start, end):
-            return []
+            return web.Response(status=400)
         try:
             start_date = dt.parse_datetime(start)
             end_date = dt.parse_datetime(end)
         except (ValueError, AttributeError):
-            return []
+            return web.Response(status=400)
         hass = request.app['hass']
         event_list = await self.device.async_get_events(hass,
                                                         start_date,

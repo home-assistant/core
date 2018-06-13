@@ -11,7 +11,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    PLATFORM_SCHEMA, CalendarEventDevice)
+    PLATFORM_SCHEMA, CalendarEventDevice, get_date)
 from homeassistant.const import (
     CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
@@ -155,15 +155,8 @@ class WebDavCalendarData(object):
                 "description": self.get_attr_value(vevent, "description"),
             }
 
-            def _get_date(date):
-                """Get the dateTime from date or dateTime as a local."""
-                if 'date' in date:
-                    return dt.start_of_local_day(dt.dt.datetime.combine(
-                        dt.parse_date(date['date']), dt.dt.time.min))
-                return dt.as_local(dt.parse_datetime(date['dateTime']))
-
-            data['start'] = _get_date(data['start']).isoformat()
-            data['end'] = _get_date(data['end']).isoformat()
+            data['start'] = get_date(data['start']).isoformat()
+            data['end'] = get_date(data['end']).isoformat()
 
             event_list.append(data)
 
