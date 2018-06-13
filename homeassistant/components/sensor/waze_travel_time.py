@@ -35,6 +35,8 @@ ICON = 'mdi:car'
 
 REGIONS = ['US', 'NA', 'EU', 'IL']
 
+TRACKABLE_DOMAINS = ['sensor', 'input_text']
+
 SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -58,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         waze_data = WazeRouteData(
-            origin, destination, region, incl_filter, excl_filter)
+            hass, origin, destination, region, incl_filter, excl_filter)
     except requests.exceptions.HTTPError as error:
         _LOGGER.error("%s", error)
         return
@@ -100,6 +102,8 @@ class WazeTravelTime(Entity):
         """Return the state attributes of the last update."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            CONF_ORIGIN: self._state['origin'],
+            CONF_DESTINATION: self._state['destination'],
             ATTR_DISTANCE: round(self._state['distance']),
             ATTR_ROUTE: self._state['route'],
         }
@@ -116,36 +120,65 @@ class WazeTravelTime(Entity):
 class WazeRouteData(object):
     """Get data from Waze."""
 
-    def __init__(self, origin, destination, region, incl_filter, excl_filter):
+    def __init__(self, hass, origin, destination, region,
+                 incl_filter, excl_filter):
         """Initialize the data object."""
-        self._destination = destination
-        self._origin = origin
+        self._hass = hass
         self._region = region
         self._incl_filter = incl_filter
         self._excl_filter = excl_filter
         self.data = {}
 
+        # Check if location is a trackable entity
+        if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
+            self._origin_entity_id = origin
+        else:
+            self._origin = origin
+
+        if destination.split('.', 1)[0] in TRACKABLE_DOMAINS:
+            self._destination_entity_id = destination
+        else:
+            self._destination = destination
+
     @Throttle(SCAN_INTERVAL)
     def update(self):
-        """Fetch latest data from Waze."""
-        import WazeRouteCalculator
-        _LOGGER.debug("Update in progress...")
-        try:
-            params = WazeRouteCalculator.WazeRouteCalculator(
-                self._origin, self._destination, self._region, None)
-            results = params.calc_all_routes_info()
-            if self._incl_filter is not None:
-                results = {k: v for k, v in results.items() if
-                           self._incl_filter.lower() in k.lower()}
-            if self._excl_filter is not None:
-                results = {k: v for k, v in results.items() if
-                           self._excl_filter.lower() not in k.lower()}
-            best_route = next(iter(results))
-            (duration, distance) = results[best_route]
-            best_route_str = bytes(best_route, 'ISO-8859-1').decode('UTF-8')
-            self.data['duration'] = duration
-            self.data['distance'] = distance
-            self.data['route'] = best_route_str
-        except WazeRouteCalculator.WRCError as exp:
-            _LOGGER.error("Error on retrieving data: %s", exp)
-            return
+        """Check if origin/destination are entities, then get travel time."""
+        if hasattr(self, '_origin_entity_id'):
+            self._origin = self._hass.states.get(self._origin_entity_id).state
+
+        if hasattr(self, '_destination_entity_id'):
+            self._destination = \
+                self._hass.states.get(self._destination_entity_id).state
+
+        self.data['origin'] = self._origin
+        self.data['destination'] = self._destination
+
+        if (self._origin is None or self._origin == "" or
+                self._destination is None or self._destination == ""):
+            _LOGGER.debug("Origin or destination are not locations.")
+            self.data['duration'] = 0
+            self.data['distance'] = 0
+            self.data['route'] = "No route"
+        else:
+            import WazeRouteCalculator
+            _LOGGER.debug("Update in progress...")
+            try:
+                params = WazeRouteCalculator.WazeRouteCalculator(
+                    self._origin, self._destination, self._region, None)
+                results = params.calc_all_routes_info()
+                if self._incl_filter is not None:
+                    results = {k: v for k, v in results.items() if
+                               self._incl_filter.lower() in k.lower()}
+                if self._excl_filter is not None:
+                    results = {k: v for k, v in results.items() if
+                               self._excl_filter.lower() not in k.lower()}
+                best_route = next(iter(results))
+                (duration, distance) = results[best_route]
+                best_route_str = \
+                    bytes(best_route, 'ISO-8859-1').decode('UTF-8')
+                self.data['duration'] = duration
+                self.data['distance'] = distance
+                self.data['route'] = best_route_str
+            except WazeRouteCalculator.WRCError as exp:
+                _LOGGER.error("Error on retrieving data: %s", exp)
+                return
