@@ -46,6 +46,7 @@ SERVICE_HOMEKIT = 'homekit'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
+    'google_cast': 'cast',
     SERVICE_HUE: 'hue',
     'sonos': 'sonos',
 }
@@ -65,7 +66,6 @@ SERVICE_HANDLERS = {
     SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     SERVICE_KONNECTED: ('konnected', None),
-    'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
     'roku': ('media_player', 'roku'),
