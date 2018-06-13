@@ -1,4 +1,4 @@
-"""Tests for the Sonos config flow."""
+"""Tests for the Config Entry Flow helper."""
 from unittest.mock import patch
 
 import pytest
