@@ -155,6 +155,9 @@ pyqwikswitch==0.8
 # homeassistant.components.weather.darksky
 python-forecastio==1.4.0
 
+# homeassistant.components.nest
+python-nest==4.0.2
+
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
 
