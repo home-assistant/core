@@ -81,7 +81,7 @@ hbmqtt==0.9.2
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180607.0
+home-assistant-frontend==20180613.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -157,6 +157,9 @@ python-forecastio==1.4.0
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
+
+# homeassistant.components.tradfri
+pytradfri[async]==5.5.1
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13

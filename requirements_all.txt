@@ -398,7 +398,7 @@ hipnotify==1.0.8
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180607.0
+home-assistant-frontend==20180613.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.6
@@ -481,6 +481,9 @@ keyring==12.2.1
 
 # homeassistant.scripts.keyring
 keyrings.alt==3.1
+
+# homeassistant.components.lock.kiwi
+kiwiki-client==0.1.1
 
 # homeassistant.components.konnected
 konnected==0.1.2
@@ -734,7 +737,7 @@ pyairvisual==1.0.0
 pyalarmdotcom==0.3.2
 
 # homeassistant.components.arlo
-pyarlo==0.1.2
+pyarlo==0.1.6
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.1.5
@@ -1051,7 +1054,7 @@ python-mpd2==1.0.0
 python-mystrom==0.4.4
 
 # homeassistant.components.nest
-python-nest==4.0.1
+python-nest==4.0.2
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.1
@@ -1114,7 +1117,7 @@ pytouchline==0.7
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==5.4.2
+pytradfri[async]==5.5.1
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
