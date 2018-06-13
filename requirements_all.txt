@@ -294,6 +294,9 @@ enocean==0.40
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
 
+# homeassistant.components.media_player.epson
+epson-projector==0.1.3
+
 # homeassistant.components.netgear_lte
 eternalegypt==0.0.1
 
