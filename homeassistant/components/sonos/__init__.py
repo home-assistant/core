@@ -1,8 +1,4 @@
 """Component to embed Sonos."""
-import asyncio
-import json
-import os
-
 from homeassistant.helpers import config_entry_flow
 
 
