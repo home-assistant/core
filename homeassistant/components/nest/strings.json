@@ -1,0 +1,33 @@
+{
+  "config": {
+    "title": "Nest",
+    "step": {
+      "init": {
+        "title": "Authentication Provider",
+        "description": "Pick via which authentication provider you want to authenticate with Nest.",
+        "data": {
+          "flow_impl": "Provider"
+        }
+      },
+      "link": {
+        "title": "Link Nest Account",
+        "description": "To link your Nest account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided pin code below.",
+        "data": {
+          "code": "Pin code"
+        }
+      }
+    },
+    "error": {
+      "timeout": "Timeout validating code",
+      "invalid_code": "Invalid code",
+      "unknown": "Unknown error validating code",
+      "internal_error": "Internal error validating code"
+    },
+    "abort": {
+      "already_setup": "You can only configure a single Nest account.",
+      "no_flows": "You need to configure Nest before being able to authenticate with it. [Please read the instructions](https://www.home-assistant.io/components/nest/).",
+      "authorize_url_timeout": "Timeout generating authorize url.",
+      "authorize_url_fail": "Unknown error generating an authorize url."
+    }
+  }
+}

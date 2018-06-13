@@ -6,6 +6,7 @@ https://home-assistant.io/components/nest/
 """
 from concurrent.futures import ThreadPoolExecutor
 import logging
+import os.path
 import socket
 from datetime import datetime, timedelta
 
@@ -15,19 +16,22 @@ from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
     CONF_MONITORED_CONDITIONS,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.helpers import discovery, config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send, \
     async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+
+from .const import DOMAIN
+from . import local_auth
 
 REQUIREMENTS = ['python-nest==4.0.2']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'nest'
 
 DATA_NEST = 'nest'
+DATA_NEST_CONFIG = 'nest_config'
 
 SIGNAL_NEST_UPDATE = 'nest_update'
 
@@ -86,76 +90,45 @@ async def async_nest_update_event_broker(hass, nest):
                 return
 
 
-async def async_request_configuration(nest, hass, config):
-    """Request configuration steps from the user."""
-    configurator = hass.components.configurator
-    if 'nest' in _CONFIGURING:
-        _LOGGER.debug("configurator failed")
-        configurator.async_notify_errors(
-            _CONFIGURING['nest'], "Failed to configure, please try again.")
+async def async_setup(hass, config):
+    """Set up Nest components."""
+    if DOMAIN not in config:
         return
 
-    async def async_nest_config_callback(data):
-        """Run when the configuration callback is called."""
-        _LOGGER.debug("configurator callback")
-        pin = data.get('pin')
-        if await async_setup_nest(hass, nest, config, pin=pin):
-            # start nest update event listener as we missed startup hook
-            hass.async_add_job(async_nest_update_event_broker, hass, nest)
+    conf = config[DOMAIN]
 
-    _CONFIGURING['nest'] = configurator.async_request_config(
-        "Nest", async_nest_config_callback,
-        description=('To configure Nest, click Request Authorization below, '
-                     'log into your Nest account, '
-                     'and then enter the resulting PIN'),
-        link_name='Request Authorization',
-        link_url=nest.authorize_url,
-        submit_caption="Confirm",
-        fields=[{'id': 'pin', 'name': 'Enter the PIN', 'type': ''}]
-    )
+    local_auth.initialize(hass, conf[CONF_CLIENT_ID], conf[CONF_CLIENT_SECRET])
+
+    filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
+    access_token_cache_file = hass.config.path(filename)
+
+    if await hass.async_add_job(os.path.isfile, access_token_cache_file):
+        hass.async_add_job(hass.config_entries.flow.async_init(
+            DOMAIN, source='import', data={
+                'nest_conf_path': access_token_cache_file,
+            }
+        ))
+
+    # Store config to be used during entry setup
+    hass.data[DATA_NEST_CONFIG] = conf
+
+    return True
 
 
-async def async_setup_nest(hass, nest, config, pin=None):
-    """Set up the Nest devices."""
-    from nest.nest import AuthorizationError, APIError
-    if pin is not None:
-        _LOGGER.debug("pin acquired, requesting access token")
-        error_message = None
-        try:
-            nest.request_token(pin)
-        except AuthorizationError as auth_error:
-            error_message = "Nest authorization failed: {}".format(auth_error)
-        except APIError as api_error:
-            error_message = "Failed to call Nest API: {}".format(api_error)
+async def async_setup_entry(hass, entry):
+    """Setup Nest from a config entry."""
+    from nest import Nest
 
-        if error_message is not None:
-            _LOGGER.warning(error_message)
-            hass.components.configurator.async_notify_errors(
-                _CONFIGURING['nest'], error_message)
-            return False
-
-    if nest.access_token is None:
-        _LOGGER.debug("no access_token, requesting configuration")
-        await async_request_configuration(nest, hass, config)
-        return False
-
-    if 'nest' in _CONFIGURING:
-        _LOGGER.debug("configuration done")
-        configurator = hass.components.configurator
-        configurator.async_request_done(_CONFIGURING.pop('nest'))
+    nest = Nest(access_token=entry.data['tokens']['access_token'])
 
     _LOGGER.debug("proceeding with setup")
-    conf = config[DOMAIN]
+    conf = hass.data.get(DATA_NEST_CONFIG, {})
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
+    await hass.async_add_job(hass.data[DATA_NEST].initialize)
 
-    for component, discovered in [
-            ('climate', {}),
-            ('camera', {}),
-            ('sensor', conf.get(CONF_SENSORS, {})),
-            ('binary_sensor', conf.get(CONF_BINARY_SENSORS, {}))]:
-        _LOGGER.debug("proceeding with discovery -- %s", component)
-        hass.async_add_job(discovery.async_load_platform,
-                           hass, component, DOMAIN, discovered, config)
+    for component in 'climate', 'camera', 'sensor', 'binary_sensor':
+        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+            entry, component))
 
     def set_mode(service):
         """
@@ -210,29 +183,6 @@ async def async_setup_nest(hass, nest, config, pin=None):
     return True
 
 
-async def async_setup(hass, config):
-    """Set up Nest components."""
-    from nest import Nest
-
-    if 'nest' in _CONFIGURING:
-        return
-
-    conf = config[DOMAIN]
-    client_id = conf[CONF_CLIENT_ID]
-    client_secret = conf[CONF_CLIENT_SECRET]
-    filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
-
-    access_token_cache_file = hass.config.path(filename)
-
-    nest = Nest(
-        access_token_cache_file=access_token_cache_file,
-        client_id=client_id, client_secret=client_secret)
-
-    await async_setup_nest(hass, nest, config)
-
-    return True
-
-
 class NestDevice(object):
     """Structure Nest functions for hass."""
 
@@ -240,12 +190,12 @@ class NestDevice(object):
         """Init Nest Devices."""
         self.hass = hass
         self.nest = nest
+        self.local_structure = conf.get(CONF_STRUCTURE)
 
-        if CONF_STRUCTURE not in conf:
-            self.local_structure = [s.name for s in nest.structures]
-        else:
-            self.local_structure = conf[CONF_STRUCTURE]
-        _LOGGER.debug("Structures to include: %s", self.local_structure)
+    def initialize(self):
+        """Initialize Nest."""
+        if self.local_structure is None:
+            self.local_structure = [s.name for s in self.nest.structures]
 
     def structures(self):
         """Generate a list of structures."""
