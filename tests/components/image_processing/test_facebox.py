@@ -7,7 +7,7 @@ import requests_mock
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_FRIENDLY_NAME,
+    ATTR_ENTITY_ID, ATTR_NAME, CONF_FRIENDLY_NAME,
     CONF_IP_ADDRESS, CONF_PORT, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
@@ -16,6 +16,7 @@ import homeassistant.components.image_processing.facebox as fb
 MOCK_IP = '192.168.0.1'
 MOCK_PORT = '8080'
 
+# Mock data returned by the facebox API.
 MOCK_FACE = {'confidence': 0.5812028911604818,
              'id': 'john.jpg',
              'matched': True,
@@ -27,6 +28,20 @@ MOCK_JSON = {"facesCount": 1,
              "success": True,
              "faces": [MOCK_FACE]
              }
+
+# Faces data after parsing.
+PARSED_FACES = [{ATTR_NAME: 'John Lennon',
+                 fb.ATTR_IMAGE_ID: 'john.jpg',
+                 fb.ATTR_CONFIDENCE: 58.12,
+                 fb.ATTR_MATCHED: True,
+                 fb.ATTR_BOUNDING_BOX: {
+                     'height': 75,
+                     'left': 63,
+                     'top': 262,
+                     'width': 74},
+                 }]
+
+MATCHED_FACES = {'John Lennon': 58.12}
 
 VALID_ENTITY_ID = 'image_processing.facebox_demo_camera'
 VALID_CONFIG = {
@@ -45,12 +60,14 @@ VALID_CONFIG = {
 
 def test_encode_image():
     """Test that binary data is encoded correctly."""
-    assert fb.encode_image(b'test')["base64"] == 'dGVzdA=='
+    assert fb.encode_image(b'test') == 'dGVzdA=='
 
 
-def test_get_matched_faces():
-    """Test that matched faces are parsed correctly."""
-    assert fb.get_matched_faces([MOCK_FACE]) == {MOCK_FACE['name']: 0.58}
+def test_parse_faces():
+    """Test parsing of raw face data, and generation of matched_faces."""
+    parsed_faces = fb.parse_faces(MOCK_JSON['faces'])
+    assert parsed_faces == PARSED_FACES
+    assert fb.get_matched_faces(parsed_faces) == MATCHED_FACES
 
 
 @pytest.fixture
@@ -92,16 +109,21 @@ async def test_process_image(hass, mock_image):
 
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == '1'
-    assert state.attributes.get('matched_faces') == {MOCK_FACE['name']: 0.58}
+    assert state.attributes.get('matched_faces') == MATCHED_FACES
 
-    MOCK_FACE[ATTR_ENTITY_ID] = VALID_ENTITY_ID  # Update.
-    assert state.attributes.get('faces') == [MOCK_FACE]
+    PARSED_FACES[0][ATTR_ENTITY_ID] = VALID_ENTITY_ID  # Update.
+    assert state.attributes.get('faces') == PARSED_FACES
     assert state.attributes.get(CONF_FRIENDLY_NAME) == 'facebox demo_camera'
 
     assert len(face_events) == 1
-    assert face_events[0].data['name'] == MOCK_FACE['name']
-    assert face_events[0].data['confidence'] == MOCK_FACE['confidence']
-    assert face_events[0].data['entity_id'] == VALID_ENTITY_ID
+    assert face_events[0].data[ATTR_NAME] == PARSED_FACES[0][ATTR_NAME]
+    assert (face_events[0].data[fb.ATTR_CONFIDENCE]
+            == PARSED_FACES[0][fb.ATTR_CONFIDENCE])
+    assert face_events[0].data[ATTR_ENTITY_ID] == VALID_ENTITY_ID
+    assert (face_events[0].data[fb.ATTR_IMAGE_ID] ==
+            PARSED_FACES[0][fb.ATTR_IMAGE_ID])
+    assert (face_events[0].data[fb.ATTR_BOUNDING_BOX] ==
+            PARSED_FACES[0][fb.ATTR_BOUNDING_BOX])
 
 
 async def test_connection_error(hass, mock_image):
