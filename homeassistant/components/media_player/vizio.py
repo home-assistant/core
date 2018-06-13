@@ -100,7 +100,9 @@ class VizioDevice(MediaPlayerDevice):
         else:
             self._state = STATE_ON
 
-        self._volume_level = float(self._device.get_current_volume()) / 100.
+        volume = self._device.get_current_volume()
+        if volume is not None:
+            self._volume_level = float(volume) / 100.
         input_ = self._device.get_current_input()
         if input_ is not None:
             self._current_input = input_.meta_name
@@ -182,7 +184,7 @@ class VizioDevice(MediaPlayerDevice):
         return self._device.get_current_volume() is not None
 
     def set_volume_level(self, volume):
-        """Set volume level."""
+        """Set volume level"""
         if self._volume_level is not None:
             if volume > self._volume_level:
                 num = int(100*(volume - self._volume_level))
