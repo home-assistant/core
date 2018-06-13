@@ -917,7 +917,7 @@ pymonoprice==0.3
 pymusiccast==0.1.6
 
 # homeassistant.components.cover.myq
-pymyq==0.0.8
+pymyq==0.0.11
 
 # homeassistant.components.mysensors
 pymysensors==0.14.0
