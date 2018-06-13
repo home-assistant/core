@@ -52,6 +52,9 @@ def parse_faces(api_faces):
         if entry['matched']:  # This data is only in matched faces.
             face[ATTR_NAME] = entry['name']
             face[ATTR_IMAGE_ID] = entry['id']
+        else:  # Lets be explicit.
+            face[ATTR_NAME] = None
+            face[ATTR_IMAGE_ID] = None
         face[ATTR_CONFIDENCE] = round(100.0*entry['confidence'], 2)
         face[ATTR_MATCHED] = entry['matched']
         face[ATTR_BOUNDING_BOX] = entry['rect']
