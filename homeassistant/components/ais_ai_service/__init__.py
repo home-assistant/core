@@ -17,8 +17,8 @@ from homeassistant.const import (
     SERVICE_TURN_ON, ATTR_UNIT_OF_MEASUREMENT)
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import ais_cloud
-from homeassistant.ais_dom import ais_global
 import homeassistant.components.mqtt as mqtt
+import homeassistant.ais_dom.ais_global as ais_global
 aisCloudWS = ais_cloud.AisCloudWS()
 
 REQUIREMENTS = ['fuzzywuzzy==0.15.1', 'babel']
@@ -890,9 +890,11 @@ def _say_it(hass, message, caller_ip=None):
 
     # check if we should inform back the caller speaker
     # the local caller has ip like 192.168.1.45
-    internal_ip = hass.states.get('sensor.internal_ip_address').state
+    # internal_ip = hass.states.get('sensor.internal_ip_address').state
+    if ais_global.GLOBAL_MY_IP is None:
+        ais_global.set_global_my_ip()
     if caller_ip is not None:
-        if caller_ip not in ['localhost', '127.0.0.1', device_ip, internal_ip]:
+        if caller_ip not in ['localhost', '127.0.0.1', device_ip, ais_global.GLOBAL_MY_IP]:
             _post_message(message, caller_ip)
 
     if len(message) > 199:

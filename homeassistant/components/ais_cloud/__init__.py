@@ -2,7 +2,6 @@
 import asyncio
 import logging
 import requests
-import subprocess
 import json
 from homeassistant.ais_dom import ais_global
 from homeassistant.const import EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED
@@ -13,18 +12,22 @@ DOMAIN = 'ais_cloud'
 # DEPENDENCIES = ['http']
 _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['feedparser==5.2.1', 'readability-lxml', 'bs4']
-HOST_IP = ''
 CLOUD_TOKEN_PATH = "/data/data/pl.sviete.dom/files"
 CLOUD_TOKEN_PATH += "/home/AIS/.dom/.ais_token.txt"
 CLOUD_APP_URL = "https://powiedz.co/ords/f?p=100:1&x01=TOKEN:"
 CLOUD_WS_TOKEN = None
 CLOUD_WS_HEADER = {}
 GLOBAL_RSS_NEWS_TEXT = None
+GLOBAL_RSS_HELP_TEXT = None
 G_PLAYERS = []
 
 
 def get_news_text():
     return GLOBAL_RSS_NEWS_TEXT
+
+
+def get_rss_help_text():
+    return GLOBAL_RSS_HELP_TEXT
 
 
 # Get player id by his name
@@ -42,12 +45,9 @@ def async_setup(hass, config):
     yield from data.get_types_async()
 
     # add "Projekt" panel to the menu list
-    HOST_IP = subprocess.check_output(
-        "ip route get 8.8.8.8 | head -1 | cut -d' ' -f8", shell=True)
-    HOST_IP = HOST_IP.decode('utf-8').strip()
     yield from hass.components.frontend.async_register_built_in_panel(
             'iframe', "Projekt", "mdi:shuffle-variant",
-            "dom", {'url': 'https://' + HOST_IP + ':1880'})
+            "dom", {'url': 'https://' + ais_global.get_my_global_ip() + ':1880'})
 
     def get_radio_types(call):
         _LOGGER.info("get_radio_types  ")
@@ -101,6 +101,11 @@ def async_setup(hass, config):
         _LOGGER.info("select_rss_news_item")
         data.select_rss_news_item(call)
 
+    def select_rss_help_item(call):
+        _LOGGER.info("select_rss_help_item")
+        data.select_rss_help_item(call)
+
+
     # register services
     hass.services.async_register(
         DOMAIN, 'get_radio_types', get_radio_types)
@@ -128,7 +133,8 @@ def async_setup(hass, config):
         DOMAIN, 'get_rss_news_items', get_rss_news_items)
     hass.services.async_register(
         DOMAIN, 'select_rss_news_item', select_rss_news_item)
-
+    hass.services.async_register(
+        DOMAIN, 'select_rss_help_item', select_rss_help_item)
     def device_discovered(service):
         """ Called when a Awesome device has been discovered. """
         _LOGGER.info("--------------------------------")
@@ -1148,3 +1154,46 @@ class AisColudData:
                 'custom_ui_state_card': 'state-card-text',
                 'text': "" + GLOBAL_RSS_NEWS_TEXT
                 })
+
+    def select_rss_help_item(self, call):
+        """Get text for the selected item."""
+        global GLOBAL_RSS_HELP_TEXT
+        GLOBAL_RSS_HELP_TEXT = ''
+        if ("rss_help_topic" not in call.data):
+            _LOGGER.error("No rss_help_topic")
+            return
+        if call.data["rss_help_topic"] == ais_global.G_EMPTY_OPTION:
+            # reset status for item below
+            self.hass.states.async_set(
+                'sensor.ais_rss_help_text', 'ok', {
+                    'custom_ui_state_card': 'state-card-text',
+                    'text': "" + GLOBAL_RSS_HELP_TEXT
+                })
+            return
+        # we need to build the url and get the text to read
+        rss_help_topic = call.data["rss_help_topic"]
+        _url = "https://raw.githubusercontent.com/wiki/sviete/AIS-WWW/" + rss_help_topic.replace(" ", "-") + ".md"
+        import requests
+        from readability import Document
+        response = requests.get(_url)
+        doc = Document(response.text)
+        GLOBAL_RSS_HELP_TEXT += doc.summary()
+
+        from bs4 import BeautifulSoup
+        GLOBAL_RSS_HELP_TEXT = BeautifulSoup(
+            GLOBAL_RSS_HELP_TEXT, "lxml").text
+
+        text = "Czytam stronę pomocy, " + rss_help_topic
+        self.hass.services.call(
+            'ais_ai_service',
+            'say_it', {
+                "text": text
+            })
+        text = "\n\n+" + "Czytam stronę pomocy: \n"
+        text += '*' + rss_help_topic + "\n" + GLOBAL_RSS_HELP_TEXT
+        GLOBAL_RSS_HELP_TEXT = text
+        self.hass.states.async_set(
+            'sensor.ais_rss_help_text', 'ok', {
+                'custom_ui_state_card': 'state-card-text',
+                'text': "" + GLOBAL_RSS_HELP_TEXT
+            })

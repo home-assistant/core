@@ -39,6 +39,8 @@ homeassistant:
     sensor.wolna_pamiec:
       icon: mdi:memory
       friendly_name: Wolna pamięć
+    sensor.ais_rss_help_text:
+      custom_ui_state_card: state-card-text
 
 sensor:
   # - platform: speedtest
@@ -77,6 +79,10 @@ sensor:
   - platform: systemmonitor
     resources:
       - type: since_last_boot
+  - platform: ais_long_text
+    name: ais_rss_help_text
+    package: homeassistant.components.ais_cloud
+    method: get_rss_help_text
   - platform: template
     sensors:
       uzycie_procesora:
@@ -145,6 +151,23 @@ weblink:
       url: /local/upgrade_log.txt
       icon: mdi:file-document
 
+input_select:
+  ais_rss_help_topic:
+    name: 'Temat:'
+    options:
+      - "-"
+      - "Pierwsze kroki"
+      - "Co nowego"
+      - "Sterowanie"
+      - "Konfigurowanie"
+    initial: "-"
+    icon: mdi:format-list-bulleted-type
+  ais_rss_help_player:
+    name: 'Głośnik:'
+    options:
+     - Podłączony głośnik
+    icon: mdi:speaker-wireless
+
 group:
   AIS Help:
     name: Przydatne linki
@@ -173,3 +196,31 @@ group:
     name: Konfiguracja
     entities:
       - configurator.ais_dom_host
+  ais_rss_help:
+    control: hidden
+    name: Tematy pomocy
+    entities:
+      - input_select.ais_rss_help_topic
+      - input_select.ais_rss_help_player
+      - sensor.ais_rss_help_text
+
+
+automation:
+  - alias: 'Get RSS Help Items for selected topic'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.ais_rss_help_topic
+    action:
+      -  service: ais_cloud.select_rss_help_item
+         data_template:
+           rss_help_topic: "{{ states('input_select.ais_rss_help_topic') }}"
+  - alias: 'Select rss help player'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_select.ais_rss_help_player
+    action:
+      - service: ais_cloud.select_media_player
+        data_template:
+          media_player_type: "Help"

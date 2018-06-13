@@ -27,6 +27,7 @@ then
   exit 1
 fi
 
+rm -rf build
 rm -rf dist
 python3.6 setup.py sdist bdist_wheel
 python3.6 -m twine upload dist/* --skip-existing

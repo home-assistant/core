@@ -7,25 +7,11 @@ https://home-assistant.io/components/shell_command/
 from homeassistant.const import (CONF_IP_ADDRESS, CONF_MAC)
 import asyncio
 import logging
-import socket
+import homeassistant.ais_dom.ais_global as ais_global
 REQUIREMENTS = ['requests_futures']
 DOMAIN = 'ais_shell_command'
 GLOBAL_X = 0
-GLOBAL_MY_IP = None
 _LOGGER = logging.getLogger(__name__)
-
-
-def set_global_my_ip():
-    global GLOBAL_MY_IP
-    GLOBAL_MY_IP = (([ip for ip in socket.gethostbyname_ex(socket.gethostname())[2]
-              if not ip.startswith('127.')] or [[(s.connect(('8.8.8.8', 53)),
-              s.getsockname()[0], s.close()) for s in
-              [socket.socket(socket.AF_INET, socket.SOCK_DGRAM)]][0][1]])
-              + ['no IP found'])[0]
-
-
-set_global_my_ip()
-
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -344,7 +330,7 @@ def _scan_device(hass, call):
 def _scan_network_for_devices(hass, call):
     import homeassistant.ais_dom.sensor.ais_device_search_mqtt as dsm
     global GLOBAL_X
-    set_global_my_ip()
+    GLOBAL_MY_IP = ais_global.get_my_global_ip()
     info = ""
     if (GLOBAL_X == 0):
         GLOBAL_X += 1

@@ -156,6 +156,7 @@ group:
       icon: mdi:help
       entities:
         - group.dom_system_version
+        - group.ais_rss_help
         - group.ais_help
         # - group.ais_android_certification
         - group.dom_cloud

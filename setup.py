@@ -60,7 +60,7 @@ setup(
     description=PROJECT_DESCRIPTION,
     packages=PACKAGES,
     include_package_data=True,
-    zip_safe=False,
+    zip_safe=True,
     platforms='any',
     install_requires=REQUIRES,
     python_requires='>={}'.format(MIN_PY_VERSION),
