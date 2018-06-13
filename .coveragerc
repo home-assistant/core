@@ -195,7 +195,7 @@ omit =
     homeassistant/components/neato.py
     homeassistant/components/*/neato.py
 
-    homeassistant/components/nest.py
+    homeassistant/components/nest/__init__.py
     homeassistant/components/*/nest.py
 
     homeassistant/components/netatmo.py
