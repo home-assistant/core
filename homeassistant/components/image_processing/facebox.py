@@ -24,6 +24,7 @@ ATTR_BOUNDING_BOX = 'bounding_box'
 ATTR_IMAGE_ID = 'image_id'
 ATTR_MATCHED = 'matched'
 CLASSIFIER = 'facebox'
+TIMEOUT = 9
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -98,17 +99,17 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
             response = requests.post(
                 self._url,
                 json={"base64": encode_image(image)},
-                timeout=9
+                timeout=TIMEOUT
                 ).json()
         except requests.exceptions.ConnectionError:
             _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
             response['success'] = False
 
         if response['success']:
-            self.total_faces = response['facesCount']
-            self.faces = parse_faces(response['faces'])
-            self._matched = get_matched_faces(self.faces)
-            self.process_faces(self.faces, self.total_faces)
+            total_faces = response['facesCount']
+            faces = parse_faces(response['faces'])
+            self._matched = get_matched_faces(faces)
+            self.process_faces(faces, total_faces)
 
         else:
             self.total_faces = None
