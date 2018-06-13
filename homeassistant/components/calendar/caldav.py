@@ -120,9 +120,9 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         attributes = super().device_state_attributes
         return attributes
 
-    async def async_get_events(self, start_date, end_date):
+    async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
-        return await self.data.async_get_events(start_date, end_date)
+        return await self.data.async_get_events(hass, start_date, end_date)
 
 
 class WebDavCalendarData(object):
@@ -135,15 +135,19 @@ class WebDavCalendarData(object):
         self.search = search
         self.event = None
 
-    async def async_get_events(self, start_date, end_date):
+    async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
-        vevent_list = self.calendar.date_search(start_date, end_date)
+        vevent_list = await hass.async_add_job(self.calendar.date_search,
+                                               start_date, end_date)
         event_list = []
         for event in vevent_list:
             vevent = event.instance.vevent
+            uid = None
+            if hasattr(vevent, 'uid'):
+                uid = vevent.uid.value
             data = {
-                "uid": vevent.uid.value,
+                "uid": uid,
                 "title": vevent.summary.value,
                 "start": self.get_hass_date(vevent.dtstart.value),
                 "end": self.get_hass_date(self.get_end_date(vevent)),

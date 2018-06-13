@@ -51,9 +51,9 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
 
         super().__init__(hass, data)
 
-    async def async_get_events(self, start_date, end_date):
+    async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
-        return await self.data.async_get_events(start_date, end_date)
+        return await self.data.async_get_events(hass, start_date, end_date)
 
 
 class GoogleCalendarData(object):
@@ -83,14 +83,15 @@ class GoogleCalendarData(object):
 
         return service, params
 
-    async def async_get_events(self, start_date, end_date):
+    async def async_get_events(self, hass, start_date, end_date):
         """Get all events in a specific time frame."""
         service, params = self._prepare_query()
         params['timeMin'] = start_date.isoformat('T')
         params['timeMax'] = end_date.isoformat('T')
 
         events = service.events()  # pylint: disable=no-member
-        result = events.list(**params).execute()
+        result = await hass.async_add_job(events.list(**params).execute)
+
         items = result.get('items', [])
         event_list = []
         for item in items:

@@ -90,11 +90,6 @@ class CalendarEventDevice(Entity):
         return self._name
 
     @property
-    def event_list(self):
-        """Return calendar events."""
-        return self._event_list
-
-    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         start = self._cal_data.get('start', None)
@@ -214,5 +209,8 @@ class CalendarEventView(http.HomeAssistantView):
             end_date = dt.parse_datetime(end)
         except (ValueError, AttributeError):
             return []
-        event_list = await self.device.async_get_events(start_date, end_date)
+        hass = request.app['hass']
+        event_list = await self.device.async_get_events(hass,
+                                                        start_date,
+                                                        end_date)
         return self.json(event_list)
