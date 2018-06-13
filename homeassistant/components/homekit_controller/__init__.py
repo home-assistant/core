@@ -37,6 +37,7 @@ def homekit_http_send(self, message_body=None, encode_chunked=False):
     Appends an extra \r\n to the buffer.
     A message_body may be specified, to be appended to the request.
     """
+    # pylint: disable=protected-access
     self._buffer.extend((b"", b""))
     msg = b"\r\n".join(self._buffer)
     del self._buffer[:]
