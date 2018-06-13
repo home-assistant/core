@@ -158,6 +158,9 @@ python-forecastio==1.4.0
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
 
+# homeassistant.components.tradfri
+pytradfri[async]==5.5.1
+
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
 
