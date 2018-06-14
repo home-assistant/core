@@ -127,9 +127,11 @@ _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
+    'cast',
     'deconz',
     'hue',
     'nest',
+    'sonos',
     'zone',
 ]
 
