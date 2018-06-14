@@ -740,7 +740,7 @@ py_ryobi_gdo==0.0.10
 pyads==2.2.6
 
 # homeassistant.components.sensor.airvisual
-pyairvisual==1.0.0
+pyairvisual==2.0.1
 
 # homeassistant.components.alarm_control_panel.alarmdotcom
 pyalarmdotcom==0.3.2
