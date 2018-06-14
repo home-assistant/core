@@ -128,9 +128,9 @@ HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
     'deconz',
+    'homematicip_cloud',
     'hue',
     'zone',
-    'homematicip_cloud',
 ]
 
 

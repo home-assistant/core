@@ -17,7 +17,7 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
         """Initialize HomematicIP Cloud config flow."""
         self.hmip_auth = None
         self.hmip_apid = None
-        self.hmip_name = None
+        self.hmip_name = ''
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
@@ -26,32 +26,29 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
         errors = {}
 
         if user_input is not None:
-            if user_input[CONF_ACCESSPOINT]:
-                self.hmip_apid = user_input[CONF_ACCESSPOINT]
+            self.hmip_apid = user_input[CONF_ACCESSPOINT]
+            if user_input[CONF_NAME] is not None:
                 self.hmip_name = user_input[CONF_NAME]
-                _LOGGER.info("Create new authtoken for %s", self.hmip_apid)
+            _LOGGER.info("Create new authtoken for %s", self.hmip_apid)
 
-                # Create new authtoken for the accesspoint
-                websession = aiohttp_client.async_get_clientsession(self.hass)
-                self.hmip_auth = AsyncAuth(self.hass.loop, websession)
-                try:
-                    await self.hmip_auth.init(self.hmip_apid)
-                except HmipConnectionError:
-                    return self.async_abort(reason='conection_aborted')
-                if user_input[CONF_PIN]:
-                    self.hmip_auth.pin = user_input[CONF_PIN]
-                try:
-                    state = await self.hmip_auth.connectionRequest(
-                        'HomeAssistant')
-                except HmipConnectionError:
-                    if state['errorCode'] == 'INVALID_PIN':
-                        errors[CONF_PIN] = 'invalid_pin'
-                    else:
-                        errors['base'] = 'register_failed'
-                else:
-                    # Connection established
-                    _LOGGER.info("Connection established")
-                    return await self.async_step_link()
+            # Create new authtoken for the accesspoint
+            websession = aiohttp_client.async_get_clientsession(self.hass)
+            self.hmip_auth = AsyncAuth(self.hass.loop, websession)
+            try:
+                await self.hmip_auth.init(self.hmip_apid)
+            except HmipConnectionError:
+                return self.async_abort(reason='conection_aborted')
+            if user_input[CONF_PIN]:
+                self.hmip_auth.pin = user_input[CONF_PIN]
+            try:
+                await self.hmip_auth.connectionRequest(
+                    'HomeAssistant')
+            except HmipConnectionError:
+                errors['base'] = 'register_failed'
+            else:
+                # Connection established
+                _LOGGER.info("Connection established")
+                return await self.async_step_link()
 
         return self.async_show_form(
             step_id='init',

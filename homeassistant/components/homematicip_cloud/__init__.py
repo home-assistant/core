@@ -65,7 +65,7 @@ async def async_setup(hass, config):
     """Set up the HomematicIP component."""
     from homematicip.base.base_connection import HmipConnectionError
 
-    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN] = {}
     accesspoints = config.get(DOMAIN, [])
 
     for conf in accesspoints:
