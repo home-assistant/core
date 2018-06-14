@@ -954,7 +954,7 @@ pyotp==2.2.6
 pyowm==2.8.0
 
 # homeassistant.components.sensor.pollen
-pypollencom==1.1.2
+pypollencom==2.1.0
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8

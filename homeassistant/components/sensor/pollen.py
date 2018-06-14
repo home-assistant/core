@@ -40,6 +40,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 TYPE_ALLERGY_FORECAST = 'allergy_average_forecasted'
 TYPE_ALLERGY_HISTORIC = 'allergy_average_historical'
 TYPE_ALLERGY_INDEX = 'allergy_index'
+TYPE_ALLERGY_OUTLOOK = 'allergy_outlook'
 TYPE_ALLERGY_TODAY = 'allergy_index_today'
 TYPE_ALLERGY_TOMORROW = 'allergy_index_tomorrow'
 TYPE_ALLERGY_YESTERDAY = 'allergy_index_yesterday'
@@ -182,7 +183,6 @@ class PollencomSensor(Entity):
     async def async_update(self):
         """Update the sensor."""
         await self.pollencom.async_update()
-
         if not self.pollencom.data:
             return
 
@@ -191,15 +191,21 @@ class PollencomSensor(Entity):
         else:
             data = self.pollencom.data[self._type]['Location']
 
-        if self._type == TYPE_ALLERGY_FORECAST:
-            outlook = self.pollencom.data[ATTR_OUTLOOK]
+        indices = [p['Index'] for p in data['periods']]
+        average = round(mean(indices), 1)
+        [rating] = [
+            i['label'] for i in RATING_MAPPING
+            if i['minimum'] <= average <= i['maximum']
+        ]
+        slope = (data['periods'][-1]['Index'] - data['periods'][-2]['Index'])
+        trend = TREND_FLAT
+        if slope > 0:
+            trend = TREND_INCREASING
+        elif slope < 0:
+            trend = TREND_SUBSIDING
 
-            indices = [p['Index'] for p in data['periods']]
-            average = round(mean(indices), 1)
-            [rating] = [
-                i['label'] for i in RATING_MAPPING
-                if i['minimum'] <= average <= i['maximum']
-            ]
+        if self._type == TYPE_ALLERGY_FORECAST:
+            outlook = self.pollencom.data[TYPE_ALLERGY_OUTLOOK]
 
             self._attrs.update({
                 ATTR_CITY: data['City'].title(),
@@ -212,17 +218,6 @@ class PollencomSensor(Entity):
             })
             self._state = average
         elif self._type == TYPE_ALLERGY_HISTORIC:
-            indices = [p['Index'] for p in data['periods']]
-            average = round(mean(indices), 1)
-
-            slope = (
-                data['periods'][-1]['Index'] - data['periods'][-2]['Index'])
-            trend = TREND_FLAT
-            if slope > 0:
-                trend = TREND_INCREASING
-            elif slope < 0:
-                trend = TREND_SUBSIDING
-
             self._attrs.update({
                 ATTR_CITY: data['City'].title(),
                 ATTR_RATING: calculate_average_rating(indices),
@@ -259,20 +254,6 @@ class PollencomSensor(Entity):
             })
             self._state = period['Index']
         elif self._type == TYPE_DISEASE_FORECAST:
-            indices = [p['Index'] for p in data['periods']]
-            average = round(mean(indices), 1)
-            [rating] = [
-                i['label'] for i in RATING_MAPPING
-                if i['minimum'] <= average <= i['maximum']
-            ]
-            slope = (
-                data['periods'][-1]['Index'] - data['periods'][-2]['Index'])
-            trend = TREND_FLAT
-            if slope > 0:
-                trend = TREND_INCREASING
-            elif slope < 0:
-                trend = TREND_SUBSIDING
-
             self._attrs.update({
                 ATTR_CITY: data['City'].title(),
                 ATTR_RATING: rating,
@@ -315,10 +296,10 @@ class PollenComData(object):
 
                 try:
                     data = await self._client.allergens.outlook()
-                    self.data[ATTR_OUTLOOK] = data
+                    self.data[TYPE_ALLERGY_OUTLOOK] = data
                 except PollenComError as err:
                     _LOGGER.error('Unable to get allergy outlook: %s', err)
-                    self.data[ATTR_OUTLOOK] = {}
+                    self.data[TYPE_ALLERGY_OUTLOOK] = {}
 
             if TYPE_ALLERGY_HISTORIC in self._sensor_types:
                 try:
