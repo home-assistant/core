@@ -54,7 +54,7 @@ PyXiaomiGateway==0.9.5
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.0
 
-# homeassistant.components.media_player.sonos
+# homeassistant.components.sonos
 SoCo==0.14
 
 # homeassistant.components.sensor.travisci
@@ -773,7 +773,7 @@ pyblackbird==0.5
 # homeassistant.components.media_player.channels
 pychannels==1.0.0
 
-# homeassistant.components.media_player.cast
+# homeassistant.components.cast
 pychromecast==2.1.0
 
 # homeassistant.components.media_player.cmus
