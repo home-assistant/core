@@ -22,9 +22,9 @@ from homeassistant.util import Throttle
 REQUIREMENTS = ['pypollencom==2.1.0']
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ALLERGEN_GENUS = 'primary_allergen_genus'
-ATTR_ALLERGEN_NAME = 'primary_allergen_name'
-ATTR_ALLERGEN_TYPE = 'primary_allergen_type'
+ATTR_ALLERGEN_GENUS = 'allergen_genus'
+ATTR_ALLERGEN_NAME = 'allergen_name'
+ATTR_ALLERGEN_TYPE = 'allergen_type'
 ATTR_CITY = 'city'
 ATTR_OUTLOOK = 'outlook'
 ATTR_RATING = 'rating'
@@ -88,8 +88,7 @@ TREND_INCREASING = 'Increasing'
 TREND_SUBSIDING = 'Subsiding'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ZIP_CODE):
-        str,
+    vol.Required(CONF_ZIP_CODE): str,
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
         vol.All(cv.ensure_list, [vol.In(SENSORS)]),
     vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
@@ -242,7 +241,7 @@ class PollencomSensor(Entity):
                         attrs['Genus'],
                     '{0}_{1}'.format(ATTR_ALLERGEN_NAME, index):
                         attrs['Name'],
-                    '{0}_{1}'.format(ATTR_ALLERGEN_GENUS, index):
+                    '{0}_{1}'.format(ATTR_ALLERGEN_TYPE, index):
                         attrs['PlantType'],
                 })
 
