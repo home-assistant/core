@@ -60,7 +60,6 @@ def get_date(date):
     return dt.as_local(dt.parse_datetime(date['dateTime']))
 
 
-# pylint: disable=too-many-instance-attributes
 class CalendarEventDevice(Entity):
     """A calendar event device."""
 
@@ -68,7 +67,6 @@ class CalendarEventDevice(Entity):
     # with an update() method
     data = None
 
-    # pylint: disable=too-many-arguments
     def __init__(self, hass, data):
         """Create the Calendar Event Device."""
         self._name = data.get(CONF_NAME)

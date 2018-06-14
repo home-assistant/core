@@ -210,7 +210,6 @@ def _request_oauth_completion(hass, config):
             "Failed to register, please try again.")
         return
 
-    # pylint: disable=unused-argument
     def wink_configuration_callback(callback_data):
         """Call setup again."""
         setup(hass, config)
