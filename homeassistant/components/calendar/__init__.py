@@ -27,6 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'calendar'
 
+DEPENDENCIES = ['http']
+
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -193,11 +195,10 @@ class CalendarEventDevice(Entity):
 class CalendarEventView(http.HomeAssistantView):
     """View to retrieve calendar content."""
 
-    name = "api:calendar"
-
     def __init__(self, device):
         """Initialize calendar view."""
         self.device = device
+        self.name = "api:calendar" + device.entity_id.split(".")[-1]
         self.url = '/api/calendar/' + device.entity_id.split(".")[-1]
 
     async def get(self, request):
