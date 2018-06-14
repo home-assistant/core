@@ -597,6 +597,9 @@ neurio==0.3.1
 # homeassistant.components.sensor.nederlandse_spoorwegen
 nsapi==2.7.4
 
+# homeassistant.components.sensor.nsw_fuel_station
+nsw-fuel-api-client==1.0.10
+
 # homeassistant.components.nuheat
 nuheat==0.3.0
 
