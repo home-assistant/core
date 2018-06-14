@@ -143,7 +143,7 @@ class WazeTravelTime(Entity):
         return res
 
     def _get_location_from_entity(self, entity_id):
-        """Get the location from the entity state or attributes."""
+        """Get the location from the entity_id."""
         state = self.hass.states.get(entity_id)
 
         if state is None:
