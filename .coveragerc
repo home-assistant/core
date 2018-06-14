@@ -671,6 +671,7 @@ omit =
     homeassistant/components/sensor/openweathermap.py
     homeassistant/components/sensor/otp.py
     homeassistant/components/sensor/pi_hole.py
+    homeassistant/components/sensor/pjm.py
     homeassistant/components/sensor/plex.py
     homeassistant/components/sensor/pocketcasts.py
     homeassistant/components/sensor/pollen.py
