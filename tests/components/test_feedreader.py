@@ -1,6 +1,6 @@
 """The tests for the feedreader component."""
 import time
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import unittest
 from genericpath import exists
