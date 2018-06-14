@@ -1034,13 +1034,13 @@ def _process(hass, text, callback):
                     break
         # the was no match - try again but with context
         if not found:
-            sufix = GROUP_ENTITIES[get_curr_group_idx()]['context_suffix']
-            if sufix is not None:
+            suffix = GROUP_ENTITIES[get_curr_group_idx()]['context_suffix']
+            if suffix is not None:
                 for intent_type, matchers in intents.items():
                     if found:
                         break
                     for matcher in matchers:
-                        match = matcher.match(sufix + " " + text)
+                        match = matcher.match(suffix + " " + text)
                         if match:
                             # we have a match
                             found = True
@@ -1048,7 +1048,7 @@ def _process(hass, text, callback):
                                 DOMAIN, intent_type,
                                 {key: {'value': value} for key, value
                                  in match.groupdict().items()},
-                                sufix + " " + text)
+                                suffix + " " + text)
                             # reset the curr button code
                             # TODO the mic should send a button code too
                             # in this case we will know if the call source
@@ -1059,7 +1059,7 @@ def _process(hass, text, callback):
             if m is None:
                 # no message / no match
                 m = 'Nie rozumiem ' + text
-            # asking without the sufix
+            # asking without the suffix
             ws_resp = aisCloudWS.ask(text, m)
             m = ws_resp.text
 

@@ -30,7 +30,16 @@ def get_rss_help_text():
     return GLOBAL_RSS_HELP_TEXT
 
 
-# Get player id by his name
+def check_url(url_address):
+    # check the 301 redirection
+    try:
+        r = requests.head(url_address, allow_redirects=True, timeout=1)
+        return r.url
+    except:
+        return url_address
+
+
+    # Get player id by his name
 def get_player_data(player_name):
     for player in G_PLAYERS:
         if player["friendly_name"] == player_name:
@@ -493,7 +502,7 @@ class AisColudData:
         for audio in self.radio_names:
             if audio["NAME"] == radio_name:
                 if "STREAM_URL" in audio:
-                    _url = audio["STREAM_URL"]
+                    _url = check_url(audio["STREAM_URL"])
                     _audio_info["NAME"] = audio["NAME"]
                     _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_RADIO
                     _audio_info["IMAGE_URL"] = audio["IMAGE_URL"]
@@ -510,7 +519,7 @@ class AisColudData:
                 'play_media', {
                     "entity_id": player["entity_id"],
                     "media_content_type": "audio/mp4",
-                    "media_content_id": _url
+                    "media_content_id": check_url(_url)
                 })
             # set stream image and title only if the player is AIS dom player
             if player["device_ip"] is not None:
@@ -611,7 +620,7 @@ class AisColudData:
                     "text": "Pobieram"
                 })
             try:
-                d = feedparser.parse(_lookup_url)
+                d = feedparser.parse(check_url(_lookup_url))
                 tracks = [ais_global.G_EMPTY_OPTION]
                 self.podcast_tracks = []
                 for e in d.entries:
@@ -692,7 +701,7 @@ class AisColudData:
         for podcast in self.podcast_tracks:
             if podcast["title"] == podcast_track:
                 if "link" in podcast:
-                    _url = podcast["link"].href
+                    _url = check_url(podcast["link"].href)
                     try:
                         _audio_info["IMAGE_URL"] = podcast["image_url"]
                     except Exception as e:
@@ -712,7 +721,7 @@ class AisColudData:
                 'play_media', {
                     "entity_id": player["entity_id"],
                     "media_content_type": "audio/mp4",
-                    "media_content_id": _url
+                    "media_content_id": check_url(_url)
                 })
             self.hass.services.call(
                 'media_player',
@@ -756,7 +765,7 @@ class AisColudData:
                 'play_media', {
                     "entity_id": player["entity_id"],
                     "media_content_type": "audio/mp4",
-                    "media_content_id": call.data["stream_url"]
+                    "media_content_id": check_url(call.data["stream_url"])
                 })
             # set stream image and title
             if player["device_id"] is not None:
@@ -878,7 +887,7 @@ class AisColudData:
                 'play_media', {
                     "entity_id": player["entity_id"],
                     "media_content_type": "audio/mp4",
-                    "media_content_id": _url
+                    "media_content_id": check_url(_url)
                 })
             if player["device_ip"] is not None:
                 # set stream image and title
@@ -1127,12 +1136,12 @@ class AisColudData:
                 if "description" in item:
                     GLOBAL_RSS_NEWS_TEXT = item["description"]
                 if "link" in item:
-                    _url = item["link"]
+                    _url = check_url(item["link"])
 
         if _url is not None:
             import requests
             from readability import Document
-            response = requests.get(_url)
+            response = requests.get(check_url(_url))
             doc = Document(response.text)
             GLOBAL_RSS_NEWS_TEXT += doc.summary()
 
@@ -1172,7 +1181,7 @@ class AisColudData:
             return
         # we need to build the url and get the text to read
         rss_help_topic = call.data["rss_help_topic"]
-        _url = "https://raw.githubusercontent.com/wiki/sviete/AIS-WWW/" + rss_help_topic.replace(" ", "-") + ".md"
+        _url = check_url("https://raw.githubusercontent.com/wiki/sviete/AIS-WWW/" + rss_help_topic.replace(" ", "-") + ".md")
         import requests
         from readability import Document
         response = requests.get(_url)
