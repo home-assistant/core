@@ -63,34 +63,21 @@ ATTR_OPERATION_LOCK = 'operation_lock'
 
 async def async_setup(hass, config):
     """Set up the HomematicIP component."""
-    from homematicip.base.base_connection import HmipConnectionError
-
     hass.data[DOMAIN] = {}
+
     accesspoints = config.get(DOMAIN, [])
 
     for conf in accesspoints:
-        apid = conf[CONF_ACCESSPOINT].replace('-', '').upper()
-        if apid in hass.data[DOMAIN]:
-            _LOGGER.error('Accesspoint already loaded, %s.', apid)
-            continue
+        if CONF_NAME not in conf:
+            conf[CONF_NAME] = ''
+        hass.async_add_job(hass.config_entries.flow.async_init(
+            DOMAIN, source='import', data={
+                CONF_ACCESSPOINT: conf[CONF_ACCESSPOINT],
+                CONF_AUTHTOKEN: conf[CONF_AUTHTOKEN],
+                CONF_NAME: conf[CONF_NAME],
+            }
+        ))
 
-        _websession = async_get_clientsession(hass)
-        _hmip = HomematicipConnector(hass, conf, _websession)
-        try:
-            await _hmip.init()
-        except HmipConnectionError:
-            _LOGGER.error('Failed to connect to the HomematicIP server, %s',
-                          apid)
-            return False
-
-        hass.data[DOMAIN][apid] = _hmip.home
-        _LOGGER.info('Connected to the HomematicIP server, %s.', apid)
-        homeid = {ATTR_HOME_ID: apid}
-        for component in COMPONENTS:
-            hass.async_add_job(async_load_platform(hass, component, DOMAIN,
-                                                   homeid, config))
-
-        hass.loop.create_task(_hmip.connect())
     return True
 
 

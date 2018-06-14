@@ -2,9 +2,18 @@
 import voluptuous as vol
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
-from .const import DOMAIN, _LOGGER, CONF_ACCESSPOINT, CONF_PIN, CONF_NAME
+from .const import (
+    DOMAIN, _LOGGER, CONF_ACCESSPOINT, CONF_AUTHTOKEN, CONF_PIN, CONF_NAME)
+
+
+@callback
+def configured_accesspoint(hass):
+    """Return a set of the configured hosts."""
+    return set(entry.data[CONF_ACCESSPOINT] for entry
+               in hass.config_entries.async_entries(DOMAIN))
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -27,6 +36,9 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
 
         if user_input is not None:
             self.hmip_apid = user_input[CONF_ACCESSPOINT]
+
+            if self.hmip_apid in configured_accesspoint(self.hass):
+                return self.async_abort(reason='already_configured')
             if user_input[CONF_NAME] is not None:
                 self.hmip_name = user_input[CONF_NAME]
             _LOGGER.info("Create new authtoken for %s", self.hmip_apid)
@@ -77,13 +89,35 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
                 return self.async_abort(reason='conection_aborted')
             else:
                 _LOGGER.info("Register new config entry")
+                apid = self.hmip_apid.replace('-', '').upper()
                 return self.async_create_entry(
-                    title=self.hmip_apid,
+                    title=apid,
                     data={
-                        'accesspoint': self.hmip_apid.replace('-', '').upper(),
+                        'accesspoint': apid,
                         'authtoken': authtoken,
                         'name': self.hmip_name
                         }
                 )
 
         return self.async_show_form(step_id='link', errors=errors)
+
+    async def async_step_import(self, import_info):
+        """Import a new bridge as a config entry."""
+        apid = import_info[CONF_ACCESSPOINT]
+        authtoken = import_info[CONF_AUTHTOKEN]
+        name = import_info[CONF_NAME]
+
+        apid = apid.replace('-', '').upper()
+        if apid in configured_accesspoint(self.hass):
+            return self.async_abort(reason='already_configured')
+
+        _LOGGER.info('Imported authentication for %s', apid)
+
+        return self.async_create_entry(
+            title=apid,
+            data={
+                'accesspoint': apid,
+                'authtoken': authtoken,
+                'name': name
+                }
+        )

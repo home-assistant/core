@@ -23,7 +23,8 @@
     },
     "abort": {
       "unknown": "Unknown error occurred.",
-      "conection_aborted": "Could not connect to HMIP server"
+      "conection_aborted": "Could not connect to HMIP server",
+      "already_configured": "Accesspoint is already configured"
     }
   }
 }
