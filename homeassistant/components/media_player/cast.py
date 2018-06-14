@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (dispatcher_send,
                                               async_dispatcher_connect)
-from homeassistant.components.cast import DOMAIN
+from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
@@ -201,7 +201,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up Cast from a config entry."""
     await _async_setup_platform(
-        hass, hass.data[DOMAIN].get('media_player', {}),
+        hass, hass.data[CAST_DOMAIN].get('media_player', {}),
         async_add_devices, None)
 
 

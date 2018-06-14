@@ -20,6 +20,7 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+from homeassistant.components.sonos import DOMAIN as SONOS_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
@@ -133,7 +134,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         hass.add_job(async_add_devices, devices, update_before_add)
 
     hass.add_job(_setup_platform, hass,
-                 hass.data['sonos'].get('media_player', {}), add_devices, None)
+                 hass.data[SONOS_DOMAIN].get('media_player', {}),
+                 add_devices, None)
 
 
 def _setup_platform(hass, config, add_devices, discovery_info):
