@@ -509,6 +509,7 @@ class TodoistProjectData(object):
                     'title': task['content'],
                     'start': due_date.isoformat(),
                     'end': due_date.isoformat(),
+                    'allDay': True,
                 }
                 events.append(event)
         return events
