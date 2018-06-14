@@ -54,34 +54,43 @@ TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Waze travel time sensor platform."""
-    def run_setup(event):
-        """Set up the waze travel time sensor."""
-        destination = config.get(CONF_DESTINATION)
-        name = config.get(CONF_NAME)
-        origin = config.get(CONF_ORIGIN)
-        region = config.get(CONF_REGION)
-        incl_filter = config.get(CONF_INCL_FILTER)
-        excl_filter = config.get(CONF_EXCL_FILTER)
+    destination = config.get(CONF_DESTINATION)
+    name = config.get(CONF_NAME)
+    origin = config.get(CONF_ORIGIN)
+    region = config.get(CONF_REGION)
+    incl_filter = config.get(CONF_INCL_FILTER)
+    excl_filter = config.get(CONF_EXCL_FILTER)
 
-        sensor = WazeTravelTime(hass, name, origin, destination, region,
-                                incl_filter, excl_filter)
-        add_devices([sensor])
+    sensor = WazeTravelTime(name, origin, destination, region,
+                            incl_filter, excl_filter)
 
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
+    add_devices([sensor], True)
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, sensor.update)
+
+
+def _get_location_from_attributes(state):
+    """Get the lat/long string from an states attributes."""
+    attr = state.attributes
+    return '{},{}'.format(
+        attr.get(ATTR_LATITUDE),
+        attr.get(ATTR_LONGITUDE)
+    )
 
 
 class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
-    def __init__(self, hass, name, origin, destination, region,
+    def __init__(self, name, origin, destination, region,
                  incl_filter, excl_filter):
         """Initialize the Waze travel time sensor."""
-        self._hass = hass
         self._name = name
         self._region = region
         self._incl_filter = incl_filter
         self._excl_filter = excl_filter
         self._state = None
+        self._origin_entity_id = None
+        self._destination_entity_id = None
 
         if origin.split('.', 1)[0] in TRACKABLE_DOMAINS:
             self._origin_entity_id = origin
@@ -121,6 +130,9 @@ class WazeTravelTime(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the last update."""
+        if self._state is None:
+            return None
+
         res = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
         if 'duration' in self._state:
             res[ATTR_DURATION] = self._state['duration']
@@ -132,47 +144,38 @@ class WazeTravelTime(Entity):
 
     def _get_location_from_entity(self, entity_id):
         """Get the location from the entity state or attributes."""
-        entity = self._hass.states.get(entity_id)
+        state = self.hass.states.get(entity_id)
 
-        if entity is None:
-            _LOGGER.error("Unable to find entity %s", entity_id)
+        if state is None:
+            _LOGGER.error('Unable to find entity %s', entity_id)
             return None
 
         # Check if the entity has location attributes (zone)
-        if location.has_location(entity):
-            return self._get_location_from_attributes(entity)
+        if location.has_location(state):
+            return _get_location_from_attributes(state)
 
         # Check if device is in a zone (device_tracker)
-        zone_entity = self._hass.states.get("zone.%s" % entity.state)
-        if location.has_location(zone_entity):
+        zone_state = self.hass.states.get('zone.{}'.format(state.state))
+        if location.has_location(zone_state):
             _LOGGER.debug(
-                "%s is in %s, getting zone location",
-                entity_id, zone_entity.entity_id
+                '%s is in %s, getting zone location',
+                entity_id, zone_state.entity_id
             )
-            return self._get_location_from_attributes(zone_entity)
+            return _get_location_from_attributes(zone_state)
 
         # If zone was not found in state then use the state as the location
-        if entity_id.startswith("sensor."):
-            return entity.state
+        if entity_id.startswith('sensor.'):
+            return state.state
 
         # When everything fails just return nothing
         return None
 
-    @staticmethod
-    def _get_location_from_attributes(entity):
-        """Get the lat/long string from an entities attributes."""
-        attr = entity.attributes
-        return "{},{}".format(
-            attr.get(ATTR_LATITUDE),
-            attr.get(ATTR_LONGITUDE)
-        )
-
     def _resolve_zone(self, friendly_name):
         """Get a lat/long from a zones friendly_name."""
-        entities = self._hass.states.all()
-        for entity in entities:
-            if entity.domain == 'zone' and entity.name == friendly_name:
-                return self._get_location_from_attributes(entity)
+        states = self.hass.states.all()
+        for state in states:
+            if state.domain == 'zone' and state.name == friendly_name:
+                return _get_location_from_attributes(state)
 
         return friendly_name
 
@@ -181,12 +184,12 @@ class WazeTravelTime(Entity):
         """Fetch new state data for the sensor."""
         import WazeRouteCalculator
 
-        if hasattr(self, '_origin_entity_id'):
+        if self._origin_entity_id is not None:
             self._origin = self._get_location_from_entity(
                 self._origin_entity_id
             )
 
-        if hasattr(self, '_destination_entity_id'):
+        if self._destination_entity_id is not None:
             self._destination = self._get_location_from_entity(
                 self._destination_entity_id
             )
@@ -216,8 +219,8 @@ class WazeTravelTime(Entity):
                     'distance': distance,
                     'route': route}
             except WazeRouteCalculator.WRCError as exp:
-                _LOGGER.error("Error on retrieving data: %s", exp)
+                _LOGGER.error('Error on retrieving data: %s', exp)
                 return
             except KeyError:
-                _LOGGER.error("Error retrieving data from server")
+                _LOGGER.error('Error retrieving data from server')
                 return
