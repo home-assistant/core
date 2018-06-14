@@ -88,3 +88,9 @@ select_rss_news_item:
       description: Artykuł.
       example: 'Klamka zapadła - Microsoft przejmuje GitHub'
 
+select_rss_help_item:
+  description: Wybranie strony pomocy do przeczytania
+  fields:
+    rss_help_topic:
+      description: Strona pomocy.
+      example: '2. Co nowego'

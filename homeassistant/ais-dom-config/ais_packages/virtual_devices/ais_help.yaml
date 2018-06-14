@@ -1,13 +1,7 @@
 homeassistant:
   customize:
-    weblink.faq:
-      friendly_name: Najczęściej zadawane pytania
-    weblink.aispeakercom:
-      friendly_name: Internetowa strona projektu
     weblink.ftp_url:
       friendly_name: Serwer FTP
-    weblink.githubsviete:
-      friendly_name: Kody źródłowe systemu
     weblink.uncertified_android_registration:
       friendly_name: "Rejestracja urządzenia w Google Android"
     sensor.memory_free:
@@ -126,15 +120,6 @@ sensor:
 
 weblink:
   entities:
-    - name: faq
-      url: https://github.com/sviete/AIS_DOM_FAQ
-      icon: mdi:information-variant
-    - name: githubsviete
-      url: https://github.com/sviete
-      icon: mdi:home-automation
-    - name: ai-speaker.com
-      url: https://ai-speaker.com
-      icon: mdi:audiobook
     - name: klucz ssh
       url: /local/id_rsa_ais
       icon: mdi:console-line
@@ -153,29 +138,18 @@ weblink:
 
 input_select:
   ais_rss_help_topic:
-    name: 'Temat:'
+    name: 'Strona:'
     options:
       - "-"
-      - "Pierwsze kroki"
-      - "Co nowego"
-      - "Sterowanie"
-      - "Konfigurowanie"
+      - "1. Pierwsze kroki"
+      - "2. Co nowego"
+      - "3. Komendy głosowe"
+      - "4. Sterowanie pilotem"
+      - "5. Automatyka domowa"
     initial: "-"
     icon: mdi:format-list-bulleted-type
-  ais_rss_help_player:
-    name: 'Głośnik:'
-    options:
-     - Podłączony głośnik
-    icon: mdi:speaker-wireless
 
 group:
-  AIS Help:
-    name: Przydatne linki
-    control: hidden
-    entities:
-      - weblink.faq
-      - weblink.aispeakercom
-      - weblink.githubsviete
   System Status:
     name: Status systemu
     entities:
@@ -198,10 +172,9 @@ group:
       - configurator.ais_dom_host
   ais_rss_help:
     control: hidden
-    name: Tematy pomocy
+    name: Strony pomocy
     entities:
       - input_select.ais_rss_help_topic
-      - input_select.ais_rss_help_player
       - sensor.ais_rss_help_text
 
 
@@ -215,12 +188,3 @@ automation:
       -  service: ais_cloud.select_rss_help_item
          data_template:
            rss_help_topic: "{{ states('input_select.ais_rss_help_topic') }}"
-  - alias: 'Select rss help player'
-    hide_entity: True
-    trigger:
-      platform: state
-      entity_id: input_select.ais_rss_help_player
-    action:
-      - service: ais_cloud.select_media_player
-        data_template:
-          media_player_type: "Help"

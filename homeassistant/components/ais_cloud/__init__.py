@@ -1183,7 +1183,7 @@ class AisColudData:
         GLOBAL_RSS_HELP_TEXT = BeautifulSoup(
             GLOBAL_RSS_HELP_TEXT, "lxml").text
 
-        text = "Czytam stronę pomocy, " + rss_help_topic
+        text = "Czytam stronę pomocy, " + rss_help_topic + ". " + GLOBAL_RSS_HELP_TEXT
         self.hass.services.call(
             'ais_ai_service',
             'say_it', {

@@ -59,7 +59,7 @@ INTENT_SWITCHES_OFF = 'AisSwitchesOff'
 REGEX_TYPE = type(re.compile(''))
 
 _LOGGER = logging.getLogger(__name__)
-GROUP_VIEWS = ['Twój Dom', 'Audio', 'Ustawienia', 'Pomoc']
+GROUP_VIEWS = ['Pomoc', 'Twój Dom', 'Audio', 'Ustawienia']
 CURR_GROUP_VIEW = None
 # group entities in each group view, see main_ais_groups.yaml
 GROUP_ENTITIES = []
