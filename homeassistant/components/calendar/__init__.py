@@ -40,6 +40,8 @@ def async_setup(hass, config):
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
+    hass.http.register_view(CalendarEventView(component))
+
     yield from component.async_setup(config)
     return True
 
@@ -83,7 +85,6 @@ class CalendarEventDevice(Entity):
             'description': '',
         }
 
-        hass.http.register_view(CalendarEventView(self))
         self.update()
 
     def offset_reached(self):
@@ -195,25 +196,26 @@ class CalendarEventDevice(Entity):
 class CalendarEventView(http.HomeAssistantView):
     """View to retrieve calendar content."""
 
-    def __init__(self, device):
-        """Initialize calendar view."""
-        self.device = device
-        self.name = "api:calendar" + device.entity_id.split(".")[-1]
-        self.url = '/api/calendar/' + device.entity_id.split(".")[-1]
+    url = '/api/calendar/{entity_id}'
+    name = 'api:calendar'
 
-    async def get(self, request):
+    def __init__(self, component):
+        """Initialize calendar view."""
+        self.component = component
+
+    async def get(self, request, entity_id):
         """Return calendar events."""
+        entity = self.component.get_entity('calendar.' + entity_id)
         start = request.query.get('start')
         end = request.query.get('end')
-        if None in (start, end):
+        if None in (start, end, entity):
             return web.Response(status=400)
         try:
             start_date = dt.parse_datetime(start)
             end_date = dt.parse_datetime(end)
         except (ValueError, AttributeError):
             return web.Response(status=400)
-        hass = request.app['hass']
-        event_list = await self.device.async_get_events(hass,
-                                                        start_date,
-                                                        end_date)
+        event_list = await entity.async_get_events(request.app['hass'],
+                                                   start_date,
+                                                   end_date)
         return self.json(event_list)
