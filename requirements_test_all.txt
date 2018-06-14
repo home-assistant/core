@@ -24,7 +24,7 @@ HAP-python==2.2.2
 # homeassistant.components.notify.html5
 PyJWT==1.6.0
 
-# homeassistant.components.media_player.sonos
+# homeassistant.components.sonos
 SoCo==0.14
 
 # homeassistant.components.device_tracker.automatic
