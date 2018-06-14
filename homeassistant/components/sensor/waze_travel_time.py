@@ -147,7 +147,7 @@ class WazeTravelTime(Entity):
         state = self.hass.states.get(entity_id)
 
         if state is None:
-            _LOGGER.error('Unable to find entity %s', entity_id)
+            _LOGGER.error("Unable to find entity %s", entity_id)
             return None
 
         # Check if the entity has location attributes (zone)
@@ -158,7 +158,7 @@ class WazeTravelTime(Entity):
         zone_state = self.hass.states.get('zone.{}'.format(state.state))
         if location.has_location(zone_state):
             _LOGGER.debug(
-                '%s is in %s, getting zone location',
+                "%s is in %s, getting zone location",
                 entity_id, zone_state.entity_id
             )
             return _get_location_from_attributes(zone_state)
@@ -219,8 +219,8 @@ class WazeTravelTime(Entity):
                     'distance': distance,
                     'route': route}
             except WazeRouteCalculator.WRCError as exp:
-                _LOGGER.error('Error on retrieving data: %s', exp)
+                _LOGGER.error("Error on retrieving data: %s", exp)
                 return
             except KeyError:
-                _LOGGER.error('Error retrieving data from server')
+                _LOGGER.error("Error retrieving data from server")
                 return
