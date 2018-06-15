@@ -211,39 +211,31 @@ class NestDevice(object):
                 "Connection error logging into the nest web service.")
 
     def thermostats(self):
-        """Generate a list of thermostats and their location."""
-        try:
-            for structure in self.nest.structures:
-                if structure.name in self.local_structure:
-                    for device in structure.thermostats:
-                        yield (structure, device)
-                else:
-                    _LOGGER.debug("Ignoring structure %s, not in %s",
-                                  structure.name, self.local_structure)
-        except socket.error:
-            _LOGGER.error(
-                "Connection error logging into the nest web service.")
+        """Generate a list of thermostats."""
+        return self._devices('thermostats')
 
     def smoke_co_alarms(self):
         """Generate a list of smoke co alarms."""
-        try:
-            for structure in self.nest.structures:
-                if structure.name in self.local_structure:
-                    for device in structure.smoke_co_alarms:
-                        yield (structure, device)
-                else:
-                    _LOGGER.debug("Ignoring structure %s, not in %s",
-                                  structure.name, self.local_structure)
-        except socket.error:
-            _LOGGER.error(
-                "Connection error logging into the nest web service.")
+        return self._devices('smoke_co_alarms')
 
     def cameras(self):
         """Generate a list of cameras."""
+        return self._devices('cameras')
+
+    def _devices(self, device_type):
+        """Generate a list of Nest devices."""
         try:
             for structure in self.nest.structures:
                 if structure.name in self.local_structure:
-                    for device in structure.cameras:
+                    for device in getattr(structure, device_type, []):
+                        try:
+                            device.name_long
+                        except KeyError:
+                            _LOGGER.warning("Cannot retrieve device name for "
+                                            "[%s], please check your Nest "
+                                            "developer account permission "
+                                            "settings.", device.serial)
+                            continue
                         yield (structure, device)
                 else:
                     _LOGGER.debug("Ignoring structure %s, not in %s",
