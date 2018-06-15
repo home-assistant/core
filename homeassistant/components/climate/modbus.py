@@ -224,6 +224,9 @@ class ModbusClimate(ClimateDevice):
     @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
+        if not self.is_on:
+            return 'off'
+
         operation = self.get_value(CONF_OPERATION)
         if operation is not None and operation < len(self._operation_list):
             return self._operation_list[operation]
@@ -279,6 +282,17 @@ class ModbusClimate(ClimateDevice):
     def is_on(self):
         """Return true if the device is on."""
         return self.get_value(CONF_IS_ON)
+        
+    def try_reconnect(self):
+        from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+        from pymodbus.transaction import ModbusRtuFramer as ModbusFramer
+        client = ModbusClient(host=modbus.HUB._client.host,
+                              port=modbus.HUB._client.port,
+                              framer=ModbusFramer,
+                              timeout=modbus.HUB._client.timeout)
+        _LOGGER.error("Reconnect: %s", client)
+        modbus.HUB._client = client
+        modbus.HUB._client.connect()
 
     def update(self):
         """Update state."""
@@ -290,22 +304,28 @@ class ModbusClimate(ClimateDevice):
 
             if register_type == REGISTER_TYPE_COIL:
                 result = modbus.HUB.read_coils(slave, register, count)
-                value = bool(result.bits[0])
+                try:
+                	value = bool(result.bits[0])
+                except:
+                    _LOGGER.error("No response from %s %s", self._name, prop)
+                    self.try_reconnect()
+                    return
             else:
-                if register_type == REGISTER_TYPE_INPUT:
-                    result = modbus.HUB.read_input_registers(slave,
+                try:
+                    if register_type == REGISTER_TYPE_INPUT:
+                        result = modbus.HUB.read_input_registers(slave,
                                                              register, count)
-                else:
-                    result = modbus.HUB.read_holding_registers(slave,
+                    else:
+                        result = modbus.HUB.read_holding_registers(slave,
                                                                register, count)
 
-                val = 0
-                try:
+                    val = 0
                     registers = result.registers
                     if mod.get(CONF_REVERSE_ORDER):
                         registers.reverse()
-                except AttributeError:
-                    _LOGGER.error("No response from modbus %s", prop)
+                except:
+                    _LOGGER.error("No response from %s %s", self._name, prop)
+                    self.try_reconnect()
                     return
 
                 byte_string = b''.join(
@@ -330,8 +350,16 @@ class ModbusClimate(ClimateDevice):
     def set_operation_mode(self, operation_mode):
         """Set new operation mode."""
         try:
-            index = self._operation_list.index(operation_mode)
-            self.set_value(CONF_OPERATION, index)
+            is_on = operation_mode != 'off'
+            self.set_value(CONF_IS_ON, is_on)
+            if is_on:
+                if operation_mode == 'auto':
+                    current = self.current_temperature
+                    target = self.target_temperature
+                    operation_mode = 'heat' \
+                        if current and target and current < target else 'cool'
+                index = self._operation_list.index(operation_mode)
+                self.set_value(CONF_OPERATION, index)
         except ValueError:
             _LOGGER.error("Invalid operation_mode: %s", operation_mode)
 
