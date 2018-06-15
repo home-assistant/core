@@ -121,7 +121,9 @@ class PJMSensor(Entity):
             # Find the table row that has the zone we want
             found_text = soup.find('td', text=search_text)
             # The next cell contains the power data
-            self._state = found_text.find_next_sibling('td').text
+            text_data = found_text.find_next_sibling('td').text
+            # Convert number string with commas to int
+            self._state = int(text_data.replace(',',''))
 
         except (ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self._name)
