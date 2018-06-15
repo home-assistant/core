@@ -269,9 +269,8 @@ class PollenComData(object):
         self._sensor_types = sensor_types
         self.data = {}
 
-        self.async_update = Throttle(DEFAULT_SCAN_INTERVAL)(self._async_update)
-
-    async def _async_update(self):
+    @Throttle(DEFAULT_SCAN_INTERVAL)
+    async def async_update(self):
         """Update Pollen.com data."""
         from pypollencom.errors import InvalidZipError, PollenComError
 
