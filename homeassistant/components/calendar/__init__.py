@@ -9,6 +9,8 @@ import logging
 from datetime import timedelta
 import re
 
+from aiohttp import web
+
 from homeassistant.components.google import (
     CONF_OFFSET, CONF_DEVICE_ID, CONF_NAME)
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -18,10 +20,14 @@ from homeassistant.helpers.entity import Entity, generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt
+from homeassistant.components import http
+
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'calendar'
+
+DEPENDENCIES = ['http']
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -34,12 +40,22 @@ def async_setup(hass, config):
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
+    hass.http.register_view(CalendarEventView(component))
+
     yield from component.async_setup(config)
     return True
 
 
 DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = '!!'
+
+
+def get_date(date):
+    """Get the dateTime from date or dateTime as a local."""
+    if 'date' in date:
+        return dt.start_of_local_day(dt.dt.datetime.combine(
+            dt.parse_date(date['date']), dt.dt.time.min))
+    return dt.as_local(dt.parse_datetime(date['dateTime']))
 
 
 # pylint: disable=too-many-instance-attributes
@@ -144,15 +160,8 @@ class CalendarEventDevice(Entity):
             self.cleanup()
             return
 
-        def _get_date(date):
-            """Get the dateTime from date or dateTime as a local."""
-            if 'date' in date:
-                return dt.start_of_local_day(dt.dt.datetime.combine(
-                    dt.parse_date(date['date']), dt.dt.time.min))
-            return dt.as_local(dt.parse_datetime(date['dateTime']))
-
-        start = _get_date(self.data.event['start'])
-        end = _get_date(self.data.event['end'])
+        start = get_date(self.data.event['start'])
+        end = get_date(self.data.event['end'])
 
         summary = self.data.event.get('summary', '')
 
@@ -176,10 +185,37 @@ class CalendarEventDevice(Entity):
 
         # cleanup the string so we don't have a bunch of double+ spaces
         self._cal_data['message'] = re.sub('  +', '', summary).strip()
-
         self._cal_data['offset_time'] = offset_time
         self._cal_data['location'] = self.data.event.get('location', '')
         self._cal_data['description'] = self.data.event.get('description', '')
         self._cal_data['start'] = start
         self._cal_data['end'] = end
         self._cal_data['all_day'] = 'date' in self.data.event['start']
+
+
+class CalendarEventView(http.HomeAssistantView):
+    """View to retrieve calendar content."""
+
+    url = '/api/calendar/{entity_id}'
+    name = 'api:calendar'
+
+    def __init__(self, component):
+        """Initialize calendar view."""
+        self.component = component
+
+    async def get(self, request, entity_id):
+        """Return calendar events."""
+        entity = self.component.get_entity('calendar.' + entity_id)
+        start = request.query.get('start')
+        end = request.query.get('end')
+        if None in (start, end, entity):
+            return web.Response(status=400)
+        try:
+            start_date = dt.parse_datetime(start)
+            end_date = dt.parse_datetime(end)
+        except (ValueError, AttributeError):
+            return web.Response(status=400)
+        event_list = await entity.async_get_events(request.app['hass'],
+                                                   start_date,
+                                                   end_date)
+        return self.json(event_list)
