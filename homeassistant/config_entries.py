@@ -146,7 +146,10 @@ ENTRY_STATE_NOT_LOADED = 'not_loaded'
 ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
-DISCOVERY_SOURCES = (data_entry_flow.SOURCE_DISCOVERY,)
+DISCOVERY_SOURCES = (
+    data_entry_flow.SOURCE_DISCOVERY,
+    data_entry_flow.SOURCE_IMPORT,
+)
 
 
 class ConfigEntry:
