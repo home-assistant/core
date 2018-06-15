@@ -36,8 +36,6 @@ class MySensorsNotificationDevice(mysensors.MySensorsDevice):
 class MySensorsNotificationService(BaseNotificationService):
     """Implement a MySensors notification service."""
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(self, hass):
         """Initialize the service."""
         self.devices = mysensors.get_mysensors_devices(hass, DOMAIN)
