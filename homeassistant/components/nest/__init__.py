@@ -249,7 +249,7 @@ class NestDevice(object):
                         # it is here for verify Nest API permission.
                         device.name_long
                     except KeyError:
-                        _LOGGER.warning("Cannot retrieve device name for [%s], "
+                        _LOGGER.warning("Cannot retrieve device name for %s,"
                                         "please check your Nest developer "
                                         "account permission settings.",
                                         device.serial)
