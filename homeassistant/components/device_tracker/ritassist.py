@@ -5,8 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.ritassist/
 """
 import logging
-import requests
 import time
+import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
