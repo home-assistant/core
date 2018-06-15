@@ -13,55 +13,51 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (
+    CONF_NAME, CONF_TYPE, CONF_ZONE, CONF_MONITORED_VARIABLES)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
 REQUIREMENTS = ['beautifulsoup4==4.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://datasnapshot.pjm.com/content/InstantaneousLoad.aspx'
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
+
 PJM_RTO_TOTAL = "PJM RTO Total"
-
-SCAN_INTERVAL = timedelta(minutes=5)
-
 ICON_POWER = 'mdi:flash'
 
-CONF_MONITORED_FEEDS = 'monitored_feeds'
-CONF_SENSOR_TYPE = 'type'
 CONF_INSTANTANEOUS_ZONE_LOAD = 'instantaneous_zone_load'
 CONF_INSTANTANEOUS_TOTAL_LOAD = 'instantaneous_total_load'
-CONF_ZONE = 'zone'
 
 SENSOR_TYPES = {
     CONF_INSTANTANEOUS_ZONE_LOAD: ["PJM Instantaneous Zone Load", 'MW'],
     CONF_INSTANTANEOUS_TOTAL_LOAD: ["PJM Instantaneous Total Load", 'MW'],
 }
 
-TYPES_SCHEMA = vol.In(SENSOR_TYPES)
-
 SENSORS_SCHEMA = vol.Schema({
-    vol.Required(CONF_SENSOR_TYPE): TYPES_SCHEMA,
+    vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
     vol.Optional(CONF_ZONE): cv.string,
     vol.Optional(CONF_NAME): cv.string,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_FEEDS): [SENSORS_SCHEMA],
+    vol.Required(CONF_MONITORED_VARIABLES): [SENSORS_SCHEMA],
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the PJM sensor."""
-    websession = async_get_clientsession(hass)
+    pjm_data = PJMData(hass.loop, async_get_clientsession(hass))
     dev = []
 
-    for variable in config[CONF_MONITORED_FEEDS]:
+    for variable in config[CONF_MONITORED_VARIABLES]:
         dev.append(PJMSensor(
-            hass.loop, websession, variable[CONF_SENSOR_TYPE],
+            pjm_data, variable[CONF_TYPE],
             variable.get(CONF_ZONE), variable.get(CONF_NAME)))
 
     async_add_devices(dev, True)
@@ -70,20 +66,18 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class PJMSensor(Entity):
     """Implementation of a PJM sensor."""
 
-    def __init__(self, loop, websession, sensor_type, zone, name):
+    def __init__(self, pjm_data, sensor_type, zone, name):
         """Initialize the sensor."""
-        self.loop = loop
-        self.websession = websession
+        self._pjm_data = pjm_data
         if name:
             self._name = name
         else:
             self._name = SENSOR_TYPES[sensor_type][0]
             if sensor_type == CONF_INSTANTANEOUS_ZONE_LOAD:
                 self._name += ' ' + zone
-        self.type = sensor_type
+        self._type = sensor_type
         self._state = None
-        if zone:
-            self.zone = zone
+        self._zone = zone
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
@@ -94,9 +88,9 @@ class PJMSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if self.type == CONF_INSTANTANEOUS_ZONE_LOAD:
+        if self._type == CONF_INSTANTANEOUS_ZONE_LOAD:
             return ICON_POWER
-        if self.type == CONF_INSTANTANEOUS_TOTAL_LOAD:
+        if self._type == CONF_INSTANTANEOUS_TOTAL_LOAD:
             return ICON_POWER
 
     @property
@@ -109,27 +103,48 @@ class PJMSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
-    @asyncio.coroutine
-    def async_update(self):
-        """Get the PJM data from the web service."""
+    async def async_update(self):
+        """Parse the PJM data and set our state."""
         from bs4 import BeautifulSoup
 
         try:
-            with async_timeout.timeout(60, loop=self.loop):
-                response = yield from self.websession.get(_RESOURCE)
-                text = yield from response.text()
-                soup = BeautifulSoup(text, "html.parser")
-                search_text = PJM_RTO_TOTAL
-                if self.type == CONF_INSTANTANEOUS_ZONE_LOAD:
-                    search_text = self.zone + ' Zone'
-                # Find the table row that has the zone we want
-                found_text = soup.find('td', text=search_text)
-                # The next cell contains the power data
-                self._state = found_text.find_next_sibling('td').text
+            await self._pjm_data.async_update()
+
+            if not self._pjm_data.data:
+                # No data; return
+                return
+
+            soup = BeautifulSoup(self._pjm_data.data, "html.parser")
+            search_text = PJM_RTO_TOTAL
+            if self._type == CONF_INSTANTANEOUS_ZONE_LOAD:
+                search_text = self._zone + ' Zone'
+            # Find the table row that has the zone we want
+            found_text = soup.find('td', text=search_text)
+            # The next cell contains the power data
+            self._state = found_text.find_next_sibling('td').text
+
+        except (ValueError, KeyError):
+            _LOGGER.warning("Could not update status for %s", self._name)
+        except AttributeError as err:
+            _LOGGER.error("Could not update status for PJM: %s", err)
+
+
+class PJMData(object):
+    """Get data from PJM."""
+
+    def __init__(self, loop, websession):
+        """Initialize the data object."""
+        self._loop = loop
+        self._websession = websession
+        self.data = None
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def async_update(self):
+        """Get the latest data from PJM."""
+        try:
+            with async_timeout.timeout(60, loop=self._loop):
+                response = await self._websession.get(_RESOURCE)
+                self.data = await response.text()
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            _LOGGER.error("Could not get data from PJM: %s", err)
-        except (ValueError, KeyError):
-            _LOGGER.warning("Could not update status for %s", self.name)
-        except AttributeError as err:
             _LOGGER.error("Could not get data from PJM: %s", err)
