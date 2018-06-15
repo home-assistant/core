@@ -10,9 +10,8 @@ import pytest
 from homeassistant.components.homekit.accessories import (
     debounce, HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
-    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, CHAR_FIRMWARE_REVISION,
-    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER,
-    MANUFACTURER, SERV_ACCESSORY_INFO)
+    CHAR_FIRMWARE_REVISION, CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME,
+    CHAR_SERIAL_NUMBER, SERV_ACCESSORY_INFO)
 from homeassistant.const import __version__, ATTR_NOW, EVENT_TIME_CHANGED
 import homeassistant.util.dt as dt_util
 
@@ -56,8 +55,7 @@ async def test_home_accessory(hass, hk_driver):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, hk_driver, 'Home Accessory',
-                        entity_id, 2, None)
+    acc = HomeAccessory(hass, hk_driver, 'Home Accessory', entity_id, 2, None)
     assert acc.hass == hass
     assert acc.display_name == 'Home Accessory'
     assert acc.aid == 2
@@ -66,7 +64,7 @@ async def test_home_accessory(hass, hk_driver):
     serv = acc.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_NAME).value == 'Home Accessory'
-    assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == 'Home Assistant'
     assert serv.get_characteristic(CHAR_MODEL).value == 'Homekit'
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == \
         'homekit.accessory'
@@ -98,17 +96,17 @@ def test_home_bridge(hk_driver):
     """Test HomeBridge class."""
     bridge = HomeBridge('hass', hk_driver)
     assert bridge.hass == 'hass'
-    assert bridge.display_name == BRIDGE_NAME
+    assert bridge.display_name == 'Home Assistant Bridge'
     assert bridge.category == 2  # Category.BRIDGE
     assert len(bridge.services) == 1
     serv = bridge.services[0]  # SERV_ACCESSORY_INFO
     assert serv.display_name == SERV_ACCESSORY_INFO
-    assert serv.get_characteristic(CHAR_NAME).value == BRIDGE_NAME
+    assert serv.get_characteristic(CHAR_NAME).value == 'Home Assistant Bridge'
     assert serv.get_characteristic(CHAR_FIRMWARE_REVISION).value == __version__
-    assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER
-    assert serv.get_characteristic(CHAR_MODEL).value == BRIDGE_MODEL
+    assert serv.get_characteristic(CHAR_MANUFACTURER).value == 'Home Assistant'
+    assert serv.get_characteristic(CHAR_MODEL).value == 'Bridge'
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == \
-        BRIDGE_SERIAL_NUMBER
+        'homekit.bridge'
 
     bridge = HomeBridge('hass', hk_driver, 'test_name')
     assert bridge.display_name == 'test_name'

@@ -4,13 +4,8 @@ from collections import namedtuple
 import pytest
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN, SUPPORT_STOP)
-from homeassistant.components.homekit.const import (
-    ACC_GARAGE_DOOR_OPENER, ACC_WINDOW_COVERING, ACC_WINDOW_COVERING_BASIC)
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_CLOSE_COVER,
-    SERVICE_OPEN_COVER, SERVICE_SET_COVER_POSITION, SERVICE_STOP_COVER,
-    STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN)
+    ATTR_CURRENT_POSITION, ATTR_POSITION, SUPPORT_STOP)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 
 from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
@@ -22,8 +17,8 @@ def cls():
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_covers',
-                         fromlist=[ACC_GARAGE_DOOR_OPENER, ACC_WINDOW_COVERING,
-                                   ACC_WINDOW_COVERING_BASIC])
+                         fromlist=['GarageDoorOpener', 'WindowCovering',
+                                   'WindowCoveringBasic'])
     patcher_tuple = namedtuple('Cls', ['window', 'window_basic', 'garage'])
     yield patcher_tuple(window=_import.WindowCovering,
                         window_basic=_import.WindowCoveringBasic,
@@ -46,29 +41,29 @@ async def test_garage_door_open_close(hass, hk_driver, cls):
     assert acc.char_current_state.value == 0
     assert acc.char_target_state.value == 0
 
-    hass.states.async_set(entity_id, STATE_CLOSED)
+    hass.states.async_set(entity_id, 'closed')
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 1
     assert acc.char_target_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_OPEN)
+    hass.states.async_set(entity_id, 'open')
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 0
     assert acc.char_target_state.value == 0
 
-    hass.states.async_set(entity_id, STATE_UNAVAILABLE)
+    hass.states.async_set(entity_id, 'unavailable')
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 0
     assert acc.char_target_state.value == 0
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    hass.states.async_set(entity_id, 'unknown')
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 0
     assert acc.char_target_state.value == 0
 
     # Set from HomeKit
-    call_close_cover = async_mock_service(hass, DOMAIN, SERVICE_CLOSE_COVER)
-    call_open_cover = async_mock_service(hass, DOMAIN, SERVICE_OPEN_COVER)
+    call_close_cover = async_mock_service(hass, 'cover', 'close_cover')
+    call_open_cover = async_mock_service(hass, 'cover', 'open_cover')
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 1)
     await hass.async_block_till_done()
@@ -77,7 +72,7 @@ async def test_garage_door_open_close(hass, hk_driver, cls):
     assert acc.char_current_state.value == 2
     assert acc.char_target_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_CLOSED)
+    hass.states.async_set(entity_id, 'closed')
     await hass.async_block_till_done()
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 0)
@@ -103,21 +98,21 @@ async def test_window_set_cover_position(hass, hk_driver, cls):
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN,
+    hass.states.async_set(entity_id, 'unknown',
                           {ATTR_CURRENT_POSITION: None})
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
 
-    hass.states.async_set(entity_id, STATE_OPEN,
+    hass.states.async_set(entity_id, 'open',
                           {ATTR_CURRENT_POSITION: 50})
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 50
     assert acc.char_target_position.value == 50
 
     # Set from HomeKit
-    call_set_cover_position = async_mock_service(hass, DOMAIN,
-                                                 SERVICE_SET_COVER_POSITION)
+    call_set_cover_position = async_mock_service(hass, 'cover',
+                                                 'set_cover_position')
 
     await hass.async_add_job(acc.char_target_position.client_update_value, 25)
     await hass.async_block_till_done()
@@ -140,8 +135,7 @@ async def test_window_open_close(hass, hk_driver, cls):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.window'
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN,
-                          {ATTR_SUPPORTED_FEATURES: 0})
+    hass.states.async_set(entity_id, 'unknown', {ATTR_SUPPORTED_FEATURES: 0})
     acc = cls.window_basic(hass, hk_driver, 'Window', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
@@ -152,27 +146,27 @@ async def test_window_open_close(hass, hk_driver, cls):
     assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 2
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    hass.states.async_set(entity_id, 'unknown')
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 2
 
-    hass.states.async_set(entity_id, STATE_OPEN)
+    hass.states.async_set(entity_id, 'open')
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 100
     assert acc.char_target_position.value == 100
     assert acc.char_position_state.value == 2
 
-    hass.states.async_set(entity_id, STATE_CLOSED)
+    hass.states.async_set(entity_id, 'closed')
     await hass.async_block_till_done()
     assert acc.char_current_position.value == 0
     assert acc.char_target_position.value == 0
     assert acc.char_position_state.value == 2
 
     # Set from HomeKit
-    call_close_cover = async_mock_service(hass, DOMAIN, SERVICE_CLOSE_COVER)
-    call_open_cover = async_mock_service(hass, DOMAIN, SERVICE_OPEN_COVER)
+    call_close_cover = async_mock_service(hass, 'cover', 'close_cover')
+    call_open_cover = async_mock_service(hass, 'cover', 'open_cover')
 
     await hass.async_add_job(acc.char_target_position.client_update_value, 25)
     await hass.async_block_till_done()
@@ -203,15 +197,15 @@ async def test_window_open_close_stop(hass, hk_driver, cls):
     """Test if accessory and HA are updated accordingly."""
     entity_id = 'cover.window'
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN,
+    hass.states.async_set(entity_id, 'unknown',
                           {ATTR_SUPPORTED_FEATURES: SUPPORT_STOP})
     acc = cls.window_basic(hass, hk_driver, 'Window', entity_id, 2, None)
     await hass.async_add_job(acc.run)
 
     # Set from HomeKit
-    call_close_cover = async_mock_service(hass, DOMAIN, SERVICE_CLOSE_COVER)
-    call_open_cover = async_mock_service(hass, DOMAIN, SERVICE_OPEN_COVER)
-    call_stop_cover = async_mock_service(hass, DOMAIN, SERVICE_STOP_COVER)
+    call_close_cover = async_mock_service(hass, 'cover', 'close_cover')
+    call_open_cover = async_mock_service(hass, 'cover', 'open_cover')
+    call_stop_cover = async_mock_service(hass, 'cover', 'stop_cover')
 
     await hass.async_add_job(acc.char_target_position.client_update_value, 25)
     await hass.async_block_till_done()

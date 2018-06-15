@@ -2,10 +2,7 @@
 import pytest
 
 from homeassistant.components.homekit.type_locks import Lock
-from homeassistant.components.lock import DOMAIN
-from homeassistant.const import (
-    ATTR_CODE, ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK, STATE_LOCKED,
-    STATE_UNKNOWN, STATE_UNLOCKED)
+from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID
 
 from tests.common import async_mock_service
 
@@ -27,17 +24,17 @@ async def test_lock_unlock(hass, hk_driver):
     assert acc.char_current_state.value == 3
     assert acc.char_target_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_LOCKED)
+    hass.states.async_set(entity_id, 'locked')
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 1
     assert acc.char_target_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_UNLOCKED)
+    hass.states.async_set(entity_id, 'unlocked')
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 0
     assert acc.char_target_state.value == 0
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    hass.states.async_set(entity_id, 'unknown')
     await hass.async_block_till_done()
     assert acc.char_current_state.value == 3
     assert acc.char_target_state.value == 0
@@ -48,8 +45,8 @@ async def test_lock_unlock(hass, hk_driver):
     assert acc.char_target_state.value == 0
 
     # Set from HomeKit
-    call_lock = async_mock_service(hass, DOMAIN, SERVICE_LOCK)
-    call_unlock = async_mock_service(hass, DOMAIN, SERVICE_UNLOCK)
+    call_lock = async_mock_service(hass, 'lock', 'lock')
+    call_unlock = async_mock_service(hass, 'lock', 'unlock')
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 1)
     await hass.async_block_till_done()
@@ -76,7 +73,7 @@ async def test_no_code(hass, hk_driver, config):
     acc = Lock(hass, hk_driver, 'Lock', entity_id, 2, config)
 
     # Set from HomeKit
-    call_lock = async_mock_service(hass, DOMAIN, SERVICE_LOCK)
+    call_lock = async_mock_service(hass, 'lock', 'lock')
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 1)
     await hass.async_block_till_done()

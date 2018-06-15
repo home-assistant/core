@@ -10,14 +10,12 @@ from homeassistant.core import split_entity_id
 
 from . import TYPES
 from .accessories import HomeAccessory
-from .const import (
-    ACC_OUTLET, ACC_SWITCH, CHAR_ON, CHAR_OUTLET_IN_USE, SERV_OUTLET,
-    SERV_SWITCH)
+from .const import CHAR_ON, CHAR_OUTLET_IN_USE, SERV_OUTLET, SERV_SWITCH
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@TYPES.register(ACC_OUTLET)
+@TYPES.register('Outlet')
 class Outlet(HomeAccessory):
     """Generate an Outlet accessory."""
 
@@ -51,7 +49,7 @@ class Outlet(HomeAccessory):
         self.flag_target_state = False
 
 
-@TYPES.register(ACC_SWITCH)
+@TYPES.register('Switch')
 class Switch(HomeAccessory):
     """Generate a Switch accessory."""
 

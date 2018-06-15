@@ -13,7 +13,6 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import debounce, HomeAccessory
 from .const import (
-    ACC_GARAGE_DOOR_OPENER, ACC_WINDOW_COVERING, ACC_WINDOW_COVERING_BASIC,
     CHAR_CURRENT_DOOR_STATE, CHAR_CURRENT_POSITION, CHAR_POSITION_STATE,
     CHAR_TARGET_DOOR_STATE, CHAR_TARGET_POSITION,
     SERV_GARAGE_DOOR_OPENER, SERV_WINDOW_COVERING)
@@ -21,7 +20,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-@TYPES.register(ACC_GARAGE_DOOR_OPENER)
+@TYPES.register('GarageDoorOpener')
 class GarageDoorOpener(HomeAccessory):
     """Generate a Garage Door Opener accessory for a cover entity.
 
@@ -64,7 +63,7 @@ class GarageDoorOpener(HomeAccessory):
             self.flag_target_state = False
 
 
-@TYPES.register(ACC_WINDOW_COVERING)
+@TYPES.register('WindowCovering')
 class WindowCovering(HomeAccessory):
     """Generate a Window accessory for a cover entity.
 
@@ -102,7 +101,7 @@ class WindowCovering(HomeAccessory):
                 self.homekit_target = None
 
 
-@TYPES.register(ACC_WINDOW_COVERING_BASIC)
+@TYPES.register('WindowCoveringBasic')
 class WindowCoveringBasic(HomeAccessory):
     """Generate a Window accessory for a cover entity.
 

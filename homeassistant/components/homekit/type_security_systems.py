@@ -13,8 +13,8 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    ACC_SECURITY_SYSTEM, CHAR_CURRENT_SECURITY_STATE,
-    CHAR_TARGET_SECURITY_STATE, SERV_SECURITY_SYSTEM)
+    CHAR_CURRENT_SECURITY_STATE, CHAR_TARGET_SECURITY_STATE,
+    SERV_SECURITY_SYSTEM)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ STATE_TO_SERVICE = {
     STATE_ALARM_DISARMED: SERVICE_ALARM_DISARM}
 
 
-@TYPES.register(ACC_SECURITY_SYSTEM)
+@TYPES.register('SecuritySystem')
 class SecuritySystem(HomeAccessory):
     """Generate an SecuritySystem accessory for an alarm control panel."""
 

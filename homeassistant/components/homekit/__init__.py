@@ -9,10 +9,7 @@ from zlib import adler32
 
 import voluptuous as vol
 
-from homeassistant.components import (
-    alarm_control_panel, automation, binary_sensor, climate, cover,
-    device_tracker, fan, input_boolean, light, lock, media_player, remote,
-    script, sensor, switch)
+import homeassistant.components.cover as cover
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
@@ -24,14 +21,9 @@ from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
-    ACC_AIR_QUALITY_SENSOR, ACC_BINARY_SENSOR, ACC_CARBON_DIOXIDE_SENSOR,
-    ACC_FAN, ACC_GARAGE_DOOR_OPENER, ACC_HUMIDITY_SENSOR, ACC_LIGHT,
-    ACC_LIGHT_SENSOR, ACC_LOCK, ACC_MEDIA_PLAYER, ACC_OUTLET,
-    ACC_SECURITY_SYSTEM, ACC_SWITCH, ACC_TEMPERATURE_SENSOR, ACC_THERMOSTAT,
-    ACC_WINDOW_COVERING, ACC_WINDOW_COVERING_BASIC, CONF_AUTO_START,
-    CONF_ENTITY_CONFIG, CONF_FEATURE_LIST, CONF_FILTER, DEFAULT_AUTO_START,
-    DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25, DOMAIN, HOMEKIT_FILE,
-    SERVICE_HOMEKIT_START, TYPE_OUTLET, TYPE_SWITCH)
+    CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST, CONF_FILTER,
+    DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25,
+    DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START, TYPE_OUTLET, TYPE_SWITCH)
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
@@ -46,8 +38,8 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
-SWITCH_TYPES = {TYPE_OUTLET: ACC_OUTLET,
-                TYPE_SWITCH: ACC_SWITCH}
+SWITCH_TYPES = {TYPE_OUTLET: 'Outlet',
+                TYPE_SWITCH: 'Switch'}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
@@ -105,68 +97,66 @@ def get_accessory(hass, driver, state, aid, config):
     a_type = None
     name = config.get(CONF_NAME, state.name)
 
-    if state.domain == alarm_control_panel.DOMAIN:
-        a_type = ACC_SECURITY_SYSTEM
+    if state.domain == 'alarm_control_panel':
+        a_type = 'SecuritySystem'
 
-    elif state.domain == binary_sensor.DOMAIN or \
-            state.domain == device_tracker.DOMAIN:
-        a_type = ACC_BINARY_SENSOR
+    elif state.domain == 'binary_sensor' or state.domain == 'device_tracker':
+        a_type = 'BinarySensor'
 
-    elif state.domain == climate.DOMAIN:
-        a_type = ACC_THERMOSTAT
+    elif state.domain == 'climate':
+        a_type = 'Thermostat'
 
-    elif state.domain == cover.DOMAIN:
+    elif state.domain == 'cover':
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if device_class == 'garage' and \
                 features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
-            a_type = ACC_GARAGE_DOOR_OPENER
+            a_type = 'GarageDoorOpener'
         elif features & cover.SUPPORT_SET_POSITION:
-            a_type = ACC_WINDOW_COVERING
+            a_type = 'WindowCovering'
         elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
-            a_type = ACC_WINDOW_COVERING_BASIC
+            a_type = 'WindowCoveringBasic'
 
-    elif state.domain == fan.DOMAIN:
-        a_type = ACC_FAN
+    elif state.domain == 'fan':
+        a_type = 'Fan'
 
-    elif state.domain == light.DOMAIN:
-        a_type = ACC_LIGHT
+    elif state.domain == 'light':
+        a_type = 'Light'
 
-    elif state.domain == lock.DOMAIN:
-        a_type = ACC_LOCK
+    elif state.domain == 'lock':
+        a_type = 'Lock'
 
-    elif state.domain == media_player.DOMAIN:
+    elif state.domain == 'media_player':
         feature_list = config.get(CONF_FEATURE_LIST)
         if feature_list and \
                 validate_media_player_features(state, feature_list):
-            a_type = ACC_MEDIA_PLAYER
+            a_type = 'MediaPlayer'
 
-    elif state.domain == sensor.DOMAIN:
+    elif state.domain == 'sensor':
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class == DEVICE_CLASS_TEMPERATURE or \
                 unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
-            a_type = ACC_TEMPERATURE_SENSOR
+            a_type = 'TemperatureSensor'
         elif device_class == DEVICE_CLASS_HUMIDITY and unit == '%':
-            a_type = ACC_HUMIDITY_SENSOR
+            a_type = 'HumiditySensor'
         elif device_class == DEVICE_CLASS_PM25 \
                 or DEVICE_CLASS_PM25 in state.entity_id:
-            a_type = ACC_AIR_QUALITY_SENSOR
+            a_type = 'AirQualitySensor'
         elif device_class == DEVICE_CLASS_CO2 \
                 or DEVICE_CLASS_CO2 in state.entity_id:
-            a_type = ACC_CARBON_DIOXIDE_SENSOR
+            a_type = 'CarbonDioxideSensor'
         elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ('lm', 'lx'):
-            a_type = ACC_LIGHT_SENSOR
+            a_type = 'LightSensor'
 
-    elif state.domain == switch.DOMAIN:
+    elif state.domain == 'switch':
         switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
         a_type = SWITCH_TYPES[switch_type]
 
-    elif state.domain in (automation.DOMAIN, input_boolean.DOMAIN,
-                          remote.DOMAIN, script.DOMAIN):
-        a_type = ACC_SWITCH
+    elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
+        a_type = 'Switch'
 
     if a_type is None:
         return None

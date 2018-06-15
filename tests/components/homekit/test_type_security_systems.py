@@ -1,14 +1,9 @@
 """Test different accessory types: Security Systems."""
 import pytest
 
-from homeassistant.components.alarm_control_panel import DOMAIN
 from homeassistant.components.homekit.type_security_systems import \
     SecuritySystem
-from homeassistant.const import (
-    ATTR_CODE, ATTR_ENTITY_ID, SERVICE_ALARM_ARM_AWAY, SERVICE_ALARM_ARM_HOME,
-    SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_DISARM, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
+from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID
 
 from tests.common import async_mock_service
 
@@ -31,41 +26,45 @@ async def test_switch_set_state(hass, hk_driver):
     assert acc.char_current_state.value == 3
     assert acc.char_target_state.value == 3
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_AWAY)
+    hass.states.async_set(entity_id, 'armed_away')
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 1
     assert acc.char_current_state.value == 1
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_HOME)
+    hass.states.async_set(entity_id, 'armed_home')
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 0
     assert acc.char_current_state.value == 0
 
-    hass.states.async_set(entity_id, STATE_ALARM_ARMED_NIGHT)
+    hass.states.async_set(entity_id, 'armed_night')
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 2
     assert acc.char_current_state.value == 2
 
-    hass.states.async_set(entity_id, STATE_ALARM_DISARMED)
+    hass.states.async_set(entity_id, 'disarmed')
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 3
     assert acc.char_current_state.value == 3
 
-    hass.states.async_set(entity_id, STATE_ALARM_TRIGGERED)
+    hass.states.async_set(entity_id, 'triggered')
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 3
     assert acc.char_current_state.value == 4
 
-    hass.states.async_set(entity_id, STATE_UNKNOWN)
+    hass.states.async_set(entity_id, 'unknown')
     await hass.async_block_till_done()
     assert acc.char_target_state.value == 3
     assert acc.char_current_state.value == 4
 
     # Set from HomeKit
-    call_arm_home = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_HOME)
-    call_arm_away = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_AWAY)
-    call_arm_night = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_NIGHT)
-    call_disarm = async_mock_service(hass, DOMAIN, SERVICE_ALARM_DISARM)
+    call_arm_home = async_mock_service(hass, 'alarm_control_panel',
+                                       'alarm_arm_home')
+    call_arm_away = async_mock_service(hass, 'alarm_control_panel',
+                                       'alarm_arm_away')
+    call_arm_night = async_mock_service(hass, 'alarm_control_panel',
+                                        'alarm_arm_night')
+    call_disarm = async_mock_service(hass, 'alarm_control_panel',
+                                     'alarm_disarm')
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()
@@ -107,7 +106,8 @@ async def test_no_alarm_code(hass, hk_driver, config):
                          entity_id, 2, config)
 
     # Set from HomeKit
-    call_arm_home = async_mock_service(hass, DOMAIN, SERVICE_ALARM_ARM_HOME)
+    call_arm_home = async_mock_service(hass, 'alarm_control_panel',
+                                       'alarm_arm_home')
 
     await hass.async_add_job(acc.char_target_state.client_update_value, 0)
     await hass.async_block_till_done()

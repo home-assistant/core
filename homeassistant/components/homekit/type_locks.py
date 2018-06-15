@@ -9,8 +9,7 @@ from homeassistant.const import ATTR_CODE
 
 from . import TYPES
 from .accessories import HomeAccessory
-from .const import (
-    ACC_LOCK, CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK)
+from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ STATE_TO_SERVICE = {STATE_LOCKED: 'lock',
                     STATE_UNLOCKED: 'unlock'}
 
 
-@TYPES.register(ACC_LOCK)
+@TYPES.register('Lock')
 class Lock(HomeAccessory):
     """Generate a Lock accessory for a lock entity.
 

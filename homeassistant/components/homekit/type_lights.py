@@ -14,7 +14,7 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import debounce, HomeAccessory
 from .const import (
-    ACC_LIGHT, CHAR_BRIGHTNESS, CHAR_COLOR_TEMPERATURE, CHAR_HUE, CHAR_ON,
+    CHAR_BRIGHTNESS, CHAR_COLOR_TEMPERATURE, CHAR_HUE, CHAR_ON,
     CHAR_SATURATION, SERV_LIGHTBULB, PROP_MAX_VALUE, PROP_MIN_VALUE)
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 RGB_COLOR = 'rgb_color'
 
 
-@TYPES.register(ACC_LIGHT)
+@TYPES.register('Light')
 class Light(HomeAccessory):
     """Generate a Light accessory for a light entity.
 

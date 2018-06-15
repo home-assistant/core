@@ -2,9 +2,7 @@
 import pytest
 
 from homeassistant.components.homekit.type_switches import Outlet, Switch
-from homeassistant.components.switch import DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON)
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import split_entity_id
 
 from tests.common import async_mock_service
@@ -26,17 +24,17 @@ async def test_outlet_set_state(hass, hk_driver):
     assert acc.char_on.value is False
     assert acc.char_outlet_in_use.value is True
 
-    hass.states.async_set(entity_id, STATE_ON)
+    hass.states.async_set(entity_id, 'on')
     await hass.async_block_till_done()
     assert acc.char_on.value is True
 
-    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(entity_id, 'off')
     await hass.async_block_till_done()
     assert acc.char_on.value is False
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    call_turn_off = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
+    call_turn_on = async_mock_service(hass, 'switch', 'turn_on')
+    call_turn_off = async_mock_service(hass, 'switch', 'turn_off')
 
     await hass.async_add_job(acc.char_on.client_update_value, True)
     await hass.async_block_till_done()
@@ -71,17 +69,17 @@ async def test_switch_set_state(hass, hk_driver, entity_id):
 
     assert acc.char_on.value is False
 
-    hass.states.async_set(entity_id, STATE_ON)
+    hass.states.async_set(entity_id, 'on')
     await hass.async_block_till_done()
     assert acc.char_on.value is True
 
-    hass.states.async_set(entity_id, STATE_OFF)
+    hass.states.async_set(entity_id, 'off')
     await hass.async_block_till_done()
     assert acc.char_on.value is False
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, domain, SERVICE_TURN_ON)
-    call_turn_off = async_mock_service(hass, domain, SERVICE_TURN_OFF)
+    call_turn_on = async_mock_service(hass, domain, 'turn_on')
+    call_turn_off = async_mock_service(hass, domain, 'turn_off')
 
     await hass.async_add_job(acc.char_on.client_update_value, True)
     await hass.async_block_till_done()

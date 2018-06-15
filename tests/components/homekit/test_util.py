@@ -3,8 +3,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.homekit.const import (
-    CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
-    FEATURE_PLAY_PAUSE, TYPE_OUTLET)
+    CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID)
 from homeassistant.components.homekit.util import (
     convert_to_float, density_to_air_quality, dismiss_setup_message,
     show_setup_message, temperature_to_homekit, temperature_to_states,
@@ -12,11 +11,9 @@ from homeassistant.components.homekit.util import (
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
-    ATTR_MESSAGE, ATTR_NOTIFICATION_ID, DOMAIN, SERVICE_CREATE,
-    SERVICE_DISMISS)
+    ATTR_MESSAGE, ATTR_NOTIFICATION_ID)
 from homeassistant.const import (
-    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, STATE_ON,
-    STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE)
 from homeassistant.core import State
 
 from tests.common import async_mock_service
@@ -30,8 +27,8 @@ def test_validate_entity_config():
                {'media_player.test': {CONF_FEATURE_LIST: [
                     {CONF_FEATURE: 'invalid_feature'}]}},
                {'media_player.test': {CONF_FEATURE_LIST: [
-                    {CONF_FEATURE: FEATURE_ON_OFF},
-                    {CONF_FEATURE: FEATURE_ON_OFF}]}},
+                    {CONF_FEATURE: 'on_off'},
+                    {CONF_FEATURE: 'on_off'}]}},
                {'switch.test': {CONF_TYPE: 'invalid_type'}}]
 
     for conf in configs:
@@ -53,26 +50,26 @@ def test_validate_entity_config():
 
     assert vec({'media_player.demo': {}}) == \
         {'media_player.demo': {CONF_FEATURE_LIST: {}}}
-    config = {CONF_FEATURE_LIST: [{CONF_FEATURE: FEATURE_ON_OFF},
-                                  {CONF_FEATURE: FEATURE_PLAY_PAUSE}]}
+    config = {CONF_FEATURE_LIST: [{CONF_FEATURE: 'on_off'},
+                                  {CONF_FEATURE: 'play_pause'}]}
     assert vec({'media_player.demo': config}) == \
         {'media_player.demo': {CONF_FEATURE_LIST:
-                               {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
-    assert vec({'switch.demo': {CONF_TYPE: TYPE_OUTLET}}) == \
-        {'switch.demo': {CONF_TYPE: TYPE_OUTLET}}
+                               {'on_off': {}, 'play_pause': {}}}}
+    assert vec({'switch.demo': {CONF_TYPE: 'outlet'}}) == \
+        {'switch.demo': {CONF_TYPE: 'outlet'}}
 
 
 def test_validate_media_player_features():
     """Test validate modes for media players."""
     config = {}
     attrs = {ATTR_SUPPORTED_FEATURES: 20873}
-    entity_state = State('media_player.demo', STATE_ON, attrs)
+    entity_state = State('media_player.demo', 'on', attrs)
     assert validate_media_player_features(entity_state, config) is True
 
-    config = {FEATURE_ON_OFF: None}
+    config = {'on_off': None}
     assert validate_media_player_features(entity_state, config) is True
 
-    entity_state = State('media_player.demo', STATE_ON)
+    entity_state = State('media_player.demo', 'on')
     assert validate_media_player_features(entity_state, config) is False
 
 
@@ -80,20 +77,20 @@ def test_convert_to_float():
     """Test convert_to_float method."""
     assert convert_to_float(12) == 12
     assert convert_to_float(12.4) == 12.4
-    assert convert_to_float(STATE_UNKNOWN) is None
+    assert convert_to_float('unknown') is None
     assert convert_to_float(None) is None
 
 
 def test_temperature_to_homekit():
     """Test temperature conversion from HA to HomeKit."""
-    assert temperature_to_homekit(20.46, TEMP_CELSIUS) == 20.5
-    assert temperature_to_homekit(92.1, TEMP_FAHRENHEIT) == 33.4
+    assert temperature_to_homekit(20.46, '°C') == 20.5
+    assert temperature_to_homekit(92.1, '°F') == 33.4
 
 
 def test_temperature_to_states():
     """Test temperature conversion from HomeKit to HA."""
-    assert temperature_to_states(20, TEMP_CELSIUS) == 20.0
-    assert temperature_to_states(20.2, TEMP_FAHRENHEIT) == 68.4
+    assert temperature_to_states(20, '°C') == 20.0
+    assert temperature_to_states(20.2, '°F') == 68.4
 
 
 def test_density_to_air_quality():
@@ -111,7 +108,8 @@ async def test_show_setup_msg(hass):
     """Test show setup message as persistence notification."""
     pincode = b'123-45-678'
 
-    call_create_notification = async_mock_service(hass, DOMAIN, SERVICE_CREATE)
+    call_create_notification = \
+        async_mock_service(hass, 'persistent_notification', 'create')
 
     await hass.async_add_job(show_setup_message, hass, pincode)
     await hass.async_block_till_done()
@@ -124,8 +122,8 @@ async def test_show_setup_msg(hass):
 
 async def test_dismiss_setup_msg(hass):
     """Test dismiss setup message."""
-    call_dismiss_notification = async_mock_service(hass, DOMAIN,
-                                                   SERVICE_DISMISS)
+    call_dismiss_notification = \
+        async_mock_service(hass, 'persistent_notification', 'dismiss')
 
     await hass.async_add_job(dismiss_setup_message, hass)
     await hass.async_block_till_done()

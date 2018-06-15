@@ -14,13 +14,12 @@ from homeassistant.const import (
 from . import TYPES
 from .accessories import HomeAccessory
 from .const import (
-    ACC_FAN, CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_SWING_MODE,
-    SERV_FANV2)
+    CHAR_ACTIVE, CHAR_ROTATION_DIRECTION, CHAR_SWING_MODE, SERV_FANV2)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-@TYPES.register(ACC_FAN)
+@TYPES.register('Fan')
 class Fan(HomeAccessory):
     """Generate a Fan accessory for a fan entity.
 
