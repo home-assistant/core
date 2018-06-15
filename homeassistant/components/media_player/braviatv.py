@@ -60,7 +60,6 @@ def _get_mac_address(ip_address):
     return None
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sony Bravia TV platform."""
     host = config.get(CONF_HOST)

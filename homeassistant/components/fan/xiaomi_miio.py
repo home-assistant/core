@@ -314,7 +314,6 @@ SERVICE_TO_METHOD = {
 }
 
 
-# pylint: disable=unused-argument
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the miio fan device from config."""
