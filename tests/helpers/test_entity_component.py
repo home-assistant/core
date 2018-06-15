@@ -346,7 +346,8 @@ async def test_setup_entry(hass):
     mock_setup_entry = Mock(return_value=mock_coro(True))
     loader.set_component(
         hass, 'test_domain.entry_domain',
-        MockPlatform(async_setup_entry=mock_setup_entry))
+        MockPlatform(async_setup_entry=mock_setup_entry,
+                     scan_interval=timedelta(seconds=5)))
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     entry = MockConfigEntry(domain='entry_domain')
@@ -356,6 +357,9 @@ async def test_setup_entry(hass):
     p_hass, p_entry, p_add_entities = mock_setup_entry.mock_calls[0][1]
     assert p_hass is hass
     assert p_entry is entry
+
+    assert component._platforms[entry.entry_id].scan_interval == \
+        timedelta(seconds=5)
 
 
 async def test_setup_entry_platform_not_exist(hass):
