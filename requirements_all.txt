@@ -358,6 +358,9 @@ gTTS-token==1.1.1
 # homeassistant.components.sensor.gearbest
 gearbest_parser==1.0.7
 
+# homeassistant.components.version_control.local_git
+gitpython==2.1.9
+
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.7
 
@@ -1032,6 +1035,9 @@ python-forecastio==1.4.0
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a
+
+# homeassistant.components.version_control.gitlab
+python-gitlab==1.4.0
 
 # homeassistant.components.sensor.hp_ilo
 python-hpilo==3.9
