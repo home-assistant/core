@@ -282,7 +282,7 @@ class ModbusClimate(ClimateDevice):
     def is_on(self):
         """Return true if the device is on."""
         return self.get_value(CONF_IS_ON)
-        
+
     def try_reconnect(self):
         from pymodbus.client.sync import ModbusTcpClient as ModbusClient
         from pymodbus.transaction import ModbusRtuFramer as ModbusFramer
@@ -305,7 +305,7 @@ class ModbusClimate(ClimateDevice):
             if register_type == REGISTER_TYPE_COIL:
                 result = modbus.HUB.read_coils(slave, register, count)
                 try:
-                	value = bool(result.bits[0])
+                    value = bool(result.bits[0])
                 except:
                     _LOGGER.error("No response from %s %s", self._name, prop)
                     self.try_reconnect()
