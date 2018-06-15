@@ -4,7 +4,7 @@ Core components of Home Assistant.
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
-# pylint: disable=unused-import, too-many-lines
+# pylint: disable=unused-import
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
 import enum

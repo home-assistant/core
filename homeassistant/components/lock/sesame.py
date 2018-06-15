@@ -24,7 +24,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(
         hass, config: ConfigType,
         add_devices: Callable[[list], None], discovery_info=None):
