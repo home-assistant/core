@@ -17,12 +17,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     calendar_data_current = DemoGoogleCalendarDataCurrent()
     add_devices([
         DemoGoogleCalendar(hass, calendar_data_future, {
-            CONF_NAME: 'Future Event',
+            CONF_NAME: 'Calendar 1',
             CONF_DEVICE_ID: 'calendar_1',
         }),
 
         DemoGoogleCalendar(hass, calendar_data_current, {
-            CONF_NAME: 'Current Event',
+            CONF_NAME: 'Calendar 2',
             CONF_DEVICE_ID: 'calendar_2',
         }),
     ])
