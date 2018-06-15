@@ -284,6 +284,7 @@ class ModbusClimate(ClimateDevice):
         return self.get_value(CONF_IS_ON)
 
     def try_reconnect(self):
+        """Retry connect to modbus."""
         from pymodbus.client.sync import ModbusTcpClient as ModbusClient
         from pymodbus.transaction import ModbusRtuFramer as ModbusFramer
         client = ModbusClient(host=modbus.HUB._client.host,
@@ -306,24 +307,24 @@ class ModbusClimate(ClimateDevice):
                 result = modbus.HUB.read_coils(slave, register, count)
                 try:
                     value = bool(result.bits[0])
-                except:
+                except BaseException:
                     _LOGGER.error("No response from %s %s", self._name, prop)
                     self.try_reconnect()
                     return
             else:
                 try:
                     if register_type == REGISTER_TYPE_INPUT:
-                        result = modbus.HUB.read_input_registers(slave,
-                                                             register, count)
+                        result = modbus.HUB.read_input_registers(
+                            slave, register, count)
                     else:
-                        result = modbus.HUB.read_holding_registers(slave,
-                                                               register, count)
+                        result = modbus.HUB.read_holding_registers(
+                            slave, register, count)
 
                     val = 0
                     registers = result.registers
                     if mod.get(CONF_REVERSE_ORDER):
                         registers.reverse()
-                except:
+                except BaseException:
                     _LOGGER.error("No response from %s %s", self._name, prop)
                     self.try_reconnect()
                     return
