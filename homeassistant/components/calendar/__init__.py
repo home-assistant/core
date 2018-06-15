@@ -4,7 +4,6 @@ Support for Google Calendar event device sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/calendar/
 """
-import asyncio
 import logging
 from datetime import timedelta
 import re
@@ -34,15 +33,18 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SCAN_INTERVAL = timedelta(seconds=60)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Track states and offer events for calendars."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, DOMAIN)
 
+    hass.http.register_view(CalendarListView(component))
     hass.http.register_view(CalendarEventView(component))
 
-    yield from component.async_setup(config)
+    await hass.components.frontend.async_register_built_in_panel(
+        'calendar', 'calendar', 'hass:calendar')
+
+    await component.async_setup(config)
     return True
 
 
@@ -196,8 +198,8 @@ class CalendarEventDevice(Entity):
 class CalendarEventView(http.HomeAssistantView):
     """View to retrieve calendar content."""
 
-    url = '/api/calendar/{entity_id}'
-    name = 'api:calendar'
+    url = '/api/calendars/{entity_id}'
+    name = 'api:calendars:calendar'
 
     def __init__(self, component):
         """Initialize calendar view."""
@@ -205,7 +207,7 @@ class CalendarEventView(http.HomeAssistantView):
 
     async def get(self, request, entity_id):
         """Return calendar events."""
-        entity = self.component.get_entity('calendar.' + entity_id)
+        entity = self.component.get_entity(entity_id)
         start = request.query.get('start')
         end = request.query.get('end')
         if None in (start, end, entity):
@@ -215,7 +217,31 @@ class CalendarEventView(http.HomeAssistantView):
             end_date = dt.parse_datetime(end)
         except (ValueError, AttributeError):
             return web.Response(status=400)
-        event_list = await entity.async_get_events(request.app['hass'],
-                                                   start_date,
-                                                   end_date)
+        event_list = await entity.async_get_events(
+            request.app['hass'], start_date, end_date)
         return self.json(event_list)
+
+
+class CalendarListView(http.HomeAssistantView):
+    """View to retrieve calendar list."""
+
+    url = '/api/calendars'
+    name = "api:calendars"
+
+    def __init__(self, component):
+        """Initialize calendar view."""
+        self.component = component
+
+    async def get(self, request):
+        """Retrieve calendar list."""
+        get_state = request.app['hass'].states.get
+        calendar_list = []
+
+        for entity in self.component.entities:
+            state = get_state(entity.entity_id)
+            calendar_list.append({
+                "name": state.name,
+                "entity_id": entity.entity_id,
+            })
+
+        return self.json(sorted(calendar_list, key=lambda x: x['name']))
