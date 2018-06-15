@@ -123,7 +123,7 @@ class PJMSensor(Entity):
             # The next cell contains the power data
             text_data = found_text.find_next_sibling('td').text
             # Convert number string with commas to int
-            self._state = int(text_data.replace(',',''))
+            self._state = int(text_data.replace(',', ''))
 
         except (ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self._name)
