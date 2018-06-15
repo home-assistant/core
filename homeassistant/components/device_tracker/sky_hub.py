@@ -23,7 +23,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Return a Sky Hub scanner if successful."""
     scanner = SkyHubDeviceScanner(config[DOMAIN])

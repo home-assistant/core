@@ -16,7 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['lutron']
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Lutron lights."""
     devs = []

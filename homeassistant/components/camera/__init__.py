@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines
 """
 Component to interface with cameras.
 

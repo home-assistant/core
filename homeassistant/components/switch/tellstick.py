@@ -10,7 +10,6 @@ from homeassistant.components.tellstick import (
 from homeassistant.helpers.entity import ToggleEntity
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Tellstick switches."""
     if (discovery_info is None or
