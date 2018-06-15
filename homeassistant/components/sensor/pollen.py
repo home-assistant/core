@@ -13,8 +13,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_STATE, CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL)
+    ATTR_ATTRIBUTION, ATTR_STATE, CONF_MONITORED_CONDITIONS)
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -90,9 +89,7 @@ TREND_SUBSIDING = 'Subsiding'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ZIP_CODE): str,
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
-        vol.All(cv.ensure_list, [vol.In(SENSORS)]),
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        cv.time_period
+        vol.All(cv.ensure_list, [vol.In(SENSORS)])
 })
 
 
@@ -105,7 +102,7 @@ async def async_setup_platform(
 
     data = PollenComData(
         Client(config[CONF_ZIP_CODE], websession),
-        config[CONF_MONITORED_CONDITIONS], config[CONF_SCAN_INTERVAL])
+        config[CONF_MONITORED_CONDITIONS])
 
     await data.async_update()
 
@@ -266,13 +263,13 @@ class PollencomSensor(Entity):
 class PollenComData(object):
     """Define a data object to retrieve info from Pollen.com."""
 
-    def __init__(self, client, sensor_types, scan_interval):
+    def __init__(self, client, sensor_types):
         """Initialize."""
         self._client = client
         self._sensor_types = sensor_types
         self.data = {}
 
-        self.async_update = Throttle(scan_interval)(self._async_update)
+        self.async_update = Throttle(DEFAULT_SCAN_INTERVAL)(self._async_update)
 
     async def _async_update(self):
         """Update Pollen.com data."""
