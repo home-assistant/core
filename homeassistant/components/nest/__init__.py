@@ -6,7 +6,6 @@ https://home-assistant.io/components/nest/
 """
 from concurrent.futures import ThreadPoolExecutor
 import logging
-import os.path
 import socket
 from datetime import datetime, timedelta
 
@@ -102,12 +101,11 @@ async def async_setup(hass, config):
     filename = config.get(CONF_FILENAME, NEST_CONFIG_FILE)
     access_token_cache_file = hass.config.path(filename)
 
-    if await hass.async_add_job(os.path.isfile, access_token_cache_file):
-        hass.async_add_job(hass.config_entries.flow.async_init(
-            DOMAIN, source='import', data={
-                'nest_conf_path': access_token_cache_file,
-            }
-        ))
+    hass.async_add_job(hass.config_entries.flow.async_init(
+        DOMAIN, source='import', data={
+            'nest_conf_path': access_token_cache_file,
+        }
+    ))
 
     # Store config to be used during entry setup
     hass.data[DATA_NEST_CONFIG] = conf

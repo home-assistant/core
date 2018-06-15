@@ -3,7 +3,8 @@ import asyncio
 from unittest.mock import Mock, patch
 
 from homeassistant import data_entry_flow
-from homeassistant.components.nest import config_flow
+from homeassistant.setup import async_setup_component
+from homeassistant.components.nest import config_flow, DOMAIN
 
 from tests.common import mock_coro
 
@@ -172,3 +173,46 @@ async def test_verify_code_exception(hass):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert result['step_id'] == 'link'
     assert result['errors'] == {'code': 'internal_error'}
+
+
+async def test_step_import(hass):
+    """Test that we trigger import when configuring with client."""
+    with patch('os.path.isfile', return_value=False):
+        assert await async_setup_component(hass, DOMAIN, {
+            DOMAIN: {
+                'client_id': 'bla',
+                'client_secret': 'bla',
+            },
+        })
+        await hass.async_block_till_done()
+
+    flow = hass.config_entries.flow.async_progress()[0]
+    result = await hass.config_entries.flow.async_configure(flow['flow_id'])
+
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'link'
+
+
+async def test_step_import_with_token_cache(hass):
+    """Test that we import existing token cache."""
+    with patch('os.path.isfile', return_value=True), \
+        patch('homeassistant.components.nest.config_flow.load_json',
+              return_value={'access_token': 'yo'}), \
+            patch('homeassistant.components.nest.async_setup_entry',
+                  return_value=mock_coro(True)):
+        assert await async_setup_component(hass, DOMAIN, {
+            DOMAIN: {
+                'client_id': 'bla',
+                'client_secret': 'bla',
+            },
+        })
+        await hass.async_block_till_done()
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.data == {
+        'impl_domain': 'nest',
+        'tokens': {
+            'access_token': 'yo'
+        }
+    }
