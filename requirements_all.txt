@@ -811,7 +811,7 @@ pyeconet==0.0.5
 pyedimax==0.1
 
 # homeassistant.components.eight_sleep
-pyeight==0.0.8
+pyeight==0.0.9
 
 # homeassistant.components.media_player.emby
 pyemby==1.5
