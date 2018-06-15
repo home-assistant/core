@@ -4,6 +4,7 @@ Support for displaying weather info from Ecobee API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.ecobee/
 """
+from datetime import datetime
 from homeassistant.components import ecobee
 from homeassistant.components.weather import (
     WeatherEntity, ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP,
@@ -135,7 +136,7 @@ class EcobeeWeather(WeatherEntity):
             forecasts = []
             for day in self.weather['forecasts']:
                 forecast = {
-                    ATTR_FORECAST_TIME: day['dateTime'],
+                    ATTR_FORECAST_TIME: datetime.strptime(day['dateTime'], '%Y-%m-%d %H:%M:%S').isoformat(),
                     ATTR_FORECAST_CONDITION: day['condition'],
                     ATTR_FORECAST_TEMP: float(day['tempHigh']) / 10,
                 }
