@@ -135,8 +135,10 @@ class EcobeeWeather(WeatherEntity):
         try:
             forecasts = []
             for day in self.weather['forecasts']:
+                date_time = datetime.strptime(day['dateTime'],
+                                              '%Y-%m-%d %H:%M:%S').isoformat()
                 forecast = {
-                    ATTR_FORECAST_TIME: datetime.strptime(day['dateTime'], '%Y-%m-%d %H:%M:%S').isoformat(),
+                    ATTR_FORECAST_TIME: date_time,
                     ATTR_FORECAST_CONDITION: day['condition'],
                     ATTR_FORECAST_TEMP: float(day['tempHigh']) / 10,
                 }
