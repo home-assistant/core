@@ -6,7 +6,6 @@ https://home-assistant.io/components/nest/
 """
 from concurrent.futures import ThreadPoolExecutor
 import logging
-import os.path
 import socket
 from datetime import datetime, timedelta
 
