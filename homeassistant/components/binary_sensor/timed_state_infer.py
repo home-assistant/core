@@ -121,11 +121,11 @@ class TimedStateInferBinarySensor(BinarySensorDevice):
         if self._pending:
             time_pending = dt_util.utcnow() - self._pending_since
             if self._is_on:
-                time_remaining = time_pending - self._time_off
+                time_remaining = self._time_off - time_pending
             else:
-                time_remaining = time_pending - self._time_on
+                time_remaining = self._time_on - time_pending
 
-            if time_remaining.seconds <= 0:
+            if time_remaining.total_seconds() <= 0:
                 self._is_on = not self._is_on
                 self._pending = False
                 self.schedule_update_ha_state()
