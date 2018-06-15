@@ -49,7 +49,7 @@ async def async_setup_platform(hass,
                                discovery_info=None):
     """Set up a Xiaomi Camera."""
     _LOGGER.debug('Received configuration for model %s', config[CONF_MODEL])
-    async_add_devices([XiaomiCamera(hass, config)], True)
+    async_add_devices([XiaomiCamera(hass, config)])
 
 
 class XiaomiCamera(Camera):
