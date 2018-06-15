@@ -29,6 +29,7 @@ DEFAULT_VERIFY_SSL = True
 DEFAULT_FORCE_UPDATE = False
 
 CONF_JSON_ATTRS = 'json_attributes'
+CONF_JSON_TEMPLATE = 'json_template'
 METHODS = ['POST', 'GET']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -37,6 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
+    vol.Optional(CONF_JSON_TEMPLATE): cv.template,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
@@ -62,10 +64,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
     json_attrs = config.get(CONF_JSON_ATTRS)
+    json_template = config.get(CONF_JSON_TEMPLATE)
     force_update = config.get(CONF_FORCE_UPDATE)
 
     if value_template is not None:
         value_template.hass = hass
+    if json_template is not None:
+        json_template.hass = hass
 
     if username and password:
         if config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
@@ -78,7 +83,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest.update()
 
     add_devices([RestSensor(
-        hass, rest, name, unit, value_template, json_attrs, force_update
+        hass, rest, name, unit, value_template, json_attrs, force_update,
+        json_template
     )], True)
 
 
@@ -86,7 +92,8 @@ class RestSensor(Entity):
     """Implementation of a REST sensor."""
 
     def __init__(self, hass, rest, name, unit_of_measurement,
-                 value_template, json_attrs, force_update):
+                 value_template, json_attrs, force_update,
+                 json_template=None):
         """Initialize the REST sensor."""
         self._hass = hass
         self.rest = rest
@@ -95,6 +102,7 @@ class RestSensor(Entity):
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
         self._json_attrs = json_attrs
+        self._json_template = json_template
         self._attributes = None
         self._force_update = force_update
 
@@ -132,7 +140,13 @@ class RestSensor(Entity):
             self._attributes = {}
             if value:
                 try:
-                    json_dict = json.loads(value)
+                    if self._json_template is not None:
+                        attributes = self._json_template \
+                                         .render_with_possible_json_value(
+                                             value, {})
+                        json_dict = json.loads(attributes)
+                    else:
+                        json_dict = json.loads(value)
                     if isinstance(json_dict, dict):
                         attrs = {k: json_dict[k] for k in self._json_attrs
                                  if k in json_dict}

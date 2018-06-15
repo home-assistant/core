@@ -131,12 +131,14 @@ class TestRestSensor(unittest.TestCase):
         self.name = 'foo'
         self.unit_of_measurement = 'MB'
         self.value_template = template('{{ value_json.key }}')
+        self.json_template = template('{{ value_json[0]|tojson }}')
+        self.json_template.hass = self.hass
         self.value_template.hass = self.hass
         self.force_update = False
 
         self.sensor = rest.RestSensor(
             self.hass, self.rest, self.name, self.unit_of_measurement,
-            self.value_template, [], self.force_update
+            self.value_template, [], self.force_update, self.json_template
         )
 
     def tearDown(self):
@@ -194,6 +196,19 @@ class TestRestSensor(unittest.TestCase):
         self.sensor.update()
         self.assertEqual('plain_state', self.sensor.state)
         self.assertTrue(self.sensor.available)
+
+    def test_update_with_json_attrs_and_json_template(self):
+        """Test attributes get extracted from a JSON result."""
+        """After being rendered in the json_template."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(
+                                    '[{ "key": "some_json_value" }]'))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, ['key'],
+                                      self.force_update, self.json_template)
+        self.sensor.update()
+        self.assertEqual('some_json_value',
+                         self.sensor.device_state_attributes['key'])
 
     def test_update_with_json_attrs(self):
         """Test attributes get extracted from a JSON result."""
