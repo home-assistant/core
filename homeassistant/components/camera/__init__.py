@@ -129,7 +129,6 @@ async def async_get_image(hass, entity_id, timeout=10):
     raise HomeAssistantError('Unable to get image')
 
 
-@bind_hass
 async def async_setup(hass, config):
     """Set up the camera component."""
     component = hass.data[DOMAIN] = \
