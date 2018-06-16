@@ -202,7 +202,7 @@ def _check_for_uom_id(hass: HomeAssistant, node,
     node_uom = set(map(str.lower, node.uom))
 
     if uom_list:
-        if node_uom.intersection(NODE_FILTERS[single_domain]['uom']):
+        if node_uom.intersection(uom_list):
             hass.data[ISY994_NODES][single_domain].append(node)
             return True
     else:
@@ -425,7 +425,6 @@ class ISYDevice(Entity):
             self._control_handler = self._node.controlEvents.subscribe(
                 self.on_control)
 
-    # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Handle the update event from the ISY994 Node."""
         self.schedule_update_ha_state()

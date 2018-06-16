@@ -1,7 +1,6 @@
 """The tests for the Cast Media player platform."""
 # pylint: disable=protected-access
 import asyncio
-import datetime as dt
 from typing import Optional
 from unittest.mock import patch, MagicMock, Mock
 from uuid import UUID
@@ -15,8 +14,7 @@ from homeassistant.components.media_player.cast import ChromecastInfo
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
     async_dispatcher_send
-from homeassistant.components.media_player import cast, \
-    ATTR_MEDIA_POSITION, ATTR_MEDIA_POSITION_UPDATED_AT
+from homeassistant.components.media_player import cast
 from homeassistant.setup import async_setup_component
 
 
@@ -288,8 +286,6 @@ async def test_entity_media_states(hass: HomeAssistantType):
     assert entity.unique_id == full_info.uuid
 
     media_status = MagicMock(images=None)
-    media_status.current_time = 0
-    media_status.playback_rate = 1
     media_status.player_is_playing = True
     entity.new_media_status(media_status)
     await hass.async_block_till_done()
@@ -324,85 +320,6 @@ async def test_entity_media_states(hass: HomeAssistantType):
     assert state.state == 'unknown'
 
 
-async def test_entity_media_position(hass: HomeAssistantType):
-    """Test various entity media states."""
-    info = get_fake_chromecast_info()
-    full_info = attr.evolve(info, model_name='google home',
-                            friendly_name='Speaker', uuid=FakeUUID)
-
-    with patch('pychromecast.dial.get_device_status',
-               return_value=full_info):
-        chromecast, entity = await async_setup_media_player_cast(hass, info)
-
-    media_status = MagicMock(images=None)
-    media_status.current_time = 10
-    media_status.playback_rate = 1
-    media_status.player_is_playing = True
-    media_status.player_is_paused = False
-    media_status.player_is_idle = False
-    now = dt.datetime.now(dt.timezone.utc)
-    with patch('homeassistant.util.dt.utcnow', return_value=now):
-        entity.new_media_status(media_status)
-        await hass.async_block_till_done()
-    state = hass.states.get('media_player.speaker')
-    assert state.attributes[ATTR_MEDIA_POSITION] == 10
-    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == now
-
-    media_status.current_time = 15
-    now_plus_5 = now + dt.timedelta(seconds=5)
-    with patch('homeassistant.util.dt.utcnow', return_value=now_plus_5):
-        entity.new_media_status(media_status)
-        await hass.async_block_till_done()
-    state = hass.states.get('media_player.speaker')
-    assert state.attributes[ATTR_MEDIA_POSITION] == 10
-    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == now
-
-    media_status.current_time = 20
-    with patch('homeassistant.util.dt.utcnow', return_value=now_plus_5):
-        entity.new_media_status(media_status)
-        await hass.async_block_till_done()
-    state = hass.states.get('media_player.speaker')
-    assert state.attributes[ATTR_MEDIA_POSITION] == 20
-    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == now_plus_5
-
-    media_status.current_time = 25
-    now_plus_10 = now + dt.timedelta(seconds=10)
-    media_status.player_is_playing = False
-    media_status.player_is_paused = True
-    with patch('homeassistant.util.dt.utcnow', return_value=now_plus_10):
-        entity.new_media_status(media_status)
-        await hass.async_block_till_done()
-    state = hass.states.get('media_player.speaker')
-    assert state.attributes[ATTR_MEDIA_POSITION] == 25
-    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == now_plus_10
-
-    now_plus_15 = now + dt.timedelta(seconds=15)
-    with patch('homeassistant.util.dt.utcnow', return_value=now_plus_15):
-        entity.new_media_status(media_status)
-        await hass.async_block_till_done()
-    state = hass.states.get('media_player.speaker')
-    assert state.attributes[ATTR_MEDIA_POSITION] == 25
-    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == now_plus_10
-
-    media_status.current_time = 30
-    now_plus_20 = now + dt.timedelta(seconds=20)
-    with patch('homeassistant.util.dt.utcnow', return_value=now_plus_20):
-        entity.new_media_status(media_status)
-        await hass.async_block_till_done()
-    state = hass.states.get('media_player.speaker')
-    assert state.attributes[ATTR_MEDIA_POSITION] == 30
-    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == now_plus_20
-
-    media_status.player_is_paused = False
-    media_status.player_is_idle = True
-    with patch('homeassistant.util.dt.utcnow', return_value=now_plus_20):
-        entity.new_media_status(media_status)
-        await hass.async_block_till_done()
-    state = hass.states.get('media_player.speaker')
-    assert ATTR_MEDIA_POSITION not in state.attributes
-    assert ATTR_MEDIA_POSITION_UPDATED_AT not in state.attributes
-
-
 async def test_switched_host(hass: HomeAssistantType):
     """Test cast device listens for changed hosts and disconnects old cast."""
     info = get_fake_chromecast_info()
@@ -429,8 +346,16 @@ async def test_switched_host(hass: HomeAssistantType):
         async_dispatcher_send(hass, cast.SIGNAL_CAST_DISCOVERED, changed)
         await hass.async_block_till_done()
         assert get_chromecast.call_count == 1
-        chromecast.disconnect.assert_called_once_with(blocking=False)
+        assert chromecast.disconnect.call_count == 1
 
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        await hass.async_block_till_done()
-        chromecast.disconnect.assert_called_once_with(blocking=False)
+
+async def test_disconnect_on_stop(hass: HomeAssistantType):
+    """Test cast device disconnects socket on stop."""
+    info = get_fake_chromecast_info()
+
+    with patch('pychromecast.dial.get_device_status', return_value=info):
+        chromecast, _ = await async_setup_media_player_cast(hass, info)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert chromecast.disconnect.call_count == 1

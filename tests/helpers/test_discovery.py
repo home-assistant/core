@@ -129,11 +129,11 @@ class TestHelpersDiscovery:
             platform_calls.append('disc' if discovery_info else 'component')
 
         loader.set_component(
-            'test_component',
+            self.hass, 'test_component',
             MockModule('test_component', setup=component_setup))
 
         loader.set_component(
-            'switch.test_circular',
+            self.hass, 'switch.test_circular',
             MockPlatform(setup_platform,
                          dependencies=['test_component']))
 
@@ -177,11 +177,11 @@ class TestHelpersDiscovery:
             return True
 
         loader.set_component(
-            'test_component1',
+            self.hass, 'test_component1',
             MockModule('test_component1', setup=component1_setup))
 
         loader.set_component(
-            'test_component2',
+            self.hass, 'test_component2',
             MockModule('test_component2', setup=component2_setup))
 
         @callback

@@ -26,7 +26,7 @@ SENSORS = {
     'V_PERCENTAGE': ['%', 'mdi:percent'],
     'V_LEVEL': {
         'S_SOUND': ['dB', 'mdi:volume-high'], 'S_VIBRATION': ['Hz', None],
-        'S_LIGHT_LEVEL': ['lux', 'white-balance-sunny']},
+        'S_LIGHT_LEVEL': ['lx', 'white-balance-sunny']},
     'V_ORP': ['mV', None],
     'V_EC': ['μS/cm', None],
     'V_VAR': ['var', None],

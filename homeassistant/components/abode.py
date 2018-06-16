@@ -81,7 +81,7 @@ TRIGGER_SCHEMA = vol.Schema({
 
 ABODE_PLATFORMS = [
     'alarm_control_panel', 'binary_sensor', 'lock', 'switch', 'cover',
-    'camera', 'light'
+    'camera', 'light', 'sensor'
 ]
 
 

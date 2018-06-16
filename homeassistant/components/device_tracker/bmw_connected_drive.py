@@ -48,8 +48,11 @@ class BMWDeviceTracker(object):
             return
 
         _LOGGER.debug('Updating %s', dev_id)
-
+        attrs = {
+            'vin': self.vehicle.vin,
+        }
         self._see(
             dev_id=dev_id, host_name=self.vehicle.name,
-            gps=self.vehicle.state.gps_position, icon='mdi:car'
+            gps=self.vehicle.state.gps_position, attributes=attrs,
+            icon='mdi:car'
         )

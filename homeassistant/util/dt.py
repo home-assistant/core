@@ -27,7 +27,7 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
 
     Async friendly.
     """
-    global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
+    global DEFAULT_TIME_ZONE
 
     # NOTE: Remove in the future in favour of typing
     assert isinstance(time_zone, dt.tzinfo)

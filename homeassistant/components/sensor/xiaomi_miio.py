@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_CHARGING = 'charging'
@@ -36,7 +36,6 @@ ATTR_MODEL = 'model'
 SUCCESS = ['ok']
 
 
-# pylint: disable=unused-argument
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the sensor from config."""

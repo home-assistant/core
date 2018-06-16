@@ -6,7 +6,6 @@ at https://home-assistant.io/components/light.zha/
 """
 import logging
 from homeassistant.components import light, zha
-from homeassistant.const import STATE_UNKNOWN
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +75,7 @@ class Light(zha.Entity, light.Light):
     @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
-        if self._state == STATE_UNKNOWN:
+        if self._state is None:
             return False
         return bool(self._state)
 
@@ -173,7 +172,8 @@ class Light(zha.Entity, light.Light):
             result = await zha.safe_read(self._endpoint.light_color,
                                          ['current_x', 'current_y'])
             if 'current_x' in result and 'current_y' in result:
-                xy_color = (result['current_x'], result['current_y'])
+                xy_color = (round(result['current_x']/65535, 3),
+                            round(result['current_y']/65535, 3))
                 self._hs_color = color_util.color_xy_to_hs(*xy_color)
 
     @property

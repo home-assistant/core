@@ -138,7 +138,7 @@ class TestServiceHelpers(unittest.TestCase):
         self.hass.states.set('light.Ceiling', STATE_OFF)
         self.hass.states.set('light.Kitchen', STATE_OFF)
 
-        loader.get_component('group').Group.create_group(
+        loader.get_component(self.hass, 'group').Group.create_group(
             self.hass, 'test', ['light.Ceiling', 'light.Kitchen'])
 
         call = ha.ServiceCall('light', 'turn_on',
@@ -160,7 +160,7 @@ class TestServiceHelpers(unittest.TestCase):
 @asyncio.coroutine
 def test_async_get_all_descriptions(hass):
     """Test async_get_all_descriptions."""
-    group = loader.get_component('group')
+    group = loader.get_component(hass, 'group')
     group_config = {group.DOMAIN: {}}
     yield from async_setup_component(hass, group.DOMAIN, group_config)
     descriptions = yield from service.async_get_all_descriptions(hass)
@@ -170,7 +170,7 @@ def test_async_get_all_descriptions(hass):
     assert 'description' in descriptions['group']['reload']
     assert 'fields' in descriptions['group']['reload']
 
-    logger = loader.get_component('logger')
+    logger = loader.get_component(hass, 'logger')
     logger_config = {logger.DOMAIN: {}}
     yield from async_setup_component(hass, logger.DOMAIN, logger_config)
     descriptions = yield from service.async_get_all_descriptions(hass)

@@ -17,6 +17,12 @@ from homeassistant.loader import set_component
 from tests.common import MockConfigEntry, MockModule, mock_coro_func
 
 
+@pytest.fixture(autouse=True)
+def mock_test_component(hass):
+    """Ensure a component called 'test' exists."""
+    set_component(hass, 'test', MockModule('test'))
+
+
 @pytest.fixture
 def client(hass, aiohttp_client):
     """Fixture that can interact with the config manager API."""
@@ -104,6 +110,9 @@ def test_initialize_flow(hass, client):
             return self.async_show_form(
                 step_id='init',
                 data_schema=schema,
+                description_placeholders={
+                    'url': 'https://example.com',
+                },
                 errors={
                     'username': 'Should be unique.'
                 }
@@ -111,7 +120,7 @@ def test_initialize_flow(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post('/api/config/config_entries/flow',
-                                      json={'domain': 'test'})
+                                      json={'handler': 'test'})
 
     assert resp.status == 200
     data = yield from resp.json()
@@ -134,6 +143,9 @@ def test_initialize_flow(hass, client):
                 'type': 'string'
             }
         ],
+        'description_placeholders': {
+            'url': 'https://example.com',
+        },
         'errors': {
             'username': 'Should be unique.'
         }
@@ -150,7 +162,7 @@ def test_abort(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post('/api/config/config_entries/flow',
-                                      json={'domain': 'test'})
+                                      json={'handler': 'test'})
 
     assert resp.status == 200
     data = yield from resp.json()
@@ -166,7 +178,8 @@ def test_abort(hass, client):
 def test_create_account(hass, client):
     """Test a flow that creates an account."""
     set_component(
-        'test', MockModule('test', async_setup_entry=mock_coro_func(True)))
+        hass, 'test',
+        MockModule('test', async_setup_entry=mock_coro_func(True)))
 
     class TestFlow(FlowHandler):
         VERSION = 1
@@ -180,7 +193,7 @@ def test_create_account(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post('/api/config/config_entries/flow',
-                                      json={'domain': 'test'})
+                                      json={'handler': 'test'})
 
     assert resp.status == 200
     data = yield from resp.json()
@@ -198,7 +211,8 @@ def test_create_account(hass, client):
 def test_two_step_flow(hass, client):
     """Test we can finish a two step flow."""
     set_component(
-        'test', MockModule('test', async_setup_entry=mock_coro_func(True)))
+        hass, 'test',
+        MockModule('test', async_setup_entry=mock_coro_func(True)))
 
     class TestFlow(FlowHandler):
         VERSION = 1
@@ -220,7 +234,7 @@ def test_two_step_flow(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post('/api/config/config_entries/flow',
-                                      json={'domain': 'test'})
+                                      json={'handler': 'test'})
         assert resp.status == 200
         data = yield from resp.json()
         flow_id = data.pop('flow_id')
@@ -234,6 +248,7 @@ def test_two_step_flow(hass, client):
                     'type': 'string'
                 }
             ],
+            'description_placeholders': None,
             'errors': None
         }
 
@@ -305,7 +320,7 @@ def test_get_progress_flow(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         resp = yield from client.post('/api/config/config_entries/flow',
-                                      json={'domain': 'test'})
+                                      json={'handler': 'test'})
 
     assert resp.status == 200
     data = yield from resp.json()

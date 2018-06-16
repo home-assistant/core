@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.3.1']
+REQUIREMENTS = ['netdisco==1.4.1']
 
 DOMAIN = 'discovery'
 
@@ -37,13 +37,18 @@ SERVICE_WINK = 'wink'
 SERVICE_XIAOMI_GW = 'xiaomi_gw'
 SERVICE_TELLDUSLIVE = 'tellstick'
 SERVICE_HUE = 'philips_hue'
+SERVICE_KONNECTED = 'konnected'
 SERVICE_DECONZ = 'deconz'
 SERVICE_DAIKIN = 'daikin'
+SERVICE_SABNZBD = 'sabnzbd'
 SERVICE_SAMSUNG_PRINTER = 'samsung_printer'
 SERVICE_HOMEKIT = 'homekit'
 
 CONFIG_ENTRY_HANDLERS = {
+    SERVICE_DECONZ: 'deconz',
+    'google_cast': 'cast',
     SERVICE_HUE: 'hue',
+    'sonos': 'sonos',
 }
 
 SERVICE_HANDLERS = {
@@ -57,14 +62,13 @@ SERVICE_HANDLERS = {
     SERVICE_WINK: ('wink', None),
     SERVICE_XIAOMI_GW: ('xiaomi_aqara', None),
     SERVICE_TELLDUSLIVE: ('tellduslive', None),
-    SERVICE_DECONZ: ('deconz', None),
     SERVICE_DAIKIN: ('daikin', None),
+    SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
-    'google_cast': ('media_player', 'cast'),
+    SERVICE_KONNECTED: ('konnected', None),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
     'roku': ('media_player', 'roku'),
-    'sonos': ('media_player', 'sonos'),
     'yamaha': ('media_player', 'yamaha'),
     'logitech_mediaserver': ('media_player', 'squeezebox'),
     'directv': ('media_player', 'directv'),
@@ -74,11 +78,13 @@ SERVICE_HANDLERS = {
     'frontier_silicon': ('media_player', 'frontier_silicon'),
     'openhome': ('media_player', 'openhome'),
     'harmony': ('remote', 'harmony'),
-    'sabnzbd': ('sensor', 'sabnzbd'),
     'bose_soundtouch': ('media_player', 'soundtouch'),
     'bluesound': ('media_player', 'bluesound'),
     'songpal': ('media_player', 'songpal'),
     'kodi': ('media_player', 'kodi'),
+    'volumio': ('media_player', 'volumio'),
+    'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
+    'freebox': ('device_tracker', 'freebox'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
@@ -189,6 +195,7 @@ def _discover(netdisco):
         for disc in netdisco.discover():
             for service in netdisco.get_info(disc):
                 results.append((disc, service))
+
     finally:
         netdisco.stop()
 

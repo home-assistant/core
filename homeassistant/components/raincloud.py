@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['raincloudy==0.0.4']
+REQUIREMENTS = ['raincloudy==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -168,7 +168,6 @@ class RainCloudEntity(Entity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'current_time': self.data.current_time,
             'identifier': self.data.serial,
         }
 
