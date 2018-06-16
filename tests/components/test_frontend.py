@@ -278,3 +278,22 @@ async def test_get_translations(hass, hass_ws_client):
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success']
     assert msg['result'] == {'resources': {'lang': 'nl'}}
+
+
+async def test_experimental_ui(hass, hass_ws_client):
+    """Test experimental_ui command."""
+    await async_setup_component(hass, 'frontend')
+    client = await hass_ws_client(hass)
+
+    with patch('homeassistant.components.frontend.load_yaml',
+               return_value={'hello': 'world'}):
+        await client.send_json({
+            'id': 5,
+            'type': 'frontend/experimental_ui',
+        })
+        msg = await client.receive_json()
+
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['success']
+    assert msg['result'] == {'hello': 'world'}
