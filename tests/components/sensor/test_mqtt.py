@@ -273,7 +273,8 @@ class TestSensorMQTT(unittest.TestCase):
                 'name': 'test',
                 'state_topic': 'test-topic',
                 'unit_of_measurement': 'fav unit',
-                'json_template_attributes': {'test': '{{ value_json.val | int + 1 }}'}
+                'json_template_attributes':
+                    {'test': '{{ value_json.val | int + 1 }}'}
             }
         })
 
@@ -294,7 +295,8 @@ class TestSensorMQTT(unittest.TestCase):
                 'state_topic': 'test-topic',
                 'unit_of_measurement': 'fav unit',
                 'json_attributes': 'val',
-                'json_template_attributes': {'test': '{{ value_json.val | int + 1 }}'}
+                'json_template_attributes':
+                    {'test': '{{ value_json.val | int + 1 }}'}
             }
         })
 

@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     # Integrations shouldn't never expose unique_id through configuration
     # this here is an exception because MQTT is a msg transport, not a protocol
     vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_JSON_TEMPLATE_ATTRS): vol.Schema({cv.string: cv.template}) #tillåter inte multipla????
+    vol.Optional(CONF_JSON_TEMPLATE_ATTRS): vol.Schema({cv.string: cv.template})
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -92,9 +92,9 @@ class MqttSensor(MqttAvailability, Entity):
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
                  force_update, expire_after, icon, device_class: Optional[str],
-                 value_template, json_attributes, json_template_attributes, unique_id: Optional[str],
-                 availability_topic, payload_available,
-                 payload_not_available):
+                 value_template, json_attributes, json_template_attributes,
+                 unique_id: Optional[str], availability_topic,
+                 payload_available, payload_not_available):
         """Initialize the sensor."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -155,8 +155,10 @@ class MqttSensor(MqttAvailability, Entity):
 
             if self._json_template_attributes and json_dict:
                 print('enumerating json template attributes!')
-                for key, value in self._json_template_attributes.items():
-                    self._attributes[key] = self._json_template_attributes[key].async_render_with_possible_json_value(payload, self._state)
+                for key, template in self._json_template_attributes.items():
+                    result = template.async_render_with_possible_json_value(
+                        payload, self._state)
+                    self._attributes[key] = result
 
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
