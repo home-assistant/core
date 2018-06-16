@@ -213,9 +213,8 @@ async def async_from_config_file(config_path: str,
     finally:
         clear_secret_cache()
 
-    hass = await async_from_config_dict(
+    return await async_from_config_dict(
         config_dict, hass, enable_log=False, skip_pip=skip_pip)
-    return hass
 
 
 @core.callback
