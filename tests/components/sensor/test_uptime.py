@@ -62,7 +62,7 @@ class TestUptimeSensor(unittest.TestCase):
     def test_uptime_sensor_days_output(self):
         """Test uptime sensor output data."""
         sensor = UptimeSensor('test', 'days')
-        self.assertEqual(sensor.unit_of_measurement, 'days')
+        self.assertEqual(sensor.unit_of_measurement, 'd')
         new_time = sensor.initial + timedelta(days=1)
         with patch('homeassistant.util.dt.now', return_value=new_time):
             run_coroutine_threadsafe(
@@ -81,7 +81,7 @@ class TestUptimeSensor(unittest.TestCase):
     def test_uptime_sensor_hours_output(self):
         """Test uptime sensor output data."""
         sensor = UptimeSensor('test', 'hours')
-        self.assertEqual(sensor.unit_of_measurement, 'hours')
+        self.assertEqual(sensor.unit_of_measurement, 'h')
         new_time = sensor.initial + timedelta(hours=16)
         with patch('homeassistant.util.dt.now', return_value=new_time):
             run_coroutine_threadsafe(
@@ -100,7 +100,7 @@ class TestUptimeSensor(unittest.TestCase):
     def test_uptime_sensor_minutes_output(self):
         """Test uptime sensor output data."""
         sensor = UptimeSensor('test', 'minutes')
-        self.assertEqual(sensor.unit_of_measurement, 'minutes')
+        self.assertEqual(sensor.unit_of_measurement, 'min')
         new_time = sensor.initial + timedelta(minutes=16)
         with patch('homeassistant.util.dt.now', return_value=new_time):
             run_coroutine_threadsafe(
