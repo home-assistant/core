@@ -205,6 +205,7 @@ class NestDevice(object):
         except (AuthorizationError, APIError, socket.error) as err:
             _LOGGER.error(
                 "Connection error while access Nest web service: %s", err)
+            raise err
 
     def structures(self):
         """Generate a list of structures."""
