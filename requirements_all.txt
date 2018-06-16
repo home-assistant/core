@@ -424,9 +424,6 @@ httplib2==0.10.3
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 
-# homeassistant.components.media_player.spotify
-https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
-
 # homeassistant.components.neato
 https://github.com/jabesq/pybotvac/archive/v0.0.5.zip#pybotvac==0.0.5
 
@@ -1280,6 +1277,9 @@ speedtest-cli==2.0.2
 
 # homeassistant.components.sensor.spotcrime
 spotcrime==1.0.3
+
+# homeassistant.components.media_player.spotify
+spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
