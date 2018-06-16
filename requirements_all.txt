@@ -113,7 +113,7 @@ alarmdecoder==1.13.2
 alpha_vantage==2.0.0
 
 # homeassistant.components.amcrest
-amcrest==1.2.2
+amcrest==1.2.3
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
