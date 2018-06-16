@@ -80,10 +80,10 @@ def post_image(url, image):
     """Post an image to the classifier."""
     try:
         response = requests.post(
-                    url,
-                    json={"base64": encode_image(image)},
-                    timeout=TIMEOUT
-                    )
+            url,
+            json={"base64": encode_image(image)},
+            timeout=TIMEOUT
+            )
         return response
     except requests.exceptions.ConnectionError:
         _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
@@ -187,8 +187,8 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
 
             elif response.status_code == 400:
                 _LOGGER.warning(
-                    "{} teaching of file {} failed with message:{}".format(
-                        CLASSIFIER, file_path, response.text))
+                    "%s teaching of file %s failed with message:%s",
+                    CLASSIFIER, file_path, response.text)
                 self.hass.bus.fire(
                     EVENT_CLASSIFIER_TEACH, {
                         ATTR_CLASSIFIER: CLASSIFIER,
