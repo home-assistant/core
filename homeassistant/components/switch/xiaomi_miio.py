@@ -480,7 +480,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
                 self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
 
             if self._channel_usb is False and state.load_power:
-                    self._state_attrs[ATTR_LOAD_POWER] = state.load_power
+                self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:
             self._available = False
