@@ -107,6 +107,11 @@ class WemoLight(Light):
         """Flag supported features."""
         return SUPPORT_WEMO
 
+    @property
+    def available(self):
+        """Return if light is available."""
+        return self.device.state['available']
+
     def turn_on(self, **kwargs):
         """Turn the light on."""
         transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
@@ -194,6 +199,11 @@ class WemoDimmer(Light):
     def is_on(self):
         """Return true if dimmer is on. Standby is on."""
         return self._state
+
+    @property
+    def available(self):
+        """Return if dimmer is available."""
+        return self.device.state['available']
 
     def _update(self, force_update=True):
         """Update the device state."""
