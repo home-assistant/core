@@ -719,7 +719,7 @@ pyCEC==0.4.13
 
 # homeassistant.components.light.tplink
 # homeassistant.components.switch.tplink
-pyHS100==0.3.0
+pyHS100==0.3.1
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.22.1
