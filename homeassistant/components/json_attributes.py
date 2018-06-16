@@ -3,7 +3,6 @@ Core support for mapping a subset of values in a JSON dictionary
 into component attributes.
 """
 
-import voluptuous as vol
 import json
 import logging
 
@@ -15,8 +14,10 @@ CONF_JSON_ATTRS = 'json_attributes'
 
 json_attrs_validation = cv.ensure_list_csv
 
+
 def extract_json_attrs(json_attrs_conf, value):
-    _LOGGER.debug("extract_json_attrs called with value %s and conf %s", value, json_attrs_conf)
+    _LOGGER.debug("extract_json_attrs called with value %s and conf %s",
+                  value, json_attrs_conf)
     attributes = {}
     if value:
         try:
@@ -24,7 +25,7 @@ def extract_json_attrs(json_attrs_conf, value):
             if isinstance(json_dict, dict):
                 attributes = {k: json_dict[k]
                               for k in json_attrs_conf
-                              if k in json_dict }
+                              if k in json_dict}
             else:
                 _LOGGER.warning("JSON result was not a dictionary")
         except ValueError:

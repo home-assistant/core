@@ -126,7 +126,8 @@ class MqttSensor(MqttAvailability, Entity):
                     self.hass, self.value_is_expired, expiration_at)
 
             if self._json_attributes:
-                self._attributes = extract_json_attrs(self._json_attributes, payload)
+                self._attributes = extract_json_attrs(self._json_attributes,
+                                                      payload)
 
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
