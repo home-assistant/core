@@ -1189,7 +1189,7 @@ restrictedpython==4.0b4
 rflink==0.0.37
 
 # homeassistant.components.ring
-ring_doorbell==0.1.8
+ring_doorbell==0.2.1
 
 # homeassistant.components.notify.rocketchat
 rocketchat-API==0.6.1
