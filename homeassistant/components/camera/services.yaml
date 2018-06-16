@@ -49,3 +49,17 @@ onvif_ptz:
     zoom:
       description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
       example: "ZOOM_IN"
+
+nest_turn_off:
+  description: Turn off Nest Camera.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.living_room'
+
+nest_turn_on:
+  description: Turn on Nest Camera.
+  fields:
+    entity_id:
+      description: Entity id.
+      example: 'camera.living_room'
