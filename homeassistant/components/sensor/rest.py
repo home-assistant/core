@@ -19,8 +19,8 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION, STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.json_attributes import (
-    CONF_JSON_ATTRS, json_attrs_validation, extract_json_attrs)
+from homeassistant.helpers.json_attributes import (
+    CONF_JSON_ATTRS, JSON_ATTRS_VALIDATION, extract_json_attrs)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_AUTHENTICATION):
         vol.In([HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]),
     vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
-    vol.Optional(CONF_JSON_ATTRS, default=[]): json_attrs_validation,
+    vol.Optional(CONF_JSON_ATTRS, default=[]): JSON_ATTRS_VALIDATION,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,

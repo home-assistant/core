@@ -24,8 +24,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
-from homeassistant.components.json_attributes import (
-    CONF_JSON_ATTRS, json_attrs_validation, extract_json_attrs)
+from homeassistant.helpers.json_attributes import (
+    CONF_JSON_ATTRS, JSON_ATTRS_VALIDATION, extract_json_attrs)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_JSON_ATTRS, default=[]): json_attrs_validation,
+    vol.Optional(CONF_JSON_ATTRS, default=[]): JSON_ATTRS_VALIDATION,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     # Integrations shouldn't never expose unique_id through configuration
