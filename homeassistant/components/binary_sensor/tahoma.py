@@ -60,9 +60,13 @@ class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):
         return self._icon
 
     @property
-    def state_attributes(self):
-        """Return the state attributes of the sensor."""
+    def device_state_attributes(self):
+        """Return the device state attributes."""
         attr = {}
+        super_attr = super().device_state_attributes
+        if super_attr is not None:
+            attr.update(super_attr)
+
         if self._battery is not None:
             attr[ATTR_BATTERY_LEVEL] = self._battery
         return attr

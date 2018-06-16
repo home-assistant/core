@@ -58,9 +58,13 @@ class TahomaSensor(TahomaDevice, Entity):
             return '%'
 
     @property
-    def state_attributes(self):
-        """Return the state attributes of the sensor."""
+    def device_state_attributes(self):
+        """Return the device state attributes."""
         attr = {}
+        super_attr = super().device_state_attributes
+        if super_attr is not None:
+            attr.update(super_attr)
+
         if 'core:RSSILevelState' in self.tahoma_device.active_states:
             attr[ATTR_RSSI_LEVEL] = \
                 self.tahoma_device.active_states['core:RSSILevelState']
