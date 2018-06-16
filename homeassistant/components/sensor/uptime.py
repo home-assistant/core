@@ -20,6 +20,12 @@ DEFAULT_NAME = 'Uptime'
 
 ICON = 'mdi:clock'
 
+UNIT_OF_MEASUREMENT = {
+    'hours': 'h',
+    'minutes': 'min',
+    'days': 'd'
+}
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT, default='days'):
@@ -42,7 +48,7 @@ class UptimeSensor(Entity):
     def __init__(self, name, unit):
         """Initialize the uptime sensor."""
         self._name = name
-        self._unit = unit
+        self._unit = UNIT_OF_MEASUREMENT[unit]
         self.initial = dt_util.now()
         self._state = None
 
@@ -71,9 +77,9 @@ class UptimeSensor(Entity):
         delta = dt_util.now() - self.initial
         div_factor = 3600
 
-        if self.unit_of_measurement == 'days':
+        if self.unit_of_measurement == 'd':
             div_factor *= 24
-        elif self.unit_of_measurement == 'minutes':
+        elif self.unit_of_measurement == 'min':
             div_factor /= 60
 
         delta = delta.total_seconds() / div_factor
