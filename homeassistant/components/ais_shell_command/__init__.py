@@ -183,7 +183,6 @@ def _execute_upgrade(hass, call):
 def _show_network_devices_info(hass, call):
     import homeassistant.ais_dom.sensor.ais_device_search_mqtt as dsm
     info = dsm.get_text()
-    _LOGGER.error("info: " + str(info))
     hass.async_add_job(
         hass.states.async_set(
             'sensor.network_devices_info_value', '', {

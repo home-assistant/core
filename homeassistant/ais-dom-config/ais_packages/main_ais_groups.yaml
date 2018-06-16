@@ -9,21 +9,16 @@ homeassistant:
     group.dom_cloud:
       friendly_name: "Usługi AIS dom"
       order: 2
-    group.internet_status:
-      context_key_words: "internet,sieć"
-      context_answer: "OK, wybrano internet. Możesz nawigowac pilotem by uzyskać informację o statusie Twojej sieci."
-      remote_group_view: Pomoc
-      order: 3
     group.system_status:
       context_key_words: "system,status systemu"
       context_answer: "OK, wybrano status systemu. Możesz nawigować pilotem by uzyskać informację o statusie elementów systemu"
       remote_group_view: Pomoc
-      order: 4
+      order: 3
     group.ais_rss_help:
       context_key_words: "instrukcja,pomoc,pomocy,help"
       context_answer: "OK, wybierz pilotem stronę pomocy"
       remote_group_view: Pomoc
-      order: 5
+      order: 4
     group.all_switches:
       order: 1
       hidden: false
@@ -93,11 +88,16 @@ homeassistant:
     group.audio_player:
       order: 6
       remote_group_view: Audio
-    group.ais_tts_configuration:
-      context_key_words: "głos"
-      context_answer: "OK, wybrano konfigurację zamiany tekstu na mowę"
+    group.internet_status:
+      context_key_words: "internet,sieć,ustawienia sieci,wifi"
+      context_answer: "OK, wybrano internet. Możesz nawigowac pilotem by uzyskać informację o statusie Twojej sieci."
       remote_group_view: Ustawienia
       order: 1
+    group.ais_tts_configuration:
+      context_key_words: "głos,ustawienia głosu"
+      context_answer: "OK, wybrano konfigurację zamiany tekstu na mowę"
+      remote_group_view: Ustawienia
+      order: 2
 
 
 group:
@@ -137,7 +137,6 @@ group:
     view: yes
     icon: mdi:newspaper
     entities:
-      - group.ais_tts_configuration
       - group.ais_rss_news
   audio:
     name: audio
@@ -148,6 +147,13 @@ group:
       - group.podcast_player
       - group.music_player
       - group.audiobooks_player
+  setings:
+    name: setings
+    view: yes
+    icon:  mdi:account-settings-variant
+    entities:
+      - group.ais_tts_configuration
+      - group.internet_status
   pomoc:
       name: Pomoc
       view: yes
@@ -166,5 +172,4 @@ group:
         - group.ais_dev_ssh
         - group.ais_host_rename
         - group.system_status
-        - group.internet_status
         - group.ais_devices_in_network

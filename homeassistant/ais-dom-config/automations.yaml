@@ -67,25 +67,23 @@
       payload: 1
       topic: cmnd/dom/SetOption19
     service: mqtt.publish
+  - delay: '5'
   - alias: ''
     data:
-      text: Wykrywam urządzenia w sieci
-    service: ais_ai_service.say_it
+      payload: ''
+      topic: cmnd/dom/Power1
+    service: mqtt.publish
   - delay: '5'
   - alias: ''
     data: {}
     service: ais_updater.check_version
-  - alias: ''
-    data: {}
-    service: ais_shell_command.silent_scan_network_for_devices
-  - delay: '5'
   - data:
       text: Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?
     service: ais_ai_service.say_it
   - alias: ''
     data: {}
     service: ais_ai_service.prepare_remote_menu
-  - delay: '300'
+  - delay: '20'
   - alias: ''
     data: {}
     service: ais_shell_command.show_network_devices_info

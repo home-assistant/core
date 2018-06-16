@@ -29,6 +29,8 @@ homeassistant:
       custom_ui_state_card: state-card-text
     sensor.host_name_dev_info:
       custom_ui_state_card: state-card-text
+    sensor.https_connection_info:
+      custom_ui_state_card: state-card-text
     group.ais_devices_in_network:
       icon: mdi:help-network
     script.ais_scan_network_devices:
@@ -222,6 +224,13 @@ sensor:
                         Możesz zmienić nazwę hosta na inną ale pamiętaj, żeby zmienić też konfigurację urządzeń.\n
                         # UWAGA: Żeby zmiana była widoczna wymagany będzie restart!"
 
+  - platform: template
+    sensors:
+      https_connection_info:
+        value_template: "Komunikaja z serwerem WWW AIS dom a Twoją przeglądarką jest szyfrowana - protokół https.\n
+                        @https://ais-dom:8123 lub https://localhost:8123\n
+                        Zainstaluj poniższy certyfikat w swoim systemie/przeglądarce by dodać do zaufanych hosty: localhost i ais-dom."
+
 input_text:
   new_host_name:
     name: Nowa nazwa hosta
@@ -298,6 +307,8 @@ group:
   ais_dev_ssh:
     name: Zdalny dostęp
     entities:
+      - sensor.https_connection_info
+      - weblink.https_localhost_cert
       - sensor.ssh_connection_info
       - weblink.klucz_ssh
       - sensor.ftp_connection_info

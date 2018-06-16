@@ -157,11 +157,6 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 }
             )
 
-    def media_seek(self, position):
-        """Send seek command."""
-        # TODO
-        pass
-
     @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""

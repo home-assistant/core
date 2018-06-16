@@ -830,12 +830,40 @@ async def async_setup(hass, config):
 def _publish_command_to_frame(hass, key, val, ip):
     # sent the command to the android frame via http
     url = G_HTTP_REST_SERVICE_BASE_URL.format(ip)
-    requests.post(
-        url + '/command',
-        json={key: val, "ip": ip})
+    if key == "WifiConnectToSid":
+        if val == ais_global.G_EMPTY_OPTION:
+            return
+        # info to user
+        ssid = val.split(';')[0]
+        _say_it(hass, "ok, łączymy z siecią: " + ssid)
+        # TODO get password from file
+        password = hass.states.get('input_text.ais_android_wifi_password').state
+        wifi_type = val.split(';')[-1]
+        _LOGGER.error("wifi type: " + wifi_type)
+        requests.post(
+            url + '/command',
+            json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type})
+    else:
+        requests.post(
+            url + '/command',
+            json={key: val, "ip": ip})
 
 
 def _process_command_from_frame(hass, service):
+    def rssi_to_info(rssi):
+        info = "moc nieznana"
+        if rssi > -31:
+            return "moc " + str(rssi) + " doskonała"
+        if rssi > -68:
+            return "moc " + str(rssi) + " bardzo dobra"
+        if rssi > -71:
+            return "moc " + str(rssi) + " dobra"
+        if rssi > -81:
+            return "moc " + str(rssi) + " słaba"
+        if rssi > -91:
+            return "moc " + str(rssi) + " bardzo słaba"
+        return info
+
     # process from frame
     if service.data["topic"] == 'ais/speech_command':
         hass.async_add_job(
@@ -847,6 +875,28 @@ def _process_command_from_frame(hass, service):
             _process_code(
                 hass, json.loads(service.data["payload"]),
                 service.data["callback"])
+        )
+    elif service.data["topic"] == 'ais/wifi_scan_info':
+        wifis = json.loads(service.data["payload"])
+        wifis_names = [ais_global.G_EMPTY_OPTION]
+        for item in wifis["ScanResult"]:
+            if len(item["ssid"]) > 1:
+                wifis_names.append(
+                    item["ssid"] + "; " + " " +
+                    str(item["frequency_mhz"]) + " mhz; " +
+                    rssi_to_info(item["rssi"]) +
+                    "; " + item["capabilities"])
+        info = "Mamy dostępne " + str(len(wifis_names)) + " wifi."
+        if len(wifis_names) > 0:
+            info += " Wybierz sieć z którą chcesz się połączyć."
+            info += " Jeżeli łączysz się pierwszy raz z zabezpieczoną siecią to wybierz lokalizację pliku z hasłem."
+        _say_it(hass, info)
+        hass.async_run_job(
+            hass.services.call(
+                'input_select',
+                'set_options', {
+                    "entity_id": "input_select.ais_android_wifi_network",
+                    "options": wifis_names})
         )
     else:
         # TODO process this without mqtt
