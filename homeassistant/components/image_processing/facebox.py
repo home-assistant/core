@@ -95,17 +95,15 @@ def valid_file_path(file_path):
         _LOGGER.error(
             "%s error: Invalid file path: %s", CLASSIFIER, file_path)
         return False
-    else:
-        return True
+    return True
 
 
 def valid_image(file_path):
     """Check that a file_path points to an image."""
     if file_path.endswith(VALID_FILETYPES):
         return True
-    else:
-        _LOGGER.error("Not a valid image file: %s", file_path)
-        return False
+    _LOGGER.error("Not a valid image file: %s", file_path)
+    return False
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
