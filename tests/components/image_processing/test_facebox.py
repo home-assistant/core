@@ -85,12 +85,6 @@ def test_valid_file_path():
         assert not fb.valid_file_path('test_path')
 
 
-def test_valid_image():
-    """Test for valid images."""
-    assert fb.valid_image('test.jpg')
-    assert not fb.valid_image('test.foo')
-
-
 @pytest.fixture
 def mock_image():
     """Return a mock camera image."""
