@@ -586,7 +586,7 @@ nanoleaf==0.4.1
 netdata==0.1.2
 
 # homeassistant.components.discovery
-netdisco==1.4.1
+netdisco==1.5.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
