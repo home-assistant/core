@@ -57,13 +57,12 @@ class LinodeSwitch(SwitchDevice):
         """Return the name of the switch."""
         if self.data is not None:
             return self.data.label
+        return None
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        if self.data is not None:
-            return self.data.status == 'running'
-        return False
+        return self._state
 
     @property
     def device_state_attributes(self):
@@ -98,3 +97,5 @@ class LinodeSwitch(SwitchDevice):
             for node in self._linode.data:
                 if node.id == self._node_id:
                     self.data = node
+        if self.data is not None:
+            self._state = self.data.status == 'running'

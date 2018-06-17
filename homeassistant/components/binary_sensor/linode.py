@@ -58,13 +58,12 @@ class LinodeBinarySensor(BinarySensorDevice):
         """Return the name of the sensor."""
         if self.data is not None:
             return self.data.label
+        return None
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        if self.data is not None:
-            return self.data.status == 'running'
-        return False
+        return self._state
 
     @property
     def device_class(self):
@@ -94,3 +93,5 @@ class LinodeBinarySensor(BinarySensorDevice):
             for node in self._linode.data:
                 if node.id == self._node_id:
                     self.data = node
+        if self.data is not None:
+            self._state = self.data.status == 'running'
