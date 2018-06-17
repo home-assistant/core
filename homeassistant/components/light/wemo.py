@@ -227,3 +227,7 @@ class WemoDimmer(Light):
         else:
             brightness = 255
         self.wemo.set_brightness(brightness)
+
+    def turn_off(self, **kwargs):
+        """Turn the dimmer off."""
+        self.wemo.off()
