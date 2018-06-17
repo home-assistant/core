@@ -75,16 +75,16 @@ class HomeAccessory(Accessory):
         """Add battery service if available"""
         battery_level = self.hass.states.get(self.entity_id).attributes \
             .get(ATTR_BATTERY_LEVEL)
-        if not battery_level or battery_level is None:
+        if battery_level is None:
             return
         _LOGGER.debug('%s: Found battery level attribute', self.entity_id)
         self._support_battery_level = True
         serv_battery = self.add_preload_service(SERV_BATTERY_SERVICE)
-        self.char_battery = serv_battery.configure_char(
+        self._char_battery = serv_battery.configure_char(
             CHAR_BATTERY_LEVEL, value=0)
-        self.char_charging = serv_battery.configure_char(
+        self._char_charging = serv_battery.configure_char(
             CHAR_CHARGING_STATE, value=2)
-        self.char_low_battery = serv_battery.configure_char(
+        self._char_low_battery = serv_battery.configure_char(
             CHAR_STATUS_LOW_BATTERY, value=0)
 
     async def run(self):
@@ -109,11 +109,14 @@ class HomeAccessory(Accessory):
         self.hass.async_add_job(self.update_state, new_state)
 
     def update_battery(self, new_state):
-        """Update battery service if available."""
+        """Update battery service if available.
+
+        Only call this function if self._support_battery_level is True.
+        """
         battery_level = convert_to_float(
             new_state.attributes.get(ATTR_BATTERY_LEVEL))
-        self.char_battery.set_value(battery_level)
-        self.char_low_battery.set_value(battery_level < 20)
+        self._char_battery.set_value(battery_level)
+        self._char_low_battery.set_value(battery_level < 20)
         _LOGGER.debug('%s: Updated battery level to %d', self.entity_id,
                       battery_level)
         if not self._support_battery_charging:
@@ -123,7 +126,7 @@ class HomeAccessory(Accessory):
             self._support_battery_charging = False
             return
         hk_charging = 1 if charging is True else 0
-        self.char_charging.set_value(hk_charging)
+        self._char_charging.set_value(hk_charging)
         _LOGGER.debug('%s: Updated battery charging to %d', self.entity_id,
                       hk_charging)
 
