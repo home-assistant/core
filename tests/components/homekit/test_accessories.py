@@ -56,8 +56,7 @@ async def test_home_accessory(hass, hk_driver):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, hk_driver, 'Home Accessory',
-                        entity_id, 2, None)
+    acc = HomeAccessory(hass, hk_driver, 'Home Accessory', entity_id, 2, None)
     assert acc.hass == hass
     assert acc.display_name == 'Home Accessory'
     assert acc.aid == 2
