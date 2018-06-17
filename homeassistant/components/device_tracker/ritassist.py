@@ -213,10 +213,10 @@ class RitAssistDevice(Entity):
         import requests
 
         base_url = "https://secure.ritassist.nl/GenericServiceJSONP.ashx"
-        query = f"""?f=CheckExtraVehicleInfo
-                    &token={authentication_info.token}
-                    &equipmentId={str(self.identifier)}
-                    &lastHash=null&padding=false"""
+        query = ("?f=CheckExtraVehicleInfo"
+                    f"&token={authentication_info.token}"
+                    f"&equipmentId={str(self.identifier)}"
+                    "&lastHash=null&padding=false")
 
         try:
             response = requests.get(base_url + query)
