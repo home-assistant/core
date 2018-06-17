@@ -6,6 +6,7 @@ https://home-assistant.io/components/device_tracker.ritassist/
 """
 import logging
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS, PLATFORM_SCHEMA, DeviceScanner)
