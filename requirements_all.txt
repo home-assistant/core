@@ -113,7 +113,7 @@ alarmdecoder==1.13.2
 alpha_vantage==2.0.0
 
 # homeassistant.components.amcrest
-amcrest==1.2.2
+amcrest==1.2.3
 
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
@@ -404,7 +404,7 @@ hipnotify==1.0.8
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180615.0
+home-assistant-frontend==20180617.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.6
@@ -423,9 +423,6 @@ httplib2==0.10.3
 
 # homeassistant.components.media_player.braviatv
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
-
-# homeassistant.components.media_player.spotify
-https://github.com/happyleavesaoc/spotipy/archive/544614f4b1d508201d363e84e871f86c90aa26b2.zip#spotipy==2.4.4
 
 # homeassistant.components.neato
 https://github.com/jabesq/pybotvac/archive/v0.0.5.zip#pybotvac==0.0.5
@@ -722,7 +719,7 @@ pyCEC==0.4.13
 
 # homeassistant.components.light.tplink
 # homeassistant.components.switch.tplink
-pyHS100==0.3.0
+pyHS100==0.3.1
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.22.1
@@ -746,7 +743,7 @@ pyairvisual==2.0.1
 pyalarmdotcom==0.3.2
 
 # homeassistant.components.arlo
-pyarlo==0.1.6
+pyarlo==0.1.7
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.1.5
@@ -1174,7 +1171,7 @@ rachiopy==0.1.2
 radiotherm==1.3
 
 # homeassistant.components.raincloud
-raincloudy==0.0.4
+raincloudy==0.0.5
 
 # homeassistant.components.raspihats
 # raspihats==2.2.3
@@ -1189,7 +1186,7 @@ restrictedpython==4.0b4
 rflink==0.0.37
 
 # homeassistant.components.ring
-ring_doorbell==0.1.8
+ring_doorbell==0.2.1
 
 # homeassistant.components.notify.rocketchat
 rocketchat-API==0.6.1
@@ -1280,6 +1277,9 @@ speedtest-cli==2.0.2
 
 # homeassistant.components.sensor.spotcrime
 spotcrime==1.0.3
+
+# homeassistant.components.media_player.spotify
+spotipy-homeassistant==2.4.4.dev1
 
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator

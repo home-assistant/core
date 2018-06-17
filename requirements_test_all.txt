@@ -81,7 +81,7 @@ hbmqtt==0.9.2
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180615.0
+home-assistant-frontend==20180617.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -180,7 +180,7 @@ restrictedpython==4.0b4
 rflink==0.0.37
 
 # homeassistant.components.ring
-ring_doorbell==0.1.8
+ring_doorbell==0.2.1
 
 # homeassistant.components.media_player.yamaha
 rxv==0.5.1

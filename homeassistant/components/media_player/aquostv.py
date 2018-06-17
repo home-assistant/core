@@ -59,7 +59,6 @@ SOURCES = {0: 'TV / Antenna',
            8: 'PC_IN'}
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sharp Aquos TV platform."""
     import sharp_aquos_rc
@@ -104,7 +103,6 @@ def _retry(func):
     return wrapper
 
 
-# pylint: disable=abstract-method
 class SharpAquosTVDevice(MediaPlayerDevice):
     """Representation of a Aquos TV."""
 
