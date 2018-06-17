@@ -2,7 +2,8 @@
 import concurrent.futures
 import threading
 import logging
-from asyncio import coroutines
+from asyncio import (
+    coroutines, iscoroutinefunction as org_iscoroutinefunction)
 from asyncio.futures import Future
 
 from asyncio import ensure_future
@@ -172,6 +173,6 @@ def run_callback_threadsafe(loop, callback, *args):
 def iscoroutinefunction(callback):
     """Avoid CPython bug https://bugs.python.org/issue33261."""
     try:
-        return asyncio.iscoroutinefunction(callback)
+        return org_iscoroutinefunction(callback)
     except AttributeError:
         return False
