@@ -35,7 +35,7 @@ from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, InvalidStateError)
 from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe,
-    fire_coroutine_threadsafe)
+    fire_coroutine_threadsafe, iscoroutinefunction)
 import homeassistant.util as util
 import homeassistant.util.dt as dt_util
 import homeassistant.util.location as location
@@ -219,7 +219,7 @@ class HomeAssistant(object):
             task = self.loop.create_task(target)
         elif is_callback(target):
             self.loop.call_soon(target, *args)
-        elif asyncio.iscoroutinefunction(target):
+        elif iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
         else:
             task = self.loop.run_in_executor(None, target, *args)
