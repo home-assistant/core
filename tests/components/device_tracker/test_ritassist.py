@@ -32,7 +32,7 @@ class TestRitAssistSetup(unittest.TestCase):
     def test_setup(self, mock_req):
         """Test for successfully setting up the platform."""
         mock_req.post('https://api.ritassist.nl/api/session/login',
-                     text=load_fixture('ritassist_authentication.json'))
+                      text=load_fixture('ritassist_authentication.json'))
 
         mock_req.get('https://api.ritassist.nl/api/equipment/Getfleet',
                      text=load_fixture('ritassist_fleet.json'))
@@ -40,7 +40,9 @@ class TestRitAssistSetup(unittest.TestCase):
         mock_req.get('https://secure.ritassist.nl/GenericServiceJSONP.ashx',
                      text=load_fixture('ritassist_extra_information.json'))
 
-        self.assertTrue(setup_component(self.hass, 'device_tracker', self.config))
+        self.assertTrue(setup_component(self.hass,
+                                        'device_tracker',
+                                        self.config))
 
         entities = self.hass.states.async_entity_ids('device_tracker')
         self.assertEqual(len(entities), 1)

@@ -149,7 +149,7 @@ class RitAssistDevice(Entity):
         self._last_seen = None
         self._equipment_id = None
 
-        self._malfunction_indicator_light = False
+        self._malfunction_light = False
         self._fuel_level = -1
         self._coolant_temperature = 0
         self._power_voltage = 0
@@ -203,7 +203,7 @@ class RitAssistDevice(Entity):
             'equipment_id': self._equipment_id,
             ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS,
             'fuel_level': self._fuel_level,
-            'malfunction_indicator_light': self._malfunction_indicator_light,
+            'malfunction_light': self._malfunction_light,
             'coolant_temperature': self._coolant_temperature,
             'power_voltage': self._power_voltage
         }
@@ -214,15 +214,15 @@ class RitAssistDevice(Entity):
 
         base_url = "https://secure.ritassist.nl/GenericServiceJSONP.ashx"
         query = ("?f=CheckExtraVehicleInfo"
-                    f"&token={authentication_info.token}"
-                    f"&equipmentId={str(self.identifier)}"
-                    "&lastHash=null&padding=false")
+                 f"&token={authentication_info.token}"
+                 f"&equipmentId={str(self.identifier)}"
+                 "&lastHash=null&padding=false")
 
         try:
             response = requests.get(base_url + query)
             json = response.json()
 
-            self._malfunction_indicator_light = json['MalfunctionIndicatorLight']
+            self._malfunction_light = json['MalfunctionIndicatorLight']
             self._fuel_level = json['FuelLevel']
             self._coolant_temperature = json['EngineCoolantTemperature']
             self._power_voltage = json['PowerVoltage']
