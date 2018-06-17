@@ -124,7 +124,8 @@ async def async_setup_entry(hass, entry):
     _LOGGER.debug("proceeding with setup")
     conf = hass.data.get(DATA_NEST_CONFIG, {})
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
-    await hass.async_add_job(hass.data[DATA_NEST].initialize)
+    if not await hass.async_add_job(hass.data[DATA_NEST].initialize):
+        return False
 
     for component in 'climate', 'camera', 'sensor', 'binary_sensor':
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
@@ -205,7 +206,8 @@ class NestDevice(object):
         except (AuthorizationError, APIError, socket.error) as err:
             _LOGGER.error(
                 "Connection error while access Nest web service: %s", err)
-            raise err
+            return False
+        return True
 
     def structures(self):
         """Generate a list of structures."""

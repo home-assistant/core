@@ -164,8 +164,7 @@ async def _async_setup_component(hass: core.HomeAssistant,
         return False
 
     for entry in hass.config_entries.async_entries(domain):
-        if not await entry.async_setup(hass, component=component):
-            async_notify_setup_error(hass, entry.domain, True)
+        await entry.async_setup(hass, component=component)
 
     hass.config.components.add(component.DOMAIN)  # type: ignore
 
