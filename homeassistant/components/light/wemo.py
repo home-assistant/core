@@ -200,11 +200,6 @@ class WemoDimmer(Light):
         """Return true if dimmer is on. Standby is on."""
         return self._state
 
-    @property
-    def available(self):
-        """Return if dimmer is available."""
-        return self.device.state['available']
-
     def _update(self, force_update=True):
         """Update the device state."""
         try:
