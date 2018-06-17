@@ -224,6 +224,11 @@ async def setup_gateway(hass, mock_gateway, mock_api,
     if known_hosts is None:
         known_hosts = {}
 
+    # Catch any exceptions within the core loop
+    handler = hass.loop.get_exception_handler()
+    exception_handler = Mock(wraps=handler)
+    hass.loop.set_exception_handler(exception_handler)
+
     with patch('pytradfri.api.aiocoap_api.APIFactory.generate_psk',
                generate_psk), \
             patch('pytradfri.api.aiocoap_api.APIFactory.request', mock_api), \
@@ -240,6 +245,7 @@ async def setup_gateway(hass, mock_gateway, mock_api,
                                         }
                                     })
         await hass.async_block_till_done()
+    exception_handler.assert_not_called()
 
 
 async def test_setup_gateway(hass, mock_gateway, mock_api):
