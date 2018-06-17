@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 import pytest
 import requests
 import requests_mock
-from unittest import mock
 
 from homeassistant.core import callback
 from homeassistant.const import (
