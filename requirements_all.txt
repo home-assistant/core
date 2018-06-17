@@ -187,6 +187,9 @@ boto3==1.4.7
 # homeassistant.scripts.credstash
 botocore==1.7.34
 
+# homeassistant.components.media_player.braviatv
+braviarc-homeassistant==0.3.7.dev0
+
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
 broadlink==0.9.0
@@ -423,9 +426,6 @@ httplib2==0.10.3
 
 # homeassistant.components.sensor.dht
 # https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.2
-
-# homeassistant.components.media_player.braviatv
-https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 
 # homeassistant.components.neato
 https://github.com/jabesq/pybotvac/archive/v0.0.5.zip#pybotvac==0.0.5
