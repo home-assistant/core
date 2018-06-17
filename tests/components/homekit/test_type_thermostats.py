@@ -13,7 +13,7 @@ from homeassistant.components.homekit.const import (
     PROP_MAX_VALUE, PROP_MIN_VALUE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    CONF_TEMPERATURE_UNIT, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 from tests.common import async_mock_service
 from tests.components.homekit.common import patch_debounce
@@ -323,7 +323,7 @@ async def test_thermostat_fahrenheit(hass, hk_driver, cls):
     # support_auto = True
     hass.states.async_set(entity_id, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 6})
     await hass.async_block_till_done()
-    with patch.object(hass.config.units, 'temperature_unit',
+    with patch.object(hass.config.units, CONF_TEMPERATURE_UNIT,
                       new=TEMP_FAHRENHEIT):
         acc = cls.thermostat(hass, hk_driver, 'Climate', entity_id, 2, None)
     await hass.async_add_job(acc.run)

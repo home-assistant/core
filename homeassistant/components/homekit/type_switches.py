@@ -3,7 +3,7 @@ import logging
 
 from pyhap.const import CATEGORY_OUTLET, CATEGORY_SWITCH
 
-from homeassistant.components.switch import DOMAIN as SWITCH
+from homeassistant.components.switch import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_ON)
 from homeassistant.core import split_entity_id
@@ -37,7 +37,7 @@ class Outlet(HomeAccessory):
         self.flag_target_state = True
         params = {ATTR_ENTITY_ID: self.entity_id}
         service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
-        self.hass.services.call(SWITCH, service, params)
+        self.hass.services.call(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update switch state after state changed."""
