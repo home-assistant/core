@@ -213,13 +213,18 @@ class RitAssistDevice(Entity):
         import requests
 
         base_url = "https://secure.ritassist.nl/GenericServiceJSONP.ashx"
-        query = ("?f=CheckExtraVehicleInfo"
-                 f"&token={authentication_info.token}"
-                 f"&equipmentId={str(self.identifier)}"
-                 "&lastHash=null&padding=false")
+        query = "?f=CheckExtraVehicleInfo" \
+                "&token={token}" \
+                "&equipmentId={identifier}" \
+                "&lastHash=null&padding=false"
+
+        parameters = {
+            'token': authentication_info.access_token,
+            'identifier': str(self.identifier)
+        }
 
         try:
-            response = requests.get(base_url + query)
+            response = requests.get(base_url + query.format(**parameters))
             json = response.json()
 
             self._malfunction_light = json['MalfunctionIndicatorLight']
