@@ -109,6 +109,7 @@ def valid_image(file_path):
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the classifier."""
     entities = []
+    facebox = None
     for camera in config[CONF_SOURCE]:
         facebox = FaceClassifyEntity(
             config[CONF_IP_ADDRESS],
