@@ -90,11 +90,13 @@ def post_image(url, image):
 
 def valid_file_path(file_path):
     """Check that a file_path points to a valid file."""
-    if not os.access(file_path, os.R_OK):
+    try:
+        cv.isfile(file_path)
+        return True
+    except:
         _LOGGER.error(
             "%s error: Invalid file path: %s", CLASSIFIER, file_path)
         return False
-    return True
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
