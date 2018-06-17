@@ -31,7 +31,6 @@ EVENT_CLASSIFIER_TEACH = 'image_processing.teach_classifier'
 FILE_PATH = 'file_path'
 SERVICE_FACEBOX_TEACH_FACE = 'facebox_teach_face'
 TIMEOUT = 9
-VALID_FILETYPES = ('.jpg', '.png', '.jpeg')
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -98,14 +97,6 @@ def valid_file_path(file_path):
     return True
 
 
-def valid_image(file_path):
-    """Check that a file_path points to an image."""
-    if file_path.endswith(VALID_FILETYPES):
-        return True
-    _LOGGER.error("Not a valid image file: %s", file_path)
-    return False
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the classifier."""
     entities = []
@@ -169,7 +160,7 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
 
     def teach(self, name, file_path):
         """Teach classifier a face name."""
-        if valid_file_path(file_path) and valid_image(file_path):
+        if valid_file_path(file_path):
             data = {ATTR_NAME: name, 'id': file_path}
             file = {'file': open(file_path, 'rb')}
             response = requests.post(self._url_teach, data=data, files=file)
