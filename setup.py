@@ -52,7 +52,6 @@ REQUIRES = [
     'pytz>=2018.04',
     'pyyaml>=3.11,<4',
     'requests==2.18.4',
-    'typing>=3,<4',
     'voluptuous==0.11.1',
 ]
 
