@@ -5,18 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.ritassist/
 """
 import logging
-import time
-import requests
 import voluptuous as vol
-
 import homeassistant.helpers.config_validation as cv
-
 from homeassistant.components.device_tracker import (
     ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_utc_time_change
-from homeassistant.util.json import load_json, save_json
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,6 +43,8 @@ class RitAssistDeviceScanner(DeviceScanner):
 
     def __init__(self, hass, config, see, discovery_info):
         """Initialize RitAssistDeviceScanner."""
+        from homeassistant.helpers.event import track_utc_time_change
+
         self.discovery_info = discovery_info
         self.hass = hass
         self.devices = []
@@ -65,6 +62,8 @@ class RitAssistDeviceScanner(DeviceScanner):
 
     def get_access_token(self):
         """Retrieve an access token from API."""
+        import requests
+
         data_url = "https://api.ritassist.nl/api/session/login"
 
         try:
@@ -87,6 +86,8 @@ class RitAssistDeviceScanner(DeviceScanner):
 
     def refresh(self) -> None:
         """Refresh device information from the platform."""
+        import requests
+
         if (self.authentication_info is None or
                 not self.authentication_info.is_valid()):
             self.get_access_token()
@@ -100,8 +101,9 @@ class RitAssistDeviceScanner(DeviceScanner):
             self.data = response.json()
             self.devices = self.parse_devices(self.data)
 
-            for device_index in range(0, len(self.devices)):
-                device = self.devices[device_index]
+            for device in self.devices:
+                device.get_extra_vehicle_info(self.authentication_info)
+
                 self.see(dev_id=device.plate_as_id,
                          gps=(device.latitude, device.longitude),
                          attributes=device.state_attributes,
@@ -145,6 +147,12 @@ class RitAssistDevice(Entity):
         self._altitude = 0
         self._speed = 0
         self._last_seen = None
+        self._equipment_id = None
+
+        self._malfunction_indicator_light = False
+        self._fuel_level = -1
+        self._coolant_temperature = 0
+        self._power_voltage = 0
 
     @property
     def identifier(self):
@@ -160,6 +168,11 @@ class RitAssistDevice(Entity):
     def license_plate(self):
         """Return the license plate of the vehicle."""
         return self._license_plate
+
+    @property
+    def equipment_id(self):
+        """Return the equipment_id of the vehicle."""
+        return self._equipment_id
 
     @property
     def latitude(self):
@@ -187,8 +200,34 @@ class RitAssistDevice(Entity):
             'speed': self._speed,
             'last_seen': self._last_seen,
             'friendly_name': self._license_plate,
-            ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS
+            'equipment_id': self._equipment_id,
+            ATTR_SOURCE_TYPE: SOURCE_TYPE_GPS,
+            'fuel_level': self._fuel_level,
+            'malfunction_indicator_light': self._malfunction_indicator_light,
+            'coolant_temperature': self._coolant_temperature,
+            'power_voltage': self._power_voltage
         }
+
+    def get_extra_vehicle_info(self, authentication_info):
+        """Get extra data from the API."""
+        import requests
+
+        base_url = 'https://secure.ritassist.nl/GenericServiceJSONP.ashx'
+        query = f"?f=CheckExtraVehicleInfo&token={authentication_info.token}"
+        query += f"&equipmentId={str(self.identifier)}"
+        query += f"&lastHash=null&padding=false"
+
+        try:
+            response = requests.get(base_url + query)
+            r = response.json()
+
+            self._malfunction_indicator_light = r['MalfunctionIndicatorLight']
+            self._fuel_level = r['FuelLevel']
+            self._coolant_temperature = r['EngineCoolantTemperature']
+            self._power_voltage = r['PowerVoltage']
+
+        except requests.exceptions.ConnectionError:
+            _LOGGER.error('ConnectionError: Could not connect to RitAssist')
 
     def update_from_json(self, json_device):
         """Set all attributes based on API response."""
@@ -196,6 +235,7 @@ class RitAssistDevice(Entity):
         self._license_plate = json_device['EquipmentHeader']['SerialNumber']
         self._make = json_device['EquipmentHeader']['Make']
         self._model = json_device['EquipmentHeader']['Model']
+        self._equipment_id = json_device['EquipmentHeader']['EquipmentID']
         self._active = json_device['EngineRunning']
         self._odo = json_device['Odometer']
         self._latitude = json_device['Location']['Latitude']
@@ -215,8 +255,15 @@ class RitAssistAuthenticationInfo(object):
         self.authenticated = None
         self.expires_in = None
 
+    @property
+    def token(self):
+        """Return the access token."""
+        return self.access_token
+
     def set_json(self, json):
         """Set all attributes based on JSON response."""
+        import time
+
         self.access_token = json['access_token']
         self.refresh_token = json['refresh_token']
         self.expires_in = json['expires_in']
@@ -236,6 +283,8 @@ class RitAssistAuthenticationInfo(object):
 
     def save(self, filename):
         """Save the authentication information to a file for caching."""
+        from homeassistant.util.json import save_json
+
         json = {
             'access_token': self.access_token,
             'refresh_token': self.refresh_token,
@@ -248,6 +297,8 @@ class RitAssistAuthenticationInfo(object):
     @staticmethod
     def load(filename):
         """Load the authentication information from a file for caching."""
+        from homeassistant.util.json import load_json
+
         data = load_json(filename)
         if data:
             result = RitAssistAuthenticationInfo()
@@ -261,6 +312,8 @@ class RitAssistAuthenticationInfo(object):
 
     def _check(self):
         """Check if the access token is expired or not."""
+        import time
+
         if self.expires_in is None or self.authenticated is None:
             return False
 
