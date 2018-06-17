@@ -79,10 +79,10 @@ def test_parse_faces():
     assert fb.parse_faces(MOCK_JSON['faces']) == PARSED_FACES
 
 
+@patch('os.access', Mock(return_value=False))
 def test_valid_file_path():
     """Test that an invalid file_path is caught."""
-    with mock.patch('os.access', mock.Mock(return_value=False)):
-        assert not fb.valid_file_path('test_path')
+    assert not fb.valid_file_path('test_path')
 
 
 @pytest.fixture
