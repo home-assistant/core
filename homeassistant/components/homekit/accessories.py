@@ -69,12 +69,15 @@ class HomeAccessory(Accessory):
         self.entity_id = entity_id
         self.hass = hass
         self.debounce = {}
+        self._flag = {SERV_BATTERY_SERVICE: False,
+                      ATTR_BATTERY_CHARGING: True}
 
         """Add battery service if available"""
         battery_level = self.hass.states.get(self.entity_id).attributes \
             .get(ATTR_BATTERY_LEVEL)
         if battery_level:
             _LOGGER.debug('%s: Found battery level attribute', self.entity_id)
+            self._flag[SERV_BATTERY_SERVICE] = True
             serv_battery = self.add_preload_service(SERV_BATTERY_SERVICE)
             self.char_battery = serv_battery.configure_char(
                 CHAR_BATTERY_LEVEL, value=0)
@@ -100,31 +103,28 @@ class HomeAccessory(Accessory):
         _LOGGER.debug('New_state: %s', new_state)
         if new_state is None:
             return
-        self.hass.async_add_job(self.update_battery_level, new_state)
+        if self._flag[SERV_BATTERY_SERVICE]:
+            self.hass.async_add_job(self.update_battery, new_state)
         self.hass.async_add_job(self.update_state, new_state)
 
-    def update_battery_level(self, new_state):
+    def update_battery(self, new_state):
         """Update battery service if available."""
         battery_level = convert_to_float(
             new_state.attributes.get(ATTR_BATTERY_LEVEL))
-        if battery_level is None:
-            return
         self.char_battery.set_value(battery_level)
         self.char_low_battery.set_value(battery_level < 20)
         _LOGGER.debug('%s: Updated battery level to %d', self.entity_id,
                       battery_level)
-        self.hass.async_add_job(self.update_battery_charging, new_state)
-
-    def update_battery_charging(self, new_state):
-        """Update battery service if available."""
-        charging = new_state.attributes.get(ATTR_BATTERY_CHARGING)
-        if charging is None:
-            hk_charging = 2
-        else:
-            hk_charging = 1 if charging is True else 0
-        self.char_charging.set_value(hk_charging)
-        _LOGGER.debug('%s: Updated battery charging to %d', self.entity_id,
-                      hk_charging)
+        if self._flag[ATTR_BATTERY_CHARGING]:
+            charging = new_state.attributes.get(ATTR_BATTERY_CHARGING)
+            if charging is None:
+                self._flag[ATTR_BATTERY_CHARGING] = False
+                hk_charging = 2
+            else:
+                hk_charging = 1 if charging is True else 0
+            self.char_charging.set_value(hk_charging)
+            _LOGGER.debug('%s: Updated battery charging to %d', self.entity_id,
+                          hk_charging)
 
     def update_state(self, new_state):
         """Method called on state change to update HomeKit value.

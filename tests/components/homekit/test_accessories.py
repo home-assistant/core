@@ -104,8 +104,7 @@ async def test_battery_service(hass, hk_driver):
     hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 50})
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, hk_driver, 'Battery Service',
-                        entity_id, 2, None)
+    acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2, None)
     assert acc.char_battery.value == 0
     assert acc.char_low_battery.value == 0
     assert acc.char_charging.value == 2
@@ -120,8 +119,7 @@ async def test_battery_service(hass, hk_driver):
         ATTR_BATTERY_LEVEL: 10, ATTR_BATTERY_CHARGING: True})
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, hk_driver, 'Battery Service',
-                        entity_id, 2, None)
+    acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2, None)
     assert acc.char_battery.value == 0
     assert acc.char_low_battery.value == 0
     assert acc.char_charging.value == 2
@@ -136,8 +134,7 @@ async def test_battery_service(hass, hk_driver):
         ATTR_BATTERY_LEVEL: 100, ATTR_BATTERY_CHARGING: False})
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, hk_driver, 'Battery Service',
-                        entity_id, 2, None)
+    acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2, None)
     assert acc.char_battery.value == 0
     assert acc.char_low_battery.value == 0
     assert acc.char_charging.value == 2
