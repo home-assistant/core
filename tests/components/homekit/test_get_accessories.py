@@ -8,10 +8,12 @@ import homeassistant.components.cover as cover
 import homeassistant.components.climate as climate
 import homeassistant.components.media_player as media_player
 from homeassistant.components.homekit import get_accessory, TYPES
-from homeassistant.components.homekit.const import CONF_FEATURE_LIST
+from homeassistant.components.homekit.const import (
+    CONF_FEATURE_LIST, FEATURE_ON_OFF, TYPE_OUTLET, TYPE_SWITCH)
 from homeassistant.const import (
     ATTR_CODE, ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_TYPE)
+    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, CONF_TYPE, TEMP_CELSIUS,
+    TEMP_FAHRENHEIT)
 
 
 def test_not_supported(caplog):
@@ -21,8 +23,8 @@ def test_not_supported(caplog):
         is None
 
     # invalid aid
-    assert get_accessory(None, None, State('light.demo', 'on'), None,
-                         None) is None
+    assert get_accessory(None, None, State('light.demo', 'on'), None, None) \
+        is None
     assert caplog.records[0].levelname == 'WARNING'
     assert 'invalid aid' in caplog.records[0].msg
 
@@ -30,7 +32,7 @@ def test_not_supported(caplog):
 def test_not_supported_media_player():
     """Test if mode isn't supported and if no supported modes."""
     # selected mode for entity not supported
-    config = {CONF_FEATURE_LIST: {'on_off': None}}
+    config = {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}}
     entity_state = State('media_player.demo', 'on')
     assert get_accessory(None, None, entity_state, 2, config) is None
 
@@ -58,7 +60,8 @@ def test_customize_options(config, name):
     ('Lock', 'lock.test', 'locked', {}, {ATTR_CODE: '1234'}),
     ('MediaPlayer', 'media_player.test', 'on',
      {ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_TURN_ON |
-      media_player.SUPPORT_TURN_OFF}, {CONF_FEATURE_LIST: {'on_off': None}}),
+      media_player.SUPPORT_TURN_OFF}, {CONF_FEATURE_LIST:
+                                       {FEATURE_ON_OFF: None}}),
     ('SecuritySystem', 'alarm_control_panel.test', 'armed_away', {},
      {ATTR_CODE: '1234'}),
     ('Thermostat', 'climate.test', 'auto', {}, {}),
@@ -108,18 +111,15 @@ def test_type_covers(type_name, entity_id, state, attrs):
      {ATTR_DEVICE_CLASS: 'co2'}),
     ('HumiditySensor', 'sensor.humidity', '20',
      {ATTR_DEVICE_CLASS: 'humidity', ATTR_UNIT_OF_MEASUREMENT: '%'}),
-    ('LightSensor', 'sensor.light', '900',
-     {ATTR_DEVICE_CLASS: 'illuminance'}),
-    ('LightSensor', 'sensor.light', '900',
-     {ATTR_UNIT_OF_MEASUREMENT: 'lm'}),
-    ('LightSensor', 'sensor.light', '900',
-     {ATTR_UNIT_OF_MEASUREMENT: 'lx'}),
+    ('LightSensor', 'sensor.light', '900', {ATTR_DEVICE_CLASS: 'illuminance'}),
+    ('LightSensor', 'sensor.light', '900', {ATTR_UNIT_OF_MEASUREMENT: 'lm'}),
+    ('LightSensor', 'sensor.light', '900', {ATTR_UNIT_OF_MEASUREMENT: 'lx'}),
     ('TemperatureSensor', 'sensor.temperature', '23',
      {ATTR_DEVICE_CLASS: 'temperature'}),
     ('TemperatureSensor', 'sensor.temperature', '23',
-     {ATTR_UNIT_OF_MEASUREMENT: '°C'}),
+     {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS}),
     ('TemperatureSensor', 'sensor.temperature', '74',
-     {ATTR_UNIT_OF_MEASUREMENT: '°F'}),
+     {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT}),
 ])
 def test_type_sensors(type_name, entity_id, state, attrs):
     """Test if sensor types are associated correctly."""
@@ -131,13 +131,13 @@ def test_type_sensors(type_name, entity_id, state, attrs):
 
 
 @pytest.mark.parametrize('type_name, entity_id, state, attrs, config', [
-    ('Outlet', 'switch.test', 'on', {}, {CONF_TYPE: 'outlet'}),
+    ('Outlet', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_OUTLET}),
     ('Switch', 'automation.test', 'on', {}, {}),
     ('Switch', 'input_boolean.test', 'on', {}, {}),
     ('Switch', 'remote.test', 'on', {}, {}),
     ('Switch', 'script.test', 'on', {}, {}),
     ('Switch', 'switch.test', 'on', {}, {}),
-    ('Switch', 'switch.test', 'on', {}, {CONF_TYPE: 'switch'}),
+    ('Switch', 'switch.test', 'on', {}, {CONF_TYPE: TYPE_SWITCH}),
 ])
 def test_type_switches(type_name, entity_id, state, attrs, config):
     """Test if switch types are associated correctly."""

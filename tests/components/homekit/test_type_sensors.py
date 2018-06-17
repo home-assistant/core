@@ -3,7 +3,9 @@ from homeassistant.components.homekit.const import PROP_CELSIUS
 from homeassistant.components.homekit.type_sensors import (
     AirQualitySensor, BinarySensor, CarbonDioxideSensor, HumiditySensor,
     LightSensor, TemperatureSensor, BINARY_SENSOR_SERVICE_MAP)
-from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS, ATTR_UNIT_OF_MEASUREMENT, STATE_HOME, STATE_NOT_HOME,
+    STATE_OFF, STATE_ON, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
 
 async def test_temperature(hass, hk_driver):
@@ -22,16 +24,18 @@ async def test_temperature(hass, hk_driver):
     for key, value in PROP_CELSIUS.items():
         assert acc.char_temp.properties[key] == value
 
-    hass.states.async_set(entity_id, 'unknown',
-                          {ATTR_UNIT_OF_MEASUREMENT: '°C'})
+    hass.states.async_set(entity_id, STATE_UNKNOWN,
+                          {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
     await hass.async_block_till_done()
     assert acc.char_temp.value == 0.0
 
-    hass.states.async_set(entity_id, '20', {ATTR_UNIT_OF_MEASUREMENT: '°C'})
+    hass.states.async_set(entity_id, '20',
+                          {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})
     await hass.async_block_till_done()
     assert acc.char_temp.value == 20
 
-    hass.states.async_set(entity_id, '75.2', {ATTR_UNIT_OF_MEASUREMENT: '°F'})
+    hass.states.async_set(entity_id, '75.2',
+                          {ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT})
     await hass.async_block_till_done()
     assert acc.char_temp.value == 24
 
@@ -50,7 +54,7 @@ async def test_humidity(hass, hk_driver):
 
     assert acc.char_humidity.value == 0
 
-    hass.states.async_set(entity_id, 'unknown')
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
     assert acc.char_humidity.value == 0
 
@@ -74,7 +78,7 @@ async def test_air_quality(hass, hk_driver):
     assert acc.char_density.value == 0
     assert acc.char_quality.value == 0
 
-    hass.states.async_set(entity_id, 'unknown')
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
     assert acc.char_density.value == 0
     assert acc.char_quality.value == 0
@@ -106,7 +110,7 @@ async def test_co2(hass, hk_driver):
     assert acc.char_peak.value == 0
     assert acc.char_detected.value == 0
 
-    hass.states.async_set(entity_id, 'unknown')
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
     assert acc.char_co2.value == 0
     assert acc.char_peak.value == 0
@@ -139,7 +143,7 @@ async def test_light(hass, hk_driver):
 
     assert acc.char_light.value == 0.0001
 
-    hass.states.async_set(entity_id, 'unknown')
+    hass.states.async_set(entity_id, STATE_UNKNOWN)
     await hass.async_block_till_done()
     assert acc.char_light.value == 0.0001
 
@@ -152,7 +156,8 @@ async def test_binary(hass, hk_driver):
     """Test if accessory is updated after state change."""
     entity_id = 'binary_sensor.opening'
 
-    hass.states.async_set(entity_id, 'unknown', {ATTR_DEVICE_CLASS: 'opening'})
+    hass.states.async_set(entity_id, STATE_UNKNOWN,
+                          {ATTR_DEVICE_CLASS: 'opening'})
     await hass.async_block_till_done()
 
     acc = BinarySensor(hass, hk_driver, 'Window Opening', entity_id, 2, None)
@@ -163,19 +168,22 @@ async def test_binary(hass, hk_driver):
 
     assert acc.char_detected.value == 0
 
-    hass.states.async_set(entity_id, 'on', {ATTR_DEVICE_CLASS: 'opening'})
+    hass.states.async_set(entity_id, STATE_ON,
+                          {ATTR_DEVICE_CLASS: 'opening'})
     await hass.async_block_till_done()
     assert acc.char_detected.value == 1
 
-    hass.states.async_set(entity_id, 'off', {ATTR_DEVICE_CLASS: 'opening'})
+    hass.states.async_set(entity_id, STATE_OFF,
+                          {ATTR_DEVICE_CLASS: 'opening'})
     await hass.async_block_till_done()
     assert acc.char_detected.value == 0
 
-    hass.states.async_set(entity_id, 'home', {ATTR_DEVICE_CLASS: 'opening'})
+    hass.states.async_set(entity_id, STATE_HOME,
+                          {ATTR_DEVICE_CLASS: 'opening'})
     await hass.async_block_till_done()
     assert acc.char_detected.value == 1
 
-    hass.states.async_set(entity_id, 'not_home',
+    hass.states.async_set(entity_id, STATE_NOT_HOME,
                           {ATTR_DEVICE_CLASS: 'opening'})
     await hass.async_block_till_done()
     assert acc.char_detected.value == 0
@@ -190,7 +198,7 @@ async def test_binary_device_classes(hass, hk_driver):
     entity_id = 'binary_sensor.demo'
 
     for device_class, (service, char) in BINARY_SENSOR_SERVICE_MAP.items():
-        hass.states.async_set(entity_id, 'off',
+        hass.states.async_set(entity_id, STATE_OFF,
                               {ATTR_DEVICE_CLASS: device_class})
         await hass.async_block_till_done()
 

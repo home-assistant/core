@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.components.homekit.type_switches import Outlet, Switch
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
 from homeassistant.core import split_entity_id
 
 from tests.common import async_mock_service
@@ -24,11 +24,11 @@ async def test_outlet_set_state(hass, hk_driver):
     assert acc.char_on.value is False
     assert acc.char_outlet_in_use.value is True
 
-    hass.states.async_set(entity_id, 'on')
+    hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
     assert acc.char_on.value is True
 
-    hass.states.async_set(entity_id, 'off')
+    hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
     assert acc.char_on.value is False
 
@@ -69,11 +69,11 @@ async def test_switch_set_state(hass, hk_driver, entity_id):
 
     assert acc.char_on.value is False
 
-    hass.states.async_set(entity_id, 'on')
+    hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
     assert acc.char_on.value is True
 
-    hass.states.async_set(entity_id, 'off')
+    hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
     assert acc.char_on.value is False
 

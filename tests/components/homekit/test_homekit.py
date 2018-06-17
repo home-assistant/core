@@ -9,7 +9,7 @@ from homeassistant.components.homekit import (
     STATUS_STOPPED, STATUS_WAIT)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
-    CONF_AUTO_START, DEFAULT_PORT, HOMEKIT_FILE)
+    CONF_AUTO_START, DEFAULT_PORT, DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START)
 from homeassistant.const import (
     CONF_IP_ADDRESS, CONF_PORT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
@@ -45,7 +45,7 @@ async def test_setup_min(hass):
     """Test async_setup with min config options."""
     with patch(PATH_HOMEKIT + '.HomeKit') as mock_homekit:
         assert await setup.async_setup_component(
-            hass, 'homekit', {'homekit': {}})
+            hass, DOMAIN, {DOMAIN: {}})
 
     mock_homekit.assert_any_call(hass, DEFAULT_PORT, None, ANY, {})
     assert mock_homekit().setup.called is True
@@ -60,13 +60,13 @@ async def test_setup_min(hass):
 
 async def test_setup_auto_start_disabled(hass):
     """Test async_setup with auto start disabled and test service calls."""
-    config = {'homekit': {CONF_AUTO_START: False, CONF_PORT: 11111,
-                          CONF_IP_ADDRESS: '172.0.0.0'}}
+    config = {DOMAIN: {CONF_AUTO_START: False, CONF_PORT: 11111,
+                       CONF_IP_ADDRESS: '172.0.0.0'}}
 
     with patch(PATH_HOMEKIT + '.HomeKit') as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         assert await setup.async_setup_component(
-            hass, 'homekit', config)
+            hass, DOMAIN, config)
 
     mock_homekit.assert_any_call(hass, 11111, '172.0.0.0', ANY, {})
     assert mock_homekit().setup.called is True
@@ -81,14 +81,16 @@ async def test_setup_auto_start_disabled(hass):
     homekit.reset_mock()
     homekit.status = STATUS_READY
 
-    await hass.services.async_call('homekit', 'start', blocking=True)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_HOMEKIT_START, blocking=True)
     assert homekit.start.called is True
 
     # Test start call with driver started
     homekit.reset_mock()
     homekit.status = STATUS_STOPPED
 
-    await hass.services.async_call('homekit', 'start', blocking=True)
+    await hass.services.async_call(
+        DOMAIN, SERVICE_HOMEKIT_START, blocking=True)
     assert homekit.start.called is False
 
 
