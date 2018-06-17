@@ -8,7 +8,6 @@ pip>=8.0.3
 pytz>=2018.04
 pyyaml>=3.11,<4
 requests==2.18.4
-typing>=3,<4
 voluptuous==0.11.1
 
 # Breaks Python 3.6 and is not needed for our supported Python versions
