@@ -167,3 +167,11 @@ def run_callback_threadsafe(loop, callback, *args):
 
     loop.call_soon_threadsafe(run_callback)
     return future
+
+
+def iscoroutinefunction(callback):
+    """Avoid CPython bug https://bugs.python.org/issue33261."""
+    try:
+        return asyncio.iscoroutinefunction(callback)
+    except AttributeError:
+        return False
