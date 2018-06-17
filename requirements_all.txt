@@ -406,6 +406,9 @@ hikvision==0.4
 # homeassistant.components.notify.hipchat
 hipnotify==1.0.8
 
+# homeassistant.components.sensor.pi_hole
+hole==0.3.0
+
 # homeassistant.components.binary_sensor.workday
 holidays==0.9.5
 
@@ -650,9 +653,6 @@ pifacedigitalio==3.0.5
 
 # homeassistant.components.light.piglow
 piglow==1.2.4
-
-# homeassistant.components.sensor.pi_hole
-pihole==0.1.2
 
 # homeassistant.components.pilight
 pilight==0.1.1
