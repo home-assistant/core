@@ -57,9 +57,6 @@ class Fan(HomeAccessory):
 
     def set_state(self, value):
         """Set state if call came from HomeKit."""
-        if self._state == value:
-            return
-
         _LOGGER.debug('%s: Set state to %d', self.entity_id, value)
         self._flag[CHAR_ACTIVE] = True
         service = SERVICE_TURN_ON if value == 1 else SERVICE_TURN_OFF
