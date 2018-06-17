@@ -61,7 +61,7 @@ def test_forward_request_no_auth_for_panel(hassio_client, build_type):
                   '_create_response') as mresp:
         mresp.return_value = 'response'
         resp = yield from hassio_client.get(
-            '/api/hassio/app-{}'.format(build_type))
+            '/api/hassio/{}'.format(build_type))
 
     # Check we got right response
     assert resp.status == 200
