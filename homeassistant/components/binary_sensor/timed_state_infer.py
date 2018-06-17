@@ -1,6 +1,4 @@
-# """
-# Infers its state from the current state and duration of other sensors.
-# """
+"""Infers its state from the current state and duration of other sensors."""
 import asyncio
 import logging
 from datetime import timedelta
@@ -35,6 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    """Set up the Timed State Infer Binary sensor."""
     async_add_devices([TimedStateInferBinarySensor(hass, config[CONF_NAME],
                                                    config[CONF_ENTITY_ID],
                                                    config[CONF_TIME_ON],
@@ -48,6 +47,7 @@ class TimedStateInferBinarySensor(BinarySensorDevice):
 
     def __init__(self, hass, name, observed_entity_id, time_on, time_off,
                  value_on, value_off):
+        """Initialization of the Binary Sensor."""
         self._hass = hass
         self._name = name
         self._observed_entity_id = observed_entity_id
@@ -77,7 +77,6 @@ class TimedStateInferBinarySensor(BinarySensorDevice):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Call when entity about to be added."""
-
         @callback
         def async_sensor_state_listener(entity, old_state, new_state):
             """Handle sensor state changes."""
@@ -91,6 +90,7 @@ class TimedStateInferBinarySensor(BinarySensorDevice):
 
     @asyncio.coroutine
     def async_pending_expired(self, time):
+        """Called after the pending time has elapsed."""
         device_state = self.hass.states.get(self._observed_entity_id)
         if device_state is None:
             return
@@ -98,6 +98,7 @@ class TimedStateInferBinarySensor(BinarySensorDevice):
         self.update_state(device_state.state)
 
     def update_state(self, observed_entity_state):
+        """Update the sensor state based on the observed entity state."""
         if observed_entity_state == STATE_UNKNOWN:
             return
 
@@ -108,7 +109,7 @@ class TimedStateInferBinarySensor(BinarySensorDevice):
                             observed_entity_state)
             return
 
-        """If we are already in the correct state, no need to do anything"""
+        # if we are already in the correct state, no need to do anything
         if self._is_on:
             if obs_value > self._value_off:
                 self._pending = False
