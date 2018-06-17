@@ -6,7 +6,6 @@ https://home-assistant.io/components/image_processing.facebox
 """
 import base64
 import logging
-import os
 
 import requests
 import voluptuous as vol
@@ -93,7 +92,7 @@ def valid_file_path(file_path):
     try:
         cv.isfile(file_path)
         return True
-    except:
+    except vol.Invalid:
         _LOGGER.error(
             "%s error: Invalid file path: %s", CLASSIFIER, file_path)
         return False
