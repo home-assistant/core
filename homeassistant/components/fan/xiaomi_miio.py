@@ -465,7 +465,7 @@ class XiaomiGenericDevice(FanEntity):
             self._available = False
             return False
 
-    async def async_turn_on(self, speed: str = None,
+    async def async_turn_on(self, speed: str = None, speed_pct: int = None,
                             **kwargs) -> None:
         """Turn the device on."""
         if speed:
@@ -587,7 +587,8 @@ class XiaomiAirPurifier(XiaomiGenericDevice):
 
         return None
 
-    async def async_set_speed(self, speed: str) -> None:
+    async def async_set_speed(self, speed: str = None,
+                              speed_pct: int = None) -> None:
         """Set the speed of the fan."""
         if self.supported_features & SUPPORT_SET_SPEED == 0:
             return
@@ -762,7 +763,8 @@ class XiaomiAirHumidifier(XiaomiGenericDevice):
 
         return None
 
-    async def async_set_speed(self, speed: str) -> None:
+    async def async_set_speed(self, speed: str = None,
+                              speed_pct: int = None) -> None:
         """Set the speed of the fan."""
         if self.supported_features & SUPPORT_SET_SPEED == 0:
             return

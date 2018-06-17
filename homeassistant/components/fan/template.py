@@ -226,7 +226,8 @@ class TemplateFan(FanEntity):
         return False
 
     # pylint: disable=arguments-differ
-    async def async_turn_on(self, speed: str = None) -> None:
+    async def async_turn_on(self, speed: str = None, speed_pct: int = None,
+                            **kwargs) -> None:
         """Turn on the fan."""
         await self._on_script.async_run()
         self._state = STATE_ON
@@ -240,7 +241,8 @@ class TemplateFan(FanEntity):
         await self._off_script.async_run()
         self._state = STATE_OFF
 
-    async def async_set_speed(self, speed: str) -> None:
+    async def async_set_speed(self, speed: str = None,
+                              speed_pct: int = None) -> None:
         """Set the speed of the fan."""
         if self._set_speed_script is None:
             return

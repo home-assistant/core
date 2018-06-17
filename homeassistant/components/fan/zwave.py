@@ -53,12 +53,12 @@ class ZwaveFan(zwave.ZWaveDeviceEntity, FanEntity):
         value = math.ceil(self.values.primary.data * 3 / 100)
         self._state = VALUE_TO_SPEED[value]
 
-    def set_speed(self, speed):
+    def set_speed(self, speed=None, speed_pct=None):
         """Set the speed of the fan."""
         self.node.set_dimmer(
             self.values.primary.value_id, SPEED_TO_VALUE[speed])
 
-    def turn_on(self, speed=None, **kwargs):
+    def turn_on(self, speed=None, speed_pct=None, **kwargs):
         """Turn the device on."""
         if speed is None:
             # Value 255 tells device to return to previous value

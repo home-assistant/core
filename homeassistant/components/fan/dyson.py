@@ -100,7 +100,8 @@ class DysonPureCoolLinkDevice(FanEntity):
         """Return the display name of this fan."""
         return self._device.name
 
-    def set_speed(self: ToggleEntity, speed: str) -> None:
+    def set_speed(self: ToggleEntity, speed: str = None,
+                  speed_pct: int = None) -> None:
         """Set the speed of the fan. Never called ??."""
         from libpurecoollink.const import FanSpeed, FanMode
 
@@ -113,7 +114,8 @@ class DysonPureCoolLinkDevice(FanEntity):
             self._device.set_configuration(
                 fan_mode=FanMode.FAN, fan_speed=fan_speed)
 
-    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
+    def turn_on(self: ToggleEntity, speed: str = None,
+                speed_pct: int = None, **kwargs) -> None:
         """Turn on the fan."""
         from libpurecoollink.const import FanSpeed, FanMode
 
