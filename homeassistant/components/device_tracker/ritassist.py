@@ -212,19 +212,20 @@ class RitAssistDevice(Entity):
         """Get extra data from the API."""
         import requests
 
-        base_url = 'https://secure.ritassist.nl/GenericServiceJSONP.ashx'
-        query = f"?f=CheckExtraVehicleInfo&token={authentication_info.token}"
-        query += f"&equipmentId={str(self.identifier)}"
-        query += f"&lastHash=null&padding=false"
+        base_url = "https://secure.ritassist.nl/GenericServiceJSONP.ashx"
+        query = f"""?f=CheckExtraVehicleInfo
+                    &token={authentication_info.token}
+                    &equipmentId={str(self.identifier)}
+                    &lastHash=null&padding=false"""
 
         try:
             response = requests.get(base_url + query)
-            r = response.json()
+            json = response.json()
 
-            self._malfunction_indicator_light = r['MalfunctionIndicatorLight']
-            self._fuel_level = r['FuelLevel']
-            self._coolant_temperature = r['EngineCoolantTemperature']
-            self._power_voltage = r['PowerVoltage']
+            self._malfunction_indicator_light = json['MalfunctionIndicatorLight']
+            self._fuel_level = json['FuelLevel']
+            self._coolant_temperature = json['EngineCoolantTemperature']
+            self._power_voltage = json['PowerVoltage']
 
         except requests.exceptions.ConnectionError:
             _LOGGER.error('ConnectionError: Could not connect to RitAssist')
