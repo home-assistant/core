@@ -435,9 +435,6 @@ https://github.com/jabesq/pybotvac/archive/v0.0.5.zip#pybotvac==0.0.5
 # homeassistant.components.sensor.gtfs
 https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e2246267dd8.zip#pygtfs==0.1.3
 
-# homeassistant.components.binary_sensor.flic
-https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
-
 # homeassistant.components.media_player.lg_netcast
 https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
 
@@ -823,6 +820,9 @@ pyfido==2.1.1
 
 # homeassistant.components.climate.flexit
 pyflexit==0.3
+
+# homeassistant.components.binary_sensor.flic
+pyflic-homeassistant==0.4.dev0
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.3.7
