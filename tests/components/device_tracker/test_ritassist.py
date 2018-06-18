@@ -4,7 +4,9 @@ import requests_mock
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
 
-from homeassistant.components.device_tracker.ritassist import (setup_scanner, RitAssistDeviceScanner)
+from homeassistant.components.device_tracker.ritassist import (
+    RitAssistDeviceScanner)
+
 
 class TestRitAssistSetup(unittest.TestCase):
     """Test the RitAssist device tracker."""

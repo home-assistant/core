@@ -53,7 +53,7 @@ class RitAssistDeviceScanner(DeviceScanner):
         self._see = see
 
         self._file = self._hass.config.path(CLIENT_UUID_CONFIG_FILE)
-        self._authentication_info = RitAssistAuthenticationInfo.load(self._file)
+        self._authentication_info = RitAssistAuthentication.load(self._file)
 
         track_utc_time_change(self._hass,
                               lambda now: self._refresh(),
@@ -80,7 +80,7 @@ class RitAssistDeviceScanner(DeviceScanner):
             }
             response = requests.post(data_url, json=body)
 
-            self._authentication_info = RitAssistAuthenticationInfo()
+            self._authentication_info = RitAssistAuthentication()
             self._authentication_info.set_json(response.json())
             self._authentication_info.save(self._file)
 
@@ -111,9 +111,9 @@ class RitAssistDeviceScanner(DeviceScanner):
 
                 if self._see is not None:
                     self._see(dev_id=device.plate_as_id,
-                             gps=(device.latitude, device.longitude),
-                             attributes=device.state_attributes,
-                             icon='mdi:car')
+                              gps=(device.latitude, device.longitude),
+                              attributes=device.state_attributes,
+                              icon='mdi:car')
 
         except requests.exceptions.ConnectionError:
             _LOGGER.error('ConnectionError: Could not connect to RitAssist')
@@ -257,11 +257,11 @@ class RitAssistDevice(Entity):
         self._last_seen = json_device['Location']['DateTime']
 
 
-class RitAssistAuthenticationInfo(object):
+class RitAssistAuthentication(object):
     """Object used to store, load and validate authentication information."""
 
     def __init__(self):
-        """Initialize RitAssistAuthenticationInfo object."""
+        """Initialize RitAssistAuthentication object."""
         self.access_token = None
         self.refresh_token = None
         self.authenticated = None
@@ -313,7 +313,7 @@ class RitAssistAuthenticationInfo(object):
 
         data = load_json(filename)
         if data:
-            result = RitAssistAuthenticationInfo()
+            result = RitAssistAuthentication()
             result.set_json(data)
             if not result.is_valid():
                 return None
