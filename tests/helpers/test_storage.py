@@ -115,10 +115,12 @@ async def test_migrator_no_existing_config(hass, store, mock_save):
 async def test_migrator_existing_config(hass, store, mock_save):
     """Test migrating existing config."""
     with patch('os.path.isfile', return_value=True), \
+        patch('os.remove') as mock_remove, \
         patch('homeassistant.util.json.load_json',
               return_value={'old': 'config'}):
         data = await storage.async_migrator(hass, 'old-path', store)
 
+    assert len(mock_remove.mock_calls) == 1
     assert data == {'old': 'config'}
     assert len(mock_save) == 1
     assert mock_save[0][1] == data
@@ -127,6 +129,7 @@ async def test_migrator_existing_config(hass, store, mock_save):
 async def test_migrator_transforming_config(hass, store, mock_save):
     """Test migrating config to new format."""
     with patch('os.path.isfile', return_value=True), \
+        patch('os.remove') as mock_remove, \
         patch('homeassistant.util.json.load_json',
               return_value={'old': 'config'}):
         data = await storage.async_migrator(

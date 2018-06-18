@@ -110,8 +110,6 @@ def get_test_home_assistant():
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant(loop)
-    hass.config_entries = config_entries.ConfigEntries(hass, {})
-    hass.config_entries._entries = []
     hass.config.async_load = Mock()
     store = auth.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {})
@@ -136,6 +134,9 @@ def async_test_home_assistant(loop):
     hass.config.time_zone = date_util.get_time_zone('US/Pacific')
     hass.config.units = METRIC_SYSTEM
     hass.config.skip_pip = True
+
+    hass.config_entries = config_entries.ConfigEntries(hass, {})
+    hass.config_entries._entries = []
 
     hass.state = ha.CoreState.running
 

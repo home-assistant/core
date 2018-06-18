@@ -1,7 +1,7 @@
 """Helper to help store data."""
 import logging
 import os
-from typing import Dict
+from typing import Dict, Optional
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.loader import bind_hass
@@ -31,6 +31,7 @@ async def async_migrator(hass, old_path, store, *, migrate_func=None):
         config = migrate_func(config)
 
     await store.async_save(config)
+    await hass.async_add_executor_job(os.remove, old_path)
     return config
 
 
@@ -55,7 +56,7 @@ class Store:
         return await self.hass.async_add_executor_job(
             json.load_json, self.path)
 
-    async def async_save(self, data: Dict, *, delay: int=None):
+    async def async_save(self, data: Dict, *, delay: Optional[int] = None):
         """Save data with an optional delay."""
         self._data = data
 
@@ -63,12 +64,17 @@ class Store:
             await self._handle_write_data()
             return
 
+        if self._unsub_delay_listener is not None:
+            self._unsub_delay_listener()
+            self._unsub_delay_listener = None
+
         self._unsub_delay_listener = async_call_later(
             self.hass, delay, self._handle_write_data)
 
         # Ensure that we write if we quit before delay has passed.
-        self._unsub_stop_listener = self.hass.bus.async_listen(
-            EVENT_HOMEASSISTANT_STOP, self._handle_write_data)
+        if self._unsub_stop_listener is None:
+            self._unsub_stop_listener = self.hass.bus.async_listen(
+                EVENT_HOMEASSISTANT_STOP, self._handle_write_data)
 
     async def _handle_write_data(self, *_args):
         """Handler to handle writing the config."""
@@ -96,4 +102,5 @@ class Store:
         if not os.path.isdir(os.path.dirname(path)):
             os.makedirs(os.path.dirname(path))
 
+        _LOGGER.debug('Writing data for %s', self.key)
         json.save_json(path, data)
