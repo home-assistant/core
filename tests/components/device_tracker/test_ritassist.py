@@ -1,7 +1,6 @@
 """The tests for the RitAssist device tracker."""
 import unittest
 import requests_mock
-from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
 
 from homeassistant.components.device_tracker.ritassist import (
