@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "El nom ja existeix"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "Icona",
+                    "latitude": "Latitud",
+                    "longitude": "Longitud",
+                    "name": "Nom",
+                    "passive": "Passiu",
+                    "radius": "Radi"
+                },
+                "title": "Defineix els par\u00e0metres de la zona"
+            }
+        },
+        "title": "Zona"
+    }
+}
