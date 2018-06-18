@@ -592,3 +592,13 @@ async def test_reset_cancels_retry_setup(hass):
 
     assert len(mock_call_later.return_value.mock_calls) == 1
     assert ent_platform._async_cancel_retry_setup is None
+
+
+@asyncio.coroutine
+def test_not_fails_with_adding_empty_entities_(hass):
+    """Test for not fails on empty entities list."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    yield from component.async_add_entities([])
+
+    assert len(hass.states.async_entity_ids()) == 0
