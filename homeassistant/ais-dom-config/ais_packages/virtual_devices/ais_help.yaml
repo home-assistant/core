@@ -42,6 +42,8 @@ homeassistant:
       custom_ui_state_card: state-card-text
     script.ais_scan_android_wifi_network:
       icon: mdi:router-wireless
+    script.ais_connect_android_wifi_network:
+      icon: mdi:send-secure
 
 sensor:
   # - platform: speedtest

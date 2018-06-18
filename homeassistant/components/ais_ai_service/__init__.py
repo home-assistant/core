@@ -847,22 +847,23 @@ def _publish_command_to_frame(hass, key, val, ip):
     # sent the command to the android frame via http
     url = G_HTTP_REST_SERVICE_BASE_URL.format(ip)
     if key == "WifiConnectToSid":
-        if val == ais_global.G_EMPTY_OPTION:
-            return
+        # if val == ais_global.G_EMPTY_OPTION:
+        #     return
         # info to user
+        # enable the wifi info
+        hass.async_run_job(
+            hass.services.async_call(
+                'input_boolean',
+                'turn_on', {"entity_id": "input_boolean.ais_android_wifi_changes_notify"})
+        )
         ssid = val.split(';')[0]
         _say_it(hass, "ok, łączymy z siecią: " + ssid)
         # TODO get password from file
         password = hass.states.get('input_text.ais_android_wifi_password').state
         wifi_type = val.split(';')[-1]
-        _LOGGER.error("wifi type: " + wifi_type)
         requests.post(
             url + '/command',
             json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type})
-        # enable the wifi info
-        hass.services.call(
-            'input_boolean',
-            'turn_on', {"entity_id": "input_boolean.ais_android_wifi_changes_notify"})
     else:
         requests.post(
             url + '/command',
