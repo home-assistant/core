@@ -19,6 +19,13 @@
             "link": {
                 "description": "L\u00e5s opp deCONZ-gatewayen din for \u00e5 registrere deg med Home Assistant. \n\n 1. G\u00e5 til deCONZ-systeminnstillinger \n 2. Trykk p\u00e5 \"L\u00e5s opp gateway\" knappen",
                 "title": "Koble til deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Tillat import av virtuelle sensorer",
+                    "allow_deconz_groups": "Tillat import av deCONZ grupper"
+                },
+                "title": "Ekstra konfigurasjonsalternativer for deCONZ"
             }
         },
         "title": "deCONZ"

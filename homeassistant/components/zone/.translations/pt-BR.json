@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "name_exists": "Nome j\u00e1 existente"
+            "name_exists": "O nome j\u00e1 existe"
         },
         "step": {
             "init": {
@@ -13,7 +13,7 @@
                     "passive": "Passivo",
                     "radius": "Raio"
                 },
-                "title": "Definir os par\u00e2metros da zona"
+                "title": "Definir par\u00e2metros da zona"
             }
         },
         "title": "Zona"
