@@ -51,13 +51,13 @@ class LinodeSwitch(SwitchDevice):
         self._node_id = node_id
         self.data = None
         self._state = None
+        self._attrs = {}
+        self._name = None
 
     @property
     def name(self):
         """Return the name of the switch."""
-        if self.data is not None:
-            return self.data.label
-        return None
+        return self._name
 
     @property
     def is_on(self):
@@ -67,18 +67,7 @@ class LinodeSwitch(SwitchDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the Linode Node."""
-        if self.data:
-            return {
-                ATTR_CREATED: self.data.created,
-                ATTR_NODE_ID: self.data.id,
-                ATTR_NODE_NAME: self.data.label,
-                ATTR_IPV4_ADDRESS: self.data.ipv4,
-                ATTR_IPV6_ADDRESS: self.data.ipv6,
-                ATTR_MEMORY: self.data.specs.memory,
-                ATTR_REGION: self.data.region.country,
-                ATTR_VCPUS: self.data.specs.vcpus,
-            }
-        return {}
+        return self._attrs
 
     def turn_on(self, **kwargs):
         """Boot-up the Node."""
@@ -99,3 +88,14 @@ class LinodeSwitch(SwitchDevice):
                     self.data = node
         if self.data is not None:
             self._state = self.data.status == 'running'
+            self._attrs = {
+                ATTR_CREATED: self.data.created,
+                ATTR_NODE_ID: self.data.id,
+                ATTR_NODE_NAME: self.data.label,
+                ATTR_IPV4_ADDRESS: self.data.ipv4,
+                ATTR_IPV6_ADDRESS: self.data.ipv6,
+                ATTR_MEMORY: self.data.specs.memory,
+                ATTR_REGION: self.data.region.country,
+                ATTR_VCPUS: self.data.specs.vcpus,
+            }
+            self._name = self.data.label
