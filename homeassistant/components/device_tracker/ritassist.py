@@ -46,22 +46,26 @@ class RitAssistDeviceScanner(DeviceScanner):
         """Initialize RitAssistDeviceScanner."""
         from homeassistant.helpers.event import track_utc_time_change
 
-        self.discovery_info = discovery_info
-        self.hass = hass
-        self.devices = []
-        self.data = None
+        self._discovery_info = discovery_info
+        self._hass = hass
+        self._devices = []
         self._config = config
-        self.see = see
+        self._see = see
 
-        self.file = self.hass.config.path(CLIENT_UUID_CONFIG_FILE)
-        self.authentication_info = RitAssistAuthenticationInfo.load(self.file)
+        self._file = self._hass.config.path(CLIENT_UUID_CONFIG_FILE)
+        self._authentication_info = RitAssistAuthenticationInfo.load(self._file)
 
-        track_utc_time_change(hass,
-                              lambda now: self.refresh(),
+        track_utc_time_change(self._hass,
+                              lambda now: self._refresh(),
                               second=range(0, 60, 30))
-        self.refresh()
+        self._refresh()
 
-    def get_access_token(self):
+    @property
+    def devices(self):
+        """Return the devices detected."""
+        return self._devices
+
+    def _get_access_token(self):
         """Retrieve an access token from API."""
         import requests
 
@@ -76,39 +80,40 @@ class RitAssistDeviceScanner(DeviceScanner):
             }
             response = requests.post(data_url, json=body)
 
-            self.authentication_info = RitAssistAuthenticationInfo()
-            self.authentication_info.set_json(response.json())
-            self.authentication_info.save(self.file)
+            self._authentication_info = RitAssistAuthenticationInfo()
+            self._authentication_info.set_json(response.json())
+            self._authentication_info.save(self._file)
 
         except requests.exceptions.ConnectionError:
             _LOGGER.error("ConnectionError: API is unavailable")
         except requests.exceptions.HTTPError:
             _LOGGER.error("HTTP Error: Please check configuration")
 
-    def refresh(self) -> None:
+    def _refresh(self) -> None:
         """Refresh device information from the platform."""
         import requests
 
-        if (self.authentication_info is None or
-                not self.authentication_info.is_valid()):
-            self.get_access_token()
+        if (self._authentication_info is None or
+                not self._authentication_info.is_valid()):
+            self._get_access_token()
 
         query = "?groupId=0&hasDeviceOnly=false"
         data_url = "https://api.ritassist.nl/api/equipment/Getfleet"
 
         try:
-            header = self.authentication_info.create_header()
+            header = self._authentication_info.create_header()
             response = requests.get(data_url + query, headers=header)
-            self.data = response.json()
-            self.devices = self.parse_devices(self.data)
+            data = response.json()
+            self._devices = self.parse_devices(data)
 
-            for device in self.devices:
-                device.get_extra_vehicle_info(self.authentication_info)
+            for device in self._devices:
+                device.get_extra_vehicle_info(self._authentication_info)
 
-                self.see(dev_id=device.plate_as_id,
-                         gps=(device.latitude, device.longitude),
-                         attributes=device.state_attributes,
-                         icon='mdi:car')
+                if self._see is not None:
+                    self._see(dev_id=device.plate_as_id,
+                             gps=(device.latitude, device.longitude),
+                             attributes=device.state_attributes,
+                             icon='mdi:car')
 
         except requests.exceptions.ConnectionError:
             _LOGGER.error('ConnectionError: Could not connect to RitAssist')

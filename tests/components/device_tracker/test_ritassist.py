@@ -4,12 +4,14 @@ import requests_mock
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
 
+from homeassistant.components.device_tracker.ritassist import (setup_scanner, RitAssistDeviceScanner)
 
 class TestRitAssistSetup(unittest.TestCase):
     """Test the RitAssist device tracker."""
 
     def setUp(self):
         """Initialize values for this testcase class."""
+        self.devices = []
         self.hass = get_test_home_assistant()
         self.config = {
             'device_tracker': {
@@ -33,34 +35,18 @@ class TestRitAssistSetup(unittest.TestCase):
         """Test for successfully setting up the platform."""
         self._setup_mock_requests(mock_req)
 
-        self.assertTrue(setup_component(self.hass,
-                                        'device_tracker',
-                                        self.config))
+        scanner = RitAssistDeviceScanner(self.hass, self.config, None, None)
+        self.assertEqual(len(scanner.devices), 1)
 
-    @requests_mock.Mocker()
-    def test_response(self, mock_req):
-        """Test for successfully setting up the platform."""
-        self._setup_mock_requests(mock_req)
+        device = scanner.devices[0]
+        self.assertEqual(device.longitude, 6.2)
+        self.assertEqual(device.latitude, 52.0)
+        self.assertEqual(device.license_plate, 'AA-123-A')
+        self.assertEqual(device.equipment_id, '12344321')
+        self.assertEqual(device.identifier, 3372993813)
 
-        setup_component(self.hass, 'device_tracker', self.config)
-
-        entities = self.hass.states.async_entity_ids('device_tracker')
-        self.assertEqual(len(entities), 1)
-
-    @requests_mock.Mocker()
-    def test_location_state(self, mock_req):
-        """Test for successfully setting up the platform."""
-        self._setup_mock_requests(mock_req)
-
-        setup_component(self.hass, 'device_tracker', self.config)
-
-        state = self.hass.states.get('device_tracker.aa123a')
-        self.assertIsNot(state, None)
-        self.assertEqual(state.state, 'not_home')
-        self.assertEqual(state.attributes.get('latitude'), 52.0)
-        self.assertEqual(state.attributes.get('longitude'), 6.200000)
-        self.assertEqual(state.attributes.get('fuel_level'), 55)
-        self.assertEqual(state.attributes.get('coolant_temperature'), 60)
+        self.assertEqual(device.state_attributes['fuel_level'], 55)
+        self.assertEqual(device.state_attributes['coolant_temperature'], 60)
 
     def _setup_mock_requests(self, mock_req):
         mock_req.post('https://api.ritassist.nl/api/session/login',
