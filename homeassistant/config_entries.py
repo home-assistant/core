@@ -135,6 +135,7 @@ FLOWS = [
 
 
 STORAGE_KEY = 'core.config_entries'
+STORAGE_VERSION = 1
 
 # Deprecated since 0.73
 PATH_CONFIG = '.config_entries.json'
@@ -316,11 +317,14 @@ class ConfigEntries:
 
     async def async_load(self):
         """Handle loading the config."""
-        # Migrating for confg entries stored before 0.73
+        # Migrating for config entries stored before 0.73
         config = await self.hass.helpers.storage.async_migrator(
-            self.hass.config.path(PATH_CONFIG), self._store,
-            migrate_func=lambda old_conf: {'entries': old_conf}
+            self.hass.config.path(PATH_CONFIG), self._store, STORAGE_VERSION,
+            old_conf_migrate_func=_old_conf_migrator
         )
+
+        if config is None:
+            config = await self._store.async_load(STORAGE_VERSION)
 
         self._entries = [ConfigEntry(**entry) for entry in config['entries']]
 
@@ -422,4 +426,9 @@ class ConfigEntries:
         data = {
             'entries': [entry.as_dict() for entry in self._entries]
         }
-        await self._store.async_save(data, delay=SAVE_DELAY)
+        await self._store.async_save(STORAGE_VERSION, data, delay=SAVE_DELAY)
+
+
+async def _old_conf_migrator(old_config):
+    """Migrate the pre-0.73 config format to the latest version."""
+    return {'entries': old_config}

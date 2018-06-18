@@ -14,8 +14,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
-async def async_migrator(hass, old_path, store, *, migrate_func=None):
-    """Helper function to migrate old configs to a store and return config."""
+async def async_migrator(hass, old_path, store, version, *,
+                         old_conf_migrate_func=None):
+    """Helper function to migrate old data to a store and then load data.
+
+    async def old_conf_migrate_func(old_data)
+    """
     def load_old_config():
         """Helper to load old config."""
         if not os.path.isfile(old_path):
@@ -26,12 +30,12 @@ async def async_migrator(hass, old_path, store, *, migrate_func=None):
     config = await hass.async_add_executor_job(load_old_config)
 
     if config is None:
-        return await store.async_load()
+        return None
 
-    if migrate_func is not None:
-        config = migrate_func(config)
+    if old_conf_migrate_func is not None:
+        config = await old_conf_migrate_func(config)
 
-    await store.async_save(config)
+    await store.async_save(version, config)
     await hass.async_add_executor_job(os.remove, old_path)
     return config
 
@@ -49,17 +53,34 @@ class Store:
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
 
-    async def async_load(self):
-        """Load data."""
+    async def async_load(self, expected_version, *, migrate_func=None):
+        """Load data.
+
+        If the expected version does not match the given version, the migrate
+        function will be invoked with await migrate_func(version, config).
+        """
         if self._data is not None:
-            return self._data
+            data = self._data
+        else:
+            data = await self.hass.async_add_executor_job(
+                json.load_json, self.path, None)
 
-        return await self.hass.async_add_executor_job(
-            json.load_json, self.path)
+            if data is None:
+                return {}
 
-    async def async_save(self, data: Dict, *, delay: Optional[int] = None):
+        if data['version'] == expected_version:
+            return data['data']
+
+        return await migrate_func(data['version'], data['data'])
+
+    async def async_save(self, data_version, data: Dict, *,
+                         delay: Optional[int] = None):
         """Save data with an optional delay."""
-        self._data = data
+        self._data = {
+            'version': data_version,
+            'key': self.key,
+            'data': data,
+        }
 
         self._async_cleanup_delay_listener()
 

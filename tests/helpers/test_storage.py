@@ -11,6 +11,7 @@ from homeassistant.util import dt
 from tests.common import async_fire_time_changed, mock_coro
 
 
+MOCK_VERSION = 1
 MOCK_DATA = {'hello': 'world'}
 
 
@@ -41,21 +42,21 @@ def store(hass):
 
 async def test_loading(hass, store, mock_save, mock_load):
     """Test we can save and load data."""
-    await store.async_save(MOCK_DATA)
-    data = await store.async_load()
+    await store.async_save(MOCK_VERSION, MOCK_DATA)
+    data = await store.async_load(MOCK_VERSION)
     assert data == MOCK_DATA
 
 
 async def test_loading_non_existing(hass, store):
     """Test we can save and load data."""
     with patch('homeassistant.util.json.open', side_effect=FileNotFoundError):
-        data = await store.async_load()
+        data = await store.async_load(MOCK_VERSION)
     assert data == {}
 
 
 async def test_saving_with_delay(hass, store, mock_save):
     """Test saving data after a delay."""
-    await store.async_save(MOCK_DATA, delay=1)
+    await store.async_save(MOCK_VERSION, MOCK_DATA, delay=1)
     assert len(mock_save) == 0
 
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
@@ -66,7 +67,7 @@ async def test_saving_with_delay(hass, store, mock_save):
 async def test_saving_on_stop(hass, mock_save):
     """Test delayed saves trigger when we quit Home Assistant."""
     store = storage.Store(hass, 'test')
-    await store.async_save(MOCK_DATA, delay=1)
+    await store.async_save(MOCK_VERSION, MOCK_DATA, delay=1)
     assert len(mock_save) == 0
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
@@ -76,28 +77,28 @@ async def test_saving_on_stop(hass, mock_save):
 
 async def test_loading_while_delay(hass, store, mock_save, mock_load):
     """Test we load new data even if not written yet."""
-    await store.async_save({'delay': 'no'})
+    await store.async_save(MOCK_VERSION, {'delay': 'no'})
     assert len(mock_save) == 1
 
-    await store.async_save({'delay': 'yes'}, delay=1)
+    await store.async_save(MOCK_VERSION, {'delay': 'yes'}, delay=1)
     assert len(mock_save) == 1
 
-    data = await store.async_load()
+    data = await store.async_load(MOCK_VERSION)
     assert data == {'delay': 'yes'}
 
 
 async def test_writing_while_writing_delay(hass, store, mock_save, mock_load):
     """Test a write while a write with delay is active."""
-    await store.async_save({'delay': 'yes'}, delay=1)
+    await store.async_save(MOCK_VERSION, {'delay': 'yes'}, delay=1)
     assert len(mock_save) == 0
-    await store.async_save({'delay': 'no'})
+    await store.async_save(MOCK_VERSION, {'delay': 'no'})
     assert len(mock_save) == 1
 
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
     assert len(mock_save) == 1
 
-    data = await store.async_load()
+    data = await store.async_load(MOCK_VERSION)
     assert data == {'delay': 'no'}
 
 
@@ -106,9 +107,10 @@ async def test_migrator_no_existing_config(hass, store, mock_save):
     with patch('os.path.isfile', return_value=False), \
         patch.object(store, 'async_load',
                      return_value=mock_coro({'cur': 'config'})):
-        data = await storage.async_migrator(hass, 'old-path', store)
+        data = await storage.async_migrator(
+            hass, 'old-path', store, MOCK_VERSION)
 
-    assert data == {'cur': 'config'}
+    assert data is None
     assert len(mock_save) == 0
 
 
@@ -118,25 +120,38 @@ async def test_migrator_existing_config(hass, store, mock_save):
         patch('os.remove') as mock_remove, \
         patch('homeassistant.util.json.load_json',
               return_value={'old': 'config'}):
-        data = await storage.async_migrator(hass, 'old-path', store)
+        data = await storage.async_migrator(
+            hass, 'old-path', store, MOCK_VERSION)
 
     assert len(mock_remove.mock_calls) == 1
     assert data == {'old': 'config'}
     assert len(mock_save) == 1
-    assert mock_save[0][1] == data
+    assert mock_save[0][1] == {
+        'key': 'test',
+        'version': MOCK_VERSION,
+        'data': data,
+    }
 
 
 async def test_migrator_transforming_config(hass, store, mock_save):
     """Test migrating config to new format."""
+    async def old_conf_migrate_func(old_config):
+        """Migrate old config to new format."""
+        return {'new': old_config['old']}
+
     with patch('os.path.isfile', return_value=True), \
         patch('os.remove') as mock_remove, \
         patch('homeassistant.util.json.load_json',
               return_value={'old': 'config'}):
         data = await storage.async_migrator(
-            hass, 'old-path', store,
-            migrate_func=lambda old_config: {'new': old_config['old']})
+            hass, 'old-path', store, MOCK_VERSION,
+            old_conf_migrate_func=old_conf_migrate_func)
 
     assert len(mock_remove.mock_calls) == 1
     assert data == {'new': 'config'}
     assert len(mock_save) == 1
-    assert mock_save[0][1] == data
+    assert mock_save[0][1] == {
+        'key': 'test',
+        'version': MOCK_VERSION,
+        'data': data,
+    }
