@@ -34,7 +34,7 @@ def test_not_supported_media_player():
     # selected mode for entity not supported
     config = {CONF_FEATURE_LIST: {FEATURE_ON_OFF: None}}
     entity_state = State('media_player.demo', 'on')
-    get_accessory(None, None, entity_state, 2, config) is None
+    assert get_accessory(None, None, entity_state, 2, config) is None
 
     # no supported modes for entity
     entity_state = State('media_player.demo', 'on')
@@ -62,7 +62,7 @@ def test_customize_options(config, name):
      {ATTR_SUPPORTED_FEATURES: media_player.SUPPORT_TURN_ON |
       media_player.SUPPORT_TURN_OFF}, {CONF_FEATURE_LIST:
                                        {FEATURE_ON_OFF: None}}),
-    ('SecuritySystem', 'alarm_control_panel.test', 'armed', {},
+    ('SecuritySystem', 'alarm_control_panel.test', 'armed_away', {},
      {ATTR_CODE: '1234'}),
     ('Thermostat', 'climate.test', 'auto', {}, {}),
     ('Thermostat', 'climate.test', 'auto',
