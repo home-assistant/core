@@ -14,6 +14,9 @@ homeassistant:
     sensor.internal_ip_address:
       friendly_name: Wewnętrzny adres IP
       icon: mdi:access-point-network
+    sensor.ais_android_wifi_current_network_info:
+      friendly_name: Połączenie Wifi
+      custom_ui_state_card: state-card-text
     sensor.external_ip_address:
       friendly_name: Zewnętrzny adres IP
       icon: mdi:server-network
@@ -121,7 +124,15 @@ sensor:
             {%- endif -%}
               {{ seconds }} sek.
           {%- endif -%}
-
+  - platform: rest
+    name: ais_android_wifi_current_network_info
+    resource: http://localhost:8122/command
+    method: POST
+    payload: '{ "WifiConnectionInfo" : true }'
+    verify_ssl: false
+    headers:
+      User-Agent: AIS dom
+      Content-Type: application/json
 weblink:
   entities:
     - name: klucz ssh
@@ -169,9 +180,15 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:wifi
+input_boolean:
+  ais_android_wifi_changes_notify:
+    name: Powiadamiaj o zmianach Wifi
+    initial: off
+    icon: mdi:voice
 
 group:
   System Status:
+    control: hidden
     name: Status systemu
     entities:
       - sensor.uzycie_procesora
@@ -180,6 +197,7 @@ group:
       - sensor.since_last_boot_templated
   Internet Status:
     name: Ustawienia sieci
+    control: hidden
     entities:
       - sensor.local_host_name
       # - sensor.speedtest_download
@@ -187,9 +205,12 @@ group:
       # - sensor.speedtest_ping
       - sensor.external_ip_address
       - sensor.internal_ip_address
+      - sensor.ais_android_wifi_current_network_info
       - script.ais_scan_android_wifi_network
       - input_select.ais_android_wifi_network
       - input_text.ais_android_wifi_password
+      - script.ais_connect_android_wifi_network
+      - input_boolean.ais_android_wifi_changes_notify
   AIS Configurator:
     name: Konfiguracja
     entities:
@@ -212,25 +233,25 @@ automation:
       -  service: ais_cloud.select_rss_help_item
          data_template:
            rss_help_topic: "{{ states('input_select.ais_rss_help_topic') }}"
-  - alias: 'Connect to Wifi ssid'
-    hide_entity: True
-    trigger:
-      platform: state
-      entity_id: input_select.ais_android_wifi_network
-    action:
-      -  service: ais_ai_service.publish_command_to_frame
-         data_template:
-           key: "WifiConnectToSid"
-           val: "{{ states('input_select.ais_android_wifi_network') }}"
 
 script:
   ais_scan_android_wifi_network:
-    alias: 'Skanuj dostępne sieci Wifi'
+    alias: 'Skanowanie dostępnych sieci Wifi'
     sequence:
       - service: ais_ai_service.say_it
         data:
           text: "Sprawdzam dostępne sieci Wifi."
+      - delay: '3'
       - service: ais_ai_service.publish_command_to_frame
         data:
           key: WifiScanInfo
           val: true
+          #ip: "192.168.1.45"
+  ais_connect_android_wifi_network:
+    alias: 'Połącz z wybraną siecią wifi'
+    sequence:
+      -  service: ais_ai_service.publish_command_to_frame
+         data_template:
+           key: "WifiConnectToSid"
+           val: "{{ states('input_select.ais_android_wifi_network') }}"
+           #ip: "192.168.1.45"

@@ -18,6 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import ais_cloud
 import homeassistant.components.mqtt as mqtt
+# from homeassistant.helpers.discovery import async_load_platform
 import homeassistant.ais_dom.ais_global as ais_global
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -343,17 +344,22 @@ def say_curr_entity(hass):
     entity_id = get_curr_entity()
     state = hass.states.get(entity_id)
     text = state.attributes.get('text')
+    info_name = state.attributes.get('friendly_name')
+    info_data = state.state
+    info_unit = state.attributes.get('unit_of_measurement')
     if not text:
         text = ""
     # handle special cases...
     if (entity_id == "sensor.ais_knowledge_answer"):
         _say_it(hass, "Odpowiedź: " + text)
         return
+    elif (entity_id.startswith('script.')):
+        _say_it(hass, info_name + " Naciśnij OK/WYKONAJ by uruchomić.")
+        return
     # normal case
-    info_name = state.attributes.get('friendly_name')
-    info_data = state.state
-    info_unit = state.attributes.get('unit_of_measurement')
     # decode None
+    if not info_name:
+        info_name = ""
     if not info_data:
         info_data = ""
     if (info_data == 'on'):
@@ -387,7 +393,11 @@ def commit_current_position(hass):
             'set_value', {
                 "entity_id": CURR_ENTITIE,
                 "value": get_curent_position(hass)})
-    _say_it(hass, "ok")
+
+    if CURR_ENTITIE == "input_select.ais_android_wifi_network":
+        _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0])
+    else:
+        _say_it(hass, "ok")
 
 
 def set_next_position(hass):
@@ -459,7 +469,8 @@ def select_entity(hass):
         "input_select.",
         "input_boolean.",
         "switch.",
-        "input_number."
+        "input_number.",
+        "script."
     )):
         # these items can be controlled from remote
         # if we are here it meens that the enter on the same item was
@@ -496,6 +507,11 @@ def select_entity(hass):
                     "entity_id": CURR_ENTITIE})
         elif (CURR_ENTITIE.startswith('input_text.')):
             _say_it(hass, "Powiedz co mam zrobić?")
+        elif (CURR_ENTITIE.startswith('script.')):
+            hass.services.call(
+                'script',
+                CURR_ENTITIE.split('.')[1]
+            )
 
     else:
         # do some special staff for some entries
@@ -809,12 +825,12 @@ async def async_setup(hass, config):
         'YouTube {item}'
     ])
     async_register(hass, INTENT_TURN_ON,
-                   ['Włącz {name}', 'Zapal światło w {name}'])
+                   ['Włącz {item}', 'Zapal światło w {item}'])
     async_register(hass, INTENT_TURN_OFF,
-                   ['Wyłącz {name}', 'Zgaś Światło w {name}'])
+                   ['Wyłącz {item}', 'Zgaś Światło w {item}'])
     async_register(hass, INTENT_STATUS, [
-        'Jaka jest {name}', 'Jaki jest {name}',
-        'Jak jest {name}', 'Jakie jest {name}'])
+        'Jaka jest {item}', 'Jaki jest {item}',
+        'Jak jest {item}', 'Jakie jest {item}'])
     async_register(hass, INTENT_ASK_QUESTION, [
         'Co to jest {item}', 'Kto to jest {item}',
         'Znajdź informację o {item}', 'Znajdź informacje o {item}',
@@ -843,27 +859,51 @@ def _publish_command_to_frame(hass, key, val, ip):
         requests.post(
             url + '/command',
             json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type})
+        # enable the wifi info
+        hass.services.call(
+            'input_boolean',
+            'turn_on', {"entity_id": "input_boolean.ais_android_wifi_changes_notify"})
     else:
         requests.post(
             url + '/command',
             json={key: val, "ip": ip})
 
 
-def _process_command_from_frame(hass, service):
-    def rssi_to_info(rssi):
-        info = "moc nieznana"
-        if rssi > -31:
-            return "moc " + str(rssi) + " doskonała"
-        if rssi > -68:
-            return "moc " + str(rssi) + " bardzo dobra"
-        if rssi > -71:
-            return "moc " + str(rssi) + " dobra"
-        if rssi > -81:
-            return "moc " + str(rssi) + " słaba"
-        if rssi > -91:
-            return "moc " + str(rssi) + " bardzo słaba"
-        return info
+def _widi_rssi_to_info(rssi):
+    info = "moc nieznana"
+    if rssi > -31:
+        return "moc doskonała (" + str(rssi) + ")"
+    if rssi > -68:
+        return "moc bardzo dobra (" + str(rssi) + ")"
+    if rssi > -71:
+        return "moc dobra (" + str(rssi) + ")"
+    if rssi > -81:
+        return "moc słaba (" + str(rssi) + ")"
+    if rssi > -91:
+        return "moc bardzo słaba (" + str(rssi) + ")"
+    return info
 
+
+def _publish_wifi_status(hass, service):
+    wifis = json.loads(service.data["payload"])
+    wifis_names = []
+    for item in wifis["ScanResult"]:
+        if len(item["ssid"]) > 0:
+            wifis_names.append(
+                item["ssid"] + "; " +
+                _widi_rssi_to_info(item["rssi"]) +
+                "; " + item["capabilities"])
+    hass.async_run_job(
+        hass.services.call(
+            'input_select',
+            'set_options', {
+                "entity_id": "input_select.ais_android_wifi_network",
+                "options": wifis_names})
+    )
+    return len(wifis_names)
+
+
+def _process_command_from_frame(hass, service):
     # process from frame
     if service.data["topic"] == 'ais/speech_command':
         hass.async_add_job(
@@ -877,27 +917,58 @@ def _process_command_from_frame(hass, service):
                 service.data["callback"])
         )
     elif service.data["topic"] == 'ais/wifi_scan_info':
-        wifis = json.loads(service.data["payload"])
-        wifis_names = [ais_global.G_EMPTY_OPTION]
-        for item in wifis["ScanResult"]:
-            if len(item["ssid"]) > 1:
-                wifis_names.append(
-                    item["ssid"] + "; " + " " +
-                    str(item["frequency_mhz"]) + " mhz; " +
-                    rssi_to_info(item["rssi"]) +
-                    "; " + item["capabilities"])
-        info = "Mamy dostępne " + str(len(wifis_names)) + " wifi."
-        if len(wifis_names) > 0:
+        len_wifis = _publish_wifi_status(hass, service)
+        info = "Mamy dostępne " + str(len_wifis) + " wifi."
+        if len_wifis > 0:
             info += " Wybierz sieć z którą chcesz się połączyć."
-            info += " Jeżeli łączysz się pierwszy raz z zabezpieczoną siecią to wybierz lokalizację pliku z hasłem."
+            info += " Jeżeli łączysz się pierwszy raz z zabezpieczoną"
+            info += " siecią to podaj w aplikacji hasło lub wybierz pilotem lokalizację pliku z hasłem."
         _say_it(hass, info)
+
+    elif service.data["topic"] == 'ais/wifi_status_info':
+        _publish_wifi_status(hass, service)
+    elif service.data["topic"] == 'ais/wifi_connection_info':
+        # current connection info
+        cci = json.loads(service.data["payload"])
+        info = "Połączenie Wifi: "
+        if "ssid" in cci:
+            if cci["ssid"] == "<unknown ssid>":
+                info += "brak połączenia"
+            else:
+                info += cci["ssid"]
+                if "link_speed_mbps" in cci:
+                    info += "; prędkość: " + str(cci["link_speed_mbps"]) + " megabitów na sekundę"
+                if "rssi" in cci:
+                    info += "; " + _widi_rssi_to_info(cci["rssi"])
+
         hass.async_run_job(
-            hass.services.call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.ais_android_wifi_network",
-                    "options": wifis_names})
+            hass.states.async_set(
+                'sensor.ais_android_wifi_current_network_info',
+                info, {'custom_ui_state_card': "state-card-text"}
+            )
         )
+    elif service.data["topic"] == 'ais/wifi_state_change_info':
+        # current connection info
+        cci = json.loads(service.data["payload"])
+        info = "Wifi: "
+        if "ssid" in cci:
+            info += cci["ssid"] + " "
+        if "state" in cci:
+            info += cci["state"]
+        # check if we are now online
+        if ais_global.GLOBAL_MY_IP == "127.0.0.1":
+            ais_global.set_global_my_ip()
+            if ais_global.GLOBAL_MY_IP != "127.0.0.1":
+                pass
+                # if yes then try to reload the cloud and other components
+                # TODO reload invalid components
+                # hass.async_run_job(async_load_platform(hass, 'sun', 'sun', {}, {}))
+                # hass.async_run_job(async_load_platform(hass, 'ais_cloud', 'ais_cloud', {}, {}))
+                # hass.async_run_job(async_load_platform(hass, 'ais_yt_service', 'ais_yt_service', {}, {}))
+                # hass.async_run_job(async_load_platform(hass, 'ais_knowledge_service', 'ais_knowledge_service', {}, {}))
+        state = hass.states.get('input_boolean.ais_android_wifi_changes_notify').state
+        if (state == 'on'):
+            _say_it(hass, info)
     else:
         # TODO process this without mqtt
         # player_status and speech_status
@@ -961,9 +1032,9 @@ def _say_it(hass, message, caller_ip=None):
 def _create_matcher(utterance):
     """Create a regex that matches the utterance."""
     # Split utterance into parts that are type: NORMAL, GROUP or OPTIONAL
-    # Pattern matches (GROUP|OPTIONAL): Change light to [the color] {name}
+    # Pattern matches (GROUP|OPTIONAL): Change light to [the color] {item}
     parts = re.split(r'({\w+}|\[[\w\s]+\] *)', utterance)
-    # Pattern to extract name from GROUP part. Matches {name}
+    # Pattern to extract name from GROUP part. Matches {item}
     group_matcher = re.compile(r'{(\w+)}')
     # Pattern to extract text from OPTIONAL part. Matches [the color]
     optional_matcher = re.compile(r'\[([\w ]+)\] *')
@@ -1062,38 +1133,54 @@ def _process(hass, text, callback):
     """Process a line of text."""
     _LOGGER.info('Process text: ' + text)
     # clear text
-    text = text.replace("&", " and ")
+    text = text.replace("&", " and ").lower()
     global CURR_BUTTON_CODE
     s = False
     m = None
-    found = False
+    m_org = None
+    found_intent = None
     intents = hass.data.get(DOMAIN, {})
     try:
         for intent_type, matchers in intents.items():
-            if found:
+            if found_intent is not None:
                 break
             for matcher in matchers:
                 match = matcher.match(text)
                 if match:
                     # we have a match
-                    found = True
+                    found_intent = intent_type
                     m, s = yield from hass.helpers.intent.async_handle(
                         DOMAIN, intent_type,
                         {key: {'value': value} for key, value
                          in match.groupdict().items()}, text)
                     break
+        # the item was match as INTENT_TURN_ON but we don't have such device - maybe it is radio or podcast???
+        if s is False and found_intent == INTENT_TURN_ON:
+            m_org = m
+            m, s = yield from hass.helpers.intent.async_handle(
+                DOMAIN, INTENT_PLAY_RADIO,
+                {key: {'value': value} for key, value
+                 in match.groupdict().items()}, text.replace("włącz", "włącz radio"))
+            if s is False:
+                m, s = yield from hass.helpers.intent.async_handle(
+                    DOMAIN, INTENT_PLAY_PODCAST,
+                    {key: {'value': value} for key, value
+                     in match.groupdict().items()}, text.replace("włącz", "włącz podcast"))
+            if s is False:
+                m = m_org
+
         # the was no match - try again but with context
-        if not found:
+        if found_intent is None:
             suffix = GROUP_ENTITIES[get_curr_group_idx()]['context_suffix']
             if suffix is not None:
                 for intent_type, matchers in intents.items():
-                    if found:
+                    if found_intent is not None:
                         break
                     for matcher in matchers:
                         match = matcher.match(suffix + " " + text)
                         if match:
                             # we have a match
-                            found = True
+                            found_intent = intent_type
                             m, s = yield from hass.helpers.intent.async_handle(
                                 DOMAIN, intent_type,
                                 {key: {'value': value} for key, value
@@ -1104,7 +1191,7 @@ def _process(hass, text, callback):
                             # in this case we will know if the call source
                             CURR_BUTTON_CODE = 0
                             break
-        if s is False or not found:
+        if s is False or found_intent is None:
             # no success - try to ask the cloud
             if m is None:
                 # no message / no match
@@ -1149,7 +1236,7 @@ class TurnOnIntent(intent.IntentHandler):
 
     intent_type = INTENT_TURN_ON
     slot_schema = {
-        'name': cv.string,
+        'item': cv.string,
     }
 
     @asyncio.coroutine
@@ -1157,7 +1244,7 @@ class TurnOnIntent(intent.IntentHandler):
         """Handle turn on intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        name = slots['name']['value']
+        name = slots['item']['value']
         entity = _match_entity(hass, name)
         success = False
 
@@ -1177,7 +1264,7 @@ class TurnOnIntent(intent.IntentHandler):
                             ATTR_ENTITY_ID: entity.entity_id,
                         }, blocking=True)
                     message = 'OK, włączono {}'.format(entity.name)
-                    success = True
+                success = True
             else:
                 message = 'Urządzenia ' + name + ' nie można włączyć'
         return message, success
@@ -1188,7 +1275,7 @@ class TurnOffIntent(intent.IntentHandler):
 
     intent_type = INTENT_TURN_OFF
     slot_schema = {
-        'name': cv.string,
+        'item': cv.string,
     }
 
     @asyncio.coroutine
@@ -1196,7 +1283,7 @@ class TurnOffIntent(intent.IntentHandler):
         """Handle turn off intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        name = slots['name']['value']
+        name = slots['item']['value']
         entity = _match_entity(hass, name)
         success = False
         if not entity:
@@ -1228,7 +1315,7 @@ class StatusIntent(intent.IntentHandler):
 
     intent_type = INTENT_STATUS
     slot_schema = {
-        'name': cv.string,
+        'item': cv.string,
     }
 
     @asyncio.coroutine
@@ -1236,7 +1323,7 @@ class StatusIntent(intent.IntentHandler):
         """Handle status intent."""
         hass = intent_obj.hass
         slots = self.async_validate_slots(intent_obj.slots)
-        name = slots['name']['value']
+        name = slots['item']['value']
         entity = _match_entity(hass, name)
         success = False
 
