@@ -2,7 +2,7 @@
 Support for Sensirion SHT31 Smart-Gadget temperature and humidity sensor.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensirion_sht31_smart_gadget/
+https://home-assistant.io/components/sensirion_sht31/
 """
 
 import binascii

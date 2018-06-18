@@ -789,7 +789,7 @@ pyfritzhome==0.3.7
 # homeassistant.components.ifttt
 pyfttt==0.3
 
-# homeassistant.components.sensor.sensirion_sht31_smart_gadget
+# homeassistant.components.sensor.sensirion_sht31
 # homeassistant.components.sensor.skybeacon
 pygatt==3.2.0
 
