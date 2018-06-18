@@ -425,7 +425,6 @@ class ISYDevice(Entity):
             self._control_handler = self._node.controlEvents.subscribe(
                 self.on_control)
 
-    # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Handle the update event from the ISY994 Node."""
         self.schedule_update_ha_state()
