@@ -216,8 +216,11 @@ class EntityPlatform(object):
                                    component_entities, registry)
             for entity in new_entities]
 
-        if tasks:
-            await asyncio.wait(tasks, loop=self.hass.loop)
+        # No entities for processing
+        if not tasks:
+            return
+
+        await asyncio.wait(tasks, loop=self.hass.loop)
         self.async_entities_added_callback()
 
         if self._async_unsub_polling is not None or \
