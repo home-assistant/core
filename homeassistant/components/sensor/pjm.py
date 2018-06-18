@@ -88,10 +88,7 @@ class PJMSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        if self._type == CONF_INSTANTANEOUS_ZONE_LOAD:
-            return ICON_POWER
-        if self._type == CONF_INSTANTANEOUS_TOTAL_LOAD:
-            return ICON_POWER
+        return ICON_POWER
 
     @property
     def state(self):
