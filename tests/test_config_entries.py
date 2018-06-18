@@ -18,6 +18,7 @@ def manager(hass):
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
     manager._entries = []
+    manager._store._async_ensure_stop_listener = lambda: None
     hass.config_entries = manager
     return manager
 

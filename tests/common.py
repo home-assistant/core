@@ -14,7 +14,7 @@ from homeassistant import auth, core as ha, data_entry_flow, config_entries
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
-    intent, entity, restore_state,  entity_registry,
+    intent, entity, restore_state, entity_registry,
     entity_platform)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
@@ -137,6 +137,7 @@ def async_test_home_assistant(loop):
 
     hass.config_entries = config_entries.ConfigEntries(hass, {})
     hass.config_entries._entries = []
+    hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
     hass.state = ha.CoreState.running
 

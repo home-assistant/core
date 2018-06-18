@@ -4,6 +4,7 @@ import os
 from typing import Dict, Optional
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.util import json
 from homeassistant.helpers.event import async_call_later
@@ -60,32 +61,53 @@ class Store:
         """Save data with an optional delay."""
         self._data = data
 
+        self._async_cleanup_delay_listener()
+
         if delay is None:
+            self._async_cleanup_stop_listener()
             await self._handle_write_data()
             return
 
-        if self._unsub_delay_listener is not None:
-            self._unsub_delay_listener()
-            self._unsub_delay_listener = None
-
         self._unsub_delay_listener = async_call_later(
-            self.hass, delay, self._handle_write_data)
+            self.hass, delay, self._async_callback_delayed_write)
 
-        # Ensure that we write if we quit before delay has passed.
+        self._async_ensure_stop_listener()
+
+    @callback
+    def _async_ensure_stop_listener(self):
+        """Ensure that we write if we quit before delay has passed."""
         if self._unsub_stop_listener is None:
-            self._unsub_stop_listener = self.hass.bus.async_listen(
-                EVENT_HOMEASSISTANT_STOP, self._handle_write_data)
+            self._unsub_stop_listener = self.hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, self._async_callback_stop_write)
 
-    async def _handle_write_data(self, *_args):
-        """Handler to handle writing the config."""
-        if self._unsub_delay_listener is not None:
-            self._unsub_delay_listener()
-            self._unsub_delay_listener = None
-
+    @callback
+    def _async_cleanup_stop_listener(self):
+        """Clean up a stop listener."""
         if self._unsub_stop_listener is not None:
             self._unsub_stop_listener()
             self._unsub_stop_listener = None
 
+    @callback
+    def _async_cleanup_delay_listener(self):
+        """Clean up a delay listener."""
+        if self._unsub_delay_listener is not None:
+            self._unsub_delay_listener()
+            self._unsub_delay_listener = None
+
+    async def _async_callback_delayed_write(self, _now):
+        """Handle a delayed write callback."""
+        self._unsub_delay_listener = None
+        self._async_cleanup_stop_listener()
+        await self._handle_write_data()
+
+    async def _async_callback_stop_write(self, _event):
+        """Handle a write because Home Assistant is stopping."""
+        self._unsub_stop_listener = None
+        self._async_cleanup_delay_listener()
+        await self._handle_write_data()
+
+    async def _handle_write_data(self, *_args):
+        """Handler to handle writing the config."""
         data = self._data
         self._data = None
 

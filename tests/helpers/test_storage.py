@@ -35,9 +35,8 @@ def mock_load(mock_save):
 def store(hass):
     """Fixture of a store that prevents writing on HASS stop."""
     store = storage.Store(hass, 'test')
+    store._async_ensure_stop_listener = lambda: None
     yield store
-    if store._unsub_stop_listener is not None:
-        store._unsub_stop_listener()
 
 
 async def test_loading(hass, store, mock_save, mock_load):
@@ -64,8 +63,9 @@ async def test_saving_with_delay(hass, store, mock_save):
     assert len(mock_save) == 1
 
 
-async def test_saving_on_stop(hass, store, mock_save):
+async def test_saving_on_stop(hass, mock_save):
     """Test delayed saves trigger when we quit Home Assistant."""
+    store = storage.Store(hass, 'test')
     await store.async_save(MOCK_DATA, delay=1)
     assert len(mock_save) == 0
 
