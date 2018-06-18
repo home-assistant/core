@@ -136,6 +136,7 @@ async def test_migrator_transforming_config(hass, store, mock_save):
             hass, 'old-path', store,
             migrate_func=lambda old_config: {'new': old_config['old']})
 
+    assert len(mock_remove.mock_calls) == 1
     assert data == {'new': 'config'}
     assert len(mock_save) == 1
     assert mock_save[0][1] == data
