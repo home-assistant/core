@@ -112,8 +112,8 @@ class FireTV(object):
             _current_app = response.get('current_app', None)
             if _current_app is not None:
                 return _current_app.get('package', None)
-            else:
-                return None
+
+            return None
         except requests.exceptions.RequestException:
             _LOGGER.error(
                 "Could not retrieve current app for %s", self.device_id)
