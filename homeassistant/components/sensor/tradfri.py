@@ -33,7 +33,8 @@ async def async_setup_platform(hass, config, async_add_devices,
     devices_commands = await api(devices_command)
     all_devices = await api(devices_commands)
     devices = [dev for dev in all_devices if not dev.has_light_control]
-    async_add_devices(TradfriDevice(device, api) for device in devices)
+    if devices:
+        async_add_devices(TradfriDevice(device, api) for device in devices)
 
 
 class TradfriDevice(Entity):
