@@ -161,7 +161,8 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
 
     def teach(self, name, file_path):
         """Teach classifier a face name."""
-        if valid_file_path(file_path):
+        if (self.hass.config.is_allowed_path(file_path) and
+                valid_file_path(file_path)):
             data = {ATTR_NAME: name, 'id': file_path}
             file = {'file': open(file_path, 'rb')}
             response = requests.post(self._url_teach, data=data, files=file)
