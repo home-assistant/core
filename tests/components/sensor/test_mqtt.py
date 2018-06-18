@@ -287,7 +287,7 @@ class TestSensorMQTT(unittest.TestCase):
                          state.attributes.get('test'))
 
     def test_setting_sensor_template_attributes_and_via_mqtt_json_message(
-    self):
+        self):
         """Test the setting of attribute template via MQTT with JSON
         payload."""
         mock_component(self.hass, 'mqtt')
