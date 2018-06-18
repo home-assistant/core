@@ -1,4 +1,4 @@
-aiohttp==3.3.0
+aiohttp==3.3.2
 astral==1.6.1
 async_timeout==3.0.0
 attrs==18.1.0
