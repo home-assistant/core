@@ -38,6 +38,8 @@ BATTERY_HANDLE = "0x1D"
 HUMIDITY_HANDLE = "0x32"
 TEMPERATURE_HANDLE = "0x37"
 
+MAX_HUMIDITY_DEVIATION_PERCENT = 25
+
 CONNECT_TIMEOUT = 30
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
@@ -186,11 +188,21 @@ class SHT31SmartGadgetClient(object):
             else:
                 self.temperature = temperature
 
-            if isinstance(humidity, float) and math.isnan(humidity):
+            if isinstance(humidity, float) and math.isnan(humidity) \
+                    and self.check_humidity_deviation(self.humidity, humidity):
                 _LOGGER.warning("Bad Humidity sample from "
                                 "SHT31 Smart-Gadget")
             else:
                 self.humidity = humidity
+
+
+    @staticmethod
+    def check_humidity_deviation(oldValue, newValue):
+        """Check if humidity has a certain deviation."""
+        if oldValue is None:
+            return True
+        else:
+            return abs(oldValue - newValue) <= MAX_HUMIDITY_DEVIATION_PERCENT
 
 
 class SHT31SmartGadgetSensor(Entity):
