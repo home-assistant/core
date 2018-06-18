@@ -151,6 +151,8 @@ DISCOVERY_SOURCES = (
     data_entry_flow.SOURCE_IMPORT,
 )
 
+EVENT_FLOW_DISCOVERED = 'config_entry_discovered'
+
 
 class ConfigEntry:
     """Hold a configuration entry."""
@@ -404,6 +406,7 @@ class ConfigEntries:
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
+            self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
             self.hass.components.persistent_notification.async_create(
                 title='New devices discovered',
                 message=("We have discovered new devices on your network. "
