@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Ime \u017ee obstaja"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "Ikona",
+                    "latitude": "Zemljepisna \u0161irina",
+                    "longitude": "Zemljepisna dol\u017eina",
+                    "name": "Ime",
+                    "passive": "Pasivno",
+                    "radius": "Radij"
+                },
+                "title": "Dolo\u010dite parametre obmo\u010dja"
+            }
+        },
+        "title": "Obmo\u010dje"
+    }
+}
