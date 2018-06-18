@@ -438,9 +438,6 @@ https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e22462
 # homeassistant.components.binary_sensor.flic
 https://github.com/soldag/pyflic/archive/0.4.zip#pyflic==0.4
 
-# homeassistant.components.media_player.lg_netcast
-https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
-
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
 
@@ -880,6 +877,9 @@ pylacrosse==0.3.1
 
 # homeassistant.components.sensor.lastfm
 pylast==2.3.0
+
+# homeassistant.components.media_player.lg_netcast
+pylgnetcast-homeassistant==0.2.0.dev0
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
