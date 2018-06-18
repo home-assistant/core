@@ -19,7 +19,8 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, \
+    SERVICE_TURN_ON, ATTR_OPTION
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
@@ -77,6 +78,37 @@ class Image:
 
     content_type = attr.ib(type=str)
     content = attr.ib(type=bytes)
+
+
+@bind_hass
+async def turn_off(hass, entity_id=None):
+    """Turn off camera."""
+    hass.add_job(async_turn_off, hass, entity_id)
+
+
+@bind_hass
+async def async_turn_off(hass, entity_id=None):
+    """Turn off camera."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data)
+
+
+@bind_hass
+async def turn_on(hass, entity_id=None, option=None):
+    """Turn on camera."""
+    hass.add_job(async_turn_on, hass, entity_id, option)
+
+
+@bind_hass
+async def async_turn_on(hass, entity_id=None, option=None):
+    """Turn off camera, and set operation mode."""
+    data = {}
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+    if option is not None:
+        data[ATTR_OPTION] = option
+
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 @bind_hass
