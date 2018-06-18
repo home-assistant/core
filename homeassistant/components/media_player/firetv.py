@@ -108,9 +108,9 @@ class FireTV(object):
                 DEVICE_APPS_URL.format(
                     self.proto, self.host, self.port, self.device_id, 'current'
                     ), timeout=10).json()
-            _current_app = response.get('current_app', None)
-            if _current_app is not None:
-                return _current_app.get('package', None)
+            _current_app = response.get('current_app')
+            if _current_app:
+                return _current_app.get('package')
 
             return None
         except requests.exceptions.RequestException:
@@ -126,7 +126,7 @@ class FireTV(object):
                 DEVICE_APPS_URL.format(
                     self.proto, self.host, self.port, self.device_id, 'running'
                     ), timeout=10).json()
-            return response.get('running_apps', None)
+            return response.get('running_apps')
         except requests.exceptions.RequestException:
             _LOGGER.error(
                 "Could not retrieve running apps for %s", self.device_id)
