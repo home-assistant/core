@@ -126,6 +126,9 @@ omit =
     homeassistant/components/google.py
     homeassistant/components/*/google.py
 
+    homeassistant/components/greeneye_monitor.py
+    homeassistant/components/sensor/greeneye_monitor_*.py
+
     homeassistant/components/habitica/*
     homeassistant/components/*/habitica.py
 
