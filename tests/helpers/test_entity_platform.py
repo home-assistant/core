@@ -596,7 +596,7 @@ async def test_reset_cancels_retry_setup(hass):
 
 @asyncio.coroutine
 def test_not_fails_with_adding_empty_entities_(hass):
-    """Test for not adding duplicate entities."""
+    """Test for not fails on empty entities list."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     yield from component.async_add_entities([])
