@@ -265,7 +265,8 @@ class TestSensorMQTT(unittest.TestCase):
                          state.attributes.get('val'))
 
     def test_setting_sensor_template_attributes_via_mqtt_json_message(self):
-        """Test the setting of attribute template via MQTT with JSON payload."""
+        """Test the setting of attribute template via MQTT with JSON
+        payload."""
         mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {
@@ -285,8 +286,10 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual('101',
                          state.attributes.get('test'))
 
-    def test_setting_sensor_template_attributes_and_via_mqtt_json_message(self):
-        """Test the setting of attribute template via MQTT with JSON payload."""
+    def test_setting_sensor_template_attributes_and_via_mqtt_json_message(
+    self):
+        """Test the setting of attribute template via MQTT with JSON
+        payload."""
         mock_component(self.hass, 'mqtt')
         assert setup_component(self.hass, sensor.DOMAIN, {
             sensor.DOMAIN: {

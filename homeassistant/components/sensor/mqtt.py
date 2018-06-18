@@ -48,7 +48,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     # Integrations shouldn't never expose unique_id through configuration
     # this here is an exception because MQTT is a msg transport, not a protocol
     vol.Optional(CONF_UNIQUE_ID): cv.string,
-    vol.Optional(CONF_JSON_TEMPLATE_ATTRS): vol.Schema({cv.string: cv.template})
+    vol.Optional(CONF_JSON_TEMPLATE_ATTRS):
+        vol.Schema({cv.string: cv.template})
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
