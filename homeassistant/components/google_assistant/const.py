@@ -19,8 +19,6 @@ DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
     'switch', 'light', 'group', 'media_player', 'fan', 'cover', 'climate'
 ]
-CLIMATE_MODE_HEATCOOL = 'heatcool'
-CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', CLIMATE_MODE_HEATCOOL}
 
 PREFIX_TYPES = 'action.devices.types.'
 TYPE_LIGHT = PREFIX_TYPES + 'LIGHT'

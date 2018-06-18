@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.util import color as color_util, temperature as temp_util
 
-from .const import ERR_VALUE_OUT_OF_RANGE
+from .const import ERR_VALUE_OUT_OF_RANGE, ERR_NOT_SUPPORTED
 from .helpers import SmartHomeError
 
 PREFIX_TRAITS = 'action.devices.traits.'
@@ -46,6 +46,21 @@ COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
 COMMAND_THERMOSTAT_SET_MODE = PREFIX_COMMANDS + 'ThermostatSetMode'
 
 
+GOOGLE_TEMP_UNITS = {
+    TEMP_FAHRENHEIT: 'F',
+    TEMP_CELSIUS: 'C',
+}
+
+GOOGLE_THERMOSTAT_MODES = {
+    climate.STATE_HEAT: 'heat',
+    climate.STATE_COOL: 'cool',
+    climate.STATE_AUTO: 'heatcool',
+    climate.STATE_ECO: 'heatcool',
+    climate.STATE_IDLE: 'off',
+    climate.STATE_FAN_ONLY: 'off',
+    climate.STATE_DRY: 'off',
+}
+
 TRAITS = []
 
 
@@ -53,14 +68,6 @@ def register_trait(trait):
     """Decorator to register a trait."""
     TRAITS.append(trait)
     return trait
-
-
-def _google_temp_unit(state):
-    """Return Google temperature unit."""
-    if (state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) ==
-            TEMP_FAHRENHEIT):
-        return 'F'
-    return 'C'
 
 
 class _Trait:
@@ -395,15 +402,6 @@ class TemperatureSettingTrait(_Trait):
         COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE,
         COMMAND_THERMOSTAT_SET_MODE,
     ]
-    # We do not support "on" as we are unable to know how to restore
-    # the last mode.
-    hass_to_google = {
-        climate.STATE_HEAT: 'heat',
-        climate.STATE_COOL: 'cool',
-        climate.STATE_OFF: 'off',
-        climate.STATE_AUTO: 'heatcool',
-    }
-    google_to_hass = {value: key for key, value in hass_to_google.items()}
 
     @staticmethod
     def supported(domain, features):
@@ -415,15 +413,16 @@ class TemperatureSettingTrait(_Trait):
 
     def sync_attributes(self):
         """Return temperature point and modes attributes for a sync request."""
+        unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
         modes = []
-        for mode in self.state.attributes.get(climate.ATTR_OPERATION_LIST, []):
-            google_mode = self.hass_to_google.get(mode)
-            if google_mode is not None:
+        for mode in self.state.attributes.get(climate.ATTR_OPERATION_LIST):
+            google_mode = GOOGLE_THERMOSTAT_MODES.get(mode)
+            if google_mode is not None and google_mode not in modes:
                 modes.append(google_mode)
 
         return {
             'availableThermostatModes': ','.join(modes),
-            'thermostatTemperatureUnit': _google_temp_unit(self.state),
+            'thermostatTemperatureUnit': GOOGLE_TEMP_UNITS[unit],
         }
 
     def query_attributes(self):
@@ -432,8 +431,8 @@ class TemperatureSettingTrait(_Trait):
         response = {}
 
         operation = attrs.get(climate.ATTR_OPERATION_MODE)
-        if operation is not None and operation in self.hass_to_google:
-            response['thermostatMode'] = self.hass_to_google[operation]
+        if operation is not None and operation in GOOGLE_THERMOSTAT_MODES:
+            response['thermostatMode'] = GOOGLE_THERMOSTAT_MODES[operation]
 
         unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
 
@@ -514,9 +513,26 @@ class TemperatureSettingTrait(_Trait):
                 }, blocking=True)
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
+            mode = params['thermostatMode']
+
+            operation_list = self.state.attributes.get(
+                climate.ATTR_OPERATION_LIST)
+            # Work around a pylint false positive due to
+            #  https://github.com/PyCQA/pylint/issues/1830
+            # pylint: disable=stop-iteration-return
+            operation = next(
+                (k for k, v in GOOGLE_THERMOSTAT_MODES.items() if v == mode),
+                None
+            )
+            # We do not support "on" as we are unable to know how to restore
+            # the last mode.
+            if operation not in operation_list:
+                raise SmartHomeError(
+                    ERR_NOT_SUPPORTED,
+                    "Thermostat mode {} is not supported".format(mode))
+
             await hass.services.async_call(
                 climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
-                    climate.ATTR_OPERATION_MODE:
-                        self.google_to_hass[params['thermostatMode']],
+                    climate.ATTR_OPERATION_MODE: operation,
                 }, blocking=True)
