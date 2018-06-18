@@ -1,5 +1,5 @@
 # Home Assistant core
-aiohttp==3.3.0
+aiohttp==3.3.2
 astral==1.6.1
 async_timeout==3.0.0
 attrs==18.1.0
@@ -9,11 +9,10 @@ pip>=8.0.3
 pytz>=2018.04
 pyyaml>=3.11,<4
 requests==2.19.1
-typing>=3,<4
 voluptuous==0.11.1
 
 # homeassistant.components.nuimo_controller
---only-binary=all https://github.com/getSenic/nuimo-linux-python/archive/29fc42987f74d8090d0e2382e8f248ff5990b8c9.zip#nuimo==1.0.0
+--only-binary=all nuimo==0.1.0
 
 # homeassistant.components.sensor.sht31
 Adafruit-GPIO==1.0.3
@@ -115,6 +114,9 @@ alpha_vantage==2.0.0
 # homeassistant.components.amcrest
 amcrest==1.2.3
 
+# homeassistant.components.switch.anel_pwrctrl
+anel_pwrctrl-homeassistant==0.0.1.dev2
+
 # homeassistant.components.media_player.anthemav
 anthemav==1.1.8
 
@@ -183,6 +185,9 @@ boto3==1.4.7
 
 # homeassistant.scripts.credstash
 botocore==1.7.34
+
+# homeassistant.components.media_player.braviatv
+braviarc-homeassistant==0.3.7.dev0
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
@@ -400,11 +405,14 @@ hikvision==0.4
 # homeassistant.components.notify.hipchat
 hipnotify==1.0.8
 
+# homeassistant.components.sensor.pi_hole
+hole==0.3.0
+
 # homeassistant.components.binary_sensor.workday
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180617.0
+home-assistant-frontend==20180618.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.6
@@ -421,14 +429,8 @@ httplib2==0.10.3
 # homeassistant.components.sensor.dht
 # https://github.com/adafruit/Adafruit_Python_DHT/archive/da8cddf7fb629c1ef4f046ca44f42523c9cf2d11.zip#Adafruit_DHT==1.3.2
 
-# homeassistant.components.media_player.braviatv
-https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
-
 # homeassistant.components.neato
 https://github.com/jabesq/pybotvac/archive/v0.0.5.zip#pybotvac==0.0.5
-
-# homeassistant.components.switch.anel_pwrctrl
-https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
 
 # homeassistant.components.sensor.gtfs
 https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e2246267dd8.zip#pygtfs==0.1.3
@@ -586,7 +588,7 @@ nanoleaf==0.4.1
 netdata==0.1.2
 
 # homeassistant.components.discovery
-netdisco==1.4.1
+netdisco==1.5.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -602,7 +604,7 @@ nuheat==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.14.3
+numpy==1.14.5
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -650,9 +652,6 @@ pifacedigitalio==3.0.5
 
 # homeassistant.components.light.piglow
 piglow==1.2.4
-
-# homeassistant.components.sensor.pi_hole
-pihole==0.1.2
 
 # homeassistant.components.pilight
 pilight==0.1.1
@@ -1433,7 +1432,7 @@ yeelight==0.4.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.06.02
+youtube_dl==2018.06.14
 
 # homeassistant.components.light.zengge
 zengge==0.2

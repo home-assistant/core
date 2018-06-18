@@ -13,7 +13,9 @@ from homeassistant.components.homekit.const import (
     BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, CHAR_FIRMWARE_REVISION,
     CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER,
     MANUFACTURER, SERV_ACCESSORY_INFO)
-from homeassistant.const import __version__, ATTR_NOW, EVENT_TIME_CHANGED
+from homeassistant.const import (
+    __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_NOW,
+    EVENT_TIME_CHANGED)
 import homeassistant.util.dt as dt_util
 
 
@@ -56,8 +58,7 @@ async def test_home_accessory(hass, hk_driver):
     hass.states.async_set(entity_id, None)
     await hass.async_block_till_done()
 
-    acc = HomeAccessory(hass, hk_driver, 'Home Accessory',
-                        entity_id, 2, None)
+    acc = HomeAccessory(hass, hk_driver, 'Home Accessory', entity_id, 2, None)
     assert acc.hass == hass
     assert acc.display_name == 'Home Accessory'
     assert acc.aid == 2
@@ -89,9 +90,58 @@ async def test_home_accessory(hass, hk_driver):
 
     # Test model name from domain
     entity_id = 'test_model.demo'
-    acc = HomeAccessory('hass', hk_driver, 'test_name', entity_id, 2, None)
+    hass.states.async_set(entity_id, None)
+    await hass.async_block_till_done()
+    acc = HomeAccessory(hass, hk_driver, 'test_name', entity_id, 2, None)
     serv = acc.services[0]  # SERV_ACCESSORY_INFO
     assert serv.get_characteristic(CHAR_MODEL).value == 'Test Model'
+
+
+async def test_battery_service(hass, hk_driver):
+    """Test battery service."""
+    entity_id = 'homekit.accessory'
+    hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 50})
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2, None)
+    assert acc._char_battery.value == 0
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 2
+
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 50
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 2
+
+    hass.states.async_set(entity_id, None, {ATTR_BATTERY_LEVEL: 15})
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 15
+    assert acc._char_low_battery.value == 1
+    assert acc._char_charging.value == 2
+
+    # Test charging
+    hass.states.async_set(entity_id, None, {
+        ATTR_BATTERY_LEVEL: 10, ATTR_BATTERY_CHARGING: True})
+    await hass.async_block_till_done()
+
+    acc = HomeAccessory(hass, hk_driver, 'Battery Service', entity_id, 2, None)
+    assert acc._char_battery.value == 0
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 2
+
+    await hass.async_add_job(acc.run)
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 10
+    assert acc._char_low_battery.value == 1
+    assert acc._char_charging.value == 1
+
+    hass.states.async_set(entity_id, None, {
+        ATTR_BATTERY_LEVEL: 100, ATTR_BATTERY_CHARGING: False})
+    await hass.async_block_till_done()
+    assert acc._char_battery.value == 100
+    assert acc._char_low_battery.value == 0
+    assert acc._char_charging.value == 0
 
 
 def test_home_bridge(hk_driver):
