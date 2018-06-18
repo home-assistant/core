@@ -51,7 +51,7 @@ REQUIRES = [
     'pip>=8.0.3',
     'pytz>=2018.04',
     'pyyaml>=3.11,<4',
-    'requests==2.18.4',
+    'requests==2.19.1',
     'voluptuous==0.11.1',
 ]
 
