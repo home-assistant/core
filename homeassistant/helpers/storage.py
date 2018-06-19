@@ -30,7 +30,7 @@ async def async_migrator(hass, old_path, store, *, old_conf_migrate_func=None):
     config = await hass.async_add_executor_job(load_old_config)
 
     if config is None:
-        return None
+        return await store.async_load()
 
     if old_conf_migrate_func is not None:
         config = await old_conf_migrate_func(config)

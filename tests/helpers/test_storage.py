@@ -111,7 +111,7 @@ async def test_migrator_no_existing_config(hass, store, mock_save):
         data = await storage.async_migrator(
             hass, 'old-path', store)
 
-    assert data is None
+    assert data == {'cur': 'config'}
     assert len(mock_save) == 0
 
 

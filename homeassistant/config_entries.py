@@ -323,9 +323,6 @@ class ConfigEntries:
             old_conf_migrate_func=_old_conf_migrator
         )
 
-        if config is None:
-            config = await self._store.async_load()
-
         self._entries = [ConfigEntry(**entry) for entry in config['entries']]
 
     async def async_forward_entry_setup(self, entry, component):
