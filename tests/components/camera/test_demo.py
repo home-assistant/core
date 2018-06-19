@@ -102,7 +102,6 @@ class TestTurnOnOffDemoCamera(object):
 
     def test_turn_off_invalid_camera(self):
         """Turn off non-exist camera should quietly fail."""
-
         camera.turn_off(self.hass, 'camera.demo_camera_1')
         self.hass.block_till_done()
 
@@ -111,7 +110,6 @@ class TestTurnOnOffDemoCamera(object):
 
     def test_turn_off_unsupport_camera(self):
         """Turn off unsupported camera should quietly fail."""
-
         with patch('homeassistant.components.camera.demo.DemoCamera'
                    '.supported_features', new_callable=PropertyMock) as m:
             m.return_value = SUPPORT_TURN_ON
