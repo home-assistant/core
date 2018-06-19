@@ -54,6 +54,7 @@ CONF_WHITE_VALUE_SCALE = 'white_value_scale'
 CONF_WHITE_VALUE_STATE_TOPIC = 'white_value_state_topic'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 CONF_ON_COMMAND_TYPE = 'on_command_type'
+CONF_SCALE_RGB_WITH_BRIGHTNESS = 'scale_rgb_with_brightness'
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = 'MQTT Light'
@@ -62,6 +63,7 @@ DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_WHITE_VALUE_SCALE = 255
 DEFAULT_ON_COMMAND_TYPE = 'last'
+DEFAULT_SCALE_RGB_WITH_BRIGHTNESS = False
 
 VALUES_ON_COMMAND_TYPE = ['first', 'last', 'brightness']
 
@@ -97,6 +99,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_XY_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_ON_COMMAND_TYPE, default=DEFAULT_ON_COMMAND_TYPE):
         vol.In(VALUES_ON_COMMAND_TYPE),
+    vol.Optional(CONF_SCALE_RGB_WITH_BRIGHTNESS,
+                 default=DEFAULT_SCALE_RGB_WITH_BRIGHTNESS): cv.boolean,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -153,6 +157,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        config.get(CONF_SCALE_RGB_WITH_BRIGHTNESS),
     )])
 
 
@@ -162,7 +167,8 @@ class MqttLight(MqttAvailability, Light):
     def __init__(self, name, effect_list, topic, templates, qos,
                  retain, payload, optimistic, brightness_scale,
                  white_value_scale, on_command_type, availability_topic,
-                 payload_available, payload_not_available):
+                 payload_available, payload_not_available,
+                 scale_rgb_with_brightness):
         """Initialize MQTT light."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -189,6 +195,7 @@ class MqttLight(MqttAvailability, Light):
         self._brightness_scale = brightness_scale
         self._white_value_scale = white_value_scale
         self._on_command_type = on_command_type
+        self._scale_rgb_with_brightness = scale_rgb_with_brightness
         self._state = False
         self._brightness = None
         self._hs = None
@@ -442,8 +449,13 @@ class MqttLight(MqttAvailability, Light):
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
 
             hs_color = kwargs[ATTR_HS_COLOR]
-            brightness = kwargs.get(
-                ATTR_BRIGHTNESS, self._brightness if self._brightness else 255)
+            if self._scale_rgb_with_brightness:
+                brightness = kwargs.get(ATTR_BRIGHTNESS,
+                                        self._brightness if self._brightness
+                                        else 255)
+            else:
+                brightness = 255
+
             rgb = color_util.color_hsv_to_RGB(
                 hs_color[0], hs_color[1], brightness / 255 * 100)
             tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]
