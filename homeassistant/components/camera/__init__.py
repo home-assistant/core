@@ -48,6 +48,10 @@ STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
+# Bitfield of features supported by the camera entity
+SUPPORT_TURN_OFF = 1
+SUPPORT_TURN_ON = 2
+
 DEFAULT_CONTENT_TYPE = 'image/jpeg'
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
 
@@ -59,6 +63,10 @@ MIN_STREAM_INTERVAL = 0.5  # seconds
 
 CAMERA_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
+})
+
+CAMERA_TURN_ON_SERVICE_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Optional(ATTR_OPTION): cv.string
 })
 
 CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
@@ -81,7 +89,7 @@ class Image:
 
 
 @bind_hass
-async def turn_off(hass, entity_id=None):
+def turn_off(hass, entity_id=None):
     """Turn off camera."""
     hass.add_job(async_turn_off, hass, entity_id)
 
@@ -94,14 +102,14 @@ async def async_turn_off(hass, entity_id=None):
 
 
 @bind_hass
-async def turn_on(hass, entity_id=None, option=None):
+def turn_on(hass, entity_id=None, option=None):
     """Turn on camera."""
     hass.add_job(async_turn_on, hass, entity_id, option)
 
 
 @bind_hass
 async def async_turn_on(hass, entity_id=None, option=None):
-    """Turn off camera, and set operation mode."""
+    """Turn on camera, and set operation mode."""
     data = {}
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
@@ -195,6 +203,12 @@ async def async_setup(hass, config):
                 await camera.async_enable_motion_detection()
             elif service.service == SERVICE_DISABLE_MOTION:
                 await camera.async_disable_motion_detection()
+            elif service.service == SERVICE_TURN_OFF and \
+                    camera.supported_features & SUPPORT_TURN_OFF:
+                await camera.async_turn_off()
+            elif service.service == SERVICE_TURN_ON and \
+                    camera.supported_features & SUPPORT_TURN_ON:
+                await camera.async_turn_on(service.data.get(ATTR_OPTION))
 
             if not camera.should_poll:
                 continue
@@ -232,6 +246,12 @@ async def async_setup(hass, config):
             except OSError as err:
                 _LOGGER.error("Can't write image to file: %s", err)
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_OFF, async_handle_camera_service,
+        schema=CAMERA_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_ON, async_handle_camera_service,
+        schema=CAMERA_TURN_ON_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_ENABLE_MOTION, async_handle_camera_service,
         schema=CAMERA_SERVICE_SCHEMA)
@@ -274,6 +294,11 @@ class Camera(Entity):
     def entity_picture(self):
         """Return a link to the camera feed as entity picture."""
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return 0
 
     @property
     def is_recording(self):
@@ -369,10 +394,29 @@ class Camera(Entity):
             return STATE_STREAMING
         return STATE_IDLE
 
+    def turn_off(self):
+        """Turn off camera."""
+        raise NotImplementedError()
+
+    @callback
+    def async_turn_off(self):
+        """Turn off camera."""
+        return self.hass.async_add_job(self.turn_off)
+
+    def turn_on(self, option=None):
+        """Turn off camera."""
+        raise NotImplementedError()
+
+    @callback
+    def async_turn_on(self, option=None):
+        """Turn off camera."""
+        return self.hass.async_add_job(self.turn_on, option)
+
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
         raise NotImplementedError()
 
+    @callback
     def async_enable_motion_detection(self):
         """Call the job and enable motion detection."""
         return self.hass.async_add_job(self.enable_motion_detection)
@@ -381,6 +425,7 @@ class Camera(Entity):
         """Disable motion detection in camera."""
         raise NotImplementedError()
 
+    @callback
     def async_disable_motion_detection(self):
         """Call the job and disable motion detection."""
         return self.hass.async_add_job(self.disable_motion_detection)
