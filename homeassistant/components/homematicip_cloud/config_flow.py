@@ -6,17 +6,18 @@ from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
-    DOMAIN, _LOGGER, CONF_ACCESSPOINT, CONF_AUTHTOKEN, CONF_PIN, CONF_NAME)
+    DOMAIN as HMIPC_DOMAIN, _LOGGER,
+    HMIPC_HAPID, HMIPC_AUTHTOKEN, HMIPC_PIN, HMIPC_NAME)
 
 
 @callback
-def configured_accesspoint(hass):
-    """Return a set of the configured hosts."""
-    return set(entry.data[CONF_ACCESSPOINT] for entry
-               in hass.config_entries.async_entries(DOMAIN))
+def configured_haps(hass):
+    """Return a set of the configured HAPs."""
+    return set(entry.data[HMIPC_HAPID] for entry
+               in hass.config_entries.async_entries(HMIPC_DOMAIN))
 
 
-@config_entries.HANDLERS.register(DOMAIN)
+@config_entries.HANDLERS.register(HMIPC_DOMAIN)
 class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
     """Config flow HomematicIP Cloud."""
 
@@ -25,7 +26,7 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
     def __init__(self):
         """Initialize HomematicIP Cloud config flow."""
         self.hmip_auth = None
-        self.hmip_apid = None
+        self.hmip_hapid = None
         self.hmip_name = ''
 
     async def async_step_init(self, user_input=None):
@@ -35,23 +36,23 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
         errors = {}
 
         if user_input is not None:
-            self.hmip_apid = user_input[CONF_ACCESSPOINT]
+            self.hmip_hapid = user_input[HMIPC_HAPID]
 
-            if self.hmip_apid in configured_accesspoint(self.hass):
+            if self.hmip_hapid in configured_haps(self.hass):
                 return self.async_abort(reason='already_configured')
-            if user_input[CONF_NAME] is not None:
-                self.hmip_name = user_input[CONF_NAME]
-            _LOGGER.info("Create new authtoken for %s", self.hmip_apid)
+            if user_input[HMIPC_NAME] is not None:
+                self.hmip_name = user_input[HMIPC_NAME]
+            _LOGGER.info("Create new authtoken for %s", self.hmip_hapid)
 
             # Create new authtoken for the accesspoint
             websession = aiohttp_client.async_get_clientsession(self.hass)
             self.hmip_auth = AsyncAuth(self.hass.loop, websession)
             try:
-                await self.hmip_auth.init(self.hmip_apid)
+                await self.hmip_auth.init(self.hmip_hapid)
             except HmipConnectionError:
                 return self.async_abort(reason='conection_aborted')
-            if user_input[CONF_PIN]:
-                self.hmip_auth.pin = user_input[CONF_PIN]
+            if user_input[HMIPC_PIN]:
+                self.hmip_auth.pin = user_input[HMIPC_PIN]
             try:
                 await self.hmip_auth.connectionRequest(
                     'HomeAssistant')
@@ -65,9 +66,9 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
         return self.async_show_form(
             step_id='init',
             data_schema=vol.Schema({
-                vol.Required(CONF_ACCESSPOINT): str,
-                vol.Optional(CONF_PIN): str,
-                vol.Optional(CONF_NAME): str,
+                vol.Required(HMIPC_HAPID): str,
+                vol.Optional(HMIPC_PIN): str,
+                vol.Optional(HMIPC_NAME): str,
             }),
             errors=errors
         )
@@ -89,35 +90,35 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
                 return self.async_abort(reason='conection_aborted')
             else:
                 _LOGGER.info("Register new config entry")
-                apid = self.hmip_apid.replace('-', '').upper()
+                hapid = self.hmip_hapid.replace('-', '').upper()
                 return self.async_create_entry(
-                    title=apid,
+                    title=hapid,
                     data={
-                        'accesspoint': apid,
-                        'authtoken': authtoken,
-                        'name': self.hmip_name
-                        }
+                        HMIPC_HAPID: hapid,
+                        HMIPC_AUTHTOKEN: authtoken,
+                        HMIPC_NAME: self.hmip_name
+                    }
                 )
 
         return self.async_show_form(step_id='link', errors=errors)
 
     async def async_step_import(self, import_info):
         """Import a new bridge as a config entry."""
-        apid = import_info[CONF_ACCESSPOINT]
-        authtoken = import_info[CONF_AUTHTOKEN]
-        name = import_info[CONF_NAME]
+        hapid = import_info[HMIPC_HAPID]
+        authtoken = import_info[HMIPC_AUTHTOKEN]
+        name = import_info[HMIPC_NAME]
 
-        apid = apid.replace('-', '').upper()
-        if apid in configured_accesspoint(self.hass):
+        hapid = hapid.replace('-', '').upper()
+        if hapid in configured_haps(self.hass):
             return self.async_abort(reason='already_configured')
 
-        _LOGGER.info('Imported authentication for %s', apid)
+        _LOGGER.info('Imported authentication for %s', hapid)
 
         return self.async_create_entry(
-            title=apid,
+            title=hapid,
             data={
-                'accesspoint': apid,
-                'authtoken': authtoken,
-                'name': name
-                }
+                HMIPC_HAPID: hapid,
+                HMIPC_AUTHTOKEN: authtoken,
+                HMIPC_NAME: name
+            }
         )

@@ -5,7 +5,7 @@
       "init": {
         "title": "Pick HomematicIP Accesspoint",
         "data": {
-          "accesspoint": "Accesspoint ID (SGTIN)",
+          "hapid": "Accesspoint ID (SGTIN)",
           "pin": "Pin Code (optional)",
           "name": "Name (optional, used as name prefix for all devices)"
         }

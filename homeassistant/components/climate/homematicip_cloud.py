@@ -12,8 +12,8 @@ from homeassistant.components.climate import (
     STATE_AUTO, STATE_MANUAL)
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
-    ATTR_HOME_ID)
+    HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN,
+    HMIPC_HAPID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +30,14 @@ HMIP_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_HMIP.items()}
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the HomematicIP climate devices."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the HomematicIP climate from a config entry."""
     from homematicip.group import HeatingGroup
 
-    if discovery_info is None:
-        return
-    home = hass.data[HOMEMATICIP_CLOUD_DOMAIN][discovery_info[ATTR_HOME_ID]]
-
+    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.groups:
         if isinstance(device, HeatingGroup):

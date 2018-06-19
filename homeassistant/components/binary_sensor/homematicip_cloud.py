@@ -9,8 +9,8 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
-    ATTR_HOME_ID)
+    HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN,
+    HMIPC_HAPID)
 
 DEPENDENCIES = ['homematicip_cloud']
 
@@ -26,12 +26,15 @@ HMIP_OPEN = 'open'
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the HomematicIP binary sensor devices."""
+    """Set up the binary sensor devices."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the HomematicIP binary sensor from a config entry."""
     from homematicip.device import (ShutterContact, MotionDetectorIndoor)
 
-    if discovery_info is None:
-        return
-    home = hass.data[HOMEMATICIP_CLOUD_DOMAIN][discovery_info[ATTR_HOME_ID]]
+    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
         if isinstance(device, ShutterContact):

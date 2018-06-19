@@ -8,8 +8,8 @@ https://home-assistant.io/components/sensor.homematicip_cloud/
 import logging
 
 from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
-    ATTR_HOME_ID)
+    HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN,
+    HMIPC_HAPID)
 from homeassistant.const import (
     TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY,
     DEVICE_CLASS_ILLUMINANCE)
@@ -36,15 +36,17 @@ STATE_SABOTAGE = 'sabotage'
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the HomematicIP sensors devices."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the HomematicIP sensors from a config entry."""
     from homematicip.device import (
         HeatingThermostat, TemperatureHumiditySensorWithoutDisplay,
         TemperatureHumiditySensorDisplay, MotionDetectorIndoor)
 
-    if discovery_info is None:
-        return
-    home = hass.data[HOMEMATICIP_CLOUD_DOMAIN][discovery_info[ATTR_HOME_ID]]
+    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = [HomematicipAccesspointStatus(home)]
-
     for device in home.devices:
         if isinstance(device, HeatingThermostat):
             devices.append(HomematicipHeatingThermostat(home, device))
