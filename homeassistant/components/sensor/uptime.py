@@ -9,18 +9,17 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import (
+    CONF_NAME, DEVICE_CLASS_TIMESTAMP)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Uptime'
+DEFAULT_NAME = 'Start'
 
 ICON = 'mdi:timer'
-
-DEVICE_CLASS = 'datetime'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -56,7 +55,7 @@ class UptimeSensor(Entity):
     @property
     def device_class(self):
         """Return the device class of the sensor."""
-        return DEVICE_CLASS
+        return DEVICE_CLASS_TIMESTAMP
 
     @property
     def state(self):
