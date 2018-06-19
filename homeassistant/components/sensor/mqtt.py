@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = 'expire_after'
 CONF_JSON_ATTRS = 'json_attributes'
+CONF_JSON_TEMPLATE_ATTRS = 'json_template_attributes'
 CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Sensor'
@@ -47,6 +48,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     # Integrations shouldn't never expose unique_id through configuration
     # this here is an exception because MQTT is a msg transport, not a protocol
     vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_JSON_TEMPLATE_ATTRS):
+        vol.Schema({cv.string: cv.template})
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -60,6 +63,12 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     if value_template is not None:
         value_template.hass = hass
 
+    json_template_attrs = config.get(CONF_JSON_TEMPLATE_ATTRS)
+    if json_template_attrs is not None:
+        for key, value in json_template_attrs.items():
+            value.hass = hass
+            _LOGGER.warning("test " + key)
+
     async_add_devices([MqttSensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
@@ -71,6 +80,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         config.get(CONF_DEVICE_CLASS),
         value_template,
         config.get(CONF_JSON_ATTRS),
+        json_template_attrs,
         config.get(CONF_UNIQUE_ID),
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
@@ -83,9 +93,9 @@ class MqttSensor(MqttAvailability, Entity):
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
                  force_update, expire_after, icon, device_class: Optional[str],
-                 value_template, json_attributes, unique_id: Optional[str],
-                 availability_topic, payload_available,
-                 payload_not_available):
+                 value_template, json_attributes, json_template_attributes,
+                 unique_id: Optional[str], availability_topic,
+                 payload_available, payload_not_available):
         """Initialize the sensor."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -101,6 +111,7 @@ class MqttSensor(MqttAvailability, Entity):
         self._device_class = device_class
         self._expiration_trigger = None
         self._json_attributes = set(json_attributes)
+        self._json_template_attributes = json_template_attributes
         self._unique_id = unique_id
         self._attributes = None
 
@@ -125,23 +136,35 @@ class MqttSensor(MqttAvailability, Entity):
                 self._expiration_trigger = async_track_point_in_utc_time(
                     self.hass, self.value_is_expired, expiration_at)
 
-            if self._json_attributes:
-                self._attributes = {}
+            if self._json_attributes or self._json_template_attributes:
+                print('parsing json!')
                 try:
                     json_dict = json.loads(payload)
-                    if isinstance(json_dict, dict):
-                        attrs = {k: json_dict[k] for k in
-                                 self._json_attributes & json_dict.keys()}
-                        self._attributes = attrs
-                    else:
+                    if not isinstance(json_dict, dict):
                         _LOGGER.warning("JSON result was not a dictionary")
+                        json_dict = None
+
                 except ValueError:
                     _LOGGER.warning("MQTT payload could not be parsed as JSON")
                     _LOGGER.debug("Erroneous JSON: %s", payload)
+                self._attributes = {}
+
+            if self._json_attributes and json_dict:
+                print('enumerating json attributes!')
+                for key in self._json_attributes:
+                    self._attributes[key] = json_dict[key]
+
+            if self._json_template_attributes and json_dict:
+                print('enumerating json template attributes!')
+                for key, template in self._json_template_attributes.items():
+                    result = template.async_render_with_possible_json_value(
+                        payload, self._state)
+                    self._attributes[key] = result
 
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
                     payload, self._state)
+
             self._state = payload
             self.async_schedule_update_ha_state()
 

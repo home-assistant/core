@@ -264,6 +264,54 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual('100',
                          state.attributes.get('val'))
 
+    def test_setting_sensor_template_attributes_via_mqtt_json_message(self):
+        """Test the setting of attribute template via MQTT with JSON
+        payload."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'json_template_attributes':
+                    {'test': '{{ value_json.val | int + 1 }}'}
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', '{ "val": "100" }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        self.assertEqual('101',
+                         state.attributes.get('test'))
+
+    def test_setting_sensor_template_attributes_and_via_mqtt_json_message(
+        self):
+        """Test the setting of attribute template via MQTT with JSON
+        payload."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, sensor.DOMAIN, {
+            sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'unit_of_measurement': 'fav unit',
+                'json_attributes': 'val',
+                'json_template_attributes':
+                    {'test': '{{ value_json.val | int + 1 }}'}
+            }
+        })
+
+        fire_mqtt_message(self.hass, 'test-topic', '{ "val": "100" }')
+        self.hass.block_till_done()
+        state = self.hass.states.get('sensor.test')
+
+        self.assertEqual('101',
+                         state.attributes.get('test'))
+        self.assertEqual('100',
+                         state.attributes.get('val'))
+
     @patch('homeassistant.components.sensor.mqtt._LOGGER')
     def test_update_with_json_attrs_not_dict(self, mock_logger):
         """Test attributes get extracted from a JSON result."""
