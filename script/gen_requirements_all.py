@@ -92,6 +92,7 @@ TEST_REQUIREMENTS = (
     'somecomfort',
     'sqlalchemy',
     'statsd',
+    'turntouch',
     'uvcclient',
     'voluptuous-serialize',
     'warrant',

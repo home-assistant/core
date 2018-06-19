@@ -202,6 +202,9 @@ sqlalchemy==1.2.9
 # homeassistant.components.statsd
 statsd==3.2.1
 
+# homeassistant.components.turn_touch
+turntouch==0.4.2
+
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
 
