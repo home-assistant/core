@@ -248,7 +248,7 @@ class FluxLight(Light):
             return
 
         # Preserve current brightness on color/white level change
-        if brightness is None:
+        if brightness is None and rgb is None:
             brightness = self.brightness
 
         # Preserve color on brightness/white level change
