@@ -229,6 +229,7 @@ async def setup_gateway(hass, mock_gateway, mock_api,
             patch('pytradfri.api.aiocoap_api.APIFactory.request', mock_api), \
             patch('pytradfri.Gateway', return_value=mock_gateway), \
             patch.object(tradfri, 'load_json', return_value=known_hosts), \
+            patch.object(tradfri, 'save_json'), \
             patch.object(hass.components.configurator, 'request_config',
                          request_config):
 
