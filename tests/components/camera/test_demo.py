@@ -1,9 +1,10 @@
 """The tests for local file camera component."""
 import asyncio
-from unittest.mock import mock_open, patch
+from unittest.mock import mock_open, patch, PropertyMock
 
 from homeassistant.components import camera, http
-from homeassistant.components.camera import STATE_STREAMING, STATE_IDLE
+from homeassistant.components.camera import STATE_STREAMING, STATE_IDLE, \
+    SUPPORT_TURN_ON
 from homeassistant.setup import async_setup_component, setup_component
 from tests.common import get_test_home_assistant, get_test_instance_port
 
@@ -86,7 +87,7 @@ class TestTurnOnOffDemoCamera(object):
             assert image.content == b'OFF'
 
     def test_turn_on_state_back_to_streaming(self):
-        """After turn on state back to streaming"""
+        """After turn on state back to streaming."""
         camera.turn_off(self.hass, 'camera.demo_camera')
         self.hass.block_till_done()
 
@@ -104,6 +105,19 @@ class TestTurnOnOffDemoCamera(object):
 
         camera.turn_off(self.hass, 'camera.demo_camera_1')
         self.hass.block_till_done()
+
+        state = self.hass.states.get('camera.demo_camera')
+        assert state.state == STATE_STREAMING
+
+    def test_turn_off_unsupport_camera(self):
+        """Turn off unsupported camera should quietly fail."""
+
+        with patch('homeassistant.components.camera.demo.DemoCamera'
+                   '.supported_features', new_callable=PropertyMock) as m:
+            m.return_value = SUPPORT_TURN_ON
+
+            camera.turn_off(self.hass, 'camera.demo_camera')
+            self.hass.block_till_done()
 
         state = self.hass.states.get('camera.demo_camera')
         assert state.state == STATE_STREAMING
