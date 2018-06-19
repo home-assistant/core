@@ -1,4 +1,5 @@
 """Helper to help store data."""
+import asyncio
 import logging
 import os
 from typing import Dict, Optional
@@ -14,8 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
-async def async_migrator(hass, old_path, store, version, *,
-                         old_conf_migrate_func=None):
+async def async_migrator(hass, old_path, store, *, old_conf_migrate_func=None):
     """Helper function to migrate old data to a store and then load data.
 
     async def old_conf_migrate_func(old_data)
@@ -35,7 +35,7 @@ async def async_migrator(hass, old_path, store, version, *,
     if old_conf_migrate_func is not None:
         config = await old_conf_migrate_func(config)
 
-    await store.async_save(version, config)
+    await store.async_save(config)
     await hass.async_add_executor_job(os.remove, old_path)
     return config
 
@@ -44,16 +44,22 @@ async def async_migrator(hass, old_path, store, version, *,
 class Store:
     """Class to help storing data."""
 
-    def __init__(self, hass, key: str):
+    def __init__(self, hass, version: int, key: str):
         """Initialize storage class."""
-        self.hass = hass
+        self.version = version
         self.key = key
-        self.path = hass.config.path(STORAGE_DIR, key)
+        self.hass = hass
         self._data = None
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
+        self._write_lock = asyncio.Lock()
 
-    async def async_load(self, expected_version, *, migrate_func=None):
+    @property
+    def path(self):
+        """Return the config path."""
+        return self.hass.config.path(STORAGE_DIR, self.key)
+
+    async def async_load(self):
         """Load data.
 
         If the expected version does not match the given version, the migrate
@@ -68,16 +74,15 @@ class Store:
             if data is None:
                 return {}
 
-        if data['version'] == expected_version:
+        if data['version'] == self.version:
             return data['data']
 
-        return await migrate_func(data['version'], data['data'])
+        return await self._async_migrate_func(data['version'], data['data'])
 
-    async def async_save(self, data_version, data: Dict, *,
-                         delay: Optional[int] = None):
+    async def async_save(self, data: Dict, *, delay: Optional[int] = None):
         """Save data with an optional delay."""
         self._data = {
-            'version': data_version,
+            'version': self.version,
             'key': self.key,
             'data': data,
         }
@@ -132,13 +137,14 @@ class Store:
         data = self._data
         self._data = None
 
-        try:
-            await self.hass.async_add_executor_job(
-                self._write_data, self.path, data)
-        except json.SerializationError as err:
-            _LOGGER.error('Error writing config for %s: %s', self.key, err)
-        except json.WriteError as err:
-            _LOGGER.error('Error writing config for %s: %s', self.key, err)
+        async with self._write_lock:
+            try:
+                await self.hass.async_add_executor_job(
+                    self._write_data, self.path, data)
+            except json.SerializationError as err:
+                _LOGGER.error('Error writing config for %s: %s', self.key, err)
+            except json.WriteError as err:
+                _LOGGER.error('Error writing config for %s: %s', self.key, err)
 
     def _write_data(self, path: str, data: Dict):
         """Write the data."""
@@ -147,3 +153,7 @@ class Store:
 
         _LOGGER.debug('Writing data for %s', self.key)
         json.save_json(path, data)
+
+    async def _async_migrate_func(self, old_version, old_data):
+        """Migrate to the new version."""
+        raise NotImplementedError

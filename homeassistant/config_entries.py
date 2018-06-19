@@ -114,11 +114,11 @@ the flow from the config panel.
 import logging
 import uuid
 
-from . import data_entry_flow
-from .core import callback
-from .exceptions import HomeAssistantError
-from .setup import async_setup_component, async_process_deps_reqs
-from .util.decorator import Registry
+from homeassistant import data_entry_flow
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component, async_process_deps_reqs
+from homeassistant.util.decorator import Registry
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -273,7 +273,7 @@ class ConfigEntries:
             hass, self._async_create_flow, self._async_finish_flow)
         self._hass_config = hass_config
         self._entries = None
-        self._store = hass.helpers.storage.Store(STORAGE_KEY)
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
     def async_domains(self):
@@ -319,12 +319,12 @@ class ConfigEntries:
         """Handle loading the config."""
         # Migrating for config entries stored before 0.73
         config = await self.hass.helpers.storage.async_migrator(
-            self.hass.config.path(PATH_CONFIG), self._store, STORAGE_VERSION,
+            self.hass.config.path(PATH_CONFIG), self._store,
             old_conf_migrate_func=_old_conf_migrator
         )
 
         if config is None:
-            config = await self._store.async_load(STORAGE_VERSION)
+            config = await self._store.async_load()
 
         self._entries = [ConfigEntry(**entry) for entry in config['entries']]
 
@@ -426,7 +426,7 @@ class ConfigEntries:
         data = {
             'entries': [entry.as_dict() for entry in self._entries]
         }
-        await self._store.async_save(STORAGE_VERSION, data, delay=SAVE_DELAY)
+        await self._store.async_save(data, delay=SAVE_DELAY)
 
 
 async def _old_conf_migrator(old_config):
