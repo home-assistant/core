@@ -5,10 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/vacuum.neato/
 """
 import logging
-
+from datetime import timedelta
 import requests
 
-from datetime import timedelta
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.components.vacuum import (
     VacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
