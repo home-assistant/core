@@ -21,6 +21,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _id = shade.object_id() + shade.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             add_devices([WinkCoverDevice(shade, hass)])
+    for shade in pywink.get_shade_groups():
+        _id = shade.object_id() + shade.name()
+        if _id not in hass.data[DOMAIN]['unique_ids']:
+            add_devices([WinkCoverDevice(shade, hass)])
     for door in pywink.get_garage_doors():
         _id = door.object_id() + door.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
