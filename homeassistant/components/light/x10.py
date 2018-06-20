@@ -38,7 +38,6 @@ def get_unit_status(code):
     output = check_output('heyu onstate ' + code, shell=True)
     return int(output.decode('utf-8')[0])
 
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the x10 Light platform."""
     try:
@@ -59,6 +58,7 @@ class X10Light(Light):
         self._id = light['id']
         self._brightness = 0
         self._state = False
+        self.update()
 
     @property
     def name(self):
