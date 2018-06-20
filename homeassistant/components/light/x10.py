@@ -36,12 +36,14 @@ def x10_command(command):
 def get_unit_status(code):
     """Get on/off status for given unit."""
     output = check_output('heyu onstate ' + code, shell=True)
+    _LOGGER.debug("unit on/off status %d", int(output))
     return int(output.decode('utf-8')[0])
 
 
 def get_raw_brightness(code):
     """Get current raw brightness for given unit."""
     output = check_output('heyu rawlevel ' + code, shell=True).rstrip()
+    _LOGGER.debug("raw brightness value %d", int(output))
     return int(output)
 
 
