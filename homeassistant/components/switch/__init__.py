@@ -95,7 +95,7 @@ def toggle(hass, entity_id=None):
 
 async def async_setup(hass, config):
     """Track states and offer events for switches."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES)
     await component.async_setup(config)
 
@@ -130,6 +130,16 @@ async def async_setup(hass, config):
         schema=SWITCH_SERVICE_SCHEMA)
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class SwitchDevice(ToggleEntity):

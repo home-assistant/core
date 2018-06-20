@@ -52,8 +52,10 @@ ATTR_OPERATION_LOCK = 'operation_lock'
 
 COMPONENTS = [
     'binary_sensor',
+    'climate',
     'light',
     'sensor',
+    'switch',
 ]
 
 
