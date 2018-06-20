@@ -61,6 +61,7 @@ class X10Light(Light):
         self._brightness = 0
         self._state = False
         self._is_cm11a = is_cm11a
+        self.update()
 
     @property
     def name(self):
