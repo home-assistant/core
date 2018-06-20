@@ -27,20 +27,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     ]),
 })
 
-
 def x10_command(command):
     """Execute X10 command and check output."""
     return check_output(["heyu", command])
 
-
 def get_unit_status(code):
     """Get on/off status for given unit."""
     output = check_output('heyu onstate ' + code, shell=True)
+    _LOGGER.debug("unit on/off status %d", int(output))
     return int(output.decode('utf-8')[0])
+
 
 def get_raw_brightness(code):
     """Get current raw brightness for given unit."""
     output = check_output('heyu rawlevel ' + code, shell=True).rstrip()
+    _LOGGER.debug("raw brightness value %d", int(output))
     return (int(output))
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -52,7 +53,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     add_devices(X10Light(light) for light in config[CONF_DEVICES])
-
 
 class X10Light(Light):
     """Representation of an X10 Light."""
@@ -92,6 +92,12 @@ class X10Light(Light):
             delta_brightness = (
                 desired_brightness - int(get_raw_brightness(self._id)))
             delta_step = (abs(delta_brightness / 10) + 1)
+            _LOGGER.debug(
+                """Slider Bright %d Desired bright %d,Delta bright %d,
+                Delta Step %d, Raw bright %d""",
+                kwargs[ATTR_BRIGHTNESS], desired_brightness,
+                delta_brightness, delta_step,
+                int(get_raw_brightness(self._id)))
             if (delta_brightness > 0):
                 x10_command(
                     'bright ' + self._id.ljust(len(self._id)+1) +
