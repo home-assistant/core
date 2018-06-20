@@ -293,20 +293,11 @@ class HomeAssistantHTTP(object):
             except OSError as error:
                 _LOGGER.error("Could not read SSL certificate from %s: %s",
                               self.ssl_certificate, error)
-                context = None
                 return
 
-            try:
-                if self.ssl_peer_certificate:
-                    context.verify_mode = ssl.CERT_REQUIRED
-                    context.load_verify_locations(
-                        cafile=self.ssl_peer_certificate)
-            except OSError as error:
-                _LOGGER.error(
-                    "Could not read peer SSL certificate from %s: %s",
-                    self.ssl_peer_certificate, error)
-                context = None
-                return
+            if self.ssl_peer_certificate:
+                context.verify_mode = ssl.CERT_REQUIRED
+                context.load_verify_locations(cafile=self.ssl_peer_certificate)
 
         else:
             context = None
