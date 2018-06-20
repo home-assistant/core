@@ -23,8 +23,7 @@ ATTR_PROFILE_MODE = 'profile_mode'
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the HomematicIP light devices."""
-    """Old way of setting up Hue lights."""
+    """Old way of setting up HomematicIP lights."""
     pass
 
 
