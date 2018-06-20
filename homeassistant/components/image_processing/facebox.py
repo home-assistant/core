@@ -26,9 +26,10 @@ ATTR_CLASSIFIER = 'classifier'
 ATTR_IMAGE_ID = 'image_id'
 ATTR_MATCHED = 'matched'
 CLASSIFIER = 'facebox'
+DATA_FACEBOX = 'facebox_classifiers'
 EVENT_CLASSIFIER_TEACH = 'image_processing.teach_classifier'
 FILE_PATH = 'file_path'
-SERVICE_FACEBOX_TEACH_FACE = 'facebox_teach_face'
+SERVICE_TEACH_FACE = 'facebox_teach_face'
 TIMEOUT = 9
 
 
@@ -98,32 +99,49 @@ def valid_file_path(file_path):
         return False
 
 
+class FaceboxData:
+    """Storage class for platform global data."""
+
+    def __init__(self):
+        """Initialize the data."""
+        self.classifiers = []
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the classifier."""
+    if DATA_FACEBOX not in hass.data:
+        hass.data[DATA_FACEBOX] = FaceboxData()
+
     entities = []
-    facebox = None
     for camera in config[CONF_SOURCE]:
         facebox = FaceClassifyEntity(
             config[CONF_IP_ADDRESS],
             config[CONF_PORT],
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME))
-
-        def teach_service(call):
-            """Teach a facebox a name."""
-            name = call.data.get(ATTR_NAME)
-            file_path = call.data.get(FILE_PATH)
-            facebox.teach(name, file_path)
-            return True
-
-        hass.services.register(
-            DOMAIN,
-            SERVICE_FACEBOX_TEACH_FACE,
-            teach_service,
-            schema=SERVICE_TEACH_SCHEMA)
-
         entities.append(facebox)
+        hass.data[DATA_FACEBOX].classifiers.append(facebox)
     add_devices(entities)
+
+    def service_handle(service):
+        """Handle for services."""
+        entity_ids = service.data.get('entity_id')
+
+        classifiers = hass.data[DATA_FACEBOX].classifiers
+        if entity_ids:
+            classifiers = [c for c in classifiers if c.entity_id in entity_ids]
+
+        for classifier in classifiers:
+            if service.service == SERVICE_TEACH_FACE:
+                name = service.data.get(ATTR_NAME)
+                file_path = service.data.get(FILE_PATH)
+                classifier.teach(name, file_path)
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_TEACH_FACE,
+        service_handle,
+        schema=SERVICE_TEACH_SCHEMA)
 
 
 class FaceClassifyEntity(ImageProcessingFaceEntity):
