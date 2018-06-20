@@ -8,6 +8,7 @@ import logging
 
 import requests
 
+from datetime import timedelta
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.components.vacuum import (
     VacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
@@ -15,6 +16,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON)
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +64,7 @@ class NeatoConnectedVacuum(VacuumDevice):
         self.clean_suspension_charge_count = None
         self.clean_suspension_time = None
 
+    @Throttle(timedelta(seconds=60))
     def update(self):
         """Update the states of Neato Vacuums."""
         _LOGGER.debug("Running Neato Vacuums update")

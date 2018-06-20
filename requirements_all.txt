@@ -430,7 +430,7 @@ http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b89974819
 httplib2==0.10.3
 
 # homeassistant.components.neato
-https://github.com/jabesq/pybotvac/archive/v0.0.5.zip#pybotvac==0.0.5
+https://github.com/jabesq/pybotvac/archive/v0.0.6.zip#pybotvac==0.0.6
 
 # homeassistant.components.sensor.gtfs
 https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e2246267dd8.zip#pygtfs==0.1.3
