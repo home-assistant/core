@@ -60,15 +60,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    sensor_type == 'humidity' or \
                    sensor_type == 'air_quality':
                     continue
-                    
+
                 name = '{0} {1}'.format(
                     SENSOR_TYPES[sensor_type][0], camera.name)
                 sensors.append(ArloSensor(name, camera, sensor_type))
 
             for base_station in arlo.base_stations:
-                if ((sensor_type == 'temperature' or \
-                        sensor_type == 'humidity' or \
-                        sensor_type == 'air_quality') and \
+                if ((sensor_type == 'temperature' or
+                        sensor_type == 'humidity' or
+                        sensor_type == 'air_quality') and
                         base_station.model_id == 'ABC1000'):
                     name = '{0} {1}'.format(
                         SENSOR_TYPES[sensor_type][0], base_station.name)
