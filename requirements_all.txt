@@ -710,6 +710,9 @@ py-melissa-climate==1.0.6
 # homeassistant.components.camera.synology
 py-synology==0.2.0
 
+# homeassistant.components.fan.alfawise
+pyAlfawise==0.5-beta
+
 # homeassistant.components.hdmi_cec
 pyCEC==0.4.13
 
