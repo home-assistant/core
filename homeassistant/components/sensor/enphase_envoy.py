@@ -20,7 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 CONF_IP_ADDRESS = 'ip'
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 
-DEFAULT_NAMES = ["Envoy Current Energy Production",
+DEFAULT_NAMES = [
+    "Envoy Current Energy Production",
     "Envoy Today's Energy Production",
     "Envoy Last Seven Days Energy Production",
     "Envoy Lifetime Energy Production",
@@ -29,7 +30,8 @@ DEFAULT_NAMES = ["Envoy Current Energy Production",
     "Envoy Last Seven Days Energy Consumption",
     "Envoy Lifetime Energy Consumption"]
 
-SENSOR_TYPES = ["production", "daily_production", "7_days_production",
+SENSOR_TYPES = [
+    "production", "daily_production", "7_days_production",
     "lifetime_production", "consumption", "daily_consumption",
     "7_days_consumption", "lifetime_consumption"]
 
@@ -48,14 +50,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ip_address = config.get(CONF_IP_ADDRESS)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS, {})
 
-#Iterate through the list of sensors, adding it if either monitored
-#conditions has been left out of the config, or that the given sensor
-#is in the monitored conditions list
+
+# Iterate through the list of sensors, adding it if either monitored
+# conditions has been left out of the config, or that the given sensor
+# is in the monitored conditions list
     for i in range(8):
         if monitored_conditions == {} or \
-        SENSOR_TYPES[i] in monitored_conditions:
-            add_devices([Envoy(ip_address, DEFAULT_NAMES[i], \
-            SENSOR_TYPES[i])], True)
+            SENSOR_TYPES[i] in monitored_conditions:
+            add_devices([Envoy(ip_address, DEFAULT_NAMES[i],
+                SENSOR_TYPES[i])], True)
+
 
 class Envoy(Entity):
     """Implementation of the Enphase Envoy sensors."""
