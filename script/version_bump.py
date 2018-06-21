@@ -2,6 +2,7 @@
 """Helper script to bump the current version."""
 import argparse
 import re
+import subprocess
 
 from packaging.version import Version
 
@@ -117,11 +118,19 @@ def main():
         help="The type of the bump the version to.",
         choices=['beta', 'dev', 'patch', 'minor'],
     )
+    parser.add_argument(
+        '--commit', action='store_true',
+        help='Create a version bump commit.')
     arguments = parser.parse_args()
     current = Version(const.__version__)
     bumped = bump_version(current, arguments.type)
     assert bumped > current, 'BUG! New version is not newer than old version'
     write_version(bumped)
+
+    if not arguments.commit:
+        return
+
+    subprocess.run(['git', 'commit', '-am', f'Bumped version to {bumped}'])
 
 
 def test_bump_version():
