@@ -425,7 +425,7 @@ httplib2==0.10.3
 https://github.com/aparraga/braviarc/archive/0.3.7.zip#braviarc==0.3.7
 
 # homeassistant.components.neato
-https://github.com/jabesq/pybotvac/archive/v0.0.5.zip#pybotvac==0.0.5
+https://github.com/jabesq/pybotvac/archive/v0.0.6.zip#pybotvac==0.0.6
 
 # homeassistant.components.switch.anel_pwrctrl
 https://github.com/mweinelt/anel-pwrctrl/archive/ed26e8830e28a2bfa4260a9002db23ce3e7e63d7.zip#anel_pwrctrl==0.0.1
