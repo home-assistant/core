@@ -318,7 +318,7 @@ class MqttTemplate(MqttAvailability, Light):
         if ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[ATTR_HS_COLOR]
 
-            # If theres a brightness topic set, we don't want to scale the RGB
+            # If there's a brightness topic set, we don't want to scale the RGB
             # values given using the brightness.
             if self._templates[CONF_BRIGHTNESS_TEMPLATE] is not None:
                 brightness = 255
