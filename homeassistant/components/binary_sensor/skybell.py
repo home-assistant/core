@@ -94,4 +94,4 @@ class SkybellBinarySensor(SkybellDevice, BinarySensorDevice):
 
         self._state = bool(event and event.get('id') != self._event.get('id'))
 
-        self._event = event
+        self._event = event or {}

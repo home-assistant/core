@@ -171,13 +171,6 @@ class Entity(object):
         """Flag supported features."""
         return None
 
-    def update(self):
-        """Retrieve latest state.
-
-        For asyncio use coroutine async_update.
-        """
-        pass
-
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
@@ -320,10 +313,10 @@ class Entity(object):
             )
 
         try:
+            # pylint: disable=no-member
             if hasattr(self, 'async_update'):
-                # pylint: disable=no-member
                 yield from self.async_update()
-            else:
+            elif hasattr(self, 'update'):
                 yield from self.hass.async_add_job(self.update)
         finally:
             self._update_staged = False

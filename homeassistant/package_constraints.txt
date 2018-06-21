@@ -1,4 +1,4 @@
-aiohttp==3.2.1
+aiohttp==3.3.2
 astral==1.6.1
 async_timeout==3.0.0
 attrs==18.1.0
@@ -7,8 +7,7 @@ jinja2>=2.10
 pip>=8.0.3
 pytz>=2018.04
 pyyaml>=3.11,<4
-requests==2.18.4
-typing>=3,<4
+requests==2.19.1
 voluptuous==0.11.1
 
 # Breaks Python 3.6 and is not needed for our supported Python versions

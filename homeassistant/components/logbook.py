@@ -372,7 +372,6 @@ def _exclude_events(events, config):
     return filtered_events
 
 
-# pylint: disable=too-many-return-statements
 def _entry_message_from_state(domain, state):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again

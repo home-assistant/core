@@ -381,8 +381,8 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(50, message_json["brightness"])
         self.assertEqual({
             'r': 0,
-            'g': 50,
-            'b': 4,
+            'g': 255,
+            'b': 21,
         }, message_json["color"])
         self.assertEqual("ON", message_json["state"])
 
