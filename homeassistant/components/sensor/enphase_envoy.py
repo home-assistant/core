@@ -1,5 +1,6 @@
 """
-Support for monitoring energy usage and solar panel energy production using the Enphase Envoy.
+Support for monitoring energy usage and solar panel energy production using
+the Enphase Envoy.
 
 For more details about this platform, please refer to the documentation at
 
@@ -12,19 +13,25 @@ import voluptuous as vol
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME
+#from homeassistant.const import CONF_NAME
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IP_ADDRESS = 'ip'
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
 
-DEFAULT_NAMES = ["Envoy Current Energy Production", "Envoy Today's Energy Production", "Envoy Last Seven Days Energy Production",
-"Envoy Lifetime Energy Production", "Envoy Current Energy Consumption", "Envoy Today's Energy Consumption",
-"Envoy Last Seven Days Energy Consumption", "Envoy Lifetime Energy Consumption"]
+DEFAULT_NAMES = ["Envoy Current Energy Production",
+    "Envoy Today's Energy Production",
+    "Envoy Last Seven Days Energy Production",
+    "Envoy Lifetime Energy Production",
+    "Envoy Current Energy Consumption",
+    "Envoy Today's Energy Consumption",
+    "Envoy Last Seven Days Energy Consumption",
+    "Envoy Lifetime Energy Consumption"]
 
-SENSOR_TYPES = ["production", "daily_production", "7_days_production", "lifetime_production", "consumption",
-"daily_consumption", "7_days_consumption", "lifetime_consumption"]
+SENSOR_TYPES = ["production", "daily_production", "7_days_production",
+    "lifetime_production", "consumption", "daily_consumption",
+    "7_days_consumption", "lifetime_consumption"]
 
 ICON = 'mdi:flash'
 
@@ -41,27 +48,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ip_address = config.get(CONF_IP_ADDRESS)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS, {})
 
-    #Iterate through the list of sensors, adding it if either monitored conditions has been left
-    #out of the config, or that the given sensor is in the monitored conditions list
+#Iterate through the list of sensors, adding it if either monitored
+#conditions has been left out of the config, or that the given sensor
+#is in the monitored conditions list
     for i in range(8):
-        if monitored_conditions == {} or SENSOR_TYPES[i] in monitored_conditions:
-            add_devices([Envoy(ip_address, DEFAULT_NAMES[i], SENSOR_TYPES[i])], True)
-
-
+        if monitored_conditions == {} or \
+        SENSOR_TYPES[i] in monitored_conditions:
+            add_devices([Envoy(ip_address, DEFAULT_NAMES[i], \
+            SENSOR_TYPES[i])], True)
 
 class Envoy(Entity):
     """Implementation of the Enphase Envoy sensors."""
 
     def __init__(self, ip_address, name, type):
         """Initialize the sensor."""
-
-
         self._url = "http://{}/production.json".format(ip_address)
-
         self._name = name
 
-        if type == "production" or type == "consumption":
-            self._unit_of_measurement = "watts"
+        if type == 'production' or type == 'consumption':
+            self._unit_of_measurement = 'watts'
         else:
             self._unit_of_measurement = "watt hours"
 
