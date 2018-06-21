@@ -30,3 +30,21 @@ print_all_link_database:
       example: 'light.1a2b3c'
 print_im_all_link_database:
   description: Print the All-Link Database for the INSTEON Modem (IM).
+x10_all_units_off:
+  description: Send X10 All Units Off command
+  fields:
+    housecode:
+      description: X10 house code
+      example: c
+x10_all_lights_on:
+  description: Send X10 All Lights On command
+  fields:
+    housecode:
+      description: X10 house code
+      example: c
+x10_all_lights_off:
+  description: Send X10 All Lights Off command
+  fields:
+    housecode:
+      description: X10 house code
+      example: c
