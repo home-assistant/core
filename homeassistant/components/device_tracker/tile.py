@@ -18,7 +18,7 @@ from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['pytile==2.0.1']
+REQUIREMENTS = ['pytile==2.0.2']
 
 CLIENT_UUID_CONFIG_FILE = '.tile.conf'
 DEVICE_TYPES = ['PHONE', 'TILE']
@@ -90,7 +90,7 @@ class TileScanner(object):
         from pytile.errors import TileError
 
         try:
-            await self._client.get_session()
+            await self._client.async_init()
         except TileError as err:
             _LOGGER.error('Unable to set up Tile scanner: %s', err)
             return False
@@ -113,7 +113,7 @@ class TileScanner(object):
                 whitelist=self._types, show_inactive=self._show_inactive)
         except SessionExpiredError:
             _LOGGER.warning('Session expired; trying again shortly')
-            await self._client.get_session()
+            await self._client.async_init()
             return
         except TileError as err:
             _LOGGER.error('There was an error while updating: %s', err)
