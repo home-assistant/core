@@ -1,5 +1,5 @@
 """
-Support for monitoring energy usage and production using the Enphase Envoy.
+Support for monitoring energy usage and solar panel energy production using the Enphase Envoy.
 
 For more details about this platform, please refer to the documentation at
 
