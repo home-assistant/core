@@ -33,15 +33,12 @@ ATTR_VOIP_STATE = 'voip_state'
 CONF_SHOW_INACTIVE = 'show_inactive'
 
 DEFAULT_ICON = 'mdi:bluetooth'
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME):
-        cv.string,
-    vol.Required(CONF_PASSWORD):
-        cv.string,
-    vol.Optional(CONF_SHOW_INACTIVE, default=False):
-        cv.boolean,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_SHOW_INACTIVE, default=False): cv.boolean,
     vol.Optional(CONF_MONITORED_VARIABLES, default=list(DEVICE_TYPES)):
         vol.All(cv.ensure_list, [vol.In(DEVICE_TYPES)]),
 })
