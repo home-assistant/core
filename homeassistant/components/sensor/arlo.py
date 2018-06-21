@@ -13,7 +13,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.arlo import (
     CONF_ATTRIBUTION, DEFAULT_BRAND, DATA_ARLO, SIGNAL_UPDATE_ARLO)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS,
+    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY)
+
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -28,7 +31,10 @@ SENSOR_TYPES = {
     'total_cameras': ['Arlo Cameras', None, 'video'],
     'captured_today': ['Captured Today', None, 'file-video'],
     'battery_level': ['Battery Level', '%', 'battery-50'],
-    'signal_strength': ['Signal Strength', None, 'signal']
+    'signal_strength': ['Signal Strength', None, 'signal'],
+    'temperature': ['Temperature', TEMP_CELSIUS, 'thermometer'],
+    'humidity': ['Humidity', '%', 'water-percent'],
+    'air_quality': ['Air Quality', 'ppm', 'biohazard']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -50,9 +56,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 SENSOR_TYPES[sensor_type][0], arlo, sensor_type))
         else:
             for camera in arlo.cameras:
+                if sensor_type == 'temperature' or \
+                   sensor_type == 'humidity' or \
+                   sensor_type == 'air_quality':
+                    continue
+                    
                 name = '{0} {1}'.format(
                     SENSOR_TYPES[sensor_type][0], camera.name)
                 sensors.append(ArloSensor(name, camera, sensor_type))
+
+            for base_station in arlo.base_stations:
+                if ((sensor_type == 'temperature' or \
+                        sensor_type == 'humidity' or \
+                        sensor_type == 'air_quality') and \
+                        base_station.model_id == 'ABC1000'):
+                    name = '{0} {1}'.format(
+                        SENSOR_TYPES[sensor_type][0], base_station.name)
+                    sensors.append(ArloSensor(name, base_station, sensor_type))
 
     add_devices(sensors, True)
 
@@ -101,6 +121,15 @@ class ArloSensor(Entity):
         """Return the units of measurement."""
         return SENSOR_TYPES.get(self._sensor_type)[1]
 
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        if self._sensor_type == 'temperature':
+            return DEVICE_CLASS_TEMPERATURE
+        elif self._sensor_type == 'humidity':
+            return DEVICE_CLASS_HUMIDITY
+        return None
+
     def update(self):
         """Get the latest data and updates the state."""
         _LOGGER.debug("Updating Arlo sensor %s", self.name)
@@ -124,13 +153,31 @@ class ArloSensor(Entity):
         elif self._sensor_type == 'battery_level':
             try:
                 self._state = self._data.battery_level
-            except TypeError:
+            except (AttributeError, TypeError):
                 self._state = None
 
         elif self._sensor_type == 'signal_strength':
             try:
                 self._state = self._data.signal_strength
-            except TypeError:
+            except (AttributeError, TypeError):
+                self._state = None
+
+        elif self._sensor_type == 'temperature':
+            try:
+                self._state = self._data.ambient_temperature
+            except (AttributeError, TypeError):
+                self._state = None
+
+        elif self._sensor_type == 'humidity':
+            try:
+                self._state = self._data.ambient_humidity
+            except (AttributeError, TypeError):
+                self._state = None
+
+        elif self._sensor_type == 'air_quality':
+            try:
+                self._state = self._data.ambient_air_quality
+            except (AttributeError, TypeError):
                 self._state = None
 
     @property
@@ -144,7 +191,10 @@ class ArloSensor(Entity):
         if self._sensor_type == 'last_capture' or \
            self._sensor_type == 'captured_today' or \
            self._sensor_type == 'battery_level' or \
-           self._sensor_type == 'signal_strength':
+           self._sensor_type == 'signal_strength' or \
+           self._sensor_type == 'temperature' or \
+           self._sensor_type == 'humidity' or \
+           self._sensor_type == 'air_quality':
             attrs['model'] = self._data.model_id
 
         return attrs
