@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-#from homeassistant.const import CONF_NAME
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,8 +57,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for i in range(8):
         if monitored_conditions == {} or \
             SENSOR_TYPES[i] in monitored_conditions:
-            add_devices([Envoy(ip_address, DEFAULT_NAMES[i],
-                SENSOR_TYPES[i])], True)
+                add_devices([Envoy(ip_address, DEFAULT_NAMES[i],
+                                SENSOR_TYPES[i])], True)
 
 
 class Envoy(Entity):
