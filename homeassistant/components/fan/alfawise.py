@@ -6,15 +6,15 @@ https://home-assistant.io/components/fan.alfawise/
 """
 import logging
 import ipaddress
+from typing import Any
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (SPEED_LOW, SPEED_HIGH,
                                           FanEntity, SUPPORT_SET_SPEED)
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_MAC
 from homeassistant.const import STATE_OFF
-from typing import Any
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.exceptions import PlatformNotReady
 
@@ -50,16 +50,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import pyAlfawise
     fans = []
     for ipaddr, device_config in config[CONF_DEVICES].items():
+        name = device_config[CONF_NAME]
+        macaddr = device_config[CONF_MAC]
+        _LOGGER.debug("Adding configured %s", name)
         try:
-            name = device_config[CONF_NAME]
-            macaddr = device_config[CONF_MAC]
-            _LOGGER.debug("Adding configured %s", name)
             device = pyAlfawise.Alfawise(macaddr, ipaddr)
-            fan = AlfawiseFan(device, name)
-            fans.append(fan)
         except pyAlfawise.AlfawiseError:
             raise PlatformNotReady
-
+        fan = AlfawiseFan(device, name)
+        fans.append(fan)
     add_devices(fans, True)
 
 
