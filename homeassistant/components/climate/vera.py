@@ -32,8 +32,8 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up of Vera thermostats."""
     add_devices_callback(
-        VeraThermostat(device, hass.data[VERA_CONTROLLER]) for
-        device in hass.data[VERA_DEVICES]['climate'])
+        [VeraThermostat(device, hass.data[VERA_CONTROLLER]) for
+         device in hass.data[VERA_DEVICES]['climate']], True)
 
 
 class VeraThermostat(VeraDevice, ClimateDevice):
@@ -100,10 +100,6 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         power = self.vera_device.power
         if power:
             return convert(power, float, 0.0)
-
-    def update(self):
-        """Handle state updates."""
-        self._state = self.vera_device.get_hvac_mode()
 
     @property
     def temperature_unit(self):

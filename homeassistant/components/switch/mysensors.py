@@ -42,7 +42,7 @@ async def async_setup_platform(
         hass, DOMAIN, discovery_info, device_class_map,
         async_add_devices=async_add_devices)
 
-    def send_ir_code_service(service):
+    async def async_send_ir_code_service(service):
         """Set IR code as device state attribute."""
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         ir_code = service.data.get(ATTR_IR_CODE)
@@ -58,10 +58,10 @@ async def async_setup_platform(
 
         kwargs = {ATTR_IR_CODE: ir_code}
         for device in _devices:
-            device.turn_on(**kwargs)
+            await device.async_turn_on(**kwargs)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SEND_IR_CODE, send_ir_code_service,
+        DOMAIN, SERVICE_SEND_IR_CODE, async_send_ir_code_service,
         schema=SEND_IR_CODE_SERVICE_SCHEMA)
 
 
@@ -84,23 +84,23 @@ class MySensorsSwitch(mysensors.MySensorsEntity, SwitchDevice):
         """Return True if switch is on."""
         return self._values.get(self.value_type) == STATE_ON
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 1)
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_ON
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type, 0)
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[self.value_type] = STATE_OFF
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
 
 class MySensorsIRSwitch(MySensorsSwitch):
@@ -117,7 +117,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
         set_req = self.gateway.const.SetReq
         return self._values.get(set_req.V_LIGHT) == STATE_ON
 
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the IR switch on."""
         set_req = self.gateway.const.SetReq
         if ATTR_IR_CODE in kwargs:
@@ -130,11 +130,11 @@ class MySensorsIRSwitch(MySensorsSwitch):
             # optimistically assume that switch has changed state
             self._values[self.value_type] = self._ir_code
             self._values[set_req.V_LIGHT] = STATE_ON
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
             # turn off switch after switch was turned on
-            self.turn_off()
+            await self.async_turn_off()
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the IR switch off."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
@@ -142,7 +142,7 @@ class MySensorsIRSwitch(MySensorsSwitch):
         if self.gateway.optimistic:
             # optimistically assume that switch has changed state
             self._values[set_req.V_LIGHT] = STATE_OFF
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Update the controller with the latest value from a sensor."""

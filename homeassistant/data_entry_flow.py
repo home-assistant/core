@@ -9,6 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SOURCE_USER = 'user'
 SOURCE_DISCOVERY = 'discovery'
+SOURCE_IMPORT = 'import'
 
 RESULT_TYPE_FORM = 'form'
 RESULT_TYPE_CREATE_ENTRY = 'create_entry'
@@ -34,12 +35,12 @@ class UnknownStep(FlowError):
 class FlowManager:
     """Manage all the flows that are in progress."""
 
-    def __init__(self, hass, async_create_flow, async_save_entry):
+    def __init__(self, hass, async_create_flow, async_finish_flow):
         """Initialize the flow manager."""
         self.hass = hass
         self._progress = {}
         self._async_create_flow = async_create_flow
-        self._async_save_entry = async_save_entry
+        self._async_finish_flow = async_finish_flow
 
     @callback
     def async_progress(self):
@@ -52,7 +53,7 @@ class FlowManager:
 
     async def async_init(self, handler, *, source=SOURCE_USER, data=None):
         """Start a configuration flow."""
-        flow = await self._async_create_flow(handler)
+        flow = await self._async_create_flow(handler, source=source, data=data)
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
@@ -67,7 +68,7 @@ class FlowManager:
         return await self._async_handle_step(flow, step, data)
 
     async def async_configure(self, flow_id, user_input=None):
-        """Start or continue a configuration flow."""
+        """Continue a configuration flow."""
         flow = self._progress.get(flow_id)
 
         if flow is None:
@@ -110,13 +111,11 @@ class FlowManager:
         # Abort and Success results both finish the flow
         self._progress.pop(flow.flow_id)
 
-        if result['type'] == RESULT_TYPE_ABORT:
-            return result
+        # We pass a copy of the result because we're mutating our version
+        entry = await self._async_finish_flow(dict(result))
 
-        # We pass a copy of the result because we're going to mutate our
-        # version afterwards and don't want to cause unexpected bugs.
-        await self._async_save_entry(dict(result))
-        result.pop('data')
+        if result['type'] == RESULT_TYPE_CREATE_ENTRY:
+            result['result'] = entry
         return result
 
 
@@ -134,7 +133,8 @@ class FlowHandler:
     VERSION = 1
 
     @callback
-    def async_show_form(self, *, step_id, data_schema=None, errors=None):
+    def async_show_form(self, *, step_id, data_schema=None, errors=None,
+                        description_placeholders=None):
         """Return the definition of a form to gather user input."""
         return {
             'type': RESULT_TYPE_FORM,
@@ -143,6 +143,7 @@ class FlowHandler:
             'step_id': step_id,
             'data_schema': data_schema,
             'errors': errors,
+            'description_placeholders': description_placeholders,
         }
 
     @callback

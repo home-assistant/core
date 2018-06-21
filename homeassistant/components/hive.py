@@ -12,7 +12,7 @@ from homeassistant.const import (CONF_PASSWORD, CONF_SCAN_INTERVAL,
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['pyhiveapi==0.2.11']
+REQUIREMENTS = ['pyhiveapi==0.2.14']
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'hive'
@@ -44,6 +44,8 @@ class HiveSession:
     light = None
     sensor = None
     switch = None
+    weather = None
+    attributes = None
 
 
 def setup(hass, config):
@@ -70,6 +72,8 @@ def setup(hass, config):
     session.hotwater = Pyhiveapi.Hotwater()
     session.light = Pyhiveapi.Light()
     session.switch = Pyhiveapi.Switch()
+    session.weather = Pyhiveapi.Weather()
+    session.attributes = Pyhiveapi.Attributes()
     hass.data[DATA_HIVE] = session
 
     for ha_type, hive_type in DEVICETYPES.items():

@@ -210,7 +210,7 @@ def test_cloud_connect_invalid_auth(mock_client, caplog, mock_cloud):
     """Test invalid auth detected by server."""
     conn = iot.CloudIoT(mock_cloud)
     mock_client.receive.side_effect = \
-        client_exceptions.WSServerHandshakeError(None, None, code=401)
+        client_exceptions.WSServerHandshakeError(None, None, status=401)
 
     yield from conn.connect()
 
@@ -318,7 +318,8 @@ def test_handler_google_actions(hass):
                     'entity_config': {
                         'switch.test': {
                             'name': 'Config name',
-                            'aliases': 'Config alias'
+                            'aliases': 'Config alias',
+                            'room': 'living room'
                         }
                     }
                 }
@@ -347,6 +348,7 @@ def test_handler_google_actions(hass):
     assert device['name']['name'] == 'Config name'
     assert device['name']['nicknames'] == ['Config alias']
     assert device['type'] == 'action.devices.types.SWITCH'
+    assert device['roomHint'] == 'living room'
 
 
 async def test_refresh_token_expired(hass):

@@ -9,9 +9,9 @@ from homeassistant.setup import setup_component
 from homeassistant.components import climate
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
-               SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
-               SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
-               SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
+    SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
 from tests.common import (get_test_home_assistant, mock_mqtt_component,
                           fire_mqtt_message, mock_component)
 
@@ -53,6 +53,8 @@ class TestMQTTClimate(unittest.TestCase):
         self.assertEqual("low", state.attributes.get('fan_mode'))
         self.assertEqual("off", state.attributes.get('swing_mode'))
         self.assertEqual("off", state.attributes.get('operation_mode'))
+        self.assertEqual(DEFAULT_MIN_TEMP, state.attributes.get('min_temp'))
+        self.assertEqual(DEFAULT_MAX_TEMP, state.attributes.get('max_temp'))
 
     def test_supported_features(self):
         """Test the supported_features."""
@@ -541,3 +543,29 @@ class TestMQTTClimate(unittest.TestCase):
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_CLIMATE)
         self.assertEqual(74656, state.attributes.get('current_temperature'))
+
+    def test_min_temp_custom(self):
+        """Test a custom min temp."""
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config['climate']['min_temp'] = 26
+
+        assert setup_component(self.hass, climate.DOMAIN, config)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        min_temp = state.attributes.get('min_temp')
+
+        self.assertIsInstance(min_temp, float)
+        self.assertEqual(26, state.attributes.get('min_temp'))
+
+    def test_max_temp_custom(self):
+        """Test a custom max temp."""
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config['climate']['max_temp'] = 60
+
+        assert setup_component(self.hass, climate.DOMAIN, config)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        max_temp = state.attributes.get('max_temp')
+
+        self.assertIsInstance(max_temp, float)
+        self.assertEqual(60, max_temp)

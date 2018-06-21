@@ -33,6 +33,11 @@ DEFAULT_LANGUAGE = 'en'
 
 DEFAULT_NAME = 'Dark Sky'
 
+DEPRECATED_SENSOR_TYPES = {'apparent_temperature_max',
+                           'apparent_temperature_min',
+                           'temperature_max',
+                           'temperature_min'}
+
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
 SENSOR_TYPES = {
@@ -90,16 +95,28 @@ SENSOR_TYPES = {
                                  '°C', '°F', '°C', '°C', '°C',
                                  'mdi:thermometer',
                                  ['currently', 'hourly', 'daily']],
+    'apparent_temperature_high': ["Daytime High Apparent Temperature",
+                                  '°C', '°F', '°C', '°C', '°C',
+                                  'mdi:thermometer', ['daily']],
     'apparent_temperature_min': ['Daily Low Apparent Temperature',
                                  '°C', '°F', '°C', '°C', '°C',
                                  'mdi:thermometer',
                                  ['currently', 'hourly', 'daily']],
+    'apparent_temperature_low': ['Overnight Low Apparent Temperature',
+                                 '°C', '°F', '°C', '°C', '°C',
+                                 'mdi:thermometer', ['daily']],
     'temperature_max': ['Daily High Temperature',
                         '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
-                        ['currently', 'hourly', 'daily']],
+                        ['daily']],
+    'temperature_high': ['Daytime High Temperature',
+                         '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
+                         ['daily']],
     'temperature_min': ['Daily Low Temperature',
                         '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
-                        ['currently', 'hourly', 'daily']],
+                        ['daily']],
+    'temperature_low': ['Overnight Low Temperature',
+                        '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
+                        ['daily']],
     'precip_intensity_max': ['Daily Max Precip Intensity',
                              'mm/h', 'in', 'mm/h', 'mm/h', 'mm/h',
                              'mdi:thermometer',
@@ -146,7 +163,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                   'Latitude and longitude must exist together'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.longitude,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=120)): (
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
     vol.Optional(CONF_FORECAST):
         vol.All(cv.ensure_list, [vol.Range(min=1, max=7)]),
@@ -185,6 +202,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     forecast = config.get(CONF_FORECAST)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
+        if variable in DEPRECATED_SENSOR_TYPES:
+            _LOGGER.warning("Monitored condition %s is deprecated.",
+                            variable)
         sensors.append(DarkSkySensor(forecast_data, variable, name))
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
@@ -288,9 +308,13 @@ class DarkSkySensor(Entity):
         elif self.forecast_day > 0 or (
                 self.type in ['daily_summary',
                               'temperature_min',
+                              'temperature_low',
                               'temperature_max',
+                              'temperature_high',
                               'apparent_temperature_min',
+                              'apparent_temperature_low',
                               'apparent_temperature_max',
+                              'apparent_temperature_high',
                               'precip_intensity_max',
                               'precip_accumulation']):
             self.forecast_data.update_daily()

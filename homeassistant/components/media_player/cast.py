@@ -17,6 +17,7 @@ from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (dispatcher_send,
                                               async_dispatcher_connect)
+from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
@@ -28,7 +29,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pychromecast==2.1.0']
+DEPENDENCIES = ('cast',)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,6 +187,26 @@ def _async_create_cast_device(hass: HomeAssistantType,
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_devices, discovery_info=None):
+    """Set up thet Cast platform.
+
+    Deprecated.
+    """
+    _LOGGER.warning(
+        'Setting configuration for Cast via platform is deprecated. '
+        'Configure via Cast component instead.')
+    await _async_setup_platform(
+        hass, config, async_add_devices, discovery_info)
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up Cast from a config entry."""
+    await _async_setup_platform(
+        hass, hass.data[CAST_DOMAIN].get('media_player', {}),
+        async_add_devices, None)
+
+
+async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                                async_add_devices, discovery_info):
     """Set up the cast platform."""
     import pychromecast
 
@@ -288,8 +309,7 @@ class CastDevice(MediaPlayerDevice):
         self._chromecast = None  # type: Optional[pychromecast.Chromecast]
         self.cast_status = None
         self.media_status = None
-        self.media_status_position = None
-        self.media_status_position_received = None
+        self.media_status_received = None
         self._available = False  # type: bool
         self._status_listener = None  # type: Optional[CastStatusListener]
 
@@ -307,13 +327,18 @@ class CastDevice(MediaPlayerDevice):
             _LOGGER.debug("Discovered chromecast with same UUID: %s", discover)
             self.hass.async_add_job(self.async_set_cast_info(discover))
 
+        async def async_stop(event):
+            """Disconnect socket on Home Assistant stop."""
+            await self._async_disconnect()
+
         async_dispatcher_connect(self.hass, SIGNAL_CAST_DISCOVERED,
                                  async_cast_discovered)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop)
         self.hass.async_add_job(self.async_set_cast_info(self._cast_info))
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect Chromecast object when removed."""
-        self._async_disconnect()
+        await self._async_disconnect()
         if self._cast_info.uuid is not None:
             # Remove the entity from the added casts so that it can dynamically
             # be re-added again.
@@ -329,7 +354,7 @@ class CastDevice(MediaPlayerDevice):
             if old_cast_info.host_port == cast_info.host_port:
                 # Nothing connection-related updated
                 return
-            self._async_disconnect()
+            await self._async_disconnect()
 
         # Failed connection will unfortunately never raise an exception, it
         # will instead just try connecting indefinitely.
@@ -349,38 +374,27 @@ class CastDevice(MediaPlayerDevice):
         _LOGGER.debug("Connection successful!")
         self.async_schedule_update_ha_state()
 
-    @callback
-    def _async_disconnect(self):
+    async def _async_disconnect(self):
         """Disconnect Chromecast object if it is set."""
         if self._chromecast is None:
             # Can't disconnect if not connected.
             return
-        _LOGGER.debug("Disconnecting from previous chromecast socket.")
+        _LOGGER.debug("Disconnecting from chromecast socket.")
         self._available = False
-        self._chromecast.disconnect(blocking=False)
+        self.async_schedule_update_ha_state()
+
+        await self.hass.async_add_job(self._chromecast.disconnect)
+
         # Invalidate some attributes
         self._chromecast = None
         self.cast_status = None
         self.media_status = None
-        self.media_status_position = None
-        self.media_status_position_received = None
-        self._status_listener.invalidate()
-        self._status_listener = None
+        self.media_status_received = None
+        if self._status_listener is not None:
+            self._status_listener.invalidate()
+            self._status_listener = None
 
-    def update(self):
-        """Periodically update the properties.
-
-        Even though we receive callbacks for most state changes, some 3rd party
-        apps don't always send them. Better poll every now and then if the
-        chromecast is active (i.e. an app is running).
-        """
-        if not self._available:
-            # Not connected or not available.
-            return
-
-        if self._chromecast.media_controller.is_active:
-            # We can only update status if the media namespace is active
-            self._chromecast.media_controller.update_status()
+        self.async_schedule_update_ha_state()
 
     # ========== Callbacks ==========
     def new_cast_status(self, cast_status):
@@ -390,36 +404,8 @@ class CastDevice(MediaPlayerDevice):
 
     def new_media_status(self, media_status):
         """Handle updates of the media status."""
-        # Only use media position for playing/paused,
-        # and for normal playback rate
-        if (media_status is None or
-                abs(media_status.playback_rate - 1) > 0.01 or
-                not (media_status.player_is_playing or
-                     media_status.player_is_paused)):
-            self.media_status_position = None
-            self.media_status_position_received = None
-        else:
-            # Avoid unnecessary state attribute updates if player_state and
-            # calculated position stay the same
-            now = dt_util.utcnow()
-            do_update = \
-                (self.media_status is None or
-                 self.media_status_position is None or
-                 self.media_status.player_state != media_status.player_state)
-            if not do_update:
-                if media_status.player_is_playing:
-                    elapsed = now - self.media_status_position_received
-                    do_update = abs(media_status.current_time -
-                                    (self.media_status_position +
-                                     elapsed.total_seconds())) > 1
-                else:
-                    do_update = \
-                        self.media_status_position != media_status.current_time
-            if do_update:
-                self.media_status_position = media_status.current_time
-                self.media_status_position_received = now
-
         self.media_status = media_status
+        self.media_status_received = dt_util.utcnow()
         self.schedule_update_ha_state()
 
     def new_connection_status(self, connection_status):
@@ -496,8 +482,8 @@ class CastDevice(MediaPlayerDevice):
     # ========== Properties ==========
     @property
     def should_poll(self):
-        """Polling needed for cast integration, see async_update."""
-        return True
+        """No polling needed."""
+        return False
 
     @property
     def name(self):
@@ -625,7 +611,12 @@ class CastDevice(MediaPlayerDevice):
     @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        return self.media_status_position
+        if self.media_status is None or \
+            not (self.media_status.player_is_playing or
+                 self.media_status.player_is_paused or
+                 self.media_status.player_is_idle):
+            return None
+        return self.media_status.current_time
 
     @property
     def media_position_updated_at(self):
@@ -633,7 +624,7 @@ class CastDevice(MediaPlayerDevice):
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        return self.media_status_position_received
+        return self.media_status_received
 
     @property
     def unique_id(self) -> Optional[str]:

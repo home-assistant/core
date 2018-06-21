@@ -16,7 +16,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, MockPlatform, fire_time_changed, mock_registry,
-    MockEntity, MockEntityPlatform, MockConfigEntry, mock_coro)
+    MockEntity, MockEntityPlatform, MockConfigEntry)
 
 _LOGGER = logging.getLogger(__name__)
 DOMAIN = "test_domain"
@@ -147,7 +147,7 @@ class TestHelpersEntityPlatform(unittest.TestCase):
         platform = MockPlatform(platform_setup)
         platform.SCAN_INTERVAL = timedelta(seconds=30)
 
-        loader.set_component('test_domain.platform', platform)
+        loader.set_component(self.hass, 'test_domain.platform', platform)
 
         component = EntityComponent(_LOGGER, DOMAIN, self.hass)
 
@@ -184,7 +184,7 @@ def test_platform_warn_slow_setup(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform()
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -218,7 +218,7 @@ def test_platform_error_slow_setup(hass, caplog):
 
         platform = MockPlatform(async_setup_platform=setup_platform)
         component = EntityComponent(_LOGGER, DOMAIN, hass)
-        loader.set_component('test_domain.test_platform', platform)
+        loader.set_component(hass, 'test_domain.test_platform', platform)
         yield from component.async_setup({
             DOMAIN: {
                 'platform': 'test_platform',
@@ -260,7 +260,7 @@ def test_parallel_updates_async_platform(hass):
 
     platform.async_setup_platform = mock_update
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -288,7 +288,7 @@ def test_parallel_updates_async_platform_with_constant(hass):
     platform.async_setup_platform = mock_update
     platform.PARALLEL_UPDATES = 1
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -309,7 +309,7 @@ def test_parallel_updates_sync_platform(hass):
     """Warn we log when platform setup takes a long time."""
     platform = MockPlatform(setup_platform=lambda *args: None)
 
-    loader.set_component('test_domain.platform', platform)
+    loader.set_component(hass, 'test_domain.platform', platform)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
     component._platforms = {}
@@ -516,11 +516,19 @@ async def test_entity_registry_updates(hass):
 
 async def test_setup_entry(hass):
     """Test we can setup an entry."""
-    async_setup_entry = Mock(return_value=mock_coro(True))
+    registry = mock_registry(hass)
+
+    async def async_setup_entry(hass, config_entry, async_add_devices):
+        """Mock setup entry method."""
+        async_add_devices([
+            MockEntity(name='test1', unique_id='unique')
+        ])
+        return True
+
     platform = MockPlatform(
         async_setup_entry=async_setup_entry
     )
-    config_entry = MockConfigEntry()
+    config_entry = MockConfigEntry(entry_id='super-mock-id')
     entity_platform = MockEntityPlatform(
         hass,
         platform_name=config_entry.domain,
@@ -528,10 +536,13 @@ async def test_setup_entry(hass):
     )
 
     assert await entity_platform.async_setup_entry(config_entry)
-
+    await hass.async_block_till_done()
     full_name = '{}.{}'.format(entity_platform.domain, config_entry.domain)
     assert full_name in hass.config.components
-    assert len(async_setup_entry.mock_calls) == 1
+    assert len(hass.states.async_entity_ids()) == 1
+    assert len(registry.entities) == 1
+    assert registry.entities['test_domain.test1'].config_entry_id == \
+        'super-mock-id'
 
 
 async def test_setup_entry_platform_not_ready(hass, caplog):

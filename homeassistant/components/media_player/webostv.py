@@ -61,7 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the LG WebOS TV platform."""
     if discovery_info is not None:
@@ -139,7 +138,6 @@ def request_configuration(
             _CONFIGURING[host], 'Failed to pair, please try again.')
         return
 
-    # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
         """Handle actions when configuration callback is called."""
         setup_tv(host, name, customize, config, timeout, hass,
@@ -343,6 +341,39 @@ class LgWebOSDevice(MediaPlayerDevice):
         elif source_dict.get('label'):
             self._current_source = source_dict['label']
             self._client.set_input(source_dict['id'])
+
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        _LOGGER.debug(
+            "Call play media type <%s>, Id <%s>", media_type, media_id)
+
+        if media_type == MEDIA_TYPE_CHANNEL:
+            _LOGGER.debug("Searching channel...")
+            partial_match_channel_id = None
+            perfect_match_channel_id = None
+
+            for channel in self._client.get_channels():
+                if media_id == channel['channelNumber']:
+                    perfect_match_channel_id = channel['channelId']
+                    continue
+                elif media_id.lower() == channel['channelName'].lower():
+                    perfect_match_channel_id = channel['channelId']
+                    continue
+                elif media_id.lower() in channel['channelName'].lower():
+                    partial_match_channel_id = channel['channelId']
+
+            if perfect_match_channel_id is not None:
+                _LOGGER.info(
+                    "Switching to channel <%s> with perfect match",
+                    perfect_match_channel_id)
+                self._client.set_channel(perfect_match_channel_id)
+            elif partial_match_channel_id is not None:
+                _LOGGER.info(
+                    "Switching to channel <%s> with partial match",
+                    partial_match_channel_id)
+                self._client.set_channel(partial_match_channel_id)
+
+            return
 
     def media_play(self):
         """Send play command."""

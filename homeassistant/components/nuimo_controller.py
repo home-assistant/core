@@ -97,7 +97,6 @@ class NuimoThread(threading.Thread):
             self._nuimo.disconnect()
             self._nuimo = None
 
-    # pylint: disable=unused-argument
     def stop(self, event):
         """Terminate Thread by unsetting flag."""
         _LOGGER.debug('Stopping thread for Nuimo %s', self._mac)

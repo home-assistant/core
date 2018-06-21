@@ -16,12 +16,12 @@ from homeassistant import bootstrap, core, loader
 from homeassistant.config import (
     get_default_config_dir, CONF_CORE, CORE_CONFIG_SCHEMA,
     CONF_PACKAGES, merge_packages_config, _format_config_error,
-    find_config_file, load_yaml_config_file, get_component,
-    extract_domain_configs, config_per_platform, get_platform)
+    find_config_file, load_yaml_config_file,
+    extract_domain_configs, config_per_platform)
 import homeassistant.util.yaml as yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog==3.1.2',)
+REQUIREMENTS = ('colorlog==3.1.4',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 
@@ -58,7 +58,7 @@ def color(the_color, *args, reset=None):
 def run(script_args: List) -> int:
     """Handle ensure config commandline script."""
     parser = argparse.ArgumentParser(
-        description=("Check Home Assistant configuration."))
+        description="Check Home Assistant configuration.")
     parser.add_argument(
         '--script', choices=['check_config'])
     parser.add_argument(
@@ -201,18 +201,10 @@ def check(config_dir, secrets=False):
         yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
 
     try:
-        class HassConfig():
-            """Hass object with config."""
+        hass = core.HomeAssistant()
+        hass.config.config_dir = config_dir
 
-            def __init__(self, conf_dir):
-                """Init the config_dir."""
-                self.config = core.Config()
-                self.config.config_dir = conf_dir
-
-        loader.prepare(HassConfig(config_dir))
-
-        res['components'] = check_ha_config_file(config_dir)
-
+        res['components'] = check_ha_config_file(hass)
         res['secret_cache'] = OrderedDict(yaml.__SECRET_CACHE)
 
         for err in res['components'].errors:
@@ -222,6 +214,7 @@ def check(config_dir, secrets=False):
                 res['except'].setdefault(domain, []).append(err.config)
 
     except Exception as err:  # pylint: disable=broad-except
+        _LOGGER.exception("BURB")
         print(color('red', 'Fatal error while loading config:'), str(err))
         res['except'].setdefault(ERROR_STR, []).append(str(err))
     finally:
@@ -290,8 +283,9 @@ class HomeAssistantConfig(OrderedDict):
         return self
 
 
-def check_ha_config_file(config_dir):
+def check_ha_config_file(hass):
     """Check if Home Assistant configuration file is valid."""
+    config_dir = hass.config.config_dir
     result = HomeAssistantConfig()
 
     def _pack_error(package, component, config, message):
@@ -330,7 +324,7 @@ def check_ha_config_file(config_dir):
 
     # Merge packages
     merge_packages_config(
-        config, core_config.get(CONF_PACKAGES, {}), _pack_error)
+        hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
     del core_config[CONF_PACKAGES]
 
     # Ensure we have no None values after merge
@@ -343,7 +337,7 @@ def check_ha_config_file(config_dir):
 
     # Process and validate config
     for domain in components:
-        component = get_component(domain)
+        component = loader.get_component(hass, domain)
         if not component:
             result.add_error("Component not found: {}".format(domain))
             continue
@@ -375,7 +369,7 @@ def check_ha_config_file(config_dir):
                 platforms.append(p_validated)
                 continue
 
-            platform = get_platform(domain, p_name)
+            platform = loader.get_platform(hass, domain, p_name)
 
             if platform is None:
                 result.add_error(

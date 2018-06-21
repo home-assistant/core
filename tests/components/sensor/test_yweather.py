@@ -162,6 +162,8 @@ class TestWeather(unittest.TestCase):
         state = self.hass.states.get('sensor.yweather_condition')
         assert state is not None
         self.assertEqual(state.state, 'Mostly Cloudy')
+        self.assertEqual(state.attributes.get('condition_code'),
+                         '28')
         self.assertEqual(state.attributes.get('friendly_name'),
                          'Yweather Condition')
 

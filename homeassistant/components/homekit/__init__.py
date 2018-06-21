@@ -3,38 +3,49 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/homekit/
 """
+import ipaddress
 import logging
 from zlib import adler32
 
 import voluptuous as vol
 
-from homeassistant.components.cover import (
-    SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
+import homeassistant.components.cover as cover
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_DEVICE_CLASS, CONF_PORT, TEMP_CELSIUS, TEMP_FAHRENHEIT,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
+    CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
-    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER,
-    DEFAULT_PORT, DEFAULT_AUTO_START, SERVICE_HOMEKIT_START,
-    DEVICE_CLASS_CO2, DEVICE_CLASS_LIGHT, DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_PM25, DEVICE_CLASS_TEMPERATURE)
+    CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST, CONF_FILTER,
+    DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25,
+    DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START, TYPE_OUTLET, TYPE_SWITCH)
 from .util import (
-    validate_entity_config, show_setup_message)
+    show_setup_message, validate_entity_config, validate_media_player_features)
 
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==1.1.9']
+REQUIREMENTS = ['HAP-python==2.2.2']
 
+# #### Driver Status ####
+STATUS_READY = 0
+STATUS_RUNNING = 1
+STATUS_STOPPED = 2
+STATUS_WAIT = 3
+
+SWITCH_TYPES = {TYPE_OUTLET: 'Outlet',
+                TYPE_SWITCH: 'Switch'}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_IP_ADDRESS):
+            vol.All(ipaddress.ip_address, cv.string),
         vol.Optional(CONF_AUTO_START, default=DEFAULT_AUTO_START): cv.boolean,
         vol.Optional(CONF_FILTER, default={}): FILTER_SCHEMA,
         vol.Optional(CONF_ENTITY_CONFIG, default={}): validate_entity_config,
@@ -48,12 +59,13 @@ async def async_setup(hass, config):
 
     conf = config[DOMAIN]
     port = conf[CONF_PORT]
+    ip_address = conf.get(CONF_IP_ADDRESS)
     auto_start = conf[CONF_AUTO_START]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
 
-    homekit = HomeKit(hass, port, entity_filter, entity_config)
-    homekit.setup()
+    homekit = HomeKit(hass, port, ip_address, entity_filter, entity_config)
+    await hass.async_add_job(homekit.setup)
 
     if auto_start:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, homekit.start)
@@ -61,8 +73,10 @@ async def async_setup(hass, config):
 
     def handle_homekit_service_start(service):
         """Handle start HomeKit service call."""
-        if homekit.started:
-            _LOGGER.warning('HomeKit is already running')
+        if homekit.status != STATUS_READY:
+            _LOGGER.warning(
+                'HomeKit is not ready. Either it is already running or has '
+                'been stopped.')
             return
         homekit.start()
 
@@ -72,7 +86,7 @@ async def async_setup(hass, config):
     return True
 
 
-def get_accessory(hass, state, aid, config):
+def get_accessory(hass, driver, state, aid, config):
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning('The entitiy "%s" is not supported, since it '
@@ -81,7 +95,7 @@ def get_accessory(hass, state, aid, config):
         return None
 
     a_type = None
-    config = config or {}
+    name = config.get(CONF_NAME, state.name)
 
     if state.domain == 'alarm_control_panel':
         a_type = 'SecuritySystem'
@@ -97,10 +111,15 @@ def get_accessory(hass, state, aid, config):
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
         if device_class == 'garage' and \
-                features & (SUPPORT_OPEN | SUPPORT_CLOSE):
+                features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = 'GarageDoorOpener'
-        elif features & SUPPORT_SET_POSITION:
+        elif features & cover.SUPPORT_SET_POSITION:
             a_type = 'WindowCovering'
+        elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
+            a_type = 'WindowCoveringBasic'
+
+    elif state.domain == 'fan':
+        a_type = 'Fan'
 
     elif state.domain == 'light':
         a_type = 'Light'
@@ -108,14 +127,20 @@ def get_accessory(hass, state, aid, config):
     elif state.domain == 'lock':
         a_type = 'Lock'
 
+    elif state.domain == 'media_player':
+        feature_list = config.get(CONF_FEATURE_LIST)
+        if feature_list and \
+                validate_media_player_features(state, feature_list):
+            a_type = 'MediaPlayer'
+
     elif state.domain == 'sensor':
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
 
-        if device_class == DEVICE_CLASS_TEMPERATURE or unit == TEMP_CELSIUS \
-                or unit == TEMP_FAHRENHEIT:
+        if device_class == DEVICE_CLASS_TEMPERATURE or \
+                unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
             a_type = 'TemperatureSensor'
-        elif device_class == DEVICE_CLASS_HUMIDITY or unit == '%':
+        elif device_class == DEVICE_CLASS_HUMIDITY and unit == '%':
             a_type = 'HumiditySensor'
         elif device_class == DEVICE_CLASS_PM25 \
                 or DEVICE_CLASS_PM25 in state.entity_id:
@@ -123,19 +148,21 @@ def get_accessory(hass, state, aid, config):
         elif device_class == DEVICE_CLASS_CO2 \
                 or DEVICE_CLASS_CO2 in state.entity_id:
             a_type = 'CarbonDioxideSensor'
-        elif device_class == DEVICE_CLASS_LIGHT or unit == 'lm' or \
-                unit == 'lux':
+        elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ('lm', 'lx'):
             a_type = 'LightSensor'
 
-    elif state.domain == 'switch' or state.domain == 'remote' \
-            or state.domain == 'input_boolean' or state.domain == 'script':
+    elif state.domain == 'switch':
+        switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
+        a_type = SWITCH_TYPES[switch_type]
+
+    elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
         a_type = 'Switch'
 
     if a_type is None:
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, state.name, state.entity_id, aid, config=config)
+    return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
 
 
 def generate_aid(entity_id):
@@ -149,13 +176,14 @@ def generate_aid(entity_id):
 class HomeKit():
     """Class to handle all actions between HomeKit and Home Assistant."""
 
-    def __init__(self, hass, port, entity_filter, entity_config):
+    def __init__(self, hass, port, ip_address, entity_filter, entity_config):
         """Initialize a HomeKit object."""
         self.hass = hass
         self._port = port
+        self._ip_address = ip_address
         self._filter = entity_filter
         self._config = entity_config
-        self.started = False
+        self.status = STATUS_READY
 
         self.bridge = None
         self.driver = None
@@ -167,9 +195,11 @@ class HomeKit():
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_STOP, self.stop)
 
+        ip_addr = self._ip_address or get_local_ip()
         path = self.hass.config.path(HOMEKIT_FILE)
-        self.bridge = HomeBridge(self.hass)
-        self.driver = HomeDriver(self.bridge, self._port, get_local_ip(), path)
+        self.driver = HomeDriver(self.hass, address=ip_addr,
+                                 port=self._port, persist_file=path)
+        self.bridge = HomeBridge(self.hass, self.driver)
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
@@ -177,36 +207,38 @@ class HomeKit():
             return
         aid = generate_aid(state.entity_id)
         conf = self._config.pop(state.entity_id, {})
-        acc = get_accessory(self.hass, state, aid, conf)
+        acc = get_accessory(self.hass, self.driver, state, aid, conf)
         if acc is not None:
             self.bridge.add_accessory(acc)
 
     def start(self, *args):
         """Start the accessory driver."""
-        if self.started:
+        if self.status != STATUS_READY:
             return
-        self.started = True
+        self.status = STATUS_WAIT
 
         # pylint: disable=unused-variable
         from . import (  # noqa F401
-            type_covers, type_lights, type_locks, type_security_systems,
-            type_sensors, type_switches, type_thermostats)
+            type_covers, type_fans, type_lights, type_locks,
+            type_media_players, type_security_systems, type_sensors,
+            type_switches, type_thermostats)
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)
-        self.bridge.set_broker(self.driver)
+        self.driver.add_accessory(self.bridge)
 
-        if not self.bridge.paired:
-            show_setup_message(self.hass, self.bridge)
+        if not self.driver.state.paired:
+            show_setup_message(self.hass, self.driver.state.pincode)
 
         _LOGGER.debug('Driver start')
-        self.driver.start()
+        self.hass.add_job(self.driver.start)
+        self.status = STATUS_RUNNING
 
     def stop(self, *args):
         """Stop the accessory driver."""
-        if not self.started:
+        if self.status != STATUS_RUNNING:
             return
+        self.status = STATUS_STOPPED
 
         _LOGGER.debug('Driver stop')
-        if self.driver and self.driver.run_sentinel:
-            self.driver.stop()
+        self.hass.add_job(self.driver.stop)

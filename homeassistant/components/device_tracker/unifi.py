@@ -122,3 +122,9 @@ class UnifiScanner(DeviceScanner):
         name = client.get('name') or client.get('hostname')
         _LOGGER.debug("Device mac %s name %s", device, name)
         return name
+
+    def get_extra_attributes(self, device):
+        """Return the extra attributes of the device."""
+        client = self._clients.get(device, {})
+        _LOGGER.debug("Device mac %s attributes %s", device, client)
+        return client

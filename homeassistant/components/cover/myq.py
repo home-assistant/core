@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_TYPE, STATE_CLOSED)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymyq==0.0.8']
+REQUIREMENTS = ['pymyq==0.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,6 +68,11 @@ class MyQDevice(CoverDevice):
         self.device_id = device['deviceid']
         self._name = device['name']
         self._status = STATE_CLOSED
+
+    @property
+    def device_class(self):
+        """Define this cover as a garage door."""
+        return 'garage'
 
     @property
     def should_poll(self):

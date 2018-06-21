@@ -20,6 +20,8 @@ from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.deprecation import get_deprecated
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_send, async_dispatcher_connect)
 
 
 REQUIREMENTS = ['rflink==0.0.37']
@@ -64,6 +66,8 @@ RFLINK_GROUP_COMMANDS = ['allon', 'alloff']
 DOMAIN = 'rflink'
 
 SERVICE_SEND_COMMAND = 'send_command'
+
+SIGNAL_AVAILABILITY = 'rflink_device_available'
 
 DEVICE_DEFAULTS_SCHEMA = vol.Schema({
     vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
@@ -185,6 +189,8 @@ def async_setup(hass, config):
         # Reset protocol binding before starting reconnect
         RflinkCommand.set_rflink_protocol(None)
 
+        async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
+
         # If HA is not stopping, initiate new connection
         if hass.state != CoreState.stopping:
             _LOGGER.warning('disconnected from Rflink, reconnecting')
@@ -219,8 +225,15 @@ def async_setup(hass, config):
             _LOGGER.exception(
                 "Error connecting to Rflink, reconnecting in %s",
                 reconnect_interval)
+            # Connection to Rflink device is lost, make entities unavailable
+            async_dispatcher_send(hass, SIGNAL_AVAILABILITY, False)
+
             hass.loop.call_later(reconnect_interval, reconnect, exc)
             return
+
+        # There is a valid connection to a Rflink device now so
+        # mark entities as available
+        async_dispatcher_send(hass, SIGNAL_AVAILABILITY, True)
 
         # Bind protocol to command class to allow entities to send commands
         RflinkCommand.set_rflink_protocol(
@@ -244,6 +257,7 @@ class RflinkDevice(Entity):
 
     platform = None
     _state = STATE_UNKNOWN
+    _available = True
 
     def __init__(self, device_id, hass, name=None, aliases=None, group=True,
                  group_aliases=None, nogroup_aliases=None, fire_event=False,
@@ -304,6 +318,23 @@ class RflinkDevice(Entity):
     def assumed_state(self):
         """Assume device state until first device event sets state."""
         return self._state is STATE_UNKNOWN
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
+
+    @callback
+    def set_availability(self, availability):
+        """Update availability state."""
+        self._available = availability
+        self.async_schedule_update_ha_state()
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register update callback."""
+        async_dispatcher_connect(self.hass, SIGNAL_AVAILABILITY,
+                                 self.set_availability)
 
 
 class RflinkCommand(RflinkDevice):

@@ -29,7 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return Edimax Smart Plugs."""
     from pyedimax.smartplug import SmartPlug
@@ -84,12 +83,12 @@ class SmartPlugSwitch(SwitchDevice):
         """Update edimax switch."""
         try:
             self._now_power = float(self.smartplug.now_power)
-        except ValueError:
+        except (TypeError, ValueError):
             self._now_power = None
 
         try:
             self._now_energy_day = float(self.smartplug.now_energy_day)
-        except ValueError:
+        except (TypeError, ValueError):
             self._now_energy_day = None
 
         self._state = self.smartplug.state == 'ON'

@@ -25,7 +25,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
 
-REQUIREMENTS = ['pysensibo==1.0.2']
+REQUIREMENTS = ['pysensibo==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -154,7 +154,8 @@ class SensiboClimate(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_CURRENT_HUMIDITY: self.current_humidity}
+        return {ATTR_CURRENT_HUMIDITY: self.current_humidity,
+                'battery': self.current_battery}
 
     @property
     def temperature_unit(self):
@@ -190,6 +191,11 @@ class SensiboClimate(ClimateDevice):
     def current_humidity(self):
         """Return the current humidity."""
         return self._measurements['humidity']
+
+    @property
+    def current_battery(self):
+        """Return the current battery voltage."""
+        return self._measurements.get('batteryVoltage')
 
     @property
     def current_temperature(self):

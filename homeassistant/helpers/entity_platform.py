@@ -260,9 +260,15 @@ class EntityPlatform(object):
                 suggested_object_id = '{} {}'.format(
                     self.entity_namespace, suggested_object_id)
 
+            if self.config_entry is not None:
+                config_entry_id = self.config_entry.entry_id
+            else:
+                config_entry_id = None
+
             entry = registry.async_get_or_create(
                 self.domain, self.platform_name, entity.unique_id,
-                suggested_object_id=suggested_object_id)
+                suggested_object_id=suggested_object_id,
+                config_entry_id=config_entry_id)
 
             if entry.disabled:
                 self.logger.info(

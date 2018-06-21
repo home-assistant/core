@@ -49,7 +49,7 @@ UOM_FRIENDLY_NAME = {
     '33': 'kWH',
     '34': 'liedu',
     '35': 'l',
-    '36': 'lux',
+    '36': 'lx',
     '37': 'mercalli',
     '38': 'm',
     '39': 'm³/hr',
@@ -235,7 +235,6 @@ UOM_TO_STATES = {
 }
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 sensor platform."""

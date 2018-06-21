@@ -72,7 +72,8 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
             turn_on(hass, light,
                     xy_color=[x_val, y_val],
                     brightness=brightness,
-                    transition=transition)
+                    transition=transition,
+                    white_value=brightness)
 
 
 def set_lights_temp(hass, lights, mired, brightness, transition):
@@ -94,7 +95,6 @@ def set_lights_rgb(hass, lights, rgb, transition):
                     transition=transition)
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Flux switches."""
     name = config.get(CONF_NAME)
