@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_SHOW_INACTIVE, default=False): cv.boolean,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=list(DEVICE_TYPES)):
+    vol.Optional(CONF_MONITORED_VARIABLES, default=DEVICE_TYPES):
         vol.All(cv.ensure_list, [vol.In(DEVICE_TYPES)]),
 })
 
@@ -91,47 +91,51 @@ class TileScanner(object):
 
         try:
             await self._client.get_session()
-            await self._async_update()
-
-            async_track_time_interval(
-                self._hass, self._async_update, DEFAULT_SCAN_INTERVAL)
-
-            return True
         except TileError as err:
             _LOGGER.error('Unable to set up Tile scanner: %s', err)
             return False
 
+        await self._async_update()
+
+        async_track_time_interval(
+            self._hass, self._async_update, DEFAULT_SCAN_INTERVAL)
+
+        return True
+
     async def _async_update(self, now=None):
         """Update info from Tile."""
         from pytile.errors import SessionExpiredError, TileError
+
         _LOGGER.debug('Updating Tile data')
 
         try:
             tiles = await self._client.tiles.all(
                 whitelist=self._types, show_inactive=self._show_inactive)
-
-            if not tiles:
-                _LOGGER.warning('No Tiles found')
-                return
-
-            for tile in tiles:
-                await self._async_see(
-                    dev_id='tile_{0}'.format(slugify(tile['name'])),
-                    gps=(
-                        tile['tileState']['latitude'],
-                        tile['tileState']['longitude']),
-                    attributes={
-                        ATTR_ALTITUDE: tile['tileState']['altitude'],
-                        ATTR_CONNECTION_STATE:
-                            tile['tileState']['connection_state'],
-                        ATTR_IS_DEAD: tile['is_dead'],
-                        ATTR_IS_LOST: tile['tileState']['is_lost'],
-                        ATTR_RING_STATE: tile['tileState']['ring_state'],
-                        ATTR_VOIP_STATE: tile['tileState']['voip_state'],
-                    },
-                    icon=DEFAULT_ICON)
         except SessionExpiredError:
             _LOGGER.warning('Session expired; trying again shortly')
             await self._client.get_session()
+            return
         except TileError as err:
             _LOGGER.error('There was an error while updating: %s', err)
+            return
+
+        if not tiles:
+            _LOGGER.warning('No Tiles found')
+            return
+
+        for tile in tiles:
+            await self._async_see(
+                dev_id='tile_{0}'.format(slugify(tile['name'])),
+                gps=(
+                    tile['tileState']['latitude'],
+                    tile['tileState']['longitude']),
+                attributes={
+                    ATTR_ALTITUDE: tile['tileState']['altitude'],
+                    ATTR_CONNECTION_STATE:
+                        tile['tileState']['connection_state'],
+                    ATTR_IS_DEAD: tile['is_dead'],
+                    ATTR_IS_LOST: tile['tileState']['is_lost'],
+                    ATTR_RING_STATE: tile['tileState']['ring_state'],
+                    ATTR_VOIP_STATE: tile['tileState']['voip_state'],
+                },
+                icon=DEFAULT_ICON)
