@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SERVICE_TEACH_SCHEMA = vol.Schema({
-    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required(ATTR_NAME): cv.string,
     vol.Required(FILE_PATH): cv.string,
 })
@@ -99,18 +99,10 @@ def valid_file_path(file_path):
         return False
 
 
-class FaceboxData:
-    """Storage class for platform global data."""
-
-    def __init__(self):
-        """Initialize the data."""
-        self.classifiers = []
-
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the classifier."""
     if DATA_FACEBOX not in hass.data:
-        hass.data[DATA_FACEBOX] = FaceboxData()
+        hass.data[DATA_FACEBOX] = []
 
     entities = []
     for camera in config[CONF_SOURCE]:
@@ -120,22 +112,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME))
         entities.append(facebox)
-        hass.data[DATA_FACEBOX].classifiers.append(facebox)
+        hass.data[DATA_FACEBOX].append(facebox)
     add_devices(entities)
 
     def service_handle(service):
         """Handle for services."""
         entity_ids = service.data.get('entity_id')
 
-        classifiers = hass.data[DATA_FACEBOX].classifiers
+        classifiers = hass.data[DATA_FACEBOX]
         if entity_ids:
             classifiers = [c for c in classifiers if c.entity_id in entity_ids]
 
         for classifier in classifiers:
-            if service.service == SERVICE_TEACH_FACE:
-                name = service.data.get(ATTR_NAME)
-                file_path = service.data.get(FILE_PATH)
-                classifier.teach(name, file_path)
+            name = service.data.get(ATTR_NAME)
+            file_path = service.data.get(FILE_PATH)
+            classifier.teach(name, file_path)
 
     hass.services.register(
         DOMAIN,
