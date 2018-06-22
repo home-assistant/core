@@ -10,9 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
-    SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA,
-    MediaPlayerDevice)
-from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST,
+    SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA, MediaPlayerDevice)
+from homeassistant.const import (
+    STATE_OFF, STATE_ON, CONF_HOST,
     CONF_NAME, CONF_PASSWORD, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
@@ -37,6 +37,7 @@ SUPPORT_PJLINK = SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 KNOWN_HOSTS = []
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
@@ -74,10 +75,9 @@ class PjLinkDevice(MediaPlayerDevice):
     def projector(self):
         from pypjlink import Projector
         projector = Projector.from_address(self._host, self._port,
-            self._encoding)
+                                           self._encoding)
         projector.authenticate()
         return projector
-
 
     def update(self):
         with self.projector() as projector:
@@ -132,7 +132,7 @@ class PjLinkDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute (true) of unmute (false) media player."""
         with self.projector() as projector:
-            from pypjlink import MUTE_AUDIO 
+            from pypjlink import MUTE_AUDIO
             projector.set_mute(MUTE_AUDIO, mute)
 
     def select_source(self, source):
@@ -140,8 +140,3 @@ class PjLinkDevice(MediaPlayerDevice):
         source = self._source_name_mapping[source]
         with self.projector() as projector:
             projector.set_input(source[0], source[1])
-
-
-
-
-
