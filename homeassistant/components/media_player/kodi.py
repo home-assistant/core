@@ -168,6 +168,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         tcp_port = config.get(CONF_TCP_PORT)
         encryption = config.get(CONF_PROXY_SSL)
         websocket = config.get(CONF_ENABLE_WEBSOCKET)
+        unique_id = None
     else:
         name = "{} ({})".format(DEFAULT_NAME, discovery_info.get('hostname'))
         host = discovery_info.get('host')
@@ -175,6 +176,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         tcp_port = DEFAULT_TCP_PORT
         encryption = DEFAULT_PROXY_SSL
         websocket = DEFAULT_ENABLE_WEBSOCKET
+        properties = discovery_info.get('properties')
+        if properties is not None:
+            unique_id = properties.get('mac', None)
 
     # Only add a device once, so discovered devices do not override manual
     # config.
@@ -190,7 +194,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         password=config.get(CONF_PASSWORD),
         turn_on_action=config.get(CONF_TURN_ON_ACTION),
         turn_off_action=config.get(CONF_TURN_OFF_ACTION),
-        timeout=config.get(CONF_TIMEOUT), websocket=websocket)
+        timeout=config.get(CONF_TIMEOUT), websocket=websocket,
+        unique_id=unique_id)
 
     hass.data[DATA_KODI][ip_addr] = entity
     async_add_devices([entity], update_before_add=True)
@@ -260,12 +265,14 @@ class KodiDevice(MediaPlayerDevice):
     def __init__(self, hass, name, host, port, tcp_port, encryption=False,
                  username=None, password=None,
                  turn_on_action=None, turn_off_action=None,
-                 timeout=DEFAULT_TIMEOUT, websocket=True):
+                 timeout=DEFAULT_TIMEOUT, websocket=True,
+                 unique_id=None):
         """Initialize the Kodi device."""
         import jsonrpc_async
         import jsonrpc_websocket
         self.hass = hass
         self._name = name
+        self._unique_id = unique_id
 
         kwargs = {
             'timeout': timeout,
@@ -383,6 +390,10 @@ class KodiDevice(MediaPlayerDevice):
                 _LOGGER.info("Unable to fetch kodi data")
                 _LOGGER.debug("Unable to fetch kodi data", exc_info=True)
             return None
+
+    @property
+    def unique_id(self):
+        return self._unique_id
 
     @property
     def state(self):
