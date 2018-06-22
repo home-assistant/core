@@ -345,9 +345,14 @@ class MqttJson(MqttAvailability, Light):
             hs_color = kwargs[ATTR_HS_COLOR]
             message['color'] = {}
             if self._rgb:
-                brightness = kwargs.get(
-                    ATTR_BRIGHTNESS,
-                    self._brightness if self._brightness else 255)
+                # If there's a brightness topic set, we don't want to scale the
+                # RGB values given using the brightness.
+                if self._brightness is not None:
+                    brightness = 255
+                else:
+                    brightness = kwargs.get(
+                        ATTR_BRIGHTNESS,
+                        self._brightness if self._brightness else 255)
                 rgb = color_util.color_hsv_to_RGB(
                     hs_color[0], hs_color[1], brightness / 255 * 100)
                 message['color']['r'] = rgb[0]

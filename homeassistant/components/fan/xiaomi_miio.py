@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'zhimi.humidifier.ca1']),
 })
 
-REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
 
 ATTR_MODEL = 'model'
 
@@ -314,7 +314,6 @@ SERVICE_TO_METHOD = {
 }
 
 
-# pylint: disable=unused-argument
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the miio fan device from config."""

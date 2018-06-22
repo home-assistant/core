@@ -373,12 +373,15 @@ class MockPlatform(object):
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
                  platform_schema=None, async_setup_platform=None,
-                 async_setup_entry=None):
+                 async_setup_entry=None, scan_interval=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
+
+        if scan_interval is not None:
+            self.SCAN_INTERVAL = scan_interval
 
         if setup_platform is not None:
             # We run this in executor, wrap it in function
