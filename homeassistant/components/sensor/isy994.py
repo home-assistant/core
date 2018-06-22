@@ -235,7 +235,6 @@ UOM_TO_STATES = {
 }
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 sensor platform."""

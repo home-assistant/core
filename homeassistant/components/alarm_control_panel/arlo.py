@@ -4,15 +4,17 @@ Support for Arlo Alarm Control Panels.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.arlo/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanel, PLATFORM_SCHEMA)
-from homeassistant.components.arlo import (DATA_ARLO, CONF_ATTRIBUTION)
+from homeassistant.components.arlo import (
+    DATA_ARLO, CONF_ATTRIBUTION, SIGNAL_UPDATE_ARLO)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED)
@@ -36,21 +38,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Arlo Alarm Control Panels."""
-    data = hass.data[DATA_ARLO]
+    arlo = hass.data[DATA_ARLO]
 
-    if not data.base_stations:
+    if not arlo.base_stations:
         return
 
     home_mode_name = config.get(CONF_HOME_MODE_NAME)
     away_mode_name = config.get(CONF_AWAY_MODE_NAME)
     base_stations = []
-    for base_station in data.base_stations:
+    for base_station in arlo.base_stations:
         base_stations.append(ArloBaseStation(base_station, home_mode_name,
                                              away_mode_name))
-    async_add_devices(base_stations, True)
+    add_devices(base_stations, True)
 
 
 class ArloBaseStation(AlarmControlPanel):
@@ -68,6 +69,16 @@ class ArloBaseStation(AlarmControlPanel):
         """Return icon."""
         return ICON
 
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
+
     @property
     def state(self):
         """Return the state of the device."""
@@ -75,30 +86,22 @@ class ArloBaseStation(AlarmControlPanel):
 
     def update(self):
         """Update the state of the device."""
-        # PyArlo sometimes returns None for mode. So retry 3 times before
-        # returning None.
-        num_retries = 3
-        i = 0
-        while i < num_retries:
-            mode = self._base_station.mode
-            if mode:
-                self._state = self._get_state_from_mode(mode)
-                return
-            i += 1
-        self._state = None
+        _LOGGER.debug("Updating Arlo Alarm Control Panel %s", self.name)
+        mode = self._base_station.mode
+        if mode:
+            self._state = self._get_state_from_mode(mode)
+        else:
+            self._state = None
 
-    @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         self._base_station.mode = DISARMED
 
-    @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code=None):
         """Send arm away command. Uses custom mode."""
         self._base_station.mode = self._away_mode_name
 
-    @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code=None):
         """Send arm home command. Uses custom mode."""
         self._base_station.mode = self._home_mode_name
 
@@ -125,4 +128,4 @@ class ArloBaseStation(AlarmControlPanel):
             return STATE_ALARM_ARMED_HOME
         elif mode == self._away_mode_name:
             return STATE_ALARM_ARMED_AWAY
-        return None
+        return mode

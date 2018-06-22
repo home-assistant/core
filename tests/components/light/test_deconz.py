@@ -38,7 +38,7 @@ GROUP = {
 }
 
 
-async def setup_bridge(hass, data):
+async def setup_bridge(hass, data, allow_deconz_groups=True):
     """Load the deCONZ light platform."""
     from pydeconz import DeconzSession
     loop = Mock()
@@ -53,7 +53,9 @@ async def setup_bridge(hass, data):
     hass.data[deconz.DATA_DECONZ_UNSUB] = []
     hass.data[deconz.DATA_DECONZ_ID] = {}
     config_entry = config_entries.ConfigEntry(
-        1, deconz.DOMAIN, 'Mock Title', {'host': 'mock-host'}, 'test')
+        1, deconz.DOMAIN, 'Mock Title',
+        {'host': 'mock-host', 'allow_deconz_groups': allow_deconz_groups},
+        'test')
     await hass.config_entries.async_forward_entry_setup(config_entry, 'light')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
@@ -98,3 +100,15 @@ async def test_add_new_group(hass):
     async_dispatcher_send(hass, 'deconz_new_group', [group])
     await hass.async_block_till_done()
     assert "light.name" in hass.data[deconz.DATA_DECONZ_ID]
+
+
+async def test_do_not_add_deconz_groups(hass):
+    """Test that clip sensors can be ignored."""
+    data = {}
+    await setup_bridge(hass, data, allow_deconz_groups=False)
+    group = Mock()
+    group.name = 'name'
+    group.register_async_callback = Mock()
+    async_dispatcher_send(hass, 'deconz_new_group', [group])
+    await hass.async_block_till_done()
+    assert len(hass.data[deconz.DATA_DECONZ_ID]) == 0

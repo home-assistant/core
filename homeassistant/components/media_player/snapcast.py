@@ -46,7 +46,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Snapcast platform."""
@@ -80,8 +79,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                       host, port)
         return
 
-    groups = [SnapcastGroupDevice(group) for group in server.groups]
-    clients = [SnapcastClientDevice(client) for client in server.clients]
+    # Note: Host part is needed, when using multiple snapservers
+    hpid = '{}:{}'.format(host, port)
+
+    groups = [SnapcastGroupDevice(group, hpid) for group in server.groups]
+    clients = [SnapcastClientDevice(client, hpid) for client in server.clients]
     devices = groups + clients
     hass.data[DATA_KEY] = devices
     async_add_devices(devices)
@@ -90,10 +92,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SnapcastGroupDevice(MediaPlayerDevice):
     """Representation of a Snapcast group device."""
 
-    def __init__(self, group):
+    def __init__(self, group, uid_part):
         """Initialize the Snapcast group device."""
         group.set_callback(self.schedule_update_ha_state)
         self._group = group
+        self._uid = '{}{}_{}'.format(GROUP_PREFIX, uid_part,
+                                     self._group.identifier)
 
     @property
     def state(self):
@@ -103,6 +107,11 @@ class SnapcastGroupDevice(MediaPlayerDevice):
             'playing': STATE_PLAYING,
             'unknown': STATE_UNKNOWN,
         }.get(self._group.stream_status, STATE_UNKNOWN)
+
+    @property
+    def unique_id(self):
+        """Return the ID of snapcast group."""
+        return self._uid
 
     @property
     def name(self):
@@ -180,10 +189,21 @@ class SnapcastGroupDevice(MediaPlayerDevice):
 class SnapcastClientDevice(MediaPlayerDevice):
     """Representation of a Snapcast client device."""
 
-    def __init__(self, client):
+    def __init__(self, client, uid_part):
         """Initialize the Snapcast client device."""
         client.set_callback(self.schedule_update_ha_state)
         self._client = client
+        self._uid = '{}{}_{}'.format(CLIENT_PREFIX, uid_part,
+                                     self._client.identifier)
+
+    @property
+    def unique_id(self):
+        """
+        Return the ID of this snapcast client.
+
+        Note: Host part is needed, when using multiple snapservers
+        """
+        return self._uid
 
     @property
     def name(self):
