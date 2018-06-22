@@ -74,7 +74,6 @@ async def test_setup_defined_hosts_no_known_auth(hass):
             }
         }) is True
 
-    # Flow started for discovered bridge
     assert len(mock_config_entries.flow.mock_calls) == 1
     assert mock_config_entries.flow.mock_calls[0][2]['data'] == {
         hmipc.HMIPC_HAPID: 'ABC123',
