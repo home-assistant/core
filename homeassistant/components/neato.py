@@ -17,8 +17,8 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.5.zip'
-                '#pybotvac==0.0.5']
+REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.6.zip'
+                '#pybotvac==0.0.6']
 
 DOMAIN = 'neato'
 NEATO_ROBOTS = 'neato_robots'
@@ -122,7 +122,7 @@ class NeatoHub(object):
             _LOGGER.error("Unable to connect to Neato API")
             return False
 
-    @Throttle(timedelta(seconds=1))
+    @Throttle(timedelta(seconds=60))
     def update_robots(self):
         """Update the robot states."""
         _LOGGER.debug("Running HUB.update_robots %s",

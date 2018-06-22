@@ -47,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the one wire Sensors."""
     base_dir = config.get(CONF_MOUNT_DIR)

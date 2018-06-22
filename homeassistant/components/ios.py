@@ -203,7 +203,7 @@ def device_name_for_push_id(push_id):
 
 def setup(hass, config):
     """Set up the iOS component."""
-    # pylint: disable=global-statement, import-error
+    # pylint: disable=import-error
     global CONFIG_FILE
     global CONFIG_FILE_PATH
 

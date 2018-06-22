@@ -59,7 +59,6 @@ def request_configuration(hass, config, url, add_devices_callback):
                                'method': 'connect',
                                'arguments': ['Home Assistant']}))
 
-    # pylint: disable=unused-argument
     def gpmdp_configuration_callback(callback_data):
         """Handle configuration changes."""
         while True:
