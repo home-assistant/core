@@ -40,6 +40,7 @@ KNOWN_HOSTS = []
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the PJLink platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
@@ -56,7 +57,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class PjLinkDevice(MediaPlayerDevice):
+    """Representation of a PJLink device."""
+
     def __init__(self, host, port, name, encoding, password):
+        """Iinitialize the PJLink device."""
         self._host = host
         self._port = port
         self._name = name
@@ -73,6 +77,7 @@ class PjLinkDevice(MediaPlayerDevice):
         self.update()
 
     def projector(self):
+        """Create PJLink Projector instance."""
         from pypjlink import Projector
         projector = Projector.from_address(self._host, self._port,
                                            self._encoding)
@@ -80,6 +85,7 @@ class PjLinkDevice(MediaPlayerDevice):
         return projector
 
     def update(self):
+        """Get the latest state from the device."""
         with self.projector() as projector:
             pwstate = projector.get_power()
             if pwstate == 'off':
