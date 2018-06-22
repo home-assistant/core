@@ -78,7 +78,6 @@ _ARP_REGEX = re.compile(
     r'.*')
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return an ASUS-WRT scanner."""
     scanner = AsusWrtDeviceScanner(config[DOMAIN])

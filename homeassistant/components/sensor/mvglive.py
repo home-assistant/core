@@ -72,7 +72,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors, True)
 
 
-# pylint: disable=too-few-public-methods
 class MVGLiveSensor(Entity):
     """Implementation of an MVG Live sensor."""
 

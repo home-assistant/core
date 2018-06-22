@@ -47,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Samsung TV platform."""
     known_devices = hass.data.get(KNOWN_DEVICES_KEY)
@@ -155,16 +154,25 @@ class SamsungTVDevice(MediaPlayerDevice):
             _LOGGER.info("TV is powering off, not sending command: %s", key)
             return
         try:
-            self.get_remote().control(key)
+            # recreate connection if connection was dead
+            retry_count = 1
+            for _ in range(retry_count + 1):
+                try:
+                    self.get_remote().control(key)
+                    break
+                except (self._exceptions_class.ConnectionClosed,
+                        BrokenPipeError):
+                    # BrokenPipe can occur when the commands is sent to fast
+                    self._remote = None
             self._state = STATE_ON
         except (self._exceptions_class.UnhandledResponse,
-                self._exceptions_class.AccessDenied, BrokenPipeError):
+                self._exceptions_class.AccessDenied):
             # We got a response so it's on.
-            # BrokenPipe can occur when the commands is sent to fast
             self._state = STATE_ON
             self._remote = None
+            _LOGGER.debug("Failed sending command %s", key, exc_info=True)
             return
-        except (self._exceptions_class.ConnectionClosed, OSError):
+        except OSError:
             self._state = STATE_OFF
             self._remote = None
         if self._power_off_in_progress():
@@ -207,6 +215,7 @@ class SamsungTVDevice(MediaPlayerDevice):
         # Force closing of remote session to provide instant UI feedback
         try:
             self.get_remote().close()
+            self._remote = None
         except OSError:
             _LOGGER.debug("Could not establish connection.")
 

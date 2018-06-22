@@ -57,7 +57,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the access to Netatmo binary sensor."""
     netatmo = hass.components.netatmo
@@ -68,12 +67,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     module_name = None
 
-    import lnetatmo
+    import pyatmo
     try:
         data = CameraData(netatmo.NETATMO_AUTH, home)
         if not data.get_camera_names():
             return None
-    except lnetatmo.NoDevice:
+    except pyatmo.NoDevice:
         return None
 
     welcome_sensors = config.get(

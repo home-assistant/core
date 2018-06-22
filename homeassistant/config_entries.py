@@ -127,8 +127,11 @@ _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
+    'cast',
     'deconz',
     'hue',
+    'nest',
+    'sonos',
     'zone',
 ]
 
@@ -143,7 +146,12 @@ ENTRY_STATE_NOT_LOADED = 'not_loaded'
 ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
-DISCOVERY_SOURCES = (data_entry_flow.SOURCE_DISCOVERY,)
+DISCOVERY_SOURCES = (
+    data_entry_flow.SOURCE_DISCOVERY,
+    data_entry_flow.SOURCE_IMPORT,
+)
+
+EVENT_FLOW_DISCOVERED = 'config_entry_discovered'
 
 
 class ConfigEntry:
@@ -398,6 +406,7 @@ class ConfigEntries:
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
+            self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
             self.hass.components.persistent_notification.async_create(
                 title='New devices discovered',
                 message=("We have discovered new devices on your network. "

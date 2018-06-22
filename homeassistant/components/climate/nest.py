@@ -32,16 +32,22 @@ NEST_MODE_HEAT_COOL = 'heat-cool'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Nest thermostat."""
-    if discovery_info is None:
-        return
+    """Set up the Nest thermostat.
 
+    No longer in use.
+    """
+
+
+async def async_setup_entry(hass, entry, async_add_devices):
+    """Set up the Nest climate device based on a config entry."""
     temp_unit = hass.config.units.temperature_unit
 
-    all_devices = [NestThermostat(structure, device, temp_unit)
-                   for structure, device in hass.data[DATA_NEST].thermostats()]
+    thermostats = await hass.async_add_job(hass.data[DATA_NEST].thermostats)
 
-    add_devices(all_devices, True)
+    all_devices = [NestThermostat(structure, device, temp_unit)
+                   for structure, device in thermostats]
+
+    async_add_devices(all_devices, True)
 
 
 class NestThermostat(ClimateDevice):

@@ -70,6 +70,7 @@ homeassistant/components/sensor/filter.py @dgomes
 homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
+homeassistant/components/sensor/nsw_fuel_station.py @nickw444
 homeassistant/components/sensor/pollen.py @bachya
 homeassistant/components/sensor/qnap.py @colinodell
 homeassistant/components/sensor/sma.py @kellerza

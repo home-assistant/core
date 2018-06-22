@@ -1,6 +1,6 @@
 """The tests for the feedreader component."""
 import time
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import unittest
 from genericpath import exists
@@ -118,9 +118,11 @@ class TestFeedreaderComponent(unittest.TestCase):
         assert events[0].data.description == "Description 1"
         assert events[0].data.link == "http://www.example.com/link/1"
         assert events[0].data.id == "GUID 1"
-        assert datetime.fromtimestamp(
-            time.mktime(events[0].data.published_parsed)) == \
-            datetime(2018, 4, 30, 5, 10, 0)
+        assert events[0].data.published_parsed.tm_year == 2018
+        assert events[0].data.published_parsed.tm_mon == 4
+        assert events[0].data.published_parsed.tm_mday == 30
+        assert events[0].data.published_parsed.tm_hour == 5
+        assert events[0].data.published_parsed.tm_min == 10
         assert manager.last_update_successful is True
 
     def test_feed_updates(self):
