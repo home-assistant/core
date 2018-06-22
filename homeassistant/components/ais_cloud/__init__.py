@@ -54,9 +54,9 @@ def async_setup(hass, config):
     yield from data.get_types_async()
 
     # add "Projekt" panel to the menu list
-    yield from hass.components.frontend.async_register_built_in_panel(
-            'iframe', "Projekt", "mdi:shuffle-variant",
-            "dom", {'url': 'https://' + ais_global.get_my_global_ip() + ':1880'})
+    # yield from hass.components.frontend.async_register_built_in_panel(
+    #         'iframe', "Projekt", "mdi:shuffle-variant",
+    #         "dom", {'url': 'https://' + ais_global.get_my_global_ip() + ':1880'})
 
     def get_radio_types(call):
         _LOGGER.info("get_radio_types  ")

@@ -42,8 +42,16 @@ homeassistant:
       custom_ui_state_card: state-card-text
     script.ais_scan_android_wifi_network:
       icon: mdi:router-wireless
+    script.ais_scan_iot_devices_in_network:
+      icon: mdi:router-wireless
     script.ais_connect_android_wifi_network:
       icon: mdi:send-secure
+    script.ais_connect_iot_device_to_network:
+      icon: mdi:send-secure
+    sensor.ais_connect_iot_device_info:
+      custom_ui_state_card: state-card-text
+      friendly_name: Instrukcja
+
 
 sensor:
   # - platform: speedtest
@@ -51,6 +59,13 @@ sensor:
   #     - ping
   #     - download
   #     - upload
+  - platform: template
+    sensors:
+      ais_connect_iot_device_info:
+        value_template: "a) podłącz urządzenie do prądu\n
+                        b) uruchom 'Skanuj w poszukiwaniu nowych urządzeń'\n
+                        c) wybierz sieć wifi, jeśli podłączasz urządzenie do zabezpieczonej sieci to podaj też hasło\n
+                        d) podaj nazwę dla nowego urządzenia i uruchom 'Dołącz nowe urządzenie'"
   - platform: ais_android_cmd
     command: getprop net.hostname
     name: local_host_name
@@ -162,6 +177,14 @@ input_text:
     mode: password
     initial: ""
     icon: mdi:textbox-password
+  ais_iot_device_wifi_password:
+    name: "Podaj hasło do Wifi:"
+    mode: password
+    initial: ""
+    icon: mdi:textbox-password
+  ais_iot_device_name:
+    name: "Podaj nazwę dla nowego urządzenia:"
+    initial: ""
 input_select:
   ais_rss_help_topic:
     name: 'Strona:'
@@ -182,6 +205,12 @@ input_select:
       - "-"
     initial: "-"
     icon: mdi:wifi
+  ais_iot_devices_in_network:
+    name: 'Wykryte nowe urządzenia:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:home-plus
 input_boolean:
   ais_android_wifi_changes_notify:
     name: Powiadamiaj o zmianach Wifi
@@ -213,6 +242,17 @@ group:
       - input_text.ais_android_wifi_password
       - script.ais_connect_android_wifi_network
       - input_boolean.ais_android_wifi_changes_notify
+  AIS add IOT device:
+    name: Dodawanie nowych urządzeń
+    control: hidden
+    entities:
+      - sensor.ais_connect_iot_device_info
+      - script.ais_scan_iot_devices_in_network
+      - input_select.ais_iot_devices_in_network
+      - input_select.ais_android_wifi_network
+      - input_text.ais_iot_device_wifi_password
+      - input_text.ais_iot_device_name
+      - script.ais_connect_iot_device_to_network
   AIS Configurator:
     name: Konfiguracja
     entities:
@@ -248,7 +288,6 @@ script:
         data:
           key: WifiScanInfo
           val: true
-          #ip: "192.168.1.45"
   ais_connect_android_wifi_network:
     alias: 'Połącz z wybraną siecią wifi'
     sequence:
@@ -256,4 +295,21 @@ script:
          data_template:
            key: "WifiConnectToSid"
            val: "{{ states('input_select.ais_android_wifi_network') }}"
-           #ip: "192.168.1.45"
+  ais_scan_iot_devices_in_network:
+    alias: 'Skanuj w poszukiwaniu nowych urządzeń'
+    sequence:
+      - service: ais_ai_service.say_it
+        data:
+          text: "Skanuje w poszukiwaniu nowych urządzeń."
+      - delay: '3'
+      - service: ais_ai_service.publish_command_to_frame
+        data:
+          key: IotScanInfo
+          val: true
+  ais_connect_iot_device_to_network:
+    alias: 'Dołącz nowe urządzenie'
+    sequence:
+      -  service: ais_ai_service.publish_command_to_frame
+         data_template:
+           key: "WifiConnectTheDevice"
+           val: "{{ states('input_select.ais_iot_devices_in_network') }}"

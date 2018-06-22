@@ -93,11 +93,16 @@ homeassistant:
       context_answer: "OK, wybrano internet. Możesz nawigowac pilotem by uzyskać informację o statusie Twojej sieci."
       remote_group_view: Ustawienia
       order: 1
+    group.ais_add_iot_device:
+      context_key_words: "dodaj urządzenie"
+      context_answer: "OK, wybrano dodawanie nowego urządzenia. Możesz nawigowac pilotem by dodać urządzenie do systemu."
+      remote_group_view: Ustawienia
+      order: 2
     group.ais_tts_configuration:
       context_key_words: "głos,ustawienia głosu"
       context_answer: "OK, wybrano konfigurację zamiany tekstu na mowę"
       remote_group_view: Ustawienia
-      order: 2
+      order: 3
 
 
 group:
@@ -154,6 +159,7 @@ group:
     entities:
       - group.ais_tts_configuration
       - group.internet_status
+      - group.ais_add_iot_device
   pomoc:
       name: Pomoc
       view: yes

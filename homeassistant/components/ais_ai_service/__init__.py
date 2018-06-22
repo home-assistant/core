@@ -14,7 +14,7 @@ from homeassistant import core
 from homeassistant.loader import bind_hass
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF,
-    SERVICE_TURN_ON, ATTR_UNIT_OF_MEASUREMENT)
+    SERVICE_TURN_ON, ATTR_UNIT_OF_MEASUREMENT, SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER)
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import ais_cloud
 import homeassistant.components.mqtt as mqtt
@@ -57,6 +57,10 @@ INTENT_LAMPS_ON = 'AisLampsOn'
 INTENT_LAMPS_OFF = 'AisLampsOff'
 INTENT_SWITCHES_ON = 'AisSwitchesOn'
 INTENT_SWITCHES_OFF = 'AisSwitchesOff'
+INTENT_OPEN_COVER = 'AisCoverOpen'
+INTENT_CLOSE_COVER = 'AisCoverClose'
+
+
 REGEX_TYPE = type(re.compile(''))
 
 _LOGGER = logging.getLogger(__name__)
@@ -382,6 +386,12 @@ def get_curent_position(hass):
 
 def commit_current_position(hass):
     if CURR_ENTITIE.startswith('input_select.'):
+        # force the change - to trigger the state change for automation
+        hass.services.call(
+            'input_select',
+            'select_option', {
+                "entity_id": CURR_ENTITIE,
+                "option": ais_global.G_EMPTY_OPTION})
         hass.services.call(
             'input_select',
             'select_option', {
@@ -398,6 +408,9 @@ def commit_current_position(hass):
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0])
     else:
         _say_it(hass, "ok")
+
+    # TODO - run the script for the item,
+    # the automation on state should be executed only from app not from remote
 
 
 def set_next_position(hass):
@@ -473,12 +486,12 @@ def select_entity(hass):
         "script."
     )):
         # these items can be controlled from remote
-        # if we are here it meens that the enter on the same item was
+        # if we are here it means that the enter on the same item was
         # pressed twice, we should do something - to mange the item status
         if CURR_ENTITIE.startswith('input_select.'):
             commit_current_position(hass)
         elif (CURR_ENTITIE.startswith('input_number.')):
-            return commit_current_position(hass)
+            commit_current_position(hass)
         elif CURR_ENTITIE.startswith('media_player.'):
             # play / pause on all players
             _say_it(hass, "ok")
@@ -744,6 +757,8 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisLampsOff())
     hass.helpers.intent.async_register(AisSwitchesOn())
     hass.helpers.intent.async_register(AisSwitchesOff())
+    hass.helpers.intent.async_register(AisOpenCover())
+    hass.helpers.intent.async_register(AisCloseCover())
     async_register(hass, INTENT_GET_WEATHER, [
             'pogoda',
             'pogoda w {location}',
@@ -830,7 +845,8 @@ async def async_setup(hass, config):
                    ['Wyłącz {item}', 'Zgaś Światło w {item}'])
     async_register(hass, INTENT_STATUS, [
         'Jaka jest {item}', 'Jaki jest {item}',
-        'Jak jest {item}', 'Jakie jest {item}'])
+        'Jak jest {item}', 'Jakie jest {item}',
+        '[jaki] [ma] status {item}'])
     async_register(hass, INTENT_ASK_QUESTION, [
         'Co to jest {item}', 'Kto to jest {item}',
         'Znajdź informację o {item}', 'Znajdź informacje o {item}',
@@ -840,6 +856,9 @@ async def async_setup(hass, config):
         'Informację na temat {item}', 'Co wiesz o {item}',
         'Co wiesz na temat {item}', 'Opowiedz o {item}',
         'Kim są {item}', 'Kto to {item}'])
+    async_register(hass, INTENT_OPEN_COVER, ['Otwórz {item}', 'Odsłoń {item}'])
+    async_register(hass, INTENT_CLOSE_COVER, ['Zamknij {item}', 'Odsłoń {item}'])
+
     return True
 
 
@@ -847,9 +866,6 @@ def _publish_command_to_frame(hass, key, val, ip):
     # sent the command to the android frame via http
     url = G_HTTP_REST_SERVICE_BASE_URL.format(ip)
     if key == "WifiConnectToSid":
-        # if val == ais_global.G_EMPTY_OPTION:
-        #     return
-        # info to user
         # enable the wifi info
         hass.async_run_job(
             hass.services.async_call(
@@ -864,6 +880,29 @@ def _publish_command_to_frame(hass, key, val, ip):
         requests.post(
             url + '/command',
             json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type})
+    if key == "WifiConnectTheDevice":
+        iot = val.split(';')[0]
+        if iot == ais_global.G_EMPTY_OPTION:
+            _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie")
+            return
+        # check if wifi is selected
+        wifi = hass.states.get('input_select.ais_android_wifi_network').state.split(';')[0]
+        if wifi == ais_global.G_EMPTY_OPTION:
+            _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie")
+            return
+        # check if name is selected, if not then add the device name
+        name = hass.states.get('input_text.ais_iot_device_name').state
+        # friendly name (32 chars max)
+        if name == "":
+            name = iot
+        if len(name) > 32:
+            _say_it(hass, "nazwa urządzenie może mieć maksymalnie 32 znaki")
+            return
+        _say_it(hass, "dodajemy: " + name)
+        password = hass.states.get('input_text.ais_iot_device_wifi_password').state
+        requests.post(
+            url + '/command',
+            json={key: iot, "ip": ip, "WifiNetworkPass": password, "WifiNetworkSsid": wifi, "IotName": name})
     else:
         requests.post(
             url + '/command',
@@ -887,7 +926,7 @@ def _widi_rssi_to_info(rssi):
 
 def _publish_wifi_status(hass, service):
     wifis = json.loads(service.data["payload"])
-    wifis_names = []
+    wifis_names = [ais_global.G_EMPTY_OPTION]
     for item in wifis["ScanResult"]:
         if len(item["ssid"]) > 0:
             wifis_names.append(
@@ -901,7 +940,7 @@ def _publish_wifi_status(hass, service):
                 "entity_id": "input_select.ais_android_wifi_network",
                 "options": wifis_names})
     )
-    return len(wifis_names)
+    return len(wifis_names)-1
 
 
 def _process_command_from_frame(hass, service):
@@ -917,15 +956,46 @@ def _process_command_from_frame(hass, service):
                 hass, json.loads(service.data["payload"]),
                 service.data["callback"])
         )
+    elif service.data["topic"] == 'ais/speech_text':
+        hass.async_run_job(
+            _say_it(hass, service.data["payload"])
+        )
     elif service.data["topic"] == 'ais/wifi_scan_info':
         len_wifis = _publish_wifi_status(hass, service)
         info = "Mamy dostępne " + str(len_wifis) + " wifi."
-        if len_wifis > 0:
-            info += " Wybierz sieć z którą chcesz się połączyć."
-            info += " Jeżeli łączysz się pierwszy raz z zabezpieczoną"
-            info += " siecią to podaj w aplikacji hasło lub wybierz pilotem lokalizację pliku z hasłem."
         _say_it(hass, info)
-
+    elif service.data["topic"] == 'ais/iot_scan_info':
+        iot = json.loads(service.data["payload"])
+        iot_names = [ais_global.G_EMPTY_OPTION]
+        for item in iot["ScanResult"]:
+            if len(item["ssid"]) > 0:
+                iot_names.append(
+                    item["ssid"] + "; " +
+                    _widi_rssi_to_info(item["rssi"]) +
+                    "; " + item["capabilities"])
+        hass.async_run_job(
+            hass.services.call(
+                'input_select',
+                'set_options', {
+                    "entity_id": "input_select.ais_iot_devices_in_network",
+                    "options": iot_names})
+        )
+        if len(iot_names) == 1:
+            info = "Nie znaleziono żadnego nowego urządzenia"
+        elif len(iot_names) == 2:
+            if item["model"] == ais_global.G_MODEL_SONOFF_S20:
+                info = "Znaleziono nowe inteligentne gniazdo"
+            if item["model"] == ais_global.G_MODEL_SONOFF_SLAMPHER:
+                info = "Znaleziono nową oprawkę"
+            if item["model"] == ais_global.G_MODEL_SONOFF_TOUCH:
+                info = "Znaleziono nowy przełącznik dotykowy"
+            if item["model"] == ais_global.G_MODEL_SONOFF_TH:
+                info = "Znaleziono nowy przełącznik z czujnikami"
+            if item["model"] == ais_global.G_MODEL_SONOFF_B1:
+                info = "Znaleziono nową żarówkę"
+        else:
+            info = "Znaleziono " + str(len(iot_names)-1) + " nowe urządzenia."
+        _say_it(hass, info)
     elif service.data["topic"] == 'ais/wifi_status_info':
         _publish_wifi_status(hass, service)
     elif service.data["topic"] == 'ais/wifi_connection_info':
@@ -953,7 +1023,18 @@ def _process_command_from_frame(hass, service):
         cci = json.loads(service.data["payload"])
         info = "Wifi: "
         if "ssid" in cci:
-            info += cci["ssid"] + " "
+            if 'dom_' + ais_global.G_MODEL_SONOFF_S20 in cci["ssid"]:
+                info += "gniazdo "
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_B1 in cci["ssid"]:
+                info += "żarówka "
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_TH in cci["ssid"]:
+                info += "przełącznik z czujnikami "
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_SLAMPHER in cci["ssid"]:
+                info += "oprawka "
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_TOUCH in cci["ssid"]:
+                info += "przełącznik dotykowy "
+            else:
+                info += cci["ssid"] + " "
         if "state" in cci:
             info += cci["state"]
         # check if we are now online
@@ -1222,7 +1303,7 @@ def _match_entity(hass, name):
                 in hass.states.async_all()}
     try:
         entity_id = fuzzyExtract.extractOne(
-            name, entities, score_cutoff=88)[2]
+            name, entities, score_cutoff=86)[2]
     except Exception as e:
         entity_id = None
 
@@ -1333,10 +1414,18 @@ class StatusIntent(intent.IntentHandler):
             success = False
         else:
             unit = entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            state = entity.state
+            if state == 'unavailable':
+                state = 'niedostępny'
+            elif state == 'off':
+                state = 'wyłączony'
+            elif state == 'on':
+                state = 'włączony'
+
             if unit is None:
-                value = entity.state
+                value = state
             else:
-                value = "{} {}".format(entity.state, unit)
+                value = "{} {}".format(state, unit)
             message = format(entity.name) + ': ' + value
             success = True
         return message, success
@@ -1595,3 +1684,80 @@ class GetDateIntent(intent.IntentHandler):
         message = 'Jest ' + babel.dates.format_date(
             now, format='full', locale='pl')
         return message, True
+
+
+class AisOpenCover(intent.IntentHandler):
+    """Handle AisOpenCover intents."""
+    intent_type = INTENT_OPEN_COVER
+    slot_schema = {
+        'item': cv.string,
+    }
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        name = slots['item']['value']
+        entity = _match_entity(hass, name)
+        success = False
+
+        if not entity:
+            message = 'Nie znajduję urządzenia do otwarcia, o nazwie: ' + name
+        else:
+            # check if we can open on this device
+            if entity.entity_id.startswith('cover.'):
+                if entity.state == 'on':
+                    # check if the device is already on
+                    message = 'Urządzenie ' + name + ' jest już otwarte'
+                elif entity.state == 'unavailable':
+                    message = 'Urządzenie ' + name + ' jest niedostępne'
+                else:
+                    yield from hass.services.async_call(
+                        core.DOMAIN, SERVICE_OPEN_COVER, {
+                            ATTR_ENTITY_ID: entity.entity_id,
+                        }, blocking=True)
+                    message = 'OK, włączono {}'.format(entity.name)
+                success = True
+            else:
+                message = 'Urządzenia ' + name + ' nie można otworzyć'
+        return message, success
+
+
+class AisCloseCover(intent.IntentHandler):
+    """Handle AisCloseCover intents."""
+    intent_type = INTENT_CLOSE_COVER
+    slot_schema = {
+        'item': cv.string,
+    }
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle turn off intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        name = slots['item']['value']
+        entity = _match_entity(hass, name)
+        success = False
+        if not entity:
+            msg = 'Nie znajduję urządzenia do zamknięcia, o nazwie: ' + name
+        else:
+            # check if we can close on this device
+            if entity.entity_id.startswith('cover.'):
+                # check if the device is already closed
+                if entity.state == 'off':
+                    msg = 'Urządzenie {} jest już zamknięte'.format(
+                        entity.name)
+                elif entity.state == 'unavailable':
+                    msg = 'Urządzenie {}} jest niedostępne'.format(
+                        entity.name)
+                else:
+                    yield from hass.services.async_call(
+                        core.DOMAIN, SERVICE_TURN_OFF, {
+                            ATTR_ENTITY_ID: entity.entity_id,
+                        }, blocking=True)
+                    msg = 'OK, zamknięto {}'.format(entity.name)
+                    success = True
+            else:
+                msg = 'Urządzenia ' + name + ' nie można zamknąć'
+        return msg, success

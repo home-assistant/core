@@ -30,7 +30,6 @@ group:
     - input_select.book_chapter
     - input_select.book_player
 
-# radio
 automation:
   - alias: 'Get Books'
     hide_entity: True

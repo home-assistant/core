@@ -2,7 +2,13 @@ homeassistant:
   name: AIS dom
   unit_system: metric
   time_zone: Europe/Warsaw
+  latitude: 51.2483
+  longitude: 16.933
+  elevation: 134
   packages: !include_dir_named ais_packages/
+
+# Track the sun
+sun:
 
 # ais-dom cloud functionality
 ais_cloud:
@@ -142,8 +148,6 @@ http:
    ssl_key: /data/data/pl.sviete.dom/files/home/AIS/privekey.pem
 
 
-# Track the sun
-sun:
 
 # AIS Service for AI
 # Allows you to issue voice commands

@@ -200,9 +200,9 @@ sensor:
     sensors:
       network_devices_info:
         value_template: "Po wykryciu urządzenia możesz kliknąć w jego link by przejść do ustawień urządzenia.\n#UWAGA: Zmieniaj ustawienia urządzenia tylko gdy jesteś pewny, że wiesz co robisz!"
-  - platform: ais_device_search_mqtt
-    name: network_devices_info_value
-    state_topic: "stat/#"
+#  - platform: ais_device_search_mqtt
+#    name: network_devices_info_value
+#    state_topic: "stat/#"
   - platform: template
     sensors:
       ssh_connection_info:

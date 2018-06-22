@@ -22,7 +22,13 @@ G_AN_NEWS = "News"
 GLOBAL_MY_IP = None
 _LOGGER = logging.getLogger(__name__)
 
-
+# devices fully supported by ais dom
+G_MODEL_SONOFF_S20 = "s20"
+G_MODEL_SONOFF_SLAMPHER = "slampher"
+G_MODEL_SONOFF_TOUCH = "sonoff_touch"
+G_MODEL_SONOFF_TH = "sonoff_th"
+G_MODEL_SONOFF_B1 = "sonoff_b1"
+#
 def get_my_global_ip():
     if GLOBAL_MY_IP is None:
         set_global_my_ip()
