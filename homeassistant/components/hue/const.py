@@ -10,6 +10,8 @@ ATTR_DAYLIGHT = 'daylight'
 ATTR_LAST_UPDATED = 'last_updated'
 
 ICON_REMOTE = 'mdi:remote'
+ICON_DAY = 'mdi:weather-sunny'
+ICON_NIGHT = 'mdi:weather-night'
 
 UOM_HUMIDITY = '%'
 UOM_ILLUMINANCE = 'lx'

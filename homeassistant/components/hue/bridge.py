@@ -78,7 +78,7 @@ class HueBridge(object):
                              host)
             return False
 
-        for platform in ['light', 'sensor']:
+        for platform in ['binary_sensor', 'light', 'sensor']:
             hass.async_add_job(hass.config_entries.async_forward_entry_setup(
                 self.config_entry, platform))
 
