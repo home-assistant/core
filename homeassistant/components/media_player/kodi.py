@@ -177,6 +177,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         encryption = DEFAULT_PROXY_SSL
         websocket = DEFAULT_ENABLE_WEBSOCKET
         properties = discovery_info.get('properties')
+        unique_id = None
         if properties is not None:
             unique_id = properties.get('mac', None)
 
