@@ -46,7 +46,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
-
     ip_address = config.get(CONF_IP_ADDRESS)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS, {})
 
@@ -58,12 +57,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if monitored_conditions == {} or \
             SENSOR_TYPES[i] in monitored_conditions:
                 add_devices([Envoy(ip_address, DEFAULT_NAMES[i],
-                                SENSOR_TYPES[i])], True)
+                            SENSOR_TYPES[i])], True)
 
 
 class Envoy(Entity):
     """Implementation of the Enphase Envoy sensors."""
-
     def __init__(self, ip_address, name, type):
         """Initialize the sensor."""
         self._url = "http://{}/production.json".format(ip_address)
@@ -115,21 +113,21 @@ class Envoy(Entity):
                 response.status_code, self._name)
             return
 
-        responseParsed = json.loads(response.text)
+        responsed_parsed = json.loads(response.text)
         if self._type == "production":
-            self._state = responseParsed["production"][1]["wNow"]
+            self._state = responsed_parsed["production"][1]["wNow"]
         elif self._type == "daily_production":
-            self._state = responseParsed["production"][1]["whToday"]
+            self._state = responsed_parsed["production"][1]["whToday"]
         elif self._type == "7_days_production":
-            self._state = responseParsed["production"][1]["whLastSevenDays"]
+            self._state = responsed_parsed["production"][1]["whLastSevenDays"]
         elif self._type == "lifetime_production":
-            self._state = responseParsed["production"][1]["whLifetime"]
+            self._state = responsed_parsed["production"][1]["whLifetime"]
 
         elif self._type == "consumption":
-            self._state = responseParsed["consumption"][0]["wNow"]
+            self._state = responsed_parsed["consumption"][0]["wNow"]
         elif self._type == "daily_consumption":
-            self._state = responseParsed["consumption"][0]["whToday"]
+            self._state = responsed_parsed["consumption"][0]["whToday"]
         elif self._type == "7_days_consumption":
-            self._state = responseParsed["consumption"][0]["whLastSevenDays"]
+            self._state = responsed_parsed["consumption"][0]["whLastSevenDays"]
         elif self._type == "lifetime_consumption":
-            self._state = responseParsed["consumption"][0]["whLifetime"]
+            self._state = responsed_parsed["consumption"][0]["whLifetime"]
