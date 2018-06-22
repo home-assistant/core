@@ -64,7 +64,9 @@ class PjLinkDevice(MediaPlayerDevice):
         self._pwstate = STATE_OFF
         self._current_source = None
         with self.projector() as projector:
-            inputs = self.projector().get_inputs()
+            if not self._name:
+                self._name = projector.get_name()
+            inputs = projector.get_inputs()
         self._source_name_mapping = dict([("%s %s" % x, x) for x in inputs])
         self._source_list = sorted(self._source_name_mapping.keys())
         self.update()
