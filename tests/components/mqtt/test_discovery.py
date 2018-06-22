@@ -57,7 +57,7 @@ def test_only_valid_components(mock_load_platform, hass, mqtt_mock, caplog):
 
     async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config', '{}')
     yield from hass.async_block_till_done()
-    assert 'Component climate is not supported' in caplog.text
+    assert 'Component lock is not supported' in caplog.text
     assert not mock_load_platform.called
 
 
