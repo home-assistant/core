@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_URL, CONF_CURRENCY)
 
-REQUIREMENTS = ['gearbest_parser==1.0.5']
+REQUIREMENTS = ['gearbest_parser==1.0.7']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ITEMS = 'items'

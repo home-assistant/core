@@ -201,20 +201,8 @@ def test_check_package_zip():
     assert not package.check_package_exists(TEST_ZIP_REQ)
 
 
-def test_get_user_site(deps_dir, lib_dir, mock_popen, mock_env_copy):
-    """Test get user site directory."""
-    env = mock_env_copy()
-    env['PYTHONUSERBASE'] = os.path.abspath(deps_dir)
-    args = [sys.executable, '-m', 'site', '--user-site']
-    ret = package.get_user_site(deps_dir)
-    assert mock_popen.call_count == 1
-    assert mock_popen.call_args == call(
-        args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
-    assert ret == lib_dir
-
-
 @asyncio.coroutine
-def test_async_get_user_site(hass, mock_env_copy):
+def test_async_get_user_site(mock_env_copy):
     """Test async get user site directory."""
     deps_dir = '/deps_dir'
     env = mock_env_copy()
@@ -222,10 +210,10 @@ def test_async_get_user_site(hass, mock_env_copy):
     args = [sys.executable, '-m', 'site', '--user-site']
     with patch('homeassistant.util.package.asyncio.create_subprocess_exec',
                return_value=mock_async_subprocess()) as popen_mock:
-        ret = yield from package.async_get_user_site(deps_dir, hass.loop)
+        ret = yield from package.async_get_user_site(deps_dir)
     assert popen_mock.call_count == 1
     assert popen_mock.call_args == call(
-        *args, loop=hass.loop, stdin=asyncio.subprocess.PIPE,
+        *args, stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
         env=env)
     assert ret == os.path.join(deps_dir, 'lib_dir')

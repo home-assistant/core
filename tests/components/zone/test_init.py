@@ -17,7 +17,6 @@ async def test_setup_entry_successful(hass):
         zone.CONF_NAME: 'Test Zone',
         zone.CONF_LATITUDE: 1.1,
         zone.CONF_LONGITUDE: -2.2,
-        zone.CONF_RADIUS: 250,
         zone.CONF_RADIUS: True
     }
     hass.data[zone.DOMAIN] = {}
