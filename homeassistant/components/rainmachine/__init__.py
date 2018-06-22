@@ -11,14 +11,15 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_BINARY_SENSORS, CONF_IP_ADDRESS, CONF_PASSWORD,
-    CONF_PORT, CONF_SENSORS, CONF_SSL, CONF_MONITORED_CONDITIONS,
-    CONF_SWITCHES)
-from homeassistant.helpers import config_validation as cv, discovery
-from homeassistant.helpers.dispatcher import dispatcher_send
+    CONF_PORT, CONF_SCAN_INTERVAL, CONF_SENSORS, CONF_SSL,
+    CONF_MONITORED_CONDITIONS, CONF_SWITCHES)
+from homeassistant.helpers import (
+    aiohttp_client, config_validation as cv, discovery)
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['regenmaschine==0.4.2']
+REQUIREMENTS = ['regenmaschine==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,8 +29,9 @@ DOMAIN = 'rainmachine'
 NOTIFICATION_ID = 'rainmachine_notification'
 NOTIFICATION_TITLE = 'RainMachine Component Setup'
 
-DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
 PROGRAM_UPDATE_TOPIC = '{0}_program_update'.format(DOMAIN)
+SENSOR_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
+ZONE_UPDATE_TOPIC = '{0}_zone_update'.format(DOMAIN)
 
 CONF_PROGRAM_ID = 'program_id'
 CONF_ZONE_ID = 'zone_id'
@@ -105,6 +107,8 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Required(CONF_PASSWORD): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
             vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+                cv.time_period,
             vol.Optional(CONF_BINARY_SENSORS, default={}):
                 BINARY_SENSOR_SCHEMA,
             vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
@@ -114,10 +118,10 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the RainMachine component."""
-    from regenmaschine import Authenticator, Client
-    from regenmaschine.exceptions import RainMachineError
+    from regenmaschine import Client
+    from regenmaschine.errors import RequestError
 
     conf = config[DOMAIN]
     ip_address = conf[CONF_IP_ADDRESS]
@@ -126,17 +130,18 @@ def setup(hass, config):
     ssl = conf[CONF_SSL]
 
     try:
-        auth = Authenticator.create_local(
-            ip_address, password, port=port, https=ssl)
-        rainmachine = RainMachine(hass, Client(auth))
-        rainmachine.update()
+        websession = aiohttp_client.async_get_clientsession(hass)
+        client = Client(ip_address, websession, port=port, ssl=ssl)
+        await client.authenticate(password)
+        rainmachine = RainMachine(client)
+        await rainmachine.async_update()
         hass.data[DATA_RAINMACHINE] = rainmachine
-    except RainMachineError as exc:
-        _LOGGER.error('An error occurred: %s', str(exc))
+    except RequestError as err:
+        _LOGGER.error('An error occurred: %s', str(err))
         hass.components.persistent_notification.create(
             'Error: {0}<br />'
             'You will need to restart hass after fixing.'
-            ''.format(exc),
+            ''.format(err),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
         return False
@@ -146,36 +151,43 @@ def setup(hass, config):
             ('sensor', conf[CONF_SENSORS]),
             ('switch', conf[CONF_SWITCHES]),
     ]:
-        discovery.load_platform(hass, component, DOMAIN, schema, config)
+        hass.async_add_job(
+            discovery.async_load_platform(hass, component, DOMAIN, schema,
+                                          config))
 
-    def refresh(event_time):
-        """Refresh RainMachine data."""
-        _LOGGER.debug('Updating RainMachine data')
-        hass.data[DATA_RAINMACHINE].update()
-        dispatcher_send(hass, DATA_UPDATE_TOPIC)
+    async def refresh_sensors(event_time):
+        """Refresh RainMachine sensor data."""
+        _LOGGER.debug('Updating RainMachine sensor data')
+        await rainmachine.async_update()
+        async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
 
-    track_time_interval(hass, refresh, DEFAULT_SCAN_INTERVAL)
+    async_track_time_interval(hass, refresh_sensors, conf[CONF_SCAN_INTERVAL])
 
-    def start_program(service):
+    async def start_program(service):
         """Start a particular program."""
-        rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
+        await rainmachine.client.programs.start(service.data[CONF_PROGRAM_ID])
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    def start_zone(service):
+    async def start_zone(service):
         """Start a particular zone for a certain amount of time."""
-        rainmachine.client.zones.start(service.data[CONF_ZONE_ID],
-                                       service.data[CONF_ZONE_RUN_TIME])
+        await rainmachine.client.zones.start(service.data[CONF_ZONE_ID],
+                                             service.data[CONF_ZONE_RUN_TIME])
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
-    def stop_all(service):
+    async def stop_all(service):
         """Stop all watering."""
-        rainmachine.client.watering.stop_all()
+        await rainmachine.client.watering.stop_all()
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    def stop_program(service):
+    async def stop_program(service):
         """Stop a program."""
-        rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
+        await rainmachine.client.programs.stop(service.data[CONF_PROGRAM_ID])
+        async_dispatcher_send(hass, PROGRAM_UPDATE_TOPIC)
 
-    def stop_zone(service):
+    async def stop_zone(service):
         """Stop a zone."""
-        rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
+        await rainmachine.client.zones.stop(service.data[CONF_ZONE_ID])
+        async_dispatcher_send(hass, ZONE_UPDATE_TOPIC)
 
     for service, method, schema in [
             ('start_program', start_program, SERVICE_START_PROGRAM_SCHEMA),
@@ -184,7 +196,7 @@ def setup(hass, config):
             ('stop_program', stop_program, SERVICE_STOP_PROGRAM_SCHEMA),
             ('stop_zone', stop_zone, SERVICE_STOP_ZONE_SCHEMA)
     ]:
-        hass.services.register(DOMAIN, service, method, schema=schema)
+        hass.services.async_register(DOMAIN, service, method, schema=schema)
 
     return True
 
@@ -192,17 +204,17 @@ def setup(hass, config):
 class RainMachine(object):
     """Define a generic RainMachine object."""
 
-    def __init__(self, hass, client):
+    def __init__(self, client):
         """Initialize."""
         self.client = client
-        self.device_mac = self.client.provision.wifi()['macAddress']
+        self.device_mac = self.client.mac
         self.restrictions = {}
 
-    def update(self):
+    async def async_update(self):
         """Update sensor/binary sensor data."""
         self.restrictions.update({
-            'current': self.client.restrictions.current(),
-            'global': self.client.restrictions.universal()
+            'current': await self.client.restrictions.current(),
+            'global': await self.client.restrictions.universal()
         })
 
 

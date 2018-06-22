@@ -523,24 +523,24 @@ class TestLightMQTT(unittest.TestCase):
         self.mock_publish.reset_mock()
         light.turn_on(self.hass, 'light.test',
                       brightness=50, xy_color=[0.123, 0.123])
-        light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75],
+        light.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 0],
                       white_value=80)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_has_calls([
             mock.call('test_light_rgb/set', 'on', 2, False),
-            mock.call('test_light_rgb/rgb/set', '50,50,50', 2, False),
+            mock.call('test_light_rgb/rgb/set', '255,128,0', 2, False),
             mock.call('test_light_rgb/brightness/set', 50, 2, False),
             mock.call('test_light_rgb/white_value/set', 80, 2, False),
-            mock.call('test_light_rgb/xy/set', '0.323,0.329', 2, False),
+            mock.call('test_light_rgb/xy/set', '0.14,0.131', 2, False),
         ], any_order=True)
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual((255, 255, 255), state.attributes['rgb_color'])
+        self.assertEqual((255, 128, 0), state.attributes['rgb_color'])
         self.assertEqual(50, state.attributes['brightness'])
         self.assertEqual(80, state.attributes['white_value'])
-        self.assertEqual((0.323, 0.329), state.attributes['xy_color'])
+        self.assertEqual((0.611, 0.375), state.attributes['xy_color'])
 
     def test_sending_mqtt_rgb_command_with_template(self):
         """Test the sending of RGB command with template."""
@@ -808,11 +808,11 @@ class TestLightMQTT(unittest.TestCase):
 
         # Turn on w/ just a color to insure brightness gets
         # added and sent.
-        light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75])
+        light.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 0])
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_has_calls([
-            mock.call('test_light/rgb', '50,50,50', 0, False),
+            mock.call('test_light/rgb', '255,128,0', 0, False),
             mock.call('test_light/bright', 50, 0, False)
         ], any_order=True)
 

@@ -30,7 +30,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                   device.address.hex, device.states[state_key].name)
 
     new_entity = None
-    if state_name in ['lightOnOff', 'outletTopOnOff', 'outletBottomOnOff']:
+    if state_name in ['lightOnOff', 'outletTopOnOff', 'outletBottomOnOff',
+                      'x10OnOffSwitch']:
         new_entity = InsteonPLMSwitchDevice(device, state_key)
     elif state_name == 'openClosedRelay':
         new_entity = InsteonPLMOpenClosedDevice(device, state_key)
