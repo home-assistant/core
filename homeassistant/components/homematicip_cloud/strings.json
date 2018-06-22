@@ -12,7 +12,7 @@
       },
       "link": {
         "title": "Link Accesspoint",
-        "description": "Press the blue button on the accesspoint and the submit button to register HomematicIP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_homematicip_cloud.jpg)"
+        "description": "Press the blue button on the accesspoint and the submit button to register HomematicIP with Home Assistant.\n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)"
       }
     },
     "error": {
