@@ -69,10 +69,16 @@ SERVICE_SCAN_SCHEMA = vol.Schema({
 
 @bind_hass
 def scan(hass, entity_id=None):
-    """Force process an image."""
+    """Force process of all cameras or given entity."""
+    hass.add_job(async_scan, hass, entity_id)
+
+
+@callback
+@bind_hass
+def async_scan(hass, entity_id=None):
+    """Force process of all cameras or given entity."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_SCAN, data))
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SCAN, data))
 
 
 async def async_setup(hass, config):
