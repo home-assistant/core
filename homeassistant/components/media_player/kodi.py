@@ -176,10 +176,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         tcp_port = DEFAULT_TCP_PORT
         encryption = DEFAULT_PROXY_SSL
         websocket = DEFAULT_ENABLE_WEBSOCKET
-        properties = discovery_info.get('properties')
-        unique_id = None
-        if properties is not None:
-            unique_id = properties.get('mac', None)
+        unique_id = discovery_info.get('mac_address')
 
     # Only add a device once, so discovered devices do not override manual
     # config.
