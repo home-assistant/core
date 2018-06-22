@@ -5,6 +5,14 @@ _LOGGER = logging.getLogger('homeassistant.components.homematicip_cloud')
 
 DOMAIN = 'homematicip_cloud'
 
+COMPONENTS = [
+    'binary_sensor',
+    'climate',
+    'light',
+    'sensor',
+    'switch',
+]
+
 CONF_NAME = 'name'
 CONF_ACCESSPOINT = 'accesspoint'
 CONF_AUTHTOKEN = 'authtoken'
