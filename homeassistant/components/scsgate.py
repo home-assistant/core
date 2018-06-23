@@ -9,7 +9,7 @@ from threading import Lock
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_DEVICE, CONF_NAME)
+from homeassistant.const import (CONF_DEVICE, CONF_NAME, CONF_PORT)
 from homeassistant.core import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
@@ -28,6 +28,7 @@ SCSGATE = None
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_DEVICE): cv.string,
+        vol.Optional(CONF_PORT): cv.port,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -38,13 +39,20 @@ SCSGATE_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Set up the SCSGate component."""
+    """Setup the SCSGate component."""
     device = config[DOMAIN][CONF_DEVICE]
+
+    if CONF_PORT in config.get(DOMAIN):
+        port = config.get(DOMAIN)[CONF_PORT]
+    else:
+        port = 0
+
+    """"port = config.get(DOMAIN)[CONF_PORT].items()"""
     global SCSGATE
 
     # pylint: disable=broad-except
     try:
-        SCSGATE = SCSGate(device=device, logger=_LOGGER)
+        SCSGATE = SCSGate(device=device, logger=_LOGGER, port=port)
         SCSGATE.start()
     except Exception as exception:
         _LOGGER.error("Cannot setup SCSGate component: %s", exception)
@@ -61,9 +69,9 @@ def setup(hass, config):
 
 
 class SCSGate(object):
-    """The class for dealing with the SCSGate device via scsgate.Reactor."""
+    """The class  for dealing with the SCSGate device via scsgate.Reactor."""
 
-    def __init__(self, device, logger):
+    def __init__(self, device, logger, port):
         """Initialize the SCSGate."""
         self._logger = logger
         self._devices = {}
@@ -73,7 +81,7 @@ class SCSGate(object):
         self._device_being_registered_lock = Lock()
 
         from scsgate.connection import Connection
-        connection = Connection(device=device, logger=self._logger)
+        connection = Connection(device=device, logger=self._logger, port=port)
 
         from scsgate.reactor import Reactor
         self._reactor = Reactor(
@@ -81,13 +89,13 @@ class SCSGate(object):
             handle_message=self.handle_message)
 
     def handle_message(self, message):
-        """Handle a messages seen on the bus."""
+        """Method called whenever a message is seen on the bus."""
         from scsgate.messages import StateMessage, ScenarioTriggeredMessage
 
         self._logger.debug("Received message {}".format(message))
         if not isinstance(message, StateMessage) and \
            not isinstance(message, ScenarioTriggeredMessage):
-            msg = "Ignored message {} - not relevant type".format(
+            msg = "Ignored message {} - not releavant type".format(
                 message)
             self._logger.debug(msg)
             return
@@ -109,12 +117,12 @@ class SCSGate(object):
                 self._logger.error(msg)
         else:
             self._logger.info(
-                "Ignoring state message for device {} because unknown".format(
+                "Ignoring state message for device {} because unknonw".format(
                     message.entity))
 
     @property
     def devices(self):
-        """Return a dictionary with known devices.
+        """Dictionary with known devices.
 
         Key is device ID, value is the device itself.
         """
@@ -170,3 +178,4 @@ class SCSGate(object):
     def append_task(self, task):
         """Register a new task to be executed."""
         self._reactor.append_task(task)
+
