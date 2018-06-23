@@ -216,4 +216,5 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
         """Return the classifier attributes."""
         return {
             'matched_faces': self._matched,
+            'total_matched_faces': len(self._matched),
             }
