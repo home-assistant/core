@@ -1,5 +1,5 @@
 homeassistant:
-  name: AIS dom
+  name: Asystent domowy
   unit_system: metric
   time_zone: Europe/Warsaw
   latitude: 51.2483
