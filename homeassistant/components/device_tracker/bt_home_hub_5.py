@@ -6,9 +6,7 @@ https://home-assistant.io/components/device_tracker.bt_home_hub_5/
 """
 import logging
 import re
-import xml.etree.ElementTree as ET
-import json
-from urllib.parse import unquote
+from html.parser import HTMLParser
 
 import requests
 import voluptuous as vol
@@ -19,13 +17,14 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import CONF_HOST
 
 _LOGGER = logging.getLogger(__name__)
-_MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}\:){5}[0-9A-Fa-f]{1,2})')
+_MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}:){5}[0-9A-Fa-f]{1,2})')
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string
 })
 
 
+# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Return a BT Home Hub 5 scanner if successful."""
     scanner = BTHomeHub5DeviceScanner(config[DOMAIN])
@@ -41,7 +40,7 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
         _LOGGER.info("Initialising BT Home Hub 5")
         self.host = config.get(CONF_HOST, '192.168.1.254')
         self.last_results = {}
-        self.url = 'http://{}/nonAuth/home_status.xml'.format(self.host)
+        self.url = 'http://{}/'.format(self.host)
 
         # Test the router is accessible
         data = _get_homehub_data(self.url)
@@ -98,31 +97,84 @@ def _get_homehub_data(url):
         _LOGGER.error("Invalid response from Home Hub: %s", response)
 
 
+class HTMLTableParser(HTMLParser):
+    """ This class serves as a html table parser. It is able to parse multiple
+    tables which you feed in. You can access the result per .tables field.
+    """
+
+    def __init__(
+            self,
+            decode_html_entities=False,
+            data_separator=' ',
+    ):
+
+        HTMLParser.__init__(self)
+
+        self._parse_html_entities = decode_html_entities
+        self._data_separator = data_separator
+
+        self._in_td = False
+        self._in_th = False
+        self._current_table = []
+        self._current_row = []
+        self._current_cell = []
+        self.tables = []
+
+    def handle_starttag(self, tag, attrs):
+        """ We need to remember the opening point for the content of interest.
+        The other tags (<table>, <tr>) are only handled at the closing point.
+        """
+        if tag == 'td':
+            self._in_td = True
+        if tag == 'th':
+            self._in_th = True
+
+    def handle_data(self, data):
+        """ This is where we save content to a cell. """
+        if self._in_td or self._in_th:
+            self._current_cell.append(data.strip())
+
+    def handle_charref(self, name):
+        """ Handle HTML encoded characters. """
+
+        if self._parse_html_entities:
+            self.handle_data(self.html.unescape('&#{};'.format(name)))
+
+    def handle_endtag(self, tag):
+        """ Here we exit the tags. If the closing tag is </tr>, we know that we
+        can save our currently parsed cells to the current table as a row and
+        prepare for a new row. If the closing tag is </table>, we save the
+        current table and prepare for a new one.
+        """
+        if tag == 'td':
+            self._in_td = False
+        elif tag == 'th':
+            self._in_th = False
+
+        if tag in ['td', 'th']:
+            final_cell = self._data_separator.join(self._current_cell).strip()
+            self._current_row.append(final_cell)
+            self._current_cell = []
+        elif tag == 'tr':
+            self._current_table.append(self._current_row)
+            self._current_row = []
+        elif tag == 'table':
+            self.tables.append(self._current_table)
+            self._current_table = []
+
+
 def _parse_homehub_response(data_str):
     """Parse the BT Home Hub 5 data format."""
-    root = ET.fromstring(data_str)
 
-    dirty_json = root.find('known_device_list').get('value')
+    p = HTMLTableParser()
+    p.feed(data_str)
 
-    # Normalise the JavaScript data to JSON.
-    clean_json = unquote(dirty_json.replace('\'', '\"')
-                         .replace('{', '{\"')
-                         .replace(':\"', '\":\"')
-                         .replace('\",', '\",\"'))
-
-    known_devices = [x for x in json.loads(clean_json) if x]
+    known_devices = p.tables[9]
 
     devices = {}
 
     for device in known_devices:
-        name = device.get('name')
-        mac = device.get('mac')
-
-        if _MAC_REGEX.match(mac) or ',' in mac:
-            for mac_addr in mac.split(','):
-                if _MAC_REGEX.match(mac_addr):
-                    devices[mac_addr] = name
-        else:
-            devices[mac] = name
+        if len(device) == 5 and device[2] != '':
+            devices[device[2]] = device[1]
 
     return devices
