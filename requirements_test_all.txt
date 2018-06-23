@@ -213,3 +213,6 @@ warrant==0.6.1
 
 # homeassistant.components.sensor.yahoo_finance
 yahoo-finance==1.4.0
+
+# homeassistant.components.homematicip_cloud
+homematicip==0.9.6
