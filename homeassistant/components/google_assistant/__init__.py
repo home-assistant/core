@@ -13,7 +13,6 @@ import async_timeout
 import voluptuous as vol
 
 # Typing imports
-# pylint: disable=using-constant-test,unused-import,ungrouped-imports
 from homeassistant.core import HomeAssistant  # NOQA
 from typing import Dict, Any  # NOQA
 

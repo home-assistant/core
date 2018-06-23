@@ -10,7 +10,7 @@ from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.web import Request, Response  # NOQA
 
 # Typing imports
-# pylint: disable=using-constant-test,unused-import,ungrouped-imports
+# pylint: disable=unused-import
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback  # NOQA
 from homeassistant.helpers.entity import Entity  # NOQA

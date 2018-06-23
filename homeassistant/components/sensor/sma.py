@@ -198,5 +198,4 @@ class SMAsensor(Entity):
             update = True
             self._state = new_state
 
-        return self.async_update_ha_state() if update else None \
-            # pylint: disable=protected-access
+        return self.async_update_ha_state() if update else None

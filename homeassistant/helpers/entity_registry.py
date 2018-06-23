@@ -37,8 +37,6 @@ DISABLED_USER = 'user'
 class RegistryEntry:
     """Entity Registry Entry."""
 
-    # pylint: disable=no-member
-
     entity_id = attr.ib(type=str)
     unique_id = attr.ib(type=str)
     platform = attr.ib(type=str)

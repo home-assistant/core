@@ -268,7 +268,6 @@ def _is_sensor_a_binary_sensor(hass: HomeAssistant, node) -> bool:
 def _categorize_nodes(hass: HomeAssistant, nodes, ignore_identifier: str,
                       sensor_identifier: str)-> None:
     """Sort the nodes to their proper domains."""
-    # pylint: disable=no-member
     for (path, node) in nodes:
         ignored = ignore_identifier in path or ignore_identifier in node.name
         if ignored:

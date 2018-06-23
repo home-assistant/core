@@ -228,7 +228,6 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request):
         """Handle an incoming websocket connection."""
-        # pylint: disable=no-self-use
         return await ActiveConnection(request.app['hass'], request).handle()
 
 

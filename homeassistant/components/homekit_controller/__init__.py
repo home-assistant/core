@@ -220,7 +220,6 @@ class HomeKitEntity(Entity):
         raise NotImplementedError
 
 
-# pylint: too-many-function-args
 def setup(hass, config):
     """Set up for Homekit devices."""
     def discovery_dispatch(service, discovery_info):
