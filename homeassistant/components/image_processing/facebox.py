@@ -170,36 +170,37 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
 
     def teach(self, name, file_path):
         """Teach classifier a face name."""
-        if (self.hass.config.is_allowed_path(file_path) and
-                valid_file_path(file_path)):
-            with open(file_path, 'rb') as open_file:
-                response = requests.post(
-                    self._url_teach,
-                    data={ATTR_NAME: name, 'id': file_path},
-                    files={'file': open_file})
+        if (not self.hass.config.is_allowed_path(file_path)
+                or not valid_file_path(file_path)):
+            return
+        with open(file_path, 'rb') as open_file:
+            response = requests.post(
+                self._url_teach,
+                data={ATTR_NAME: name, 'id': file_path},
+                files={'file': open_file})
 
-            if response.status_code == 200:
-                self.hass.bus.fire(
-                    EVENT_CLASSIFIER_TEACH, {
-                        ATTR_CLASSIFIER: CLASSIFIER,
-                        ATTR_NAME: name,
-                        FILE_PATH: file_path,
-                        'success': True,
-                        'message': None
-                        })
+        if response.status_code == 200:
+            self.hass.bus.fire(
+                EVENT_CLASSIFIER_TEACH, {
+                    ATTR_CLASSIFIER: CLASSIFIER,
+                    ATTR_NAME: name,
+                    FILE_PATH: file_path,
+                    'success': True,
+                    'message': None
+                    })
 
-            elif response.status_code == 400:
-                _LOGGER.warning(
-                    "%s teaching of file %s failed with message:%s",
-                    CLASSIFIER, file_path, response.text)
-                self.hass.bus.fire(
-                    EVENT_CLASSIFIER_TEACH, {
-                        ATTR_CLASSIFIER: CLASSIFIER,
-                        ATTR_NAME: name,
-                        FILE_PATH: file_path,
-                        'success': False,
-                        'message': response.text
-                        })
+        elif response.status_code == 400:
+            _LOGGER.warning(
+                "%s teaching of file %s failed with message:%s",
+                CLASSIFIER, file_path, response.text)
+            self.hass.bus.fire(
+                EVENT_CLASSIFIER_TEACH, {
+                    ATTR_CLASSIFIER: CLASSIFIER,
+                    ATTR_NAME: name,
+                    FILE_PATH: file_path,
+                    'success': False,
+                    'message': response.text
+                    })
 
     @property
     def camera_entity(self):
