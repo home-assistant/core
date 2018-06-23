@@ -124,6 +124,7 @@ async def test_process_image(hass, mock_image):
     state = hass.states.get(VALID_ENTITY_ID)
     assert state.state == '1'
     assert state.attributes.get('matched_faces') == MATCHED_FACES
+    assert state.attributes.get('total_matched_faces') == 1
 
     PARSED_FACES[0][ATTR_ENTITY_ID] = VALID_ENTITY_ID  # Update.
     assert state.attributes.get('faces') == PARSED_FACES
