@@ -100,6 +100,8 @@ class YiCamera(Camera):
                 _LOGGER.info('Video folder "%s" empty; delaying', latest_dir)
                 return None
 
+            await ftp.quit()
+
             return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(
                 self.user, self.passwd, self.host, self.port, self.path,
                 latest_dir, videos[-1])
