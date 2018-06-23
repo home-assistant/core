@@ -387,16 +387,18 @@ def get_curent_position(hass):
 def commit_current_position(hass):
     if CURR_ENTITIE.startswith('input_select.'):
         # force the change - to trigger the state change for automation
+        possition = get_curent_position(hass)
         hass.services.call(
             'input_select',
             'select_option', {
                 "entity_id": CURR_ENTITIE,
                 "option": ais_global.G_EMPTY_OPTION})
+        hass.block_till_done()
         hass.services.call(
             'input_select',
             'select_option', {
                 "entity_id": CURR_ENTITIE,
-                "option": get_curent_position(hass)})
+                "option": possition})
     elif (CURR_ENTITIE.startswith('input_number.')):
         hass.services.call(
             'input_number',
