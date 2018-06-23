@@ -168,7 +168,7 @@ class WirelessTagSensor(WirelessTagBaseSensor):
                 new_value = event.data.get('cap')
             elif self._sensor_type == SENSOR_LIGHT:
                 new_value = event.data.get('lux')
-        except Exception as error:  # pylint: disable=W0703
+        except Exception as error:  # pylint: disable=broad-except
             _LOGGER.info("Unable to update value of entity: \
                         %s error: %s event: %s", self, error, event)
 
