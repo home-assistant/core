@@ -156,7 +156,7 @@ pyqwikswitch==0.8
 python-forecastio==1.4.0
 
 # homeassistant.components.nest
-python-nest==4.0.2
+python-nest==4.0.3
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
