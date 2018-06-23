@@ -1163,7 +1163,7 @@ pyzabbix==0.7.4
 # homeassistant.components.sensor.qnap
 qnapstats==0.2.6
 
-# homeassistant.components.switch.rachio
+# homeassistant.components.rachio
 rachiopy==0.1.3
 
 # homeassistant.components.climate.radiotherm
