@@ -42,4 +42,4 @@ class NetgearNotifyService(BaseNotificationService):
         targets = kwargs.get(ATTR_TARGET, self.phone)
         if targets and message:
             for target in targets:
-                await self.lte_data.eternalegypt.sms(target, message)
+                await self.lte_data.modem.sms(target, message)

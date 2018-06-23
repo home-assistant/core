@@ -9,12 +9,15 @@ from datetime import timedelta
 
 import voluptuous as vol
 import attr
+import aiohttp
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['eternalegypt==0.0.1']
+REQUIREMENTS = ['eternalegypt==0.0.2']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
@@ -33,14 +36,14 @@ CONFIG_SCHEMA = vol.Schema({
 class LTEData:
     """Class for LTE state."""
 
-    eternalegypt = attr.ib()
+    modem = attr.ib()
     unread_count = attr.ib(init=False)
     usage = attr.ib(init=False)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Call the API to update the data."""
-        information = await self.eternalegypt.information()
+        information = await self.modem.information()
         self.unread_count = sum(1 for x in information.sms if x.unread)
         self.usage = information.usage
 
@@ -80,7 +83,18 @@ async def _setup_lte(hass, lte_config):
     host = lte_config[CONF_HOST]
     password = lte_config[CONF_PASSWORD]
 
-    eternalegypt = eternalegypt.LB2120(host, password)
-    lte_data = LTEData(eternalegypt)
+    websession = async_create_clientsession(
+        hass, cookie_jar=aiohttp.CookieJar(unsafe=True))
+
+    modem = eternalegypt.Modem(hostname=host, websession=websession)
+    await modem.login(password=password)
+
+    lte_data = LTEData(modem)
     await lte_data.async_update()
     hass.data[DATA_KEY].hostdata[host] = lte_data
+
+    async def cleanup(event):
+        """Clean up resources."""
+        await modem.logout()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
