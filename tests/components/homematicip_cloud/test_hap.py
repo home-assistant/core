@@ -30,7 +30,7 @@ async def test_hap_init(aioclient_mock):
 async def test_hap_setup_invalid_token():
     """Test we start config flow if username is no longer whitelisted."""
     from homematicip.base.base_connection import HmipConnectionError
-    
+
     hass = Mock()
     entry = Mock()
     entry.data = {
