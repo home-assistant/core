@@ -33,8 +33,6 @@ def setup(hass, config):
     return True
 
 
-# noqa: F821
-
 def setup_output(pin):
     """Set up a GPIO as output."""
     # pylint: disable=import-error
@@ -46,9 +44,9 @@ def setup_input(pin, pull_mode):
     """Set up a GPIO as input."""
     # pylint: disable=import-error
     import Adafruit_BBIO.GPIO as GPIO
-    GPIO.setup(pin, GPIO.IN,                            # noqa: F821
-               GPIO.PUD_DOWN if pull_mode == 'DOWN'     # noqa: F821
-               else GPIO.PUD_UP)                        # noqa: F821
+    GPIO.setup(pin, GPIO.IN,
+               GPIO.PUD_DOWN if pull_mode == 'DOWN'
+               else GPIO.PUD_UP)
 
 
 def write_output(pin, value):

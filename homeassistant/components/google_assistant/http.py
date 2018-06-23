@@ -7,7 +7,7 @@ https://home-assistant.io/components/google_assistant/
 import logging
 
 from aiohttp.hdrs import AUTHORIZATION
-from aiohttp.web import Request, Response  # NOQA
+from aiohttp.web import Request, Response
 
 # Typing imports
 # pylint: disable=unused-import

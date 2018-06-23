@@ -4,10 +4,10 @@ import logging
 
 # Typing imports
 # if False:
-from aiohttp.web import Request, Response  # NOQA
-from typing import Dict, Any  # NOQA
+from aiohttp.web import Request, Response
+from typing import Dict, Any
 
-from homeassistant.core import HomeAssistant  # NOQA
+from homeassistant.core import HomeAssistant
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     HTTP_BAD_REQUEST,
