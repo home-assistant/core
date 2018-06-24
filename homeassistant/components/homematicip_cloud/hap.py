@@ -8,6 +8,7 @@ https://home-assistant.io/components/homematicip_cloud/
 import asyncio
 import logging
 
+from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
 from homeassistant.core import callback
@@ -40,7 +41,7 @@ class HomematicipHAP(object):
 
     def __init__(self, hass, config_entry):
         """Initialize HomematicIP cloud connection."""
-        self._hass = hass
+        self.hass = hass
         self.config_entry = config_entry
         self.home = None
 
@@ -48,29 +49,41 @@ class HomematicipHAP(object):
         self._retry_task = None
         self._tries = 0
         self._accesspoint_connected = True
+        self._retry_setup = None
 
-    async def async_setup(self):
+    async def async_setup(self, tries=0):
         """Initialize connection."""
         from homematicip.base.base_connection import HmipConnectionError
 
         try:
             self.home = await self.get_hap(
-                self._hass,
+                self.hass,
                 self.config_entry.data.get(HMIPC_HAPID),
                 self.config_entry.data.get(HMIPC_AUTHTOKEN),
                 self.config_entry.data.get(HMIPC_NAME)
             )
         except HmipConnectionError:
-            _LOGGER.error('Failed to connect to the sever, %s.',
-                          self.config_entry.data.get(HMIPC_HAPID))
+            retry_delay = 2 ** min(tries + 1, 6)
+            _LOGGER.error("Error connecting to HomematicIP with HAP %s. "
+                          "Retrying in %d seconds.",
+                          self.config_entry.data.get(HMIPC_HAPID), retry_delay)
+
+            async def retry_setup(_now):
+                """Retry setup."""
+                if await self.async_setup(tries + 1):
+                    self.config_entry.state = config_entries.ENTRY_STATE_LOADED
+
+            self._retry_setup = self.hass.helpers.event.async_call_later(
+                retry_delay, retry_setup)
+
             return False
 
-        _LOGGER.info('Connected to HomematicIP server, %s.',
+        _LOGGER.info('Connected to HomematicIP with HAP %s.',
                      self.config_entry.data.get(HMIPC_HAPID))
 
         for component in COMPONENTS:
-            self._hass.async_add_job(
-                self._hass.config_entries.async_forward_entry_setup(
+            self.hass.async_add_job(
+                self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, component)
             )
         return True
@@ -95,7 +108,7 @@ class HomematicipHAP(object):
             # Explicitly getting an update as device states might have
             # changed during access point disconnect."""
 
-            job = self._hass.async_add_job(self.get_state())
+            job = self.hass.async_add_job(self.get_state())
             job.add_done_callback(self.get_state_finished)
 
     async def get_state(self):
@@ -114,7 +127,7 @@ class HomematicipHAP(object):
             # so reconnect loop is taking over.
             _LOGGER.error(
                 "updating state after himp access point reconnect failed.")
-            self._hass.async_add_job(self.home.disable_events())
+            self.hass.async_add_job(self.home.disable_events())
 
     def set_all_to_unavailable(self):
         """Set all devices to unavailable and tell Hass."""
@@ -130,8 +143,10 @@ class HomematicipHAP(object):
     async def _handle_connection(self):
         """Handle websocket connection."""
         from homematicip.base.base_connection import HmipConnectionError
-
-        await self.home.get_current_state()
+        try:
+            await self.home.get_current_state()
+        except HmipConnectionError:
+            return
         hmip_events = await self.home.enable_events()
         try:
             await hmip_events
@@ -140,31 +155,45 @@ class HomematicipHAP(object):
 
     async def async_connect(self):
         """Start websocket connection."""
-        self._tries = 0
+        from homematicip.base.base_connection import HmipConnectionError
+
+        tries = 0
         while True:
-            await self._handle_connection()
+            try:
+                await self.home.get_current_state()
+                hmip_events = await self.home.enable_events()
+                tries = 0
+                await hmip_events
+            except HmipConnectionError:
+                pass
+
             if self._ws_close_requested:
                 break
             self._ws_close_requested = False
-            self._tries += 1
+
+            tries += 1
+            retry_delay = 2 ** min(tries + 1, 6)
+            _LOGGER.error("Error connecting to HomematicIP with HAP %s. "
+                          "Retrying in %d seconds.",
+                          self.config_entry.data.get(HMIPC_HAPID), retry_delay)
             try:
-                self._retry_task = self._hass.async_add_job(asyncio.sleep(
-                    2 ** min(9, self._tries), loop=self._hass.loop))
+                self._retry_task = self.hass.async_add_job(asyncio.sleep(
+                    retry_delay, loop=self.hass.loop))
                 await self._retry_task
             except asyncio.CancelledError:
                 break
-            _LOGGER.info('Reconnect (%s) to the HomematicIP cloud server.',
-                         self._tries)
 
     async def async_reset(self):
         """Close the websocket connection."""
         self._ws_close_requested = True
+        if self._retry_setup is not None:
+            self._retry_setup.cancel()
         if self._retry_task is not None:
             self._retry_task.cancel()
         self.home.disable_events()
         _LOGGER.info("Closed connection to HomematicIP cloud server.")
         for component in COMPONENTS:
-            await self._hass.config_entries.async_forward_entry_unload(
+            await self.hass.config_entries.async_forward_entry_unload(
                 self.config_entry, component)
         return True
 
