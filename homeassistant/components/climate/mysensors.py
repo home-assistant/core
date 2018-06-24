@@ -39,7 +39,7 @@ async def async_setup_platform(
         async_add_devices=async_add_devices)
 
 
-class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
+class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
     """Representation of a MySensors HVAC."""
 
     @property
