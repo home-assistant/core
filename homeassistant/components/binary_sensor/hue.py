@@ -306,6 +306,11 @@ class ZLLPresence(BinarySensorDevice):
         """Return true if the Hue Motion Sensor is on."""
         return self.sensor.presence
 
+    @property
+    def device_class(self):
+        """Return the device class of the Hue Motion Sensor."""
+        return 'motion'
+
     async def async_update(self):
         """Synchronize state with bridge."""
         await self.async_request_bridge_update(self.sensor.id)
