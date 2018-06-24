@@ -20,8 +20,9 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=1)
 
-HUE_BINARY_SENSORS = [TYPE_CLIP_GENERICFLAG, TYPE_CLIP_OPENCLOSE, TYPE_CLIP_PRESENCE,
+ALL_BINARY_SENSORS = [TYPE_CLIP_GENERICFLAG, TYPE_CLIP_OPENCLOSE, TYPE_CLIP_PRESENCE,
                       TYPE_DAYLIGHT, TYPE_ZLL_PRESENCE]
+HUE_BINARY_SENSORS = [TYPE_DAYLIGHT, TYPE_ZLL_PRESENCE]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,6 +120,7 @@ async def async_update_items(hass, bridge, async_add_devices,
                              progress_waiting):
     """Update sensors from the bridge."""
     import aiohue
+    allow_clip_sensors = bridge.allow_clip_sensors
 
     api = bridge.api.sensors
 
@@ -144,9 +146,14 @@ async def async_update_items(hass, bridge, async_add_devices,
 
     new_sensors = []
 
+    if allow_clip_sensors:
+        allowed_binary_sensor_types = ALL_BINARY_SENSORS
+    else:
+        allowed_binary_sensor_types = HUE_BINARY_SENSORS
+
     for item_id in api:
         sensor = api[item_id]
-        if sensor.type in HUE_BINARY_SENSORS:
+        if sensor.type in allowed_binary_sensor_types:
             if item_id not in current:
                 current[item_id] = create_binary_sensor(
                     api[item_id], request_bridge_update, bridge)

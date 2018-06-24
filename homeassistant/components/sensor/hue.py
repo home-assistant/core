@@ -31,9 +31,10 @@ from homeassistant.helpers.entity import Entity
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=1)
 
-HUE_SENSORS = [TYPE_CLIP_GENERICSTATUS, TYPE_CLIP_HUMIDITY, TYPE_CLIP_LIGHTLEVEL,
+ALL_SENSORS = [TYPE_CLIP_GENERICSTATUS, TYPE_CLIP_HUMIDITY, TYPE_CLIP_LIGHTLEVEL,
                TYPE_CLIP_SWITCH, TYPE_CLIP_TEMPERATURE, TYPE_CLIP_HUMIDITY, TYPE_ZGP_SWITCH,
                TYPE_ZLL_LIGHTLEVEL, TYPE_ZLL_SWITCH, TYPE_ZLL_TEMPERATURE]
+HUE_SENSORS = [TYPE_ZGP_SWITCH, TYPE_ZLL_LIGHTLEVEL, TYPE_ZLL_SWITCH, TYPE_ZLL_TEMPERATURE]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -131,6 +132,7 @@ async def async_update_items(hass, bridge, async_add_devices,
                              progress_waiting):
     """Update sensors from the bridge."""
     import aiohue
+    allow_clip_sensors = bridge.allow_clip_sensors
 
     api = bridge.api.sensors
 
@@ -156,15 +158,21 @@ async def async_update_items(hass, bridge, async_add_devices,
 
     new_sensors = []
 
+    if allow_clip_sensors:
+        allowed_sensor_types = ALL_SENSORS
+    else:
+        allowed_sensor_types = HUE_SENSORS
+
     for item_id in api:
         sensor = api[item_id]
-        if sensor.type in HUE_SENSORS:
+        if sensor.type in allowed_sensor_types:
             if item_id not in current:
                 current[item_id] = create_sensor(
                     api[item_id], request_bridge_update, bridge)
 
                 new_sensors.append(current[item_id])
-                _LOGGER.info('Added new Hue sensor: %s (Type: %s)', sensor.name, sensor.type)
+                _LOGGER.info('Added new Hue sensor: %s (Type: %s)',
+                             sensor.name, sensor.type)
             elif item_id not in progress_waiting:
                 current[item_id].async_schedule_update_ha_state()
 
