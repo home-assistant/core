@@ -52,12 +52,21 @@ def test_invalid_json(mock_load_platform, hass, mqtt_mock, caplog):
 @asyncio.coroutine
 def test_only_valid_components(mock_load_platform, hass, mqtt_mock, caplog):
     """Test for a valid component."""
+    invalid_component = "timer"
+
     mock_load_platform.return_value = mock_coro()
     yield from async_start(hass, 'homeassistant', {})
 
-    async_fire_mqtt_message(hass, 'homeassistant/timer/bla/config', '{}')
+    async_fire_mqtt_message(hass, 'homeassistant/{}/bla/config'.format(
+        invalid_component
+    ), '{}')
+
     yield from hass.async_block_till_done()
-    assert 'Component timer is not supported' in caplog.text
+
+    assert 'Component {} is not supported'.format(
+        invalid_component
+    ) in caplog.text
+
     assert not mock_load_platform.called
 
 
