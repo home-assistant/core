@@ -22,7 +22,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 
-REQUIREMENTS = ["kylin==0.5.0"]
+REQUIREMENTS = ["kylin==0.6.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +30,6 @@ ATTRIBUTION = "Provided by EDF Teleinfo."
 
 DEFAULT_DEVICE = '/dev/ttyUSB0'
 DEFAULT_NAME = 'teleinfo'
-
-DATA_TELEINFO = "data_teleinfo"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -46,19 +44,19 @@ TELEINFO_AVAILABLE_VALUES = ['HCHC', 'HCHP', 'IINST', 'IMAX', 'PAPP', 'ISOUSC']
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up for the Teleinfo device."""
     from kylin import exceptions
+    import kylin
 
     teleinfo_data = None
     try:
-        import kylin
         teleinfo = kylin.Kylin(port=config.get(CONF_DEVICE), timeout=2)
-        teleinfo_data = TeleinfoData(hass, teleinfo)
+        teleinfo_data = TeleinfoData(teleinfo)
 
     except exceptions.KylinSerialError as err:
-        return False
+        return
 
     if not teleinfo_data.update():
         _LOGGER.critical("Can't retrieve Teleinfo from device")
-        return False
+        return
 
     add_devices([TeleinfoSensor(teleinfo_data, config.get(CONF_NAME))], True)
 
@@ -108,13 +106,12 @@ class TeleinfoSensor(Entity):
                     self._attributes[info['name']] = info['value']
                 if 'ADCO' == info['name']:
                     self._state = self._attributes['ADCO']
-            _LOGGER.debug("Sensor: %s %s", self._state, self._attributes)
 
 
 class TeleinfoData(object):
     """Get the latest data from Teleinfo."""
 
-    def __init__(self, hass, teleinfo):
+    def __init__(self, teleinfo):
         """Initialize the data object."""
         self._frame = None
         self._teleinfo = teleinfo
@@ -136,7 +133,7 @@ class TeleinfoData(object):
         self._frame = self._teleinfo.readframe()
         self._teleinfo.close()
         if not self._frame:
-            _LOGGER.warning("Don't receive energy data from Teleinfo!")
+            _LOGGER.warning("No energy data received from Teleinfo")
             return None
         return self._frame
 
