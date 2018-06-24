@@ -331,13 +331,12 @@ class HassUpnpRequester(object):
 class DlnaDmrDevice(MediaPlayerDevice):
     """Representation of a DLNA DMR device."""
 
-    def __init__(self, hass, url, name, factory, **additional_configuration):
+    def __init__(self, hass, url, name, factory):
         """Initializer."""
         self.hass = hass
         self._url = url
         self._name = name
         self._factory = factory
-        self._additional_configuration = additional_configuration
 
         self._notify_view = hass.data[__name__]['notify_view']
 
