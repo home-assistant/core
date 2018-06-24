@@ -39,7 +39,7 @@ REQUIREMENTS = ['async-upnp-client==0.10.0']
 
 DEPENDENCIES = ['http']
 
-DEFAULT_NAME = 'DLNA_DMR'
+DEFAULT_NAME = 'DLNA Digital Media Renderer'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
