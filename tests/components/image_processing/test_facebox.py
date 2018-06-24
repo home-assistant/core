@@ -85,11 +85,25 @@ def test_valid_file_path():
 
 
 @pytest.fixture
+def mock_access():
+    """Mock os.access."""
+    with patch('os.access', Mock(return_value=True)) as _mock_access:
+        yield _mock_access
+
+
+@pytest.fixture
 def mock_image():
     """Return a mock camera image."""
     with patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
                return_value=b'Test') as image:
         yield image
+
+
+@pytest.fixture
+def mock_isfile():
+    """Mock os.path.isfile."""
+    with patch('os.path.isfile', Mock(return_value=True)) as _mock_isfile:
+        yield _mock_isfile
 
 
 async def test_setup_platform(hass):
@@ -141,61 +155,6 @@ async def test_process_image(hass, mock_image):
             PARSED_FACES[0][fb.ATTR_BOUNDING_BOX])
 
 
-@patch('os.access', Mock(return_value=True))
-@patch('os.path.isfile', Mock(return_value=True))
-async def test_teach_service(hass):
-    """Test teaching of facebox."""
-    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
-    assert hass.states.get(VALID_ENTITY_ID)
-
-    teach_events = []
-
-    @callback
-    def mock_teach_event(event):
-        """Mock event."""
-        teach_events.append(event)
-
-    hass.bus.async_listen(
-        'image_processing.teach_classifier', mock_teach_event)
-
-    with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
-        mock_req.post(url, status_code=200)
-        data = {ATTR_ENTITY_ID: VALID_ENTITY_ID,
-                ATTR_NAME: MOCK_NAME,
-                fb.FILE_PATH: MOCK_FILE_PATH}
-        await hass.services.async_call(ip.DOMAIN,
-                                       fb.SERVICE_FACEBOX_TEACH_FACE,
-                                       service_data=data)
-        await hass.async_block_till_done()
-
-    assert len(teach_events) == 1
-    assert teach_events[0].data[fb.ATTR_CLASSIFIER] == fb.CLASSIFIER
-    assert teach_events[0].data[ATTR_NAME] == MOCK_NAME
-    assert teach_events[0].data[fb.FILE_PATH] == MOCK_FILE_PATH
-    assert teach_events[0].data['success']
-    assert not teach_events[0].data['message']
-
-    # Now test the failed teaching.
-    with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
-        mock_req.post(url, status_code=400, text=MOCK_ERROR)
-        data = {ATTR_ENTITY_ID: VALID_ENTITY_ID,
-                ATTR_NAME: MOCK_NAME,
-                fb.FILE_PATH: MOCK_FILE_PATH}
-        await hass.services.async_call(ip.DOMAIN,
-                                       fb.SERVICE_FACEBOX_TEACH_FACE,
-                                       service_data=data)
-        await hass.async_block_till_done()
-
-    assert len(teach_events) == 2
-    assert teach_events[1].data[fb.ATTR_CLASSIFIER] == fb.CLASSIFIER
-    assert teach_events[1].data[ATTR_NAME] == MOCK_NAME
-    assert teach_events[1].data[fb.FILE_PATH] == MOCK_FILE_PATH
-    assert not teach_events[1].data['success']
-    assert teach_events[1].data['message'] == MOCK_ERROR
-
-
 async def test_connection_error(hass, mock_image):
     """Test connection error."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
@@ -229,3 +188,56 @@ async def test_setup_platform_with_name(hass):
     assert hass.states.get(NAMED_ENTITY_ID)
     state = hass.states.get(NAMED_ENTITY_ID)
     assert state.attributes.get(CONF_FRIENDLY_NAME) == MOCK_NAME
+
+
+async def test_teach_service(hass, mock_image, mock_isfile, mock_access):
+    """Test teaching of facebox."""
+    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    assert hass.states.get(VALID_ENTITY_ID)
+
+    teach_events = []
+
+    @callback
+    def mock_teach_event(event):
+        """Mock event."""
+        teach_events.append(event)
+
+    hass.bus.async_listen(
+        'image_processing.teach_classifier', mock_teach_event)
+
+    with requests_mock.Mocker() as mock_req:
+        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
+        mock_req.post(url, status_code=200)
+        data = {ATTR_ENTITY_ID: VALID_ENTITY_ID,
+                ATTR_NAME: MOCK_NAME,
+                fb.FILE_PATH: MOCK_FILE_PATH}
+        await hass.services.async_call(ip.DOMAIN,
+                                       fb.SERVICE_TEACH_FACE,
+                                       service_data=data)
+        await hass.async_block_till_done()
+
+    assert len(teach_events) == 1
+    assert teach_events[0].data[fb.ATTR_CLASSIFIER] == fb.CLASSIFIER
+    assert teach_events[0].data[ATTR_NAME] == MOCK_NAME
+    assert teach_events[0].data[fb.FILE_PATH] == MOCK_FILE_PATH
+    assert teach_events[0].data['success']
+    assert not teach_events[0].data['message']
+
+    # Now test the failed teaching.
+    with requests_mock.Mocker() as mock_req:
+        url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
+        mock_req.post(url, status_code=400, text=MOCK_ERROR)
+        data = {ATTR_ENTITY_ID: VALID_ENTITY_ID,
+                ATTR_NAME: MOCK_NAME,
+                fb.FILE_PATH: MOCK_FILE_PATH}
+        await hass.services.async_call(ip.DOMAIN,
+                                       fb.SERVICE_TEACH_FACE,
+                                       service_data=data)
+        await hass.async_block_till_done()
+
+    assert len(teach_events) == 2
+    assert teach_events[1].data[fb.ATTR_CLASSIFIER] == fb.CLASSIFIER
+    assert teach_events[1].data[ATTR_NAME] == MOCK_NAME
+    assert teach_events[1].data[fb.FILE_PATH] == MOCK_FILE_PATH
+    assert not teach_events[1].data['success']
+    assert teach_events[1].data['message'] == MOCK_ERROR
