@@ -429,9 +429,6 @@ http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b89974819
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
 
-# homeassistant.components.neato
-https://github.com/jabesq/pybotvac/archive/v0.0.6.zip#pybotvac==0.0.6
-
 # homeassistant.components.sensor.gtfs
 https://github.com/robbiet480/pygtfs/archive/00546724e4bbcb3053110d844ca44e2246267dd8.zip#pygtfs==0.1.3
 
@@ -762,6 +759,9 @@ pyblackbird==0.5
 
 # homeassistant.components.device_tracker.bluetooth_tracker
 # pybluez==0.22
+
+# homeassistant.components.neato
+pybotvac==0.0.7
 
 # homeassistant.components.media_player.channels
 pychannels==1.0.0
