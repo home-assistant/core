@@ -25,9 +25,22 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by Dark Sky"
 
+# Language Supported Codes
+LANGUAGE_CODES = [
+    'ar', 'az', 'be', 'bg', 'bs', 'ca',
+    'cs', 'da', 'de', 'el', 'en', 'es',
+    'et', 'fi', 'fr', 'hr', 'hu', 'id',
+    'is', 'it', 'ja', 'ka', 'kw', 'nb',
+    'nl', 'pl', 'pt', 'ro', 'ru', 'sk',
+    'sl', 'sr', 'sv', 'tet', 'tr', 'uk',
+    'x-pig-latin', 'zh', 'zh-tw',
+]
+
 CONF_UNITS = 'units'
+CONF_LANGUAGE = 'language'
 
 DEFAULT_NAME = 'Dark Sky'
+DEFAULT_LANGUAGE = 'en'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -35,6 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LONGITUDE): cv.longitude,
     vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_LANGUAGE,
+                 default=DEFAULT_LANGUAGE): vol.In(LANGUAGE_CODES),
 })
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=3)
@@ -44,15 +59,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dark Sky weather."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config.get(CONF_NAME)
+    name = config[CONF_NAME]
+    lang = config[CONF_LANGUAGE]
+    api_key = config[CONF_API_KEY]
 
     units = config.get(CONF_UNITS)
     if not units:
         units = 'si' if hass.config.units.is_metric else 'us'
 
-    dark_sky = DarkSkyData(
-        config.get(CONF_API_KEY), latitude, longitude, units)
-
+    dark_sky = DarkSkyData(api_key, latitude, longitude, units, lang)
     add_devices([DarkSkyWeather(name, dark_sky)], True)
 
 
@@ -132,12 +147,13 @@ class DarkSkyWeather(WeatherEntity):
 class DarkSkyData(object):
     """Get the latest data from Dark Sky."""
 
-    def __init__(self, api_key, latitude, longitude, units):
+    def __init__(self, api_key, latitude, longitude, units, lang):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
         self.longitude = longitude
         self.requested_units = units
+        self.language = lang
 
         self.data = None
         self.currently = None
@@ -152,7 +168,7 @@ class DarkSkyData(object):
         try:
             self.data = forecastio.load_forecast(
                 self._api_key, self.latitude, self.longitude,
-                units=self.requested_units)
+                units=self.requested_units, lang=self.language)
             self.currently = self.data.currently()
             self.hourly = self.data.hourly()
             self.daily = self.data.daily()
