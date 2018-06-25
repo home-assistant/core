@@ -18,7 +18,7 @@ async def async_get_service(hass, config, discovery_info=None):
     return MySensorsNotificationService(hass)
 
 
-class MySensorsNotificationDevice(mysensors.MySensorsDevice):
+class MySensorsNotificationDevice(mysensors.device.MySensorsDevice):
     """Represent a MySensors Notification device."""
 
     def send_msg(self, msg):
