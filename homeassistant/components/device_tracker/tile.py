@@ -4,6 +4,7 @@ Support for Tile® Bluetooth trackers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.tile/
 """
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -109,11 +110,13 @@ class TileScanner(object):
         _LOGGER.debug('Updating Tile data')
 
         try:
-            tiles = await self._client.tiles.all(
-                whitelist=self._types, show_inactive=self._show_inactive)
+            progress = asyncio.ensure_future(
+                self._client.tiles.all(
+                    whitelist=self._types, show_inactive=self._show_inactive))
+            tiles = await progress
         except SessionExpiredError:
-            _LOGGER.warning('Session expired; trying again shortly')
-            await self._client.async_init()
+            _LOGGER.info('Session expired; trying again shortly')
+            asyncio.ensure_future(self._client.async_init())
             return
         except TileError as err:
             _LOGGER.error('There was an error while updating: %s', err)
