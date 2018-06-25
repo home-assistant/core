@@ -300,7 +300,8 @@ class IPDB(object):
                                              OpenClosedRelay)
 
         from insteonplm.states.dimmable import (DimmableSwitch,
-                                                DimmableSwitch_Fan)
+                                                DimmableSwitch_Fan,
+                                                DimmableRemote)
 
         from insteonplm.states.sensor import (VariableSensor,
                                               OnOffSensor,
@@ -328,6 +329,7 @@ class IPDB(object):
 
                        State(DimmableSwitch_Fan, 'fan'),
                        State(DimmableSwitch, 'light'),
+                       State(DimmableRemote, 'binary_sensor'),
 
                        State(X10DimmableSwitch, 'light'),
                        State(X10OnOffSwitch, 'switch'),
