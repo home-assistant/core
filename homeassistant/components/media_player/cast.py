@@ -4,6 +4,7 @@ Provide functionality to interact with Cast devices on the network.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.cast/
 """
+import asyncio
 import logging
 import threading
 from typing import Optional, Tuple
@@ -199,9 +200,13 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up Cast from a config entry."""
-    await _async_setup_platform(
-        hass, hass.data[CAST_DOMAIN].get('media_player', {}),
-        async_add_devices, None)
+    config = hass.data[CAST_DOMAIN].get('media_player', {})
+    if not isinstance(config, list):
+        config = [config]
+
+    await asyncio.wait([
+        _async_setup_platform(hass, cfg, async_add_devices, None)
+        for cfg in config])
 
 
 async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
