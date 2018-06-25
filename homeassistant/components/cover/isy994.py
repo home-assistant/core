@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.isy994/
 """
 import logging
-from typing import Callable  # noqa
+from typing import Callable
 
 from homeassistant.components.cover import CoverDevice, DOMAIN
 from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,

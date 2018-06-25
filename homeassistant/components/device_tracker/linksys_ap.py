@@ -61,7 +61,6 @@ class LinksysAPDeviceScanner(DeviceScanner):
 
         return self.last_results
 
-    # pylint: disable=no-self-use
     def get_device_name(self, device):
         """
         Return the name (if known) of the device.
