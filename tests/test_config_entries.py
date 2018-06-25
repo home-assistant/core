@@ -318,4 +318,4 @@ async def test_loading_default_config(hass):
     with patch('homeassistant.util.json.open', side_effect=FileNotFoundError):
         await manager.async_load()
 
-    assert len(manager.async_entries) == 0
+    assert len(manager.async_entries()) == 0
