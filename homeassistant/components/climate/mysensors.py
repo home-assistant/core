@@ -26,9 +26,8 @@ DICT_MYS_TO_HA = {
     'Off': STATE_OFF,
 }
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_FAN_MODE |
-                 SUPPORT_OPERATION_MODE)
+FAN_LIST = ['Auto', 'Min', 'Normal', 'Max']
+OPERATION_LIST = [STATE_OFF, STATE_AUTO, STATE_COOL, STATE_HEAT]
 
 
 async def async_setup_platform(
@@ -45,7 +44,18 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        features = SUPPORT_OPERATION_MODE
+        set_req = self.gateway.const.SetReq
+        if set_req.V_HVAC_SPEED in self._values:
+            features = features | SUPPORT_FAN_MODE
+        if (set_req.V_HVAC_SETPOINT_COOL in self._values and
+                set_req.V_HVAC_SETPOINT_HEAT in self._values):
+            features = (
+                features | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                SUPPORT_TARGET_TEMPERATURE_LOW)
+        else:
+            features = features | SUPPORT_TARGET_TEMPERATURE
+        return features
 
     @property
     def assumed_state(self):
@@ -103,7 +113,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
     @property
     def operation_list(self):
         """List of available operation modes."""
-        return [STATE_OFF, STATE_AUTO, STATE_COOL, STATE_HEAT]
+        return OPERATION_LIST
 
     @property
     def current_fan_mode(self):
@@ -113,7 +123,7 @@ class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
     @property
     def fan_list(self):
         """List of available fan modes."""
-        return ['Auto', 'Min', 'Normal', 'Max']
+        return FAN_LIST
 
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
