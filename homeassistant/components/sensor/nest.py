@@ -145,7 +145,8 @@ class NestBasicSensor(NestSensorDevice):
         elif self.variable in PROTECT_SENSOR_TYPES \
                 and self.variable != 'color_status':
             # keep backward compatibility
-            self._state = getattr(self.device, self.variable).capitalize()
+            state = getattr(self.device, self.variable)
+            self._state = state.capitalize() if state is not None else None
         else:
             self._state = getattr(self.device, self.variable)
 
