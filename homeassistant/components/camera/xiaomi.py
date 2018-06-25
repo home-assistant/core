@@ -119,8 +119,8 @@ class XiaomiCamera(Camera):
                 _LOGGER.warning("There don't appear to be any uploaded videos")
                 return False
 
-            latest_dir = dirs[-1]
-            ftp.cwd(latest_dir)
+        latest_dir = dirs[-1]
+        ftp.cwd(latest_dir)
         videos = [v for v in ftp.nlst() if '.tmp' not in v]
         if not videos:
             _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
