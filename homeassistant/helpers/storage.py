@@ -91,7 +91,7 @@ class Store:
 
         if delay is None:
             self._async_cleanup_stop_listener()
-            await self._handle_write_data()
+            await self._async_handle_write_data()
             return
 
         self._unsub_delay_listener = async_call_later(
@@ -124,15 +124,15 @@ class Store:
         """Handle a delayed write callback."""
         self._unsub_delay_listener = None
         self._async_cleanup_stop_listener()
-        await self._handle_write_data()
+        await self._async_handle_write_data()
 
     async def _async_callback_stop_write(self, _event):
         """Handle a write because Home Assistant is stopping."""
         self._unsub_stop_listener = None
         self._async_cleanup_delay_listener()
-        await self._handle_write_data()
+        await self._async_handle_write_data()
 
-    async def _handle_write_data(self, *_args):
+    async def _async_handle_write_data(self, *_args):
         """Handler to handle writing the config."""
         data = self._data
         self._data = None
@@ -141,9 +141,7 @@ class Store:
             try:
                 await self.hass.async_add_executor_job(
                     self._write_data, self.path, data)
-            except json.SerializationError as err:
-                _LOGGER.error('Error writing config for %s: %s', self.key, err)
-            except json.WriteError as err:
+            except (json.SerializationError, json.WriteError) as err:
                 _LOGGER.error('Error writing config for %s: %s', self.key, err)
 
     def _write_data(self, path: str, data: Dict):
