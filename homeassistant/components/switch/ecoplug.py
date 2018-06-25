@@ -1,15 +1,14 @@
-# """
-# EcoPlugs Component for aut-discovering Wion and EcoPlugs automatically
+"""
+EcoPlugs Component for aut-discovering Wion and EcoPlugs automatically
 
-# For more details about this platform, please refer to the documentation
-# https://home-assistant.io/components/ecoplug/
-# """
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/ecoplug/
+"""
 
 import logging
 from datetime import timedelta
 
-from homeassistant.const import (DEVICE_DEFAULT_NAME, 
-    EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (DEVICE_DEFAULT_NAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.switch import SwitchDevice
 
 DEFAULT_INVERT_LOGIC = False
@@ -17,8 +16,8 @@ DEFAULT_INVERT_LOGIC = False
 DOMAIN = 'ecoplug'
 REQUIREMENTS = ['pyecoplug==0.0.5']
 _LOGGER = logging.getLogger(__name__)
-
 SCAN_INTERVAL = timedelta(seconds=5)
+
 
 class EcoPlugSwitch(SwitchDevice):
     def __init__(self, plug):
@@ -57,12 +56,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     discovered = {}
     def add(plug):
-        if not plug.name in discovered:
+        if plug.name not in discovered:
             add_devices([EcoPlugSwitch(plug)])
             discovered[plug.name] = plug
 
     def remove(plug):
-        # Is there a way to remove devices??
+        """Is there a way to remove devices??"""
         pass
 
     disco = EcoDiscovery(add, remove)
