@@ -21,7 +21,7 @@ TOPIC_MATCHER = re.compile(
 
 SUPPORTED_COMPONENTS = [
     'binary_sensor', 'camera', 'cover', 'fan',
-    'light', 'sensor', 'switch', 'lock']
+    'light', 'sensor', 'switch', 'lock', 'climate']
 
 ALLOWED_PLATFORMS = {
     'binary_sensor': ['mqtt'],
@@ -32,6 +32,7 @@ ALLOWED_PLATFORMS = {
     'lock': ['mqtt'],
     'sensor': ['mqtt'],
     'switch': ['mqtt'],
+    'climate': ['mqtt'],
 }
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
