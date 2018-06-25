@@ -77,7 +77,7 @@ class YiCamera(Camera):
         """Retrieve the latest video file from the customized Yi FTP server."""
         from aioftp import Client, StatusCodeError
 
-        ftp = Client()
+        ftp = Client(loop=self.hass.loop)
         try:
             await ftp.connect(self.host)
             await ftp.login(self.user, self.passwd)
