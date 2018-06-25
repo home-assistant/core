@@ -14,22 +14,22 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
 import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_ATTRIBUTION = "Data provided by magicseaweed.com"
-CONF_EXTENDED_ATTRIBUTES = 'extended_attributes'
 CONF_HOURS = 'hours'
 CONF_SPOT_ID = 'spot_id'
 CONF_UNITS = 'units'
 CONF_UPDATE_INTERVAL = 'update_interval'
 
-ICON = 'mdi:waves'
-
 DEFAULT_UNIT = 'us'
 DEFAULT_NAME = 'MSW'
+DEFAULT_ATTRIBUTION = "Data provided by magicseaweed.com"
+
+ICON = 'mdi:waves'
 
 API_URL = 'http://magicseaweed.com/api/{}/forecast/'
 
@@ -41,6 +41,7 @@ SENSOR_TYPES = {
     'swell_forecast': ['Forecast'],
 }
 
+UNITS = ['eu', 'uk', 'us']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
@@ -50,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOURS, default=None):
         vol.All(cv.ensure_list, [vol.In(HOURS)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_UNITS): vol.In(['eu', 'uk', 'us']),
+    vol.Optional(CONF_UNITS): vol.In(UNITS),
     vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
 })
@@ -63,16 +64,16 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Magicseaweed sensor."""
     name = config.get(CONF_NAME)
-    spot_id = config.get(CONF_SPOT_ID)
-    api_key = config.get(CONF_API_KEY)
+    spot_id = config[CONF_SPOT_ID]
+    api_key = config[CONF_API_KEY]
     hours = config.get(CONF_HOURS)
 
     if CONF_UNITS in config:
         units = config.get(CONF_UNITS)
     elif hass.config.units.is_metric:
-        units = 'eu'
+        units = UNITS[0]
     else:
-        units = 'us'
+        units = UNITS[2]
 
     forecast_data = MagicSeaweedData(
         api_key=api_key,
@@ -108,13 +109,14 @@ class MagicSeaweedSensor(Entity):
                  hour=None):
         """Initialize the sensor."""
         self.client_name = name
-        self._name = SENSOR_TYPES[sensor_type][0]
         self.data = forecast_data
-        self.type = sensor_type
         self.hour = hour
-        self._unit_system = unit_system
-        self._state = None
+        self.type = sensor_type
+        self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._name = SENSOR_TYPES[sensor_type][0]
         self._icon = None
+        self._state = None
+        self._unit_system = unit_system
         self._unit_of_measurement = None
 
     @property
@@ -150,56 +152,7 @@ class MagicSeaweedSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        if self.type == 'swell_forecast' and self.hour is None:
-            summaries = {ATTR_ATTRIBUTION: CONF_ATTRIBUTION}
-            for hour, data in self.data.hourly.items():
-                occurs = hour
-                swell = data.get('swell')
-                summary = "{} - {} {}".format(
-                    swell.get('minBreakingHeight'),
-                    swell.get('maxBreakingHeight'),
-                    swell.get('unit'))
-                summaries[occurs] = summary
-            return summaries
-
-        if self.hour is None:
-            forecast = self.data.currently
-        else:
-            forecast = self.data.hourly[self.hour]
-
-        occurs = datetime.utcfromtimestamp(
-            forecast.get('localTimestamp')).strftime("%a %-I %p")
-        utc_issue = datetime.utcfromtimestamp(
-            forecast.get('issueTimestamp')).strftime("%a %-I %p")
-        swell = forecast.get('swell')
-        wind = forecast.get('wind', None)
-        condition = forecast.get('condition', None)
-        rating = "{} stars, {} faded".format(
-            forecast.get('solidRating') + forecast.get('fadedRating'),
-            forecast.get('solidRating'))
-
-        return {
-            'air_pressure': "{}{}".format(condition.get('pressure'),
-                                          condition.get('unitPressure')),
-            'air_temp': "{}° {}".format(condition.get('temperature'),
-                                        condition.get('unit')),
-            'rating': rating,
-            'begins': occurs,
-            'issued': utc_issue,
-            'max_breaking_height': swell.get('maxBreakingHeight'),
-            'min_breaking_height': swell.get('minBreakingHeight'),
-            'probability': "{}%".format(swell.get('probability')),
-            'swell_period': "{} seconds".format(
-                swell.get('components', {})
-                .get('combined', {})
-                .get('period', {})),
-            'wind_chill': "{}°".format(wind.get('chill')),
-            'wind_direction': "{}° {}".format(wind.get('direction'),
-                                              wind.get('compassDirection')),
-            'wind_gusts': "{} {}".format(wind.get('gusts'), wind.get('unit')),
-            'wind_speed': "{} {}".format(wind.get('speed'), wind.get('unit')),
-            ATTR_ATTRIBUTION: CONF_ATTRIBUTION
-            }
+        return self._attrs
 
     def update(self):
         """Get the latest data from Magicseaweed and updates the states."""
@@ -209,7 +162,17 @@ class MagicSeaweedSensor(Entity):
         else:
             forecast = self.data.hourly[self.hour]
 
+        occurs = dt_util.utc_from_timestamp(
+            forecast.get('localTimestamp')).strftime("%a %-I %p")
+        utc_issue = dt_util.utc_from_timestamp(
+            forecast.get('issueTimestamp')).strftime("%a %-I %p")
         swell = forecast.get('swell')
+        wind = forecast.get('wind', None)
+        condition = forecast.get('condition', None)
+        rating = "{} stars, {} faded".format(
+            forecast.get('solidRating') + forecast.get('fadedRating'),
+            forecast.get('solidRating'))
+
         self._unit_of_measurement = swell.get('unit', None)
         if self.type == 'min_breaking_swell':
             self._state = swell.get('minBreakingHeight')
@@ -220,6 +183,41 @@ class MagicSeaweedSensor(Entity):
                 swell.get('minBreakingHeight'),
                 swell.get('maxBreakingHeight'))
             self._state = summary
+            if self.hour is None:
+                for hour, data in self.data.hourly.items():
+                    occurs = hour
+                    hr_swell = data.get('swell')
+                    hr_summary = "{} - {} {}".format(
+                        hr_swell.get('minBreakingHeight'),
+                        hr_swell.get('maxBreakingHeight'),
+                        hr_swell.get('unit'))
+                    self._attrs[occurs] = hr_summary
+
+        if self.type != 'swell_forecast':
+            self._attrs.update({
+                'air_pressure': "{}{}".format(condition.get('pressure'),
+                                              condition.get('unitPressure')),
+                'air_temp': "{}° {}".format(condition.get('temperature'),
+                                            condition.get('unit')),
+                'rating': rating,
+                'begins': occurs,
+                'issued': utc_issue,
+                'max_breaking_height': swell.get('maxBreakingHeight'),
+                'min_breaking_height': swell.get('minBreakingHeight'),
+                'probability': "{}%".format(swell.get('probability')),
+                'swell_period': "{} seconds".format(
+                    swell.get('components', {})
+                    .get('combined', {})
+                    .get('period', {})),
+                'wind_chill': "{}°".format(wind.get('chill')),
+                'wind_direction': "{}° {}".format(
+                    wind.get('direction'),
+                    wind.get('compassDirection')),
+                'wind_gusts': "{} {}".format(wind.get('gusts'),
+                                             wind.get('unit')),
+                'wind_speed': "{} {}".format(wind.get('speed'),
+                                             wind.get('unit')),
+            })
 
 
 class MagicSeaweedData(object):
