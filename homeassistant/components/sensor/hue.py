@@ -491,22 +491,22 @@ class ZLLTemperatureSensor(ZLLSensor):
 
 
 def create_sensor(sensor, request_bridge_update, bridge):
-    type = sensor.type
-    if type == TYPE_CLIP_GENERICSTATUS:
+    sensor_type = sensor.type
+    if sensor_type == TYPE_CLIP_GENERICSTATUS:
         return CLIPGenericStatus(sensor, request_bridge_update, bridge)
-    elif type == TYPE_CLIP_HUMIDITY:
+    elif sensor_type == TYPE_CLIP_HUMIDITY:
         return CLIPHumidity(sensor, request_bridge_update, bridge)
-    elif type == TYPE_CLIP_LIGHTLEVEL:
+    elif sensor_type == TYPE_CLIP_LIGHTLEVEL:
         return CLIPLightLevel(sensor, request_bridge_update, bridge)
-    elif type == TYPE_CLIP_SWITCH:
+    elif sensor_type == TYPE_CLIP_SWITCH:
         return CLIPSwitch(sensor, request_bridge_update, bridge)
-    elif type == TYPE_CLIP_TEMPERATURE:
+    elif sensor_type == TYPE_CLIP_TEMPERATURE:
         return CLIPTemperature(sensor, request_bridge_update, bridge)
-    elif type == TYPE_ZGP_SWITCH:
+    elif sensor_type == TYPE_ZGP_SWITCH:
         return ZGPSwitch(sensor, request_bridge_update, bridge)
-    elif type == TYPE_ZLL_LIGHTLEVEL:
+    elif sensor_type == TYPE_ZLL_LIGHTLEVEL:
         return ZLLLightLevelSensor(sensor, request_bridge_update, bridge)
-    elif type == TYPE_ZLL_SWITCH:
+    elif sensor_type == TYPE_ZLL_SWITCH:
         return ZLLSwitch(sensor, request_bridge_update, bridge)
-    elif type == TYPE_ZLL_TEMPERATURE:
+    elif sensor_type == TYPE_ZLL_TEMPERATURE:
         return ZLLTemperatureSensor(sensor, request_bridge_update, bridge)

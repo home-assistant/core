@@ -324,14 +324,14 @@ class ZLLPresence(BinarySensorDevice):
 
 
 def create_binary_sensor(sensor, request_bridge_update, bridge):
-    type = sensor.type
-    if type == TYPE_CLIP_GENERICFLAG:
+    binary_sensor_type = sensor.type
+    if binary_sensor_type == TYPE_CLIP_GENERICFLAG:
         return CLIPGenericFlag(sensor, request_bridge_update, bridge)
-    elif type == TYPE_CLIP_OPENCLOSE:
+    elif binary_sensor_type == TYPE_CLIP_OPENCLOSE:
         return CLIPOpenClose(sensor, request_bridge_update, bridge)
-    elif type == TYPE_CLIP_PRESENCE:
+    elif binary_sensor_type == TYPE_CLIP_PRESENCE:
         return CLIPPresence(sensor, request_bridge_update, bridge)
-    elif type == TYPE_DAYLIGHT:
+    elif binary_sensor_type == TYPE_DAYLIGHT:
         return Daylight(sensor, request_bridge_update, bridge)
-    elif type == TYPE_ZLL_PRESENCE:
+    elif binary_sensor_type == TYPE_ZLL_PRESENCE:
         return ZLLPresence(sensor, request_bridge_update, bridge)
