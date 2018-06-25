@@ -122,7 +122,8 @@ async def async_setup_entry(hass, entry):
     _LOGGER.debug("proceeding with setup")
     conf = hass.data.get(DATA_NEST_CONFIG, {})
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
-    await hass.async_add_job(hass.data[DATA_NEST].initialize)
+    if not await hass.async_add_job(hass.data[DATA_NEST].initialize):
+        return False
 
     for component in 'climate', 'camera', 'sensor', 'binary_sensor':
         hass.async_add_job(hass.config_entries.async_forward_entry_setup(
@@ -192,63 +193,73 @@ class NestDevice(object):
 
     def initialize(self):
         """Initialize Nest."""
-        if self.local_structure is None:
-            self.local_structure = [s.name for s in self.nest.structures]
+        from nest.nest import AuthorizationError, APIError
+        try:
+            # Do not optimize next statement, it is here for initialize
+            # persistence Nest API connection.
+            structure_names = [s.name for s in self.nest.structures]
+            if self.local_structure is None:
+                self.local_structure = structure_names
+
+        except (AuthorizationError, APIError, socket.error) as err:
+            _LOGGER.error(
+                "Connection error while access Nest web service: %s", err)
+            return False
+        return True
 
     def structures(self):
         """Generate a list of structures."""
+        from nest.nest import AuthorizationError, APIError
         try:
             for structure in self.nest.structures:
-                if structure.name in self.local_structure:
-                    yield structure
-                else:
+                if structure.name not in self.local_structure:
                     _LOGGER.debug("Ignoring structure %s, not in %s",
                                   structure.name, self.local_structure)
-        except socket.error:
+                    continue
+                yield structure
+
+        except (AuthorizationError, APIError, socket.error) as err:
             _LOGGER.error(
-                "Connection error logging into the nest web service.")
+                "Connection error while access Nest web service: %s", err)
 
     def thermostats(self):
-        """Generate a list of thermostats and their location."""
-        try:
-            for structure in self.nest.structures:
-                if structure.name in self.local_structure:
-                    for device in structure.thermostats:
-                        yield (structure, device)
-                else:
-                    _LOGGER.debug("Ignoring structure %s, not in %s",
-                                  structure.name, self.local_structure)
-        except socket.error:
-            _LOGGER.error(
-                "Connection error logging into the nest web service.")
+        """Generate a list of thermostats."""
+        return self._devices('thermostats')
 
     def smoke_co_alarms(self):
         """Generate a list of smoke co alarms."""
-        try:
-            for structure in self.nest.structures:
-                if structure.name in self.local_structure:
-                    for device in structure.smoke_co_alarms:
-                        yield (structure, device)
-                else:
-                    _LOGGER.debug("Ignoring structure %s, not in %s",
-                                  structure.name, self.local_structure)
-        except socket.error:
-            _LOGGER.error(
-                "Connection error logging into the nest web service.")
+        return self._devices('smoke_co_alarms')
 
     def cameras(self):
         """Generate a list of cameras."""
+        return self._devices('cameras')
+
+    def _devices(self, device_type):
+        """Generate a list of Nest devices."""
+        from nest.nest import AuthorizationError, APIError
         try:
             for structure in self.nest.structures:
-                if structure.name in self.local_structure:
-                    for device in structure.cameras:
-                        yield (structure, device)
-                else:
+                if structure.name not in self.local_structure:
                     _LOGGER.debug("Ignoring structure %s, not in %s",
                                   structure.name, self.local_structure)
-        except socket.error:
+                    continue
+
+                for device in getattr(structure, device_type, []):
+                    try:
+                        # Do not optimize next statement,
+                        # it is here for verify Nest API permission.
+                        device.name_long
+                    except KeyError:
+                        _LOGGER.warning("Cannot retrieve device name for [%s]"
+                                        ", please check your Nest developer "
+                                        "account permission settings.",
+                                        device.serial)
+                        continue
+                    yield (structure, device)
+
+        except (AuthorizationError, APIError, socket.error) as err:
             _LOGGER.error(
-                "Connection error logging into the nest web service.")
+                "Connection error while access Nest web service: %s", err)
 
 
 class NestSensorDevice(Entity):
