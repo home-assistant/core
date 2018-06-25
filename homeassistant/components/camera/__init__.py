@@ -322,6 +322,7 @@ class Camera(Entity):
         except asyncio.CancelledError:
             _LOGGER.debug("Stream closed by frontend.")
             response = None
+            raise
 
         finally:
             if response is not None:
