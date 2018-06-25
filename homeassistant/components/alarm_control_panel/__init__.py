@@ -154,7 +154,6 @@ def async_setup(hass, config):
     return True
 
 
-# pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
     """An abstract class for alarm control devices."""
 

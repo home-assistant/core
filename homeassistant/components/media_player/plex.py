@@ -747,7 +747,6 @@ class PlexClient(MediaPlayerDevice):
         if self.device and 'playback' in self._device_protocol_capabilities:
             self.device.skipPrevious(self._active_media_plexapi_type)
 
-    # pylint: disable=W0613
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         if not (self.device and

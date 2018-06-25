@@ -121,7 +121,6 @@ class BitcoinSensor(Entity):
         stats = self.data.stats
         ticker = self.data.ticker
 
-        # pylint: disable=no-member
         if self.type == 'exchangerate':
             self._state = ticker[self._currency].p15min
             self._unit_of_measurement = self._currency

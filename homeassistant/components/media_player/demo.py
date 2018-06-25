@@ -295,7 +295,6 @@ class DemoMusicPlayer(AbstractDemoPlayer):
     @property
     def media_album_name(self):
         """Return the album of current playing media (Music track only)."""
-        # pylint: disable=no-self-use
         return "Bounzz"
 
     @property

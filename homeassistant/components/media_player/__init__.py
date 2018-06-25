@@ -471,7 +471,6 @@ class MediaPlayerDevice(Entity):
 
     _access_token = None
 
-    # pylint: disable=no-self-use
     # Implement these for your media player
     @property
     def state(self):

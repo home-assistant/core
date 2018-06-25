@@ -226,7 +226,6 @@ class HomeKitEntity(Entity):
         self._securecon.put('/characteristics', body)
 
 
-# pylint: too-many-function-args
 def setup(hass, config):
     """Set up for Homekit devices."""
     def discovery_dispatch(service, discovery_info):

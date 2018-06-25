@@ -72,7 +72,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class OpenGarageCover(CoverDevice):
     """Representation of a OpenGarage cover."""
 
-    # pylint: disable=no-self-use
     def __init__(self, hass, args):
         """Initialize the cover."""
         self.opengarage_url = 'http://{}:{}'.format(
