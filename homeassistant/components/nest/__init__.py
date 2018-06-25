@@ -23,7 +23,7 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN
 from . import local_auth
 
-REQUIREMENTS = ['python-nest==4.0.2']
+REQUIREMENTS = ['python-nest==4.0.3']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -86,6 +86,7 @@ async def async_nest_update_event_broker(hass, nest):
                 _LOGGER.debug("dispatching nest data update")
                 async_dispatcher_send(hass, SIGNAL_NEST_UPDATE)
             else:
+                _LOGGER.debug("stop listening nest.update_event")
                 return
 
 
