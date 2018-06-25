@@ -73,7 +73,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class GaradgetCover(CoverDevice):
     """Representation of a Garadget cover."""
 
-    # pylint: disable=no-self-use
     def __init__(self, hass, args):
         """Initialize the cover."""
         self.particle_url = 'https://api.particle.io'

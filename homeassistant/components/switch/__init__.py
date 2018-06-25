@@ -135,7 +135,6 @@ async def async_setup(hass, config):
 class SwitchDevice(ToggleEntity):
     """Representation of a switch."""
 
-    # pylint: disable=no-self-use
     @property
     def current_power_w(self):
         """Return the current power usage in W."""

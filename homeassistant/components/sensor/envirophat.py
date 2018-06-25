@@ -55,7 +55,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sense HAT sensor platform."""
     try:
-        # pylint: disable=import-error
         import envirophat
     except OSError:
         _LOGGER.error("No Enviro pHAT was found.")
@@ -175,7 +174,6 @@ class EnvirophatData(object):
         self.light_red, self.light_green, self.light_blue = \
             self.envirophat.light.rgb()
         if self.use_leds:
-            # pylint: disable=no-value-for-parameter
             self.envirophat.leds.off()
 
         # accelerometer readings in G

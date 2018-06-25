@@ -152,7 +152,6 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         import cv2  # pylint: disable=import-error
         import numpy
 
-        # pylint: disable=no-member
         cv_image = cv2.imdecode(
             numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
@@ -168,7 +167,6 @@ class OpenCVImageProcessor(ImageProcessingEntity):
             else:
                 path = classifier
 
-            # pylint: disable=no-member
             cascade = cv2.CascadeClassifier(path)
 
             detections = cascade.detectMultiScale(

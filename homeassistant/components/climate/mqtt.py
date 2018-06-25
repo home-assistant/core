@@ -638,11 +638,9 @@ class MqttClimate(MqttAvailability, ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        # pylint: disable=no-member
         return self._min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        # pylint: disable=no-member
         return self._max_temp

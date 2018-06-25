@@ -4,7 +4,7 @@ Support for Sesame, by CANDY HOUSE.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/lock.sesame/
 """
-from typing import Callable  # noqa
+from typing import Callable
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv

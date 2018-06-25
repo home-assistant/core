@@ -117,7 +117,7 @@ class YrSensor(Entity):
         return self._state
 
     @property
-    def should_poll(self):  # pylint: disable=no-self-use
+    def should_poll(self):
         """No polling needed."""
         return False
 

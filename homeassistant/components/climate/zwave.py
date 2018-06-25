@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.zwave/
 """
 # Because we do not compile openzwave on CI
-# pylint: disable=import-error
 import logging
 from homeassistant.components.climate import (
     DOMAIN, ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
