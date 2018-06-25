@@ -52,7 +52,7 @@ async def test_loading_non_existing(hass, store):
     """Test we can save and load data."""
     with patch('homeassistant.util.json.open', side_effect=FileNotFoundError):
         data = await store.async_load()
-    assert data == {}
+    assert data is None
 
 
 async def test_saving_with_delay(hass, store, mock_save):
