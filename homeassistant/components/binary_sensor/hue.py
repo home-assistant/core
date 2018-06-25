@@ -7,11 +7,11 @@ https://home-assistant.io/components/sensor.hue/
 import asyncio
 from datetime import timedelta
 import logging
-
 import async_timeout
 
 from aiohue.sensors import (TYPE_CLIP_GENERICFLAG, TYPE_CLIP_OPENCLOSE, TYPE_CLIP_PRESENCE,
                             TYPE_DAYLIGHT, TYPE_ZLL_PRESENCE)
+
 import homeassistant.components.hue as hue
 from homeassistant.components.hue.const import (ATTR_LAST_UPDATED, ICON_DAY, ICON_NIGHT)
 from homeassistant.const import ATTR_BATTERY_LEVEL

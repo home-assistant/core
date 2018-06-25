@@ -7,7 +7,6 @@ https://home-assistant.io/components/sensor.hue/
 import asyncio
 from datetime import timedelta
 import logging
-
 import async_timeout
 
 from aiohue.sensors import (ZGP_SWITCH_BUTTON_1, ZGP_SWITCH_BUTTON_2, ZGP_SWITCH_BUTTON_3,
@@ -19,6 +18,7 @@ from aiohue.sensors import (ZGP_SWITCH_BUTTON_1, ZGP_SWITCH_BUTTON_2, ZGP_SWITCH
                             TYPE_CLIP_HUMIDITY, TYPE_CLIP_LIGHTLEVEL, TYPE_CLIP_TEMPERATURE,
                             TYPE_ZGP_SWITCH, TYPE_ZLL_SWITCH, TYPE_ZLL_LIGHTLEVEL,
                             TYPE_ZLL_TEMPERATURE, TYPE_CLIP_SWITCH)
+
 import homeassistant.components.hue as hue
 from homeassistant.components.hue.const import (ATTR_DARK, ATTR_DAYLIGHT, ATTR_LAST_UPDATED,
                                                 ICON_REMOTE, UOM_HUMIDITY, UOM_ILLUMINANCE)
