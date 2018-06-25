@@ -1,5 +1,5 @@
 # """
-# EcoPlugs Component for auto-discovering Wion and EcoPlugs. No setup necessary.
+# EcoPlugs Component for aut-discovering Wion and EcoPlugs automatically
 
 # For more details about this platform, please refer to the documentation
 # https://home-assistant.io/components/ecoplug/
@@ -8,10 +8,9 @@
 import logging
 from datetime import timedelta
 
-from homeassistant.const import (DEVICE_DEFAULT_NAME, ATTR_HIDDEN, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (DEVICE_DEFAULT_NAME, 
+    EVENT_HOMEASSISTANT_STOP)
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.helpers.event import track_time_change
 
 DEFAULT_INVERT_LOGIC = False
 
@@ -24,7 +23,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 class EcoPlugSwitch(SwitchDevice):
     def __init__(self, plug):
         self._plug = plug
-        self._name = plug.name
+        self._name = plug.name or DEVICE_DEFAULT_NAME
         self._state = self._plug.is_on()
 
     @property
