@@ -163,12 +163,11 @@ async def async_update_items(hass, bridge, async_add_devices,
     else:
         allowed_sensor_types = HUE_SENSORS
 
-    for item_id in api:
-        sensor = api[item_id]
+    for item_id, sensor in api.items():
         if sensor.type in allowed_sensor_types:
             if item_id not in current:
                 current[item_id] = create_sensor(
-                    api[item_id], request_bridge_update, bridge)
+                    sensor, request_bridge_update, bridge)
 
                 new_sensors.append(current[item_id])
                 _LOGGER.info('Added new Hue sensor: %s (Type: %s)',

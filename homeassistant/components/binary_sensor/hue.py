@@ -151,16 +151,15 @@ async def async_update_items(hass, bridge, async_add_devices,
     else:
         allowed_binary_sensor_types = HUE_BINARY_SENSORS
 
-    for item_id in api:
-        sensor = api[item_id]
-        if sensor.type in allowed_binary_sensor_types:
+    for item_id, binary_sensor in api.items():
+        if binary_sensor.type in allowed_binary_sensor_types:
             if item_id not in current:
                 current[item_id] = create_binary_sensor(
-                    api[item_id], request_bridge_update, bridge)
+                    binary_sensor, request_bridge_update, bridge)
 
                 new_sensors.append(current[item_id])
                 _LOGGER.info('Added new Hue binary sensor: %s (Type: %s)',
-                             sensor.name, sensor.type)
+                             binary_sensor.name, binary_sensor.type)
             elif item_id not in progress_waiting:
                 current[item_id].async_schedule_update_ha_state()
 
