@@ -1,13 +1,16 @@
 """Test the config manager."""
 import asyncio
+from datetime import timedelta
 from unittest.mock import MagicMock, patch, mock_open
 
 import pytest
 
 from homeassistant import config_entries, loader, data_entry_flow
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
-from tests.common import MockModule, mock_coro, MockConfigEntry
+from tests.common import (
+    MockModule, mock_coro, MockConfigEntry, async_fire_time_changed)
 
 
 @pytest.fixture
@@ -15,6 +18,7 @@ def manager(hass):
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
     manager._entries = []
+    manager._store._async_ensure_stop_listener = lambda: None
     hass.config_entries = manager
     return manager
 
@@ -151,7 +155,9 @@ def test_domains_gets_uniques(manager):
 @asyncio.coroutine
 def test_saving_and_loading(hass):
     """Test that we're saving and loading correctly."""
-    loader.set_component(hass, 'test', MockModule('test'))
+    loader.set_component(
+        hass, 'test',
+        MockModule('test', async_setup_entry=lambda *args: mock_coro(True)))
 
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
@@ -183,13 +189,12 @@ def test_saving_and_loading(hass):
     json_path = 'homeassistant.util.json.open'
 
     with patch('homeassistant.config_entries.HANDLERS.get',
-               return_value=Test2Flow), \
-            patch.object(config_entries, 'SAVE_DELAY', 0):
+               return_value=Test2Flow):
         yield from hass.config_entries.flow.async_init('test')
 
     with patch(json_path, mock_open(), create=True) as mock_write:
         # To trigger the call_later
-        yield from asyncio.sleep(0, loop=hass.loop)
+        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
         # To execute the save
         yield from hass.async_block_till_done()
 
@@ -199,7 +204,7 @@ def test_saving_and_loading(hass):
     # Now load written data in new config manager
     manager = config_entries.ConfigEntries(hass, {})
 
-    with patch('os.path.isfile', return_value=True), \
+    with patch('os.path.isfile', return_value=False), \
             patch(json_path, mock_open(read_data=written), create=True):
         yield from manager.async_load()
 
