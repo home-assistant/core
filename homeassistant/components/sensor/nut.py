@@ -36,7 +36,8 @@ SENSOR_TYPES = {
     'device.mfr': ['Device manufacturer', '', 'mdi:information-outline'],
     'device.serial': ['Device serial', '', 'mdi:information-outline'],
     'device.type': ['Device type', '', 'mdi:information-outline'],
-    'device.description': ['Device description', '', 'mdi:information-outline'],
+    'device.description':
+        ['Device description', '', 'mdi:information-outline'],
     'device.contact':
         ['Device administrator name', '', 'mdi:information-outline'],
     'device.location':
