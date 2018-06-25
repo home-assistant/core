@@ -59,16 +59,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dark Sky weather."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    name = config.get(CONF_NAME)
-    lang = config.get(CONF_LANGUAGE)
+    name = config[CONF_NAME]
+    lang = config[CONF_LANGUAGE]
+    api_key = config[CONF_API_KEY]
 
     units = config.get(CONF_UNITS)
     if not units:
         units = 'si' if hass.config.units.is_metric else 'us'
 
-    dark_sky = DarkSkyData(
-        config.get(CONF_API_KEY), latitude, longitude, units, lang)
-
+    dark_sky = DarkSkyData(api_key, latitude, longitude, units, lang)
     add_devices([DarkSkyWeather(name, dark_sky)], True)
 
 
