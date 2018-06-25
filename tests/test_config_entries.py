@@ -309,3 +309,13 @@ async def test_discovery_notification_not_created(hass):
     await hass.async_block_till_done()
     state = hass.states.get('persistent_notification.config_entry_discovery')
     assert state is None
+
+
+async def test_loading_default_config(hass):
+    """Test loading the default config."""
+    manager = config_entries.ConfigEntries(hass, {})
+
+    with patch('homeassistant.util.json.open', side_effect=FileNotFoundError):
+        await manager.async_load()
+
+    assert len(manager.async_entries()) == 0
