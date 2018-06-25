@@ -81,7 +81,7 @@ hbmqtt==0.9.2
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180622.1
+home-assistant-frontend==20180625.0
 
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
@@ -156,7 +156,7 @@ pyqwikswitch==0.8
 python-forecastio==1.4.0
 
 # homeassistant.components.nest
-python-nest==4.0.2
+python-nest==4.0.3
 
 # homeassistant.components.sensor.whois
 pythonwhois==2.4.3
