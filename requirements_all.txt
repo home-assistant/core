@@ -84,7 +84,7 @@ aioautomatic==0.6.5
 aiodns==1.1.1
 
 # homeassistant.components.device_tracker.freebox
-aiofreepybox==0.0.3
+aiofreepybox==0.0.4
 
 # homeassistant.components.camera.yi
 aioftp==0.10.1
