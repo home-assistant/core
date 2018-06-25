@@ -6,6 +6,7 @@ https://home-assistant.io/components/ecoplug/
 """
 
 import logging
+
 from datetime import timedelta
 
 from homeassistant.const import (DEVICE_DEFAULT_NAME, EVENT_HOMEASSISTANT_STOP)
