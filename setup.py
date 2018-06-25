@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Home Assistant setup script."""
-from setuptools import setup, find_packages
+from datetime import datetime as dt
+from setuptools import setup
 
 import homeassistant.const as hass_const
 
@@ -8,26 +9,9 @@ PROJECT_NAME = 'Home Assistant'
 PROJECT_PACKAGE_NAME = 'homeassistant'
 PROJECT_LICENSE = 'Apache License 2.0'
 PROJECT_AUTHOR = 'The Home Assistant Authors'
-PROJECT_COPYRIGHT = ' 2013-2018, {}'.format(PROJECT_AUTHOR)
+PROJECT_COPYRIGHT = ' 2013-{}, {}'.format(dt.now().year, PROJECT_AUTHOR)
 PROJECT_URL = 'https://home-assistant.io/'
 PROJECT_EMAIL = 'hello@home-assistant.io'
-PROJECT_DESCRIPTION = ('Open-source home automation platform '
-                       'running on Python 3.')
-PROJECT_LONG_DESCRIPTION = ('Home Assistant is an open-source '
-                            'home automation platform running on Python 3. '
-                            'Track and control all devices at home and '
-                            'automate control. '
-                            'Installation in less than a minute.')
-PROJECT_CLASSIFIERS = [
-    'Development Status :: 4 - Beta',
-    'Intended Audience :: End Users/Desktop',
-    'Intended Audience :: Developers',
-    'License :: OSI Approved :: Apache Software License',
-    'Operating System :: OS Independent',
-    'Programming Language :: Python :: 3.5',
-    'Programming Language :: Python :: 3.6',
-    'Topic :: Home Automation'
-]
 
 PROJECT_GITHUB_USERNAME = 'home-assistant'
 PROJECT_GITHUB_REPOSITORY = 'home-assistant'
@@ -38,8 +22,12 @@ GITHUB_PATH = '{}/{}'.format(
 GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
 
 DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, hass_const.__version__)
-
-PACKAGES = find_packages(exclude=['tests', 'tests.*'])
+PROJECT_URLS = {
+    'Bug Reports': '{}/issues'.format(GITHUB_URL),
+    'Dev Docs': 'https://developers.home-assistant.io/',
+    'Discord': 'https://discordapp.com/invite/c5DvZ4e',
+    'Forum': 'https://community.home-assistant.io/',
+}
 
 REQUIRES = [
     'aiohttp==3.3.2',
@@ -60,24 +48,12 @@ MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))
 setup(
     name=PROJECT_PACKAGE_NAME,
     version=hass_const.__version__,
-    license=PROJECT_LICENSE,
     url=PROJECT_URL,
     download_url=DOWNLOAD_URL,
+    project_urls=PROJECT_URLS,
     author=PROJECT_AUTHOR,
     author_email=PROJECT_EMAIL,
-    description=PROJECT_DESCRIPTION,
-    packages=PACKAGES,
-    include_package_data=True,
-    zip_safe=False,
-    platforms='any',
     install_requires=REQUIRES,
     python_requires='>={}'.format(MIN_PY_VERSION),
     test_suite='tests',
-    keywords=['home', 'automation'],
-    entry_points={
-        'console_scripts': [
-            'hass = homeassistant.__main__:main'
-        ]
-    },
-    classifiers=PROJECT_CLASSIFIERS,
 )
