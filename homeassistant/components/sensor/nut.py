@@ -32,6 +32,18 @@ KEY_STATUS_DISPLAY = 'ups.status.display'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
+    'device.model': ['Device model', '', 'mdi:information-outline'],
+    'device.mfr': ['Device manufacturer', '', 'mdi:information-outline'],
+    'device.serial': ['Device serial', '', 'mdi:information-outline'],
+    'device.type': ['Device type', '', 'mdi:information-outline'],
+    'device.description': ['Device description', '', 'mdi:information-outline'],
+    'device.contact':
+        ['Device administrator name', '', 'mdi:information-outline'],
+    'device.location':
+        ['Device physical location', '', 'mdi:information-outline'],
+    'device.part': ['Device part number', '', 'mdi:information-outline'],
+    'device.macaddr':
+        ['Device network address', '', 'mdi:information-outline'],
     'ups.status.display': ['Status', '', 'mdi:information-outline'],
     'ups.status': ['Status Data', '', 'mdi:information-outline'],
     'ups.alarm': ['Alarms', '', 'mdi:alarm'],
@@ -107,15 +119,20 @@ SENSOR_TYPES = {
         ['Voltage Transfer Reason', '', 'mdi:information-outline'],
     'input.voltage': ['Input Voltage', 'V', 'mdi:flash'],
     'input.voltage.nominal': ['Nominal Input Voltage', 'V', 'mdi:flash'],
-    'input.frequency': ['Input Line Frequency','hz','mdi:flash'],
-    'input.frequency.nominal': ['Nominal Input Line Frequency','hz','mdi:flash'],
-    'input.frequency.status': ['Input Frequency Status','','mdi:information-outline'],
+    'input.frequency': ['Input Line Frequency', 'hz', 'mdi:flash'],
+    'input.frequency.nominal':
+        ['Nominal Input Line Frequency', 'hz', 'mdi:flash'],
+    'input.frequency.status':
+        ['Input Frequency Status', '', 'mdi:information-outline'],
     'output.current': ['Output Current', 'A', 'mdi:flash'],
-    'output.current.nominal': ['Nominal Output Current', 'A', 'mdi:flash'],
+    'output.current.nominal':
+        ['Nominal Output Current', 'A', 'mdi:flash'],
     'output.voltage': ['Output Voltage', 'V', 'mdi:flash'],
-    'output.voltage.nominal': ['Nominal Output Voltage', 'V', 'mdi:flash'],
+    'output.voltage.nominal':
+        ['Nominal Output Voltage', 'V', 'mdi:flash'],
     'output.frequency': ['Output Frequency', 'hz', 'mdi:flash'],
-    'output.frequency.nominal': ['Nominal Output Frequency', 'hz', 'mdi:flash'],
+    'output.frequency.nominal':
+        ['Nominal Output Frequency', 'hz', 'mdi:flash'],
 }
 
 STATE_TYPES = {
