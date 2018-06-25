@@ -233,6 +233,7 @@ class ProxyCamera(Camera):
             _LOGGER.debug("Stream closed by frontend.")
             req.close()
             response = None
+            raise
 
         finally:
             if response is not None:
