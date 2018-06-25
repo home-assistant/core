@@ -8,7 +8,7 @@ https://home-assistant.io/components/binary_sensor.isy994/
 import asyncio
 import logging
 from datetime import timedelta
-from typing import Callable  # noqa
+from typing import Callable
 
 from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN

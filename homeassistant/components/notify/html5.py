@@ -413,7 +413,6 @@ class HTML5NotificationService(BaseNotificationService):
                 json.dumps(payload), gcm_key=gcm_key, ttl='86400'
             )
 
-            # pylint: disable=no-member
             if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)

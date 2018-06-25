@@ -10,7 +10,7 @@ import json
 import voluptuous as vol
 
 from aiohttp.hdrs import AUTHORIZATION
-from aiohttp.web import Request, Response  # NOQA
+from aiohttp.web import Request, Response
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.components.discovery import SERVICE_KONNECTED

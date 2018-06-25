@@ -144,7 +144,6 @@ class OctoPrintAPI(object):
         return response
 
 
-# pylint: disable=unused-variable
 def get_value_from_json(json_dict, sensor_type, group, tool):
     """Return the value for sensor_type from the JSON."""
     if group not in json_dict:

@@ -68,7 +68,6 @@ class TplinkDeviceScanner(DeviceScanner):
         self._update_info()
         return self.last_results
 
-    # pylint: disable=no-self-use
     def get_device_name(self, device):
         """Get firmware doesn't save the name of the wireless device."""
         return None
@@ -103,7 +102,6 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
         self._update_info()
         return self.last_results.keys()
 
-    # pylint: disable=no-self-use
     def get_device_name(self, device):
         """Get firmware doesn't save the name of the wireless device."""
         return self.last_results.get(device)
@@ -164,7 +162,6 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
         self._log_out()
         return self.last_results.keys()
 
-    # pylint: disable=no-self-use
     def get_device_name(self, device):
         """Get the firmware doesn't save the name of the wireless device.
 
@@ -273,7 +270,6 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         self._update_info()
         return self.last_results
 
-    # pylint: disable=no-self-use
     def get_device_name(self, device):
         """Get the name of the wireless device."""
         return None
@@ -349,7 +345,6 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
         self._update_info()
         return self.last_results.keys()
 
-    # pylint: disable=no-self-use
     def get_device_name(self, device):
         """Get firmware doesn't save the name of the wireless device."""
         return None

@@ -34,7 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable, too-many-function-args
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dweet sensor."""
     import dweepy
