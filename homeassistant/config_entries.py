@@ -323,6 +323,10 @@ class ConfigEntries:
             old_conf_migrate_func=_old_conf_migrator
         )
 
+        if config is None:
+            self._entries = []
+            return
+
         self._entries = [ConfigEntry(**entry) for entry in config['entries']]
 
     async def async_forward_entry_setup(self, entry, component):

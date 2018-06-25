@@ -72,7 +72,7 @@ class Store:
                 json.load_json, self.path, None)
 
             if data is None:
-                return {}
+                return None
 
         if data['version'] == self.version:
             return data['data']
