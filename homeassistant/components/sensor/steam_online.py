@@ -76,7 +76,6 @@ class SteamSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    # pylint: disable=no-member
     def update(self):
         """Update device state."""
         try:

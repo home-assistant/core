@@ -55,7 +55,6 @@ def set_level(hass, logs):
 class HomeAssistantLogFilter(logging.Filter):
     """A log filter."""
 
-    # pylint: disable=no-init
     def __init__(self, logfilter):
         """Initialize the filter."""
         super().__init__()

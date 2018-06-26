@@ -145,7 +145,6 @@ class LockDevice(Entity):
         """Last change triggered by."""
         return None
 
-    # pylint: disable=no-self-use
     @property
     def code_format(self):
         """Regex for code format or None if no code is required."""

@@ -81,7 +81,6 @@ class APIEventStream(HomeAssistantView):
 
     async def get(self, request):
         """Provide a streaming interface for the event bus."""
-        # pylint: disable=no-self-use
         hass = request.app['hass']
         stop_obj = object()
         to_write = asyncio.Queue(loop=hass.loop)

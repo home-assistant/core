@@ -84,7 +84,7 @@ aioautomatic==0.6.5
 aiodns==1.1.1
 
 # homeassistant.components.device_tracker.freebox
-aiofreepybox==0.0.3
+aiofreepybox==0.0.4
 
 # homeassistant.components.camera.yi
 aioftp==0.10.1
@@ -415,7 +415,7 @@ hole==0.3.0
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180622.1
+home-assistant-frontend==20180625.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.6
@@ -460,7 +460,7 @@ influxdb==5.0.0
 insteonlocal==0.53
 
 # homeassistant.components.insteon_plm
-insteonplm==0.10.0
+insteonplm==0.11.2
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
@@ -1059,7 +1059,7 @@ python-mpd2==1.0.0
 python-mystrom==0.4.4
 
 # homeassistant.components.nest
-python-nest==4.0.2
+python-nest==4.0.3
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.1
