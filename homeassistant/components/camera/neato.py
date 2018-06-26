@@ -45,7 +45,7 @@ class NeatoCleaningMap(Camera):
         self.update()
         return self._image
 
-    @Throttle(timedelta(seconds=60))
+    @Throttle(timedelta(seconds=600))
     def update(self):
         """Check the contents of the map list."""
         self.neato.update_robots()

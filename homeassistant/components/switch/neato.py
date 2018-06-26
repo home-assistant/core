@@ -52,7 +52,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         self._schedule_state = None
         self._clean_state = None
 
-    @Throttle(timedelta(seconds=60))
+    @Throttle(timedelta(seconds=600))
     def update(self):
         """Update the states of Neato switches."""
         _LOGGER.debug("Running switch update")

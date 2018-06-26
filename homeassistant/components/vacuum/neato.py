@@ -63,7 +63,7 @@ class NeatoConnectedVacuum(VacuumDevice):
         self.clean_suspension_charge_count = None
         self.clean_suspension_time = None
 
-    @Throttle(timedelta(seconds=60))
+    @Throttle(timedelta(seconds=300))
     def update(self):
         """Update the states of Neato Vacuums."""
         _LOGGER.debug("Running Neato Vacuums update")
@@ -98,7 +98,9 @@ class NeatoConnectedVacuum(VacuumDevice):
 
         if (self.robot.state['action'] == 1 or
                 self.robot.state['action'] == 2 or
-                self.robot.state['action'] == 3 and
+                self.robot.state['action'] == 3 or
+                self.robot.state['action'] == 11 or
+                self.robot.state['action'] == 12 and
                 self.robot.state['state'] == 2):
             self._clean_state = STATE_ON
         else:
