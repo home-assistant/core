@@ -22,7 +22,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 class EcoPlugSwitch(SwitchDevice):
     """Return the polling state."""
-    
+
     def __init__(self, plug):
         """Initialize the switch."""
         self._plug = plug
@@ -66,9 +66,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     discovered = {}
     def add(plug):
         """Find switches on the network."""
-        
         if plug.name not in discovered:
             add_devices([EcoPlugSwitch(plug)])
+
             discovered[plug.name] = plug
 
     def remove(plug):
