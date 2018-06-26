@@ -27,6 +27,27 @@ async def test_hap_init(aioclient_mock):
         (entry, 'binary_sensor')
 
 
+async def test_hap_setup_invalid_token():
+    """Test we start config flow if username is no longer whitelisted."""
+    from homematicip.base.base_connection import HmipConnectionError
+
+    hass = Mock()
+    entry = Mock()
+    entry.data = {
+        hmipc.HMIPC_HAPID: 'ABC123',
+        hmipc.HMIPC_AUTHTOKEN: '123',
+        hmipc.HMIPC_NAME: 'hmip',
+    }
+    hap = hmipc.HomematicipHAP(hass, entry)
+
+    with patch.object(hap, 'get_hap',
+                      side_effect=HmipConnectionError):
+        assert await hap.async_setup() is False
+
+    assert len(hass.async_add_job.mock_calls) == 0
+    assert len(hass.config_entries.flow.async_init.mock_calls) == 0
+
+
 async def test_reset_unloads_entry_if_setup():
     """Test calling reset while the entry has been setup."""
     hass = Mock()
