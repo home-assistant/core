@@ -22,7 +22,7 @@ import homeassistant.util.dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 CONF_BUFFER_SIZE = 'cache'
-CONF_IMAGE_FIELD = 'image'
+CONF_IMAGE_FIELD = 'field'
 
 DEFAULT_NAME = "Push Camera"
 
@@ -81,12 +81,12 @@ class CameraPushReceiver(HomeAssistantView):
             _LOGGER.debug("Received Camera push: %s", data[self._image])
             await _camera.update_image(data[self._image].file.read(),
                                        data[self._image].filename)
-        except ValueError as v:
-            _LOGGER.error("Unknown value %s", v)
+        except ValueError as value_error:
+            _LOGGER.error("Unknown value %s", value_error)
             return self.json_message('Invalid POST', HTTP_BAD_REQUEST)
-        except KeyError as k:
-            _LOGGER.error('In your POST message %s', k)
-            return self.json_message('Parameter %s missing', HTTP_BAD_REQUEST)
+        except KeyError as key_error:
+            _LOGGER.error('In your POST message %s', key_error)
+            return self.json_message('Parameter {} missing'.format(self._image), HTTP_BAD_REQUEST)
 
 
 class PushCamera(Camera):
