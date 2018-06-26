@@ -5,9 +5,9 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/camera.push/
 """
 import logging
-import datetime
 
 from collections import deque
+from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
@@ -23,33 +23,35 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-API_URL = "/api/camera_push/{entity_id}"
+CONF_BUFFER_SIZE = 'cache'
+CONF_IMAGE_FIELD = 'image'
 
-CONF_BUFFER_SIZE = "cache"
-
-DEFAULT_NAME = 'Push Camera'
+DEFAULT_NAME = "Push Camera"
 
 BLANK_IMAGE_SIZE = (640, 480)
 
-ATTR_FILENAME = "filename"
+ATTR_FILENAME = 'filename'
 
 REQUIREMENTS = ['pillow==5.0.0']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_BUFFER_SIZE, default=1): cv.positive_int,
-    vol.Optional(CONF_TIMEOUT, default=5): cv.positive_int,
+    vol.Optional(CONF_TIMEOUT, default=timedelta(seconds=5)): vol.All(
+        cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_IMAGE_FIELD, default='image'): cv.string,
 })
 
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the Push Camera platform."""
-    cameras = [PushCamera(config.get(CONF_NAME),
-                          config.get(CONF_BUFFER_SIZE),
-                          config.get(CONF_TIMEOUT))]
+    cameras = [PushCamera(config[CONF_NAME],
+                          config[CONF_BUFFER_SIZE],
+                          config[CONF_TIMEOUT])]
 
-    hass.http.register_view(CameraPushReceiver(cameras))
+    hass.http.register_view(CameraPushReceiver(cameras,
+                                               config[CONF_IMAGE_FIELD]))
 
     async_add_devices(cameras)
 
@@ -57,12 +59,13 @@ async def async_setup_platform(hass, config, async_add_devices,
 class CameraPushReceiver(HomeAssistantView):
     """Handle pushes from remote camera."""
 
-    url = API_URL
-    name = 'api:camera:push'
+    url = "/api/camera_push/{entity_id}"
+    name = 'api:camera_push:camera_entity'
 
-    def __init__(self, cameras):
+    def __init__(self, cameras, image_field):
         """Initialize CameraPushReceiver with camera entity."""
         self._cameras = cameras
+        self._image = image_field
 
     async def post(self, request, entity_id):
         """Accept the POST from Camera."""
@@ -70,16 +73,21 @@ class CameraPushReceiver(HomeAssistantView):
             (_camera,) = [camera for camera in self._cameras
                           if camera.entity_id == entity_id]
         except ValueError:
+            _LOGGER.error("Unknown push camera %s", entity_id)
             return self.json_message('Unknown Push Camera',
                                      HTTP_BAD_REQUEST)
 
         try:
             data = await request.post()
-            _LOGGER.debug("Received Camera push: %s", data['image'])
-            await _camera.update_image(data['image'].file.read(),
-                                       data['image'].filename)
-        except ValueError:
+            _LOGGER.debug("Received Camera push: %s", data[self._image])
+            await _camera.update_image(data[self._image].file.read(),
+                                       data[self._image].filename)
+        except ValueError as v:
+            _LOGGER.error("Unknown value %s", v)
             return self.json_message('Invalid POST', HTTP_BAD_REQUEST)
+        except KeyError as k:
+            _LOGGER.error('In your POST message %s', k)
+            return self.json_message('Parameter %s missing', HTTP_BAD_REQUEST)
 
 
 class PushCamera(Camera):
@@ -89,12 +97,11 @@ class PushCamera(Camera):
         """Initialize push camera component."""
         super().__init__()
         self._name = name
-        self._motion_status = False
         self._last_trip = None
         self._filename = None
         self._expired = None
         self._state = STATE_IDLE
-        self._timeout = datetime.timedelta(seconds=timeout)
+        self._timeout = timeout
         self.queue = deque([], buffer_size)
 
         from PIL import Image
@@ -137,12 +144,7 @@ class PushCamera(Camera):
         self._expired = async_track_point_in_utc_time(
             self.hass, reset_state, dt_util.utcnow() + self._timeout)
 
-        self.schedule_update_ha_state()
-
-    def camera_image(self):
-        """Return a still image response."""
-        return run_coroutine_threadsafe(
-            self.async_camera_image(), self.hass.loop).result()
+        self.async_schedule_update_ha_state()
 
     async def async_camera_image(self):
         """Return a still image response."""
@@ -161,7 +163,7 @@ class PushCamera(Camera):
     @property
     def motion_detection_enabled(self):
         """Camera Motion Detection Status."""
-        return self._motion_status
+        return False
 
     @property
     def device_state_attributes(self):
