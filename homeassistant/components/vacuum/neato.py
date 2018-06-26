@@ -102,8 +102,8 @@ class NeatoConnectedVacuum(VacuumDevice):
                 self.robot.state['state'] == 2):
             self._clean_state = STATE_ON
         elif (self.robot.state['action'] == 11 or
-                self.robot.state['action'] == 12 and
-                self.robot.state['state'] == 2):
+              self.robot.state['action'] == 12 and
+              self.robot.state['state'] == 2):
             self._clean_state = STATE_ON
         else:
             self._clean_state = STATE_OFF
