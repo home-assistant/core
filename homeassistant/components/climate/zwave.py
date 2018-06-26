@@ -103,7 +103,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
             self._operation_mapping = {}
             operation_list = self.values.mode.data_items
             if operation_list:
-                for mode in list(operation_list):
+                for mode in operation_list:
                     ha_mode = STATE_MAPPINGS.get(mode)
                     if ha_mode and ha_mode not in self._operation_mapping:
                         self._operation_mapping[ha_mode] = mode
@@ -111,8 +111,9 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
                         continue
                     self._operation_list.append(mode)
             current_mode = self.values.mode.data
-            self._current_operation = self._operation_mapping.get(
-                current_mode, current_mode)
+            self._current_operation = next(
+                (key for key, value in self._operation_mapping.items()
+                 if value == current_mode), current_mode)
         _LOGGER.debug("self._operation_list=%s", self._operation_list)
         _LOGGER.debug("self._current_operation=%s", self._current_operation)
 
