@@ -412,7 +412,7 @@ hole==0.3.0
 holidays==0.9.5
 
 # homeassistant.components.frontend
-ais-dom-frontend==20180622.0
+ais-dom-frontend==20180625.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.6
@@ -1068,7 +1068,7 @@ python-mpd2==1.0.0
 python-mystrom==0.4.4
 
 # homeassistant.components.nest
-python-nest==4.0.2
+python-nest==4.0.3
 
 # homeassistant.components.device_tracker.nmap_tracker
 python-nmap==0.6.1
