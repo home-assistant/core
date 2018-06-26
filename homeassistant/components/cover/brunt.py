@@ -12,8 +12,7 @@ from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
-    ATTR_POSITION, PLATFORM_SCHEMA, SERVICE_OPEN_COVER, 
-    SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
+    ATTR_POSITION, PLATFORM_SCHEMA,
     STATE_OPEN, STATE_CLOSED)
 import homeassistant.helpers.config_validation as cv
 
@@ -36,11 +35,12 @@ NOTIFICATION_TITLE = 'Brunt Cover Setup'
 CLOSED_POSITION = 0
 OPEN_POSITION = 100
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({     
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the brunt platform."""
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             raise HomeAssistantError
 
         add_devices(BruntDevice(
-                hass, bapi, thing['NAME'], 
+                hass, bapi, thing['NAME'],
                 thing['thingUri']) for thing in things)
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
@@ -98,7 +98,6 @@ class BruntDevice(CoverDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         data = {}
-
         if self._state['moveState'] == 1:
             data[ATTR_COVER_STATE] = 'OPENING'
         elif self._state['moveState'] == 2:
@@ -107,12 +106,10 @@ class BruntDevice(CoverDevice):
             data[ATTR_COVER_STATE] = 'CLOSED'
         elif int(self._state['currentPosition']) == OPEN_POSITION:
             data[ATTR_COVER_STATE] = 'OPENED'
-        else:            
+        else:
             data[ATTR_COVER_STATE] = 'PARTIALLY OPENED'
-
         data[ATTR_CURRENT_POSITION] = int(self._state['currentPosition'])
         data[ATTR_REQUEST_POSITION] = int(self._state['requestPosition'])
-
         return data
 
     @property
@@ -133,7 +130,7 @@ class BruntDevice(CoverDevice):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return 'window'
-    
+
     @property
     def supported_features(self):
         """Flag supported features."""
@@ -143,7 +140,6 @@ class BruntDevice(CoverDevice):
     def is_closed(self):
         """"Return true if cover is closed, else False."""
         return int(self._state['currentPosition']) == CLOSED_POSITION
-
 
     def update(self):
         """Poll the current state of the device."""
@@ -159,7 +155,6 @@ class BruntDevice(CoverDevice):
         """ set the cover to the open position. """
         self._bapi.changeRequestPosition(
             OPEN_POSITION, thingUri=self._thingUri)
-
 
     def close_cover(self, **kwargs):
         """ set the cover to the closed position. """
