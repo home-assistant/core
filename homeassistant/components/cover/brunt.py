@@ -36,14 +36,15 @@ CLOSED_POSITION = 0
 OPEN_POSITION = 100
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the brunt platform."""
+    # pylint: disable=no-name-in-module
     from brunt import BruntAPI
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -51,12 +52,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     bapi = BruntAPI(username=username, password=password)
     try:
         things = bapi.getThings()['things']
-        if len(things) == 0:
+        if not things:
             raise HomeAssistantError
 
         add_devices(BruntDevice(
-                hass, bapi, thing['NAME'],
-                thing['thingUri']) for thing in things)
+            hass, bapi, thing['NAME'],
+            thing['thingUri']) for thing in things)
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
@@ -73,12 +74,11 @@ class BruntDevice(CoverDevice):
     Contains the common logic for all Brunt devices.
     """
 
-    def __init__(self, hass, bapi, name, thingUri):
+    def __init__(self, hass, bapi, name, thing_uri):
         """Init the Brunt device."""
-        # from brunt import BruntAPI
         self._bapi = bapi
         self._name = name
-        self._thingUri = thingUri
+        self._thing_uri = thing_uri
 
         self._state = None
         self._available = None
@@ -145,7 +145,7 @@ class BruntDevice(CoverDevice):
         """Poll the current state of the device."""
         try:
             self._state = self._bapi.getState(
-                thingUri=self._thingUri)['thing']
+                thingUri=self._thing_uri)['thing']
             self._available = True
         except (TypeError, KeyError, NameError, ValueError) as ex:
             _LOGGER.error("%s", ex)
@@ -154,15 +154,15 @@ class BruntDevice(CoverDevice):
     def open_cover(self, **kwargs):
         """ set the cover to the open position. """
         self._bapi.changeRequestPosition(
-            OPEN_POSITION, thingUri=self._thingUri)
+            OPEN_POSITION, thingUri=self._thing_uri)
 
     def close_cover(self, **kwargs):
         """ set the cover to the closed position. """
         self._bapi.changeRequestPosition(
-            CLOSED_POSITION, thingUri=self._thingUri)
+            CLOSED_POSITION, thingUri=self._thing_uri)
 
     def set_cover_position(self, **kwargs):
         """ set the cover to a specific position. """
         if ATTR_POSITION in kwargs:
             self._bapi.changeRequestPosition(
-                int(kwargs[ATTR_POSITION]), thingUri=self._thingUri)
+                int(kwargs[ATTR_POSITION]), thingUri=self._thing_uri)
