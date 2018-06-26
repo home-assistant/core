@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
-from homeassistant.const import ATTR_ID, CONF_PASSWORD, CONF_USERNAME, CONF_URL
+from homeassistant.const import ATTR_ID, CONF_PASSWORD, \
+    CONF_USERNAME, CONF_URL
 import homeassistant.util.dt as dt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
@@ -45,22 +46,22 @@ class TraccarScanner(object):
 
     def __init__(self, hass, config: ConfigType, see) -> None:
         """Initialize the scanner."""
-       
+
         self.see = see
-        self.url=config.get(CONF_URL)
+        self.url = config.get(CONF_URL)
         self.username = config.get(CONF_USERNAME)
         self.password = config.get(CONF_PASSWORD)
 
-        self.positions=self.get_traccar_data( self.url +  "/api/positions" )
-        self.devices=self.get_traccar_data( self.url +  "/api/devices" )
-        
+        self.positions = self.get_traccar_data(self.url + "/api/positions")
+        self.devices = self.get_traccar_data(self.url + "/api/devices")
+
         self.parse_traccar_data()
 
         track_time_interval(
             hass, self.parse_traccar_data, MIN_TIME_BETWEEN_SCANS)
 
         self.success_init = True
-        
+
     def get_traccar_data(self, url):
 
         import requests
@@ -81,28 +82,30 @@ class TraccarScanner(object):
                 "Failed to authenticate, check your username and password")
             return
         else:
-            _LOGGER.error("Invalid response from Traccar: %s", response)   
+            _LOGGER.error("Invalid response from Traccar: %s", response)
 
     def parse_traccar_data(self, now=None):
         """Parse data from Traccar."""
 
-        devices=self.devices
-        positions=self.positions
-       
-        item=[]
-        ris=[]
+        devices = self.devices
+        positions = self.positions
+
+        item = []
+        ris = []
 
         try:
             for dev in devices:
                 for pos in positions:
-                    if pos['deviceId']==dev['id']:
+                    if pos['deviceId'] == dev['id']:
                         attrs = {
                             ATTR_ID: dev['id'],
                             ATTR_FULL_NAME: dev['name'],
                             ATTR_ADDRESS: pos['address'],
-                            ATTR_SPEED: float(pos['speed']),                            
-                            ATTR_LAST_SEEN: dt.as_local(dt.parse_datetime(pos['fixTime'])),                            
-                            ATTR_BATTERY: int(pos['attributes']['batteryLevel'])
+                            ATTR_SPEED: float(pos['speed']),
+                            ATTR_LAST_SEEN: dt.as_local(
+                                dt.parse_datetime(pos['fixTime'])),
+                            ATTR_BATTERY: int(
+                                pos['attributes']['batteryLevel'])
                         }
                         self.see(
                             dev_id=dev['name'],
@@ -112,5 +115,6 @@ class TraccarScanner(object):
                             attributes=attrs,
                         )
         except TypeError:
-            _LOGGER.warning("An error occourred parsing reply from Traccar server")
+            _LOGGER.warning(
+                "An error occourred parsing reply from Traccar server")
             return
