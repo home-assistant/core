@@ -13,11 +13,15 @@ from homeassistant.const import (
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
 <<<<<<< HEAD
+<<<<<<< HEAD
     ATTR_POSITION, PLATFORM_SCHEMA,
 =======
     ATTR_POSITION, PLATFORM_SCHEMA, SERVICE_OPEN_COVER, 
     SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+    ATTR_POSITION, PLATFORM_SCHEMA,
+>>>>>>> 64ddfcc80... small styling updates
     STATE_OPEN, STATE_CLOSED)
 import homeassistant.helpers.config_validation as cv
 
@@ -41,6 +45,7 @@ CLOSED_POSITION = 0
 OPEN_POSITION = 100
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
@@ -53,10 +58,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # pylint: disable=no-name-in-module
 =======
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({     
+=======
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+>>>>>>> 64ddfcc80... small styling updates
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the brunt platform."""
@@ -80,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             raise HomeAssistantError
 
         add_devices(BruntDevice(
-                hass, bapi, thing['NAME'], 
+                hass, bapi, thing['NAME'],
                 thing['thingUri']) for thing in things)
 >>>>>>> 203699105... Added Brunt Cover device
     except (TypeError, KeyError, NameError, ValueError) as ex:
@@ -133,9 +142,12 @@ class BruntDevice(CoverDevice):
         """Return the device state attributes."""
         data = {}
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+>>>>>>> 64ddfcc80... small styling updates
         if self._state['moveState'] == 1:
             data[ATTR_COVER_STATE] = 'OPENING'
         elif self._state['moveState'] == 2:
@@ -145,18 +157,24 @@ class BruntDevice(CoverDevice):
         elif int(self._state['currentPosition']) == OPEN_POSITION:
             data[ATTR_COVER_STATE] = 'OPENED'
 <<<<<<< HEAD
+<<<<<<< HEAD
         else:
             data[ATTR_COVER_STATE] = 'PARTIALLY OPENED'
         data[ATTR_CURRENT_POSITION] = int(self._state['currentPosition'])
         data[ATTR_REQUEST_POSITION] = int(self._state['requestPosition'])
 =======
         else:            
+=======
+        else:
+>>>>>>> 64ddfcc80... small styling updates
             data[ATTR_COVER_STATE] = 'PARTIALLY OPENED'
-
         data[ATTR_CURRENT_POSITION] = int(self._state['currentPosition'])
         data[ATTR_REQUEST_POSITION] = int(self._state['requestPosition'])
+<<<<<<< HEAD
 
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+>>>>>>> 64ddfcc80... small styling updates
         return data
 
     @property
@@ -178,10 +196,14 @@ class BruntDevice(CoverDevice):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return 'window'
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 =======
     
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+
+>>>>>>> 64ddfcc80... small styling updates
     @property
     def supported_features(self):
         """Flag supported features."""
@@ -193,9 +215,12 @@ class BruntDevice(CoverDevice):
         return int(self._state['currentPosition']) == CLOSED_POSITION
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+>>>>>>> 64ddfcc80... small styling updates
     def update(self):
         """Poll the current state of the device."""
         try:
@@ -218,8 +243,11 @@ class BruntDevice(CoverDevice):
 =======
             OPEN_POSITION, thingUri=self._thingUri)
 
+<<<<<<< HEAD
 >>>>>>> 203699105... Added Brunt Cover device
 
+=======
+>>>>>>> 64ddfcc80... small styling updates
     def close_cover(self, **kwargs):
         """ set the cover to the closed position. """
         self._bapi.changeRequestPosition(
