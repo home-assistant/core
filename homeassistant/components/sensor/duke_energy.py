@@ -12,7 +12,6 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
 
 REQUIREMENTS = ['pydukeenergy==0.0.5']
 
@@ -29,8 +28,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         duke = DukeEnergy(config.get(CONF_USERNAME),
-            config.get(CONF_PASSWORD),
-            update_interval=500)
+                          config.get(CONF_PASSWORD),
+                          update_interval=500)
     except DukeEnergyException:
         _LOGGER.error("Failed to setup Duke Energy")
         return False
@@ -79,4 +78,3 @@ class DukeEnergyMeter(Entity):
     def update(self):
         """Update meter."""
         self.duke_meter.update()
-
