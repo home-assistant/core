@@ -6,6 +6,8 @@ from homeassistant.components import homematicip_cloud as hmipc
 
 from tests.common import mock_coro
 
+import homematicip
+from homematicip.base.base_connection import HmipConnectionError
 
 async def test_hap_init(aioclient_mock):
     """Test a successful setup."""
@@ -29,8 +31,6 @@ async def test_hap_init(aioclient_mock):
 
 async def test_hap_setup_invalid_token():
     """Test we start config flow if username is no longer whitelisted."""
-    from homematicip.base.base_connection import HmipConnectionError
-
     hass = Mock()
     entry = Mock()
     entry.data = {
