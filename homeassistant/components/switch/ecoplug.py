@@ -15,7 +15,7 @@ from homeassistant.components.switch import SwitchDevice
 DEFAULT_INVERT_LOGIC = False
 
 DOMAIN = 'ecoplug'
-REQUIREMENTS = ['https://github.com/philburr/pyecoplug/v0.0.5.zip#pyecoplug==0.0.5']
+REQUIREMENTS = ['https://github.com/philburr/pyecoplug/archive/master.zip#pyecoplug==0.0.5']
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
@@ -61,6 +61,7 @@ class EcoPlugSwitch(SwitchDevice):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up EcoPlug switches."""
+    
     from pyecoplug import EcoDiscovery
 
     discovered = {}
