@@ -67,8 +67,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def add(plug):
         """Find switches on the network."""
         if plug.name not in discovered:
+            
             add_devices([EcoPlugSwitch(plug)])
-
             discovered[plug.name] = plug
 
     def remove(plug):
