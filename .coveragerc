@@ -741,6 +741,7 @@ omit =
     homeassistant/components/switch/deluge.py
     homeassistant/components/switch/digitalloggers.py
     homeassistant/components/switch/dlink.py
+    homeassistant/components/switch/ecoplug.py
     homeassistant/components/switch/edimax.py
     homeassistant/components/switch/fritzdect.py
     homeassistant/components/switch/hikvisioncam.py
