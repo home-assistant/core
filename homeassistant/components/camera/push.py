@@ -12,7 +12,6 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
     STATE_IDLE, STATE_RECORDING
-from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.core import callback
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, HTTP_BAD_REQUEST,\
