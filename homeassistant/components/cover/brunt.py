@@ -12,7 +12,12 @@ from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
+<<<<<<< HEAD
     ATTR_POSITION, PLATFORM_SCHEMA,
+=======
+    ATTR_POSITION, PLATFORM_SCHEMA, SERVICE_OPEN_COVER, 
+    SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
+>>>>>>> 203699105... Added Brunt Cover device
     STATE_OPEN, STATE_CLOSED)
 import homeassistant.helpers.config_validation as cv
 
@@ -35,6 +40,7 @@ NOTIFICATION_TITLE = 'Brunt Cover Setup'
 CLOSED_POSITION = 0
 OPEN_POSITION = 100
 
+<<<<<<< HEAD
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
@@ -45,6 +51,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the brunt platform."""
     # pylint: disable=no-name-in-module
+=======
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({     
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+})
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the brunt platform."""
+>>>>>>> 203699105... Added Brunt Cover device
     from brunt import BruntAPI
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -52,12 +68,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     bapi = BruntAPI(username=username, password=password)
     try:
         things = bapi.getThings()['things']
+<<<<<<< HEAD
         if not things:
             raise HomeAssistantError
 
         add_devices(BruntDevice(
             hass, bapi, thing['NAME'],
             thing['thingUri']) for thing in things)
+=======
+        if len(things) == 0:
+            raise HomeAssistantError
+
+        add_devices(BruntDevice(
+                hass, bapi, thing['NAME'], 
+                thing['thingUri']) for thing in things)
+>>>>>>> 203699105... Added Brunt Cover device
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
@@ -74,11 +99,20 @@ class BruntDevice(CoverDevice):
     Contains the common logic for all Brunt devices.
     """
 
+<<<<<<< HEAD
     def __init__(self, hass, bapi, name, thing_uri):
         """Init the Brunt device."""
         self._bapi = bapi
         self._name = name
         self._thing_uri = thing_uri
+=======
+    def __init__(self, hass, bapi, name, thingUri):
+        """Init the Brunt device."""
+        # from brunt import BruntAPI
+        self._bapi = bapi
+        self._name = name
+        self._thingUri = thingUri
+>>>>>>> 203699105... Added Brunt Cover device
 
         self._state = None
         self._available = None
@@ -98,6 +132,10 @@ class BruntDevice(CoverDevice):
     def device_state_attributes(self):
         """Return the device state attributes."""
         data = {}
+<<<<<<< HEAD
+=======
+
+>>>>>>> 203699105... Added Brunt Cover device
         if self._state['moveState'] == 1:
             data[ATTR_COVER_STATE] = 'OPENING'
         elif self._state['moveState'] == 2:
@@ -106,10 +144,19 @@ class BruntDevice(CoverDevice):
             data[ATTR_COVER_STATE] = 'CLOSED'
         elif int(self._state['currentPosition']) == OPEN_POSITION:
             data[ATTR_COVER_STATE] = 'OPENED'
+<<<<<<< HEAD
         else:
             data[ATTR_COVER_STATE] = 'PARTIALLY OPENED'
         data[ATTR_CURRENT_POSITION] = int(self._state['currentPosition'])
         data[ATTR_REQUEST_POSITION] = int(self._state['requestPosition'])
+=======
+        else:            
+            data[ATTR_COVER_STATE] = 'PARTIALLY OPENED'
+
+        data[ATTR_CURRENT_POSITION] = int(self._state['currentPosition'])
+        data[ATTR_REQUEST_POSITION] = int(self._state['requestPosition'])
+
+>>>>>>> 203699105... Added Brunt Cover device
         return data
 
     @property
@@ -130,7 +177,11 @@ class BruntDevice(CoverDevice):
     def device_class(self):
         """Return the class of this device, from component DEVICE_CLASSES."""
         return 'window'
+<<<<<<< HEAD
 
+=======
+    
+>>>>>>> 203699105... Added Brunt Cover device
     @property
     def supported_features(self):
         """Flag supported features."""
@@ -141,11 +192,19 @@ class BruntDevice(CoverDevice):
         """"Return true if cover is closed, else False."""
         return int(self._state['currentPosition']) == CLOSED_POSITION
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 203699105... Added Brunt Cover device
     def update(self):
         """Poll the current state of the device."""
         try:
             self._state = self._bapi.getState(
+<<<<<<< HEAD
                 thingUri=self._thing_uri)['thing']
+=======
+                thingUri=self._thingUri)['thing']
+>>>>>>> 203699105... Added Brunt Cover device
             self._available = True
         except (TypeError, KeyError, NameError, ValueError) as ex:
             _LOGGER.error("%s", ex)
@@ -154,15 +213,28 @@ class BruntDevice(CoverDevice):
     def open_cover(self, **kwargs):
         """ set the cover to the open position. """
         self._bapi.changeRequestPosition(
+<<<<<<< HEAD
             OPEN_POSITION, thingUri=self._thing_uri)
+=======
+            OPEN_POSITION, thingUri=self._thingUri)
+
+>>>>>>> 203699105... Added Brunt Cover device
 
     def close_cover(self, **kwargs):
         """ set the cover to the closed position. """
         self._bapi.changeRequestPosition(
+<<<<<<< HEAD
             CLOSED_POSITION, thingUri=self._thing_uri)
+=======
+            CLOSED_POSITION, thingUri=self._thingUri)
+>>>>>>> 203699105... Added Brunt Cover device
 
     def set_cover_position(self, **kwargs):
         """ set the cover to a specific position. """
         if ATTR_POSITION in kwargs:
             self._bapi.changeRequestPosition(
+<<<<<<< HEAD
                 int(kwargs[ATTR_POSITION]), thingUri=self._thing_uri)
+=======
+                int(kwargs[ATTR_POSITION]), thingUri=self._thingUri)
+>>>>>>> 203699105... Added Brunt Cover device
