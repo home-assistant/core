@@ -15,7 +15,7 @@ from homeassistant.components.media_player.samsungtv import setup_platform, \
     CONF_TIMEOUT, SamsungTVDevice, SUPPORT_SAMSUNGTV
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_ON, \
     CONF_MAC, STATE_OFF
-from tests.common import MockDependency
+from tests.common import MockDependency, mock_coro
 from homeassistant.util import dt as dt_util
 from datetime import timedelta
 
@@ -326,16 +326,19 @@ async def test_play_media(hass, samsung_mock):
         sleeps.append(duration)
         await asyncio_sleep(0, loop=loop)
 
+    def async_add_job(target, *args):
+        return mock_coro(target(*args))
+
     with patch('asyncio.sleep', new=sleep):
         device = SamsungTVDevice(**WORKING_CONFIG)
         device.hass = hass
 
-        hass.async_add_job = mock.Mock()
+        device.send_key = mock.Mock()
+        hass.async_add_job = async_add_job
         await device.async_play_media(MEDIA_TYPE_CHANNEL, "576")
 
-        send = device.send_key
-        exp = [call(send, "KEY_5"), call(send, "KEY_7"), call(send, "KEY_6")]
-        assert hass.async_add_job.call_args_list == exp
+        exp = [call("KEY_5"), call("KEY_7"), call("KEY_6")]
+        assert device.send_key.call_args_list == exp
         assert len(sleeps) == 3
 
 

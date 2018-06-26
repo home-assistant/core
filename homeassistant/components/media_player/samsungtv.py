@@ -273,7 +273,7 @@ class SamsungTVDevice(MediaPlayerDevice):
             return
 
         for digit in media_id:
-            self.hass.async_add_job(self.send_key, 'KEY_' + digit)
+            await self.hass.async_add_job(self.send_key, 'KEY_' + digit)
             await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
 
     def turn_on(self):
