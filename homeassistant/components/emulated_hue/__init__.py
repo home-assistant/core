@@ -91,6 +91,7 @@ def setup(hass, yaml_config):
         server_port=config.listen_port,
         api_password=None,
         ssl_certificate=None,
+        ssl_peer_certificate=None,
         ssl_key=None,
         cors_origins=None,
         use_x_forwarded_for=False,
