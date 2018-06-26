@@ -50,6 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+<<<<<<< HEAD
 })
 
 
@@ -64,12 +65,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+=======
+>>>>>>> 166484267... fixed some linting errors.
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the brunt platform."""
+<<<<<<< HEAD
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+    # pylint: disable=no-name-in-module
+>>>>>>> 166484267... fixed some linting errors.
     from brunt import BruntAPI
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -77,6 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     bapi = BruntAPI(username=username, password=password)
     try:
         things = bapi.getThings()['things']
+<<<<<<< HEAD
 <<<<<<< HEAD
         if not things:
             raise HomeAssistantError
@@ -92,6 +100,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 hass, bapi, thing['NAME'],
                 thing['thingUri']) for thing in things)
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+        if not things:
+            raise HomeAssistantError
+
+        add_devices(BruntDevice(
+            hass, bapi, thing['NAME'],
+            thing['thingUri']) for thing in things)
+>>>>>>> 166484267... fixed some linting errors.
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
@@ -109,6 +125,7 @@ class BruntDevice(CoverDevice):
     """
 
 <<<<<<< HEAD
+<<<<<<< HEAD
     def __init__(self, hass, bapi, name, thing_uri):
         """Init the Brunt device."""
         self._bapi = bapi
@@ -116,12 +133,18 @@ class BruntDevice(CoverDevice):
         self._thing_uri = thing_uri
 =======
     def __init__(self, hass, bapi, name, thingUri):
+=======
+    def __init__(self, hass, bapi, name, thing_uri):
+>>>>>>> 166484267... fixed some linting errors.
         """Init the Brunt device."""
-        # from brunt import BruntAPI
         self._bapi = bapi
         self._name = name
+<<<<<<< HEAD
         self._thingUri = thingUri
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+        self._thing_uri = thing_uri
+>>>>>>> 166484267... fixed some linting errors.
 
         self._state = None
         self._available = None
@@ -226,10 +249,14 @@ class BruntDevice(CoverDevice):
         try:
             self._state = self._bapi.getState(
 <<<<<<< HEAD
+<<<<<<< HEAD
                 thingUri=self._thing_uri)['thing']
 =======
                 thingUri=self._thingUri)['thing']
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+                thingUri=self._thing_uri)['thing']
+>>>>>>> 166484267... fixed some linting errors.
             self._available = True
         except (TypeError, KeyError, NameError, ValueError) as ex:
             _LOGGER.error("%s", ex)
@@ -239,9 +266,13 @@ class BruntDevice(CoverDevice):
         """ set the cover to the open position. """
         self._bapi.changeRequestPosition(
 <<<<<<< HEAD
+<<<<<<< HEAD
             OPEN_POSITION, thingUri=self._thing_uri)
 =======
             OPEN_POSITION, thingUri=self._thingUri)
+=======
+            OPEN_POSITION, thingUri=self._thing_uri)
+>>>>>>> 166484267... fixed some linting errors.
 
 <<<<<<< HEAD
 >>>>>>> 203699105... Added Brunt Cover device
@@ -252,17 +283,25 @@ class BruntDevice(CoverDevice):
         """ set the cover to the closed position. """
         self._bapi.changeRequestPosition(
 <<<<<<< HEAD
+<<<<<<< HEAD
             CLOSED_POSITION, thingUri=self._thing_uri)
 =======
             CLOSED_POSITION, thingUri=self._thingUri)
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+            CLOSED_POSITION, thingUri=self._thing_uri)
+>>>>>>> 166484267... fixed some linting errors.
 
     def set_cover_position(self, **kwargs):
         """ set the cover to a specific position. """
         if ATTR_POSITION in kwargs:
             self._bapi.changeRequestPosition(
 <<<<<<< HEAD
+<<<<<<< HEAD
                 int(kwargs[ATTR_POSITION]), thingUri=self._thing_uri)
 =======
                 int(kwargs[ATTR_POSITION]), thingUri=self._thingUri)
 >>>>>>> 203699105... Added Brunt Cover device
+=======
+                int(kwargs[ATTR_POSITION]), thingUri=self._thing_uri)
+>>>>>>> 166484267... fixed some linting errors.
