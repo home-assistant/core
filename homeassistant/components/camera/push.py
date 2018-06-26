@@ -86,7 +86,8 @@ class CameraPushReceiver(HomeAssistantView):
             return self.json_message('Invalid POST', HTTP_BAD_REQUEST)
         except KeyError as key_error:
             _LOGGER.error('In your POST message %s', key_error)
-            return self.json_message('Parameter {} missing'.format(self._image), HTTP_BAD_REQUEST)
+            return self.json_message('Parameter {} missing'.format(self._image),
+                                     HTTP_BAD_REQUEST)
 
 
 class PushCamera(Camera):
