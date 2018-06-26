@@ -6,8 +6,8 @@ from homeassistant.components import homematicip_cloud as hmipc
 
 from tests.common import mock_coro
 
-import homematicip
 from homematicip.base.base_connection import HmipConnectionError
+
 
 async def test_hap_init(aioclient_mock):
     """Test a successful setup."""

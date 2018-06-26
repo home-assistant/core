@@ -4,7 +4,6 @@ from homeassistant.components.homematicip_cloud import config_flow
 
 from tests.common import MockConfigEntry
 
-import homematicip
 
 async def test_import_config(hass):
     """Test importing a host with an existing config file."""

@@ -12,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.core import callback
 
-import homematicip
 from homematicip.base.base_connection import HmipConnectionError
 
 from .const import (
@@ -39,7 +38,6 @@ class HomematicipHAP(object):
 
     async def async_setup(self, tries=0):
         """Initialize connection."""
-        from homematicip.base.base_connection import HmipConnectionError
         try:
             self.home = await self.get_hap(
                 self.hass,
