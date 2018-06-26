@@ -9,6 +9,7 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 from tests.components.auth import async_setup_auth
 
+
 @mock.patch("PIL.Image.new")
 async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
     """Test that posting to wrong api endpoint fails."""
@@ -29,6 +30,7 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
     # wrong entity
     resp = await client.post('/api/camera_push/camera.wrong', data=files)
     assert resp.status == 400
+
 
 @mock.patch("PIL.Image.new")
 async def test_posting_url(aioclient_mock, hass, aiohttp_client):
