@@ -1,7 +1,7 @@
 """
-EcoPlugs Component for aut-discovering Wion and EcoPlugs automatically
+EcoPlugs Component for aut-discovering Wion and EcoPlugs automatically.
 
-For more details about this platform, please refer to the documentation
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/ecoplug/
 """
 
@@ -22,6 +22,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 
 class EcoPlugSwitch(SwitchDevice):
     """Return the polling state."""
+    
     def __init__(self, plug):
         """Initialize the switch."""
         self._plug = plug
@@ -61,25 +62,24 @@ class EcoPlugSwitch(SwitchDevice):
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up EcoPlug switches."""
-
     from pyecoplug import EcoDiscovery
-
     discovered = {}
     def add(plug):
         """Find switches on the network."""
+        
         if plug.name not in discovered:
             add_devices([EcoPlugSwitch(plug)])
             discovered[plug.name] = plug
 
     def remove(plug):
-        """Is there a way to remove devices??"""
+        """Unsure if there is a way to remove devices."""
         pass
 
     disco = EcoDiscovery(add, remove)
     disco.start()
 
     def stop_disco(event):
-        """Stop device discovery"""
+        """Stop device discovery."""
         disco.stop()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_disco)
