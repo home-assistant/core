@@ -14,8 +14,7 @@ from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
     STATE_IDLE, STATE_RECORDING
 from homeassistant.core import callback
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import CONF_NAME, CONF_TIMEOUT, HTTP_BAD_REQUEST,\
-    ATTR_LAST_TRIP_TIME
+from homeassistant.const import CONF_NAME, CONF_TIMEOUT, HTTP_BAD_REQUEST
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
@@ -30,6 +29,7 @@ DEFAULT_NAME = "Push Camera"
 BLANK_IMAGE_SIZE = (640, 480)
 
 ATTR_FILENAME = 'filename'
+ATTR_LAST_TRIP = 'last_trip'
 
 REQUIREMENTS = ['pillow==5.0.0']
 
@@ -169,7 +169,7 @@ class PushCamera(Camera):
         """Return the state attributes."""
         return {
             name: value for name, value in (
-                (ATTR_LAST_TRIP_TIME, self._last_trip),
+                (ATTR_LAST_TRIP, self._last_trip),
                 (ATTR_FILENAME, self._filename),
             ) if value is not None
         }
