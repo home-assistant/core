@@ -10,13 +10,13 @@ from datetime import timedelta
 from homeassistant.components.camera import Camera
 from homeassistant.components.neato import (
     NEATO_MAP_DATA, NEATO_ROBOTS, NEATO_LOGIN)
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
 SCAN_INTERVAL = timedelta(minutes=10)
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Neato Camera."""

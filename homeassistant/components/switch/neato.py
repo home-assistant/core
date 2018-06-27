@@ -10,7 +10,6 @@ import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
