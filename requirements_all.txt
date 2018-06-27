@@ -460,7 +460,7 @@ influxdb==5.0.0
 insteonlocal==0.53
 
 # homeassistant.components.insteon_plm
-insteonplm==0.11.2
+insteonplm==0.11.3
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
@@ -476,7 +476,7 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.6
 
 # homeassistant.scripts.keyring
-keyring==12.2.1
+keyring==13.0.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==3.1
@@ -1218,7 +1218,7 @@ schiene==0.22
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid==5.4.0
+sendgrid==5.4.1
 
 # homeassistant.components.light.sensehat
 # homeassistant.components.sensor.sensehat
@@ -1432,7 +1432,7 @@ yeelight==0.4.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.06.14
+youtube_dl==2018.06.25
 
 # homeassistant.components.light.zengge
 zengge==0.2
