@@ -41,7 +41,7 @@ def app():
     """Fixture to setup a web.Application."""
     app = web.Application()
     app.router.add_get('/', mock_handler)
-    setup_real_ip(app, False)
+    setup_real_ip(app, False, [])
     return app
 
 
