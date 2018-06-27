@@ -36,6 +36,7 @@ CONF_DIM_STEPS = 'dim_steps'
 CONF_X10_ALL_UNITS_OFF = 'x10_all_units_off'
 CONF_X10_ALL_LIGHTS_ON = 'x10_all_lights_on'
 CONF_X10_ALL_LIGHTS_OFF = 'x10_all_lights_off'
+EVENT_BINARY_SENSOR_ON = 'insteon_plm.binary_sensor_on'
 
 SRV_ADD_ALL_LINK = 'add_all_link'
 SRV_DEL_ALL_LINK = 'delete_all_link'
@@ -403,6 +404,18 @@ class InsteonPLMEntity(Entity):
     def async_entity_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
         self.async_schedule_update_ha_state()
+
+        # Firing an ON event for binary sensors because some devices can
+        # be configured to send an 'on' message only. This allows the
+        # device to be useful in automations even if it never technically
+        # changes state
+        ipdb = IPDB()
+        platform_info = ipdb[self._insteon_device_state]
+        if platform_info == "binary_sensor":
+            if val:
+                self.hass.bus.fire(EVENT_BINARY_SENSOR_ON, {
+                    CONF_ENTITY_ID: self.entity_id
+                    })
 
     @asyncio.coroutine
     def async_added_to_hass(self):
