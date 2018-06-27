@@ -26,8 +26,6 @@ CONF_IMAGE_FIELD = 'field'
 
 DEFAULT_NAME = "Push Camera"
 
-BLANK_IMAGE_SIZE = (640, 480)
-
 ATTR_FILENAME = 'filename'
 ATTR_LAST_TRIP = 'last_trip'
 
