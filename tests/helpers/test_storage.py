@@ -1,4 +1,5 @@
 """Tests for the storage helper."""
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -53,6 +54,24 @@ async def test_loading_non_existing(hass, store):
     with patch('homeassistant.util.json.open', side_effect=FileNotFoundError):
         data = await store.async_load()
     assert data is None
+
+
+async def test_loading_parallel(hass, store, mock_save):
+    """Test we can save and load data."""
+    data = {
+        'version': MOCK_VERSION,
+        'data': MOCK_DATA,
+    }
+
+    with patch('homeassistant.util.json.load_json',
+               side_effect=[data, Exception]):
+        results = await asyncio.gather(
+            store.async_load(),
+            store.async_load()
+        )
+
+    assert results[0] is MOCK_DATA
+    assert results[1] is MOCK_DATA
 
 
 async def test_saving_with_delay(hass, store, mock_save):
