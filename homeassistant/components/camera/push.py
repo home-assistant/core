@@ -104,6 +104,11 @@ class PushCamera(Camera):
         self._timeout = timeout
         self.queue = deque([], buffer_size)
 
+        self.queue.append(self._blank_image())
+        self._current_image = self.queue[0]
+
+    @classmethod
+    def _blank_image(cls):
         from PIL import Image
         import io
 
@@ -112,8 +117,7 @@ class PushCamera(Camera):
         imgbuf = io.BytesIO()
         image.save(imgbuf, "JPEG")
 
-        self.queue.append(imgbuf.getvalue())
-        self._current_image = imgbuf.getvalue()
+        return imgbuf.getvalue()
 
     @property
     def state(self):
@@ -144,6 +148,7 @@ class PushCamera(Camera):
         self._expired = async_track_point_in_utc_time(
             self.hass, reset_state, dt_util.utcnow() + self._timeout)
 
+        self._current_image = self.queue[-1]
         self.async_schedule_update_ha_state()
 
     async def async_camera_image(self):

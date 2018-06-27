@@ -2,7 +2,7 @@
 import io
 
 from datetime import timedelta
-from unittest import mock
+from unittest.mock import patch
 
 from homeassistant import core as ha
 from homeassistant.setup import async_setup_component
@@ -10,14 +10,15 @@ from homeassistant.util import dt as dt_util
 from tests.components.auth import async_setup_auth
 
 
-@mock.patch("PIL.Image.new")
 async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
     """Test that posting to wrong api endpoint fails."""
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'platform': 'push',
-            'name': 'config_test',
-        }})
+    with patch('homeassistant.components.camera.push.PushCamera._blank_image',
+               return_value=io.BytesIO(b'fakeinit')):
+        await async_setup_component(hass, 'camera', {
+            'camera': {
+                'platform': 'push',
+                'name': 'config_test',
+            }})
 
     client = await async_setup_auth(hass, aiohttp_client)
 
@@ -32,14 +33,15 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
     assert resp.status == 400
 
 
-@mock.patch("PIL.Image.new")
 async def test_posting_url(aioclient_mock, hass, aiohttp_client):
     """Test that posting to api endpoint works."""
-    await async_setup_component(hass, 'camera', {
-        'camera': {
-            'platform': 'push',
-            'name': 'config_test',
-        }})
+    with patch('homeassistant.components.camera.push.PushCamera._blank_image',
+               return_value=io.BytesIO(b'fakeinit')):
+        await async_setup_component(hass, 'camera', {
+            'camera': {
+                'platform': 'push',
+                'name': 'config_test',
+            }})
 
     client = await async_setup_auth(hass, aiohttp_client)
     files = {'image': io.BytesIO(b'fake')}
