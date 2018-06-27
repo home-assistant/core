@@ -90,9 +90,6 @@ class TraccarScanner(object):
         devices = self.devices
         positions = self.positions
 
-        item = []
-        ris = []
-
         try:
             for dev in devices:
                 for pos in positions:
