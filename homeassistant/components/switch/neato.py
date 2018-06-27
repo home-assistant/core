@@ -10,11 +10,12 @@ import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 SWITCH_TYPE_SCHEDULE = 'schedule'
 
@@ -52,7 +53,6 @@ class NeatoConnectedSwitch(ToggleEntity):
         self._schedule_state = None
         self._clean_state = None
 
-    @Throttle(timedelta(seconds=60))
     def update(self):
         """Update the states of Neato switches."""
         _LOGGER.debug("Running switch update")
