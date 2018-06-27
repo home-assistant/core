@@ -124,3 +124,13 @@ async def test_custom_component_name(hass):
     # Test custom components is mounted
     from custom_components.test_package import TEST
     assert TEST == 5
+
+
+async def test_log_warning_custom_component(hass, caplog):
+    """Test that we log a warning when loading a custom component."""
+    loader.get_component(hass, 'test_standalone')
+    assert \
+        'You are using a custom component for test_standalone' in caplog.text
+
+    loader.get_component(hass, 'light.test')
+    assert 'You are using a custom component for light.test' in caplog.text
