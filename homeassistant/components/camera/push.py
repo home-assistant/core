@@ -101,7 +101,7 @@ class PushCamera(Camera):
         self._state = STATE_IDLE
         self._timeout = timeout
         self.queue = deque([], buffer_size)
-        self._current_image = None 
+        self._current_image = None
 
     @property
     def state(self):
@@ -111,12 +111,12 @@ class PushCamera(Camera):
     async def update_image(self, image, filename):
         """Update the camera image."""
         if self._state == STATE_IDLE:
+            self._state = STATE_RECORDING
             self._last_trip = dt_util.utcnow()
             self.queue.clear()
 
-        self._state = STATE_RECORDING
         self._filename = filename
-        self.queue.append(image)
+        self.queue.appendleft(image)
 
         @callback
         def reset_state(now):
@@ -132,14 +132,13 @@ class PushCamera(Camera):
         self._expired = async_track_point_in_utc_time(
             self.hass, reset_state, dt_util.utcnow() + self._timeout)
 
-        self._current_image = self.queue[-1]
         self.async_schedule_update_ha_state()
 
     async def async_camera_image(self):
         """Return a still image response."""
         if self.queue:
             if self._state == STATE_IDLE:
-                self.queue.rotate(-1)
+                self.queue.rotate(1)
             self._current_image = self.queue[0]
 
         return self._current_image
