@@ -15,11 +15,12 @@ from homeassistant.components.vacuum import (
     SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON)
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
+
+SCAN_INTERVAL = timedelta(minutes=5)
 
 SUPPORT_NEATO = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
                  SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
@@ -63,7 +64,6 @@ class NeatoConnectedVacuum(VacuumDevice):
         self.clean_suspension_charge_count = None
         self.clean_suspension_time = None
 
-    @Throttle(timedelta(seconds=60))
     def update(self):
         """Update the states of Neato Vacuums."""
         _LOGGER.debug("Running Neato Vacuums update")
@@ -100,6 +100,10 @@ class NeatoConnectedVacuum(VacuumDevice):
                 self.robot.state['action'] == 2 or
                 self.robot.state['action'] == 3 and
                 self.robot.state['state'] == 2):
+            self._clean_state = STATE_ON
+        elif (self.robot.state['action'] == 11 or
+              self.robot.state['action'] == 12 and
+              self.robot.state['state'] == 2):
             self._clean_state = STATE_ON
         else:
             self._clean_state = STATE_OFF
