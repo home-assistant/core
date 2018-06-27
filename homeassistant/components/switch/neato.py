@@ -16,6 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
+SCAN_INTERVAL=timedelta(minutes=10)
+
 SWITCH_TYPE_SCHEDULE = 'schedule'
 
 SWITCH_TYPES = {
@@ -52,7 +54,6 @@ class NeatoConnectedSwitch(ToggleEntity):
         self._schedule_state = None
         self._clean_state = None
 
-    @Throttle(timedelta(seconds=600))
     def update(self):
         """Update the states of Neato switches."""
         _LOGGER.debug("Running switch update")

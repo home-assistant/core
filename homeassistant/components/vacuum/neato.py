@@ -21,6 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
+SCAN_INTERVAL=timedelta(minutes=5)
+
 SUPPORT_NEATO = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
                  SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
                  SUPPORT_STATUS | SUPPORT_MAP
@@ -63,7 +65,6 @@ class NeatoConnectedVacuum(VacuumDevice):
         self.clean_suspension_charge_count = None
         self.clean_suspension_time = None
 
-    @Throttle(timedelta(seconds=300))
     def update(self):
         """Update the states of Neato Vacuums."""
         _LOGGER.debug("Running Neato Vacuums update")

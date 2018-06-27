@@ -16,6 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
+SCAN_INTERVAL=timedelta(minutes=10)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Neato Camera."""
@@ -45,7 +46,6 @@ class NeatoCleaningMap(Camera):
         self.update()
         return self._image
 
-    @Throttle(timedelta(seconds=600))
     def update(self):
         """Check the contents of the map list."""
         self.neato.update_robots()
