@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import functools as ft
+import json
 import os
 import sys
 from unittest.mock import patch, MagicMock, Mock
@@ -705,3 +706,31 @@ class MockEntity(entity.Entity):
         if attr in self._values:
             return self._values[attr]
         return getattr(super(), attr)
+
+
+@contextmanager
+def mock_storage(data=None):
+    """Mock storage.
+
+    Data is a dict {'key': {'version': version, 'data': data}}
+
+    Written data will be converted to JSON to ensure JSON parsing works.
+    """
+    if data is None:
+        data = {}
+
+    async def mock_async_load(store):
+        """Mock version of load."""
+        return data.get(store.key)
+
+    def mock_write_data(store, path, data):
+        """Mock version of write data."""
+        print(store, path, data)
+        # To ensure that the data can be serialized
+        data[store.key] = json.loads(json.dumps(data))
+
+    with patch('homeassistant.helpers.storage.Store._async_load',
+               side_effect=mock_async_load, autospec=True), \
+        patch('homeassistant.helpers.storage.Store._write_data',
+              side_effect=mock_write_data, autospec=True):
+        yield data
