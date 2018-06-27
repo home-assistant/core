@@ -102,8 +102,11 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
 
             if index == 0:
                 _LOGGER.warning(
-                    'You are using a custom component for %s. Stop using it if'
-                    ' you are experiencing issues.', comp_or_platform)
+                    'You are using a custom component for %s which has not '
+                    'been tested by Home Assistant. This component might '
+                    'cause stability problems, be sure to disable it if you '
+                    'do experience issues with Home Assistant.',
+                    comp_or_platform)
 
             return module
 
