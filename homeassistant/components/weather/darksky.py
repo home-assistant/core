@@ -133,7 +133,7 @@ class DarkSkyWeather(WeatherEntity):
         return [{
             ATTR_FORECAST_TIME:
                 datetime.fromtimestamp(entry.d.get('time')).isoformat(),
-            ATTR_FORECAST_TEMP: 
+            ATTR_FORECAST_TEMP:
                 entry.d.get('temperature'),
             ATTR_FORECAST_CONDITION:
                 MAP_CONDITION.get(entry.d.get('icon'))
