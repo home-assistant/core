@@ -129,8 +129,8 @@ class HueBridge(object):
             (scene for scene in self.api.scenes.values()
              if scene.name == scene_name
              and group is not None
-             and sorted(scene.lights) == sorted(group.lights))
-            , None)
+             and sorted(scene.lights) == sorted(group.lights)),
+            None)
 
         # If we can't find it, fetch latest info.
         if not updated and (group is None or scene is None):
@@ -148,6 +148,7 @@ class HueBridge(object):
             return
 
         await group.set_action(scene=scene.id)
+
 
 async def get_bridge(hass, host, username=None):
     """Create a bridge object and verify authentication."""
