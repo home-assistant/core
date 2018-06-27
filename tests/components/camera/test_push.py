@@ -2,7 +2,6 @@
 import io
 
 from datetime import timedelta
-from unittest.mock import patch
 
 from homeassistant import core as ha
 from homeassistant.setup import async_setup_component
