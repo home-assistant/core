@@ -81,7 +81,7 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
     potential_paths = ['custom_components.{}'.format(comp_or_platform),
                        'homeassistant.components.{}'.format(comp_or_platform)]
 
-    for path in potential_paths:
+    for index, path in enumerate(potential_paths):
         try:
             module = importlib.import_module(path)
 
@@ -99,6 +99,11 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
             _LOGGER.info("Loaded %s from %s", comp_or_platform, path)
 
             cache[comp_or_platform] = module
+
+            if index == 0:
+                _LOGGER.warning(
+                    'You are using a custom component for %s. Stop using it if'
+                    ' you are experiencing issues.', comp_or_platform)
 
             return module
 
