@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
-SCAN_INTERVAL=timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Neato Camera."""

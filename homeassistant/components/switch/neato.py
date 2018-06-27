@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
-SCAN_INTERVAL=timedelta(minutes=10)
+SCAN_INTERVAL = timedelta(minutes=10)
 
 SWITCH_TYPE_SCHEDULE = 'schedule'
 

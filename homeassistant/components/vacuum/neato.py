@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
-SCAN_INTERVAL=timedelta(minutes=5)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 SUPPORT_NEATO = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
                  SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
