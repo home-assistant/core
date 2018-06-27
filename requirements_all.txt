@@ -651,7 +651,6 @@ piglow==1.2.4
 pilight==0.1.1
 
 # homeassistant.components.camera.proxy
-# homeassistant.components.camera.push
 pillow==5.0.0
 
 # homeassistant.components.dominos
