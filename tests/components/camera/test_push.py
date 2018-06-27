@@ -12,13 +12,11 @@ from tests.components.auth import async_setup_auth
 
 async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
     """Test that posting to wrong api endpoint fails."""
-    with patch('homeassistant.components.camera.push.PushCamera._blank_image',
-               return_value=io.BytesIO(b'fakeinit')):
-        await async_setup_component(hass, 'camera', {
-            'camera': {
-                'platform': 'push',
-                'name': 'config_test',
-            }})
+    await async_setup_component(hass, 'camera', {
+        'camera': {
+            'platform': 'push',
+            'name': 'config_test',
+        }})
 
     client = await async_setup_auth(hass, aiohttp_client)
 
@@ -35,13 +33,11 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
 
 async def test_posting_url(aioclient_mock, hass, aiohttp_client):
     """Test that posting to api endpoint works."""
-    with patch('homeassistant.components.camera.push.PushCamera._blank_image',
-               return_value=io.BytesIO(b'fakeinit')):
-        await async_setup_component(hass, 'camera', {
-            'camera': {
-                'platform': 'push',
-                'name': 'config_test',
-            }})
+    await async_setup_component(hass, 'camera', {
+        'camera': {
+            'platform': 'push',
+            'name': 'config_test',
+        }})
 
     client = await async_setup_auth(hass, aiohttp_client)
     files = {'image': io.BytesIO(b'fake')}
