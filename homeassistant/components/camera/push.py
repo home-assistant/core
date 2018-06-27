@@ -31,8 +31,6 @@ BLANK_IMAGE_SIZE = (640, 480)
 ATTR_FILENAME = 'filename'
 ATTR_LAST_TRIP = 'last_trip'
 
-REQUIREMENTS = ['pillow==5.0.0']
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_BUFFER_SIZE, default=1): cv.positive_int,
@@ -103,21 +101,7 @@ class PushCamera(Camera):
         self._state = STATE_IDLE
         self._timeout = timeout
         self.queue = deque([], buffer_size)
-
-        self.queue.append(self._blank_image())
-        self._current_image = self.queue[0]
-
-    @classmethod
-    def _blank_image(cls):
-        from PIL import Image
-        import io
-
-        image = Image.new('RGB', BLANK_IMAGE_SIZE)
-
-        imgbuf = io.BytesIO()
-        image.save(imgbuf, "JPEG")
-
-        return imgbuf.getvalue()
+        self._current_image = None 
 
     @property
     def state(self):
