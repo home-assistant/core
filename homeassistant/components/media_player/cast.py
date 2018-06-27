@@ -4,7 +4,7 @@ Provide functionality to interact with Cast devices on the network.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.cast/
 """
-# pylint: disable=import-error
+import asyncio
 import logging
 import threading
 from typing import Optional, Tuple
@@ -17,6 +17,7 @@ from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import (dispatcher_send,
                                               async_dispatcher_connect)
+from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.media_player import (
     MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
@@ -28,7 +29,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['pychromecast==2.1.0']
+DEPENDENCIES = ('cast',)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -186,6 +187,30 @@ def _async_create_cast_device(hass: HomeAssistantType,
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_devices, discovery_info=None):
+    """Set up thet Cast platform.
+
+    Deprecated.
+    """
+    _LOGGER.warning(
+        'Setting configuration for Cast via platform is deprecated. '
+        'Configure via Cast component instead.')
+    await _async_setup_platform(
+        hass, config, async_add_devices, discovery_info)
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up Cast from a config entry."""
+    config = hass.data[CAST_DOMAIN].get('media_player', {})
+    if not isinstance(config, list):
+        config = [config]
+
+    await asyncio.wait([
+        _async_setup_platform(hass, cfg, async_add_devices, None)
+        for cfg in config])
+
+
+async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                                async_add_devices, discovery_info):
     """Set up the cast platform."""
     import pychromecast
 

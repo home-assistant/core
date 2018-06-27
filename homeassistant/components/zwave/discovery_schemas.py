@@ -213,6 +213,7 @@ DISCOVERY_SCHEMAS = [
          }})},
     {const.DISC_COMPONENT: 'switch',
      const.DISC_GENERIC_DEVICE_CLASS: [
+         const.GENERIC_TYPE_METER,
          const.GENERIC_TYPE_SENSOR_ALARM,
          const.GENERIC_TYPE_SENSOR_BINARY,
          const.GENERIC_TYPE_SWITCH_BINARY,

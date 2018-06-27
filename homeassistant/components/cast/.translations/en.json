@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No Google Cast devices found on the network.",
+            "single_instance_allowed": "Only a single configuration of Google Cast is necessary."
+        },
+        "step": {
+            "confirm": {
+                "description": "Do you want to setup Google Cast?",
+                "title": "Google Cast"
+            }
+        },
+        "title": "Google Cast"
+    }
+}

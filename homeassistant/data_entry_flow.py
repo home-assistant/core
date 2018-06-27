@@ -9,6 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SOURCE_USER = 'user'
 SOURCE_DISCOVERY = 'discovery'
+SOURCE_IMPORT = 'import'
 
 RESULT_TYPE_FORM = 'form'
 RESULT_TYPE_CREATE_ENTRY = 'create_entry'
@@ -132,7 +133,8 @@ class FlowHandler:
     VERSION = 1
 
     @callback
-    def async_show_form(self, *, step_id, data_schema=None, errors=None):
+    def async_show_form(self, *, step_id, data_schema=None, errors=None,
+                        description_placeholders=None):
         """Return the definition of a form to gather user input."""
         return {
             'type': RESULT_TYPE_FORM,
@@ -141,6 +143,7 @@ class FlowHandler:
             'step_id': step_id,
             'data_schema': data_schema,
             'errors': errors,
+            'description_placeholders': description_placeholders,
         }
 
     @callback

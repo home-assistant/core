@@ -39,7 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Validate configuration, create devices and start monitoring thread."""
     bt_device_id = config.get("bt_device_id")

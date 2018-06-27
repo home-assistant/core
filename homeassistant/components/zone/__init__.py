@@ -73,8 +73,8 @@ async def async_setup_entry(hass, config_entry):
     entry = config_entry.data
     name = entry[CONF_NAME]
     zone = Zone(hass, name, entry[CONF_LATITUDE], entry[CONF_LONGITUDE],
-                entry.get(CONF_RADIUS), entry.get(CONF_ICON),
-                entry.get(CONF_PASSIVE))
+                entry.get(CONF_RADIUS, DEFAULT_RADIUS), entry.get(CONF_ICON),
+                entry.get(CONF_PASSIVE, DEFAULT_PASSIVE))
     zone.entity_id = async_generate_entity_id(
         ENTITY_ID_FORMAT, name, None, hass)
     hass.async_add_job(zone.async_update_ha_state())

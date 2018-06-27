@@ -110,6 +110,9 @@ def test_initialize_flow(hass, client):
             return self.async_show_form(
                 step_id='init',
                 data_schema=schema,
+                description_placeholders={
+                    'url': 'https://example.com',
+                },
                 errors={
                     'username': 'Should be unique.'
                 }
@@ -140,6 +143,9 @@ def test_initialize_flow(hass, client):
                 'type': 'string'
             }
         ],
+        'description_placeholders': {
+            'url': 'https://example.com',
+        },
         'errors': {
             'username': 'Should be unique.'
         }
@@ -242,6 +248,7 @@ def test_two_step_flow(hass, client):
                     'type': 'string'
                 }
             ],
+            'description_placeholders': None,
             'errors': None
         }
 

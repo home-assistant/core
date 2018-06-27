@@ -16,7 +16,8 @@
             "options": {
                 "title": "Extra configuration options for deCONZ",
                 "data":{
-                    "allow_clip_sensor": "Allow importing virtual sensors"
+                    "allow_clip_sensor": "Allow importing virtual sensors",
+                    "allow_deconz_groups": "Allow importing deCONZ groups"
                 }
             }
         },

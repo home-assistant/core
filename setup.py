@@ -42,7 +42,7 @@ DOWNLOAD_URL = '{}/archive/{}.zip'.format(GITHUB_URL, hass_const.__version__)
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'aiohttp==3.2.1',
+    'aiohttp==3.3.2',
     'astral==1.6.1',
     'async_timeout==3.0.0',
     'attrs==18.1.0',
