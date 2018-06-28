@@ -38,9 +38,7 @@ STATE_MAPPINGS = {
     'Heat Mode': STATE_HEAT,
     'Heat (Default)': STATE_HEAT,
     'Cool': STATE_COOL,
-    'Idle Mode': STATE_IDLE,
     'Auto': STATE_AUTO,
-    'Auto Changeover': STATE_AUTO,
 }
 
 
