@@ -180,7 +180,7 @@ class HomeAssistantHTTP(object):
             middlewares=[staticresource_middleware])
 
         # This order matters
-        setup_real_ip(app, use_x_forwarded_for)
+        setup_real_ip(app, use_x_forwarded_for, trusted_networks)
 
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
