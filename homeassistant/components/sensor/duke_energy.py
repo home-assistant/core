@@ -56,6 +56,7 @@ class DukeEnergyMeter(Entity):
 
     @property
     def unique_id(self):
+        """Return the unique ID."""
         return self.duke_meter.id
 
     @property
