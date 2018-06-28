@@ -26,6 +26,9 @@ Adafruit-SHT31==1.0.2
 # homeassistant.components.sensor.dht
 # Adafruit_Python_DHT==1.3.2
 
+# homeassistant.components.cover.brunt
+brunt==0.1.2
+
 # homeassistant.components.doorbird
 DoorBirdPy==0.1.3
 

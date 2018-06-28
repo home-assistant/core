@@ -7,11 +7,11 @@ https://home-assistant.io/components/cover/brunt
 import logging
 import voluptuous as vol
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.const import (
     CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
     ATTR_POSITION, PLATFORM_SCHEMA,
@@ -23,6 +23,11 @@ from homeassistant.components.cover import (
     ATTR_POSITION, PLATFORM_SCHEMA,
 >>>>>>> 64ddfcc80... small styling updates
     STATE_OPEN, STATE_CLOSED)
+=======
+    ATTR_POSITION, PLATFORM_SCHEMA, ATTR_CURRENT_POSITION,
+    STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING,
+    STATE_UNKNOWN)
+>>>>>>> d1da64c6f... Updated functional code, new state function and other small changes.
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['brunt==0.1.2']
@@ -34,8 +39,8 @@ ATTRIBUTION = 'Based on an unofficial Brunt SDK.'
 
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
-ATTR_COVER_STATE = 'cover_state'
-ATTR_CURRENT_POSITION = 'current_position'
+# ATTR_COVER_STATE = 'cover_state'
+STATE_PARTIALLY_OPEN = 'partially open'
 ATTR_REQUEST_POSITION = 'request_position'
 DEFAULT_NAME = 'brunt blind engine'
 NOTIFICATION_ID = 'brunt_notification'
@@ -52,6 +57,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 <<<<<<< HEAD
 })
+
+POSITION_MAP = {
+    0: STATE_CLOSED,
+    100: STATE_OPEN,
+}
+MOVE_STATES_MAP = {
+    1: STATE_OPENING,
+    2: STATE_CLOSING,
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -78,8 +92,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     # pylint: disable=no-name-in-module
 >>>>>>> 166484267... fixed some linting errors.
     from brunt import BruntAPI
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
 
     bapi = BruntAPI(username=username, password=password)
     try:
@@ -102,12 +116,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 >>>>>>> 203699105... Added Brunt Cover device
 =======
         if not things:
+<<<<<<< HEAD
             raise HomeAssistantError
 
         add_devices(BruntDevice(
             hass, bapi, thing['NAME'],
             thing['thingUri']) for thing in things)
 >>>>>>> 166484267... fixed some linting errors.
+=======
+            _LOGGER.error("No things present in account.")
+        else:
+            add_devices(BruntDevice(
+                hass, bapi, thing['NAME'],
+                thing['thingUri']) for thing in things)
+>>>>>>> d1da64c6f... Updated functional code, new state function and other small changes.
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
@@ -146,7 +168,7 @@ class BruntDevice(CoverDevice):
         self._thing_uri = thing_uri
 >>>>>>> 166484267... fixed some linting errors.
 
-        self._state = None
+        self._state = STATE_UNKNOWN
         self._available = None
         self.update()
 
@@ -162,6 +184,7 @@ class BruntDevice(CoverDevice):
 
     @property
     def device_state_attributes(self):
+<<<<<<< HEAD
         """Return the device state attributes."""
         data = {}
 <<<<<<< HEAD
@@ -199,12 +222,24 @@ class BruntDevice(CoverDevice):
 =======
 >>>>>>> 64ddfcc80... small styling updates
         return data
+=======
+        """Return the detailed device state attributes."""
+        return {
+            ATTR_CURRENT_POSITION: int(self._state['currentPosition']),
+            ATTR_REQUEST_POSITION: int(self._state['requestPosition'])
+        }
+>>>>>>> d1da64c6f... Updated functional code, new state function and other small changes.
 
     @property
     def state(self):
-        """Return the state of the cover."""
-        return STATE_CLOSED if int(
-            self._state['currentPosition']) == CLOSED_POSITION else STATE_OPEN
+        """Return the state of the cover. """
+        if int(self._state['moveState']) in MOVE_STATES_MAP:
+            state = MOVE_STATES_MAP.get(int(self._state['moveState']))
+        elif 0 <= int(self._state['currentPosition']) <= 100:
+            state = POSITION_MAP.get(int(self._state['currentPosition']), STATE_PARTIALLY_OPEN)
+        else:
+            state = STATE_UNKNOWN
+        return state
 
     @property
     def current_cover_position(self):
