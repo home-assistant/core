@@ -22,6 +22,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
 })
 
+LAST_BILL_USAGE = "lastBillsUsage"
+LAST_BILL_AVERAGE_USAGE = "lastBillsAverageUsage"
+LAST_BILL_DAYS_BILLED = "lastBillsDaysBilled"
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup all Duke Energy meters."""
@@ -35,13 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Failed to setup Duke Energy")
         return False
 
-    meters = duke.get_meters()
-    sensors = []
-    for meter in meters:
-        sensors.append(DukeEnergyMeter(meter))
-    add_devices(sensors)
-
-    return True
+    add_devices([DukeEnergyMeter(meter) for meter in duke.get_meters()])
 
 
 class DukeEnergyMeter(Entity):
@@ -57,6 +55,10 @@ class DukeEnergyMeter(Entity):
         return "duke_energy_" + self.duke_meter.id
 
     @property
+    def unique_id(self):
+        return self.duke_meter.id
+
+    @property
     def state(self):
         """Return yesterdays usage."""
         return self.duke_meter.get_usage()
@@ -70,9 +72,9 @@ class DukeEnergyMeter(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = {
-            "lastBillsUsage": self.duke_meter.get_total(),
-            "lastBillsAverageUsage": self.duke_meter.get_average(),
-            "lastBillsDaysBilled": self.duke_meter.get_days_billed()
+            LAST_BILL_USAGE: self.duke_meter.get_total(),
+            LAST_BILL_AVERAGE_USAGE: self.duke_meter.get_average(),
+            LAST_BILL_DAYS_BILLED: self.duke_meter.get_days_billed()
         }
         return attributes
 
