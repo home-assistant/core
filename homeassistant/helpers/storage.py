@@ -88,6 +88,8 @@ class Store:
         if data['version'] == self.version:
             stored = data['data']
         else:
+            _LOGGER.info('Migrating %s storage from %s to %s',
+                         self.key, data['version'], self.version)
             stored = await self._async_migrate_func(
                 data['version'], data['data'])
 
