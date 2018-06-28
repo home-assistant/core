@@ -4,14 +4,7 @@ Provide functionality to interact with Cast devices on the network.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.cast/
 """
-<<<<<<< HEAD
-<<<<<<< HEAD
 import asyncio
-=======
->>>>>>> Lint cleanup (#15103)
-=======
-import asyncio
->>>>>>> Fix cast config (#15143)
 import logging
 import threading
 from typing import Optional, Tuple
