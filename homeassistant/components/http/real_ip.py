@@ -11,7 +11,7 @@ from .const import KEY_REAL_IP
 
 
 @callback
-def setup_real_ip(app, use_x_forwarded_for, trusted_networks):
+def setup_real_ip(app, use_x_forwarded_for, trusted_proxies):
     """Create IP Ban middleware for the app."""
     @middleware
     async def real_ip_middleware(request, handler):
@@ -23,8 +23,8 @@ def setup_real_ip(app, use_x_forwarded_for, trusted_networks):
         # Only use the XFF header if enabled, present, and from a trusted proxy
         if (use_x_forwarded_for and
                 X_FORWARDED_FOR in request.headers and
-                any(connected_ip in trusted_network
-                    for trusted_network in trusted_networks)):
+                any(connected_ip in trusted_proxy
+                    for trusted_proxy in trusted_proxies)):
             request[KEY_REAL_IP] = ip_address(
                 request.headers.get(X_FORWARDED_FOR).split(',')[0])
 

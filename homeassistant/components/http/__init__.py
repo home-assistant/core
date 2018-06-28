@@ -44,6 +44,7 @@ CONF_SSL_PEER_CERTIFICATE = 'ssl_peer_certificate'
 CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
 CONF_USE_X_FORWARDED_FOR = 'use_x_forwarded_for'
+CONF_TRUSTED_PROXIES = 'trusted_proxies'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
@@ -86,6 +87,8 @@ HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_CORS_ORIGINS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
+    vol.Optional(CONF_TRUSTED_PROXIES, default=[]):
+        vol.All(cv.ensure_list, [ip_network]),
     vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
         vol.All(cv.ensure_list, [ip_network]),
     vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
@@ -114,6 +117,7 @@ async def async_setup(hass, config):
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf[CONF_CORS_ORIGINS]
     use_x_forwarded_for = conf[CONF_USE_X_FORWARDED_FOR]
+    trusted_proxies = conf[CONF_TRUSTED_PROXIES]
     trusted_networks = conf[CONF_TRUSTED_NETWORKS]
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
@@ -132,6 +136,7 @@ async def async_setup(hass, config):
         ssl_key=ssl_key,
         cors_origins=cors_origins,
         use_x_forwarded_for=use_x_forwarded_for,
+        trusted_proxies=trusted_proxies,
         trusted_networks=trusted_networks,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled
@@ -173,14 +178,14 @@ class HomeAssistantHTTP(object):
     def __init__(self, hass, api_password,
                  ssl_certificate, ssl_peer_certificate,
                  ssl_key, server_host, server_port, cors_origins,
-                 use_x_forwarded_for, trusted_networks,
+                 use_x_forwarded_for, trusted_proxies, trusted_networks,
                  login_threshold, is_ban_enabled):
         """Initialize the HTTP Home Assistant server."""
         app = self.app = web.Application(
             middlewares=[staticresource_middleware])
 
         # This order matters
-        setup_real_ip(app, use_x_forwarded_for, trusted_networks)
+        setup_real_ip(app, use_x_forwarded_for, trusted_proxies)
 
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
