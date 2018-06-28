@@ -236,7 +236,7 @@ class BruntDevice(CoverDevice):
         if int(self._state['moveState']) in MOVE_STATES_MAP:
             state = MOVE_STATES_MAP.get(int(self._state['moveState']))
         elif 0 <= int(self._state['currentPosition']) <= 100:
-            state = POSITION_MAP.get(int(self._state['currentPosition']), 
+            state = POSITION_MAP.get(int(self._state['currentPosition']),
                 STATE_PARTIALLY_OPEN)
         else:
             state = STATE_UNKNOWN
