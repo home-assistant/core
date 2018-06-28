@@ -32,19 +32,6 @@ KEY_STATUS_DISPLAY = 'ups.status.display'
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 SENSOR_TYPES = {
-    'device.model': ['Device model', '', 'mdi:information-outline'],
-    'device.mfr': ['Device manufacturer', '', 'mdi:information-outline'],
-    'device.serial': ['Device serial', '', 'mdi:information-outline'],
-    'device.type': ['Device type', '', 'mdi:information-outline'],
-    'device.description':
-        ['Device description', '', 'mdi:information-outline'],
-    'device.contact':
-        ['Device administrator name', '', 'mdi:information-outline'],
-    'device.location':
-        ['Device physical location', '', 'mdi:information-outline'],
-    'device.part': ['Device part number', '', 'mdi:information-outline'],
-    'device.macaddr':
-        ['Device network address', '', 'mdi:information-outline'],
     'ups.status.display': ['Status', '', 'mdi:information-outline'],
     'ups.status': ['Status Data', '', 'mdi:information-outline'],
     'ups.alarm': ['Alarms', '', 'mdi:alarm'],
