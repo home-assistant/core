@@ -223,7 +223,7 @@ async def test_auth_active_access_with_trusted_ip(app2, aiohttp_client):
 
 async def test_auth_active_blocked_api_password_access(app, aiohttp_client):
     """Test access using apI_password should be blocked when auth.active."""
-    setup_auth(app, [], True, None)
+    setup_auth(app, [], True, API_PASSWORD)
     client = await aiohttp_client(app)
 
     req = await client.get(

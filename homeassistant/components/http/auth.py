@@ -30,7 +30,8 @@ def setup_auth(app, trusted_networks, use_auth, api_password=None):
 
         legacy_auth = not use_auth and api_password
         if (hdrs.AUTHORIZATION in request.headers and
-                await async_validate_auth_header(request, api_password)):
+                await async_validate_auth_header(
+                    request, api_password if legacy_auth else None)):
             # it included both use_auth and api_password Basic auth
             authenticated = True
 
@@ -122,4 +123,3 @@ async def async_validate_auth_header(request, api_password=None):
 
     else:
         return False
-
