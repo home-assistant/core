@@ -411,8 +411,7 @@ class InsteonPLMEntity(Entity):
         # changes state
         ipdb = IPDB()
         platform_info = ipdb[self._insteon_device_state]
-        _LOGGER.debug('platform_info: %s', platform_info)
-        if platform_info == "binary_sensor":
+        if platform_info.get('platform') == "binary_sensor":
             if val:
                 _LOGGER.debug('Firing event insteon_plm.binary_sensor_on')
                 self.hass.bus.fire(EVENT_BINARY_SENSOR_ON, {
