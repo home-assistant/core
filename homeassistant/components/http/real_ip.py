@@ -26,7 +26,7 @@ def setup_real_ip(app, use_x_forwarded_for, trusted_proxies):
                 any(connected_ip in trusted_proxy
                     for trusted_proxy in trusted_proxies)):
             request[KEY_REAL_IP] = ip_address(
-                request.headers.get(X_FORWARDED_FOR).split(',')[0])
+                request.headers.get(X_FORWARDED_FOR).split(', ')[-1])
 
         return await handler(request)
 
