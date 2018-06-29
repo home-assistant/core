@@ -2,6 +2,7 @@
 import asyncio
 from datetime import timedelta
 import functools as ft
+import json
 import os
 import sys
 from unittest.mock import patch, MagicMock, Mock
@@ -15,7 +16,7 @@ from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
     intent, entity, restore_state, entity_registry,
-    entity_platform)
+    entity_platform, storage)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -705,3 +706,51 @@ class MockEntity(entity.Entity):
         if attr in self._values:
             return self._values[attr]
         return getattr(super(), attr)
+
+
+@contextmanager
+def mock_storage(data=None):
+    """Mock storage.
+
+    Data is a dict {'key': {'version': version, 'data': data}}
+
+    Written data will be converted to JSON to ensure JSON parsing works.
+    """
+    if data is None:
+        data = {}
+
+    orig_load = storage.Store._async_load
+
+    async def mock_async_load(store):
+        """Mock version of load."""
+        if store._data is None:
+            # No data to load
+            if store.key not in data:
+                return None
+
+            store._data = data.get(store.key)
+
+        # Route through original load so that we trigger migration
+        loaded = await orig_load(store)
+        _LOGGER.info('Loading data for %s: %s', store.key, loaded)
+        return loaded
+
+    def mock_write_data(store, path, data_to_write):
+        """Mock version of write data."""
+        # To ensure that the data can be serialized
+        _LOGGER.info('Writing data to %s: %s', store.key, data_to_write)
+        data[store.key] = json.loads(json.dumps(data_to_write))
+
+    with patch('homeassistant.helpers.storage.Store._async_load',
+               side_effect=mock_async_load, autospec=True), \
+        patch('homeassistant.helpers.storage.Store._write_data',
+              side_effect=mock_write_data, autospec=True):
+        yield data
+
+
+async def flush_store(store):
+    """Make sure all delayed writes of a store are written."""
+    if store._data is None:
+        return
+
+    await store._async_handle_write_data()
