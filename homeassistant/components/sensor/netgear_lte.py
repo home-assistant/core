@@ -29,14 +29,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(
         hass, config, async_add_devices, discovery_info):
     """Set up Netgear LTE sensor devices."""
-    lte_data = hass.data[DATA_KEY].get(config)
+    modem_data = hass.data[DATA_KEY].get_modem_data(config)
 
     sensors = []
     for sensortype in config[CONF_SENSORS]:
         if sensortype == SENSOR_SMS:
-            sensors.append(SMSSensor(lte_data))
+            sensors.append(SMSSensor(modem_data))
         elif sensortype == SENSOR_USAGE:
-            sensors.append(UsageSensor(lte_data))
+            sensors.append(UsageSensor(modem_data))
 
     async_add_devices(sensors, True)
 
@@ -45,11 +45,11 @@ async def async_setup_platform(
 class LTESensor(Entity):
     """Data usage sensor entity."""
 
-    lte_data = attr.ib()
+    modem_data = attr.ib()
 
     async def async_update(self):
         """Update state."""
-        await self.lte_data.async_update()
+        await self.modem_data.async_update()
 
 
 class SMSSensor(LTESensor):
@@ -63,7 +63,7 @@ class SMSSensor(LTESensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.lte_data.unread_count
+        return self.modem_data.unread_count
 
 
 class UsageSensor(LTESensor):
@@ -82,4 +82,4 @@ class UsageSensor(LTESensor):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return round(self.lte_data.usage / 1024**2, 1)
+        return round(self.modem_data.usage / 1024**2, 1)
