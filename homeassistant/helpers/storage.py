@@ -53,6 +53,7 @@ class Store:
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
         self._write_lock = asyncio.Lock()
+        self._load_task = None
 
     @property
     def path(self):
@@ -64,7 +65,17 @@ class Store:
 
         If the expected version does not match the given version, the migrate
         function will be invoked with await migrate_func(version, config).
+
+        Will ensure that when a call comes in while another one is in progress,
+        the second call will wait and return the result of the first call.
         """
+        if self._load_task is None:
+            self._load_task = self.hass.async_add_job(self._async_load())
+
+        return await self._load_task
+
+    async def _async_load(self):
+        """Helper to load the data."""
         if self._data is not None:
             data = self._data
         else:
@@ -75,9 +86,15 @@ class Store:
                 return None
 
         if data['version'] == self.version:
-            return data['data']
+            stored = data['data']
+        else:
+            _LOGGER.info('Migrating %s storage from %s to %s',
+                         self.key, data['version'], self.version)
+            stored = await self._async_migrate_func(
+                data['version'], data['data'])
 
-        return await self._async_migrate_func(data['version'], data['data'])
+        self._load_task = None
+        return stored
 
     async def async_save(self, data: Dict, *, delay: Optional[int] = None):
         """Save data with an optional delay."""
