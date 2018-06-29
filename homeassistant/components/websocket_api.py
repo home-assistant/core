@@ -324,8 +324,9 @@ class ActiveConnection:
                         request, msg['api_password'])
 
                 elif 'access_token' in msg:
-                    authenticated = \
-                        msg['access_token'] in self.hass.auth.access_tokens
+                    token = self.hass.auth.async_get_access_token(
+                        msg['access_token'])
+                    authenticated = token is not None
 
             if not authenticated:
                 self.debug("Invalid password")
