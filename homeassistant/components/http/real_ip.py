@@ -21,12 +21,15 @@ def setup_real_ip(app, use_x_forwarded_for, trusted_proxies):
         request[KEY_REAL_IP] = connected_ip
 
         # Only use the XFF header if enabled, present, and from a trusted proxy
-        if (use_x_forwarded_for and
-                X_FORWARDED_FOR in request.headers and
-                any(connected_ip in trusted_proxy
-                    for trusted_proxy in trusted_proxies)):
-            request[KEY_REAL_IP] = ip_address(
-                request.headers.get(X_FORWARDED_FOR).split(', ')[-1])
+        try:
+            if (use_x_forwarded_for and
+                    X_FORWARDED_FOR in request.headers and
+                    any(connected_ip in trusted_proxy
+                        for trusted_proxy in trusted_proxies)):
+                request[KEY_REAL_IP] = ip_address(
+                    request.headers.get(X_FORWARDED_FOR).split(', ')[-1])
+        except ValueError:
+            pass
 
         return await handler(request)
 
