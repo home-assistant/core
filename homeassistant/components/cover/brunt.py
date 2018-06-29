@@ -2,18 +2,21 @@
 Support for Brunt Blind Engine covers.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/cover/brunt
+https://home-assistant.io/components/cover.brunt
 """
 import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_USERNAME, CONF_PASSWORD)
+    CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.components.cover import (
-    CoverDevice, SUPPORT_OPEN, SUPPORT_CLOSE, SUPPORT_SET_POSITION,
-    ATTR_POSITION, PLATFORM_SCHEMA, ATTR_CURRENT_POSITION,
-    STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING,
-    STATE_UNKNOWN)
+    ATTR_CURRENT_POSITION, ATTR_POSITION,
+    CoverDevice, PLATFORM_SCHEMA,
+    STATE_CLOSED, STATE_CLOSING,
+    STATE_OPEN, STATE_OPENING,
+    STATE_UNKNOWN, SUPPORT_CLOSE,
+    SUPPORT_OPEN, SUPPORT_SET_POSITION
+)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['brunt==0.1.2']
@@ -35,8 +38,7 @@ OPEN_POSITION = 100
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Required(CONF_PASSWORD): cv.string
 })
 
 POSITION_MAP = {
@@ -76,7 +78,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class BruntDevice(CoverDevice):
-    """Representation of a Brunt cover device.
+    """
+    Representation of a Brunt cover device.
 
     Contains the common logic for all Brunt devices.
     """
@@ -102,32 +105,6 @@ class BruntDevice(CoverDevice):
         return self._available
 
     @property
-    def device_state_attributes(self):
-        """Return the detailed device state attributes."""
-        return {
-            ATTR_CURRENT_POSITION: int(self._state['currentPosition']),
-            ATTR_REQUEST_POSITION: int(self._state['requestPosition'])
-        }
-
-    @property
-    def state(self):
-        """Return the state of the cover."""
-        # first check if the cover is moving
-        if int(self._state['moveState']) in MOVE_STATES_MAP:
-            state = MOVE_STATES_MAP.get(int(self._state['moveState']))
-        # then check the current position, if it is between 0 and 100
-        # use the map to get open and closed, otherwise partial
-        elif 0 <= int(self._state['currentPosition']) <= 100:
-            state = POSITION_MAP.get(
-                int(self._state['currentPosition']),
-                STATE_PARTIALLY_OPEN
-                )
-        # otherwise unknown
-        else:
-            state = STATE_UNKNOWN
-        return state
-
-    @property
     def current_cover_position(self):
         """
         Return current position of cover.
@@ -135,6 +112,50 @@ class BruntDevice(CoverDevice):
         None is unknown, 0 is closed, 100 is fully open.
         """
         return int(self._state['currentPosition'])
+
+    @property
+    def request_cover_position(self):
+        """
+        Return requested position of cover.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        return int(self._state['requestPosition'])
+
+    @property
+    def move_state(self):
+        """
+        Return current position of cover.
+
+        None is unknown, 0 when stopped, 1 when opening, 2 when closing
+        """
+        return int(self._state['moveState'])
+
+    @property
+    def device_state_attributes(self):
+        """Return the detailed device state attributes."""
+        return {
+            ATTR_CURRENT_POSITION: self.current_cover_position,
+            ATTR_REQUEST_POSITION: self.request_cover_position
+        }
+
+    @property
+    def state(self):
+        """Return the state of the cover."""
+        # first check if the cover is moving
+        if self.move_state in MOVE_STATES_MAP:
+            state = MOVE_STATES_MAP.get(int(self._state['moveState']))
+        # then check the current position, if it is between 0 and 100
+        elif 0 <= self.current_cover_position <= 100:
+            # use the map to get open and closed, otherwise partial
+            state = POSITION_MAP.get(
+                self.current_cover_position,
+                STATE_PARTIALLY_OPEN
+                )
+        # otherwise unknown
+        else:
+            state = STATE_UNKNOWN
+        return state
 
     @property
     def device_class(self):
@@ -149,7 +170,7 @@ class BruntDevice(CoverDevice):
     @property
     def is_closed(self):
         """Return true if cover is closed, else False."""
-        return int(self._state['currentPosition']) == CLOSED_POSITION
+        return self.current_cover_position == CLOSED_POSITION
 
     def update(self):
         """Poll the current state of the device."""
