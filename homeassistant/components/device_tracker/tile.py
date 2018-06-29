@@ -109,14 +109,11 @@ class TileScanner(object):
         _LOGGER.debug('Updating Tile data')
 
         try:
-            progress = self._hass.async_add_job(
-                self._client.tiles.all(
-                    whitelist=self._types, show_inactive=self._show_inactive))
-            tiles = await progress
+            await self._client.asayn_init()
+            tiles = await self._client.tiles.all(
+                whitelist=self._types, show_inactive=self._show_inactive))
         except SessionExpiredError:
             _LOGGER.info('Session expired; trying again shortly')
-            progress.cancel()
-            self._hass.async_add_job(self._client.async_init())
             return
         except TileError as err:
             _LOGGER.error('There was an error while updating: %s', err)
