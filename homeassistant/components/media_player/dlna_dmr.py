@@ -11,7 +11,6 @@ import functools
 import logging
 import re
 import urllib.parse
-import xml.etree.ElementTree as ET
 from datetime import timedelta
 
 import aiohttp
@@ -35,7 +34,10 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
-REQUIREMENTS = ['async-upnp-client==0.10.0']
+REQUIREMENTS = [
+    'async-upnp-client==0.10.0',
+    'python-didl-lite==1.0.1',
+]
 
 DEPENDENCIES = ['http']
 
@@ -52,27 +54,10 @@ SUPPORT_DLNA_DMR = \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_PLAY_MEDIA
 
-NS = {
-    'didl_lite': 'urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/',
-    'dc': 'http://purl.org/dc/elements/1.1/',
-}
-
 SERVICE_TYPES = {
     'RC': 'urn:schemas-upnp-org:service:RenderingControl:1',
     'AVT': 'urn:schemas-upnp-org:service:AVTransport:1',
 }
-
-DIDL_TEMPLATE = """
-<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/"
-           xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"
-           xmlns:dc="http://purl.org/dc/elements/1.1/"
-           xmlns:sec="http://www.sec.co.kr/">
-<item id="0" parentID="0" restricted="1">
-  <dc:title>Home Assistant</dc:title>
-  <upnp:class>{upnp_class}</upnp:class>
-  <res protocolInfo="http-get:*:{mime_type}:{dlna_features}">{media_url}</res>
-</item>
-</DIDL-Lite>"""
 
 HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
     'music': 'object.item.audioItem',
@@ -539,16 +524,27 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def async_play_media(self, action, media_type, media_id, **kwargs):
         """Play a piece of media."""
         # pylint: disable=arguments-differ
+
+        # queue media
+        meta_data = await self._construct_play_media_metadata(media_type, media_id)
+        await action.async_call(InstanceID=0,
+                                CurrentURI=media_id,
+                                CurrentURIMetaData=meta_data)
+        await asyncio.sleep(0.25)
+
+        # send play command
+        await self.async_media_play()
+        await asyncio.sleep(0.25)
+
+    async def _construct_play_media_metadata(self, media_type, media_id):
+        """Construct the metadata for play_media command."""
         media_info = {
-            'media_url': media_id,
-            'upnp_class': HOME_ASSISTANT_UPNP_CLASS_MAPPING[media_type],
             'mime_type': HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING[media_type],
             'dlna_features': 'DLNA.ORG_OP=01;DLNA.ORG_CI=0;'
                              'DLNA.ORG_FLAGS=00000000000000000000000000000000',
         }
 
         # do a HEAD/GET, to retrieve content-type/mime-type
-        src_headers = None
         try:
             req_src_headers = {
                 'GetContentFeatures.dlna.org': '1'
@@ -566,16 +562,17 @@ class DlnaDmrDevice(MediaPlayerDevice):
         except aiohttp.ClientError:
             pass
 
-        # queue media
-        meta_data = DIDL_TEMPLATE.format(**media_info)
-        await action.async_call(InstanceID=0,
-                                CurrentURI=media_id,
-                                CurrentURIMetaData=meta_data)
-        await asyncio.sleep(0.25)
+        # build DIDL-Lite item + resource
+        upnp_class = HOME_ASSISTANT_UPNP_CLASS_MAPPING[media_type]
 
-        # send play command
-        await self.async_media_play()
-        await asyncio.sleep(0.25)
+        from didl_lite import didl_lite
+        protocol_info = "http-get:*:{mime_type}:{dlna_features}".format(**media_info)
+        resource = didl_lite.Resource(uri=media_id, protocol_info=protocol_info)
+        item_type = didl_lite.type_by_upnp_class(upnp_class)
+        item = item_type(id="0", parent_id="0", title="Home Assistant", restricted="1",
+                         resources=[resource])
+
+        return didl_lite.to_xml_string(item).decode('utf-8')
 
     @requires_action('AVT', 'Previous')
     async def async_media_previous_track(self, action):
@@ -598,12 +595,13 @@ class DlnaDmrDevice(MediaPlayerDevice):
         if not xml:
             return None
 
-        root = ET.fromstring(xml)
-        title_xml = root.find('.//dc:title', NS)
-        if title_xml is None:
+        from didl_lite import didl_lite
+        items = didl_lite.from_xml_string(xml)
+        if not items:
             return None
 
-        return title_xml.text
+        item = items[0]
+        return item.title
 
     @property
     @requires_state_variable('AVT', 'CurrentTrackMetaData')
@@ -614,12 +612,15 @@ class DlnaDmrDevice(MediaPlayerDevice):
         if not xml:
             return None
 
-        root = ET.fromstring(xml)
-        for res in root.findall('.//didl_lite:res', NS):
-            protocol_info = res.attrib.get('protocolInfo') or ''
+        from didl_lite import didl_lite
+        items = didl_lite.from_xml_string(xml)
+        if not items or not items[0].resources:
+            return None
+        item = items[0]
+        for res in item.resources:
+            protocol_info = res.protocol_info
             if protocol_info.startswith('http-get:*:image/'):
-                url = protocol_info.text
-                return url
+                return res.url
 
         return None
 
