@@ -67,7 +67,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)
-            if self.robot.schedule_enabled:
+            if self._state['details']['isScheduleEnabled']:
                 self._schedule_state = STATE_ON
             else:
                 self._schedule_state = STATE_OFF
