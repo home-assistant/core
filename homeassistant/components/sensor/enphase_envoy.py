@@ -1,12 +1,12 @@
-"""Support for monitoring energy usage and solar panel energy production.
+"""
+Support for monitoring energy usage and solar panel energy production.
 using the Enphase Envoy.
 
-For more details about this platform, please refer to the documentation at"""
+For more details about this platform, please refer to the documentation at
+"""
 import logging
 import json
 import voluptuous as vol
-
-from homeassistant.components.sensor.rest import RestData
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
@@ -50,20 +50,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 # is in the monitored conditions list
     for i in range(8):
         if monitored_conditions == {} or \
-            SENSOR_TYPES[i] in monitored_conditions:
+                    SENSOR_TYPES[i] in monitored_conditions:
                 add_devices([Envoy(ip_address, DEFAULT_NAMES[i],
-                            SENSOR_TYPES[i])], True)
+                        SENSOR_TYPES[i])], True)
 
 
 class Envoy(Entity):
     """Implementation of the Enphase Envoy sensors."""
+
     def __init__(self, ip_address, name, sensor_type):
         """Initialize the sensor."""
-
         self._url = "http://{}/production.json".format(ip_address)
         self._name = name
-
-
         if sensor_type == 'production' or sensor_type == 'consumption':
             self._unit_of_measurement = 'W'
         else:
@@ -115,7 +113,8 @@ class Envoy(Entity):
         elif self._type == "daily_production":
             self._state = int(response_parsed["production"][1]["whToday"])
         elif self._type == "7_days_production":
-            self._state = int(response_parsed["production"][1]["whLastSevenDays"])
+            self._state = \
+            int(response_parsed["production"][1]["whLastSevenDays"])
         elif self._type == "lifetime_production":
             self._state = int(response_parsed["production"][1]["whLifetime"])
 
@@ -124,6 +123,7 @@ class Envoy(Entity):
         elif self._type == "daily_consumption":
             self._state = int(response_parsed["consumption"][0]["whToday"])
         elif self._type == "7_days_consumption":
-            self._state = int(response_parsed["consumption"][0]["whLastSevenDays"])
+            self._state = \
+            int(response_parsed["consumption"][0]["whLastSevenDays"])
         elif self._type == "lifetime_consumption":
             self._state = int(response_parsed["consumption"][0]["whLifetime"])
