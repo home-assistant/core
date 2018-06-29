@@ -1,15 +1,12 @@
-"""
-Support for monitoring energy usage and solar panel energy production using
-the Enphase Envoy.
+"""Support for monitoring energy usage and solar panel energy production.
+using the Enphase Envoy.
 
-For more details about this platform, please refer to the documentation at
-
-"""
+For more details about this platform, please refer to the documentation at"""
 import logging
 import json
-
 import voluptuous as vol
 
+from homeassistant.components.sensor.rest import RestData
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
@@ -19,7 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_IP_ADDRESS = 'ip'
 CONF_MONITORED_CONDITIONS = 'monitored_conditions'
-
 DEFAULT_NAMES = [
     "Envoy Current Energy Production",
     "Envoy Today's Energy Production",
@@ -49,7 +45,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ip_address = config.get(CONF_IP_ADDRESS)
     monitored_conditions = config.get(CONF_MONITORED_CONDITIONS, {})
 
-
 # Iterate through the list of sensors, adding it if either monitored
 # conditions has been left out of the config, or that the given sensor
 # is in the monitored conditions list
@@ -62,17 +57,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 class Envoy(Entity):
     """Implementation of the Enphase Envoy sensors."""
-    def __init__(self, ip_address, name, type):
+    def __init__(self, ip_address, name, sensor_type):
         """Initialize the sensor."""
+
         self._url = "http://{}/production.json".format(ip_address)
         self._name = name
 
-        if type == 'production' or type == 'consumption':
-            self._unit_of_measurement = 'watts'
-        else:
-            self._unit_of_measurement = "watt hours"
 
-        self._type = type
+        if sensor_type == 'production' or sensor_type == 'consumption':
+            self._unit_of_measurement = 'W'
+        else:
+            self._unit_of_measurement = "Wh"
+
+        self._type = sensor_type
         self._state = None
 
     @property
@@ -98,7 +95,6 @@ class Envoy(Entity):
     def update(self):
         """Get the energy production data from the Enphase Envoy."""
         import requests
-
         try:
             response = requests.get(self._url, timeout=5)
         except (requests.exceptions.RequestException, ValueError):
@@ -113,21 +109,21 @@ class Envoy(Entity):
                 response.status_code, self._name)
             return
 
-        responsed_parsed = json.loads(response.text)
+        response_parsed = json.loads(response.text)
         if self._type == "production":
-            self._state = responsed_parsed["production"][1]["wNow"]
+            self._state = int(response_parsed["production"][1]["wNow"])
         elif self._type == "daily_production":
-            self._state = responsed_parsed["production"][1]["whToday"]
+            self._state = int(response_parsed["production"][1]["whToday"])
         elif self._type == "7_days_production":
-            self._state = responsed_parsed["production"][1]["whLastSevenDays"]
+            self._state = int(response_parsed["production"][1]["whLastSevenDays"])
         elif self._type == "lifetime_production":
-            self._state = responsed_parsed["production"][1]["whLifetime"]
+            self._state = int(response_parsed["production"][1]["whLifetime"])
 
         elif self._type == "consumption":
-            self._state = responsed_parsed["consumption"][0]["wNow"]
+            self._state = int(response_parsed["consumption"][0]["wNow"])
         elif self._type == "daily_consumption":
-            self._state = responsed_parsed["consumption"][0]["whToday"]
+            self._state = int(response_parsed["consumption"][0]["whToday"])
         elif self._type == "7_days_consumption":
-            self._state = responsed_parsed["consumption"][0]["whLastSevenDays"]
+            self._state = int(response_parsed["consumption"][0]["whLastSevenDays"])
         elif self._type == "lifetime_consumption":
-            self._state = responsed_parsed["consumption"][0]["whLifetime"]
+            self._state = int(response_parsed["consumption"][0]["whLifetime"])
