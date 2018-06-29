@@ -1,8 +1,8 @@
 """
-Support for monitoring energy usage and solar panel energy production
-using the Enphase Envoy.
+Support for Enphase Envoy solar energy monitor.
 
 For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/sensor.enphase_envoy/
 """
 import logging
 import json
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if monitored_conditions == {} or \
                     SENSOR_TYPES[i] in monitored_conditions:
             add_devices([Envoy(ip_address, DEFAULT_NAMES[i],
-                                SENSOR_TYPES[i])], True)
+                               SENSOR_TYPES[i])], True)
 
 
 class Envoy(Entity):
