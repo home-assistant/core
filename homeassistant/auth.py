@@ -462,6 +462,14 @@ class AuthStore:
 
     async def async_create_refresh_token(self, user, client_id):
         """Create a new token for a user."""
+        local_user = await self.async_get_user(user.id)
+        if local_user is None:
+            raise ValueError('Invalid user')
+
+        local_client = await self.async_get_client(client_id)
+        if local_client is None:
+            raise ValueError('Invalid client_id')
+
         refresh_token = RefreshToken(user, client_id)
         user.refresh_tokens[refresh_token.token] = refresh_token
         await self.async_save()

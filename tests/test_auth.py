@@ -224,15 +224,18 @@ def test_access_token_expired():
 async def test_cannot_retrieve_expired_access_token(hass):
     """Test that we cannot retrieve expired access tokens."""
     manager = await auth.auth_manager_from_config(hass, [])
+    client = await manager.async_create_client('test')
     user = MockUser(
         id='mock-user',
         is_owner=False,
         is_active=False,
         name='Paulus',
     ).add_to_auth_manager(manager)
-    refresh_token = await manager.async_create_refresh_token(user, 'bla')
-    access_token = manager.async_create_access_token(refresh_token)
+    refresh_token = await manager.async_create_refresh_token(user, client.id)
+    assert refresh_token.user.id is user.id
+    assert refresh_token.client_id is client.id
 
+    access_token = manager.async_create_access_token(refresh_token)
     assert manager.async_get_access_token(access_token.token) is access_token
 
     with patch('homeassistant.auth.dt_util.utcnow',
@@ -266,3 +269,25 @@ async def test_get_or_create_client(hass):
         redirect_uris=['/', 'https://test.com/1'],  # different order
         no_secret=True)
     assert client_no_secret2.id is client_no_secret.id
+
+
+async def test_cannot_create_refresh_token_with_invalide_client_id(hass):
+    """Test that we cannot create refresh token with invalid client id."""
+    manager = await auth.auth_manager_from_config(hass, [])
+    user = MockUser(
+        id='mock-user',
+        is_owner=False,
+        is_active=False,
+        name='Paulus',
+    ).add_to_auth_manager(manager)
+    with pytest.raises(ValueError):
+        await manager.async_create_refresh_token(user, 'bla')
+
+
+async def test_cannot_create_refresh_token_with_invalide_user(hass):
+    """Test that we cannot create refresh token with invalid client id."""
+    manager = await auth.auth_manager_from_config(hass, [])
+    client = await manager.async_create_client('test')
+    user = MockUser(id='invalid-user')
+    with pytest.raises(ValueError):
+        await manager.async_create_refresh_token(user, client.id)
