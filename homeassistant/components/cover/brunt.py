@@ -20,12 +20,10 @@ REQUIREMENTS = ['brunt==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'brunt'
 ATTRIBUTION = 'Based on an unofficial Brunt SDK.'
 
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
-# ATTR_COVER_STATE = 'cover_state'
 STATE_PARTIALLY_OPEN = 'partially open'
 ATTR_REQUEST_POSITION = 'request_position'
 DEFAULT_NAME = 'brunt blind engine'
