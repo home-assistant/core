@@ -258,18 +258,6 @@ async def test_get_or_create_client(hass):
         'Test Client', redirect_uris=['https://test.com/1'])
     assert client2.id is client1.id
 
-    client_no_secret = await manager.async_get_or_create_client(
-        'Test Client',
-        redirect_uris=['https://test.com/1', '/'],
-        no_secret=True)
-    assert client_no_secret.id is not client1.id
-
-    client_no_secret2 = await manager.async_get_or_create_client(
-        'Test Client',
-        redirect_uris=['/', 'https://test.com/1'],  # different order
-        no_secret=True)
-    assert client_no_secret2.id is client_no_secret.id
-
 
 async def test_cannot_create_refresh_token_with_invalide_client_id(hass):
     """Test that we cannot create refresh token with invalid client id."""

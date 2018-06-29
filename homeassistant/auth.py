@@ -1,23 +1,22 @@
 """Provide an authentication layer for Home Assistant."""
 import asyncio
 import binascii
-from collections import OrderedDict, Counter
-from datetime import datetime, timedelta
-import os
 import importlib
 import logging
+import os
 import uuid
+from collections import OrderedDict
+from datetime import datetime, timedelta
 
 import attr
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import data_entry_flow, requirements
-from homeassistant.core import callback
 from homeassistant.const import CONF_TYPE, CONF_NAME, CONF_ID
-from homeassistant.util.decorator import Registry
+from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
-
+from homeassistant.util.decorator import Registry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -510,12 +509,8 @@ class AuthStore:
         if self.clients is None:
             await self.async_load()
 
-        redirect_uris_counter = Counter(redirect_uris)
-
-        for _, client in self.clients.items():
-            if (client.name == name
-                    and Counter(client.redirect_uris) == redirect_uris_counter
-                    and no_secret == (client.secret is None)):
+        for client in self.clients.values():
+            if client.name == name:
                 return client
 
         return await self.async_create_client(name, redirect_uris, no_secret)
