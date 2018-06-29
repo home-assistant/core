@@ -191,15 +191,13 @@ def async_setup(hass, config):
                 ais_global.GLOBAL_TTS_VOICE = 'pl-pl-x-oda-local'
         elif entity_id == 'input_number.assistant_rate':
             try:
-                ais_global.GLOBAL_TTS_RATE = float(
-                    hass.states.get(entity_id).state) / 10
-            except Exception as e:
+                ais_global.GLOBAL_TTS_RATE = float(hass.states.get(entity_id).state)
+            except Exception:
                 ais_global.GLOBAL_TTS_RATE = 1
         elif entity_id == 'input_number.assistant_tone':
             try:
-                ais_global.GLOBAL_TTS_PITCH = float(
-                    hass.states.get(entity_id).state) / 10
-            except Exception as e:
+                ais_global.GLOBAL_TTS_PITCH = float(hass.states.get(entity_id).state)
+            except Exception:
                 ais_global.GLOBAL_TTS_PITCH = 1
 
     hass.bus.async_listen(EVENT_STATE_CHANGED, state_changed)
@@ -936,7 +934,7 @@ class AisColudData:
                     hass.services.async_call(
                         'group',
                         'set', {
-                            "object_id": "audio",
+                            "object_id": "audio_player",
                             "add_entities": [entity.entity_id]}))
 
         hass.async_add_job(
@@ -976,6 +974,10 @@ class AisColudData:
                 'set_options', {
                     "entity_id": "input_select.tts_player",
                     "options": players_lv}))
+        # rebuild the groups
+        import homeassistant.components.ais_ai_service as ais_ai
+        ais_ai.get_groups(hass)
+
 
     def get_rss_news_channels(self, call):
         """Load news channels of the for the selected category."""

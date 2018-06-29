@@ -73,7 +73,7 @@ homeassistant:
             # this is fake key, it should be removed by power when
             # the power will start to send code to app
             - entity: script.ais_button_click
-              data: {code: '{"KeyCode":190}'}
+              data: {code: '{"KeyCode":190, "Action": 1}'}
               row: 1
               column: 1
               icon: mdi:play-pause
@@ -81,14 +81,14 @@ homeassistant:
             # enf of the virtual / fake key
             - entity: script.ais_button_click
               label: "Up"
-              data: {code: '{"KeyCode":19}'}
+              data: {code: '{"KeyCode":19, "Action": 1}'}
               icon: mdi:arrow-up
               row: 1
               column: 2
               row_span: 2
               color: silver
             - entity: script.ais_button_click
-              data: {code: '{"KeyCode":21}'}
+              data: {code: '{"KeyCode":21, "Action": 1}'}
               label: "Left"
               icon: mdi:arrow-left
               row: 3
@@ -96,14 +96,14 @@ homeassistant:
               row_span: 2
               color: silver
             - entity: script.ais_button_click
-              data: {code: '{"KeyCode":23}'}
+              data: {code: '{"KeyCode":23, "Action": 1}'}
               label: OK
               row: 3
               column: 2
               row_span: 2
               color: grey
             - entity: script.ais_button_click
-              data: {code: '{"KeyCode":22}'}
+              data: {code: '{"KeyCode":22, "Action": 1}'}
               label: "Right"
               icon: mdi:arrow-right
               row: 3
@@ -111,30 +111,29 @@ homeassistant:
               row_span: 2
               color: silver
             - entity: script.ais_button_click
-              data: {code: '{"KeyCode":20}'}
+              data: {code: '{"KeyCode":20, "Action": 1}'}
               label: "Down"
               icon: mdi:arrow-down
               row: 5
               column: 2
               row_span: 2
               color: silver
-
             - entity: script.ais_button_click
-              data: {code: '{"KeyCode":190}'}
+              data: {code: '{"KeyCode":190, "Action": 1}'}
               label: "Home"
               row: 7
               column: 1
               row_span: 2
               icon: mdi:home
             - entity: script.ais_button_click
-              data: {code: '{"KeyCode":4}'}
+              data: {code: '{"KeyCode":4, "Action": 1}'}
               label: "Back"
               row: 7
               column: 3
               row_span: 2
               icon: mdi:backup-restore
             - entity: script.ais_button_click
-              data: {code: '{"KeyCode":71}'}
+              data: {code: '{"KeyCode":71, "Action": 1}'}
               label: "Mic"
               row: 8
               column: 2
@@ -261,16 +260,16 @@ input_select:
 input_number:
   assistant_rate:
     name: "Szybkość mowy:"
-    min: 1
-    max: 20
-    step: 1
-    initial: 10
+    min: 0.1
+    max: 2
+    step: 0.1
+    initial: 1
   assistant_tone:
     name: "Ton mowy:"
-    min: 1
-    max: 20
-    step: 1
-    initial: 10
+    min: 0.1
+    max: 2
+    step: 0.1
+    initial: 1
 
 group:
   ais_tts_configuration:

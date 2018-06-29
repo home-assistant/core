@@ -14,11 +14,15 @@ from homeassistant import core
 from homeassistant.loader import bind_hass
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TURN_OFF,
-    SERVICE_TURN_ON, ATTR_UNIT_OF_MEASUREMENT, SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER)
+    SERVICE_TURN_ON, ATTR_UNIT_OF_MEASUREMENT, SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER,
+    STATE_ON, STATE_OFF, STATE_HOME, STATE_NOT_HOME, STATE_UNKNOWN, STATE_OPEN, STATE_OPENING, STATE_CLOSED,
+    STATE_CLOSING, STATE_PLAYING, STATE_PAUSED, STATE_IDLE, STATE_STANDBY, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME,
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMED_CUSTOM_BYPASS, STATE_ALARM_PENDING,
+    STATE_ALARM_ARMING, STATE_ALARM_DISARMING, STATE_ALARM_TRIGGERED, STATE_LOCKED, STATE_UNLOCKED,
+    STATE_UNAVAILABLE, STATE_OK, STATE_PROBLEM)
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import ais_cloud
 import homeassistant.components.mqtt as mqtt
-# from homeassistant.helpers.discovery import async_load_platform
 import homeassistant.ais_dom.ais_global as ais_global
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -75,6 +79,7 @@ CURR_ENTITIE_POSITION = None
 ALL_SWITCHES = ["input_boolean", "automation", "switch", "light",
                 "media_player", "script"]
 GLOBAL_TTS_TEXT = None
+BUTTON_REPEAT_COUNT = 0
 
 
 def get_tts_text():
@@ -159,7 +164,7 @@ def get_curr_group_view():
 
 
 def say_curr_group_view(hass):
-    _say_it(hass, get_curr_group_view())
+    _say_it(hass, get_curr_group_view(), None)
 
 
 def set_curr_group_view():
@@ -211,7 +216,7 @@ def get_curr_group_idx():
 
 
 def say_curr_group(hass):
-    _say_it(hass, get_curr_group()['friendly_name'])
+    _say_it(hass, get_curr_group()['friendly_name'], None)
 
 
 def set_curr_group(hass, group):
@@ -355,10 +360,10 @@ def say_curr_entity(hass):
         text = ""
     # handle special cases...
     if (entity_id == "sensor.ais_knowledge_answer"):
-        _say_it(hass, "Odpowiedź: " + text)
+        _say_it(hass, "Odpowiedź: " + text, None)
         return
     elif (entity_id.startswith('script.')):
-        _say_it(hass, info_name + " Naciśnij OK/WYKONAJ by uruchomić.")
+        _say_it(hass, info_name + " Naciśnij OK/WYKONAJ by uruchomić.", None)
         return
     # normal case
     # decode None
@@ -366,14 +371,62 @@ def say_curr_entity(hass):
         info_name = ""
     if not info_data:
         info_data = ""
-    if (info_data == 'on'):
+    elif info_data == STATE_ON:
         info_data = "włączone"
-    if (info_data == 'off'):
+    elif info_data == STATE_OFF:
         info_data = "wyłączone"
+    elif info_data == STATE_HOME:
+        info_data = "w domu"
+    elif info_data == STATE_NOT_HOME:
+        info_data = "poza domem"
+    elif info_data == STATE_UNKNOWN:
+        info_data = "status nieznany"
+    elif info_data == STATE_OPEN:
+        info_data = "otwarty"
+    elif info_data == STATE_OPENING:
+        info_data = "otwieranie"
+    elif info_data == STATE_CLOSED:
+        info_data = "zamknięty"
+    elif info_data == STATE_CLOSING:
+        info_data = "zamykanie"
+    elif info_data == STATE_PAUSED:
+        info_data = "pauza"
+    elif info_data == STATE_PLAYING:
+        info_data = "odtwarzanie"
+    elif info_data == STATE_IDLE:
+        info_data = "status bezczynny"
+    elif info_data == STATE_STANDBY:
+        info_data = "status bezczynny"
+    elif info_data == STATE_ALARM_DISARMED:
+        info_data = "status rozbrojony"
+    elif info_data == STATE_ALARM_ARMED_HOME:
+        info_data = "status uzbrojony w domu"
+    elif info_data == STATE_ALARM_ARMED_AWAY:
+        info_data = "status uzbrojony poza domem"
+    elif info_data == STATE_ALARM_ARMED_NIGHT:
+        info_data = "status uzbrojony noc"
+    elif info_data == STATE_ALARM_ARMED_CUSTOM_BYPASS:
+        info_data = "status uzbrojony własny"
+    elif info_data == STATE_ALARM_ARMING:
+        info_data = "alarm uzbrajanie"
+    elif info_data == STATE_ALARM_DISARMING:
+        info_data = "alarm rozbrajanie"
+    elif info_data == STATE_ALARM_TRIGGERED:
+        info_data = "alarm powiadomiony"
+    elif info_data == STATE_LOCKED:
+        info_data = "zamknięty"
+    elif info_data == STATE_UNLOCKED:
+        info_data = "otwarty"
+    elif info_data == STATE_UNAVAILABLE:
+        info_data = "niedostępny"
+    elif info_data == STATE_OK:
+        info_data = "ok"
+    elif info_data == STATE_PROBLEM:
+        info_data = "problem"
     if not info_unit:
         info_unit = ""
     info = "%s %s %s" % (info_name, info_data, info_unit)
-    _say_it(hass, info)
+    _say_it(hass, info, None)
 
 
 def get_curent_position(hass):
@@ -407,9 +460,9 @@ def commit_current_position(hass):
                 "value": get_curent_position(hass)})
 
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
-        _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0])
+        _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0], None)
     else:
-        _say_it(hass, "ok")
+        _say_it(hass, "ok", None)
 
     # TODO - run the script for the item,
     # the automation on state should be executed only from app not from remote
@@ -423,18 +476,21 @@ def set_next_position(hass):
         arr = state.attributes.get('options')
         # the - option is olways first
         if len(arr) < 2:
-            _say_it(hass, "brak pozycji")
+            _say_it(hass, "brak pozycji", None)
         else:
             CURR_ENTITIE_POSITION = get_next(
                 arr,
                 CURR_ENTITIE_POSITION)
-            _say_it(hass, CURR_ENTITIE_POSITION)
+            _say_it(hass, CURR_ENTITIE_POSITION, None)
     elif CURR_ENTITIE.startswith('input_number.'):
-        _max = int(state.attributes.get('max'))
-        _step = int(state.attributes.get('step'))
-        _curr = int(float(CURR_ENTITIE_POSITION))
-        CURR_ENTITIE_POSITION = str(min(_curr+_step, _max))
-        _say_it(hass, str(CURR_ENTITIE_POSITION))
+        _max = float(state.attributes.get('max'))
+        _step = float(state.attributes.get('step'))
+        _curr = float(CURR_ENTITIE_POSITION)
+        CURR_ENTITIE_POSITION = str(round(min(_curr+_step, _max), 2))
+        _say_it(hass, str(CURR_ENTITIE_POSITION), None)
+    elif CURR_ENTITIE.startswith('media_player.'):
+        hass.services.call('media_player', 'media_next_track', {"entity_id": CURR_ENTITIE})
+
 
 
 def set_prev_position(hass):
@@ -444,21 +500,23 @@ def set_prev_position(hass):
     if CURR_ENTITIE.startswith('input_select.'):
         arr = state.attributes.get('options')
         if len(arr) < 2:
-            _say_it(hass, "brak pozycji")
+            _say_it(hass, "brak pozycji", None)
         else:
             CURR_ENTITIE_POSITION = get_prev(
                 arr,
                 CURR_ENTITIE_POSITION)
-            _say_it(hass, CURR_ENTITIE_POSITION)
+            _say_it(hass, CURR_ENTITIE_POSITION, None)
     elif CURR_ENTITIE.startswith('input_number.'):
-        _min = int(state.attributes.get('min'))
-        _step = int(state.attributes.get('step'))
-        _curr = int(float(CURR_ENTITIE_POSITION))
-        CURR_ENTITIE_POSITION = str(max(_curr-_step, _min))
-        _say_it(hass, str(CURR_ENTITIE_POSITION))
+        _min = float(state.attributes.get('min'))
+        _step = float(state.attributes.get('step'))
+        _curr = float(CURR_ENTITIE_POSITION)
+        CURR_ENTITIE_POSITION = str(round(max(_curr-_step, _min), 2))
+        _say_it(hass, str(CURR_ENTITIE_POSITION), None)
+    elif CURR_ENTITIE.startswith('media_player.'):
+        hass.services.call('media_player', 'media_previous_track', {"entity_id": CURR_ENTITIE})
 
 
-def select_entity(hass):
+def select_entity(hass, long_press):
     # on remote OK, select group view, group or entity
     # OK on remote
     if CURR_GROUP_VIEW is None:
@@ -492,20 +550,27 @@ def select_entity(hass):
         # pressed twice, we should do something - to mange the item status
         if CURR_ENTITIE.startswith('input_select.'):
             commit_current_position(hass)
-        elif (CURR_ENTITIE.startswith('input_number.')):
+        elif CURR_ENTITIE.startswith('input_number.'):
             commit_current_position(hass)
         elif CURR_ENTITIE.startswith('media_player.'):
-            # play / pause on all players
-            _say_it(hass, "ok")
-            hass.services.call(
-                'media_player',
-                'media_play_pause')
+            # play / pause on selected player
+            curr_state = hass.states.get(CURR_ENTITIE).state
+            if curr_state == 'playing':
+                if long_press is True:
+                    _say_it(hass, "stop", None)
+                    hass.services.call('media_player', 'media_stop', {"entity_id": CURR_ENTITIE})
+                else:
+                    _say_it(hass, "pauza", None)
+                    hass.services.call('media_player', 'media_pause', {"entity_id": CURR_ENTITIE})
+            else:
+                _say_it(hass,  "graj", None)
+                hass.services.call('media_player', 'media_play', {"entity_id": CURR_ENTITIE})
         elif (CURR_ENTITIE.startswith('input_boolean.')):
             curr_state = hass.states.get(CURR_ENTITIE).state
             if (curr_state == 'on'):
-                _say_it(hass, "ok, wyłączam")
+                _say_it(hass, "ok, wyłączam", None)
             if (curr_state == 'off'):
-                _say_it(hass,  "ok, włączam")
+                _say_it(hass,  "ok, włączam", None)
             hass.services.call(
                 'input_boolean',
                 'toggle', {
@@ -513,15 +578,15 @@ def select_entity(hass):
         elif (CURR_ENTITIE.startswith('switch.')):
             curr_state = hass.states.get(CURR_ENTITIE).state
             if (curr_state == 'on'):
-                _say_it(hass, "ok, wyłączam")
+                _say_it(hass, "ok, wyłączam", None)
             if (curr_state == 'off'):
-                _say_it(hass,  "ok, włączam")
+                _say_it(hass,  "ok, włączam", None)
             hass.services.call(
                 'switch',
                 'toggle', {
                     "entity_id": CURR_ENTITIE})
         elif (CURR_ENTITIE.startswith('input_text.')):
-            _say_it(hass, "Powiedz co mam zrobić?")
+            _say_it(hass, "Powiedz co mam zrobić?", None)
         elif (CURR_ENTITIE.startswith('script.')):
             hass.services.call(
                 'script',
@@ -537,13 +602,13 @@ def select_entity(hass):
             if (upgrade is True):
                 _say_it(
                     hass,
-                    "Aktualizuje system do najnowszej wersji. Do usłyszenia.")
+                    "Aktualizuje system do najnowszej wersji. Do usłyszenia.", None)
                 hass.services.call('ais_shell_command', 'execute_upgrade')
             else:
-                _say_it(hass, "Twoja wersja jest aktualna")
+                _say_it(hass, "Twoja wersja jest aktualna", None)
         else:
             # eneter on unchanged item
-            _say_it(hass, "Tej pozycji nie można zmieniać")
+            _say_it(hass, "Tej pozycji nie można zmieniać", None)
 
     hass.block_till_done()
     # say_curr_entity(hass)
@@ -563,23 +628,67 @@ def can_entity_be_changed(hass, entity):
         return False
 
 
-def set_focus_on_down_entity(hass):
+def set_focus_on_down_entity(hass, long_press):
     # down on joystick
+    if long_press and CURR_ENTITIE is not None:
+        if CURR_ENTITIE.startswith("media_player."):
+            # speed up on remote
+            state = hass.states.get('input_number.media_player_speed')
+            _min = float(state.attributes.get('min'))
+            _step = float(state.attributes.get('step'))
+            _curr = round(max(float(state.state) - _step, _min), 2)
+            _say_it(hass, str(_curr), None)
+            _LOGGER.info("speed down the player - info from remote: " + str(_curr))
+            hass.services.call(
+                'ais_ai_service',
+                'publish_command_to_frame', {
+                    "key": 'setPlaybackSpeed',
+                    "val": _curr
+                }
+            )
+            hass.services.call(
+                'input_number',
+                'set_value', {
+                    "entity_id": "input_number.media_player_speed",
+                    "value": _curr})
+        return
     # no group is selected go to next in the groups view menu
     if CURR_GROUP is None:
-            select_entity(hass)
+            select_entity(hass, False)
             return
     # group is selected
     # check if the entity in the group is selected if not go to the group
     if CURR_ENTITIE is None:
-            select_entity(hass)
+            select_entity(hass, False)
             return
     # entity in the group is selected
     set_next_entity(hass)
 
 
-def set_focus_on_up_entity(hass):
+def set_focus_on_up_entity(hass, long_press):
     # on joystick up
+    if long_press and CURR_ENTITIE is not None:
+        if CURR_ENTITIE.startswith("media_player."):
+            # speed up on remote
+            state = hass.states.get('input_number.media_player_speed')
+            _max = float(state.attributes.get('max'))
+            _step = float(state.attributes.get('step'))
+            _curr = round(min(float(state.state) + _step, _max), 2)
+            _say_it(hass, str(_curr), None)
+            _LOGGER.info("speed up the player - info from remote: " + str(_curr))
+            hass.services.call(
+                'ais_ai_service',
+                'publish_command_to_frame', {
+                    "key": 'setPlaybackSpeed',
+                    "val": _curr
+                }
+            )
+            hass.services.call(
+                'input_number',
+                'set_value', {
+                    "entity_id": "input_number.media_player_speed",
+                    "value": _curr})
+        return
     # no group is selected go to prev in the groups view menu
     if CURR_GROUP is None:
             set_prev_group_view()
@@ -601,8 +710,14 @@ def set_focus_on_up_entity(hass):
         set_prev_entity(hass)
 
 
-def set_focus_on_prev_entity(hass):
+def set_focus_on_prev_entity(hass, long_press):
     # prev on joystick
+    if long_press and CURR_ENTITIE is not None:
+        if CURR_ENTITIE.startswith("media_player."):
+            # seek back on remote
+            _LOGGER.info("seek back in the player - info from remote")
+            hass.services.call('media_player', 'media_seek', {"entity_id": CURR_ENTITIE, "seek_position": 0})
+        return
     # no group is selected go to prev in the groups view menu
     if CURR_GROUP is None:
             set_prev_group_view()
@@ -623,8 +738,14 @@ def set_focus_on_prev_entity(hass):
         set_prev_entity(hass)
 
 
-def set_focus_on_next_entity(hass):
+def set_focus_on_next_entity(hass, long_press):
     # next on joystick
+    if long_press and CURR_ENTITIE is not None:
+        if CURR_ENTITIE.startswith("media_player."):
+            # seek next on remote
+            _LOGGER.info("seek next in the player - info from remote")
+            hass.services.call('media_player', 'media_seek', {"entity_id": CURR_ENTITIE, "seek_position": 1})
+        return
     # no group is selected go to next in the groups view menu
     if CURR_GROUP is None:
             set_next_group_view()
@@ -643,6 +764,36 @@ def set_focus_on_next_entity(hass):
     else:
         # no way to change the entity, go to next one
         set_next_entity(hass)
+
+
+def go_up_in_menu(hass):
+    # on back on remote
+    # check if the entity in the group is selected
+    if CURR_ENTITIE is not None:
+        # go up in the group menu
+        set_curr_group(hass, None)
+        say_curr_group(hass)
+        return
+    # no entity is selected, check if the group is selected
+    if CURR_GROUP is not None:
+        # go up in the group view menu
+        set_curr_group_view()
+        say_curr_group_view(hass)
+        return
+    # go to next group view
+    set_next_group_view()
+    say_curr_group_view(hass)
+
+
+def go_to_player(hass):
+    # selecting the player to control via remote
+    if len(GROUP_ENTITIES) == 0:
+        get_groups(hass)
+    for group in GROUP_ENTITIES:
+        if group['entity_id'] == 'group.audio_player':
+            set_curr_group(hass, group)
+            set_curr_entity(hass, 'media_player.wbudowany_glosnik')
+            _say_it(hass, "Sterowanie odtwarzaczem", None)
 
 
 def get_groups(hass):
@@ -707,7 +858,7 @@ async def async_setup(hass, config):
     def say_it(service):
         """Info to the user."""
         text = service.data[ATTR_TEXT]
-        _say_it(hass, text)
+        _say_it(hass, text, None)
 
     @asyncio.coroutine
     def publish_command_to_frame(service):
@@ -875,7 +1026,7 @@ def _publish_command_to_frame(hass, key, val, ip):
                 'turn_on', {"entity_id": "input_boolean.ais_android_wifi_changes_notify"})
         )
         ssid = val.split(';')[0]
-        _say_it(hass, "ok, łączymy z siecią: " + ssid)
+        _say_it(hass, "ok, łączymy z siecią: " + ssid, None)
         # TODO get password from file
         password = hass.states.get('input_text.ais_android_wifi_password').state
         wifi_type = val.split(';')[-1]
@@ -885,12 +1036,12 @@ def _publish_command_to_frame(hass, key, val, ip):
     if key == "WifiConnectTheDevice":
         iot = val.split(';')[0]
         if iot == ais_global.G_EMPTY_OPTION:
-            _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie")
+            _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie", None)
             return
         # check if wifi is selected
         wifi = hass.states.get('input_select.ais_android_wifi_network').state.split(';')[0]
         if wifi == ais_global.G_EMPTY_OPTION:
-            _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie")
+            _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie", None)
             return
         # check if name is selected, if not then add the device name
         name = hass.states.get('input_text.ais_iot_device_name').state
@@ -898,9 +1049,9 @@ def _publish_command_to_frame(hass, key, val, ip):
         if name == "":
             name = iot
         if len(name) > 32:
-            _say_it(hass, "nazwa urządzenie może mieć maksymalnie 32 znaki")
+            _say_it(hass, "nazwa urządzenie może mieć maksymalnie 32 znaki", None)
             return
-        _say_it(hass, "dodajemy: " + name)
+        _say_it(hass, "dodajemy: " + name, None)
         password = hass.states.get('input_text.ais_iot_device_wifi_password').state
         requests.post(
             url + '/command',
@@ -947,25 +1098,34 @@ def _publish_wifi_status(hass, service):
 
 def _process_command_from_frame(hass, service):
     # process from frame
+    callback = None
+    if "callback" in service.data:
+        callback = service.data["callback"]
     if service.data["topic"] == 'ais/speech_command':
-        hass.async_add_job(
-            _process(
-                hass, service.data["payload"], service.data["callback"])
+        hass.async_run_job(
+            _process(hass, service.data["payload"], callback)
         )
+        return
     elif service.data["topic"] == 'ais/key_command':
-        hass.async_run_job(
-            _process_code(
-                hass, json.loads(service.data["payload"]),
-                service.data["callback"])
-        )
+        _process_code(hass, json.loads(service.data["payload"]), callback)
+        return
     elif service.data["topic"] == 'ais/speech_text':
-        hass.async_run_job(
-            _say_it(hass, service.data["payload"])
-        )
+        _say_it(hass, service.data["payload"], callback)
+        return
+    elif service.data["topic"] == 'ais/player_speed':
+        speed = json.loads(service.data["payload"])
+        # _say_it(hass, "prędkość odtwarzania: " + str(speed["currentSpeed"]), callback)
+        # hass.services.call(
+        #     'input_number',
+        #     'set_value', {
+        #         "entity_id": "input_number.media_player_speed",
+        #         "value": round(speed["currentSpeed"], 2)})
+        return
     elif service.data["topic"] == 'ais/wifi_scan_info':
         len_wifis = _publish_wifi_status(hass, service)
         info = "Mamy dostępne " + str(len_wifis) + " wifi."
-        _say_it(hass, info)
+        _say_it(hass, info, callback)
+        return
     elif service.data["topic"] == 'ais/iot_scan_info':
         iot = json.loads(service.data["payload"])
         iot_names = [ais_global.G_EMPTY_OPTION]
@@ -997,9 +1157,11 @@ def _process_command_from_frame(hass, service):
                 info = "Znaleziono nową żarówkę"
         else:
             info = "Znaleziono " + str(len(iot_names)-1) + " nowe urządzenia."
-        _say_it(hass, info)
+        _say_it(hass, info, callback)
+        return
     elif service.data["topic"] == 'ais/wifi_status_info':
         _publish_wifi_status(hass, service)
+        return
     elif service.data["topic"] == 'ais/wifi_connection_info':
         # current connection info
         cci = json.loads(service.data["payload"])
@@ -1014,12 +1176,11 @@ def _process_command_from_frame(hass, service):
                 if "rssi" in cci:
                     info += "; " + _widi_rssi_to_info(cci["rssi"])
 
-        hass.async_run_job(
-            hass.states.async_set(
-                'sensor.ais_android_wifi_current_network_info',
-                info, {'custom_ui_state_card': "state-card-text"}
+        hass.states.async_set(
+            'sensor.ais_android_wifi_current_network_info',
+            info, {'custom_ui_state_card': "state-card-text"}
             )
-        )
+        return
     elif service.data["topic"] == 'ais/wifi_state_change_info':
         # current connection info
         cci = json.loads(service.data["payload"])
@@ -1049,16 +1210,18 @@ def _process_command_from_frame(hass, service):
                 # hass.async_run_job(async_load_platform(hass, 'sun', 'sun', {}, {}))
                 # hass.async_run_job(async_load_platform(hass, 'ais_cloud', 'ais_cloud', {}, {}))
                 # hass.async_run_job(async_load_platform(hass, 'ais_yt_service', 'ais_yt_service', {}, {}))
-                # hass.async_run_job(async_load_platform(hass, 'ais_knowledge_service', 'ais_knowledge_service', {}, {}))
+                # hass.async_run_job(async_load_platform(hass, 'ais_knowledge_service', 'ais_knowledge_service'...
         state = hass.states.get('input_boolean.ais_android_wifi_changes_notify').state
-        if (state == 'on'):
-            _say_it(hass, info)
+        if state == 'on':
+            _say_it(hass, info, callback)
+        return
     else:
         # TODO process this without mqtt
         # player_status and speech_status
         mqtt.async_publish(
             hass, service.data["topic"], service.data["payload"], 2)
         # TODO
+    return
 
 
 def _post_message(message, host):
@@ -1149,15 +1312,42 @@ def _create_matcher(utterance):
 def _process_code(hass, data, callback):
     """Process a code from remote."""
     global CURR_BUTTON_CODE
-    if 'Action' in data:
-        action = data["Action"]
-        if action == 1:
-            return
+    global BUTTON_REPEAT_COUNT
+    if 'Action' not in data or 'KeyCode' not in data:
+        return
     # check if we have callback
     if callback is not None:
         # TODO the answer should go to the correct clien
         pass
+
+    action = data["Action"]
     code = data["KeyCode"]
+    long_press = False
+    # ACTION_DOWN = 0; ACTION_UP = 1;
+    if action == 0:
+        if "RepeatCount" in data:
+            BUTTON_REPEAT_COUNT = data["RepeatCount"]
+            if BUTTON_REPEAT_COUNT > 0 and BUTTON_REPEAT_COUNT % 10 == 0:
+                # long press on remote
+                long_press = True
+        if long_press is False or code not in [19, 20, 21, 22]:
+            return
+
+    elif action == 2:
+        # ACTION_MULTIPLE = 2;
+        # check if long press will be send to us
+        _LOGGER.error("long press on " + str(data))
+        return
+
+    elif action == 1:
+        # ACTION_UP
+        # to prevent up action after long press
+        if BUTTON_REPEAT_COUNT > 10:
+            BUTTON_REPEAT_COUNT = 0
+            return
+
+
+
     _LOGGER.info("KeyCode: -> " + str(code))
     # set the code in global variable
     CURR_BUTTON_CODE = code
@@ -1172,8 +1362,8 @@ def _process_code(hass, data, callback):
         # PG+ -> KEYCODE_PAGE_UP
         pass
     elif code == 4:
-        # Back arrow -> KEYCODE_BACK
-        pass
+        # Back arrow, go up in menu/groups -> KEYCODE_BACK
+        go_up_in_menu(hass)
     elif code == 82:
         # Menu -> KEYCODE_MENU
         set_next_group_view()
@@ -1187,20 +1377,21 @@ def _process_code(hass, data, callback):
     elif code == 72:
         # MIC UP -> KEYCODE_RIGHT_BRACKET
         hass.states.set('binary_sensor.ais_remote_mic', 'off')
+    elif code == 19:
+        # Dpad right -> KEYCODE_DPAD_UP
+        set_focus_on_up_entity(hass, long_press)
     elif code == 20:
         # Dpad down -> KEYCODE_DPAD_DOWN
-        set_focus_on_down_entity(hass)
+        set_focus_on_down_entity(hass, long_press)
     elif code == 21:
         # Dpad left -> KEYCODE_DPAD_LEFT
-        set_focus_on_prev_entity(hass)
+        set_focus_on_prev_entity(hass, long_press)
     elif code == 22:
         # Dpad right -> KEYCODE_DPAD_RIGHT
-        set_focus_on_next_entity(hass)
-    elif code == 19:
-        set_focus_on_up_entity(hass)
+        set_focus_on_next_entity(hass, long_press)
     elif code == 23:
         # Dpad center -> KEYCODE_DPAD_CENTER
-        select_entity(hass)
+        select_entity(hass, long_press)
     elif code == 25:
         # Volume down -> KEYCODE_VOLUME_DOWN
         pass
@@ -1208,8 +1399,9 @@ def _process_code(hass, data, callback):
         # Volume up -> KEYCODE_VOLUME_UP
         pass
     elif code == 190:
-        # stop the audio -> KEYCODE_HOME
-        hass.services.call('media_player', 'media_play_pause')
+        # go to built-in player -> KEYCODE_HOME
+        go_to_player(hass)
+        #hass.services.call('media_player', 'media_play_pause')
 
 
 @asyncio.coroutine

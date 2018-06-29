@@ -129,6 +129,10 @@ class ExoPlayerDevice(MediaPlayerDevice):
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
+        if position == 0:
+            position = -5000
+        else:
+            position = 5000
         self.hass.services.call(
             'ais_ai_service',
             'publish_command_to_frame', {

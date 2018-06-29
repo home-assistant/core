@@ -10,10 +10,6 @@ homeassistant:
   customize:
     media_player.wbudowany_glosnik:
       friendly_name: "Podłączony głośnik"
-    # media_player.glosnik_1:
-    #   friendly_name: "Głośnik 1"
-    media_player.glosnik_2:
-      friendly_name: "Głośnik 2"
 
 input_select:
   radio_type:
@@ -39,6 +35,14 @@ media_player:
   - platform: ais_exo_player
     name: wbudowany_glosnik
     ip_address: localhost
+
+input_number:
+  media_player_speed:
+    name: "Szybkość odtwarzania:"
+    min: 0.1
+    max: 3
+    step: 0.1
+    initial: 1
 
 group:
   Radio Player:
@@ -79,3 +83,14 @@ automation:
       - service: ais_cloud.select_media_player
         data_template:
           media_player_type: "Radio"
+
+  - alias: 'Change player speed'
+    hide_entity: True
+    trigger:
+      platform: state
+      entity_id: input_number.media_player_speed
+    action:
+      -  service: ais_ai_service.publish_command_to_frame
+         data_template:
+           key: "setPlaybackSpeed"
+           val: "{{ states('input_number.media_player_speed') }}"

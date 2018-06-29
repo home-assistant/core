@@ -72,18 +72,20 @@ class MqttSensor(MqttAvailability, Entity):
             """Handle new MQTT messages."""
             try:
                 message = json.loads(payload)
-                statusNet = message.get("StatusNET", None)
-                if statusNet is not None:
-                    _LOGGER.info("statusNet: " + str(statusNet))
-                    _LOGGER.info("statusNet type: " + str(type(statusNet)))
+                # statusNet = message.get("StatusNET", None)
+                status = message.get("Status", None)
+                if status is not None:
+                    _LOGGER.info("statusNet: " + str(status))
                     # check if it is already added or not
                     device_info = "#"
-                    device_info += statusNet["Hostname"]
-                    device_info += ", " + statusNet["IPAddress"]
-                    device_info += ":80"
+                    # device_info += statusNet["Hostname"]
+                    # device_info += ", " + statusNet["IPAddress"]
+                    device_info += status["FriendlyName"][0]
+                    # TODO take the ip from device
+                    device_info += ", https://127.0.0.1:8123"
                     device_not_exist = True
-                    for d in (MQTT_DEVICES):
-                        if (str(d) == device_info):
+                    for d in MQTT_DEVICES:
+                        if str(d) == device_info:
                             device_not_exist = False
                     if device_not_exist:
                         MQTT_DEVICES.append(device_info)

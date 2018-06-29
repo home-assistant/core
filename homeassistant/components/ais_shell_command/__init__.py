@@ -271,6 +271,7 @@ def _scan_device(hass, call):
     url = call.data["url"]
     url_a = call.data["url_a"]
     from requests_futures.sessions import FuturesSession
+    from urllib.parse import urlparse
     import homeassistant.ais_dom.sensor.ais_device_search_mqtt as dsm
     session = FuturesSession()
 
@@ -278,9 +279,10 @@ def _scan_device(hass, call):
         try:
             # parse the json storing the result on the response object
             json_ws_resp = resp.json()
-            hostname = json_ws_resp["StatusNET"]["Hostname"]
-            ip = json_ws_resp["StatusNET"]["IPAddress"]
-            dsm.NET_DEVICES.append("#" + hostname + ", " + ip + ':80')
+            hostname = urlparse(resp.url).hostname
+            name = json_ws_resp["Status"]["FriendlyName"][0]
+            #ip = json_ws_resp["StatusNET"]["IPAddress"]
+            dsm.NET_DEVICES.append("#" + name + ", http://" + hostname + ':80')
             info = dsm.get_text()
             hass.states.async_set(
                 'sensor.network_devices_info_value', '', {
@@ -299,7 +301,7 @@ def _scan_device(hass, call):
             ip = json_ws_resp["IPAddressIPv4"]
             mac = json_ws_resp["MacWlan0"]
             dsm.DOM_DEVICES.append(
-                "#" + model + " " + manufacturer + ", " + ip + ':8123')
+                "#" + model + " " + manufacturer + ", https://" + ip + ':8123')
             info = dsm.get_text()
             hass.states.async_set(
                 'sensor.network_devices_info_value', '', {
@@ -353,7 +355,7 @@ def _scan_network_for_devices(hass, call):
     # 256
     elif (GLOBAL_X > 0 and GLOBAL_X < 256):
         GLOBAL_X += 1
-        rest_url = "http://{}.{}/cm?cmnd=status%205"
+        rest_url = "http://{}.{}/cm?cmnd=status"
         url = rest_url.format(GLOBAL_MY_IP.rsplit('.', 1)[0], str(GLOBAL_X))
         info = "!sprawdzam " + GLOBAL_MY_IP.rsplit('.', 1)[0]
         info += "." + str(GLOBAL_X) + "\n"
@@ -380,7 +382,7 @@ def _scan_network_for_devices(hass, call):
         # send the message to all robots in network
         yield from hass.services.async_call('mqtt', 'publish', {
             'topic': 'cmnd/dom/status',
-            'payload': 5
+            'payload': ''
         })
         hass.states.async_set(
             'sensor.network_devices_info_value', '', {
