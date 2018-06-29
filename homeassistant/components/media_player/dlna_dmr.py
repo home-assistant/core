@@ -649,7 +649,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
     def media_duration(self, state_variable):
         """Duration of current playing media in seconds."""
         # pylint: disable=arguments-differ
-        if state_variable is None or state_variable.value is None:
+        if state_variable is None or \
+           state_variable.value is None or \
+           state_variable.value == 'NOT_IMPLEMENTED':
             return None
 
         split = [int(v) for v in re.findall(r"[\w']+", state_variable.value)]
@@ -661,7 +663,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
     def media_position(self, state_variable):
         """Position of current playing media in seconds."""
         # pylint: disable=arguments-differ
-        if state_variable is None or state_variable.value is None:
+        if state_variable is None or \
+           state_variable.value is None or \
+           state_variable.value == 'NOT_IMPLEMENTED':
             return None
 
         split = [int(v) for v in re.findall(r"[\w']+", state_variable.value)]
