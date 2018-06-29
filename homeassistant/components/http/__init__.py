@@ -51,7 +51,7 @@ CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
 # TLS configuration follows the best-practice guidelines specified here:
 # https://wiki.mozilla.org/Security/Server_Side_TLS
 # Modern guidelines are followed.
-SSL_VERSION = ssl.PROTOCOL_TLS
+SSL_VERSION = ssl.PROTOCOL_TLS  # pylint: disable=no-member
 SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | \
            ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1 | \
            ssl.OP_CIPHER_SERVER_PREFERENCE
