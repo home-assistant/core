@@ -1098,7 +1098,7 @@ python-velbus==2.0.11
 python-vlc==1.1.2
 
 # homeassistant.components.wink
-python-wink==1.9.0
+python-wink==1.9.1
 
 # homeassistant.components.sensor.swiss_public_transport
 python_opendata_transport==0.1.3
