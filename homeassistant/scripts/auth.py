@@ -1,7 +1,9 @@
 """Script to manage users for the Home Assistant auth provider."""
 import argparse
+import asyncio
 import os
 
+from homeassistant.core import HomeAssistant
 from homeassistant.config import get_default_config_dir
 from homeassistant.auth_providers import homeassistant as hass_auth
 
@@ -17,7 +19,8 @@ def run(args):
         default=get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
 
-    subparsers = parser.add_subparsers()
+    subparsers = parser.add_subparsers(dest='func')
+    subparsers.required = True
     parser_list = subparsers.add_parser('list')
     parser_list.set_defaults(func=list_users)
 
@@ -37,11 +40,15 @@ def run(args):
     parser_change_pw.set_defaults(func=change_password)
 
     args = parser.parse_args(args)
-    path = os.path.join(os.getcwd(), args.config, hass_auth.PATH_DATA)
-    args.func(hass_auth.load_data(path), args)
+    loop = asyncio.get_event_loop()
+    hass = HomeAssistant(loop=loop)
+    hass.config.config_dir = os.path.join(os.getcwd(), args.config)
+    data = hass_auth.Data(hass)
+    loop.run_until_complete(data.async_load())
+    loop.run_until_complete(args.func(data, args))
 
 
-def list_users(data, args):
+async def list_users(data, args):
     """List the users."""
     count = 0
     for user in data.users:
@@ -52,14 +59,14 @@ def list_users(data, args):
     print("Total users:", count)
 
 
-def add_user(data, args):
+async def add_user(data, args):
     """Create a user."""
     data.add_user(args.username, args.password)
-    data.save()
+    await data.async_save()
     print("User created")
 
 
-def validate_login(data, args):
+async def validate_login(data, args):
     """Validate a login."""
     try:
         data.validate_login(args.username, args.password)
@@ -68,11 +75,11 @@ def validate_login(data, args):
         print("Auth invalid")
 
 
-def change_password(data, args):
+async def change_password(data, args):
     """Change password."""
     try:
         data.change_password(args.username, args.new_password)
-        data.save()
+        await data.async_save()
         print("Password changed")
     except hass_auth.InvalidUser:
         print("User not found")
