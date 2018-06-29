@@ -52,6 +52,7 @@ class LTEData:
 class LTEHostData:
     """Container for LTE states."""
 
+    websession = attr.ib()
     hostdata = attr.ib(init=False, factory=dict)
 
     def get(self, config):
@@ -67,7 +68,9 @@ class LTEHostData:
 async def async_setup(hass, config):
     """Set up Netgear LTE component."""
     if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = LTEHostData()
+        websession = async_create_clientsession(
+            hass, cookie_jar=aiohttp.CookieJar(unsafe=True))
+        hass.data[DATA_KEY] = LTEHostData(websession)
 
     tasks = [_setup_lte(hass, conf) for conf in config.get(DOMAIN, [])]
     if tasks:
@@ -83,8 +86,7 @@ async def _setup_lte(hass, lte_config):
     host = lte_config[CONF_HOST]
     password = lte_config[CONF_PASSWORD]
 
-    websession = async_create_clientsession(
-        hass, cookie_jar=aiohttp.CookieJar(unsafe=True))
+    websession = hass.data[DATA_KEY].websession
 
     modem = eternalegypt.Modem(hostname=host, websession=websession)
     await modem.login(password=password)
