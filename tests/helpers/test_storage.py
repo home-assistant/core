@@ -1,4 +1,5 @@
 """Tests for the storage helper."""
+import asyncio
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -17,31 +18,12 @@ MOCK_DATA = {'hello': 'world'}
 
 
 @pytest.fixture
-def mock_save():
-    """Fixture to mock JSON save."""
-    written = []
-    with patch('homeassistant.util.json.save_json',
-               side_effect=lambda *args: written.append(args)):
-        yield written
-
-
-@pytest.fixture
-def mock_load(mock_save):
-    """Fixture to mock JSON read."""
-    with patch('homeassistant.util.json.load_json',
-               side_effect=lambda *args: mock_save[-1][1]):
-        yield
-
-
-@pytest.fixture
 def store(hass):
     """Fixture of a store that prevents writing on HASS stop."""
-    store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
-    store._async_ensure_stop_listener = lambda: None
-    yield store
+    yield storage.Store(hass, MOCK_VERSION, MOCK_KEY)
 
 
-async def test_loading(hass, store, mock_save, mock_load):
+async def test_loading(hass, store):
     """Test we can save and load data."""
     await store.async_save(MOCK_DATA)
     data = await store.async_load()
@@ -55,55 +37,96 @@ async def test_loading_non_existing(hass, store):
     assert data is None
 
 
-async def test_saving_with_delay(hass, store, mock_save):
+async def test_loading_parallel(hass, store, hass_storage, caplog):
+    """Test we can save and load data."""
+    hass_storage[store.key] = {
+        'version': MOCK_VERSION,
+        'data': MOCK_DATA,
+    }
+
+    results = await asyncio.gather(
+        store.async_load(),
+        store.async_load()
+    )
+
+    assert results[0] is MOCK_DATA
+    assert results[1] is MOCK_DATA
+    assert caplog.text.count('Loading data for {}'.format(store.key))
+
+
+async def test_saving_with_delay(hass, store, hass_storage):
     """Test saving data after a delay."""
     await store.async_save(MOCK_DATA, delay=1)
-    assert len(mock_save) == 0
+    assert store.key not in hass_storage
 
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
-    assert len(mock_save) == 1
+    assert hass_storage[store.key] == {
+        'version': MOCK_VERSION,
+        'key': MOCK_KEY,
+        'data': MOCK_DATA,
+    }
 
 
-async def test_saving_on_stop(hass, mock_save):
+async def test_saving_on_stop(hass, hass_storage):
     """Test delayed saves trigger when we quit Home Assistant."""
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY)
     await store.async_save(MOCK_DATA, delay=1)
-    assert len(mock_save) == 0
+    assert store.key not in hass_storage
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
-    assert len(mock_save) == 1
+    assert hass_storage[store.key] == {
+        'version': MOCK_VERSION,
+        'key': MOCK_KEY,
+        'data': MOCK_DATA,
+    }
 
 
-async def test_loading_while_delay(hass, store, mock_save, mock_load):
+async def test_loading_while_delay(hass, store, hass_storage):
     """Test we load new data even if not written yet."""
     await store.async_save({'delay': 'no'})
-    assert len(mock_save) == 1
+    assert hass_storage[store.key] == {
+        'version': MOCK_VERSION,
+        'key': MOCK_KEY,
+        'data': {'delay': 'no'},
+    }
 
     await store.async_save({'delay': 'yes'}, delay=1)
-    assert len(mock_save) == 1
+    assert hass_storage[store.key] == {
+        'version': MOCK_VERSION,
+        'key': MOCK_KEY,
+        'data': {'delay': 'no'},
+    }
 
     data = await store.async_load()
     assert data == {'delay': 'yes'}
 
 
-async def test_writing_while_writing_delay(hass, store, mock_save, mock_load):
+async def test_writing_while_writing_delay(hass, store, hass_storage):
     """Test a write while a write with delay is active."""
     await store.async_save({'delay': 'yes'}, delay=1)
-    assert len(mock_save) == 0
+    assert store.key not in hass_storage
     await store.async_save({'delay': 'no'})
-    assert len(mock_save) == 1
+    assert hass_storage[store.key] == {
+        'version': MOCK_VERSION,
+        'key': MOCK_KEY,
+        'data': {'delay': 'no'},
+    }
 
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
     await hass.async_block_till_done()
-    assert len(mock_save) == 1
+    assert hass_storage[store.key] == {
+        'version': MOCK_VERSION,
+        'key': MOCK_KEY,
+        'data': {'delay': 'no'},
+    }
 
     data = await store.async_load()
     assert data == {'delay': 'no'}
 
 
-async def test_migrator_no_existing_config(hass, store, mock_save):
+async def test_migrator_no_existing_config(hass, store, hass_storage):
     """Test migrator with no existing config."""
     with patch('os.path.isfile', return_value=False), \
         patch.object(store, 'async_load',
@@ -112,10 +135,10 @@ async def test_migrator_no_existing_config(hass, store, mock_save):
             hass, 'old-path', store)
 
     assert data == {'cur': 'config'}
-    assert len(mock_save) == 0
+    assert store.key not in hass_storage
 
 
-async def test_migrator_existing_config(hass, store, mock_save):
+async def test_migrator_existing_config(hass, store, hass_storage):
     """Test migrating existing config."""
     with patch('os.path.isfile', return_value=True), \
         patch('os.remove') as mock_remove, \
@@ -126,15 +149,14 @@ async def test_migrator_existing_config(hass, store, mock_save):
 
     assert len(mock_remove.mock_calls) == 1
     assert data == {'old': 'config'}
-    assert len(mock_save) == 1
-    assert mock_save[0][1] == {
+    assert hass_storage[store.key] == {
         'key': MOCK_KEY,
         'version': MOCK_VERSION,
         'data': data,
     }
 
 
-async def test_migrator_transforming_config(hass, store, mock_save):
+async def test_migrator_transforming_config(hass, store, hass_storage):
     """Test migrating config to new format."""
     async def old_conf_migrate_func(old_config):
         """Migrate old config to new format."""
@@ -150,8 +172,7 @@ async def test_migrator_transforming_config(hass, store, mock_save):
 
     assert len(mock_remove.mock_calls) == 1
     assert data == {'new': 'config'}
-    assert len(mock_save) == 1
-    assert mock_save[0][1] == {
+    assert hass_storage[store.key] == {
         'key': MOCK_KEY,
         'version': MOCK_VERSION,
         'data': data,
