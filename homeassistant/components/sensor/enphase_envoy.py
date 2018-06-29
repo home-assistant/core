@@ -1,5 +1,5 @@
 """
-Support for monitoring energy usage and solar panel energy production.
+Support for monitoring energy usage and solar panel energy production
 using the Enphase Envoy.
 
 For more details about this platform, please refer to the documentation at
@@ -51,8 +51,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for i in range(8):
         if monitored_conditions == {} or \
                     SENSOR_TYPES[i] in monitored_conditions:
-                add_devices([Envoy(ip_address, DEFAULT_NAMES[i],
-                        SENSOR_TYPES[i])], True)
+            add_devices([Envoy(ip_address, DEFAULT_NAMES[i],
+                                SENSOR_TYPES[i])], True)
 
 
 class Envoy(Entity):
@@ -114,7 +114,7 @@ class Envoy(Entity):
             self._state = int(response_parsed["production"][1]["whToday"])
         elif self._type == "7_days_production":
             self._state = \
-            int(response_parsed["production"][1]["whLastSevenDays"])
+                int(response_parsed["production"][1]["whLastSevenDays"])
         elif self._type == "lifetime_production":
             self._state = int(response_parsed["production"][1]["whLifetime"])
 
@@ -124,6 +124,6 @@ class Envoy(Entity):
             self._state = int(response_parsed["consumption"][0]["whToday"])
         elif self._type == "7_days_consumption":
             self._state = \
-            int(response_parsed["consumption"][0]["whLastSevenDays"])
+                int(response_parsed["consumption"][0]["whLastSevenDays"])
         elif self._type == "lifetime_consumption":
             self._state = int(response_parsed["consumption"][0]["whLifetime"])
