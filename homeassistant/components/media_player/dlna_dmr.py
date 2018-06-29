@@ -43,8 +43,10 @@ DEPENDENCIES = ['http']
 
 DEFAULT_NAME = 'DLNA Digital Media Renderer'
 
+CONF_UDN = 'udn'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
+    vol.Required(CONF_UDN): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -174,7 +176,6 @@ def start_notify_view(hass):
     view = UpnpNotifyView(hass)
     hass_data[name] = view
     hass.http.register_view(view)
-    return view
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -189,21 +190,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if config.get(CONF_URL) is not None:
         url = config.get(CONF_URL)
         name = config.get(CONF_NAME)
+        udn = config.get(CONF_UDN)
     elif discovery_info is not None:
         url = discovery_info['ssdp_description']
         name = discovery_info['name']
+        udn = discovery_info['udn']
 
     # set up our Views, if not already done so
     if __name__ not in hass.data:
         hass.data[__name__] = {}
 
     hass.async_run_job(start_notify_view, hass)
+    notify_view = hass.data[__name__]['notify_view']
 
     # create device
     from async_upnp_client import UpnpFactory
     requester = HassUpnpRequester(hass)
-    factory = UpnpFactory(requester)
-    device = DlnaDmrDevice(hass, url, name, factory)
+    factory = UpnpFactory(requester, ignore_state_variable_value_range=True)
+    device = DlnaDmrDevice(hass, url, udn, name, factory, notify_view)
 
     _LOGGER.debug("Adding device: %s", device)
     add_devices([device])
@@ -316,14 +320,14 @@ class HassUpnpRequester(object):
 class DlnaDmrDevice(MediaPlayerDevice):
     """Representation of a DLNA DMR device."""
 
-    def __init__(self, hass, url, name, factory):
+    def __init__(self, hass, url, udn, name, factory, notify_view):
         """Initializer."""
         self.hass = hass
         self._url = url
+        self._udn = udn
         self._name = name
         self._factory = factory
-
-        self._notify_view = hass.data[__name__]['notify_view']
+        self._notify_view = notify_view
 
         self._device = None
         self._is_connected = False
@@ -369,6 +373,11 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def _async_init_device(self):
         """Fetch and init services."""
         self._device = await self._factory.async_create_device(self._url)
+
+        # ensure correct UDN
+        if self._device.udn != self._udn:
+            _LOGGER.warning('Given UDN (%s) does not match device UDN: %s',
+                            self._udn, self._device.udn)
 
         # set name
         if self.name is None or self.name == DEFAULT_NAME:
@@ -690,8 +699,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return "{}.{}".format(__name__, self._url)
+        return "{}.{}".format(__name__, self._udn)
 
     def __str__(self):
         """To string."""
-        return "<DlnaDmrDevice('{}')>".format(self._url)
+        return "<DlnaDmrDevice('{}')>".format(self._udn)
