@@ -21,6 +21,8 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+STORAGE_VERSION = 1
+STORAGE_KEY = 'auth'
 
 AUTH_PROVIDERS = Registry()
 
@@ -121,23 +123,12 @@ class User:
     is_owner = attr.ib(type=bool, default=False)
     is_active = attr.ib(type=bool, default=False)
     name = attr.ib(type=str, default=None)
-    # For persisting and see if saved?
-    # store = attr.ib(type=AuthStore, default=None)
 
     # List of credentials of a user.
-    credentials = attr.ib(type=list, default=attr.Factory(list))
+    credentials = attr.ib(type=list, default=attr.Factory(list), cmp=False)
 
     # Tokens associated with a user.
-    refresh_tokens = attr.ib(type=dict, default=attr.Factory(dict))
-
-    def as_dict(self):
-        """Convert user object to a dictionary."""
-        return {
-            'id': self.id,
-            'is_owner': self.is_owner,
-            'is_active': self.is_active,
-            'name': self.name,
-        }
+    refresh_tokens = attr.ib(type=dict, default=attr.Factory(dict), cmp=False)
 
 
 @attr.s(slots=True)
@@ -152,7 +143,7 @@ class RefreshToken:
                                       default=ACCESS_TOKEN_EXPIRATION)
     token = attr.ib(type=str,
                     default=attr.Factory(lambda: generate_secret(64)))
-    access_tokens = attr.ib(type=list, default=attr.Factory(list))
+    access_tokens = attr.ib(type=list, default=attr.Factory(list), cmp=False)
 
 
 @attr.s(slots=True)
@@ -376,7 +367,7 @@ class AuthStore:
         self.hass = hass
         self.users = None
         self.clients = None
-        self._load_lock = asyncio.Lock(loop=hass.loop)
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     async def credentials_for_provider(self, provider_type, provider_id):
         """Return credentials for specific auth provider type and id."""
@@ -494,10 +485,128 @@ class AuthStore:
 
     async def async_load(self):
         """Load the users."""
-        async with self._load_lock:
+        data = await self._store.async_load()
+
+        # Make sure that we're not overriding data if 2 loads happened at the
+        # same time
+        if self.users is not None:
+            return
+
+        if data is None:
             self.users = {}
             self.clients = {}
+            return
+
+        users = {
+            user_dict['id']: User(**user_dict) for user_dict in data['users']
+        }
+
+        for cred_dict in data['credentials']:
+            users[cred_dict['user_id']].credentials.append(Credentials(
+                id=cred_dict['id'],
+                is_new=False,
+                auth_provider_type=cred_dict['auth_provider_type'],
+                auth_provider_id=cred_dict['auth_provider_id'],
+                data=cred_dict['data'],
+            ))
+
+        refresh_tokens = {}
+
+        for rt_dict in data['refresh_tokens']:
+            token = RefreshToken(
+                id=rt_dict['id'],
+                user=users[rt_dict['user_id']],
+                client_id=rt_dict['client_id'],
+                created_at=dt_util.parse_datetime(rt_dict['created_at']),
+                access_token_expiration=timedelta(
+                    rt_dict['access_token_expiration']),
+                token=rt_dict['token'],
+            )
+            refresh_tokens[token.id] = token
+            users[rt_dict['user_id']].refresh_tokens[token.token] = token
+
+        for ac_dict in data['access_tokens']:
+            refresh_token = refresh_tokens[ac_dict['refresh_token_id']]
+            token = AccessToken(
+                refresh_token=refresh_token,
+                created_at=dt_util.parse_datetime(ac_dict['created_at']),
+                token=ac_dict['token'],
+            )
+            refresh_token.access_tokens.append(token)
+
+        clients = {
+            cl_dict['id']: Client(**cl_dict) for cl_dict in data['clients']
+        }
+
+        self.users = users
+        self.clients = clients
 
     async def async_save(self):
         """Save users."""
-        pass
+        users = [
+            {
+                'id': user.id,
+                'is_owner': user.is_owner,
+                'is_active': user.is_active,
+                'name': user.name,
+            }
+            for user in self.users.values()
+        ]
+
+        credentials = [
+            {
+                'id': credential.id,
+                'user_id': user.id,
+                'auth_provider_type': credential.auth_provider_type,
+                'auth_provider_id': credential.auth_provider_id,
+                'data': credential.data,
+            }
+            for user in self.users.values()
+            for credential in user.credentials
+        ]
+
+        refresh_tokens = [
+            {
+                'id': refresh_token.id,
+                'user_id': user.id,
+                'client_id': refresh_token.client_id,
+                'created_at': refresh_token.created_at.isoformat(),
+                'access_token_expiration':
+                    refresh_token.access_token_expiration.total_seconds(),
+                'token': refresh_token.token,
+            }
+            for user in self.users.values()
+            for refresh_token in user.refresh_tokens.values()
+        ]
+
+        access_tokens = [
+            {
+                'id': user.id,
+                'refresh_token_id': refresh_token.id,
+                'created_at': access_token.created_at.isoformat(),
+                'token': access_token.token,
+            }
+            for user in self.users.values()
+            for refresh_token in user.refresh_tokens.values()
+            for access_token in refresh_token.access_tokens
+        ]
+
+        clients = [
+            {
+                'id': client.id,
+                'name': client.name,
+                'secret': client.secret,
+                'redirect_uris': client.redirect_uris,
+            }
+            for client in self.clients.values()
+        ]
+
+        data = {
+            'users': users,
+            'clients': clients,
+            'credentials': credentials,
+            'access_tokens': access_tokens,
+            'refresh_tokens': refresh_tokens,
+        }
+
+        await self._store.async_save(data, delay=1)
