@@ -512,7 +512,7 @@ class AuthStore:
 
         redirect_uris_counter = Counter(redirect_uris)
 
-        for client_id, client in self.clients.items():
+        for _, client in self.clients.items():
             if (client.name == name
                     and Counter(client.redirect_uris) == redirect_uris_counter
                     and no_secret == (client.secret is None)):
