@@ -320,6 +320,7 @@ class MockUser(auth.User):
 
     def add_to_auth_manager(self, auth_mgr):
         """Test helper to add entry to hass."""
+        ensure_auth_manager_loaded(auth_mgr)
         auth_mgr._store.users[self.id] = self
         return self
 
