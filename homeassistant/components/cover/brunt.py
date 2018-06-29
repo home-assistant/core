@@ -113,12 +113,18 @@ class BruntDevice(CoverDevice):
 
     @property
     def state(self):
-        """Return the state of the cover. """
+        """Return the state of the cover."""
+        # first check if the cover is moving
         if int(self._state['moveState']) in MOVE_STATES_MAP:
             state = MOVE_STATES_MAP.get(int(self._state['moveState']))
+        # then check the current position, if it is between 0 and 100
+        # use the map to get open and closed, otherwise partial
         elif 0 <= int(self._state['currentPosition']) <= 100:
-            state = POSITION_MAP.get(int(self._state['currentPosition']),
-                STATE_PARTIALLY_OPEN)
+            state = POSITION_MAP.get(
+                int(self._state['currentPosition']),
+                STATE_PARTIALLY_OPEN
+                )
+        # otherwise unknown
         else:
             state = STATE_UNKNOWN
         return state
@@ -127,6 +133,7 @@ class BruntDevice(CoverDevice):
     def current_cover_position(self):
         """
         Return current position of cover.
+
         None is unknown, 0 is closed, 100 is fully open.
         """
         return int(self._state['currentPosition'])
@@ -143,7 +150,7 @@ class BruntDevice(CoverDevice):
 
     @property
     def is_closed(self):
-        """"Return true if cover is closed, else False."""
+        """Return true if cover is closed, else False."""
         return int(self._state['currentPosition']) == CLOSED_POSITION
 
     def update(self):
@@ -157,17 +164,17 @@ class BruntDevice(CoverDevice):
             self._available = False
 
     def open_cover(self, **kwargs):
-        """ set the cover to the open position. """
+        """Set the cover to the open position."""
         self._bapi.changeRequestPosition(
             OPEN_POSITION, thingUri=self._thing_uri)
 
     def close_cover(self, **kwargs):
-        """ set the cover to the closed position. """
+        """Set the cover to the closed position."""
         self._bapi.changeRequestPosition(
             CLOSED_POSITION, thingUri=self._thing_uri)
 
     def set_cover_position(self, **kwargs):
-        """ set the cover to a specific position. """
+        """Set the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             self._bapi.changeRequestPosition(
                 int(kwargs[ATTR_POSITION]), thingUri=self._thing_uri)
