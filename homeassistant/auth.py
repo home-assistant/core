@@ -1,7 +1,7 @@
 """Provide an authentication layer for Home Assistant."""
 import asyncio
 import binascii
-from collections import OrderedDict
+from collections import OrderedDict, Counter
 from datetime import datetime, timedelta
 import os
 import importlib
@@ -337,6 +337,12 @@ class AuthManager:
         return await self._store.async_create_client(
             name, redirect_uris, no_secret)
 
+    async def async_get_or_create_client(self, name, *, redirect_uris=None,
+                                         no_secret=False):
+        """Find a client, if not exists, create a new one."""
+        return await self._store.async_get_or_create_client(
+            name, redirect_uris, no_secret)
+
     async def async_get_client(self, client_id):
         """Get a client."""
         return await self._store.async_get_client(client_id)
@@ -490,6 +496,21 @@ class AuthStore:
         self.clients[client.id] = client
         await self.async_save()
         return client
+
+    async def async_get_or_create_client(self, name, redirect_uris, no_secret):
+        """Find a client, if not exists, create a new one."""
+        if self.clients is None:
+            await self.async_load()
+
+        redirect_uris_counter = Counter(redirect_uris)
+
+        for client_id, client in self.clients.items():
+            if (client.name == name
+                    and Counter(client.redirect_uris) == redirect_uris_counter
+                    and no_secret == (client.secret is None)):
+                return client
+
+        return await self.async_create_client(name, redirect_uris, no_secret)
 
     async def async_get_client(self, client_id):
         """Get a client."""

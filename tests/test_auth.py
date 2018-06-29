@@ -241,3 +241,28 @@ async def test_cannot_retrieve_expired_access_token(hass):
 
     # Even with unpatched time, it should have been removed from manager
     assert manager.async_get_access_token(access_token.token) is None
+
+
+async def test_get_or_create_client(hass):
+    """Test that get_or_create_client works."""
+    manager = await auth.auth_manager_from_config(hass, [])
+
+    client1 = await manager.async_get_or_create_client(
+        'Test Client', redirect_uris=['https://test.com/1'])
+    assert client1.name is 'Test Client'
+
+    client2 = await manager.async_get_or_create_client(
+        'Test Client', redirect_uris=['https://test.com/1'])
+    assert client2.id is client1.id
+
+    client_no_secret = await manager.async_get_or_create_client(
+        'Test Client',
+        redirect_uris=['https://test.com/1', '/'],
+        no_secret=True)
+    assert client_no_secret.id is not client1.id
+
+    client_no_secret2 = await manager.async_get_or_create_client(
+        'Test Client',
+        redirect_uris=['/', 'https://test.com/1'],  # different order
+        no_secret=True)
+    assert client_no_secret2.id is client_no_secret.id
