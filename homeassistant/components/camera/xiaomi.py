@@ -113,7 +113,7 @@ class XiaomiCamera(Camera):
         except error_perm as exc:
             _LOGGER.error('Unable to find path: %s - %s', first_dir, exc)
             return False
-          
+
         if self._model == MODEL_XIAOFANG:
             dirs = [d for d in ftp.nlst() if '.' not in d]
             if not dirs:
