@@ -242,8 +242,7 @@ async def test_auth_active_blocked_api_password_access(app, aiohttp_client):
 
 
 async def test_auth_legacy_support_api_password_access(app, aiohttp_client):
-    """Test access using api_password should be support
-    when auth.support_legacy."""
+    """Test access using api_password if auth.support_legacy."""
     setup_auth(app, [], True, support_legacy=True, api_password=API_PASSWORD)
     client = await aiohttp_client(app)
 
