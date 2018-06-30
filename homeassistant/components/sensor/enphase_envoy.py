@@ -108,7 +108,7 @@ class Envoy(Entity):
             return
 
         response_parsed = json.loads(response.text)
-        """if self._type == "production":
+        if self._type == "production":
             self._state = int(response_parsed["production"][1]["wNow"])
         elif self._type == "daily_production":
             self._state = int(response_parsed["production"][1]["whToday"])
@@ -126,4 +126,4 @@ class Envoy(Entity):
             self._state = \
                 int(response_parsed["consumption"][0]["whLastSevenDays"])
         elif self._type == "lifetime_consumption":
-            self._state = int(response_parsed["consumption"][0]["whLifetime"])"""
+            self._state = int(response_parsed["consumption"][0]["whLifetime"])
