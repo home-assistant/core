@@ -460,7 +460,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         """State variable(s) changed, let home-assistant know."""
         for state_variable in state_variables:
             if state_variable.name == 'LastChange':
-                from async_upnp_client.utils import dlna_handle_notify_last_change
+                from async_upnp_client.utils import \
+                    dlna_handle_notify_last_change
                 dlna_handle_notify_last_change(state_variable)
 
         self.schedule_update_ha_state()
@@ -542,7 +543,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         # pylint: disable=arguments-differ
 
         # queue media
-        meta_data = await self._construct_play_media_metadata(media_type, media_id)
+        meta_data = await self._construct_play_media_metadata(media_type,
+                                                              media_id)
         await action.async_call(InstanceID=0,
                                 CurrentURI=media_id,
                                 CurrentURIMetaData=meta_data)
@@ -582,11 +584,13 @@ class DlnaDmrDevice(MediaPlayerDevice):
         upnp_class = HOME_ASSISTANT_UPNP_CLASS_MAPPING[media_type]
 
         from didl_lite import didl_lite
-        protocol_info = "http-get:*:{mime_type}:{dlna_features}".format(**media_info)
-        resource = didl_lite.Resource(uri=media_id, protocol_info=protocol_info)
+        protocol_info = "http-get:*:{mime_type}:{dlna_features}".format(
+            **media_info)
+        resource = didl_lite.Resource(uri=media_id,
+                                      protocol_info=protocol_info)
         item_type = didl_lite.type_by_upnp_class(upnp_class)
-        item = item_type(id="0", parent_id="0", title="Home Assistant", restricted="1",
-                         resources=[resource])
+        item = item_type(id="0", parent_id="0", title="Home Assistant",
+                         restricted="1", resources=[resource])
 
         return didl_lite.to_xml_string(item).decode('utf-8')
 
