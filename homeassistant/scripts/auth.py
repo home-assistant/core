@@ -5,15 +5,15 @@ import logging
 import os
 
 from homeassistant.auth import auth_manager_from_config
+from homeassistant.auth.providers import homeassistant as hass_auth
 from homeassistant.core import HomeAssistant
 from homeassistant.config import get_default_config_dir
-from homeassistant.auth.providers import homeassistant as hass_auth
 
 
 def run(args):
     """Handle Home Assistant auth provider script."""
     parser = argparse.ArgumentParser(
-        description=("Manage Home Assistant users"))
+        description="Manage Home Assistant users")
     parser.add_argument(
         '--script', choices=['auth'])
     parser.add_argument(
@@ -25,6 +25,8 @@ def run(args):
     subparsers.required = True
     parser_list = subparsers.add_parser('list')
     parser_list.set_defaults(func=list_users)
+    parser_list.add_argument('-a', '--all', default=False,
+                             help="Show all users included system user")
 
     parser_add = subparsers.add_parser('add')
     parser_add.add_argument('username', type=str)
@@ -56,7 +58,7 @@ async def run_command(hass, args):
     hass.config.config_dir = os.path.join(os.getcwd(), args.config)
     hass.auth = await auth_manager_from_config(hass, [{
         'type': 'homeassistant',
-    }])
+    }], [])
     provider = hass.auth.auth_providers[0]
     await provider.async_initialize()
     await args.func(hass, provider, args)
@@ -65,9 +67,21 @@ async def run_command(hass, args):
 async def list_users(hass, provider, args):
     """List the users."""
     count = 0
-    for user in provider.data.users:
-        count += 1
-        print(user['username'])
+    if args.all:
+        for user in await hass.auth.async_get_users():
+            print("{}{}{}".format(
+                str(user.name).ljust(20),
+                str(user.id).ljust(34),
+                str(user.mfa_modules)
+            ))
+            count += 1
+            for cred in user.credentials:
+                print("  - {}".format(cred.data.get('username')))
+
+    else:
+        for user in provider.data.users:
+            count += 1
+            print(user['username'])
 
     print()
     print("Total users:", count)
@@ -100,6 +114,7 @@ async def validate_login(hass, provider, args):
         print("Auth valid")
     except hass_auth.InvalidAuth:
         print("Auth invalid")
+        return
 
 
 async def change_password(hass, provider, args):

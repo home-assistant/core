@@ -1,22 +1,19 @@
 """Example auth provider."""
-from collections import OrderedDict
 import hmac
+from collections import OrderedDict
 
 import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant import data_entry_flow
 from homeassistant.core import callback
 
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
-
+from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 
 USER_SCHEMA = vol.Schema({
     vol.Required('username'): str,
     vol.Required('password'): str,
     vol.Optional('name'): str,
 })
-
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
     vol.Required('users'): [USER_SCHEMA]
@@ -31,9 +28,9 @@ class InvalidAuthError(HomeAssistantError):
 class ExampleAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
-    async def async_credential_flow(self):
+    async def async_login_flow(self):
         """Return a flow to login."""
-        return LoginFlow(self)
+        return ExampleLoginFlow(self)
 
     @callback
     def async_validate_login(self, username, password):
@@ -85,12 +82,8 @@ class ExampleAuthProvider(AuthProvider):
         return {}
 
 
-class LoginFlow(data_entry_flow.FlowHandler):
+class ExampleLoginFlow(LoginFlow):
     """Handler for the login flow."""
-
-    def __init__(self, auth_provider):
-        """Initialize the login flow."""
-        self._auth_provider = auth_provider
 
     async def async_step_init(self, user_input=None):
         """Handle the step of the form."""
@@ -104,10 +97,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
                 errors['base'] = 'invalid_auth'
 
             if not errors:
-                return self.async_create_entry(
-                    title=self._auth_provider.name,
-                    data=user_input
-                )
+                return await self.async_finish(user_input['username'])
 
         schema = OrderedDict()
         schema['username'] = str
