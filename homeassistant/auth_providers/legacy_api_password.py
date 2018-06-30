@@ -52,7 +52,7 @@ class LegacyApiPasswordAuthProvider(auth.AuthProvider):
             raise InvalidAuthError
 
     async def async_get_or_create_credentials(self, flow_result):
-        """Always return LEGACY_USER."""
+        """Return LEGACY_USER always."""
         for credential in await self.async_credentials():
             if credential.data['username'] == LEGACY_USER:
                 return credential
@@ -62,7 +62,8 @@ class LegacyApiPasswordAuthProvider(auth.AuthProvider):
         })
 
     async def async_user_meta_for_credentials(self, credentials):
-        """Always return LEGACY_USER.
+        """
+        Set name as LEGACY_USER always.
 
         Will be used to populate info when creating a new user.
         """
