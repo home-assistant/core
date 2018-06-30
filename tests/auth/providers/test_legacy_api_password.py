@@ -27,7 +27,7 @@ def manager(hass, store, provider):
     """Mock manager."""
     return auth.AuthManager(hass, store, {
         (provider.type, provider.id): provider
-    })
+    }, {})
 
 
 async def test_create_new_credential(manager, provider):
