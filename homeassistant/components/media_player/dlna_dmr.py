@@ -46,7 +46,7 @@ DEFAULT_NAME = 'DLNA Digital Media Renderer'
 CONF_UDN = 'udn'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
-    vol.Required(CONF_UDN): cv.string,
+    vol.Optional(CONF_UDN): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -377,7 +377,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         self._device = await self._factory.async_create_device(self._url)
 
         # ensure correct UDN
-        if self._device.udn != self._udn:
+        if self._udn and self._device.udn != self._udn:
             _LOGGER.warning('Given UDN (%s) does not match device UDN: %s',
                             self._udn, self._device.udn)
 
@@ -710,6 +710,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
+        if not self._udn:
+            return None
+
         return "{}.{}".format(__name__, self._udn)
 
     def __str__(self):
