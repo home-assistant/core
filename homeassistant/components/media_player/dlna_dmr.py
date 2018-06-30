@@ -35,7 +35,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
 REQUIREMENTS = [
-    'async-upnp-client==0.10.0',
+    'async-upnp-client==0.10.1',
     'python-didl-lite==1.0.1',
 ]
 
@@ -256,7 +256,7 @@ class UpnpNotifyView(HomeAssistantView):
     async def async_notify(self, request):
         """Callback method for NOTIFY requests."""
         if 'SID' not in request.headers:
-            return aiohttp.web.Response(status=422)
+            return aiohttp.web.Response(status=412)
 
         headers = request.headers
         sid = headers['SID']
@@ -264,12 +264,13 @@ class UpnpNotifyView(HomeAssistantView):
 
         # find UpnpService by SID
         if sid not in self._registered_services:
+            _LOGGER.debug('Storing NOTIFY in backlog for SID: %s', sid)
             self._backlog[sid] = {'headers': headers, 'body': body}
             return aiohttp.web.Response(status=202)
 
         service = self._registered_services[sid]
-        service.on_notify(headers, body)
-        return aiohttp.web.Response(status=200)
+        status = service.on_notify(headers, body)
+        return aiohttp.web.Response(status=status)
 
     @property
     def callback_url(self):
@@ -286,6 +287,7 @@ class UpnpNotifyView(HomeAssistantView):
 
         if sid in self._backlog:
             item = self._backlog[sid]
+            _LOGGER.debug('Re-playing backlogged NOTIFY for SID: %s', sid)
             service.on_notify(item['headers'], item['body'])
             del self._backlog[sid]
 
@@ -456,6 +458,11 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
     def on_state_variable_change(self, service, state_variables):
         """State variable(s) changed, let home-assistant know."""
+        for state_variable in state_variables:
+            if state_variable.name == 'LastChange':
+                from async_upnp_client.utils import dlna_handle_notify_last_change
+                dlna_handle_notify_last_change(state_variable)
+
         self.schedule_update_ha_state()
 
     @property
