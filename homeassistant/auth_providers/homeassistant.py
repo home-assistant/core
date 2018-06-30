@@ -23,7 +23,6 @@ CONF_ENABLE_2FA = 'enable_2fa'
 
 CONFIG_SCHEMA = auth.AUTH_PROVIDER_SCHEMA.extend({
     # NOTE this config enable 2FA for all users
-    # TODO support turn on/off 2FA per user basis
     vol.Optional(CONF_ENABLE_2FA): cv.boolean,
 }, extra=vol.PREVENT_EXTRA)
 
@@ -49,6 +48,7 @@ class Request2FA(HomeAssistantError):
 
     def __init__(self, session_token):
         """Set session_token."""
+        super().__init__()
         self.session_token = session_token
 
 
