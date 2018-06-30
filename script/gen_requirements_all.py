@@ -75,6 +75,7 @@ TEST_REQUIREMENTS = (
     'pylitejet',
     'pymonoprice',
     'pynx584',
+    'pyotp',
     'pyqwikswitch',
     'python-forecastio',
     'python-nest',
@@ -163,8 +164,10 @@ def gather_modules():
 
     errors = []
 
-    for package in sorted(explore_module('homeassistant.components', True) +
-                          explore_module('homeassistant.scripts', True)):
+    for package in sorted(
+            explore_module('homeassistant.components', True) +
+            explore_module('homeassistant.scripts', True) +
+            explore_module('homeassistant.auth_providers', True)):
         try:
             module = importlib.import_module(package)
         except ImportError:
