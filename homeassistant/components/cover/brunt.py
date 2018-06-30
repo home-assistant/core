@@ -144,7 +144,7 @@ class BruntDevice(CoverDevice):
         """Return the state of the cover."""
         # first check if the cover is moving
         if self.move_state in MOVE_STATES_MAP:
-            state = MOVE_STATES_MAP.get(int(self._state['moveState']))
+            state = MOVE_STATES_MAP.get(self.move_state)
         # then check the current position, if it is between 0 and 100
         elif 0 <= self.current_cover_position <= 100:
             # use the map to get open and closed, otherwise partial
