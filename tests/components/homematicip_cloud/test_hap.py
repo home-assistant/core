@@ -3,10 +3,8 @@
 from unittest.mock import Mock, patch
 
 from homeassistant.components import homematicip_cloud as hmipc
-
+from homeassistant.components.homematicip_cloud import errors
 from tests.common import mock_coro
-
-from homematicip.base.base_connection import HmipConnectionError
 
 
 async def test_hap_init(aioclient_mock):
@@ -41,7 +39,7 @@ async def test_hap_setup_invalid_token():
     hap = hmipc.HomematicipHAP(hass, entry)
 
     with patch.object(hap, 'get_hap',
-                      side_effect=HmipConnectionError):
+                      side_effect=errors.HmipcConnectionError):
         assert await hap.async_setup() is False
 
     assert len(hass.async_add_job.mock_calls) == 0
