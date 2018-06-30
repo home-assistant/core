@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.enphase_envoy/
 """
 import logging
-import json
 import voluptuous as vol
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -93,6 +92,7 @@ class Envoy(Entity):
     def update(self):
         """Get the energy production data from the Enphase Envoy."""
         import requests
+        import json
         try:
             response = requests.get(self._url, timeout=5)
         except (requests.exceptions.RequestException, ValueError):
@@ -108,7 +108,7 @@ class Envoy(Entity):
             return
 
         response_parsed = json.loads(response.text)
-        if self._type == "production":
+        """if self._type == "production":
             self._state = int(response_parsed["production"][1]["wNow"])
         elif self._type == "daily_production":
             self._state = int(response_parsed["production"][1]["whToday"])
@@ -126,4 +126,4 @@ class Envoy(Entity):
             self._state = \
                 int(response_parsed["consumption"][0]["whLastSevenDays"])
         elif self._type == "lifetime_consumption":
-            self._state = int(response_parsed["consumption"][0]["whLifetime"])
+            self._state = int(response_parsed["consumption"][0]["whLifetime"])"""
