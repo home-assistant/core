@@ -352,8 +352,8 @@ async def test_auth_active_with_password_not_allow(hass, aiohttp_client):
     client = await aiohttp_client(hass.http.app)
 
     async with client.ws_connect(wapi.URL) as ws:
-        with patch('homeassistant.auth.AuthManager.active') as auth_active:
-            auth_active.return_value = True
+        with patch('homeassistant.auth.AuthManager.active',
+                   return_value=True):
             auth_msg = await ws.receive_json()
             assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
 
@@ -364,6 +364,33 @@ async def test_auth_active_with_password_not_allow(hass, aiohttp_client):
 
             auth_msg = await ws.receive_json()
             assert auth_msg['type'] == wapi.TYPE_AUTH_INVALID
+
+
+async def test_auth_legacy_support_with_password(hass, aiohttp_client):
+    """Test authenticating with a token."""
+    assert await async_setup_component(hass, 'websocket_api', {
+        'http': {
+            'api_password': API_PASSWORD
+        }
+    })
+
+    client = await aiohttp_client(hass.http.app)
+
+    async with client.ws_connect(wapi.URL) as ws:
+        with patch('homeassistant.auth.AuthManager.active',
+                   return_value=True),\
+             patch('homeassistant.auth.AuthManager.support_legacy',
+                   return_value=True):
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+
+            await ws.send_json({
+                'type': wapi.TYPE_AUTH,
+                'api_password': API_PASSWORD
+            })
+
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_OK
 
 
 async def test_auth_with_invalid_token(hass, aiohttp_client):

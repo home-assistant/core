@@ -17,7 +17,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def setup_auth(app, trusted_networks, use_auth, api_password=None):
+def setup_auth(app, trusted_networks, use_auth,
+               support_legacy=False, api_password=None):
     """Create auth middleware for the app."""
     @middleware
     async def auth_middleware(request, handler):
@@ -28,7 +29,7 @@ def setup_auth(app, trusted_networks, use_auth, api_password=None):
                          DATA_API_PASSWORD in request.query):
             _LOGGER.warning('Please use access_token instead api_password.')
 
-        legacy_auth = not use_auth and api_password
+        legacy_auth = (not use_auth or support_legacy) and api_password
         if (hdrs.AUTHORIZATION in request.headers and
                 await async_validate_auth_header(
                     request, api_password if legacy_auth else None)):

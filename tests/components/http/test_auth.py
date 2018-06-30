@@ -82,7 +82,7 @@ async def test_auth_middleware_loaded_by_default(hass):
 
 async def test_access_without_password(app, aiohttp_client):
     """Test access without password."""
-    setup_auth(app, [], False, None)
+    setup_auth(app, [], False, api_password=None)
     client = await aiohttp_client(app)
 
     resp = await client.get('/')
@@ -91,7 +91,7 @@ async def test_access_without_password(app, aiohttp_client):
 
 async def test_access_with_password_in_header(app, aiohttp_client):
     """Test access with password in header."""
-    setup_auth(app, [], False, API_PASSWORD)
+    setup_auth(app, [], False, api_password=API_PASSWORD)
     client = await aiohttp_client(app)
 
     req = await client.get(
@@ -105,7 +105,7 @@ async def test_access_with_password_in_header(app, aiohttp_client):
 
 async def test_access_with_password_in_query(app, aiohttp_client):
     """Test access with password in URL."""
-    setup_auth(app, [], False, API_PASSWORD)
+    setup_auth(app, [], False, api_password=API_PASSWORD)
     client = await aiohttp_client(app)
 
     resp = await client.get('/', params={
@@ -124,7 +124,7 @@ async def test_access_with_password_in_query(app, aiohttp_client):
 
 async def test_basic_auth_works(app, aiohttp_client):
     """Test access with basic authentication."""
-    setup_auth(app, [], False, API_PASSWORD)
+    setup_auth(app, [], False, api_password=API_PASSWORD)
     client = await aiohttp_client(app)
 
     req = await client.get(
@@ -152,7 +152,7 @@ async def test_basic_auth_works(app, aiohttp_client):
 
 async def test_access_with_trusted_ip(app2, aiohttp_client):
     """Test access with an untrusted ip address."""
-    setup_auth(app2, TRUSTED_NETWORKS, False, 'some-pass')
+    setup_auth(app2, TRUSTED_NETWORKS, False, api_password='some-pass')
 
     set_mock_ip = mock_real_ip(app2)
     client = await aiohttp_client(app2)
@@ -173,7 +173,7 @@ async def test_access_with_trusted_ip(app2, aiohttp_client):
 async def test_auth_active_access_with_access_token_in_header(
         app, aiohttp_client):
     """Test access with access token in header."""
-    setup_auth(app, [], True, None)
+    setup_auth(app, [], True, api_password=None)
     client = await aiohttp_client(app)
 
     req = await client.get(
@@ -203,7 +203,7 @@ async def test_auth_active_access_with_access_token_in_header(
 
 async def test_auth_active_access_with_trusted_ip(app2, aiohttp_client):
     """Test access with an untrusted ip address."""
-    setup_auth(app2, TRUSTED_NETWORKS, True, None)
+    setup_auth(app2, TRUSTED_NETWORKS, True, api_password=None)
 
     set_mock_ip = mock_real_ip(app2)
     client = await aiohttp_client(app2)
@@ -222,8 +222,8 @@ async def test_auth_active_access_with_trusted_ip(app2, aiohttp_client):
 
 
 async def test_auth_active_blocked_api_password_access(app, aiohttp_client):
-    """Test access using apI_password should be blocked when auth.active."""
-    setup_auth(app, [], True, API_PASSWORD)
+    """Test access using api_password should be blocked when auth.active."""
+    setup_auth(app, [], True, api_password=API_PASSWORD)
     client = await aiohttp_client(app)
 
     req = await client.get(
@@ -239,3 +239,24 @@ async def test_auth_active_blocked_api_password_access(app, aiohttp_client):
         '/',
         auth=BasicAuth('homeassistant', API_PASSWORD))
     assert req.status == 401
+
+
+async def test_auth_legacy_support_api_password_access(app, aiohttp_client):
+    """Test access using api_password should be support
+    when auth.support_legacy."""
+    setup_auth(app, [], True, support_legacy=True, api_password=API_PASSWORD)
+    client = await aiohttp_client(app)
+
+    req = await client.get(
+        '/', headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
+    assert req.status == 200
+
+    resp = await client.get('/', params={
+        'api_password': API_PASSWORD
+    })
+    assert resp.status == 200
+
+    req = await client.get(
+        '/',
+        auth=BasicAuth('homeassistant', API_PASSWORD))
+    assert req.status == 200

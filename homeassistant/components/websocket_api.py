@@ -326,7 +326,9 @@ class ActiveConnection:
                         msg['access_token'])
                     authenticated = token is not None
 
-                elif not self.hass.auth.active and 'api_password' in msg:
+                elif ((not self.hass.auth.active or
+                       self.hass.auth.support_legacy) and
+                      'api_password' in msg):
                     self.debug("Received api_password")
                     authenticated = validate_password(
                         request, msg['api_password'])

@@ -185,12 +185,21 @@ class HomeAssistantHTTP(object):
             setup_bans(hass, app, login_threshold)
 
         if hass.auth.active:
-            _LOGGER.warning("Experimental auth api enabled."
-                            " Please use access_token instead api_password.")
+            if hass.auth.support_legacy:
+                _LOGGER.warning("Experimental auth api enabled and "
+                                "legacy_api_password support enabled. Please "
+                                "use access_token instead api_password, "
+                                "although you can still use legacy "
+                                "api_password")
+            else:
+                _LOGGER.warning("Experimental auth api enabled. Please use "
+                                "access_token instead api_password.")
         elif api_password is None:
             _LOGGER.warning("You have been advised to set http.api_password.")
 
-        setup_auth(app, trusted_networks, hass.auth.active, api_password)
+        setup_auth(app, trusted_networks, hass.auth.active,
+                   support_legacy=hass.auth.support_legacy,
+                   api_password=api_password)
 
         if cors_origins:
             setup_cors(app, cors_origins)
