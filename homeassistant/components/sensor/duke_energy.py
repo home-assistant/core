@@ -2,7 +2,7 @@
 Support for Duke Energy Gas and Electric meters.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor/duke_energy/
+https://home-assistant.io/components/sensor.duke_energy/
 """
 import logging
 
@@ -22,9 +22,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
 })
 
-LAST_BILL_USAGE = "lastBillsUsage"
-LAST_BILL_AVERAGE_USAGE = "lastBillsAverageUsage"
-LAST_BILL_DAYS_BILLED = "lastBillsDaysBilled"
+LAST_BILL_USAGE = "last_bills_usage"
+LAST_BILL_AVERAGE_USAGE = "last_bills_average_usage"
+LAST_BILL_DAYS_BILLED = "last_bills_days_billed"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -32,12 +32,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from pydukeenergy.api import DukeEnergy, DukeEnergyException
 
     try:
-        duke = DukeEnergy(config.get(CONF_USERNAME),
-                          config.get(CONF_PASSWORD),
-                          update_interval=500)
+        duke = DukeEnergy(config[CONF_USERNAME],
+                          config[CONF_PASSWORD],
+                          update_interval=60)
     except DukeEnergyException:
         _LOGGER.error("Failed to setup Duke Energy")
-        return False
+        return
 
     add_devices([DukeEnergyMeter(meter) for meter in duke.get_meters()])
 
@@ -52,7 +52,7 @@ class DukeEnergyMeter(Entity):
     @property
     def name(self):
         """Return the name."""
-        return "duke_energy_" + self.duke_meter.id
+        return "duke_energy_{}".format(self.duke_meter.id)
 
     @property
     def unique_id(self):
