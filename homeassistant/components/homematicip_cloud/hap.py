@@ -12,13 +12,66 @@ from homeassistant import config_entries
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.core import callback
 
-from homematicip.base.base_connection import HmipConnectionError
-
 from .const import (
-    HMIPC_HAPID, HMIPC_AUTHTOKEN, HMIPC_NAME,
+    HMIPC_HAPID, HMIPC_AUTHTOKEN, HMIPC_PIN, HMIPC_NAME,
     COMPONENTS)
+from .errors import HmipcConnectionError, HmipcPressButton
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class HomematicipRegister(object):
+    """Manages HomematicIP client registration."""
+
+    def __init__(self, hass, config):
+        """Initialize HomematicIP Cloud client registration."""
+        self.hass = hass
+        self.auth = None
+        self.hapid = config[HMIPC_HAPID]
+        self.pin = config[HMIPC_PIN]
+        self.name = config[HMIPC_NAME]
+
+    async def async_setup(self):
+        """Connect to HomematicIP for registration."""
+        from homematicip.base.base_connection import HmipConnectionError
+
+        try:
+            self.auth = await self.get_register(self.hass)
+            return True
+        except HmipConnectionError:
+            return False
+
+    async def async_register(self):
+        """Register client at HomematicIP."""
+        from homematicip.base.base_connection import HmipConnectionError
+
+        try:
+            await self.auth.isRequestAcknowledged()
+        except HmipConnectionError:
+            raise HmipcPressButton
+        try:
+            authtoken = await self.auth.requestAuthToken()
+            print(authtoken)
+            await self.auth.confirmAuthToken(authtoken)
+            return authtoken
+        except HmipConnectionError:
+            raise HmipcConnectionError
+        return False
+
+    async def get_register(self, hass):
+        """Create a auth object."""
+        from homematicip.aio.auth import AsyncAuth
+        from homematicip.base.base_connection import HmipConnectionError
+
+        auth = AsyncAuth(hass.loop, async_get_clientsession(hass))
+        try:
+            await auth.init(self.hapid)
+            if self.pin:
+                auth.pin = self.pin
+            await auth.connectionRequest('HomeAssistant')
+        except HmipConnectionError:
+            raise HmipcConnectionError
+        return auth
 
 
 class HomematicipHAP(object):
@@ -45,7 +98,7 @@ class HomematicipHAP(object):
                 self.config_entry.data.get(HMIPC_AUTHTOKEN),
                 self.config_entry.data.get(HMIPC_NAME)
             )
-        except HmipConnectionError:
+        except HmipcConnectionError:
             retry_delay = 2 ** min(tries + 1, 6)
             _LOGGER.error("Error connecting to HomematicIP with HAP %s. "
                           "Retrying in %d seconds.",
@@ -101,6 +154,8 @@ class HomematicipHAP(object):
 
     def get_state_finished(self, future):
         """Execute when get_state coroutine has finished."""
+        from homematicip.base.base_connection import HmipConnectionError
+
         try:
             future.result()
         except HmipConnectionError:
@@ -123,6 +178,8 @@ class HomematicipHAP(object):
 
     async def _handle_connection(self):
         """Handle websocket connection."""
+        from homematicip.base.base_connection import HmipConnectionError
+
         try:
             await self.home.get_current_state()
         except HmipConnectionError:
@@ -135,6 +192,8 @@ class HomematicipHAP(object):
 
     async def async_connect(self):
         """Start websocket connection."""
+        from homematicip.base.base_connection import HmipConnectionError
+
         tries = 0
         while True:
             try:
@@ -178,6 +237,7 @@ class HomematicipHAP(object):
     async def get_hap(self, hass, hapid, authtoken, name):
         """Create a hap object."""
         from homematicip.aio.home import AsyncHome
+        from homematicip.base.base_connection import HmipConnectionError
 
         home = AsyncHome(hass.loop, async_get_clientsession(hass))
 
@@ -186,9 +246,11 @@ class HomematicipHAP(object):
         home.modelType = 'HmIP-HAP'
 
         home.set_auth_token(authtoken)
-        await home.init(hapid)
-        await home.get_current_state()
-
+        try:
+            await home.init(hapid)
+            await home.get_current_state()
+        except HmipConnectionError:
+            raise HmipcConnectionError
         home.on_update(self.async_update)
         hass.loop.create_task(self.async_connect())
 
