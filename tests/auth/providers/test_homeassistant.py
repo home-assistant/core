@@ -4,8 +4,9 @@ from unittest.mock import Mock
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.auth.providers import (
-    auth_provider_from_config, homeassistant as hass_auth)
+from homeassistant.auth import auth_store
+from homeassistant.auth.providers import homeassistant as hass_auth, \
+    auth_provider_from_config
 
 
 @pytest.fixture
@@ -23,7 +24,7 @@ async def test_adding_user(data, hass):
 
 
 async def test_adding_user_duplicate_username(data, hass):
-    """Test adding a user."""
+    """Test adding a user with duplicate username."""
     data.add_auth('test-user', 'test-pass')
     with pytest.raises(hass_auth.InvalidUser):
         data.add_auth('test-user', 'other-pass')
@@ -36,7 +37,7 @@ async def test_validating_password_invalid_user(data, hass):
 
 
 async def test_validating_password_invalid_password(data, hass):
-    """Test validating an invalid user."""
+    """Test validating an invalid password."""
     data.add_auth('test-user', 'test-pass')
 
     with pytest.raises(hass_auth.InvalidAuth):
@@ -66,8 +67,9 @@ async def test_login_flow_validates(data, hass):
     data.add_auth('test-user', 'test-pass')
     await data.async_save()
 
-    provider = hass_auth.HassAuthProvider(hass, None, {})
-    flow = hass_auth.LoginFlow(provider)
+    provider = hass_auth.HassAuthProvider(hass, auth_store.AuthStore(hass),
+                                          {'type': 'homeassistant'})
+    flow = await provider.async_login_flow()
     result = await flow.async_step_init()
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
 
@@ -90,6 +92,7 @@ async def test_login_flow_validates(data, hass):
         'password': 'test-pass',
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result['data']['username'] == 'test-user'
 
 
 async def test_saving_loading(data, hass):

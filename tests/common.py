@@ -118,7 +118,7 @@ def async_test_home_assistant(loop):
     hass = ha.HomeAssistant(loop)
     hass.config.async_load = Mock()
     store = auth_store.AuthStore(hass)
-    hass.auth = auth.AuthManager(hass, store, {})
+    hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
@@ -315,11 +315,11 @@ class MockUser(auth_models.User):
     """Mock a user in Home Assistant."""
 
     def __init__(self, id='mock-id', is_owner=False, is_active=True,
-                 name='Mock User', system_generated=False):
+                 name='Mock User', system_generated=False, mfa_modules=None):
         """Initialize mock user."""
         super().__init__(
             id=id, is_owner=is_owner, is_active=is_active, name=name,
-            system_generated=system_generated)
+            system_generated=system_generated, mfa_modules=mfa_modules)
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""

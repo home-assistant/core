@@ -3,10 +3,11 @@ from unittest.mock import Mock, patch
 
 import pytest
 
+from homeassistant.auth.models import Credentials
 from homeassistant.scripts import auth as script_auth
 from homeassistant.auth.providers import homeassistant as hass_auth
 
-from tests.common import register_auth_provider
+from tests.common import register_auth_provider, MockUser
 
 
 @pytest.fixture
@@ -25,7 +26,7 @@ async def test_list_user(hass, provider, capsys):
     data.add_auth('test-user', 'test-pass')
     data.add_auth('second-user', 'second-pass')
 
-    await script_auth.list_users(hass, provider, None)
+    await script_auth.list_users(hass, provider, Mock(all=False))
 
     captured = capsys.readouterr()
 
@@ -34,6 +35,40 @@ async def test_list_user(hass, provider, capsys):
         'second-user',
         '',
         'Total users: 2',
+        ''
+    ])
+
+
+async def test_list_all_user(hass, provider, capsys):
+    """Test we can list all users."""
+    # Add fake user with credentials for example auth provider.
+    user = MockUser(
+        id='mock-user',
+        is_owner=False,
+        is_active=True,
+        name='Paulus',
+        mfa_modules=['homeassistant']
+    ).add_to_auth_manager(hass.auth)
+    user.credentials.append(Credentials(
+        id='mock-id',
+        auth_provider_type='homeassistant',
+        auth_provider_id=None,
+        data={'username': 'test-user'},
+        is_new=False,
+    ))
+
+    await script_auth.list_users(hass, provider, Mock(all=True))
+
+    captured = capsys.readouterr()
+
+    assert captured.out == '\n'.join([
+        '{}{}{}'.format(
+            'Paulus              ',
+            'mock-user                         ',
+            "['homeassistant']"),
+        '  - test-user',
+        '',
+        'Total users: 1',
         ''
     ])
 
