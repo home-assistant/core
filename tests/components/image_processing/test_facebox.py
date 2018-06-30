@@ -176,21 +176,7 @@ async def test_connection_error(hass, mock_image):
     assert state.attributes.get('matched_faces') == {}
 
 
-async def test_setup_platform_with_name(hass):
-    """Setup platform with one entity and a name."""
-    MOCK_NAME = 'mock_name'
-    NAMED_ENTITY_ID = 'image_processing.{}'.format(MOCK_NAME)
-
-    VALID_CONFIG_NAMED = VALID_CONFIG.copy()
-    VALID_CONFIG_NAMED[ip.DOMAIN][ip.CONF_SOURCE][ip.CONF_NAME] = MOCK_NAME
-
-    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG_NAMED)
-    assert hass.states.get(NAMED_ENTITY_ID)
-    state = hass.states.get(NAMED_ENTITY_ID)
-    assert state.attributes.get(CONF_FRIENDLY_NAME) == MOCK_NAME
-
-
-async def test_teach_service(hass, mock_image, mock_isfile, mock_access):
+async def test_teach_service(hass, mock_image): # mock_isfile, mock_access
     """Test teaching of facebox."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
@@ -241,3 +227,17 @@ async def test_teach_service(hass, mock_image, mock_isfile, mock_access):
     assert teach_events[1].data[fb.FILE_PATH] == MOCK_FILE_PATH
     assert not teach_events[1].data['success']
     assert teach_events[1].data['message'] == MOCK_ERROR
+
+
+async def test_setup_platform_with_name(hass):
+    """Setup platform with one entity and a name."""
+    MOCK_NAME = 'mock_name'
+    NAMED_ENTITY_ID = 'image_processing.{}'.format(MOCK_NAME)
+
+    VALID_CONFIG_NAMED = VALID_CONFIG.copy()
+    VALID_CONFIG_NAMED[ip.DOMAIN][ip.CONF_SOURCE][ip.CONF_NAME] = MOCK_NAME
+
+    await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG_NAMED)
+    assert hass.states.get(NAMED_ENTITY_ID)
+    state = hass.states.get(NAMED_ENTITY_ID)
+    assert state.attributes.get(CONF_FRIENDLY_NAME) == MOCK_NAME
