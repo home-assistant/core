@@ -156,6 +156,8 @@ class OpenWeatherMapWeather(WeatherEntity):
                         entry.get_temperature('celsius').get('day'),
                     ATTR_FORECAST_TEMP_LOW:
                         entry.get_temperature('celsius').get('night'),
+                    ATTR_FORECAST_PRECIPITATION:
+                        entry.get_rain().get('all'),
                     ATTR_FORECAST_WIND_SPEED:
                         entry.get_wind().get('speed'),
                     ATTR_FORECAST_WIND_BEARING:
@@ -223,12 +225,10 @@ class WeatherData(object):
         try:
             if self._mode == 'daily':
                 fcd = self.owm.daily_forecast_at_coords(
-                    self.latitude, self.longitude, 15
-                )
+                    self.latitude, self.longitude, 15)
             else:
                 fcd = self.owm.three_hours_forecast_at_coords(
-                    self.latitude, self.longitude
-                )
+                    self.latitude, self.longitude)
         except APICallError:
             _LOGGER.error("Exception when calling OWM web API "
                           "to update forecast")
