@@ -4,9 +4,9 @@ Support for deCONZ sensor.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.deconz/
 """
-from homeassistant.components.deconz import (
-    CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ, DATA_DECONZ_ID,
-    DATA_DECONZ_UNSUB)
+from homeassistant.components.deconz.const import (
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
@@ -122,8 +122,10 @@ class DeconzSensor(Entity):
         attr = {}
         if self._sensor.battery:
             attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
+        if self._sensor.on is not None:
+            attr[ATTR_ON] = self._sensor.on
         if self._sensor.type in LIGHTLEVEL and self._sensor.dark is not None:
-            attr['dark'] = self._sensor.dark
+            attr[ATTR_DARK] = self._sensor.dark
         if self.unit_of_measurement == 'Watts':
             attr[ATTR_CURRENT] = self._sensor.current
             attr[ATTR_VOLTAGE] = self._sensor.voltage
