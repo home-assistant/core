@@ -180,7 +180,10 @@ def start_notify_view(hass):
     hass_data[name] = view
 
 
-def setup_platform(hass: HomeAssistant, config, add_devices, discovery_info=None):
+def setup_platform(hass: HomeAssistant,
+                   config,
+                   add_devices,
+                   discovery_info=None):
     """Set up DLNA DMR platform."""
     if discovery_info and \
        'upnp_device_type' in discovery_info and \
@@ -311,8 +314,10 @@ class HassUpnpRequester:
 
     async def async_http_request(self, method, url, headers=None, body=None):
         """Do a HTTP request."""
-        soap_action = headers['SOAPAction'] if 'SOAPAction' in (headers or []) else ''
-        _LOGGER.debug('%s.async_http_request(): method: %s, soap_action: %s', self, method, soap_action)
+        soap_action = headers['SOAPAction'] \
+            if 'SOAPAction' in (headers or []) else ''
+        _LOGGER.debug('%s.async_http_request(): method: %s, soap_action: %s',
+                      self, method, soap_action)
         session = async_get_clientsession(self.hass)
         with async_timeout.timeout(5, loop=self.hass.loop):
             response = await session.request(method,
@@ -461,7 +466,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         track_duration = service.state_variable('CurrentTrackDuration')
         if track_duration.value != result['TrackDuration']:
             track_duration.value = result['TrackDuration']
-            changed.append(track_duratio)
+            changed.append(track_duration)
 
         time_position = service.state_variable('RelativeTimePosition')
         if time_position.value != result['RelTime']:
@@ -472,7 +477,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
     def on_state_variable_change(self, service, state_variables):
         """State variable(s) changed, let home-assistant know."""
-        _LOGGER.debug('Change state variables: %s', ','.join([sv.name for sv in state_variables]))
+        _LOGGER.debug('Change state variables: %s',
+                      ','.join([sv.name for sv in state_variables]))
         for state_variable in state_variables:
             if state_variable.name == 'LastChange':
                 from async_upnp_client.utils import \
@@ -571,7 +577,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
         # wait for state variable AVT.AVTransportURI to change
         avt_service = action.service
-        service_var = avt_service.state_variable('CurrentTransportActions')
+        state_var = avt_service.state_variable('CurrentTransportActions')
         for i in range(20):  # wait max 5 seconds
             actions = state_var.value.split(',')
             if 'Play' in actions:
