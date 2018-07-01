@@ -7,7 +7,7 @@ import os
 import re
 import shutil
 # pylint: disable=unused-import
-from typing import Any, List, Tuple, Optional  # NOQA
+from typing import Any, Tuple, Optional  # noqa: F401
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
