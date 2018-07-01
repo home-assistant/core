@@ -12,7 +12,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
     YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
-    load_config, PLATFORM_SCHEMA, DEFAULT_TRACK_NEW, SOURCE_TYPE_BLUETOOTH)
+    load_config, PLATFORM_SCHEMA, DEFAULT_TRACK_NEW, SOURCE_TYPE_BLUETOOTH,
+    DOMAIN)
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     request_rssi = config.get(CONF_REQUEST_RSSI, False)
 
-    def update_bluetooth(now):
+    def update_bluetooth(now, once = False):
         """Lookup Bluetooth device and update status."""
         try:
             if track_new:
@@ -99,9 +100,17 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 see_device(mac, result, rssi)
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
-        track_point_in_utc_time(
-            hass, update_bluetooth, dt_util.utcnow() + interval)
+        if not once:
+            track_point_in_utc_time(
+                hass, update_bluetooth, dt_util.utcnow() + interval)
+
+    def handle_update_bluetooth(call):
+        """Update bluetooth devices on demand."""
+        now = dt_util.utcnow()
+        update_bluetooth(now, True)
 
     update_bluetooth(dt_util.utcnow())
+    
+    hass.services.register(DOMAIN, "bluetooth_update", handle_update_bluetooth)
 
     return True
