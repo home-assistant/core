@@ -5,13 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.alpha_vantage/
 """
 from datetime import timedelta
+from random import randint
+from time import sleep
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME)
+    STATE_UNKNOWN, ATTR_ATTRIBUTION, CONF_API_KEY, CONF_CURRENCY, CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -30,6 +32,7 @@ CONF_FROM = 'from'
 CONF_SYMBOL = 'symbol'
 CONF_SYMBOLS = 'symbols'
 CONF_TO = 'to'
+CONF_CONVERT_CURRENCY = 'convert_currency'
 
 ICONS = {
     'BTC': 'mdi:currency-btc',
@@ -47,6 +50,7 @@ SYMBOL_SCHEMA = vol.Schema({
     vol.Required(CONF_SYMBOL): cv.string,
     vol.Optional(CONF_CURRENCY): cv.string,
     vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_CONVERT_CURRENCY): cv.string,
 })
 
 CURRENCY_SCHEMA = vol.Schema({
@@ -88,10 +92,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.debug("Configuring timeseries for symbols: %s",
                           symbol[CONF_SYMBOL])
             timeseries.get_intraday(symbol[CONF_SYMBOL])
+            sleep(randint(1, 10))  # don't send too much requests per second
         except ValueError:
             _LOGGER.error(
                 "API Key is not valid or symbol '%s' not known", symbol)
-        dev.append(AlphaVantageSensor(timeseries, symbol))
+        dev.append(AlphaVantageSensor(hass, timeseries, symbol))
 
     forex = ForeignExchange(key=api_key)
     for conversion in conversions:
@@ -101,12 +106,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.debug("Configuring forex %s - %s", from_cur, to_cur)
             forex.get_currency_exchange_rate(
                 from_currency=from_cur, to_currency=to_cur)
+            sleep(randint(1, 10))
         except ValueError as error:
             _LOGGER.error(
                 "API Key is not valid or currencies '%s'/'%s' not known",
                 from_cur, to_cur)
             _LOGGER.debug(str(error))
-        dev.append(AlphaVantageForeignExchange(forex, conversion))
+        dev.append(AlphaVantageForeignExchange(hass, forex, conversion))
 
     add_devices(dev, True)
     _LOGGER.debug("Setup completed")
@@ -115,14 +121,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AlphaVantageSensor(Entity):
     """Representation of a Alpha Vantage sensor."""
 
-    def __init__(self, timeseries, symbol):
+    def __init__(self, hass, timeseries, symbol):
         """Initialize the sensor."""
+        self._hass = hass
         self._symbol = symbol[CONF_SYMBOL]
         self._name = symbol.get(CONF_NAME, self._symbol)
         self._timeseries = timeseries
         self.values = None
         self._unit_of_measurement = symbol.get(CONF_CURRENCY, self._symbol)
         self._icon = ICONS.get(symbol.get(CONF_CURRENCY, 'USD'))
+        self._convert_currency = symbol.get(CONF_CONVERT_CURRENCY)
+        if self._convert_currency:
+            self._last_conversion = None
 
     @property
     def name(self):
@@ -161,14 +171,31 @@ class AlphaVantageSensor(Entity):
         _LOGGER.debug("Requesting new data for symbol %s", self._symbol)
         all_values, _ = self._timeseries.get_intraday(self._symbol)
         self.values = next(iter(all_values.values()))
-        _LOGGER.debug("Received new values for symbol %s", self._symbol)
+        if self._convert_currency:
+            _LOGGER.debug("Converting new values for symbol %s using %s",
+                          self._symbol, self._convert_currency)
+            converter_state = self._hass.states.get(
+                "sensor."+self._convert_currency.lower())
+            if not converter_state or converter_state.state == STATE_UNKNOWN:
+                _LOGGER.warning("currency converter %s not found",
+                                "sensor."+self._convert_currency.lower())
+                if not self._last_conversion:
+                    self.values = None
+            else:
+                self._last_conversion = float(converter_state.state)
+            if self._last_conversion:
+                for attribute in ['1. open', '2. high', '3. low', '4. close',
+                                  '5. volume']:
+                    self.values[attribute] = str(float(
+                        self.values[attribute]) * self._last_conversion)
 
 
 class AlphaVantageForeignExchange(Entity):
     """Sensor for foreign exchange rates."""
 
-    def __init__(self, foreign_exchange, config):
+    def __init__(self, hass, foreign_exchange, config):
         """Initialize the sensor."""
+        self._hass = hass
         self._foreign_exchange = foreign_exchange
         self._from_currency = config.get(CONF_FROM)
         self._to_currency = config.get(CONF_TO)
