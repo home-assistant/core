@@ -85,25 +85,11 @@ def test_valid_file_path():
 
 
 @pytest.fixture
-def mock_access():
-    """Mock os.access."""
-    with patch('os.access', Mock(return_value=True)) as _mock_access:
-        yield _mock_access
-
-
-@pytest.fixture
 def mock_image():
     """Return a mock camera image."""
     with patch('homeassistant.components.camera.demo.DemoCamera.camera_image',
                return_value=b'Test') as image:
         yield image
-
-
-@pytest.fixture
-def mock_isfile():
-    """Mock os.path.isfile."""
-    with patch('os.path.isfile', Mock(return_value=True)) as _mock_isfile:
-        yield _mock_isfile
 
 
 async def test_setup_platform(hass):
@@ -176,7 +162,9 @@ async def test_connection_error(hass, mock_image):
     assert state.attributes.get('matched_faces') == {}
 
 
-async def test_teach_service(hass, mock_image): # mock_isfile, mock_access
+@patch('os.access', Mock(return_value=True))
+@patch('os.path.isfile', Mock(return_value=True))
+async def test_teach_service(hass, mock_image):
     """Test teaching of facebox."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
