@@ -52,7 +52,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AlarmDecoderBinarySensor(BinarySensorDevice):
     """Representation of an AlarmDecoder binary sensor."""
 
-    def __init__(self, zone_number, zone_name, zone_type, zone_rfid, relay_addr, relay_chan):
+    def __init__(self, zone_number, zone_name, zone_type, zone_rfid,
+                 relay_addr, relay_chan):
         """Initialize the binary_sensor."""
         self._zone_number = zone_number
         self._zone_type = zone_type
@@ -133,6 +134,7 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
 
     def _rel_message_callback(self, message):
         """Update Relay state."""
-        if self._relay_addr == message.address and self._relay_chan == message.channel:
+        if (self._relay_addr == message.address and
+            self._relay_chan == message.channel):
             self._state = message.value
             self.schedule_update_ha_state()
