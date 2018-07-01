@@ -418,18 +418,10 @@ class DlnaDmrDevice(MediaPlayerDevice):
         try:
             avt_service = self._service('AVT')
             if avt_service:
-                get_transport_info_action = \
-                    avt_service.action('GetTransportInfo')
-                state = await self._async_poll_transport_info(
-                    get_transport_info_action)
-                await asyncio.sleep(0.25)
-
+                state = await self._async_poll_transport_info(avt_service)
                 if state == STATE_PLAYING or state == STATE_PAUSED:
                     # playing something... get position info
-                    get_position_info_action = avt_service.action(
-                        'GetPositionInfo')
-                    await self._async_poll_position_info(
-                        get_position_info_action)
+                    await self._async_poll_position_info(avt_service)
             else:
                 await self._device.async_ping()
 
@@ -438,44 +430,55 @@ class DlnaDmrDevice(MediaPlayerDevice):
             _LOGGER.debug('%s.async_update(): error on update: %s', self, ex)
             self._is_connected = False
             await self.async_unsubscribe_all()
+            raise
 
-    async def _async_poll_transport_info(self, action):
+    async def _async_poll_transport_info(self, avt_service):
         """Update transport info from device."""
+        action = avt_service.action('GetTransportInfo')
         result = await action.async_call(InstanceID=0)
 
         # set/update state_variable 'TransportState'
+        changed = []
         service = action.service
         state_var = service.state_variable('TransportState')
-        old_value = state_var.value
-        state_var.value = result['CurrentTransportState']
+        if state_var.value != result['CurrentTransportState']:
+            state_var.value = result['CurrentTransportState']
+            changed.append(state_var)
 
-        if old_value != result['CurrentTransportState']:
-            self.on_state_variable_change(service, [state_var])
+        self.on_state_variable_change(service, changed)
 
         return self.state
 
-    async def _async_poll_position_info(self, action):
+    async def _async_poll_position_info(self, avt_service):
         """Update position info."""
+        action = avt_service.action('GetPositionInfo')
         result = await action.async_call(InstanceID=0)
 
+        changed = []
         service = action.service
         track_duration = service.state_variable('CurrentTrackDuration')
-        track_duration.value = result['TrackDuration']
+        if track_duration.value != result['TrackDuration']:
+            track_duration.value = result['TrackDuration']
+            changed.append(track_duratio)
 
         time_position = service.state_variable('RelativeTimePosition')
-        time_position.value = result['RelTime']
+        if time_position.value != result['RelTime']:
+            time_position.value = result['RelTime']
+            changed.append(time_position)
 
-        self.on_state_variable_change(service, [track_duration, time_position])
+        self.on_state_variable_change(service, changed)
 
     def on_state_variable_change(self, service, state_variables):
         """State variable(s) changed, let home-assistant know."""
+        _LOGGER.debug('Change state variables: %s', ','.join([sv.name for sv in state_variables]))
         for state_variable in state_variables:
             if state_variable.name == 'LastChange':
                 from async_upnp_client.utils import \
                     dlna_handle_notify_last_change
                 dlna_handle_notify_last_change(state_variable)
 
-        self.schedule_update_ha_state()
+        if state_variables:
+            self.schedule_update_ha_state()
 
     @property
     def supported_features(self):
