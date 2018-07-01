@@ -562,11 +562,24 @@ class DlnaDmrDevice(MediaPlayerDevice):
         await action.async_call(InstanceID=0,
                                 CurrentURI=media_id,
                                 CurrentURIMetaData=meta_data)
-        await asyncio.sleep(0.25)
+
+        if self.state == STATE_PLAYING:
+            # already playing, no need to call Play
+            return
+
+        # wait for state variable AVT.AVTransportURI to change
+        avt_service = action.service
+        service_var = avt_service.state_variable('CurrentTransportActions')
+        for i in range(20):  # wait max 5 seconds
+            actions = state_var.value.split(',')
+            if 'Play' in actions:
+                break
+            await asyncio.sleep(0.25)
+        else:
+            _LOGGER.debug('break out of waiting game')
 
         # send play command
         await self.async_media_play()
-        await asyncio.sleep(0.25)
 
     async def _construct_play_media_metadata(self, media_type, media_id):
         """Construct the metadata for play_media command."""
