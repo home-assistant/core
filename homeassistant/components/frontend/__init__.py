@@ -201,7 +201,7 @@ def add_manifest_json_key(key, val):
 async def async_setup(hass, config):
     """Set up the serving of the frontend."""
     if hass.auth.active:
-        client = await hass.auth.async_create_client(
+        client = await hass.auth.async_get_or_create_client(
             'Home Assistant Frontend',
             redirect_uris=['/'],
             no_secret=True,
