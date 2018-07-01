@@ -1,16 +1,15 @@
 """Tests for HomematicIP Cloud config flow."""
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
-from homeassistant.components import homematicip_cloud as hmipc
+from homeassistant.components.homematicip_cloud import hap as hmipc
 from homeassistant.components.homematicip_cloud import (
-    config_flow, const, errors)
+    config_flow, const)
 
 from tests.common import MockConfigEntry, mock_coro
 
 
-async def test_flow_works(hass, aioclient_mock):
+async def test_flow_works(hass):
     """Test config flow works."""
-    home = Mock()
     config = {
         const.HMIPC_HAPID: 'ABC123',
         const.HMIPC_PIN: '123',
@@ -19,11 +18,12 @@ async def test_flow_works(hass, aioclient_mock):
     flow = config_flow.HomematicipCloudFlowHandler()
     flow.hass = hass
 
-    hap = hmipc.hap.HomematicipRegister(hass, config)
-    with patch.object(hmipc.hap.HomematicipRegister, 'async_setup',
-                      return_value=mock_coro(home)), \
-        patch.object(hmipc.hap.HomematicipRegister, 'async_register',
-                     return_value=mock_coro(home)):
+    hap = hmipc.HomematicipAuth(hass, config)
+    with patch.object(hap, 'get_auth', return_value=mock_coro()), \
+            patch.object(hmipc.HomematicipAuth, 'async_checkbutton',
+                         return_value=mock_coro(True)), \
+            patch.object(hmipc.HomematicipAuth, 'async_register',
+                         return_value=mock_coro(True)):
         hap.authtoken = 'ABC'
         result = await flow.async_step_init(user_input=config)
 
@@ -31,7 +31,7 @@ async def test_flow_works(hass, aioclient_mock):
         assert result['type'] == 'create_entry'
 
 
-async def test_flow_init_connection_error(hass, aioclient_mock):
+async def test_flow_init_connection_error(hass):
     """Test config flow init connection error."""
     config = {
         const.HMIPC_HAPID: 'ABC123',
@@ -41,32 +41,14 @@ async def test_flow_init_connection_error(hass, aioclient_mock):
     flow = config_flow.HomematicipCloudFlowHandler()
     flow.hass = hass
 
-    with patch.object(hmipc.hap.HomematicipRegister, 'async_setup',
-                      side_effect=errors.HmipcConnectionError):
-        result = await flow.async_step_init(user_input=config)
-        assert result['type'] == 'abort'
-
-
-async def test_flow_init_register_failed(hass, aioclient_mock):
-    """Test config flow init registration failed."""
-    config = {
-        const.HMIPC_HAPID: 'ABC123',
-        const.HMIPC_PIN: '123',
-        const.HMIPC_NAME: 'hmip',
-    }
-    flow = config_flow.HomematicipCloudFlowHandler()
-    flow.hass = hass
-
-    with patch.object(hmipc.hap.HomematicipRegister, 'async_setup',
-                      side_effect=errors.HmipcRegistrationFailed):
+    with patch.object(hmipc.HomematicipAuth, 'async_setup',
+                      return_value=mock_coro(False)):
         result = await flow.async_step_init(user_input=config)
         assert result['type'] == 'form'
-        assert result['errors'] == {'base': 'register_failed'}
 
 
-async def test_flow_link_connection_error(hass, aioclient_mock):
+async def test_flow_link_connection_error(hass):
     """Test config flow link connection error."""
-    home = Mock()
     config = {
         const.HMIPC_HAPID: 'ABC123',
         const.HMIPC_PIN: '123',
@@ -75,17 +57,18 @@ async def test_flow_link_connection_error(hass, aioclient_mock):
     flow = config_flow.HomematicipCloudFlowHandler()
     flow.hass = hass
 
-    with patch.object(hmipc.hap.HomematicipRegister, 'async_setup',
-                      return_value=mock_coro(home)), \
-        patch.object(hmipc.hap.HomematicipRegister, 'async_register',
-                     side_effect=errors.HmipcConnectionError):
+    with patch.object(hmipc.HomematicipAuth, 'async_setup',
+                      return_value=mock_coro(True)), \
+        patch.object(hmipc.HomematicipAuth, 'async_checkbutton',
+                     return_value=mock_coro(True)), \
+        patch.object(hmipc.HomematicipAuth, 'async_register',
+                     return_value=mock_coro(False)):
         result = await flow.async_step_init(user_input=config)
         assert result['type'] == 'abort'
 
 
-async def test_flow_link_press_button(hass, aioclient_mock):
+async def test_flow_link_press_button(hass):
     """Test config flow ask for pressing the blue button."""
-    home = Mock()
     config = {
         const.HMIPC_HAPID: 'ABC123',
         const.HMIPC_PIN: '123',
@@ -94,16 +77,16 @@ async def test_flow_link_press_button(hass, aioclient_mock):
     flow = config_flow.HomematicipCloudFlowHandler()
     flow.hass = hass
 
-    with patch.object(hmipc.hap.HomematicipRegister, 'async_setup',
-                      return_value=mock_coro(home)), \
-        patch.object(hmipc.hap.HomematicipRegister, 'async_register',
-                     side_effect=errors.HmipcPressButton):
+    with patch.object(hmipc.HomematicipAuth, 'async_setup',
+                      return_value=mock_coro(True)), \
+        patch.object(hmipc.HomematicipAuth, 'async_checkbutton',
+                     return_value=mock_coro(False)):
         result = await flow.async_step_init(user_input=config)
         assert result['type'] == 'form'
         assert result['errors'] == {'base': 'press_the_button'}
 
 
-async def test_init_flow_show_form(hass, aioclient_mock):
+async def test_init_flow_show_form(hass):
     """Test config flow ."""
     flow = config_flow.HomematicipCloudFlowHandler()
     flow.hass = hass
@@ -112,7 +95,7 @@ async def test_init_flow_show_form(hass, aioclient_mock):
     assert result['type'] == 'form'
 
 
-async def test_init_already_configured(hass, aioclient_mock):
+async def test_init_already_configured(hass):
     """Test HAP is already configured."""
     MockConfigEntry(domain=const.DOMAIN, data={
         const.HMIPC_HAPID: 'ABC123',
@@ -155,7 +138,7 @@ async def test_import_existing_config(hass):
     flow = config_flow.HomematicipCloudFlowHandler()
     flow.hass = hass
 
-    MockConfigEntry(domain=hmipc.DOMAIN, data={
+    MockConfigEntry(domain=const.DOMAIN, data={
         hmipc.HMIPC_HAPID: 'ABC123',
     }).add_to_hass(hass)
 

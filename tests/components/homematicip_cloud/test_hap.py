@@ -2,12 +2,91 @@
 
 from unittest.mock import Mock, patch
 
-from homeassistant.components import homematicip_cloud as hmipc
-from homeassistant.components.homematicip_cloud import errors
+from homeassistant.components.homematicip_cloud import hap as hmipc
+from homeassistant.components.homematicip_cloud import const, errors
 from tests.common import mock_coro
 
 
-async def test_hap_init(aioclient_mock):
+async def test_auth_setup(hass):
+    """Test auth setup."""
+    config = {
+        const.HMIPC_HAPID: 'ABC123',
+        const.HMIPC_PIN: '123',
+        const.HMIPC_NAME: 'hmip',
+    }
+    hap = hmipc.HomematicipAuth(hass, config)
+    with patch.object(hap, 'get_auth', return_value=mock_coro()):
+        assert await hap.async_setup() is True
+
+
+async def test_auth_setup_connection_error(hass):
+    """Test auth setup connection error."""
+    config = {
+        const.HMIPC_HAPID: 'ABC123',
+        const.HMIPC_PIN: '123',
+        const.HMIPC_NAME: 'hmip',
+    }
+    hap = hmipc.HomematicipAuth(hass, config)
+    with patch.object(hap, 'get_auth',
+                      side_effect=errors.HmipcConnectionError):
+        assert await hap.async_setup() is False
+
+
+async def test_auth_auth_check_and_register(hass):
+    """Test auth register."""
+    config = {
+        const.HMIPC_HAPID: 'ABC123',
+        const.HMIPC_PIN: '123',
+        const.HMIPC_NAME: 'hmip',
+    }
+    hap = hmipc.HomematicipAuth(hass, config)
+    hap.auth = Mock()
+    with patch.object(hap.auth, 'isRequestAcknowledged',
+                      return_value=mock_coro()), \
+            patch.object(hap.auth, 'requestAuthToken',
+                         return_value=mock_coro('ABC')), \
+            patch.object(hap.auth, 'confirmAuthToken',
+                         return_value=mock_coro()):
+        assert await hap.async_checkbutton() is True
+        assert await hap.async_register() == 'ABC'
+
+
+async def test_auth_auth_checkbutton_false(hass):
+    """Test auth register."""
+    from homematicip.base.base_connection import HmipConnectionError
+    config = {
+        const.HMIPC_HAPID: 'ABC123',
+        const.HMIPC_PIN: '123',
+        const.HMIPC_NAME: 'hmip',
+    }
+    hap = hmipc.HomematicipAuth(hass, config)
+    hap.auth = Mock()
+    with patch.object(hap.auth, 'isRequestAcknowledged',
+                      side_effect=HmipConnectionError):
+        assert await hap.async_checkbutton() is False
+
+
+async def test_auth_auth_register_failed(hass):
+    """Test auth register."""
+    from homematicip.base.base_connection import HmipConnectionError
+    config = {
+        const.HMIPC_HAPID: 'ABC123',
+        const.HMIPC_PIN: '123',
+        const.HMIPC_NAME: 'hmip',
+    }
+    hap = hmipc.HomematicipAuth(hass, config)
+    hap.auth = Mock()
+    with patch.object(hap.auth, 'isRequestAcknowledged',
+                      return_value=mock_coro()), \
+            patch.object(hap.auth, 'requestAuthToken',
+                         side_effect=HmipConnectionError), \
+            patch.object(hap.auth, 'confirmAuthToken',
+                         return_value=mock_coro()):
+        assert await hap.async_checkbutton() is True
+        assert await hap.async_register() is False
+
+
+async def test_hap_setup_works(aioclient_mock):
     """Test a successful setup."""
     hass = Mock()
     entry = Mock()
@@ -27,7 +106,7 @@ async def test_hap_init(aioclient_mock):
         (entry, 'binary_sensor')
 
 
-async def test_hap_setup_invalid_token():
+async def test_hap_setup_connection_error():
     """Test we start config flow if username is no longer whitelisted."""
     hass = Mock()
     entry = Mock()
@@ -37,7 +116,6 @@ async def test_hap_setup_invalid_token():
         hmipc.HMIPC_NAME: 'hmip',
     }
     hap = hmipc.HomematicipHAP(hass, entry)
-
     with patch.object(hap, 'get_hap',
                       side_effect=errors.HmipcConnectionError):
         assert await hap.async_setup() is False
@@ -46,7 +124,7 @@ async def test_hap_setup_invalid_token():
     assert len(hass.config_entries.flow.async_init.mock_calls) == 0
 
 
-async def test_reset_unloads_entry_if_setup():
+async def test_hap_reset_unloads_entry_if_setup():
     """Test calling reset while the entry has been setup."""
     hass = Mock()
     entry = Mock()

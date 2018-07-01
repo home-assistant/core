@@ -15,28 +15,38 @@ from homeassistant.core import callback
 from .const import (
     HMIPC_HAPID, HMIPC_AUTHTOKEN, HMIPC_PIN, HMIPC_NAME,
     COMPONENTS)
-from .errors import HmipcConnectionError, HmipcPressButton
+from .errors import HmipcConnectionError
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class HomematicipRegister(object):
+class HomematicipAuth(object):
     """Manages HomematicIP client registration."""
 
     def __init__(self, hass, config):
         """Initialize HomematicIP Cloud client registration."""
         self.hass = hass
+        self.config = config
         self.auth = None
-        self.hapid = config[HMIPC_HAPID]
-        self.pin = config[HMIPC_PIN]
-        self.name = config[HMIPC_NAME]
 
     async def async_setup(self):
         """Connect to HomematicIP for registration."""
+        try:
+            self.auth = await self.get_auth(
+                self.hass,
+                self.config.get(HMIPC_HAPID),
+                self.config.get(HMIPC_PIN)
+            )
+            return True
+        except HmipcConnectionError:
+            return False
+
+    async def async_checkbutton(self):
+        """Check blue butten has been pressed."""
         from homematicip.base.base_connection import HmipConnectionError
 
         try:
-            self.auth = await self.get_register(self.hass)
+            await self.auth.isRequestAcknowledged()
             return True
         except HmipConnectionError:
             return False
@@ -46,31 +56,26 @@ class HomematicipRegister(object):
         from homematicip.base.base_connection import HmipConnectionError
 
         try:
-            await self.auth.isRequestAcknowledged()
-        except HmipConnectionError:
-            raise HmipcPressButton
-        try:
             authtoken = await self.auth.requestAuthToken()
-            print(authtoken)
             await self.auth.confirmAuthToken(authtoken)
             return authtoken
         except HmipConnectionError:
-            raise HmipcConnectionError
-        return False
+            return False
 
-    async def get_register(self, hass):
+    async def get_auth(self, hass, hapid, pin):
         """Create a auth object."""
         from homematicip.aio.auth import AsyncAuth
         from homematicip.base.base_connection import HmipConnectionError
 
         auth = AsyncAuth(hass.loop, async_get_clientsession(hass))
+        print(auth)
         try:
-            await auth.init(self.hapid)
-            if self.pin:
-                auth.pin = self.pin
+            await auth.init(hapid)
+            if pin:
+                auth.pin = pin
             await auth.connectionRequest('HomeAssistant')
         except HmipConnectionError:
-            raise HmipcConnectionError
+            return False
         return auth
 
 

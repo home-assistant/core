@@ -7,9 +7,7 @@ from homeassistant.core import callback
 from .const import (
     DOMAIN as HMIPC_DOMAIN, _LOGGER,
     HMIPC_HAPID, HMIPC_AUTHTOKEN, HMIPC_PIN, HMIPC_NAME)
-from .errors import (
-    HmipcConnectionError, HmipcRegistrationFailed, HmipcPressButton)
-from .hap import HomematicipRegister
+from .hap import HomematicipAuth
 
 
 @callback
@@ -27,7 +25,7 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
 
     def __init__(self):
         """Initialize HomematicIP Cloud config flow."""
-        self.register = None
+        self.auth = None
 
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
@@ -39,16 +37,19 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
             if user_input[HMIPC_HAPID] in configured_haps(self.hass):
                 return self.async_abort(reason='already_configured')
 
-            self.register = HomematicipRegister(self.hass, user_input)
-            try:
-                await self.register.async_setup()
-            except HmipcConnectionError:
-                return self.async_abort(reason='conection_aborted')
-            except HmipcRegistrationFailed:
-                errors['base'] = 'register_failed'
-            else:
+            self.auth = HomematicipAuth(self.hass, user_input)
+            connected = await self.auth.async_setup()
+            if connected:
                 _LOGGER.info("Connection established")
                 return await self.async_step_link()
+
+            #            try:
+#                await self.auth.async_setup()
+#            except HmipcConnectionError:
+#                return self.async_abort(reason='conection_aborted')
+#            else:
+#                _LOGGER.info("Connection established")
+#                return await self.async_step_link()
 
         return self.async_show_form(
             step_id='init',
@@ -64,20 +65,20 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
         """Attempt to link with the HomematicIP Cloud accesspoint."""
         errors = {}
 
-        try:
-            authtoken = await self.register.async_register()
-            _LOGGER.info("Write config entry")
-            return self.async_create_entry(
-                title=self.register.hapid,
-                data={
-                    HMIPC_HAPID: self.register.hapid,
-                    HMIPC_AUTHTOKEN: authtoken,
-                    HMIPC_NAME: self.register.name
-                })
-        except HmipcConnectionError:
-            _LOGGER.info("Connection aborted")
+        pressed = await self.auth.async_checkbutton()
+        if pressed:
+            authtoken = await self.auth.async_register()
+            if authtoken:
+                _LOGGER.info("Write config entry")
+                return self.async_create_entry(
+                    title=self.auth.config.get(HMIPC_HAPID),
+                    data={
+                        HMIPC_HAPID: self.auth.config.get(HMIPC_HAPID),
+                        HMIPC_AUTHTOKEN: authtoken,
+                        HMIPC_NAME: self.auth.config.get(HMIPC_NAME)
+                    })
             return self.async_abort(reason='conection_aborted')
-        except HmipcPressButton:
+        else:
             errors['base'] = 'press_the_button'
 
         return self.async_show_form(step_id='link', errors=errors)
