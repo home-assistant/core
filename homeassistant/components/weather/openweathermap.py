@@ -156,6 +156,8 @@ class OpenWeatherMapWeather(WeatherEntity):
                         entry.get_temperature('celsius').get('day'),
                     ATTR_FORECAST_TEMP_LOW:
                         entry.get_temperature('celsius').get('night'),
+                    ATTR_FORECAST_PRECIPITATION:
+                        entry.get_rain().get('all'),
                     ATTR_FORECAST_WIND_SPEED:
                         entry.get_wind().get('speed'),
                     ATTR_FORECAST_WIND_BEARING:
