@@ -287,25 +287,20 @@ class LoginFlow(data_entry_flow.FlowHandler):
         self._user_name = None
 
     async def async_step_init(self, user_input=None):
-        """Handle the step of the form."""
+        """Handle the step of username/password validation."""
         errors = {}
         result = None
 
         if user_input is not None:
             try:
-                if self._session_token and 'code' in user_input:
-                    username = await self._auth_provider.async_validate_2fa(
-                        self._session_token, user_input['code'])
-                    result = {'username': username}
-                else:
-                    await self._auth_provider.async_validate_login(
-                        user_input['username'], user_input['password'])
-                    result = {'username': user_input['username']}
+                await self._auth_provider.async_validate_login(
+                    user_input['username'], user_input['password'])
+                result = {'username': user_input['username']}
             except InvalidAuth:
                 errors['base'] = 'invalid_auth'
             except Request2FA as request2fa:
                 self._session_token = request2fa.session_token
-                errors['base'] = 'request_2fa'
+                return await self.async_step_2fa()
 
             if not errors and result:
                 return self.async_create_entry(
@@ -314,14 +309,39 @@ class LoginFlow(data_entry_flow.FlowHandler):
                 )
 
         schema = OrderedDict()
-        if self._session_token:
-            schema['code'] = str
-        else:
-            schema['username'] = str
-            schema['password'] = str
+        schema['username'] = str
+        schema['password'] = str
 
         return self.async_show_form(
             step_id='init',
+            data_schema=vol.Schema(schema),
+            errors=errors,
+        )
+
+    async def async_step_2fa(self, user_input=None):
+        """Handle the step of 2fa code validation."""
+        errors = {}
+        result = None
+
+        if user_input is not None:
+            try:
+                username = await self._auth_provider.async_validate_2fa(
+                    self._session_token, user_input.get('code'))
+                result = {'username': username}
+            except InvalidAuth:
+                errors['base'] = 'invalid_auth'
+
+            if not errors and result:
+                return self.async_create_entry(
+                    title=self._auth_provider.name,
+                    data=result
+                )
+
+        schema = OrderedDict()
+        schema['code'] = str
+
+        return self.async_show_form(
+            step_id='2fa',
             data_schema=vol.Schema(schema),
             errors=errors,
         )

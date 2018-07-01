@@ -180,17 +180,17 @@ async def test_login_flow_validates_2fa(data_2fa, hass):
         'password': 'test-pass',
     })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['errors']['base'] == 'request_2fa'
+    assert result['step_id'] == '2fa'
 
     with patch('pyotp.TOTP.verify', return_value=False):
-        result = await flow.async_step_init({
+        result = await flow.async_step_2fa({
             'code': 'invalid-code',
         })
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['errors']['base'] == 'invalid_auth'
 
     with patch('pyotp.TOTP.verify', return_value=True):
-        result = await flow.async_step_init({
+        result = await flow.async_step_2fa({
             'code': MOCK_CODE,
         })
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
