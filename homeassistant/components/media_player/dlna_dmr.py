@@ -11,6 +11,7 @@ import functools
 import logging
 import re
 import urllib.parse
+import time
 from datetime import timedelta
 
 import aiohttp
@@ -31,6 +32,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     CONF_URL, CONF_NAME,
     STATE_OFF, STATE_ON, STATE_IDLE, STATE_PLAYING, STATE_PAUSED)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
@@ -171,14 +173,14 @@ def start_notify_view(hass):
     hass_data = hass.data[__name__]
     name = 'notify_view'
     if name in hass_data:
-        return hass_data[name]
+        return
 
     view = UpnpNotifyView(hass)
-    hass_data[name] = view
     hass.http.register_view(view)
+    hass_data[name] = view
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass: HomeAssistant, config, add_devices, discovery_info=None):
     """Set up DLNA DMR platform."""
     if discovery_info and \
        'upnp_device_type' in discovery_info and \
@@ -200,7 +202,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if __name__ not in hass.data:
         hass.data[__name__] = {}
 
+    # ensure view has been started
     hass.async_run_job(start_notify_view, hass)
+    while 'notify_view' not in hass.data[__name__]:
+        time.sleep(0.1)
     notify_view = hass.data[__name__]['notify_view']
 
     # create device
