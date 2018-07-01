@@ -303,9 +303,6 @@ ATTR_DEVICE_CLASS = 'device_class'
 # Temperature attribute
 ATTR_TEMPERATURE = 'temperature'
 
-# Current Temperature attribute
-ATTR_CURRENT_TEMPERATURE = 'current_temperature'
-
 # #### UNITS OF MEASUREMENT ####
 # Temperature units
 TEMP_CELSIUS = '°C'
