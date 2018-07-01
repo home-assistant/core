@@ -225,12 +225,10 @@ class WeatherData(object):
         try:
             if self._mode == 'daily':
                 fcd = self.owm.daily_forecast_at_coords(
-                    self.latitude, self.longitude, 15
-                )
+                    self.latitude, self.longitude, 15)
             else:
                 fcd = self.owm.three_hours_forecast_at_coords(
-                    self.latitude, self.longitude
-                )
+                    self.latitude, self.longitude)
         except APICallError:
             _LOGGER.error("Exception when calling OWM web API "
                           "to update forecast")
