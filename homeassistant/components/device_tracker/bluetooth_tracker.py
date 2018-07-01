@@ -80,7 +80,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     request_rssi = config.get(CONF_REQUEST_RSSI, False)
 
-    def update_bluetooth(now, once = False):
+    def update_bluetooth(now, once=False):
         """Lookup Bluetooth device and update status."""
         try:
             if track_new:
@@ -110,7 +110,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
         update_bluetooth(now, True)
 
     update_bluetooth(dt_util.utcnow())
-    
+
     hass.services.register(DOMAIN, "bluetooth_update", handle_update_bluetooth)
 
     return True
