@@ -516,7 +516,7 @@ class AuthStore:
         return client
 
     async def async_get_clients(self):
-        """Find a client, if not exists, create a new one."""
+        """Return all clients."""
         if self._clients is None:
             await self.async_load()
 
