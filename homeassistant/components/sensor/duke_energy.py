@@ -13,7 +13,7 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pydukeenergy==0.0.5']
+REQUIREMENTS = ['pydukeenergy==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         duke = DukeEnergy(config[CONF_USERNAME],
                           config[CONF_PASSWORD],
-                          update_interval=60)
+                          update_interval=120)
     except DukeEnergyException:
         _LOGGER.error("Failed to setup Duke Energy")
         return
