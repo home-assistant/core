@@ -280,6 +280,18 @@ class AuthManager:
         return bool(self._providers)
 
     @property
+    def support_legacy(self):
+        """
+        Return if legacy_api_password auth providers are registered.
+
+        Should be removed when we removed legacy_api_password auth providers.
+        """
+        for provider_type, _ in self._providers:
+            if provider_type == 'legacy_api_password':
+                return True
+        return False
+
+    @property
     def async_auth_providers(self):
         """Return a list of available auth providers."""
         return self._providers.values()
@@ -565,7 +577,7 @@ class AuthStore:
                 client_id=rt_dict['client_id'],
                 created_at=dt_util.parse_datetime(rt_dict['created_at']),
                 access_token_expiration=timedelta(
-                    rt_dict['access_token_expiration']),
+                    seconds=rt_dict['access_token_expiration']),
                 token=rt_dict['token'],
             )
             refresh_tokens[token.id] = token
