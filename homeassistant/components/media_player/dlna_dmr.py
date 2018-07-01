@@ -302,7 +302,7 @@ class UpnpNotifyView(HomeAssistantView):
             del self._registered_services[sid]
 
 
-class HassUpnpRequester(object):
+class HassUpnpRequester:
     """async_upnp_client.UpnpRequester for home-assistant."""
 
     def __init__(self, hass):
@@ -311,6 +311,8 @@ class HassUpnpRequester(object):
 
     async def async_http_request(self, method, url, headers=None, body=None):
         """Do a HTTP request."""
+        soap_action = headers['SOAPAction'] if 'SOAPAction' in (headers or []) else ''
+        _LOGGER.debug('%s.async_http_request(): method: %s, soap_action: %s', self, method, soap_action)
         session = async_get_clientsession(self.hass)
         with async_timeout.timeout(5, loop=self.hass.loop):
             response = await session.request(method,
@@ -318,7 +320,7 @@ class HassUpnpRequester(object):
                                              headers=headers,
                                              data=body)
             response_body = await response.text()
-            await response.release()
+
         await asyncio.sleep(0.25)
 
         return response.status, response.headers, response_body
