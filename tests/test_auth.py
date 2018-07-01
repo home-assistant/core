@@ -191,12 +191,13 @@ async def test_saving_loading(hass, hass_storage):
     await flush_store(manager._store._store)
 
     store2 = auth.AuthStore(hass)
-    await store2.async_load()
-    assert len(store2.users) == 1
-    assert store2.users[user.id] == user
+    users = await store2.async_get_users()
+    assert len(users) == 1
+    assert users[0] == user
 
-    assert len(store2.clients) == 1
-    assert store2.clients[client.id] == client
+    clients = await store2.async_get_clients()
+    assert len(clients) == 1
+    assert clients[0] == client
 
 
 def test_access_token_expired():
