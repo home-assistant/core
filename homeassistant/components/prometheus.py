@@ -13,7 +13,8 @@ from aiohttp import web
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN,
-    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, ATTR_CURRENT_TEMPERATURE)
+    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT)
+from homeassistant.climate import ATTR_CURRENT_TEMPERATURE
 from homeassistant import core as hacore
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import entityfilter, state as state_helper
