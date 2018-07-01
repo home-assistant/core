@@ -28,7 +28,7 @@ ATTRIBUTION = 'Based on an unofficial Brunt SDK.'
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
 STATE_PARTIALLY_OPEN = 'partially open'
-ATTR_REQUEST_POSITION = 'request_position'
+ATTR_REQUEST_POSITION = 'requested_position'
 DEFAULT_NAME = 'brunt blind engine'
 NOTIFICATION_ID = 'brunt_notification'
 NOTIFICATION_TITLE = 'Brunt Cover Setup'
