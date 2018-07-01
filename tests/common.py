@@ -321,7 +321,7 @@ class MockUser(auth.User):
     def add_to_auth_manager(self, auth_mgr):
         """Test helper to add entry to hass."""
         ensure_auth_manager_loaded(auth_mgr)
-        auth_mgr._store.users[self.id] = self
+        auth_mgr._store._users[self.id] = self
         return self
 
 
@@ -329,10 +329,10 @@ class MockUser(auth.User):
 def ensure_auth_manager_loaded(auth_mgr):
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
-    if store.clients is None:
-        store.clients = {}
-    if store.users is None:
-        store.users = {}
+    if store._clients is None:
+        store._clients = {}
+    if store._users is None:
+        store._users = {}
 
 
 class MockModule(object):
