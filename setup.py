@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Home Assistant setup script."""
 from datetime import datetime as dt
-from setuptools import setup
+from setuptools import setup, find_packages
 
 import homeassistant.const as hass_const
 
@@ -29,6 +29,8 @@ PROJECT_URLS = {
     'Forum': 'https://community.home-assistant.io/',
 }
 
+PACKAGES = find_packages(exclude=['tests', 'tests.*'])
+
 REQUIRES = [
     'aiohttp==3.3.2',
     'astral==1.6.1',
@@ -53,7 +55,15 @@ setup(
     project_urls=PROJECT_URLS,
     author=PROJECT_AUTHOR,
     author_email=PROJECT_EMAIL,
+    packages=PACKAGES,
+    include_package_data=True,
+    zip_safe=False,
     install_requires=REQUIRES,
     python_requires='>={}'.format(MIN_PY_VERSION),
     test_suite='tests',
+    entry_points={
+        'console_scripts': [
+            'hass = homeassistant.__main__:main'
+        ]
+    },
 )
