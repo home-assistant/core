@@ -95,7 +95,7 @@ class PushCamera(Camera):
         self._name = name
         self._last_trip = None
         self._filename = None
-        self._expired = None
+        self._expired_listener = None
         self._state = STATE_IDLE
         self._timeout = timeout
         self.queue = deque([], buffer_size)
@@ -120,14 +120,14 @@ class PushCamera(Camera):
         def reset_state(now):
             """Set state to idle after no new images for a period of time."""
             self._state = STATE_IDLE
-            self.async_schedule_update_ha_state()
-            self._expired = None
+            self._expired_listener = None
             _LOGGER.debug("Reset state")
+            self.async_schedule_update_ha_state()
 
-        if self._expired:
-            self._expired()
+        if self._expired_listener:
+            self._expired_listener()
 
-        self._expired = async_track_point_in_utc_time(
+        self._expired_listener = async_track_point_in_utc_time(
             self.hass, reset_state, dt_util.utcnow() + self._timeout)
 
         self.async_schedule_update_ha_state()
