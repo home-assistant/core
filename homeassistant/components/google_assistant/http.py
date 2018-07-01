@@ -10,10 +10,8 @@ from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.web import Request, Response
 
 # Typing imports
-# pylint: disable=unused-import
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.core import HomeAssistant, callback  # NOQA
-from homeassistant.helpers.entity import Entity  # NOQA
+from homeassistant.core import callback
 
 from .const import (
     GOOGLE_ASSISTANT_API_ENDPOINT,
