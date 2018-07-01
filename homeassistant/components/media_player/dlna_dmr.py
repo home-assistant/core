@@ -369,6 +369,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
             return
 
         for service in self._device.services.values():
+            if not service.subscription_sid:
+                continue
+
             try:
                 sid = service.subscription_sid
                 if sid:
@@ -392,7 +395,10 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
         # subscribe services for events
         callback_url = self._notify_view.callback_url
-        for service in self._device.services.values():
+        for service_type, service in self._device.services.items():
+            if service_type not in SERVICE_TYPES.values():
+                continue
+
             service.on_state_variable_change = self.on_state_variable_change
 
             sid = await service.async_subscribe(callback_url)
