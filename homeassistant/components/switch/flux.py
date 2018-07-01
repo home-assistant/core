@@ -95,7 +95,6 @@ def set_lights_rgb(hass, lights, rgb, transition):
                     transition=transition)
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Flux switches."""
     name = config.get(CONF_NAME)
@@ -219,7 +218,6 @@ class FluxSwitch(SwitchDevice):
                 else:
                     sunset_time = sunset
 
-                # pylint: disable=no-member
                 night_length = int(stop_time.timestamp() -
                                    sunset_time.timestamp())
                 seconds_from_sunset = int(now.timestamp() -

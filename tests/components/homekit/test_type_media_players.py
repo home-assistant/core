@@ -1,16 +1,14 @@
 """Test different accessory types: Media Players."""
 
-from homeassistant.components.media_player import (
-    ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
-from homeassistant.components.homekit.type_media_players import MediaPlayer
 from homeassistant.components.homekit.const import (
     CONF_FEATURE_LIST, FEATURE_ON_OFF, FEATURE_PLAY_PAUSE, FEATURE_PLAY_STOP,
     FEATURE_TOGGLE_MUTE)
+from homeassistant.components.homekit.type_media_players import MediaPlayer
+from homeassistant.components.media_player import (
+    ATTR_MEDIA_VOLUME_MUTED, DOMAIN)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_STOP, SERVICE_TURN_OFF, SERVICE_TURN_ON,
-    SERVICE_VOLUME_MUTE, STATE_IDLE, STATE_OFF, STATE_ON, STATE_PAUSED,
-    STATE_PLAYING)
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_IDLE, STATE_OFF, STATE_ON,
+    STATE_PAUSED, STATE_PLAYING)
 
 from tests.common import async_mock_service
 
@@ -59,12 +57,12 @@ async def test_media_player_set_state(hass, hk_driver):
     assert acc.chars[FEATURE_PLAY_STOP].value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
-    call_turn_off = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
-    call_media_play = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PLAY)
-    call_media_pause = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_PAUSE)
-    call_media_stop = async_mock_service(hass, DOMAIN, SERVICE_MEDIA_STOP)
-    call_toggle_mute = async_mock_service(hass, DOMAIN, SERVICE_VOLUME_MUTE)
+    call_turn_on = async_mock_service(hass, DOMAIN, 'turn_on')
+    call_turn_off = async_mock_service(hass, DOMAIN, 'turn_off')
+    call_media_play = async_mock_service(hass, DOMAIN, 'media_play')
+    call_media_pause = async_mock_service(hass, DOMAIN, 'media_pause')
+    call_media_stop = async_mock_service(hass, DOMAIN, 'media_stop')
+    call_toggle_mute = async_mock_service(hass, DOMAIN, 'volume_mute')
 
     await hass.async_add_job(acc.chars[FEATURE_ON_OFF]
                              .client_update_value, True)

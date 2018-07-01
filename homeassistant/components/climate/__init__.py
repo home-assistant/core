@@ -246,7 +246,8 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
 
 async def async_setup(hass, config):
     """Set up climate devices."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = hass.data[DOMAIN] = \
+        EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
 
     async def async_away_mode_set_service(service):
@@ -456,10 +457,19 @@ async def async_setup(hass, config):
     return True
 
 
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
 class ClimateDevice(Entity):
     """Representation of a climate device."""
 
-    # pylint: disable=no-self-use
     @property
     def state(self):
         """Return the current state."""

@@ -11,11 +11,13 @@ import voluptuous as vol
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PATH,
-                                 CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PATH, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.exceptions import PlatformNotReady
 
+REQUIREMENTS = ['aioftp==0.10.1']
 DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +40,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass,
-                               config,
-                               async_add_devices,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up a Yi Camera."""
-    _LOGGER.debug('Received configuration: %s', config)
     async_add_devices([YiCamera(hass, config)], True)
 
 
@@ -57,68 +56,72 @@ class YiCamera(Camera):
         self._last_image = None
         self._last_url = None
         self._manager = hass.data[DATA_FFMPEG]
-        self._name = config.get(CONF_NAME)
-        self.host = config.get(CONF_HOST)
-        self.port = config.get(CONF_PORT)
-        self.path = config.get(CONF_PATH)
-        self.user = config.get(CONF_USERNAME)
-        self.passwd = config.get(CONF_PASSWORD)
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
+        self._name = config[CONF_NAME]
+        self.host = config[CONF_HOST]
+        self.port = config[CONF_PORT]
+        self.path = config[CONF_PATH]
+        self.user = config[CONF_USERNAME]
+        self.passwd = config[CONF_PASSWORD]
 
     @property
     def brand(self):
         """Camera brand."""
         return DEFAULT_BRAND
 
-    def get_latest_video_url(self):
+    @property
+    def name(self):
+        """Return the name of this camera."""
+        return self._name
+
+    async def _get_latest_video_url(self):
         """Retrieve the latest video file from the customized Yi FTP server."""
-        from ftplib import FTP, error_perm
+        from aioftp import Client, StatusCodeError
 
-        ftp = FTP(self.host)
+        ftp = Client(loop=self.hass.loop)
         try:
-            ftp.login(self.user, self.passwd)
-        except error_perm as exc:
-            _LOGGER.error('There was an error while logging into the camera')
-            _LOGGER.debug(exc)
-            return False
+            await ftp.connect(self.host)
+            await ftp.login(self.user, self.passwd)
+        except StatusCodeError as err:
+            raise PlatformNotReady(err)
 
         try:
-            ftp.cwd(self.path)
-        except error_perm as exc:
-            _LOGGER.error('Unable to find path: %s', self.path)
-            _LOGGER.debug(exc)
-            return False
+            await ftp.change_directory(self.path)
+            dirs = []
+            for path, attrs in await ftp.list():
+                if attrs['type'] == 'dir' and '.' not in str(path):
+                    dirs.append(path)
+            latest_dir = dirs[-1]
+            await ftp.change_directory(latest_dir)
 
-        dirs = [d for d in ftp.nlst() if '.' not in d]
-        if not dirs:
-            _LOGGER.warning("There don't appear to be any uploaded videos")
-            return False
+            videos = []
+            for path, _ in await ftp.list():
+                videos.append(path)
+            if not videos:
+                _LOGGER.info('Video folder "%s" empty; delaying', latest_dir)
+                return None
 
-        latest_dir = dirs[-1]
-        ftp.cwd(latest_dir)
-        videos = ftp.nlst()
-        if not videos:
-            _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
-            return False
+            await ftp.quit()
 
-        return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(
-            self.user, self.passwd, self.host, self.port, self.path,
-            latest_dir, videos[-1])
+            return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(
+                self.user, self.passwd, self.host, self.port, self.path,
+                latest_dir, videos[-1])
+        except (ConnectionRefusedError, StatusCodeError) as err:
+            _LOGGER.error('Error while fetching video: %s', err)
+            return None
 
     async def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg import ImageFrame, IMAGE_JPEG
 
-        url = await self.hass.async_add_job(self.get_latest_video_url)
+        url = await self._get_latest_video_url()
         if url != self._last_url:
             ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
-            self._last_image = await asyncio.shield(ffmpeg.get_image(
-                url, output_format=IMAGE_JPEG,
-                extra_cmd=self._extra_arguments), loop=self.hass.loop)
+            self._last_image = await asyncio.shield(
+                ffmpeg.get_image(
+                    url,
+                    output_format=IMAGE_JPEG,
+                    extra_cmd=self._extra_arguments),
+                loop=self.hass.loop)
             self._last_url = url
 
         return self._last_image

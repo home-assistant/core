@@ -75,11 +75,10 @@ HUB = None
 def setup(hass, config):
     """Set up Modbus component."""
     # Modbus connection type
-    # pylint: disable=global-statement, import-error
     client_type = config[DOMAIN][CONF_TYPE]
 
     # Connect to Modbus network
-    # pylint: disable=global-statement, import-error
+    # pylint: disable=import-error
 
     if client_type == 'serial':
         from pymodbus.client.sync import ModbusSerialClient as ModbusClient

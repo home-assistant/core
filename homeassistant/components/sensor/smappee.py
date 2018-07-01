@@ -189,8 +189,10 @@ class SmappeeSensor(Entity):
             data = self._smappee.sensor_consumption[self._location_id]\
                 .get(int(sensor_id))
             if data:
-                consumption = data.get('records')[-1]
-                _LOGGER.debug("%s (%s) %s",
-                              sensor_name, sensor_id, consumption)
-                value = consumption.get(self._smappe_name)
-                self._state = value
+                tempdata = data.get('records')
+                if tempdata:
+                    consumption = tempdata[-1]
+                    _LOGGER.debug("%s (%s) %s",
+                                  sensor_name, sensor_id, consumption)
+                    value = consumption.get(self._smappe_name)
+                    self._state = value

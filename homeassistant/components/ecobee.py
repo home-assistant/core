@@ -48,7 +48,6 @@ def request_configuration(network, hass, config):
 
         return
 
-    # pylint: disable=unused-argument
     def ecobee_configuration_callback(callback_data):
         """Handle configuration callbacks."""
         network.request_tokens()
@@ -106,7 +105,6 @@ def setup(hass, config):
     Will automatically load thermostat and sensor components to support
     devices discovered on the network.
     """
-    # pylint: disable=global-statement, import-error
     global NETWORK
 
     if 'ecobee' in _CONFIGURING:

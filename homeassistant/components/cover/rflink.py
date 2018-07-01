@@ -4,7 +4,6 @@ Support for Rflink Cover devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.rflink/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -79,8 +78,8 @@ def devices_from_config(domain_config, hass=None):
     return devices
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Rflink cover platform."""
     async_add_devices(devices_from_config(config, hass))
 

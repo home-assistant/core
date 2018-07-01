@@ -112,27 +112,32 @@ the flow from the config panel.
 """
 
 import logging
-import os
 import uuid
 
-from . import data_entry_flow
-from .core import callback
-from .exceptions import HomeAssistantError
-from .setup import async_setup_component, async_process_deps_reqs
-from .util.json import load_json, save_json
-from .util.decorator import Registry
+from homeassistant import data_entry_flow
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component, async_process_deps_reqs
+from homeassistant.util.decorator import Registry
 
 
 _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
+    'cast',
     'deconz',
     'hue',
+    'nest',
+    'sonos',
     'zone',
 ]
 
 
+STORAGE_KEY = 'core.config_entries'
+STORAGE_VERSION = 1
+
+# Deprecated since 0.73
 PATH_CONFIG = '.config_entries.json'
 
 SAVE_DELAY = 1
@@ -143,7 +148,12 @@ ENTRY_STATE_NOT_LOADED = 'not_loaded'
 ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
-DISCOVERY_SOURCES = (data_entry_flow.SOURCE_DISCOVERY,)
+DISCOVERY_SOURCES = (
+    data_entry_flow.SOURCE_DISCOVERY,
+    data_entry_flow.SOURCE_IMPORT,
+)
+
+EVENT_FLOW_DISCOVERED = 'config_entry_discovered'
 
 
 class ConfigEntry:
@@ -263,7 +273,7 @@ class ConfigEntries:
             hass, self._async_create_flow, self._async_finish_flow)
         self._hass_config = hass_config
         self._entries = None
-        self._sched_save = None
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
     def async_domains(self):
@@ -297,7 +307,7 @@ class ConfigEntries:
             raise UnknownEntry
 
         entry = self._entries.pop(found)
-        self._async_schedule_save()
+        await self._async_schedule_save()
 
         unloaded = await entry.async_unload(self.hass)
 
@@ -306,14 +316,18 @@ class ConfigEntries:
         }
 
     async def async_load(self):
-        """Load the config."""
-        path = self.hass.config.path(PATH_CONFIG)
-        if not os.path.isfile(path):
+        """Handle loading the config."""
+        # Migrating for config entries stored before 0.73
+        config = await self.hass.helpers.storage.async_migrator(
+            self.hass.config.path(PATH_CONFIG), self._store,
+            old_conf_migrate_func=_old_conf_migrator
+        )
+
+        if config is None:
             self._entries = []
             return
 
-        entries = await self.hass.async_add_job(load_json, path)
-        self._entries = [ConfigEntry(**entry) for entry in entries]
+        self._entries = [ConfigEntry(**entry) for entry in config['entries']]
 
     async def async_forward_entry_setup(self, entry, component):
         """Forward the setup of an entry to a different component.
@@ -364,7 +378,7 @@ class ConfigEntries:
             source=result['source'],
         )
         self._entries.append(entry)
-        self._async_schedule_save()
+        await self._async_schedule_save()
 
         # Setup entry
         if entry.domain in self.hass.config.components:
@@ -398,6 +412,7 @@ class ConfigEntries:
 
         # Create notification.
         if source in DISCOVERY_SOURCES:
+            self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
             self.hass.components.persistent_notification.async_create(
                 title='New devices discovered',
                 message=("We have discovered new devices on your network. "
@@ -407,20 +422,14 @@ class ConfigEntries:
 
         return handler()
 
-    @callback
-    def _async_schedule_save(self):
-        """Schedule saving the entity registry."""
-        if self._sched_save is not None:
-            self._sched_save.cancel()
-
-        self._sched_save = self.hass.loop.call_later(
-            SAVE_DELAY, self.hass.async_add_job, self._async_save
-        )
-
-    async def _async_save(self):
+    async def _async_schedule_save(self):
         """Save the entity registry to a file."""
-        self._sched_save = None
-        data = [entry.as_dict() for entry in self._entries]
+        data = {
+            'entries': [entry.as_dict() for entry in self._entries]
+        }
+        await self._store.async_save(data, delay=SAVE_DELAY)
 
-        await self.hass.async_add_job(
-            save_json, self.hass.config.path(PATH_CONFIG), data)
+
+async def _old_conf_migrator(old_config):
+    """Migrate the pre-0.73 config format to the latest version."""
+    return {'entries': old_config}

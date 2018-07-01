@@ -23,6 +23,7 @@ HOMEKIT_DIR = '.homekit'
 HOMEKIT_ACCESSORY_DISPATCH = {
     'lightbulb': 'light',
     'outlet': 'switch',
+    'thermostat': 'climate',
 }
 
 KNOWN_ACCESSORIES = "{}-accessories".format(DOMAIN)
@@ -37,6 +38,7 @@ def homekit_http_send(self, message_body=None, encode_chunked=False):
     Appends an extra \r\n to the buffer.
     A message_body may be specified, to be appended to the request.
     """
+    # pylint: disable=protected-access
     self._buffer.extend((b"", b""))
     msg = b"\r\n".join(self._buffer)
     del self._buffer[:]
@@ -218,8 +220,12 @@ class HomeKitEntity(Entity):
         """Synchronise a HomeKit device state with Home Assistant."""
         raise NotImplementedError
 
+    def put_characteristics(self, characteristics):
+        """Control a HomeKit device state from Home Assistant."""
+        body = json.dumps({'characteristics': characteristics})
+        self._securecon.put('/characteristics', body)
 
-# pylint: too-many-function-args
+
 def setup(hass, config):
     """Set up for Homekit devices."""
     def discovery_dispatch(service, discovery_info):

@@ -53,7 +53,6 @@ VERA_COMPONENTS = [
 ]
 
 
-# pylint: disable=unused-argument, too-many-function-args
 def setup(hass, base_config):
     """Set up for Vera devices."""
     import pyvera as veraApi

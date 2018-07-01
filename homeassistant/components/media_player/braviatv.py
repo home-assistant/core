@@ -18,9 +18,7 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.7.zip'
-    '#braviarc==0.3.7']
+REQUIREMENTS = ['braviarc-homeassistant==0.3.7.dev0']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 
@@ -60,7 +58,6 @@ def _get_mac_address(ip_address):
     return None
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sony Bravia TV platform."""
     host = config.get(CONF_HOST)

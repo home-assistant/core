@@ -16,7 +16,6 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['lutron_caseta']
 
 
-# pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up Lutron switch."""

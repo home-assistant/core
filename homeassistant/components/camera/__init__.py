@@ -1,4 +1,3 @@
-# pylint: disable=too-many-lines
 """
 Component to interface with cameras.
 
@@ -97,6 +96,7 @@ def disable_motion_detection(hass, entity_id=None):
 
 
 @bind_hass
+@callback
 def async_snapshot(hass, filename, entity_id=None):
     """Make a snapshot from a camera."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -129,8 +129,7 @@ async def async_get_image(hass, entity_id, timeout=10):
     raise HomeAssistantError('Unable to get image')
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the camera component."""
     component = hass.data[DOMAIN] = \
         EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
@@ -142,7 +141,7 @@ def async_setup(hass, config):
         SCHEMA_WS_CAMERA_THUMBNAIL
     )
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
     @callback
     def update_tokens(time):
@@ -154,27 +153,25 @@ def async_setup(hass, config):
     hass.helpers.event.async_track_time_interval(
         update_tokens, TOKEN_CHANGE_INTERVAL)
 
-    @asyncio.coroutine
-    def async_handle_camera_service(service):
+    async def async_handle_camera_service(service):
         """Handle calls to the camera services."""
         target_cameras = component.async_extract_from_service(service)
 
         update_tasks = []
         for camera in target_cameras:
             if service.service == SERVICE_ENABLE_MOTION:
-                yield from camera.async_enable_motion_detection()
+                await camera.async_enable_motion_detection()
             elif service.service == SERVICE_DISABLE_MOTION:
-                yield from camera.async_disable_motion_detection()
+                await camera.async_disable_motion_detection()
 
             if not camera.should_poll:
                 continue
             update_tasks.append(camera.async_update_ha_state(True))
 
         if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks, loop=hass.loop)
 
-    @asyncio.coroutine
-    def async_handle_snapshot_service(service):
+    async def async_handle_snapshot_service(service):
         """Handle snapshot services calls."""
         target_cameras = component.async_extract_from_service(service)
         filename = service.data[ATTR_FILENAME]
@@ -190,7 +187,7 @@ def async_setup(hass, config):
                     "Can't write %s, no access to path!", snapshot_file)
                 continue
 
-            image = yield from camera.async_camera_image()
+            image = await camera.async_camera_image()
 
             def _write_image(to_file, image_data):
                 """Executor helper to write image."""
@@ -198,7 +195,7 @@ def async_setup(hass, config):
                     img_file.write(image_data)
 
             try:
-                yield from hass.async_add_job(
+                await hass.async_add_job(
                     _write_image, snapshot_file, image)
             except OSError as err:
                 _LOGGER.error("Can't write image to file: %s", err)
@@ -214,6 +211,16 @@ def async_setup(hass, config):
         schema=CAMERA_SERVICE_SNAPSHOT)
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class Camera(Entity):
@@ -265,6 +272,7 @@ class Camera(Entity):
         """Return bytes of camera image."""
         raise NotImplementedError()
 
+    @callback
     def async_camera_image(self):
         """Return bytes of camera image.
 
@@ -314,6 +322,7 @@ class Camera(Entity):
         except asyncio.CancelledError:
             _LOGGER.debug("Stream closed by frontend.")
             response = None
+            raise
 
         finally:
             if response is not None:
@@ -388,8 +397,7 @@ class CameraView(HomeAssistantView):
         """Initialize a basic camera view."""
         self.component = component
 
-    @asyncio.coroutine
-    def get(self, request, entity_id):
+    async def get(self, request, entity_id):
         """Start a GET request."""
         camera = self.component.get_entity(entity_id)
 
@@ -403,11 +411,10 @@ class CameraView(HomeAssistantView):
         if not authenticated:
             return web.Response(status=401)
 
-        response = yield from self.handle(request, camera)
+        response = await self.handle(request, camera)
         return response
 
-    @asyncio.coroutine
-    def handle(self, request, camera):
+    async def handle(self, request, camera):
         """Handle the camera request."""
         raise NotImplementedError()
 
@@ -418,12 +425,11 @@ class CameraImageView(CameraView):
     url = '/api/camera_proxy/{entity_id}'
     name = 'api:camera:image'
 
-    @asyncio.coroutine
-    def handle(self, request, camera):
+    async def handle(self, request, camera):
         """Serve camera image."""
         with suppress(asyncio.CancelledError, asyncio.TimeoutError):
             with async_timeout.timeout(10, loop=request.app['hass'].loop):
-                image = yield from camera.async_camera_image()
+                image = await camera.async_camera_image()
 
             if image:
                 return web.Response(body=image,

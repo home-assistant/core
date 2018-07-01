@@ -198,7 +198,6 @@ async def async_setup(hass, config):
 class CoverDevice(Entity):
     """Representation a cover."""
 
-    # pylint: disable=no-self-use
     @property
     def current_cover_position(self):
         """Return current position of cover.

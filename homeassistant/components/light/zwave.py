@@ -6,8 +6,6 @@ https://home-assistant.io/components/light.zwave/
 """
 import logging
 
-# Because we do not compile openzwave on CI
-# pylint: disable=import-error
 from threading import Timer
 from homeassistant.components.light import (
     ATTR_WHITE_VALUE, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
