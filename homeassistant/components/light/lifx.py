@@ -446,7 +446,9 @@ class LIFXLight(Light):
     @property
     def color_temp(self):
         """Return the color temperature."""
-        kelvin = self.device.color[3]
+        _, sat, _, kelvin = self.device.color
+        if sat:
+            return None
         return color_util.color_temperature_kelvin_to_mired(kelvin)
 
     @property
@@ -601,7 +603,7 @@ class LIFXColor(LIFXLight):
         hue, sat, _, _ = self.device.color
         hue = hue / 65535 * 360
         sat = sat / 65535 * 100
-        return (hue, sat)
+        return (hue, sat) if sat else None
 
 
 class LIFXStrip(LIFXColor):
