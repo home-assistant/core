@@ -28,7 +28,7 @@ ATTRIBUTION = 'Based on an unofficial Brunt SDK.'
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
 STATE_PARTIALLY_OPEN = 'partially open'
-ATTR_REQUEST_POSITION = 'requested_position'
+ATTR_REQUEST_POSITION = 'request_position'
 DEFAULT_NAME = 'brunt blind engine'
 NOTIFICATION_ID = 'brunt_notification'
 NOTIFICATION_TITLE = 'Brunt Cover Setup'
@@ -116,8 +116,10 @@ class BruntDevice(CoverDevice):
     @property
     def request_cover_position(self):
         """
-        Return requested position of cover.
+        Return request position of cover.
 
+        The request position is the position of the last request
+        to Brunt, at times there is a diff of 1 to current
         None is unknown, 0 is closed, 100 is fully open.
         """
         return int(self._state['requestPosition'])
