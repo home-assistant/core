@@ -67,8 +67,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
             for base_station in arlo.base_stations:
                 if ((sensor_type == 'temperature' or
-                        sensor_type == 'humidity' or
-                        sensor_type == 'air_quality') and
+                     sensor_type == 'humidity' or
+                     sensor_type == 'air_quality') and
                         base_station.model_id == 'ABC1000'):
                     name = '{0} {1}'.format(
                         SENSOR_TYPES[sensor_type][0], base_station.name)
@@ -82,6 +82,7 @@ class ArloSensor(Entity):
 
     def __init__(self, name, device, sensor_type):
         """Initialize an Arlo sensor."""
+        _LOGGER.debug('ArloSensor created for %s', name)
         self._name = name
         self._data = device
         self._sensor_type = sensor_type
@@ -101,6 +102,7 @@ class ArloSensor(Entity):
     @callback
     def _update_callback(self):
         """Call update method."""
+        _LOGGER.debug('update')
         self.async_schedule_update_ha_state(True)
 
     @property
@@ -188,13 +190,16 @@ class ArloSensor(Entity):
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         attrs['brand'] = DEFAULT_BRAND
 
-        if self._sensor_type == 'last_capture' or \
-           self._sensor_type == 'captured_today' or \
-           self._sensor_type == 'battery_level' or \
-           self._sensor_type == 'signal_strength' or \
-           self._sensor_type == 'temperature' or \
-           self._sensor_type == 'humidity' or \
-           self._sensor_type == 'air_quality':
+        known_sensor_types = [
+            'last_capture',
+            'captured_today',
+            'battery_level',
+            'signal_strength',
+            'temperature',
+            'humidity',
+            'air_quality']
+
+        if self._sensor_type in known_sensor_types:
             attrs['model'] = self._data.model_id
 
         return attrs
