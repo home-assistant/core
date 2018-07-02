@@ -791,6 +791,9 @@ pydispatcher==2.0.5
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==0.8
 
+# homeassistant.components.sensor.duke_energy
+pydukeenergy==0.0.6
+
 # homeassistant.components.sensor.ebox
 pyebox==1.1.4
 
