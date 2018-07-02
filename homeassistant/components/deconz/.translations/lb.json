@@ -22,7 +22,8 @@
             },
             "options": {
                 "data": {
-                    "allow_clip_sensor": "Erlaabt den Import vun virtuellen Sensoren"
+                    "allow_clip_sensor": "Erlaabt den Import vun virtuellen Sensoren",
+                    "allow_deconz_groups": "Erlaabt den Import vun deCONZ Gruppen"
                 },
                 "title": "Extra Konfiguratiouns Optiounen fir deCONZ"
             }
