@@ -465,6 +465,7 @@ class Device(Entity):
     def state_attributes(self):
         """Return the device state attributes."""
         attr = {
+            ATTR_CONSIDER_HOME: self.consider_home.total_seconds(),
             ATTR_SOURCE_TYPE: self.source_type
         }
 
@@ -563,6 +564,13 @@ class Device(Entity):
         if not state:
             return
         self._state = state.state
+
+        if self._state == STATE_HOME:
+            self.last_seen = state.last_updated
+            self.last_update_home = True
+            seconds = state.attributes.get(ATTR_CONSIDER_HOME)
+            if seconds:
+                self.consider_home = timedelta(seconds=seconds)
 
         for attr, var in (
                 (ATTR_SOURCE_TYPE, 'source_type'),
