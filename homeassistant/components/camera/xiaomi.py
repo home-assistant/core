@@ -20,7 +20,6 @@ DEPENDENCIES = ['ffmpeg']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_BRAND = 'Xiaomi Home Camera'
-DEFAULT_PATH = '/media/mmcblk0p1/record'
 DEFAULT_PORT = 21
 DEFAULT_USERNAME = 'root'
 
@@ -36,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MODEL): vol.Any(MODEL_YI,
                                       MODEL_XIAOFANG),
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-    vol.Required(CONF_PATH, default=DEFAULT_PATH): cv.string,
+    vol.Required(CONF_PATH): cv.string,
     vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string
