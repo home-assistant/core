@@ -137,7 +137,8 @@ class SynoApi(object):
         self.temp_unit = temp_unit
 
         try:
-            self._api = SynologyDSM(host, port, username, password, use_https=use_ssl)
+            self._api = SynologyDSM(host, port, username, password,
+                                    use_https=use_ssl)
         except:  # noqa: E722  # pylint: disable=bare-except
             _LOGGER.error("Error setting up Synology DSM")
 
