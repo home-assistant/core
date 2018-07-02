@@ -4,7 +4,6 @@ Support for covers which integrate with other components.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.template/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -72,8 +71,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Template cover."""
     covers = []
 
@@ -199,8 +198,7 @@ class CoverTemplate(CoverDevice):
         if self._entity_picture_template is not None:
             self._entity_picture_template.hass = self.hass
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         @callback
         def template_cover_state_listener(entity, old_state, new_state):
@@ -277,70 +275,62 @@ class CoverTemplate(CoverDevice):
         """Return the polling state."""
         return False
 
-    @asyncio.coroutine
-    def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Move the cover up."""
         if self._open_script:
-            yield from self._open_script.async_run()
+            await self._open_script.async_run()
         elif self._position_script:
-            yield from self._position_script.async_run({"position": 100})
+            await self._position_script.async_run({"position": 100})
         if self._optimistic:
             self._position = 100
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Move the cover down."""
         if self._close_script:
-            yield from self._close_script.async_run()
+            await self._close_script.async_run()
         elif self._position_script:
-            yield from self._position_script.async_run({"position": 0})
+            await self._position_script.async_run({"position": 0})
         if self._optimistic:
             self._position = 0
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Fire the stop action."""
         if self._stop_script:
-            yield from self._stop_script.async_run()
+            await self._stop_script.async_run()
 
-    @asyncio.coroutine
-    def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Set cover position."""
         self._position = kwargs[ATTR_POSITION]
-        yield from self._position_script.async_run(
+        await self._position_script.async_run(
             {"position": self._position})
         if self._optimistic:
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover open."""
         self._tilt_value = 100
-        yield from self._tilt_script.async_run({"tilt": self._tilt_value})
+        await self._tilt_script.async_run({"tilt": self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
         self._tilt_value = 0
-        yield from self._tilt_script.async_run(
+        await self._tilt_script.async_run(
             {"tilt": self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_set_cover_tilt_position(self, **kwargs):
+    async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         self._tilt_value = kwargs[ATTR_TILT_POSITION]
-        yield from self._tilt_script.async_run({"tilt": self._tilt_value})
+        await self._tilt_script.async_run({"tilt": self._tilt_value})
         if self._tilt_optimistic:
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update the state from the template."""
         if self._template is not None:
             try:

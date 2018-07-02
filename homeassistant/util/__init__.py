@@ -120,7 +120,6 @@ def get_random_string(length=10):
 class OrderedEnum(enum.Enum):
     """Taken from Python 3.4.0 docs."""
 
-    # pylint: disable=no-init
     def __ge__(self, other):
         """Return the greater than element."""
         if self.__class__ is other.__class__:

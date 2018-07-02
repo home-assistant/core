@@ -107,6 +107,20 @@ SENSOR_TYPES = {
         ['Voltage Transfer Reason', '', 'mdi:information-outline'],
     'input.voltage': ['Input Voltage', 'V', 'mdi:flash'],
     'input.voltage.nominal': ['Nominal Input Voltage', 'V', 'mdi:flash'],
+    'input.frequency': ['Input Line Frequency', 'hz', 'mdi:flash'],
+    'input.frequency.nominal':
+        ['Nominal Input Line Frequency', 'hz', 'mdi:flash'],
+    'input.frequency.status':
+        ['Input Frequency Status', '', 'mdi:information-outline'],
+    'output.current': ['Output Current', 'A', 'mdi:flash'],
+    'output.current.nominal':
+        ['Nominal Output Current', 'A', 'mdi:flash'],
+    'output.voltage': ['Output Voltage', 'V', 'mdi:flash'],
+    'output.voltage.nominal':
+        ['Nominal Output Voltage', 'V', 'mdi:flash'],
+    'output.frequency': ['Output Frequency', 'hz', 'mdi:flash'],
+    'output.frequency.nominal':
+        ['Nominal Output Frequency', 'hz', 'mdi:flash'],
 }
 
 STATE_TYPES = {

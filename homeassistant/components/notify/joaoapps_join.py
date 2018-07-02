@@ -28,7 +28,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable
 def get_service(hass, config, discovery_info=None):
     """Get the Join notification service."""
     api_key = config.get(CONF_API_KEY)

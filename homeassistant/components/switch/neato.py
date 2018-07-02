@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.neato/
 """
 import logging
+from datetime import timedelta
 import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
@@ -13,6 +14,8 @@ from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 SWITCH_TYPE_SCHEDULE = 'schedule'
 
@@ -64,7 +67,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)
-            if self.robot.schedule_enabled:
+            if self._state['details']['isScheduleEnabled']:
                 self._schedule_state = STATE_ON
             else:
                 self._schedule_state = STATE_OFF

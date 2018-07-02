@@ -64,7 +64,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([PvoutputSensor(rest, name)], True)
 
 
-# pylint: disable=no-member
 class PvoutputSensor(Entity):
     """Representation of a PVOutput sensor."""
 

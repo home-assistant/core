@@ -17,6 +17,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect, \
 from homeassistant.components.media_player import cast
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockConfigEntry, mock_coro
+
 
 @pytest.fixture(autouse=True)
 def cast_mock():
@@ -359,3 +361,56 @@ async def test_disconnect_on_stop(hass: HomeAssistantType):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert chromecast.disconnect.call_count == 1
+
+
+async def test_entry_setup_no_config(hass: HomeAssistantType):
+    """Test setting up entry with no config.."""
+    await async_setup_component(hass, 'cast', {})
+
+    with patch(
+        'homeassistant.components.media_player.cast._async_setup_platform',
+            return_value=mock_coro()) as mock_setup:
+        await cast.async_setup_entry(hass, MockConfigEntry(), None)
+
+    assert len(mock_setup.mock_calls) == 1
+    assert mock_setup.mock_calls[0][1][1] == {}
+
+
+async def test_entry_setup_single_config(hass: HomeAssistantType):
+    """Test setting up entry and having a single config option."""
+    await async_setup_component(hass, 'cast', {
+        'cast': {
+            'media_player': {
+                'host': 'bla'
+            }
+        }
+    })
+
+    with patch(
+        'homeassistant.components.media_player.cast._async_setup_platform',
+            return_value=mock_coro()) as mock_setup:
+        await cast.async_setup_entry(hass, MockConfigEntry(), None)
+
+    assert len(mock_setup.mock_calls) == 1
+    assert mock_setup.mock_calls[0][1][1] == {'host': 'bla'}
+
+
+async def test_entry_setup_list_config(hass: HomeAssistantType):
+    """Test setting up entry and having multiple config options."""
+    await async_setup_component(hass, 'cast', {
+        'cast': {
+            'media_player': [
+                {'host': 'bla'},
+                {'host': 'blu'},
+            ]
+        }
+    })
+
+    with patch(
+        'homeassistant.components.media_player.cast._async_setup_platform',
+            return_value=mock_coro()) as mock_setup:
+        await cast.async_setup_entry(hass, MockConfigEntry(), None)
+
+    assert len(mock_setup.mock_calls) == 2
+    assert mock_setup.mock_calls[0][1][1] == {'host': 'bla'}
+    assert mock_setup.mock_calls[1][1][1] == {'host': 'blu'}

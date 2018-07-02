@@ -104,27 +104,25 @@ class XiaomiCamera(Camera):
 
         dirs = [d for d in ftp.nlst() if '.' not in d]
         if not dirs:
-            if self._model == MODEL_YI:
-                _LOGGER.warning("There don't appear to be any uploaded videos")
-                return False
-            elif self._model == MODEL_XIAOFANG:
-                _LOGGER.warning("There don't appear to be any folders")
-                return False
+            _LOGGER.warning("There don't appear to be any folders")
+            return False
 
-            first_dir = dirs[-1]
-            try:
-                ftp.cwd(first_dir)
-            except error_perm as exc:
-                _LOGGER.error('Unable to find path: %s - %s', first_dir, exc)
-                return False
+        first_dir = dirs[-1]
+        try:
+            ftp.cwd(first_dir)
+        except error_perm as exc:
+            _LOGGER.error('Unable to find path: %s - %s', first_dir, exc)
+            return False
 
+        if self._model == MODEL_XIAOFANG:
             dirs = [d for d in ftp.nlst() if '.' not in d]
             if not dirs:
                 _LOGGER.warning("There don't appear to be any uploaded videos")
                 return False
 
-        latest_dir = dirs[-1]
-        ftp.cwd(latest_dir)
+            latest_dir = dirs[-1]
+            ftp.cwd(latest_dir)
+
         videos = [v for v in ftp.nlst() if '.tmp' not in v]
         if not videos:
             _LOGGER.info('Video folder "%s" is empty; delaying', latest_dir)
