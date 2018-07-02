@@ -10,12 +10,14 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
+import math
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE,
-    LENGTH_KILOMETERS, LENGTH_METERS)
+    LENGTH_KILOMETERS, LENGTH_METERS, CONF_ALTITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import distance as util_distance
 from homeassistant.util import location as util_location
@@ -29,6 +31,8 @@ ATTR_SENSOR = 'sensor'
 ATTR_STATES = 'states'
 
 DOMAIN = 'opensky'
+
+DEFAULT_ALTITUDE = 0
 
 EVENT_OPENSKY_ENTRY = '{}_entry'.format(DOMAIN)
 EVENT_OPENSKY_EXIT = '{}_exit'.format(DOMAIN)
@@ -47,7 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RADIUS): vol.Coerce(float),
     vol.Optional(CONF_NAME): cv.string,
     vol.Inclusive(CONF_LATITUDE, 'coordinates'): cv.latitude,
-    vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude
+    vol.Inclusive(CONF_LONGITUDE, 'coordinates'): cv.longitude,
+    vol.Optional(CONF_ALTITUDE, default=DEFAULT_ALTITUDE): vol.Coerce(float)
 })
 
 
@@ -57,19 +62,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
     add_devices([OpenSkySensor(
         hass, config.get(CONF_NAME, DOMAIN), latitude, longitude,
-        config.get(CONF_RADIUS))], True)
+        config.get(CONF_RADIUS), config.get(CONF_ALTITUDE))], True)
 
 
 class OpenSkySensor(Entity):
     """Open Sky Network Sensor."""
 
-    def __init__(self, hass, name, latitude, longitude, radius):
+    def __init__(self, hass, name, latitude, longitude, radius, altitude):
         """Initialize the sensor."""
         self._session = requests.Session()
         self._latitude = latitude
         self._longitude = longitude
         self._radius = util_distance.convert(
             radius, LENGTH_KILOMETERS, LENGTH_METERS)
+        self._altitude = altitude
         self._state = 0
         self._hass = hass
         self._name = name
@@ -85,12 +91,18 @@ class OpenSkySensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    def _handle_boundary(self, flights, event):
+    def _handle_boundary(self, flights, event, metadata):
         """Handle flights crossing region boundary."""
         for flight in flights:
+            if flight in metadata:
+                altitude = metadata[flight].get(ATTR_ALTITUDE)
+            else:
+                # Assume Flight has landed if missing.
+                altitude = 0
+
             data = {
-                ATTR_CALLSIGN: flight.get(ATTR_CALLSIGN),
-                ATTR_ALTITUDE: flight.get(ATTR_ALTITUDE),
+                ATTR_CALLSIGN: flight,
+                ATTR_ALTITUDE: altitude,
                 ATTR_SENSOR: self._name,
             }
             self._hass.bus.fire(event, data)
@@ -98,9 +110,15 @@ class OpenSkySensor(Entity):
     def update(self):
         """Update device state."""
         currently_tracked = set()
+        flight_metadata = {}
         states = self._session.get(OPENSKY_API_URL).json().get(ATTR_STATES)
         for state in states:
             flight = dict(zip(OPENSKY_API_FIELDS, state))
+            callsign = flight[ATTR_CALLSIGN].strip()
+            if callsign != '':
+                flight_metadata[callsign] = flight
+            else:
+                continue
             missing_location = (
                 flight.get(ATTR_LONGITUDE) is None or
                 flight.get(ATTR_LATITUDE) is None)
@@ -113,15 +131,16 @@ class OpenSkySensor(Entity):
                 flight.get(ATTR_LATITUDE), flight.get(ATTR_LONGITUDE))
             if distance is None or distance > self._radius:
                 continue
-            callsign = flight[ATTR_CALLSIGN].strip()
-            if callsign == '':
+            altitude = flight.get(ATTR_ALTITUDE)
+            if altitude > self._altitude and self._altitude != 0:
                 continue
-            currently_tracked.add(flight)
+            currently_tracked.add(callsign)
         if self._previously_tracked is not None:
             entries = currently_tracked - self._previously_tracked
             exits = self._previously_tracked - currently_tracked
-            self._handle_boundary(entries, EVENT_OPENSKY_ENTRY)
-            self._handle_boundary(exits, EVENT_OPENSKY_EXIT)
+            self._handle_boundary(entries, EVENT_OPENSKY_ENTRY,
+                                  flight_metadata)
+            self._handle_boundary(exits, EVENT_OPENSKY_EXIT, flight_metadata)
         self._state = len(currently_tracked)
         self._previously_tracked = currently_tracked
 
