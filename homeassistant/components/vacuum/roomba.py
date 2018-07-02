@@ -284,7 +284,9 @@ class RoombaVacuum(VacuumDevice):
         software_version = state.get('softwareVer')
 
         # Error message in plain english
-        error_msg = self.vacuum.error_message
+        error_msg = 'None'
+        if hasattr(self.vacuum, 'error_message'):
+            error_msg = self.vacuum.error_message
 
         self._battery_level = state.get('batPct')
         self._status = self.vacuum.current_state
