@@ -23,6 +23,7 @@ from homeassistant.util import location as util_location
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CALLSIGN = 'callsign'
+ATTR_ALTITUDE = 'altitude'
 ATTR_ON_GROUND = 'on_ground'
 ATTR_SENSOR = 'sensor'
 ATTR_STATES = 'states'
@@ -38,7 +39,7 @@ OPENSKY_ATTRIBUTION = "Information provided by the OpenSky Network "\
 OPENSKY_API_URL = 'https://opensky-network.org/api/states/all'
 OPENSKY_API_FIELDS = [
     'icao24', ATTR_CALLSIGN, 'origin_country', 'time_position',
-    'time_velocity', ATTR_LONGITUDE, ATTR_LATITUDE, 'altitude',
+    'time_velocity', ATTR_LONGITUDE, ATTR_LATITUDE, ATTR_ALTITUDE,
     ATTR_ON_GROUND, 'velocity', 'heading', 'vertical_rate', 'sensors']
 
 
@@ -84,11 +85,12 @@ class OpenSkySensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    def _handle_boundary(self, callsigns, event):
+    def _handle_boundary(self, flights, event):
         """Handle flights crossing region boundary."""
-        for callsign in callsigns:
+        for flight in flights:
             data = {
-                ATTR_CALLSIGN: callsign,
+                ATTR_CALLSIGN: flight.get(ATTR_CALLSIGN),
+                ATTR_ALTITUDE: flight.get(ATTR_ALTITUDE),
                 ATTR_SENSOR: self._name,
             }
             self._hass.bus.fire(event, data)
@@ -98,23 +100,23 @@ class OpenSkySensor(Entity):
         currently_tracked = set()
         states = self._session.get(OPENSKY_API_URL).json().get(ATTR_STATES)
         for state in states:
-            data = dict(zip(OPENSKY_API_FIELDS, state))
+            flight = dict(zip(OPENSKY_API_FIELDS, state))
             missing_location = (
-                data.get(ATTR_LONGITUDE) is None or
-                data.get(ATTR_LATITUDE) is None)
+                flight.get(ATTR_LONGITUDE) is None or
+                flight.get(ATTR_LATITUDE) is None)
             if missing_location:
                 continue
-            if data.get(ATTR_ON_GROUND):
+            if flight.get(ATTR_ON_GROUND):
                 continue
             distance = util_location.distance(
                 self._latitude, self._longitude,
-                data.get(ATTR_LATITUDE), data.get(ATTR_LONGITUDE))
+                flight.get(ATTR_LATITUDE), flight.get(ATTR_LONGITUDE))
             if distance is None or distance > self._radius:
                 continue
-            callsign = data[ATTR_CALLSIGN].strip()
+            callsign = flight[ATTR_CALLSIGN].strip()
             if callsign == '':
                 continue
-            currently_tracked.add(callsign)
+            currently_tracked.add(flight)
         if self._previously_tracked is not None:
             entries = currently_tracked - self._previously_tracked
             exits = self._previously_tracked - currently_tracked
