@@ -42,7 +42,7 @@ async def async_setup_platform(
         async_add_devices=async_add_devices)
 
 
-class MySensorsSensor(mysensors.MySensorsEntity):
+class MySensorsSensor(mysensors.device.MySensorsEntity):
     """Representation of a MySensors Sensor child node."""
 
     @property

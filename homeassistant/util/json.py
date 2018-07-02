@@ -11,6 +11,14 @@ _LOGGER = logging.getLogger(__name__)
 _UNDEFINED = object()
 
 
+class SerializationError(HomeAssistantError):
+    """Error serializing the data to JSON."""
+
+
+class WriteError(HomeAssistantError):
+    """Error writing the data."""
+
+
 def load_json(filename: str, default: Union[List, Dict] = _UNDEFINED) \
         -> Union[List, Dict]:
     """Load JSON data from a file and return as dict or list.
@@ -41,13 +49,11 @@ def save_json(filename: str, data: Union[List, Dict]):
         data = json.dumps(data, sort_keys=True, indent=4)
         with open(filename, 'w', encoding='utf-8') as fdesc:
             fdesc.write(data)
-            return True
     except TypeError as error:
         _LOGGER.exception('Failed to serialize to JSON: %s',
                           filename)
-        raise HomeAssistantError(error)
+        raise SerializationError(error)
     except OSError as error:
         _LOGGER.exception('Saving JSON file failed: %s',
                           filename)
-        raise HomeAssistantError(error)
-    return False
+        raise WriteError(error)

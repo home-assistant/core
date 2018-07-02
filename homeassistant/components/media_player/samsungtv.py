@@ -4,6 +4,7 @@ Support for interface with an Samsung TV.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.samsungtv/
 """
+import asyncio
 import logging
 import socket
 from datetime import timedelta
@@ -15,8 +16,9 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_TURN_ON)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_PLAY,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_PLAY_MEDIA,
+    MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_CHANNEL)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT,
     CONF_MAC)
@@ -32,12 +34,13 @@ CONF_TIMEOUT = 'timeout'
 DEFAULT_NAME = 'Samsung TV Remote'
 DEFAULT_PORT = 55000
 DEFAULT_TIMEOUT = 0
+KEY_PRESS_TIMEOUT = 1.2
 
 KNOWN_DEVICES_KEY = 'samsungtv_known_devices'
 
 SUPPORT_SAMSUNGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
     SUPPORT_VOLUME_MUTE | SUPPORT_PREVIOUS_TRACK | \
-    SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | SUPPORT_PLAY
+    SUPPORT_NEXT_TRACK | SUPPORT_TURN_OFF | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -255,6 +258,23 @@ class SamsungTVDevice(MediaPlayerDevice):
     def media_previous_track(self):
         """Send the previous track command."""
         self.send_key('KEY_REWIND')
+
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Support changing a channel."""
+        if media_type != MEDIA_TYPE_CHANNEL:
+            _LOGGER.error('Unsupported media type')
+            return
+
+        # media_id should only be a channel number
+        try:
+            cv.positive_int(media_id)
+        except vol.Invalid:
+            _LOGGER.error('Media ID must be positive integer')
+            return
+
+        for digit in media_id:
+            await self.hass.async_add_job(self.send_key, 'KEY_' + digit)
+            await asyncio.sleep(KEY_PRESS_TIMEOUT, self.hass.loop)
 
     def turn_on(self):
         """Turn the media player on."""

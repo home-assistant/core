@@ -147,7 +147,6 @@ class TadoSensor(Entity):
 
         unit = TEMP_CELSIUS
 
-        # pylint: disable=R0912
         if self.zone_variable == 'temperature':
             if 'sensorDataPoints' in data:
                 sensor_data = data['sensorDataPoints']

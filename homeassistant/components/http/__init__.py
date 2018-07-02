@@ -40,33 +40,29 @@ CONF_SERVER_HOST = 'server_host'
 CONF_SERVER_PORT = 'server_port'
 CONF_BASE_URL = 'base_url'
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
+CONF_SSL_PEER_CERTIFICATE = 'ssl_peer_certificate'
 CONF_SSL_KEY = 'ssl_key'
 CONF_CORS_ORIGINS = 'cors_allowed_origins'
 CONF_USE_X_FORWARDED_FOR = 'use_x_forwarded_for'
+CONF_TRUSTED_PROXIES = 'trusted_proxies'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
 
 # TLS configuration follows the best-practice guidelines specified here:
 # https://wiki.mozilla.org/Security/Server_Side_TLS
-# Intermediate guidelines are followed.
-SSL_VERSION = ssl.PROTOCOL_SSLv23
-SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3
+# Modern guidelines are followed.
+SSL_VERSION = ssl.PROTOCOL_TLS  # pylint: disable=no-member
+SSL_OPTS = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | \
+           ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1 | \
+           ssl.OP_CIPHER_SERVER_PREFERENCE
 if hasattr(ssl, 'OP_NO_COMPRESSION'):
     SSL_OPTS |= ssl.OP_NO_COMPRESSION
-CIPHERS = "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
+CIPHERS = "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:" \
+          "ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:" \
           "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:" \
-          "ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:" \
-          "DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384:" \
-          "ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256:" \
-          "ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:" \
-          "ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES256-SHA384:" \
-          "ECDHE-ECDSA-AES256-SHA:ECDHE-RSA-AES256-SHA:" \
-          "DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-RSA-AES256-SHA256:" \
-          "DHE-RSA-AES256-SHA:ECDHE-ECDSA-DES-CBC3-SHA:" \
-          "ECDHE-RSA-DES-CBC3-SHA:EDH-RSA-DES-CBC3-SHA:AES128-GCM-SHA256:" \
-          "AES256-GCM-SHA384:AES128-SHA256:AES256-SHA256:AES128-SHA:" \
-          "AES256-SHA:DES-CBC3-SHA:!DSS"
+          "ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:" \
+          "ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,10 +76,13 @@ HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_BASE_URL): cv.string,
     vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
+    vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
     vol.Optional(CONF_SSL_KEY): cv.isfile,
     vol.Optional(CONF_CORS_ORIGINS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
+    vol.Optional(CONF_TRUSTED_PROXIES, default=[]):
+        vol.All(cv.ensure_list, [ip_network]),
     vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
         vol.All(cv.ensure_list, [ip_network]),
     vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
@@ -108,9 +107,11 @@ async def async_setup(hass, config):
     server_host = conf[CONF_SERVER_HOST]
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
+    ssl_peer_certificate = conf.get(CONF_SSL_PEER_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf[CONF_CORS_ORIGINS]
     use_x_forwarded_for = conf[CONF_USE_X_FORWARDED_FOR]
+    trusted_proxies = conf[CONF_TRUSTED_PROXIES]
     trusted_networks = conf[CONF_TRUSTED_NETWORKS]
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
@@ -125,9 +126,11 @@ async def async_setup(hass, config):
         server_port=server_port,
         api_password=api_password,
         ssl_certificate=ssl_certificate,
+        ssl_peer_certificate=ssl_peer_certificate,
         ssl_key=ssl_key,
         cors_origins=cors_origins,
         use_x_forwarded_for=use_x_forwarded_for,
+        trusted_proxies=trusted_proxies,
         trusted_networks=trusted_networks,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled
@@ -166,21 +169,37 @@ async def async_setup(hass, config):
 class HomeAssistantHTTP(object):
     """HTTP server for Home Assistant."""
 
-    def __init__(self, hass, api_password, ssl_certificate,
+    def __init__(self, hass, api_password,
+                 ssl_certificate, ssl_peer_certificate,
                  ssl_key, server_host, server_port, cors_origins,
-                 use_x_forwarded_for, trusted_networks,
+                 use_x_forwarded_for, trusted_proxies, trusted_networks,
                  login_threshold, is_ban_enabled):
         """Initialize the HTTP Home Assistant server."""
         app = self.app = web.Application(
             middlewares=[staticresource_middleware])
 
         # This order matters
-        setup_real_ip(app, use_x_forwarded_for)
+        setup_real_ip(app, use_x_forwarded_for, trusted_proxies)
 
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
 
-        setup_auth(app, trusted_networks, api_password)
+        if hass.auth.active:
+            if hass.auth.support_legacy:
+                _LOGGER.warning("Experimental auth api enabled and "
+                                "legacy_api_password support enabled. Please "
+                                "use access_token instead api_password, "
+                                "although you can still use legacy "
+                                "api_password")
+            else:
+                _LOGGER.warning("Experimental auth api enabled. Please use "
+                                "access_token instead api_password.")
+        elif api_password is None:
+            _LOGGER.warning("You have been advised to set http.api_password.")
+
+        setup_auth(app, trusted_networks, hass.auth.active,
+                   support_legacy=hass.auth.support_legacy,
+                   api_password=api_password)
 
         if cors_origins:
             setup_cors(app, cors_origins)
@@ -190,6 +209,7 @@ class HomeAssistantHTTP(object):
         self.hass = hass
         self.api_password = api_password
         self.ssl_certificate = ssl_certificate
+        self.ssl_peer_certificate = ssl_peer_certificate
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
@@ -287,8 +307,12 @@ class HomeAssistantHTTP(object):
             except OSError as error:
                 _LOGGER.error("Could not read SSL certificate from %s: %s",
                               self.ssl_certificate, error)
-                context = None
                 return
+
+            if self.ssl_peer_certificate:
+                context.verify_mode = ssl.CERT_REQUIRED
+                context.load_verify_locations(cafile=self.ssl_peer_certificate)
+
         else:
             context = None
 

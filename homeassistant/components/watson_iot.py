@@ -4,7 +4,6 @@ A component which allows you to send data to the IBM Watson IoT Platform.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/watson_iot/
 """
-
 import logging
 import queue
 import threading
@@ -13,8 +12,8 @@ import time
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_INCLUDE,
-    CONF_TOKEN, CONF_TYPE, EVENT_STATE_CHANGED, EVENT_HOMEASSISTANT_STOP,
+    CONF_DOMAINS, CONF_ENTITIES, CONF_EXCLUDE, CONF_ID, CONF_INCLUDE,
+    CONF_TOKEN, CONF_TYPE, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
     STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
@@ -24,12 +23,12 @@ REQUIREMENTS = ['ibmiotf==0.3.4']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ORG = 'organization'
-CONF_ID = 'id'
 
 DOMAIN = 'watson_iot'
 
-RETRY_DELAY = 20
 MAX_TRIES = 3
+
+RETRY_DELAY = 20
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(vol.Schema({
@@ -103,7 +102,7 @@ def setup(hass, config):
             },
             'time': event.time_fired.isoformat(),
             'fields': {
-                'state': state.state
+                'state': state.state,
             }
         }
         if _state_as_value is not None:
@@ -113,7 +112,7 @@ def setup(hass, config):
             if key != 'unit_of_measurement':
                 # If the key is already in fields
                 if key in out_event['fields']:
-                    key = key + "_"
+                    key = '{}_'.format(key)
                 # For each value we try to cast it as float
                 # But if we can not do it we store the value
                 # as string
@@ -153,7 +152,7 @@ class WatsonIOTThread(threading.Thread):
         hass.bus.listen(EVENT_STATE_CHANGED, self._event_listener)
 
     def _event_listener(self, event):
-        """Listen for new messages on the bus and queue them for Watson IOT."""
+        """Listen for new messages on the bus and queue them for Watson IoT."""
         item = (time.monotonic(), event)
         self.queue.put(item)
 
@@ -191,7 +190,7 @@ class WatsonIOTThread(threading.Thread):
                             field, 'json', value)
                     if not device_success:
                         _LOGGER.error(
-                            "Failed to publish message to watson iot")
+                            "Failed to publish message to Watson IoT")
                         continue
                     break
                 except (ibmiotf.MissingMessageEncoderException, IOError):
@@ -199,7 +198,7 @@ class WatsonIOTThread(threading.Thread):
                         time.sleep(RETRY_DELAY)
                     else:
                         _LOGGER.exception(
-                            "Failed to publish message to watson iot")
+                            "Failed to publish message to Watson IoT")
 
     def run(self):
         """Process incoming events."""
