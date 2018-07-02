@@ -13,9 +13,9 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_ALTITUDE, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
-    ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE,
-    LENGTH_KILOMETERS, LENGTH_METERS, CONF_ALTITUDE)
+    CONF_ALTITUDE, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE,
+    CONF_RADIUS, ATTR_ATTRIBUTION, ATTR_LATITUDE,
+    ATTR_LONGITUDE, LENGTH_KILOMETERS, LENGTH_METERS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import distance as util_distance
 from homeassistant.util import location as util_location
