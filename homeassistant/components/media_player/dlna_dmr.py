@@ -562,7 +562,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
     @requires_action('AVT', 'SetAVTransportURI')
     async def async_play_media(self, action, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        # pylint: disable=arguments-differ
+        # pylint: disable=arguments-differ,unused-variable
 
         # queue media
         meta_data = await self._construct_play_media_metadata(media_type,
