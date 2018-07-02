@@ -11,3 +11,6 @@ DATA_DECONZ_UNSUB = 'deconz_dispatchers'
 
 CONF_ALLOW_CLIP_SENSOR = 'allow_clip_sensor'
 CONF_ALLOW_DECONZ_GROUPS = 'allow_deconz_groups'
+
+ATTR_DARK = 'dark'
+ATTR_ON = 'on'
