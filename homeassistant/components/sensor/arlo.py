@@ -155,13 +155,13 @@ class ArloSensor(Entity):
         elif self._sensor_type == 'battery_level':
             try:
                 self._state = self._data.battery_level
-            except (AttributeError, TypeError):
+            except TypeError:
                 self._state = None
 
         elif self._sensor_type == 'signal_strength':
             try:
                 self._state = self._data.signal_strength
-            except (AttributeError, TypeError):
+            except TypeError:
                 self._state = None
 
         elif self._sensor_type == 'temperature':
