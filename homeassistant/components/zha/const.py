@@ -4,6 +4,7 @@ DEVICE_CLASS = {}
 SINGLE_INPUT_CLUSTER_DEVICE_CLASS = {}
 SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS = {}
 COMPONENT_CLUSTERS = {}
+REMOTE_DEVICE_TYPES = {}
 
 
 def populate_data():
@@ -16,18 +17,20 @@ def populate_data():
     from zigpy.profiles import PROFILES, zha, zll
 
     DEVICE_CLASS[zha.PROFILE_ID] = {
-        zha.DeviceType.ON_OFF_SWITCH: 'binary_sensor',
-        zha.DeviceType.LEVEL_CONTROL_SWITCH: 'binary_sensor',
-        zha.DeviceType.REMOTE_CONTROL: 'binary_sensor',
+        zha.DeviceType.ON_OFF_OUTPUT: 'binary_sensor',
         zha.DeviceType.SMART_PLUG: 'switch',
-
         zha.DeviceType.ON_OFF_LIGHT: 'light',
         zha.DeviceType.DIMMABLE_LIGHT: 'light',
         zha.DeviceType.COLOR_DIMMABLE_LIGHT: 'light',
-        zha.DeviceType.ON_OFF_LIGHT_SWITCH: 'binary_sensor',
-        zha.DeviceType.DIMMER_SWITCH: 'binary_sensor',
-        zha.DeviceType.COLOR_DIMMER_SWITCH: 'binary_sensor',
     }
+    REMOTE_DEVICE_TYPES[zha.PROFILE_ID] = [
+        zha.DeviceType.ON_OFF_SWITCH,
+        zha.DeviceType.LEVEL_CONTROL_SWITCH,
+        zha.DeviceType.REMOTE_CONTROL,
+        zha.DeviceType.ON_OFF_LIGHT_SWITCH,
+        zha.DeviceType.DIMMER_SWITCH,
+        zha.DeviceType.COLOR_DIMMER_SWITCH,
+    ]
     DEVICE_CLASS[zll.PROFILE_ID] = {
         zll.DeviceType.ON_OFF_LIGHT: 'light',
         zll.DeviceType.ON_OFF_PLUGIN_UNIT: 'switch',
@@ -36,13 +39,14 @@ def populate_data():
         zll.DeviceType.COLOR_LIGHT: 'light',
         zll.DeviceType.EXTENDED_COLOR_LIGHT: 'light',
         zll.DeviceType.COLOR_TEMPERATURE_LIGHT: 'light',
-        zll.DeviceType.COLOR_CONTROLLER: 'binary_sensor',
-        zll.DeviceType.COLOR_SCENE_CONTROLLER: 'binary_sensor',
-        zll.DeviceType.CONTROLLER: 'binary_sensor',
-        zll.DeviceType.SCENE_CONTROLLER: 'binary_sensor',
-        zll.DeviceType.ON_OFF_SENSOR: 'binary_sensor',
     }
-
+    REMOTE_DEVICE_TYPES[zll.PROFILE_ID] = [
+        zll.DeviceType.COLOR_CONTROLLER,
+        zll.DeviceType.COLOR_SCENE_CONTROLLER,
+        zll.DeviceType.CONTROLLER,
+        zll.DeviceType.SCENE_CONTROLLER,
+        zll.DeviceType.ON_OFF_SENSOR,
+    ]
     SINGLE_INPUT_CLUSTER_DEVICE_CLASS.update({
         zcl.clusters.general.OnOff: 'switch',
         zcl.clusters.measurement.RelativeHumidity: 'sensor',

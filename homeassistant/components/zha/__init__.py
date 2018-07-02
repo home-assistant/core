@@ -229,18 +229,34 @@ class ApplicationListener:
                 discovery_info.update(discovered_info)
                 self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
 
-                from zigpy.zcl.clusters.general import OnOff
-                if component == 'binary_sensor' and OnOff.cluster_id in \
-                        discovery_info['out_clusters']:
+                await discovery.async_load_platform(
+                    self._hass,
+                    component,
+                    DOMAIN,
+                    {'discovery_key': device_key},
+                    self._config,
+                )
+            else:
+                if endpoint.device_type in zha_const.REMOTE_DEVICE_TYPES.get(
+                        endpoint.profile_id, {}):
+                    profile_clusters = profile.CLUSTERS[endpoint.device_type]
+                    in_clusters = [endpoint.in_clusters[c]
+                                   for c in profile_clusters[0]
+                                   if c in endpoint.in_clusters]
+                    out_clusters = [endpoint.out_clusters[c]
+                                    for c in profile_clusters[1]
+                                    if c in endpoint.out_clusters]
+                    discovery_info = {
+                        'application_listener': self,
+                        'endpoint': endpoint,
+                        'in_clusters': {c.cluster_id: c for c in in_clusters},
+                        'out_clusters': {c.cluster_id: c for c in
+                                         out_clusters},
+                        'new_join': join,
+                        'unique_id': device_key,
+                    }
+                    discovery_info.update(discovered_info)
                     await self._async_setup_remote(discovery_info)
-                else:
-                    await discovery.async_load_platform(
-                        self._hass,
-                        component,
-                        DOMAIN,
-                        {'discovery_key': device_key},
-                        self._config,
-                    )
 
             for cluster in endpoint.in_clusters.values():
                 await self._attempt_single_cluster_device(
@@ -301,18 +317,13 @@ class ApplicationListener:
         discovery_info.update(entity_info)
         self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
 
-        from zigpy.zcl.clusters.general import OnOff
-        if component == 'binary_sensor' and OnOff.cluster_id == \
-                cluster.cluster_id:
-            await self._async_setup_remote(discovery_info)
-        else:
-            await discovery.async_load_platform(
-                self._hass,
-                component,
-                DOMAIN,
-                {'discovery_key': cluster_key},
-                self._config,
-            )
+        await discovery.async_load_platform(
+            self._hass,
+            component,
+            DOMAIN,
+            {'discovery_key': cluster_key},
+            self._config,
+        )
 
     async def _async_setup_remote(self, discovery_info):
 
