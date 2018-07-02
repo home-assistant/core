@@ -11,7 +11,6 @@ from numbers import Number
 from functools import partial
 from copy import copy
 from datetime import timedelta
-import math
 
 import voluptuous as vol
 
@@ -55,8 +54,6 @@ DEFAULT_WINDOW_SIZE = 1
 DEFAULT_PRECISION = 2
 DEFAULT_FILTER_RADIUS = 2.0
 DEFAULT_FILTER_TIME_CONSTANT = 10
-DEFAULT_LOWER_BOUND = -math.inf
-DEFAULT_UPPER_BOUND = math.inf
 
 NAME_TEMPLATE = "{} filter"
 ICON = 'mdi:chart-line-variant'
@@ -85,10 +82,8 @@ FILTER_LOWPASS_SCHEMA = FILTER_SCHEMA.extend({
 
 FILTER_RANGE_SCHEMA = FILTER_SCHEMA.extend({
     vol.Required(CONF_FILTER_NAME): FILTER_NAME_RANGE,
-    vol.Optional(CONF_FILTER_LOWER_BOUND,
-                 default=DEFAULT_LOWER_BOUND): vol.Coerce(float),
-    vol.Optional(CONF_FILTER_UPPER_BOUND,
-                 default=DEFAULT_UPPER_BOUND): vol.Coerce(float),
+    vol.Optional(CONF_FILTER_LOWER_BOUND): vol.Coerce(float),
+    vol.Optional(CONF_FILTER_UPPER_BOUND): vol.Coerce(float),
 })
 
 FILTER_TIME_SMA_SCHEMA = FILTER_SCHEMA.extend({
@@ -353,7 +348,7 @@ class RangeFilter(Filter):
     """
 
     def __init__(self, entity,
-                 lower_bound, upper_bound):
+                 lower_bound=None, upper_bound=None):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_RANGE, entity=entity)
         self._lower_bound = lower_bound
@@ -362,7 +357,7 @@ class RangeFilter(Filter):
 
     def _filter_state(self, new_state):
         """Implement the range filter."""
-        if new_state.state > self._upper_bound:
+        if self._upper_bound and new_state.state > self._upper_bound:
 
             self._stats_internal['erasures_up'] += 1
 
@@ -371,7 +366,7 @@ class RangeFilter(Filter):
                           self._entity, new_state)
             new_state.state = self._upper_bound
 
-        elif new_state.state < self._lower_bound:
+        elif self._lower_bound and new_state.state < self._lower_bound:
 
             self._stats_internal['erasures_low'] += 1
 
