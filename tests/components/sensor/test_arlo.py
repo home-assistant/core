@@ -1,7 +1,7 @@
 """The tests for the Netgear Arlo sensors."""
 import asyncio
-import unittest
 from collections import namedtuple
+import unittest
 from unittest import mock
 from unittest.mock import patch, MagicMock
 from homeassistant.const import (
@@ -11,8 +11,6 @@ from homeassistant.components.arlo import DATA_ARLO
 from homeassistant.helpers import dispatcher
 from tests.common import get_test_home_assistant
 
-TEST_USERNAME = 'test@domain.com'
-TEST_PASSWORD = 'password'
 
 class TestArloSensor(unittest.TestCase):
     """Test Netgear Arlo sensors."""
@@ -70,7 +68,8 @@ class TestArloSensor(unittest.TestCase):
         self.assertEqual(sensor.name, 'Last')
 
     @asyncio.coroutine
-    @patch('homeassistant.helpers.dispatcher.async_dispatcher_connect', MagicMock())
+    @patch('homeassistant.helpers.dispatcher.async_dispatcher_connect',
+           MagicMock())
     async def test_async_added_to_hass(self):
         """Test dispatcher called when added."""
         sensor = TestArloSensor._get_mock_sensor()
@@ -88,7 +87,10 @@ class TestArloSensor(unittest.TestCase):
             'battery_level': 50
         })
 
-        sensor = TestArloSensor._get_mock_sensor('Battery Level', 'battery_level', data)
+        sensor = TestArloSensor._get_mock_sensor(
+            'Battery Level',
+            'battery_level',
+            data)
         self.assertEqual(sensor.icon, 'mdi:battery-50')
 
     def test_sensor_icon(self):
@@ -100,7 +102,9 @@ class TestArloSensor(unittest.TestCase):
         """Test the unit_of_measurement property."""
         sensor = TestArloSensor._get_mock_sensor()
         self.assertIsNone(sensor.unit_of_measurement)
-        sensor = TestArloSensor._get_mock_sensor('Battery Level', 'battery_level')
+        sensor = TestArloSensor._get_mock_sensor(
+            'Battery Level',
+            'battery_level')
         self.assertEqual(sensor.unit_of_measurement, '%')
 
     def test_device_class(self):
@@ -117,7 +121,10 @@ class TestArloSensor(unittest.TestCase):
         data = TestArloSensor._get_named_tuple({
             'cameras': [0, 0]
         })
-        sensor = TestArloSensor._get_mock_sensor('Arlo Cameras', 'total_cameras', data)
+        sensor = TestArloSensor._get_mock_sensor(
+            'Arlo Cameras',
+            'total_cameras',
+            data)
         sensor.update()
         self.assertEqual(sensor.state, 2)
 
@@ -126,7 +133,10 @@ class TestArloSensor(unittest.TestCase):
         data = TestArloSensor._get_named_tuple({
             'captured_today': [0, 0, 0, 0, 0]
         })
-        sensor = TestArloSensor._get_mock_sensor('Captured Today', 'captured_today', data)
+        sensor = TestArloSensor._get_mock_sensor(
+            'Captured Today',
+            'captured_today',
+            data)
         sensor.update()
         self.assertEqual(sensor.state, 5)
 
@@ -153,6 +163,8 @@ class TestArloSensor(unittest.TestCase):
         })
         sensor = TestArloSensor._get_mock_sensor('test', 'humidity', data)
         attrs = sensor.device_state_attributes
-        self.assertEqual(attrs.get(ATTR_ATTRIBUTION), 'Data provided by arlo.netgear.com')
+        self.assertEqual(
+            attrs.get(ATTR_ATTRIBUTION),
+            'Data provided by arlo.netgear.com')
         self.assertEqual(attrs.get('brand'), 'Netgear Arlo')
         self.assertEqual(attrs.get('model'), 'ABC1000')
