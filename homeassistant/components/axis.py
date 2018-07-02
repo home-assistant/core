@@ -188,7 +188,7 @@ def setup(hass, config):
 
     def vapix_service(call):
         """Service to send a message."""
-        for _, device in AXIS_DEVICES.items():
+        for device in AXIS_DEVICES.values():
             if device.name == call.data[CONF_NAME]:
                 response = device.vapix.do_request(
                     call.data[SERVICE_CGI],
