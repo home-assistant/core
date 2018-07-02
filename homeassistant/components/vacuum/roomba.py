@@ -284,7 +284,7 @@ class RoombaVacuum(VacuumDevice):
         software_version = state.get('softwareVer')
 
         # Error message in plain english
-        error_msg = "None"
+        error_msg = 'None'
         if hasattr(self.vacuum, 'error_message'):
             error_msg = self.vacuum.error_message
 
