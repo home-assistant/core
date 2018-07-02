@@ -2,7 +2,6 @@
 import asyncio
 from collections import namedtuple
 import unittest
-from unittest import mock
 from unittest.mock import patch, MagicMock
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY, ATTR_ATTRIBUTION)
@@ -45,7 +44,7 @@ class TestArloSensor(unittest.TestCase):
 
     def test_setup_with_valid_data(self):
         """Test setup_platform with valid data."""
-        add_devices = mock.MagicMock()
+        add_devices = MagicMock()
         config = {
             'monitored_conditions': [
                 'last_capture',
