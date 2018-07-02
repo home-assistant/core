@@ -19,6 +19,13 @@
             "link": {
                 "description": "Ontgrendel je deCONZ gateway om te registreren met Home Assistant.\n\n1. Ga naar deCONZ systeeminstellingen\n2. Druk op de knop \"Gateway ontgrendelen\"",
                 "title": "Koppel met deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Sta het importeren van virtuele sensoren toe",
+                    "allow_deconz_groups": "Sta de import van deCONZ-groepen toe"
+                },
+                "title": "Extra configuratieopties voor deCONZ"
             }
         },
         "title": "deCONZ"
