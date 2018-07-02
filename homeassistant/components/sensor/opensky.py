@@ -10,12 +10,10 @@ from datetime import timedelta
 import requests
 import voluptuous as vol
 
-import math
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
+    CONF_ALTITUDE, CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS,
     ATTR_ATTRIBUTION, ATTR_LATITUDE, ATTR_LONGITUDE,
     LENGTH_KILOMETERS, LENGTH_METERS, CONF_ALTITUDE)
 from homeassistant.helpers.entity import Entity
