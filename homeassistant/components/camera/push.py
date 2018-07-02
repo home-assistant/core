@@ -14,7 +14,8 @@ from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
     STATE_IDLE, STATE_RECORDING
 from homeassistant.core import callback
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import CONF_NAME, CONF_TIMEOUT, HTTP_BAD_REQUEST
+from homeassistant.const import CONF_NAME, CONF_TIMEOUT, CONF_FORCE_UPDATE,\
+    HTTP_BAD_REQUEST
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
@@ -25,6 +26,7 @@ CONF_BUFFER_SIZE = 'cache'
 CONF_IMAGE_FIELD = 'field'
 
 DEFAULT_NAME = "Push Camera"
+DEFAULT_FORCE_UPDATE = False
 
 ATTR_FILENAME = 'filename'
 ATTR_LAST_TRIP = 'last_trip'
@@ -34,6 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_BUFFER_SIZE, default=1): cv.positive_int,
     vol.Optional(CONF_TIMEOUT, default=timedelta(seconds=5)): vol.All(
         cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_IMAGE_FIELD, default='image'): cv.string,
 })
 
@@ -43,7 +46,8 @@ async def async_setup_platform(hass, config, async_add_devices,
     """Set up the Push Camera platform."""
     cameras = [PushCamera(config[CONF_NAME],
                           config[CONF_BUFFER_SIZE],
-                          config[CONF_TIMEOUT])]
+                          config[CONF_TIMEOUT],
+                          config[CONF_FORCE_UPDATE])]
 
     hass.http.register_view(CameraPushReceiver(cameras,
                                                config[CONF_IMAGE_FIELD]))
@@ -89,7 +93,7 @@ class CameraPushReceiver(HomeAssistantView):
 class PushCamera(Camera):
     """The representation of a Push camera."""
 
-    def __init__(self, name, buffer_size, timeout):
+    def __init__(self, name, buffer_size, timeout, force_update):
         """Initialize push camera component."""
         super().__init__()
         self._name = name
@@ -100,18 +104,26 @@ class PushCamera(Camera):
         self._timeout = timeout
         self.queue = deque([], buffer_size)
         self._current_image = None
+        self._force_update = force_update
 
     @property
     def state(self):
         """Current state of the camera."""
         return self._state
 
+    @property
+    def force_update(self):
+        """Force update."""
+        return self._force_update
+
     async def update_image(self, image, filename):
         """Update the camera image."""
+        _first_image = False
         if self._state == STATE_IDLE:
             self._state = STATE_RECORDING
             self._last_trip = dt_util.utcnow()
             self.queue.clear()
+            _first_image = True
 
         self._filename = filename
         self.queue.appendleft(image)
@@ -130,7 +142,8 @@ class PushCamera(Camera):
         self._expired_listener = async_track_point_in_utc_time(
             self.hass, reset_state, dt_util.utcnow() + self._timeout)
 
-        self.async_schedule_update_ha_state()
+        if self.force_update or _first_image:
+            self.async_schedule_update_ha_state()
 
     async def async_camera_image(self):
         """Return a still image response."""
