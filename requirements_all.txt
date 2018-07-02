@@ -783,7 +783,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==39
+pydeconz==42
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
