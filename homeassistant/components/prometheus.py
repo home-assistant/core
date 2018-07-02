@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 from aiohttp import web
 
+from homeassistant.components.climate import ATTR_CURRENT_TEMPERATURE
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     EVENT_STATE_CHANGED, TEMP_FAHRENHEIT, CONTENT_TYPE_TEXT_PLAIN,
@@ -179,6 +180,15 @@ class PrometheusMetrics(object):
                 'temperature_c', self.prometheus_client.Gauge,
                 'Temperature in degrees Celsius')
             metric.labels(**self._labels(state)).set(temp)
+
+        current_temp = state.attributes.get(ATTR_CURRENT_TEMPERATURE)
+        if current_temp:
+            if unit == TEMP_FAHRENHEIT:
+                current_temp = fahrenheit_to_celsius(current_temp)
+            metric = self._metric(
+                'current_temperature_c', self.prometheus_client.Gauge,
+                'Current Temperature in degrees Celsius')
+            metric.labels(**self._labels(state)).set(current_temp)
 
         metric = self._metric(
             'climate_state', self.prometheus_client.Gauge,
