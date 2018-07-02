@@ -62,7 +62,8 @@ class DeconzBinarySensor(BinarySensorDevice):
         """
         if reason['state'] or \
            'reachable' in reason['attr'] or \
-           'battery' in reason['attr']:
+           'battery' in reason['attr'] or \
+           'on' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property
