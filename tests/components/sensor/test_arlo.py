@@ -42,9 +42,14 @@ class TestArloSensor(unittest.TestCase):
         result = arlo.setup_platform(self.hass, None, None)
         self.assertEqual(result, False)
 
+    sensors = None
+
+    def _add_devices(self, sensors, boolean):
+        if boolean:
+            self.sensors = sensors
+
     def test_setup_with_valid_data(self):
         """Test setup_platform with valid data."""
-        add_devices = MagicMock()
         config = {
             'monitored_conditions': [
                 'last_capture',
@@ -57,9 +62,20 @@ class TestArloSensor(unittest.TestCase):
                 'air_quality'
             ]
         }
-        self.hass.data[DATA_ARLO] = MagicMock()
-        arlo.setup_platform(self.hass, config, add_devices)
-        add_devices.assert_called_once()
+
+        self.hass.data[DATA_ARLO] = self._get_named_tuple({
+            'cameras': [self._get_named_tuple({
+                'name': 'Camera',
+                'model_id': 'ABC1000'
+            })],
+            'base_stations': [self._get_named_tuple({
+                'name': 'Base Station',
+                'model_id': 'ABC1000'
+            })]
+        })
+
+        arlo.setup_platform(self.hass, config, self._add_devices)
+        self.assertEqual(len(self.sensors), 8)
 
     def test_sensor_name(self):
         """Test the name property."""
