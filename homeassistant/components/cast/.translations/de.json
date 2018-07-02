@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "Keine Google Cast Ger\u00e4te im Netzwerk gefunden."
+        },
+        "step": {
+            "confirm": {
+                "description": "M\u00f6chten Sie Google Cast einrichten?",
+                "title": ""
+            }
+        },
+        "title": ""
+    }
+}
