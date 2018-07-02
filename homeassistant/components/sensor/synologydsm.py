@@ -13,15 +13,16 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
-    TEMP_CELSIUS, CONF_MONITORED_CONDITIONS, EVENT_HOMEASSISTANT_START,
-    CONF_DISKS)
+    ATTR_ATTRIBUTION, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS,
+    EVENT_HOMEASSISTANT_START, CONF_DISKS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-synology==0.1.1']
+REQUIREMENTS = ['python-synology==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = 'Data provided by Synology'
 CONF_VOLUMES = 'volumes'
 DEFAULT_NAME = 'Synology DSM'
 DEFAULT_PORT = 5000
@@ -188,6 +189,13 @@ class SynoNasSensor(Entity):
         """Get the latest data for the states."""
         if self._api is not None:
             self._api.update()
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+        }
 
 
 class SynoNasUtilSensor(SynoNasSensor):
