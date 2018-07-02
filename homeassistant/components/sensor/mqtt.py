@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.mqtt/
 """
 import logging
-import json
 from datetime import timedelta
 from typing import Optional
 
@@ -25,11 +24,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
+from homeassistant.helpers.json_attributes import (
+    CONF_JSON_ATTRS, JSON_ATTRS_VALIDATION, extract_json_attrs)
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_EXPIRE_AFTER = 'expire_after'
-CONF_JSON_ATTRS = 'json_attributes'
 CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Sensor'
@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_ICON): cv.icon,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
+    vol.Optional(CONF_JSON_ATTRS, default=[]): JSON_ATTRS_VALIDATION,
     vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     # Integrations shouldn't never expose unique_id through configuration
@@ -126,18 +126,8 @@ class MqttSensor(MqttAvailability, Entity):
                     self.hass, self.value_is_expired, expiration_at)
 
             if self._json_attributes:
-                self._attributes = {}
-                try:
-                    json_dict = json.loads(payload)
-                    if isinstance(json_dict, dict):
-                        attrs = {k: json_dict[k] for k in
-                                 self._json_attributes & json_dict.keys()}
-                        self._attributes = attrs
-                    else:
-                        _LOGGER.warning("JSON result was not a dictionary")
-                except ValueError:
-                    _LOGGER.warning("MQTT payload could not be parsed as JSON")
-                    _LOGGER.debug("Erroneous JSON: %s", payload)
+                self._attributes = extract_json_attrs(self._json_attributes,
+                                                      payload)
 
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
