@@ -64,7 +64,7 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
             station_info = await self.hass.async_add_job(self.device.status)
             _LOGGER.debug("Got new station info: %s", station_info)
 
-            for device in station_info['mat']:
+            for device in station_info.associated_stations:
                 devices.append(device['mac'])
 
         except DeviceException as ex:
