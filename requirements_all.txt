@@ -429,9 +429,6 @@ http://github.com/tgaugry/suds-passworddigest-py3/archive/86fc50e39b4d2b89974819
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
 
-# homeassistant.components.media_player.lg_netcast
-https://github.com/wokar/pylgnetcast/archive/v0.2.0.zip#pylgnetcast==0.2.0
-
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
 
@@ -880,6 +877,9 @@ pylacrosse==0.3.1
 
 # homeassistant.components.sensor.lastfm
 pylast==2.3.0
+
+# homeassistant.components.media_player.lg_netcast
+pylgnetcast-homeassistant==0.2.0.dev0
 
 # homeassistant.components.media_player.webostv
 # homeassistant.components.notify.webostv
