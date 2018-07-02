@@ -17,8 +17,7 @@ from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['https://github.com/jabesq/pybotvac/archive/v0.0.5.zip'
-                '#pybotvac==0.0.5']
+REQUIREMENTS = ['pybotvac==0.0.7']
 
 DOMAIN = 'neato'
 NEATO_ROBOTS = 'neato_robots'
@@ -55,7 +54,12 @@ ACTION = {
     7: 'Updating...',
     8: 'Copying logs...',
     9: 'Calculating position...',
-    10: 'IEC test'
+    10: 'IEC test',
+    11: 'Map cleaning',
+    12: 'Exploring map (creating a persistent map)',
+    13: 'Acquiring Persistent Map IDs',
+    14: 'Creating & Uploading Map',
+    15: 'Suspended Exploration'
 }
 
 ERRORS = {
@@ -71,12 +75,30 @@ ERRORS = {
     'ui_error_navigation_pathproblems_returninghome': 'Cannot return to base',
     'ui_error_navigation_falling': 'Clear my path',
     'ui_error_picked_up': 'Picked up',
-    'ui_error_stuck': 'Stuck!'
+    'ui_error_stuck': 'Stuck!',
+    'dustbin_full': 'Dust bin full',
+    'dustbin_missing': 'Dust bin missing',
+    'maint_brush_stuck': 'Brush stuck',
+    'maint_brush_overload': 'Brush overloaded',
+    'maint_bumper_stuck': 'Bumper stuck',
+    'maint_vacuum_stuck': 'Vacuum is stuck',
+    'maint_left_drop_stuck': 'Vacuum is stuck',
+    'maint_left_wheel_stuck': 'Vacuum is stuck',
+    'maint_right_drop_stuck': 'Vacuum is stuck',
+    'maint_right_wheel_stuck': 'Vacuum is stuck',
+    'not_on_charge_base': 'Not on the charge base',
+    'nav_robot_falling': 'Clear my path',
+    'nav_no_path': 'Clear my path',
+    'nav_path_problem': 'Clear my path'
 }
 
 ALERTS = {
     'ui_alert_dust_bin_full': 'Please empty dust bin',
-    'ui_alert_recovering_location': 'Returning to start'
+    'ui_alert_recovering_location': 'Returning to start',
+    'dustbin_full': 'Please empty dust bin',
+    'maint_brush_change': 'Change the brush',
+    'maint_filter_change': 'Change the filter',
+    'clean_completed_to_start': 'Cleaning completed'
 }
 
 
@@ -122,7 +144,7 @@ class NeatoHub(object):
             _LOGGER.error("Unable to connect to Neato API")
             return False
 
-    @Throttle(timedelta(seconds=1))
+    @Throttle(timedelta(seconds=300))
     def update_robots(self):
         """Update the robot states."""
         _LOGGER.debug("Running HUB.update_robots %s",

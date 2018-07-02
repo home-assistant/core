@@ -5,15 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.zwave/
 """
 # Because we do not compile openzwave on CI
-# pylint: disable=import-error
 import logging
 from homeassistant.components.climate import (
-    DOMAIN, ClimateDevice, SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
+    DOMAIN, ClimateDevice, STATE_AUTO, STATE_COOL, STATE_HEAT,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
 from homeassistant.const import (
-    TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
+    STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +30,15 @@ WORKAROUND_ZXT_120 = 'zxt_120'
 
 DEVICE_MAPPINGS = {
     REMOTEC_ZXT_120_THERMOSTAT: WORKAROUND_ZXT_120
+}
+
+STATE_MAPPINGS = {
+    'Off': STATE_OFF,
+    'Heat': STATE_HEAT,
+    'Heat Mode': STATE_HEAT,
+    'Heat (Default)': STATE_HEAT,
+    'Cool': STATE_COOL,
+    'Auto': STATE_AUTO,
 }
 
 
@@ -49,6 +58,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         self._current_temperature = None
         self._current_operation = None
         self._operation_list = None
+        self._operation_mapping = None
         self._operating_state = None
         self._current_fan_mode = None
         self._fan_list = None
@@ -87,10 +97,21 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """Handle the data changes for node values."""
         # Operation Mode
         if self.values.mode:
-            self._current_operation = self.values.mode.data
+            self._operation_list = []
+            self._operation_mapping = {}
             operation_list = self.values.mode.data_items
             if operation_list:
-                self._operation_list = list(operation_list)
+                for mode in operation_list:
+                    ha_mode = STATE_MAPPINGS.get(mode)
+                    if ha_mode and ha_mode not in self._operation_mapping:
+                        self._operation_mapping[ha_mode] = mode
+                        self._operation_list.append(ha_mode)
+                        continue
+                    self._operation_list.append(mode)
+            current_mode = self.values.mode.data
+            self._current_operation = next(
+                (key for key, value in self._operation_mapping.items()
+                 if value == current_mode), current_mode)
         _LOGGER.debug("self._operation_list=%s", self._operation_list)
         _LOGGER.debug("self._current_operation=%s", self._current_operation)
 
@@ -206,7 +227,8 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
         if self.values.mode:
-            self.values.mode.data = operation_mode
+            self.values.mode.data = self._operation_mapping.get(
+                operation_mode, operation_mode)
 
     def set_swing_mode(self, swing_mode):
         """Set new target swing mode."""

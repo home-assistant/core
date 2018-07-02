@@ -1,7 +1,5 @@
 """Service calling related helpers."""
 import logging
-# pylint: disable=unused-import
-from typing import Optional  # NOQA
 from os import path
 
 import voluptuous as vol

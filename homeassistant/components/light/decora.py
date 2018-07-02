@@ -75,7 +75,7 @@ class DecoraLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        # pylint: disable=import-error, no-member
+        # pylint: disable=no-member
         import decora
 
         self._name = device['name']

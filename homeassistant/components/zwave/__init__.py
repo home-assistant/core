@@ -218,7 +218,6 @@ async def async_setup_platform(hass, config, async_add_devices,
     return True
 
 
-# pylint: disable=R0914
 async def async_setup(hass, config):
     """Set up Z-Wave.
 

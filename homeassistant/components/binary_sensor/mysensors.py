@@ -29,7 +29,8 @@ async def async_setup_platform(
         async_add_devices=async_add_devices)
 
 
-class MySensorsBinarySensor(mysensors.MySensorsEntity, BinarySensorDevice):
+class MySensorsBinarySensor(
+        mysensors.device.MySensorsEntity, BinarySensorDevice):
     """Representation of a MySensors Binary Sensor child node."""
 
     @property

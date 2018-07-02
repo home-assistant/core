@@ -231,6 +231,20 @@ class HomeAssistant(object):
         return task
 
     @callback
+    def async_add_executor_job(
+            self,
+            target: Callable[..., Any],
+            *args: Any) -> asyncio.tasks.Task:
+        """Add an executor job from within the event loop."""
+        task = self.loop.run_in_executor(None, target, *args)
+
+        # If a task is scheduled
+        if self._track_task:
+            self._pending_tasks.append(task)
+
+        return task
+
+    @callback
     def async_track_tasks(self):
         """Track tasks so you can wait for all tasks to be done."""
         self._track_task = True
