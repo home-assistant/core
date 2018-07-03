@@ -79,3 +79,25 @@ ifttt_push_alarm_state:
     state:
       description: The state to which the alarm control panel has to be set.
       example: 'armed_night'
+
+lifesos_alarm_monitor:
+  description: >
+    Send the alarm the command to enter monitor mode, for testing attached
+    sensors without triggering the alarm.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to monitor.
+      example: 'alarm_control_panel.lifesos'
+    code:
+      description: Code/Password for user that is changing the mode.
+      example: 1234
+
+lifesos_clear_status:
+  description: Clear the alarm/warning LEDs on base unit and stop siren.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to clear.
+      example: 'alarm_control_panel.lifesos'
+    code:
+      description: Code/Password for user that is clearing the status.
+      example: 1234

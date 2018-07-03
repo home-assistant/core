@@ -506,6 +506,9 @@ librouteros==2.1.0
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.7.2
 
+# homeassistant.components.lifesos
+lifesospy==0.7.0
+
 # homeassistant.components.light.lifx_legacy
 liffylights==0.9.4
 

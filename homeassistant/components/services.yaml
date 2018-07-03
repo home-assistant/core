@@ -601,3 +601,10 @@ nest:
       trip_id:
         description: Optional identity of a trip. Using the same trip_ID will update the estimation.
         example: trip_back_home
+
+lifesos:
+  sync_datetime:
+    description: >
+      Set the remote date/time on LifeSOS base unit to the local date/time.
+      This can be set up as an automation to periodically fix drift and correct
+      for Daylight Savings changes.

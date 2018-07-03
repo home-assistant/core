@@ -165,6 +165,9 @@ omit =
     homeassistant/components/lametric.py
     homeassistant/components/*/lametric.py
 
+    homeassistant/components/lifesos.py
+    homeassistant/components/*/lifesos.py
+
     homeassistant/components/linode.py
     homeassistant/components/*/linode.py
 
