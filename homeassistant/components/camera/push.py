@@ -21,7 +21,7 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_BUFFER_SIZE = 'cache'
+CONF_BUFFER_SIZE = 'buffer'
 CONF_IMAGE_FIELD = 'field'
 
 DEFAULT_NAME = "Push Camera"
