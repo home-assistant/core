@@ -73,9 +73,8 @@ class TraccarScanner(object):
         return self.parse_traccar_data()
 
     def get_traccar_data(self, url):
-
-        import requests
         """Retrieve data from Traccar and return result."""
+        import requests
 
         try:
             response = requests.get(
