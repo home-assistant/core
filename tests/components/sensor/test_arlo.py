@@ -21,13 +21,13 @@ def _get_sensor(name='Last', sensor_type='last_capture', data=None):
 
 @pytest.fixture()
 def default_sensor():
-    """Creates an ArloSensor with default values."""
+    """Create an ArloSensor with default values."""
     return _get_sensor()
 
 
 @pytest.fixture()
 def battery_sensor():
-    """Creates an ArloSensor with battery data."""
+    """Create an ArloSensor with battery data."""
     data = _get_named_tuple({
         'battery_level': 50
     })
@@ -36,13 +36,13 @@ def battery_sensor():
 
 @pytest.fixture()
 def temperature_sensor():
-    """Creates a temperature ArloSensor."""
+    """Create a temperature ArloSensor."""
     return _get_sensor('Temperature', 'temperature')
 
 
 @pytest.fixture()
 def humidity_sensor():
-    """Creates a humidity ArloSensor."""
+    """Create a humidity ArloSensor."""
     data = _get_named_tuple({
         'model_id': 'ABC1000'
     })
@@ -51,7 +51,7 @@ def humidity_sensor():
 
 @pytest.fixture()
 def cameras_sensor():
-    """Creates a total cameras ArloSensor."""
+    """Create a total cameras ArloSensor."""
     data = _get_named_tuple({
         'cameras': [0, 0]
     })
@@ -60,7 +60,7 @@ def cameras_sensor():
 
 @pytest.fixture()
 def captured_sensor():
-    """Creates a captured today ArloSensor."""
+    """Create a captured today ArloSensor."""
     data = _get_named_tuple({
         'captured_today': [0, 0, 0, 0, 0]
     })
@@ -68,8 +68,10 @@ def captured_sensor():
 
 
 class PlatformSetupFixture():
-    """Fixture for testing platform setup call to add_devices()"""
+    """Fixture for testing platform setup call to add_devices()."""
+
     def __init__(self):
+        """Instantiate the platform setup fixture."""
         self.sensors = None
         self.update = False
 
@@ -81,7 +83,7 @@ class PlatformSetupFixture():
 
 @pytest.fixture()
 def platform_setup():
-    """Returns an instance of the PlatformSetupFixture class."""
+    """Create an instance of the PlatformSetupFixture class."""
     return PlatformSetupFixture()
 
 
