@@ -425,8 +425,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
         try:
             avt_service = self._service('AVT')
             if avt_service:
-                state = await self._async_poll_transport_info(avt_service)
-                if state == STATE_PLAYING or state == STATE_PAUSED:
+                await self._async_poll_transport_info(avt_service)
+                if self.state == STATE_PLAYING or \
+                   self.state == STATE_PAUSED:
                     # playing something... get position info
                     await self._async_poll_position_info(avt_service)
             else:
@@ -434,10 +435,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
             self._is_connected = True
         except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
-            _LOGGER.debug('%s.async_update(): error on update: %s', self, ex)
+            _LOGGER.error('Error during update call')
             self._is_connected = False
             await self.async_unsubscribe_all()
-            raise
 
     async def _async_poll_transport_info(self, avt_service):
         """Update transport info from device."""
@@ -453,8 +453,6 @@ class DlnaDmrDevice(MediaPlayerDevice):
             changed.append(state_var)
 
         self.on_state_variable_change(service, changed)
-
-        return self.state
 
     async def _async_poll_position_info(self, avt_service):
         """Update position info."""
@@ -516,9 +514,12 @@ class DlnaDmrDevice(MediaPlayerDevice):
         max_ = state_variable.max_value or 100
         desired_volume = int(min_ + volume * (max_ - min_))
 
-        await action.async_call(InstanceID=0,
-                                Channel='Master',
-                                DesiredVolume=desired_volume)
+        try:
+            await action.async_call(InstanceID=0,
+                                    Channel='Master',
+                                    DesiredVolume=desired_volume)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error during RC/SetVolume call")
 
     @property
     @requires_state_variable('RC', 'Mute')
@@ -537,39 +538,73 @@ class DlnaDmrDevice(MediaPlayerDevice):
         """Mute the volume."""
         # pylint: disable=arguments-differ
         desired_mute = bool(mute)
-        await action.async_call(InstanceID=0,
-                                Channel='Master',
-                                DesiredMute=desired_mute)
+
+        try:
+            await action.async_call(InstanceID=0,
+                                    Channel='Master',
+                                    DesiredMute=desired_mute)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error during RC/SetMute call")
 
     @requires_action('AVT', 'Pause')
     async def async_media_pause(self, action):
         """Send pause command."""
         # pylint: disable=arguments-differ
-        await action.async_call(InstanceID=0)
+        avt_service = action.service
+        state_var = avt_service.state_variable('CurrentTransportActions')
+        if 'Pause' not in state_var.value:
+            _LOGGER.debug('Cannot do Pause')
+            return
+
+        try:
+            await action.async_call(InstanceID=0)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error during AVT/Pause call")
 
     @requires_action('AVT', 'Play')
     async def async_media_play(self, action):
         """Send play command."""
         # pylint: disable=arguments-differ
-        await action.async_call(InstanceID=0, Speed='1')
+        avt_service = action.service
+        state_var = avt_service.state_variable('CurrentTransportActions')
+        if 'Play' not in state_var.value:
+            _LOGGER.debug('Cannot do Play')
+            return
+
+        try:
+            await action.async_call(InstanceID=0, Speed='1')
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error during AVT/Play call")
 
     @requires_action('AVT', 'Stop')
     async def async_media_stop(self, action):
         """Send stop command."""
         # pylint: disable=arguments-differ
-        await action.async_call(InstanceID=0)
+        avt_service = action.service
+        state_var = avt_service.state_variable('CurrentTransportActions')
+        if 'Stop' not in state_var.value:
+            _LOGGER.debug('Cannot do Stop')
+            return
+
+        try:
+            await action.async_call(InstanceID=0)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error during AVT/Stop call")
 
     @requires_action('AVT', 'SetAVTransportURI')
     async def async_play_media(self, action, media_type, media_id, **kwargs):
         """Play a piece of media."""
         # pylint: disable=arguments-differ,unused-variable
-
         # queue media
         meta_data = await self._construct_play_media_metadata(media_type,
                                                               media_id)
-        await action.async_call(InstanceID=0,
-                                CurrentURI=media_id,
-                                CurrentURIMetaData=meta_data)
+        try:
+            await action.async_call(InstanceID=0,
+                                    CurrentURI=media_id,
+                                    CurrentURIMetaData=meta_data)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error during AVT/SetAVTransportURI call")
+            return
 
         if self.state == STATE_PLAYING:
             # already playing, no need to call Play
@@ -633,13 +668,31 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def async_media_previous_track(self, action):
         """Send previous track command."""
         # pylint: disable=arguments-differ
-        await action.async_call(InstanceID=0)
+        avt_service = action.service
+        state_var = avt_service.state_variable('CurrentTransportActions')
+        if 'Previous' not in state_var.value:
+            _LOGGER.debug('Cannot do Previous')
+            return
+
+        try:
+            await action.async_call(InstanceID=0)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error during AVT/Previous call")
 
     @requires_action('AVT', 'Next')
     async def async_media_next_track(self, action):
         """Send next track command."""
         # pylint: disable=arguments-differ
-        await action.async_call(InstanceID=0)
+        avt_service = action.service
+        state_var = avt_service.state_variable('CurrentTransportActions')
+        if 'Next' not in state_var.value:
+            _LOGGER.debug('Cannot do Next')
+            return
+
+        try:
+            await action.async_call(InstanceID=0)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error during AVT/Next call")
 
     @property
     @requires_state_variable('AVT', 'CurrentTrackMetaData')
