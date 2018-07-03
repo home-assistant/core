@@ -16,16 +16,10 @@ import logging
 import sys
 from types import ModuleType
 
-# pylint: disable=unused-import
-from typing import Dict, List, Optional, Sequence, Set  # NOQA
+from typing import Optional, Set
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
-
-# Typing imports
-# pylint: disable=using-constant-test,unused-import
-if False:
-    from homeassistant.core import HomeAssistant  # NOQA
 
 PREPARED = False
 

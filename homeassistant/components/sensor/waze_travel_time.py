@@ -18,7 +18,7 @@ import homeassistant.helpers.location as location
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['WazeRouteCalculator==0.5']
+REQUIREMENTS = ['WazeRouteCalculator==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +40,8 @@ REGIONS = ['US', 'NA', 'EU', 'IL']
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
+TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
     vol.Required(CONF_DESTINATION): cv.string,
@@ -48,8 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_INCL_FILTER): cv.string,
     vol.Optional(CONF_EXCL_FILTER): cv.string,
 })
-
-TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -72,10 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 def _get_location_from_attributes(state):
     """Get the lat/long string from an states attributes."""
     attr = state.attributes
-    return '{},{}'.format(
-        attr.get(ATTR_LATITUDE),
-        attr.get(ATTR_LONGITUDE)
-    )
+    return '{},{}'.format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
 
 class WazeTravelTime(Entity):
@@ -186,13 +183,11 @@ class WazeTravelTime(Entity):
 
         if self._origin_entity_id is not None:
             self._origin = self._get_location_from_entity(
-                self._origin_entity_id
-            )
+                self._origin_entity_id)
 
         if self._destination_entity_id is not None:
             self._destination = self._get_location_from_entity(
-                self._destination_entity_id
-            )
+                self._destination_entity_id)
 
         self._destination = self._resolve_zone(self._destination)
         self._origin = self._resolve_zone(self._origin)
@@ -217,7 +212,8 @@ class WazeTravelTime(Entity):
                 self._state = {
                     'duration': duration,
                     'distance': distance,
-                    'route': route}
+                    'route': route,
+                }
             except WazeRouteCalculator.WRCError as exp:
                 _LOGGER.error("Error on retrieving data: %s", exp)
                 return

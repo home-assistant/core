@@ -191,12 +191,13 @@ async def test_saving_loading(hass, hass_storage):
     await flush_store(manager._store._store)
 
     store2 = auth.AuthStore(hass)
-    await store2.async_load()
-    assert len(store2.users) == 1
-    assert store2.users[user.id] == user
+    users = await store2.async_get_users()
+    assert len(users) == 1
+    assert users[0] == user
 
-    assert len(store2.clients) == 1
-    assert store2.clients[client.id] == client
+    clients = await store2.async_get_clients()
+    assert len(clients) == 1
+    assert clients[0] == client
 
 
 def test_access_token_expired():
@@ -224,15 +225,18 @@ def test_access_token_expired():
 async def test_cannot_retrieve_expired_access_token(hass):
     """Test that we cannot retrieve expired access tokens."""
     manager = await auth.auth_manager_from_config(hass, [])
+    client = await manager.async_create_client('test')
     user = MockUser(
         id='mock-user',
         is_owner=False,
         is_active=False,
         name='Paulus',
     ).add_to_auth_manager(manager)
-    refresh_token = await manager.async_create_refresh_token(user, 'bla')
-    access_token = manager.async_create_access_token(refresh_token)
+    refresh_token = await manager.async_create_refresh_token(user, client.id)
+    assert refresh_token.user.id is user.id
+    assert refresh_token.client_id is client.id
 
+    access_token = manager.async_create_access_token(refresh_token)
     assert manager.async_get_access_token(access_token.token) is access_token
 
     with patch('homeassistant.auth.dt_util.utcnow',
@@ -241,3 +245,38 @@ async def test_cannot_retrieve_expired_access_token(hass):
 
     # Even with unpatched time, it should have been removed from manager
     assert manager.async_get_access_token(access_token.token) is None
+
+
+async def test_get_or_create_client(hass):
+    """Test that get_or_create_client works."""
+    manager = await auth.auth_manager_from_config(hass, [])
+
+    client1 = await manager.async_get_or_create_client(
+        'Test Client', redirect_uris=['https://test.com/1'])
+    assert client1.name is 'Test Client'
+
+    client2 = await manager.async_get_or_create_client(
+        'Test Client', redirect_uris=['https://test.com/1'])
+    assert client2.id is client1.id
+
+
+async def test_cannot_create_refresh_token_with_invalide_client_id(hass):
+    """Test that we cannot create refresh token with invalid client id."""
+    manager = await auth.auth_manager_from_config(hass, [])
+    user = MockUser(
+        id='mock-user',
+        is_owner=False,
+        is_active=False,
+        name='Paulus',
+    ).add_to_auth_manager(manager)
+    with pytest.raises(ValueError):
+        await manager.async_create_refresh_token(user, 'bla')
+
+
+async def test_cannot_create_refresh_token_with_invalide_user(hass):
+    """Test that we cannot create refresh token with invalid client id."""
+    manager = await auth.auth_manager_from_config(hass, [])
+    client = await manager.async_create_client('test')
+    user = MockUser(id='invalid-user')
+    with pytest.raises(ValueError):
+        await manager.async_create_refresh_token(user, client.id)
