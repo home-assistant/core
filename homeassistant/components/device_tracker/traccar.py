@@ -39,53 +39,64 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
     """Set up the scanner."""
     scanner = TraccarScanner(hass, config, see)
-    return scanner.success_init
+    return scanner if scanner.success_init else None
 
 
 class TraccarScanner(object):
+    """This class queries a Traccar website to get devices position."""
 
     def __init__(self, hass, config: ConfigType, see) -> None:
         """Initialize the scanner."""
 
         self.see = see
-        self.url = config.get(CONF_URL)
+        self.baseurl = config.get(CONF_URL)
         self.username = config.get(CONF_USERNAME)
         self.password = config.get(CONF_PASSWORD)
-
-        self.positions = self.get_traccar_data(self.url + "/api/positions")
-        self.devices = self.get_traccar_data(self.url + "/api/devices")
-
-        self.parse_traccar_data()
+        self.positions = None
+        self.devices = None
 
         track_time_interval(
-            hass, self.parse_traccar_data, MIN_TIME_BETWEEN_SCANS)
+            hass,
+            self.update_traccar_data,
+            MIN_TIME_BETWEEN_SCANS
+        )
 
-        self.success_init = True
+        data = self.update_traccar_data()
+        self.success_init = data is not None
+        _LOGGER.info("Scanner initialized")
+
+    def update_traccar_data(self, now=None):
+        """Update Traccar devices position."""
+
+        self.positions = self.get_traccar_data("/api/positions")
+        self.devices = self.get_traccar_data("/api/devices")
+        return self.parse_traccar_data()
 
     def get_traccar_data(self, url):
 
         import requests
-        """Retrieve data from Traccar and return parsed result."""
+        """Retrieve data from Traccar and return result."""
 
         try:
             response = requests.get(
-                url, auth=(self.username, self.password), timeout=4)
+                self.baseurl + url,
+                auth=(self.username, self.password),
+                timeout=4
+            )
         except requests.exceptions.Timeout:
-            """ Wrong URL or server down. """
             _LOGGER.exception("Connection to the server timed out")
             return
         if response.status_code == 200:
             return response.json()
         elif response.status_code == 401:
-            """ Authentication error. """
             _LOGGER.exception(
                 "Failed to authenticate, check your username and password")
             return
         else:
             _LOGGER.error("Invalid response from Traccar: %s", response)
 
-    def parse_traccar_data(self, now=None):
-        """Parse data from Traccar."""
+    def parse_traccar_data(self):
+        """Parse data from Traccar result."""
 
         devices = self.devices
         positions = self.positions
@@ -111,7 +122,8 @@ class TraccarScanner(object):
                             gps_accuracy=float(pos['accuracy']),
                             attributes=attrs,
                         )
+            return True
         except TypeError:
             _LOGGER.warning(
                 "An error occourred parsing reply from Traccar server")
-            return
+            return None
