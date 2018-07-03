@@ -4,7 +4,8 @@ import unittest
 from unittest.mock import patch
 
 from homeassistant.components.sensor.filter import (
-    LowPassFilter, OutlierFilter, ThrottleFilter, TimeSMAFilter)
+    LowPassFilter, OutlierFilter, ThrottleFilter, TimeSMAFilter,
+    RangeFilter)
 import homeassistant.util.dt as dt_util
 from homeassistant.setup import setup_component
 import homeassistant.core as ha
@@ -130,6 +131,23 @@ class TestFilterSensor(unittest.TestCase):
         for state in self.values:
             filtered = filt.filter_state(state)
         self.assertEqual(18.05, filtered.state)
+
+    def test_range(self):
+        """Test if range filter works."""
+        lower = 10
+        upper = 20
+        filt = RangeFilter(entity=None,
+                           lower_bound=lower,
+                           upper_bound=upper)
+        for unf_state in self.values:
+            unf = float(unf_state.state)
+            filtered = filt.filter_state(unf_state)
+            if unf < lower:
+                self.assertEqual(lower, filtered.state)
+            elif unf > upper:
+                self.assertEqual(upper, filtered.state)
+            else:
+                self.assertEqual(unf, filtered.state)
 
     def test_throttle(self):
         """Test if lowpass filter works."""
