@@ -32,17 +32,17 @@ import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['stream_magic==0.16']
 DOMAIN = 'cambridgeaudio'
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SOURCES = 'sources'
 DEFAULT_NAME = 'Cambridge Audio Streamer'
-DEFAULT_PWROFF_CMD = 'OFF'
+CONF_SOURCES = 'sources'
 KNOWN_HOSTS = []
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_COMMAND_OFF, default=DEFAULT_PWROFF_CMD): cv.string
+    vol.Optional(CONF_COMMAND_OFF, default='OFF'): cv.string
 })
 
 # supported features in all configurations
@@ -68,10 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
-    if CONF_COMMAND_OFF in config:
-        poweroff_command = config.get(CONF_COMMAND_OFF)
-    else:
-        poweroff_command = DEFAULT_PWROFF_CMD
+    poweroff_command = config.get(CONF_COMMAND_OFF, 'OFF')
 
     hosts = []
     sm = ca.StreamMagic()   # pylint: disable=C0103
@@ -100,27 +97,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                               addr, desc)
         except OSError:
             _LOGGER.debug("Unable to connect to device at %s", host)
-    else:
-        # netdisco found the device
-        if discovery_info is not None:
-            addr = discovery_info.get('host')
-            port = discovery_info.get('port')
 
-            # if a name was set in the config, use it
-            if name is None:
-                name = discovery_info.get('name')
+    elif discovery_info is not None:    # netdisco found the device
+        addr = discovery_info.get('host')
+        port = discovery_info.get('port')
 
-            scpd_url = discovery_info.get('ssdp_description')
-            if addr not in KNOWN_HOSTS:
-                smdevice = cadevice.StreamMagicDevice(addr, port,
-                                                      name, scpd_url)
-                hosts.append(CADevice(smdevice,
-                                      config.get(CONF_SOURCES),
-                                      poweroff_command,
-                                      name=name))
-                KNOWN_HOSTS.append(host)
-                _LOGGER.debug("Added StreamMagic device with ip %s (%s)",
-                              addr, name)
+        # if a name was set in the config, use it
+        if name is None:
+            name = discovery_info.get('name')
+
+        scpd_url = discovery_info.get('ssdp_description')
+        if addr not in KNOWN_HOSTS:
+            smdevice = cadevice.StreamMagicDevice(addr, port, name, scpd_url)
+            hosts.append(CADevice(smdevice, config.get(CONF_SOURCES),
+                                  poweroff_command, name=name))
+            KNOWN_HOSTS.append(host)
+            _LOGGER.debug("Added StreamMagic device with ip %s (%s)",
+                          addr, name)
     add_devices(hosts, True)
 
 
@@ -256,13 +249,11 @@ class CADevice(MediaPlayerDevice):
         """Skip to the next track, when in media player mode."""
         if self._audio_source == "media player":
             self._smdevice.trnsprt_next()
-            self.schedule_update_ha_state()
 
     def media_previous_track(self):
         """Skip to the previous track, when in media player mode."""
         if self._audio_source == "media player":
             self._smdevice.trnsprt_prev()
-            self.schedule_update_ha_state()
 
     def media_pause(self):
         """Pause playing the current media."""
@@ -288,7 +279,6 @@ class CADevice(MediaPlayerDevice):
     def media_stop(self):
         """Stop playing the current media."""
         self._smdevice.trnsprt_stop()
-        self._state = STATE_IDLE
 
     def media_play(self):
         """Start playing the current media."""
@@ -362,28 +352,31 @@ class CADevice(MediaPlayerDevice):
             self._muted = dev.get_mute_state()
             self._volume = dev.get_volume()
 
-        if self._state == STATE_PLAYING:
-            if self._audio_source == "media player":
-                self._album_art = dev.get_current_track_info()['albumArtURI']
-                self._artist = dev.get_current_track_info()['artist']
-                self._album = dev.get_current_track_info()['album']
-                self._trackno = dev.get_current_track_info()['origTrackNo']
-                self._title = dev.get_current_track_info()['trackTitle']
+        # don't update playback info when nothing is playing
+        if self._state != STATE_PLAYING:
+            return
 
-                # track position in seconds
-                self._position = dev.get_current_track_info()['currentPos']
-                self._position = self._to_seconds(self._position)
-                # self._position = "{:.1f}".format(float(pos / tracklen * 100))
+        if self._audio_source == "media player":
+            self._album_art = dev.get_current_track_info()['albumArtURI']
+            self._artist = dev.get_current_track_info()['artist']
+            self._album = dev.get_current_track_info()['album']
+            self._trackno = dev.get_current_track_info()['origTrackNo']
+            self._title = dev.get_current_track_info()['trackTitle']
 
-                # track length in seconds
-                self._duration = dev.get_current_track_info()['trackLength']
-                self._duration = self._to_seconds(self._duration)
+            # track position in seconds
+            self._position = dev.get_current_track_info()['currentPos']
+            self._position = self._to_seconds(self._position)
+            # self._position = "{:.1f}".format(float(pos / tracklen * 100))
 
-                self._position_updated_at = dt_util.utcnow()
+            # track length in seconds
+            self._duration = dev.get_current_track_info()['trackLength']
+            self._duration = self._to_seconds(self._duration)
 
-            elif self._audio_source == "internet radio":
-                self._artist = dev.get_playback_details()['artist']
-                self._album = dev.get_playback_details()['stream']
-                self._album_art = None
-                self._trackno = None
-                self._title = None
+            self._position_updated_at = dt_util.utcnow()
+
+        elif self._audio_source == "internet radio":
+            self._artist = dev.get_playback_details()['artist']
+            self._album = dev.get_playback_details()['stream']
+            self._album_art = None
+            self._trackno = None
+            self._title = None
