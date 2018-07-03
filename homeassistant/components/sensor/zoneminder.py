@@ -58,6 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                include_archived, sensor)
             )
 
+    sensors.append(ZMSensorRunState())
     add_devices(sensors)
 
 
@@ -140,3 +141,29 @@ class ZMSensorEvents(Entity):
             self._state = event['results'][str(self._monitor_id)]
         except (TypeError, KeyError):
             self._state = '0'
+
+
+class ZMSensorRunState(Entity):
+    """Get the ZoneMinder run state."""
+
+    def __init__(self):
+        """Initialize run state sensor."""
+        self._state = None
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return 'Run State'
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    def update(self):
+        """Update the sensor."""
+        s = zoneminder.get_run_states()[1]
+        if s is None:
+            self._state = STATE_UNKNOWN
+        else:
+            self._state = s
