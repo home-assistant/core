@@ -475,8 +475,6 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
     def on_state_variable_change(self, service, state_variables):
         """State variable(s) changed, let home-assistant know."""
-        _LOGGER.debug('Change state variables: %s',
-                      ','.join([sv.name for sv in state_variables]))
         for state_variable in state_variables:
             if state_variable.name == 'LastChange':
                 from async_upnp_client.utils import \
