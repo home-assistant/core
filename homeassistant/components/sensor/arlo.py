@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Arlo IP sensor."""
     arlo = hass.data.get(DATA_ARLO)
     if not arlo:
-        return False
+        return
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
@@ -102,7 +102,6 @@ class ArloSensor(Entity):
     @callback
     def _update_callback(self):
         """Call update method."""
-        _LOGGER.debug('update')
         self.async_schedule_update_ha_state(True)
 
     @property
@@ -167,19 +166,19 @@ class ArloSensor(Entity):
         elif self._sensor_type == 'temperature':
             try:
                 self._state = self._data.ambient_temperature
-            except (AttributeError, TypeError):
+            except TypeError:
                 self._state = None
 
         elif self._sensor_type == 'humidity':
             try:
                 self._state = self._data.ambient_humidity
-            except (AttributeError, TypeError):
+            except TypeError:
                 self._state = None
 
         elif self._sensor_type == 'air_quality':
             try:
                 self._state = self._data.ambient_air_quality
-            except (AttributeError, TypeError):
+            except TypeError:
                 self._state = None
 
     @property
@@ -190,16 +189,12 @@ class ArloSensor(Entity):
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         attrs['brand'] = DEFAULT_BRAND
 
-        known_sensor_types = [
-            'last_capture',
-            'captured_today',
-            'battery_level',
-            'signal_strength',
-            'temperature',
-            'humidity',
-            'air_quality']
+        known = False
+        for sensor_type in SENSOR_TYPES:
+            if self._sensor_type == sensor_type:
+                known = True
 
-        if self._sensor_type in known_sensor_types:
+        if known:
             attrs['model'] = self._data.model_id
 
         return attrs
