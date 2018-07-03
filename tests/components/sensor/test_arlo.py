@@ -8,6 +8,7 @@ from homeassistant.components.sensor import arlo
 from homeassistant.components.arlo import DATA_ARLO
 from homeassistant.helpers import dispatcher
 
+
 def _get_named_tuple(input_dict):
     return namedtuple('Struct', input_dict.keys())(*input_dict.values())
 
@@ -22,6 +23,7 @@ def _get_sensor(name='Last', sensor_type='last_capture', data=None):
 def default_sensor():
     """Creates an ArloSensor with default values."""
     return _get_sensor()
+
 
 @pytest.fixture()
 def battery_sensor():
