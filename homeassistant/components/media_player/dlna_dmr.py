@@ -37,7 +37,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
 REQUIREMENTS = [
-    'async-upnp-client==0.10.1',
+    'async-upnp-client==0.11.0',
     'python-didl-lite==1.0.1',
 ]
 
@@ -214,7 +214,7 @@ def setup_platform(hass: HomeAssistant,
     # create device
     from async_upnp_client import UpnpFactory
     requester = HassUpnpRequester(hass)
-    factory = UpnpFactory(requester, ignore_state_variable_value_range=True)
+    factory = UpnpFactory(requester, disable_state_variable_validation=True)
     device = DlnaDmrDevice(hass, url, udn, name, factory, notify_view)
 
     _LOGGER.debug("Adding device: %s", device)
@@ -434,7 +434,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
                 await self._device.async_ping()
 
             self._is_connected = True
-        except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
+        except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error('Error during update call')
             self._is_connected = False
             await self.async_unsubscribe_all()
