@@ -81,7 +81,11 @@ class TahomaCover(TahomaDevice, CoverDevice):
             self.apply_action('setPosition', 'secured')
         elif self.tahoma_device.type in \
                 ('rts:BlindRTSComponent',
-                 'io:ExteriorVenetianBlindIOComponent'):
+                 'io:ExteriorVenetianBlindIOComponent',
+                 'rts:VenetianBlindRTSComponent',
+                 'rts:DualCurtainRTSComponent',
+                 'rts:ExteriorVenetianBlindRTSComponent',
+                 'rts:BlindRTSComponent'):
             self.apply_action('my')
         else:
             self.apply_action('stopIdentify')
