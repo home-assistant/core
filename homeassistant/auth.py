@@ -53,7 +53,7 @@ class AuthProvider:
 
     initialized = False
 
-    def __init__(self, hass, store: 'AuthStore', config):
+    def __init__(self, hass, store, config):
         """Initialize an auth provider."""
         self.hass = hass
         self.store = store
@@ -273,7 +273,7 @@ async def _auth_provider_from_config(hass, store, config):
 class AuthManager:
     """Manage the authentication for Home Assistant."""
 
-    def __init__(self, hass, store: 'AuthStore', providers):
+    def __init__(self, hass, store, providers):
         """Initialize the auth manager."""
         self._store = store
         self._providers = providers
