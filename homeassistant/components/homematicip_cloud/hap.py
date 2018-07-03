@@ -1,10 +1,4 @@
-"""
-Support for HomematicIP components.
-
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/homematicip_cloud/
-"""
-
+"""Accesspoint for the HomematicIP Cloud component."""
 import asyncio
 import logging
 
@@ -63,7 +57,7 @@ class HomematicipAuth(object):
             return False
 
     async def get_auth(self, hass, hapid, pin):
-        """Create a auth object."""
+        """Create a HomematicIP access point object."""
         from homematicip.aio.auth import AsyncAuth
         from homematicip.base.base_connection import HmipConnectionError
 
@@ -240,7 +234,7 @@ class HomematicipHAP(object):
         return True
 
     async def get_hap(self, hass, hapid, authtoken, name):
-        """Create a hap object."""
+        """Create a HomematicIP access point object."""
         from homematicip.aio.home import AsyncHome
         from homematicip.base.base_connection import HmipConnectionError
 

@@ -17,7 +17,7 @@ from .const import (
 # Loading the config flow file will register the flow
 from .config_flow import configured_haps
 from .hap import HomematicipHAP
-from .generic import HomematicipGenericDevice  # noqa: F401
+from .device import HomematicipGenericDevice  # noqa: F401
 
 REQUIREMENTS = ['homematicip==0.9.6']
 
@@ -52,7 +52,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, entry):
-    """Set up a hap from a config entry."""
+    """Set up an accsspoint from a config entry."""
     hap = HomematicipHAP(hass, entry)
     hapid = entry.data[HMIPC_HAPID].replace('-', '').upper()
     hass.data[DOMAIN][hapid] = hap

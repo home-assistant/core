@@ -32,7 +32,7 @@ async def test_flow_works(hass):
 
 
 async def test_flow_init_connection_error(hass):
-    """Test config flow init connection error."""
+    """Test config flow with accesspoint connection error."""
     config = {
         const.HMIPC_HAPID: 'ABC123',
         const.HMIPC_PIN: '123',
@@ -48,7 +48,7 @@ async def test_flow_init_connection_error(hass):
 
 
 async def test_flow_link_connection_error(hass):
-    """Test config flow link connection error."""
+    """Test config flow client registration connection error."""
     config = {
         const.HMIPC_HAPID: 'ABC123',
         const.HMIPC_PIN: '123',
@@ -87,7 +87,7 @@ async def test_flow_link_press_button(hass):
 
 
 async def test_init_flow_show_form(hass):
-    """Test config flow ."""
+    """Test config flow shows up with a form."""
     flow = config_flow.HomematicipCloudFlowHandler()
     flow.hass = hass
 
@@ -96,7 +96,7 @@ async def test_init_flow_show_form(hass):
 
 
 async def test_init_already_configured(hass):
-    """Test HAP is already configured."""
+    """Test accesspoint is already configured."""
     MockConfigEntry(domain=const.DOMAIN, data={
         const.HMIPC_HAPID: 'ABC123',
     }).add_to_hass(hass)
@@ -134,7 +134,7 @@ async def test_import_config(hass):
 
 
 async def test_import_existing_config(hass):
-    """Test importing a host with an existing config file."""
+    """Test abort of an existing accesspoint from config."""
     flow = config_flow.HomematicipCloudFlowHandler()
     flow.hass = hass
 

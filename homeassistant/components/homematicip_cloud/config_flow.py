@@ -12,7 +12,7 @@ from .hap import HomematicipAuth
 
 @callback
 def configured_haps(hass):
-    """Return a set of the configured HAPs."""
+    """Return a set of the configured accesspoints."""
     return set(entry.data[HMIPC_HAPID] for entry
                in hass.config_entries.async_entries(HMIPC_DOMAIN))
 
@@ -42,14 +42,6 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
             if connected:
                 _LOGGER.info("Connection established")
                 return await self.async_step_link()
-
-            #            try:
-#                await self.auth.async_setup()
-#            except HmipcConnectionError:
-#                return self.async_abort(reason='conection_aborted')
-#            else:
-#                _LOGGER.info("Connection established")
-#                return await self.async_step_link()
 
         return self.async_show_form(
             step_id='init',

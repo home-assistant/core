@@ -9,7 +9,7 @@ from tests.common import mock_coro, MockConfigEntry
 
 
 async def test_config_with_accesspoint_passed_to_config_entry(hass):
-    """Test that configured options for a host are loaded via config entry."""
+    """Test that config for a accesspoint are loaded via config entry."""
     with patch.object(hass, 'config_entries') as mock_config_entries, \
             patch.object(hmipc, 'configured_haps', return_value=[]):
         assert await async_setup_component(hass, hmipc.DOMAIN, {
@@ -20,12 +20,12 @@ async def test_config_with_accesspoint_passed_to_config_entry(hass):
             }
         }) is True
 
-    # Flow started for discovered bridge
+    # Flow started for the access point
     assert len(mock_config_entries.flow.mock_calls) == 2
 
 
 async def test_config_already_registered_not_passed_to_config_entry(hass):
-    """Test that an already registered host does not initiate an import."""
+    """Test that an already registered accesspoint does not get imported."""
     with patch.object(hass, 'config_entries') as mock_config_entries, \
             patch.object(hmipc, 'configured_haps', return_value=['ABC123']):
         assert await async_setup_component(hass, hmipc.DOMAIN, {
@@ -61,8 +61,8 @@ async def test_setup_entry_successful(hass):
     assert len(mock_hap.mock_calls) == 2
 
 
-async def test_setup_defined_hosts_no_known_auth(hass):
-    """Test we initiate config entry if config bridge is not known."""
+async def test_setup_defined_accesspoint(hass):
+    """Test we initiate config entry for the accesspoint."""
     with patch.object(hass, 'config_entries') as mock_config_entries, \
             patch.object(hmipc, 'configured_haps', return_value=[]):
         mock_config_entries.flow.async_init.return_value = mock_coro()

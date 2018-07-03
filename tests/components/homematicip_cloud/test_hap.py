@@ -1,5 +1,4 @@
-"""Test HomematicIP Cloud hap."""
-
+"""Test HomematicIP Cloud accesspoint."""
 from unittest.mock import Mock, patch
 
 from homeassistant.components.homematicip_cloud import hap as hmipc
@@ -8,7 +7,7 @@ from tests.common import mock_coro
 
 
 async def test_auth_setup(hass):
-    """Test auth setup."""
+    """Test auth setup for client registration."""
     config = {
         const.HMIPC_HAPID: 'ABC123',
         const.HMIPC_PIN: '123',
@@ -20,7 +19,7 @@ async def test_auth_setup(hass):
 
 
 async def test_auth_setup_connection_error(hass):
-    """Test auth setup connection error."""
+    """Test auth setup connection error behaviour."""
     config = {
         const.HMIPC_HAPID: 'ABC123',
         const.HMIPC_PIN: '123',
@@ -33,7 +32,7 @@ async def test_auth_setup_connection_error(hass):
 
 
 async def test_auth_auth_check_and_register(hass):
-    """Test auth register."""
+    """Test auth client registration."""
     config = {
         const.HMIPC_HAPID: 'ABC123',
         const.HMIPC_PIN: '123',
@@ -51,43 +50,8 @@ async def test_auth_auth_check_and_register(hass):
         assert await hap.async_register() == 'ABC'
 
 
-async def test_auth_auth_checkbutton_false(hass):
-    """Test auth register."""
-    from homematicip.base.base_connection import HmipConnectionError
-    config = {
-        const.HMIPC_HAPID: 'ABC123',
-        const.HMIPC_PIN: '123',
-        const.HMIPC_NAME: 'hmip',
-    }
-    hap = hmipc.HomematicipAuth(hass, config)
-    hap.auth = Mock()
-    with patch.object(hap.auth, 'isRequestAcknowledged',
-                      side_effect=HmipConnectionError):
-        assert await hap.async_checkbutton() is False
-
-
-async def test_auth_auth_register_failed(hass):
-    """Test auth register."""
-    from homematicip.base.base_connection import HmipConnectionError
-    config = {
-        const.HMIPC_HAPID: 'ABC123',
-        const.HMIPC_PIN: '123',
-        const.HMIPC_NAME: 'hmip',
-    }
-    hap = hmipc.HomematicipAuth(hass, config)
-    hap.auth = Mock()
-    with patch.object(hap.auth, 'isRequestAcknowledged',
-                      return_value=mock_coro()), \
-            patch.object(hap.auth, 'requestAuthToken',
-                         side_effect=HmipConnectionError), \
-            patch.object(hap.auth, 'confirmAuthToken',
-                         return_value=mock_coro()):
-        assert await hap.async_checkbutton() is True
-        assert await hap.async_register() is False
-
-
 async def test_hap_setup_works(aioclient_mock):
-    """Test a successful setup."""
+    """Test a successful setup of a accesspoint."""
     hass = Mock()
     entry = Mock()
     home = Mock()
@@ -107,7 +71,7 @@ async def test_hap_setup_works(aioclient_mock):
 
 
 async def test_hap_setup_connection_error():
-    """Test we start config flow if username is no longer whitelisted."""
+    """Test a failed accesspoint setup."""
     hass = Mock()
     entry = Mock()
     entry.data = {
