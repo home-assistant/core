@@ -1,181 +1,178 @@
 """The tests for the Netgear Arlo sensors."""
-import asyncio
 from collections import namedtuple
-import unittest
 from unittest.mock import patch, MagicMock
+import pytest
 from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY, ATTR_ATTRIBUTION)
 from homeassistant.components.sensor import arlo
 from homeassistant.components.arlo import DATA_ARLO
 from homeassistant.helpers import dispatcher
-from tests.common import get_test_home_assistant
 
+def _get_named_tuple(input_dict):
+    return namedtuple('Struct', input_dict.keys())(*input_dict.values())
 
-class TestArloSensor(unittest.TestCase):
-    """Test Netgear Arlo sensors."""
+def _get_sensor(name='Last', sensor_type='last_capture', data=None):
+    if data is None:
+        data = {}
+    return arlo.ArloSensor(name, data, sensor_type)
 
-    def _setup_arlo(self):
-        self.hass.data = {
-            DATA_ARLO: 'test'
-        }
+@pytest.fixture()
+def default_sensor():
+    """Creates an ArloSensor with default values."""
+    return _get_sensor()
 
-    def _get_sensor(self, name='Last', sensor_type='last_capture', data=None):
-        if data is None:
-            data = {}
-        return arlo.ArloSensor(name, data, sensor_type)
+@pytest.fixture()
+def battery_sensor():
+    """Creates an ArloSensor with battery data."""
+    data = _get_named_tuple({
+        'battery_level': 50
+    })
+    return _get_sensor('Battery Level', 'battery_level', data)
 
-    def _get_named_tuple(self, input_dict):
-        return namedtuple('Struct', input_dict.keys())(*input_dict.values())
+@pytest.fixture()
+def temperature_sensor():
+    """Creates a temperature ArloSensor."""
+    return _get_sensor('Temperature', 'temperature')
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Setup shared dependencies for each test."""
-        self.hass = get_test_home_assistant()
+@pytest.fixture()
+def humidity_sensor():
+    """Creates a humidity ArloSensor."""
+    data = _get_named_tuple({
+        'model_id': 'ABC1000'
+    })
+    return _get_sensor('Humidity', 'humidity', data)
+
+@pytest.fixture()
+def cameras_sensor():
+    """Creates a total cameras ArloSensor."""
+    data = _get_named_tuple({
+        'cameras': [0, 0]
+    })
+    return _get_sensor('Arlo Cameras', 'total_cameras', data)
+
+@pytest.fixture()
+def captured_sensor():
+    """Creates a captured today ArloSensor."""
+    data = _get_named_tuple({
+        'captured_today': [0, 0, 0, 0, 0]
+    })
+    return _get_sensor('Captured Today', 'captured_today', data)
+
+class PlatformSetupFixture():
+    """Fixture for testing platform setup call to add_devices()"""
+    def __init__(self):
         self.sensors = None
+        self.update = False
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Tear down shared dependencies for each test."""
-        self.hass.stop()
-
-    def _add_devices(self, sensors, boolean):
+    def add_devices(self, sensors, update):
+        """Mock method for adding devices."""
         self.sensors = sensors
+        self.update = update
 
-    def test_setup_with_no_data(self):
-        """Test setup_platform with no data."""
-        arlo.setup_platform(self.hass, None, self._add_devices)
-        self.assertIsNone(self.sensors)
+@pytest.fixture()
+def platform_setup():
+    """Returns an instance of the PlatformSetupFixture class."""
+    return PlatformSetupFixture()
 
-    def test_setup_with_valid_data(self):
-        """Test setup_platform with valid data."""
-        config = {
-            'monitored_conditions': [
-                'last_capture',
-                'total_cameras',
-                'captured_today',
-                'battery_level',
-                'signal_strength',
-                'temperature',
-                'humidity',
-                'air_quality'
-            ]
-        }
+def test_setup_with_no_data(platform_setup, hass):
+    """Test setup_platform with no data."""
+    arlo.setup_platform(hass, None, platform_setup.add_devices)
+    assert platform_setup.sensors is None
+    assert not platform_setup.update
 
-        self.hass.data[DATA_ARLO] = self._get_named_tuple({
-            'cameras': [self._get_named_tuple({
-                'name': 'Camera',
-                'model_id': 'ABC1000'
-            })],
-            'base_stations': [self._get_named_tuple({
-                'name': 'Base Station',
-                'model_id': 'ABC1000'
-            })]
-        })
-
-        arlo.setup_platform(self.hass, config, self._add_devices)
-        self.assertEqual(len(self.sensors), 8)
-
-    def test_sensor_name(self):
-        """Test the name property."""
-        sensor = self._get_sensor()
-        self.assertEqual(sensor.name, 'Last')
-
-    @asyncio.coroutine
-    @patch('homeassistant.helpers.dispatcher.async_dispatcher_connect',
-           MagicMock())
-    async def test_async_added_to_hass(self):
-        """Test dispatcher called when added."""
-        sensor = self._get_sensor()
-        await sensor.async_added_to_hass()
-        self.assertTrue(len(dispatcher.async_dispatcher_connect.calls) == 1)
-
-    def test_sensor_state_default(self):
-        """Test the state property."""
-        sensor = self._get_sensor()
-        self.assertIsNone(sensor.state)
-
-    def test_sensor_icon_battery(self):
-        """Test the battery icon."""
-        data = self._get_named_tuple({
-            'battery_level': 50
-        })
-
-        sensor = self._get_sensor(
-            'Battery Level',
-            'battery_level',
-            data)
-        self.assertEqual(sensor.icon, 'mdi:battery-50')
-
-    def test_sensor_icon(self):
-        """Test the icon property."""
-        sensor = self._get_sensor('Temperature', 'temperature')
-        self.assertEqual(sensor.icon, 'mdi:thermometer')
-
-    def test_unit_of_measure(self):
-        """Test the unit_of_measurement property."""
-        sensor = self._get_sensor()
-        self.assertIsNone(sensor.unit_of_measurement)
-        sensor = self._get_sensor(
-            'Battery Level',
-            'battery_level')
-        self.assertEqual(sensor.unit_of_measurement, '%')
-
-    def test_device_class(self):
-        """Test the device_class property."""
-        sensor = self._get_sensor()
-        self.assertIsNone(sensor.device_class)
-        sensor = self._get_sensor('Temperature', 'temperature')
-        self.assertEqual(sensor.device_class, DEVICE_CLASS_TEMPERATURE)
-        sensor = self._get_sensor('Humidity', 'humidity')
-        self.assertEqual(sensor.device_class, DEVICE_CLASS_HUMIDITY)
-
-    def test_update_total_cameras(self):
-        """Test update method for total_cameras sensor type."""
-        data = self._get_named_tuple({
-            'cameras': [0, 0]
-        })
-        sensor = self._get_sensor(
-            'Arlo Cameras',
+def test_setup_with_valid_data(platform_setup, hass):
+    """Test setup_platform with valid data."""
+    config = {
+        'monitored_conditions': [
+            'last_capture',
             'total_cameras',
-            data)
-        sensor.update()
-        self.assertEqual(sensor.state, 2)
-
-    def test_update_captured_today(self):
-        """Test update method for captured_today sensor type."""
-        data = self._get_named_tuple({
-            'captured_today': [0, 0, 0, 0, 0]
-        })
-        sensor = self._get_sensor(
-            'Captured Today',
             'captured_today',
-            data)
-        sensor.update()
-        self.assertEqual(sensor.state, 5)
+            'battery_level',
+            'signal_strength',
+            'temperature',
+            'humidity',
+            'air_quality'
+        ]
+    }
 
-    def _test_update(self, sensor_type, key, value):
-        data = self._get_named_tuple({
-            key: value
-        })
-        sensor = self._get_sensor('test', sensor_type, data)
-        sensor.update()
-        self.assertEqual(sensor.state, value)
-
-    def test_update(self):
-        """Test update method for direct transcription sensor types."""
-        self._test_update('battery_level', 'battery_level', 100)
-        self._test_update('signal_strength', 'signal_strength', 100)
-        self._test_update('temperature', 'ambient_temperature', 21.4)
-        self._test_update('humidity', 'ambient_humidity', 45.1)
-        self._test_update('air_quality', 'ambient_air_quality', 14.2)
-
-    def test_attributes_known_sensor(self):
-        """Test attributes for known sensor type."""
-        data = self._get_named_tuple({
+    hass.data[DATA_ARLO] = _get_named_tuple({
+        'cameras': [_get_named_tuple({
+            'name': 'Camera',
             'model_id': 'ABC1000'
-        })
-        sensor = self._get_sensor('test', 'humidity', data)
-        attrs = sensor.device_state_attributes
-        self.assertEqual(
-            attrs.get(ATTR_ATTRIBUTION),
-            'Data provided by arlo.netgear.com')
-        self.assertEqual(attrs.get('brand'), 'Netgear Arlo')
-        self.assertEqual(attrs.get('model'), 'ABC1000')
+        })],
+        'base_stations': [_get_named_tuple({
+            'name': 'Base Station',
+            'model_id': 'ABC1000'
+        })]
+    })
+
+    arlo.setup_platform(hass, config, platform_setup.add_devices)
+    assert len(platform_setup.sensors) == 8
+    assert platform_setup.update
+
+def test_sensor_name(default_sensor):
+    """Test the name property."""
+    assert default_sensor.name == 'Last'
+
+@patch('homeassistant.helpers.dispatcher.async_dispatcher_connect',
+       MagicMock())
+async def test_async_added_to_hass(default_sensor):
+    """Test dispatcher called when added."""
+    await default_sensor.async_added_to_hass()
+    assert len(dispatcher.async_dispatcher_connect.calls) == 1
+
+def test_sensor_state_default(default_sensor):
+    """Test the state property."""
+    assert default_sensor.state is None
+
+def test_sensor_icon_battery(battery_sensor):
+    """Test the battery icon."""
+    assert battery_sensor.icon == 'mdi:battery-50'
+
+def test_sensor_icon(temperature_sensor):
+    """Test the icon property."""
+    assert temperature_sensor.icon == 'mdi:thermometer'
+
+def test_unit_of_measure(default_sensor, battery_sensor):
+    """Test the unit_of_measurement property."""
+    assert default_sensor.unit_of_measurement is None
+    assert battery_sensor.unit_of_measurement == '%'
+
+def test_device_class(default_sensor, temperature_sensor, humidity_sensor):
+    """Test the device_class property."""
+    assert default_sensor.device_class is None
+    assert temperature_sensor.device_class == DEVICE_CLASS_TEMPERATURE
+    assert humidity_sensor.device_class == DEVICE_CLASS_HUMIDITY
+
+def test_update_total_cameras(cameras_sensor):
+    """Test update method for total_cameras sensor type."""
+    cameras_sensor.update()
+    assert cameras_sensor.state == 2
+
+def test_update_captured_today(captured_sensor):
+    """Test update method for captured_today sensor type."""
+    captured_sensor.update()
+    assert captured_sensor.state == 5
+
+def test_attributes_known_sensor(humidity_sensor):
+    """Test attributes for known sensor type."""
+    attrs = humidity_sensor.device_state_attributes
+    assert attrs.get(ATTR_ATTRIBUTION) == 'Data provided by arlo.netgear.com'
+    assert attrs.get('brand') == 'Netgear Arlo'
+    assert attrs.get('model') == 'ABC1000'
+
+def _test_update(sensor_type, key, value):
+    data = _get_named_tuple({
+        key: value
+    })
+    sensor = _get_sensor('test', sensor_type, data)
+    sensor.update()
+    assert sensor.state == value
+
+def test_update():
+    """Test update method for direct transcription sensor types."""
+    _test_update('battery_level', 'battery_level', 100)
+    _test_update('signal_strength', 'signal_strength', 100)
+    _test_update('temperature', 'ambient_temperature', 21.4)
+    _test_update('humidity', 'ambient_humidity', 45.1)
+    _test_update('air_quality', 'ambient_air_quality', 14.2)
