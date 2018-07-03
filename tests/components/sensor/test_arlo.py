@@ -132,9 +132,9 @@ def test_sensor_name(default_sensor):
 
 @patch('homeassistant.helpers.dispatcher.async_dispatcher_connect',
        MagicMock())
-async def test_async_added_to_hass(default_sensor):
+def test_async_added_to_hass(default_sensor):
     """Test dispatcher called when added."""
-    await default_sensor.async_added_to_hass()
+    yield from default_sensor.async_added_to_hass()
     assert len(dispatcher.async_dispatcher_connect.calls) == 1
 
 
