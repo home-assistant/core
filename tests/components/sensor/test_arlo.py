@@ -11,10 +11,12 @@ from homeassistant.helpers import dispatcher
 def _get_named_tuple(input_dict):
     return namedtuple('Struct', input_dict.keys())(*input_dict.values())
 
+
 def _get_sensor(name='Last', sensor_type='last_capture', data=None):
     if data is None:
         data = {}
     return arlo.ArloSensor(name, data, sensor_type)
+
 
 @pytest.fixture()
 def default_sensor():
@@ -29,10 +31,12 @@ def battery_sensor():
     })
     return _get_sensor('Battery Level', 'battery_level', data)
 
+
 @pytest.fixture()
 def temperature_sensor():
     """Creates a temperature ArloSensor."""
     return _get_sensor('Temperature', 'temperature')
+
 
 @pytest.fixture()
 def humidity_sensor():
@@ -42,6 +46,7 @@ def humidity_sensor():
     })
     return _get_sensor('Humidity', 'humidity', data)
 
+
 @pytest.fixture()
 def cameras_sensor():
     """Creates a total cameras ArloSensor."""
@@ -50,6 +55,7 @@ def cameras_sensor():
     })
     return _get_sensor('Arlo Cameras', 'total_cameras', data)
 
+
 @pytest.fixture()
 def captured_sensor():
     """Creates a captured today ArloSensor."""
@@ -57,6 +63,7 @@ def captured_sensor():
         'captured_today': [0, 0, 0, 0, 0]
     })
     return _get_sensor('Captured Today', 'captured_today', data)
+
 
 class PlatformSetupFixture():
     """Fixture for testing platform setup call to add_devices()"""
@@ -69,16 +76,19 @@ class PlatformSetupFixture():
         self.sensors = sensors
         self.update = update
 
+
 @pytest.fixture()
 def platform_setup():
     """Returns an instance of the PlatformSetupFixture class."""
     return PlatformSetupFixture()
+
 
 def test_setup_with_no_data(platform_setup, hass):
     """Test setup_platform with no data."""
     arlo.setup_platform(hass, None, platform_setup.add_devices)
     assert platform_setup.sensors is None
     assert not platform_setup.update
+
 
 def test_setup_with_valid_data(platform_setup, hass):
     """Test setup_platform with valid data."""
@@ -110,9 +120,11 @@ def test_setup_with_valid_data(platform_setup, hass):
     assert len(platform_setup.sensors) == 8
     assert platform_setup.update
 
+
 def test_sensor_name(default_sensor):
     """Test the name property."""
     assert default_sensor.name == 'Last'
+
 
 @patch('homeassistant.helpers.dispatcher.async_dispatcher_connect',
        MagicMock())
@@ -121,22 +133,27 @@ async def test_async_added_to_hass(default_sensor):
     await default_sensor.async_added_to_hass()
     assert len(dispatcher.async_dispatcher_connect.calls) == 1
 
+
 def test_sensor_state_default(default_sensor):
     """Test the state property."""
     assert default_sensor.state is None
+
 
 def test_sensor_icon_battery(battery_sensor):
     """Test the battery icon."""
     assert battery_sensor.icon == 'mdi:battery-50'
 
+
 def test_sensor_icon(temperature_sensor):
     """Test the icon property."""
     assert temperature_sensor.icon == 'mdi:thermometer'
+
 
 def test_unit_of_measure(default_sensor, battery_sensor):
     """Test the unit_of_measurement property."""
     assert default_sensor.unit_of_measurement is None
     assert battery_sensor.unit_of_measurement == '%'
+
 
 def test_device_class(default_sensor, temperature_sensor, humidity_sensor):
     """Test the device_class property."""
@@ -144,15 +161,18 @@ def test_device_class(default_sensor, temperature_sensor, humidity_sensor):
     assert temperature_sensor.device_class == DEVICE_CLASS_TEMPERATURE
     assert humidity_sensor.device_class == DEVICE_CLASS_HUMIDITY
 
+
 def test_update_total_cameras(cameras_sensor):
     """Test update method for total_cameras sensor type."""
     cameras_sensor.update()
     assert cameras_sensor.state == 2
 
+
 def test_update_captured_today(captured_sensor):
     """Test update method for captured_today sensor type."""
     captured_sensor.update()
     assert captured_sensor.state == 5
+
 
 def test_attributes_known_sensor(humidity_sensor):
     """Test attributes for known sensor type."""
@@ -161,6 +181,7 @@ def test_attributes_known_sensor(humidity_sensor):
     assert attrs.get('brand') == 'Netgear Arlo'
     assert attrs.get('model') == 'ABC1000'
 
+
 def _test_update(sensor_type, key, value):
     data = _get_named_tuple({
         key: value
@@ -168,6 +189,7 @@ def _test_update(sensor_type, key, value):
     sensor = _get_sensor('test', sensor_type, data)
     sensor.update()
     assert sensor.state == value
+
 
 def test_update():
     """Test update method for direct transcription sensor types."""
