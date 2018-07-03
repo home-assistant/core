@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['WazeRouteCalculator==0.5']
+REQUIREMENTS = ['WazeRouteCalculator==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
