@@ -338,7 +338,7 @@ fints==0.2.1
 fitbit==0.3.0
 
 # homeassistant.components.sensor.fixer
-fixerio==0.1.1
+fixerio==1.0.0a0
 
 # homeassistant.components.light.flux_led
 flux_led==0.21
