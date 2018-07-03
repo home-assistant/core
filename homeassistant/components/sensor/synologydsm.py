@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTRIBUTION = 'Data provided by Synology'
 CONF_VOLUMES = 'volumes'
 DEFAULT_NAME = 'Synology DSM'
-DEFAULT_PORT = 5000
+DEFAULT_PORT = 5001
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
@@ -76,7 +76,7 @@ _MONITORED_CONDITIONS = list(_UTILISATION_MON_COND.keys()) + \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SSL, default=False): cv.boolean,
+    vol.Optional(CONF_SSL, default=True): cv.boolean,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS):
