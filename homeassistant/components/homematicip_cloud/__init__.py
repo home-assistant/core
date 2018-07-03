@@ -16,7 +16,7 @@ from .const import (
     CONF_ACCESSPOINT, CONF_AUTHTOKEN, CONF_NAME)
 # Loading the config flow file will register the flow
 from .config_flow import configured_haps
-from .hap import HomematicipHAP
+from .hap import HomematicipHAP, HomematicipAuth  # noqa: F401
 from .device import HomematicipGenericDevice  # noqa: F401
 
 REQUIREMENTS = ['homematicip==0.9.6']
