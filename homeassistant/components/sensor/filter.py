@@ -348,7 +348,7 @@ class RangeFilter(Filter):
     """
 
     def __init__(self, entity,
-                 lower_bound=None, upper_bound=None):
+                 lower_bound, upper_bound):
         """Initialize Filter."""
         super().__init__(FILTER_NAME_RANGE, entity=entity)
         self._lower_bound = lower_bound
