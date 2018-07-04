@@ -128,19 +128,15 @@ class TileScanner(object):
                 dev_id='tile_{0}'.format(slugify(tile['name'])),
                 gps=(
                     tile['tileState']['latitude'],
-                    tile['tileState']['longitude']),
+                    tile['tileState']['longitude']
+                ),
                 attributes={
-                    ATTR_ALTITUDE:
-                        tile['tileState']['altitude'],
+                    ATTR_ALTITUDE: tile['tileState']['altitude'],
                     ATTR_CONNECTION_STATE:
                         tile['tileState']['connection_state'],
-                    ATTR_IS_DEAD:
-                        tile['is_dead'],
-                    ATTR_IS_LOST:
-                        tile['tileState']['is_lost'],
-                    ATTR_RING_STATE:
-                        tile['tileState']['ring_state'],
-                    ATTR_VOIP_STATE:
-                        tile['tileState']['voip_state'],
+                    ATTR_IS_DEAD: tile['is_dead'],
+                    ATTR_IS_LOST: tile['tileState']['is_lost'],
+                    ATTR_RING_STATE: tile['tileState']['ring_state'],
+                    ATTR_VOIP_STATE: tile['tileState']['voip_state'],
                 },
                 icon=DEFAULT_ICON)
