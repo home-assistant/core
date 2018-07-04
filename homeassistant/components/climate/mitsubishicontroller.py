@@ -6,23 +6,35 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.climate import ClimateDevice
 from homeassistant.const import CONF_URL
 from homeassistant.const import TEMP_FAHRENHEIT
+from homeassistant.components.climate import ( ClimateDevice, PLATFORM_SCHEMA, 
+SUPPORT_TARGET_TEMPERATURE,
+SUPPORT_TARGET_TEMPERATURE_HIGH,
+SUPPORT_TARGET_TEMPERATURE_LOW,
+SUPPORT_TARGET_HUMIDITY,
+SUPPORT_TARGET_HUMIDITY_HIGH,
+SUPPORT_TARGET_HUMIDITY_LOW,
+SUPPORT_FAN_MODE,
+SUPPORT_OPERATION_MODE,
+SUPPORT_HOLD_MODE,
+SUPPORT_SWING_MODE,
+SUPPORT_AWAY_MODE,
+SUPPORT_AUX_HEAT,
+SUPPORT_ON_OFF)
+REQUIREMENTS = ['mitsPy==0.1.8']
 
-DOMAIN = 'mitsubishicontroller'
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_URL): cv.string
+})
 
-from mitsPy.manager import Manager
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+    from mitsPy.manager import Manager
+    controller = Manager(config.get(CONF_URL))
+    async def register_devices(raw_devices):
+        async_add_devices(
+        [MitsubishiHvacDevice(device=device, unit_of_measurement=TEMP_FAHRENHEIT) for device in raw_devices])
+    await controller.initialize(register_devices)
 
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_URL): cv.string
-    }),
-}, extra=vol.ALLOW_EXTRA)
-
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    controller = Manager(config[CONF_URL], loop=hass.loop)
-    controller.initialize(lambda raw_devices: async_add_devices(
-        [MitsubishiHvacDevice(device=device, unit_of_measurement=TEMP_FAHRENHEIT) for device in raw_devices]))
-
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE)
 
 class MitsubishiHvacDevice(ClimateDevice):
     def __init__(self, device, unit_of_measurement=None, current_fan_mode=None):
@@ -33,8 +45,8 @@ class MitsubishiHvacDevice(ClimateDevice):
         self._current_fan_mode = current_fan_mode
         self._device.refresh(self.schedule_update_ha_state)
 
-    def _refresh(self):
-        self._device.refresh(self.schedule_update_ha_state)
+    async def _refresh(self):
+        await self._device.refresh(self.schedule_update_ha_state)
 
     @property
     def should_poll(self):
@@ -54,11 +66,11 @@ class MitsubishiHvacDevice(ClimateDevice):
 
     @property
     def current_temperature(self):
-        return self._device.current_temp_f
+        return float(self._device.current_temp_f)
 
     @property
     def target_temperature(self):
-        return self._device.set_temp_value_f
+        return float(self._device.set_temp_value_f)
 
     @property
     def current_operation(self):
@@ -76,21 +88,21 @@ class MitsubishiHvacDevice(ClimateDevice):
     def fan_list(self):
         return self._device.fan_speed_options
 
-    def set_temperature(self, temperature, **kwargs):
-        self._device.set_temperature_f(temperature)
-        self._refresh()
+    async def async_set_temperature(self, temperature, **kwargs):
+        await self._device.set_temperature_f(temperature)
+        await self._refresh()
 
-    def set_swing_mode(self, swing_mode):
-        self._device.set_air_direction(swing_mode)
-        self._refresh()
+    async def async_set_swing_mode(self, swing_mode):
+        await self._device.set_air_direction(swing_mode)
+        await self._refresh()
 
-    def set_fan_mode(self, fan):
-        self._device.set_fan_speed(fan)
-        self._refresh()
+    async def async_set_fan_mode(self, fan):
+        await self._device.set_fan_speed(fan)
+        await self._refresh()
 
-    def set_operation_mode(self, operation_mode):
-        self._device.set_operation(operation_mode)
-        self._refresh()
+    async def async_set_operation_mode(self, operation_mode):
+        await self._device.set_operation(operation_mode)
+        await self._refresh()
 
     @property
     def current_swing_mode(self):
@@ -99,6 +111,11 @@ class MitsubishiHvacDevice(ClimateDevice):
     @property
     def swing_list(self):
         return self._device.air_direction_options
+        
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
-    def update(self):
-        self._device.refresh(self.schedule_update_ha_state)
+    async def async_update(self):
+        await self._device.refresh(self.schedule_update_ha_state)
