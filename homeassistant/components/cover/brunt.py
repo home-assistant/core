@@ -81,7 +81,7 @@ class BruntDevice(CoverDevice):
         self._name = name
         self._thing_uri = thing_uri
 
-        self._state = None
+        self._state = {}
         self._available = None
 
     @property
@@ -101,7 +101,8 @@ class BruntDevice(CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return int(self._state.get('currentPosition'))
+        pos = self._state.get('currentPosition', None)
+        return int(pos) if pos else None
 
     @property
     def request_cover_position(self):
@@ -112,7 +113,8 @@ class BruntDevice(CoverDevice):
         to Brunt, at times there is a diff of 1 to current
         None is unknown, 0 is closed, 100 is fully open.
         """
-        return int(self._state.get('requestPosition'))
+        pos = self._state.get('requestPosition', None)
+        return int(pos) if pos else None
 
     @property
     def move_state(self):
@@ -121,7 +123,8 @@ class BruntDevice(CoverDevice):
 
         None is unknown, 0 when stopped, 1 when opening, 2 when closing
         """
-        return int(self._state.get('moveState'))
+        mov = self._state.get('moveState', None)
+        return int(mov) if mov else None
 
     @property
     def is_opening(self):
