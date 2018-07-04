@@ -315,7 +315,7 @@ class NetAtmoData(object):
         of the last update from the cloud.
         """
         if time() < self._next_update or \
-            not self._update_in_progress.acquire(False):
+                not self._update_in_progress.acquire(False):
             return
 
         try:
