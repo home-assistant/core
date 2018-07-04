@@ -54,7 +54,7 @@ async def test_match_existing_credentials(store, provider):
         },
         is_new=False,
     )
-    store.credentials_for_provider = Mock(return_value=mock_coro([existing]))
+    provider.async_credentials = Mock(return_value=mock_coro([existing]))
     credentials = await provider.async_get_or_create_credentials({
         'username': 'user-test',
         'password': 'password-test',
