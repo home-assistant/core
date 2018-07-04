@@ -180,6 +180,5 @@ class BruntDevice(CoverDevice):
 
     def set_cover_position(self, **kwargs):
         """Set the cover to a specific position."""
-        if ATTR_POSITION in kwargs:
-            self._bapi.changeRequestPosition(
-                int(kwargs[ATTR_POSITION]), thingUri=self._thing_uri)
+        self._bapi.changeRequestPosition(
+            kwargs[ATTR_POSITION], thingUri=self._thing_uri)
