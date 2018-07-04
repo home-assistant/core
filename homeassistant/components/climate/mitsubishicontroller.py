@@ -31,7 +31,11 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 
 SUPPORT_FLAGS = (
-        SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE)
+        SUPPORT_TARGET_TEMPERATURE |
+        SUPPORT_OPERATION_MODE |
+        SUPPORT_FAN_MODE |
+        SUPPORT_SWING_MODE
+)
 
 
 class MitsubishiHvacDevice(ClimateDevice):
