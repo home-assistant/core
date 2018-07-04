@@ -1,8 +1,8 @@
 """
-Component to offer a way to store a numeric float.
+Component to offer a way to store a numeric value as an Integer.
 
 For more details about this component, please refer to the documentation
-at https://home-assistant.io/components/numeric_float/
+at https://home-assistant.io/components/numeric_integer/
 """
 import asyncio
 import logging
@@ -19,7 +19,7 @@ from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'numeric_float'
+DOMAIN = 'numeric_integer'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 CONF_INITIAL = 'initial'
@@ -33,7 +33,7 @@ SERVICE_DEFAULT_SCHEMA = vol.Schema({
 
 SERVICE_SET_VALUE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_VALUE): vol.Coerce(float),
+    vol.Required(ATTR_VALUE): vol.Coerce(int),
 })
 
 
@@ -41,13 +41,12 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         cv.slug: vol.All({
             vol.Optional(CONF_NAME): cv.string,
-            vol.Optional(CONF_INITIAL): vol.Coerce(float),
+            vol.Optional(CONF_INITIAL): vol.Coerce(int),
             vol.Optional(CONF_ICON): cv.icon,
             vol.Optional(ATTR_UNIT_OF_MEASUREMENT): cv.string,
         })
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
-
 
 SERVICE_TO_METHOD = {
     SERVICE_SET_VALUE: {
@@ -58,7 +57,7 @@ SERVICE_TO_METHOD = {
 
 @bind_hass
 def set_value(hass, entity_id, value):
-    """Set numeric_value to a value."""
+    """Set numeric_integer to a value."""
     hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
         ATTR_ENTITY_ID: entity_id,
         ATTR_VALUE: value,
@@ -67,7 +66,7 @@ def set_value(hass, entity_id, value):
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up an Numeric Float."""
+    """Set up an Numeric Integer."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
@@ -77,14 +76,14 @@ def async_setup(hass, config):
         initial = cfg.get(CONF_INITIAL)
         icon = cfg.get(CONF_ICON)
         unit = cfg.get(ATTR_UNIT_OF_MEASUREMENT)
-        entities.append(NumericValue(object_id, name, initial, icon, unit))
+        entities.append(NumericValueInt(object_id, name, initial, icon, unit))
 
     if not entities:
         return False
 
     @asyncio.coroutine
     def async_handle_service(service):
-        """Handle calls to numeric_float services."""
+        """Handle calls to numeric_integer services."""
         target_inputs = component.async_extract_from_service(service)
         method = SERVICE_TO_METHOD.get(service.service)
         params = service.data.copy()
@@ -108,11 +107,11 @@ def async_setup(hass, config):
     return True
 
 
-class NumericValue(Entity):
-    """Representation of a Numeric Float."""
+class NumericValueInt(Entity):
+    """Representation of a Numeric Integer."""
 
     def __init__(self, object_id, name, initial, icon, unit):
-        """Initialize an Numeric Float."""
+        """Initialize an Numeric Integer."""
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self._name = name
         self._current_value = initial
@@ -126,7 +125,7 @@ class NumericValue(Entity):
 
     @property
     def name(self):
-        """Return the name of the Numeric Float."""
+        """Return the name of the Numeric Integer."""
         return self._name
 
     @property
@@ -151,7 +150,7 @@ class NumericValue(Entity):
             return
 
         state = yield from async_get_last_state(self.hass, self.entity_id)
-        value = state and float(state.state)
+        value = state and int(state.state)
 
         if value is not None:
             self._current_value = value
@@ -159,6 +158,6 @@ class NumericValue(Entity):
     @asyncio.coroutine
     def async_set_value(self, value):
         """Set new value."""
-        num_value = float(value)
+        num_value = int(value)
         self._current_value = num_value
         yield from self.async_update_ha_state()
