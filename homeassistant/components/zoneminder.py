@@ -125,3 +125,21 @@ def get_state(api_url):
 def change_state(api_url, post_data):
     """Update a state using the Zoneminder API."""
     return _zm_request('post', api_url, data=post_data)
+
+
+# pylint: disable=no-member
+def get_run_states():
+    """
+    Get all run state names and the current run state from Zoneminder API.
+
+    Returns a 2-tuple of the list of state names (str) and the active state
+    name (str).
+    """
+    state_names = []
+    active_state = None
+    for i in get_state('api/states.json')['states']:
+        state_names.append(i['State']['Name'])
+        # yes, the ZM API uses the *string* "1" for this...
+        if i['State']['IsActive'] == '1':
+            active_state = i['State']['Name']
+    return state_names, active_state
