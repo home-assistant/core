@@ -183,9 +183,12 @@ class PollencomSensor(Entity):
             return
 
         if self._category:
-            data = self.pollencom.data[self._category]['Location']
+            data = self.pollencom.data[self._category].get('Location')
         else:
-            data = self.pollencom.data[self._type]['Location']
+            data = self.pollencom.data[self._type].get('Location')
+
+        if not data:
+            return
 
         indices = [p['Index'] for p in data['periods']]
         average = round(mean(indices), 1)
