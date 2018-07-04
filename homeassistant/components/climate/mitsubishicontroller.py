@@ -9,7 +9,7 @@ from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA,
 from homeassistant.const import CONF_URL
 from homeassistant.const import TEMP_FAHRENHEIT
 
-REQUIREMENTS = ['mitsPy==0.1.8']
+REQUIREMENTS = ['mitsPy==0.1.9']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
   vol.Required(CONF_URL): cv.string
@@ -33,7 +33,7 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_F
 class MitsubishiHvacDevice(ClimateDevice):
   def __init__(self, device, unit_of_measurement=None, current_fan_mode=None):
     self._device = device
-    self._name = self._device.number + " : " + self._device.group_name
+    self._name = self._device.group_name
     self._current_swing_mode = self._device.current_air_direction
     self._unit_of_measurement = unit_of_measurement
     self._current_fan_mode = current_fan_mode
@@ -44,7 +44,7 @@ class MitsubishiHvacDevice(ClimateDevice):
 
   @property
   def should_poll(self):
-    return True
+    return False
 
   @property
   def name(self):
@@ -65,6 +65,10 @@ class MitsubishiHvacDevice(ClimateDevice):
   @property
   def target_temperature(self):
     return float(self._device.set_temp_value_f)
+
+  @property
+  def state(self):
+    return self.current_operation
 
   @property
   def current_operation(self):
