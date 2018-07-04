@@ -44,7 +44,7 @@ class MitsubishiHvacDevice(ClimateDevice):
 
   @property
   def should_poll(self):
-    return False
+    return True
 
   @property
   def name(self):
