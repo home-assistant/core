@@ -16,22 +16,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     from mitsPy.manager import Manager
     controller = Manager(config.get(CONF_URL))
 
     async def register_devices(raw_devices):
         async_add_devices(
-            [MitsubishiHvacDevice(device=device, unit_of_measurement=TEMP_FAHRENHEIT) for device in raw_devices])
+            [MitsubishiHvacDevice(device=device,
+                                  unit_of_measurement=TEMP_FAHRENHEIT) for
+             device in raw_devices])
 
     await controller.initialize(register_devices)
 
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE)
+SUPPORT_FLAGS = (
+        SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE)
 
 
 class MitsubishiHvacDevice(ClimateDevice):
-    def __init__(self, device, unit_of_measurement=None, current_fan_mode=None):
+    def __init__(self, device, unit_of_measurement=None,
+                 current_fan_mode=None):
         self._device = device
         self._name = self._device.group_name
         self._current_swing_mode = self._device.current_air_direction
