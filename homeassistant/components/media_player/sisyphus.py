@@ -72,7 +72,7 @@ class SisyphusPlayer(MediaPlayerDevice):
 
     @property
     def state(self):
-        """Return the urrent state of the table; sleeping maps to off."""
+        """Return the current state of the table; sleeping maps to off."""
         if self._table.state in ["homing", "playing"]:
             return STATE_PLAYING
         elif self._table.state == "paused":
@@ -82,7 +82,8 @@ class SisyphusPlayer(MediaPlayerDevice):
             return STATE_PAUSED
         elif self._table.state == "waiting":
             return STATE_IDLE
-        raise Exception("Unknown state: {0}".format(self._table.state))
+
+        return None
 
     @property
     def volume_level(self):
