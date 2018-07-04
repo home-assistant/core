@@ -1113,7 +1113,7 @@ pythonegardia==1.0.39
 pythonwhois==2.4.3
 
 # homeassistant.components.device_tracker.tile
-pytile==1.1.0
+pytile==2.0.2
 
 # homeassistant.components.climate.touchline
 pytouchline==0.7
