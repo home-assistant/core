@@ -79,7 +79,14 @@ class AuthProvider:
 
     async def async_credentials(self):
         """Return all credentials of this provider."""
-        return await self.store.credentials_for_provider(self.type, self.id)
+        users = await self.store.async_get_users()
+        return [
+            credentials
+            for user in users
+            for credentials in user.credentials
+            if (credentials.auth_provider_type == self.type and
+                credentials.auth_provider_id == self.id)
+        ]
 
     @callback
     def async_create_credentials(self, data):
@@ -118,10 +125,11 @@ class AuthProvider:
 class User:
     """A user."""
 
+    name = attr.ib(type=str)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     is_owner = attr.ib(type=bool, default=False)
     is_active = attr.ib(type=bool, default=False)
-    name = attr.ib(type=str, default=None)
+    system_generated = attr.ib(type=bool, default=False)
 
     # List of credentials of a user.
     credentials = attr.ib(type=list, default=attr.Factory(list), cmp=False)
@@ -300,10 +308,45 @@ class AuthManager:
         """Retrieve a user."""
         return await self._store.async_get_user(user_id)
 
+    async def async_create_system_user(self, name):
+        """Create a system user."""
+        return await self._store.async_create_user(
+            name=name,
+            system_generated=True,
+            is_active=True,
+        )
+
     async def async_get_or_create_user(self, credentials):
         """Get or create a user."""
-        return await self._store.async_get_or_create_user(
-            credentials, self._async_get_auth_provider(credentials))
+        if not credentials.is_new:
+            for user in await self._store.async_get_users():
+                for creds in user.credentials:
+                    if (creds.auth_provider_type ==
+                            credentials.auth_provider_type
+                            and creds.auth_provider_id ==
+                            credentials.auth_provider_id):
+                        return user
+
+            raise ValueError('Unable to find the user.')
+
+        auth_provider = self._async_get_auth_provider(credentials)
+        info = await auth_provider.async_user_meta_for_credentials(
+            credentials)
+
+        kwargs = {
+            'credentials': credentials,
+            'name': info.get('name')
+        }
+
+        # Make owner and activate user if it's the first user.
+        if await self._store.async_get_users():
+            kwargs['is_owner'] = False
+            kwargs['is_active'] = False
+        else:
+            kwargs['is_owner'] = True
+            kwargs['is_active'] = True
+
+        return await self._store.async_create_user(**kwargs)
 
     async def async_link_user(self, user, credentials):
         """Link credentials to an existing user."""
@@ -313,9 +356,20 @@ class AuthManager:
         """Remove a user."""
         await self._store.async_remove_user(user)
 
-    async def async_create_refresh_token(self, user, client_id):
+    async def async_create_refresh_token(self, user, client=None):
         """Create a new refresh token for a user."""
-        return await self._store.async_create_refresh_token(user, client_id)
+        if not user.is_active:
+            raise ValueError('User is not active')
+
+        if user.system_generated and client is not None:
+            raise ValueError(
+                'System generated users cannot have refresh tokens connected '
+                'to a client.')
+
+        if not user.system_generated and client is None:
+            raise ValueError('Client is required to generate a refresh token.')
+
+        return await self._store.async_create_refresh_token(user, client)
 
     async def async_get_refresh_token(self, token):
         """Get refresh token by token."""
@@ -324,7 +378,7 @@ class AuthManager:
     @callback
     def async_create_access_token(self, refresh_token):
         """Create a new access token."""
-        access_token = AccessToken(refresh_token)
+        access_token = AccessToken(refresh_token=refresh_token)
         self._access_tokens[access_token.token] = access_token
         return access_token
 
@@ -405,19 +459,6 @@ class AuthStore:
         self._clients = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
-    async def credentials_for_provider(self, provider_type, provider_id):
-        """Return credentials for specific auth provider type and id."""
-        if self._users is None:
-            await self.async_load()
-
-        return [
-            credentials
-            for user in self._users.values()
-            for credentials in user.credentials
-            if (credentials.auth_provider_type == provider_type and
-                credentials.auth_provider_id == provider_id)
-        ]
-
     async def async_get_users(self):
         """Retrieve all users."""
         if self._users is None:
@@ -426,50 +467,42 @@ class AuthStore:
         return list(self._users.values())
 
     async def async_get_user(self, user_id):
-        """Retrieve a user."""
+        """Retrieve a user by id."""
         if self._users is None:
             await self.async_load()
 
         return self._users.get(user_id)
 
-    async def async_get_or_create_user(self, credentials, auth_provider):
-        """Get or create a new user for given credentials.
-
-        If link_user is passed in, the credentials will be linked to the passed
-        in user if the credentials are new.
-        """
+    async def async_create_user(self, name, is_owner=None, is_active=None,
+                                system_generated=None, credentials=None):
+        """Create a new user."""
         if self._users is None:
             await self.async_load()
 
-        # New credentials, store in user
-        if credentials.is_new:
-            info = await auth_provider.async_user_meta_for_credentials(
-                credentials)
-            # Make owner and activate user if it's the first user.
-            if self._users:
-                is_owner = False
-                is_active = False
-            else:
-                is_owner = True
-                is_active = True
+        kwargs = {
+            'name': name
+        }
 
-            new_user = User(
-                is_owner=is_owner,
-                is_active=is_active,
-                name=info.get('name'),
-            )
-            self._users[new_user.id] = new_user
-            await self.async_link_user(new_user, credentials)
+        if is_owner is not None:
+            kwargs['is_owner'] = is_owner
+
+        if is_active is not None:
+            kwargs['is_active'] = is_active
+
+        if system_generated is not None:
+            kwargs['system_generated'] = system_generated
+
+        new_user = User(**kwargs)
+
+        self._users[new_user.id] = new_user
+
+        if credentials is None:
+            await self.async_save()
             return new_user
 
-        for user in self._users.values():
-            for creds in user.credentials:
-                if (creds.auth_provider_type == credentials.auth_provider_type
-                        and creds.auth_provider_id ==
-                        credentials.auth_provider_id):
-                    return user
-
-        raise ValueError('We got credentials with ID but found no user')
+        # Saving is done inside the link.
+        await self.async_link_user(new_user, credentials)
+        return new_user
 
     async def async_link_user(self, user, credentials):
         """Add credentials to an existing user."""
@@ -482,17 +515,10 @@ class AuthStore:
         self._users.pop(user.id)
         await self.async_save()
 
-    async def async_create_refresh_token(self, user, client_id):
+    async def async_create_refresh_token(self, user, client=None):
         """Create a new token for a user."""
-        local_user = await self.async_get_user(user.id)
-        if local_user is None:
-            raise ValueError('Invalid user')
-
-        local_client = await self.async_get_client(client_id)
-        if local_client is None:
-            raise ValueError('Invalid client_id')
-
-        refresh_token = RefreshToken(user, client_id)
+        client_id = client.id if client is not None else None
+        refresh_token = RefreshToken(user=user, client_id=client_id)
         user.refresh_tokens[refresh_token.token] = refresh_token
         await self.async_save()
         return refresh_token
@@ -607,6 +633,7 @@ class AuthStore:
                 'is_owner': user.is_owner,
                 'is_active': user.is_active,
                 'name': user.name,
+                'system_generated': user.system_generated,
             }
             for user in self._users.values()
         ]
