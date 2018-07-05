@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """setup platform asynchronously"""
+    """Setup platform asynchronously."""
     from mitsPy.manager import Manager
     controller = Manager(config.get(CONF_URL))
 
@@ -57,7 +57,7 @@ class MitsubishiHvacDevice(ClimateDevice):
 
     def __init__(self, device, unit_of_measurement=None,
                  current_fan_mode=None):
-        """initialize device"""
+        """Initialize device."""
         self._device = device
         self._name = self._device.group_name
         self._current_swing_mode = self._device.current_air_direction
@@ -66,92 +66,92 @@ class MitsubishiHvacDevice(ClimateDevice):
         self._device.refresh(self.schedule_update_ha_state)
 
     async def _refresh(self):
-        """refresh function"""
+        """Refresh function."""
         await self._device.refresh(self.schedule_update_ha_state)
 
     @property
     def should_poll(self):
-        """should poll"""
+        """Should poll."""
         return True
 
     @property
     def name(self):
-        """device name"""
+        """Device name."""
         return self._name
 
     @property
     def unit_of_measurement(self):
-        """unit of measurement"""
+        """Unit of measurement."""
         return self._unit_of_measurement
 
     @property
     def temperature_unit(self):
-        """temperature unit"""
+        """Temperature unit."""
         return self._unit_of_measurement
 
     @property
     def current_temperature(self):
-        """current temperature"""
+        """Current temperature."""
         return float(self._device.current_temp_f)
 
     @property
     def target_temperature(self):
-        """target temperature"""
+        """Target temperature."""
         return float(self._device.set_temp_value_f)
 
     @property
     def state(self):
-        """current state"""
+        """Current state."""
         return self.current_operation
 
     @property
     def current_operation(self):
-        """current operation mode"""
+        """Current operation mode."""
         return self._device.current_operation
 
     @property
     def operation_list(self):
-        """list of supported operations"""
+        """List of supported operations."""
         return self._device.operation_list
 
     @property
     def current_fan_mode(self):
-        """current fan mode"""
+        """Current fan mode."""
         return self._device.current_fan_speed
 
     @property
     def fan_list(self):
-        """list of supported fan modes"""
+        """List of supported fan modes."""
         return self._device.fan_speed_options
 
     async def async_set_temperature(self, **kwargs):
-        """set the temperature"""
+        """Set the temperature."""
         await self._device.set_temperature_f(kwargs[ATTR_TEMPERATURE])
         await self._refresh()
 
     async def async_set_swing_mode(self, swing_mode):
-        """set the swing mode"""
+        """Set the swing mode."""
         await self._device.set_air_direction(swing_mode)
         await self._refresh()
 
     async def async_set_fan_mode(self, fan):
-        """set the fan mode"""
+        """Set the fan mode."""
         await self._device.set_fan_speed(fan)
         await self._refresh()
 
     async def async_set_operation_mode(self, operation_mode, **kwargs):
-        """set the operation mode"""
+        """Set the operation mode."""
         await self._device.set_operation(operation_mode)
         await self._refresh()
 
     @property
     def current_swing_mode(self):
-        """get the current swing mode"""
+        """Get the current swing mode."""
         return self._device.current_air_direction
 
     @property
     def swing_list(self):
-        """get the list of available swing lists"""
+        """Get the list of available swing lists."""
         return self._device.air_direction_options
 
     @property
@@ -160,5 +160,5 @@ class MitsubishiHvacDevice(ClimateDevice):
         return SUPPORT_FLAGS
 
     async def async_update(self):
-        """update"""
+        """Update."""
         await self._device.refresh(self.schedule_update_ha_state)
