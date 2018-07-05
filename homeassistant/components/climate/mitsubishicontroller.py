@@ -12,8 +12,7 @@ from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA,
                                               SUPPORT_TARGET_TEMPERATURE,
                                               SUPPORT_FAN_MODE,
                                               SUPPORT_OPERATION_MODE,
-                                              SUPPORT_SWING_MODE,
-                                              ATTR_FAN_MODE)
+                                              SUPPORT_SWING_MODE)
 from homeassistant.const import CONF_URL, ATTR_TEMPERATURE
 from homeassistant.const import TEMP_FAHRENHEIT
 
@@ -53,7 +52,7 @@ SUPPORT_FLAGS = (
 
 
 class MitsubishiHvacDevice(ClimateDevice):
-    """Mitsubishi HVAC Device"""
+    """Mitsubishi HVAC Device."""
 
     def __init__(self, device, unit_of_measurement=None,
                  current_fan_mode=None):
