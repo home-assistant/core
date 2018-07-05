@@ -42,10 +42,7 @@ def temperature_sensor():
 @pytest.fixture()
 def humidity_sensor():
     """Create a humidity ArloSensor."""
-    data = _get_named_tuple({
-        'model_id': 'ABC1000'
-    })
-    return _get_sensor('Humidity', 'humidity', data)
+    return _get_sensor('Humidity', 'humidity')
 
 
 @pytest.fixture()
@@ -94,6 +91,13 @@ def sensor_with_hass_data(default_sensor, hass):
     return default_sensor
 
 
+@pytest.fixture()
+def mock_dispatch():
+    target = 'homeassistant.components.sensor.arlo.async_dispatcher_connect'
+    with patch(target, MagicMock()) as _mock:
+        yield _mock
+
+
 def test_setup_with_no_data(platform_setup, hass):
     """Test setup_platform with no data."""
     arlo.setup_platform(hass, None, platform_setup.add_devices)
@@ -137,18 +141,16 @@ def test_sensor_name(default_sensor):
     assert default_sensor.name == 'Last'
 
 
-async def test_async_added_to_hass(sensor_with_hass_data):
+async def test_async_added_to_hass(sensor_with_hass_data, mock_dispatch):
     """Test dispatcher called when added."""
-    target = 'homeassistant.components.sensor.arlo.async_dispatcher_connect'
-    with patch(target, MagicMock()) as mock:
-        await sensor_with_hass_data.async_added_to_hass()
-        assert len(mock.mock_calls) == 1
-        kall = mock.call_args
-        args, kwargs = kall
-        assert len(args) == 3
-        assert args[0] == sensor_with_hass_data.hass
-        assert args[1] == 'arlo_update'
-        assert not kwargs
+    await sensor_with_hass_data.async_added_to_hass()
+    assert len(mock_dispatch.mock_calls) == 1
+    kall = mock_dispatch.call_args
+    args, kwargs = kall
+    assert len(args) == 3
+    assert args[0] == sensor_with_hass_data.hass
+    assert args[1] == 'arlo_update'
+    assert not kwargs
 
 
 def test_sensor_state_default(default_sensor):
@@ -191,12 +193,32 @@ def test_update_captured_today(captured_sensor):
     assert captured_sensor.state == 5
 
 
-def test_attributes_known_sensor(humidity_sensor):
-    """Test attributes for known sensor type."""
-    attrs = humidity_sensor.device_state_attributes
+def _test_attributes(sensor_type):
+    data = _get_named_tuple({
+        'model_id': 'TEST123'
+    })
+    sensor = _get_sensor('test', sensor_type, data)
+    attrs = sensor.device_state_attributes
     assert attrs.get(ATTR_ATTRIBUTION) == 'Data provided by arlo.netgear.com'
     assert attrs.get('brand') == 'Netgear Arlo'
-    assert attrs.get('model') == 'ABC1000'
+    assert attrs.get('model') == 'TEST123'
+
+
+def test_state_attributes():
+    """Test attributes for camera sensor types."""
+    _test_attributes('battery_level')
+    _test_attributes('signal_strength')
+    _test_attributes('temperature')
+    _test_attributes('humidity')
+    _test_attributes('air_quality')
+
+
+def test_attributes_total_cameras(cameras_sensor):
+    """Test attributes for total cameras sensor type."""
+    attrs = cameras_sensor.device_state_attributes
+    assert attrs.get(ATTR_ATTRIBUTION) == 'Data provided by arlo.netgear.com'
+    assert attrs.get('brand') == 'Netgear Arlo'
+    assert attrs.get('model') is None
 
 
 def _test_update(sensor_type, key, value):

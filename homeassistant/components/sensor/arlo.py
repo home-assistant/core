@@ -188,6 +188,8 @@ class ArloSensor(Entity):
 
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         attrs['brand'] = DEFAULT_BRAND
-        attrs['model'] = self._data.model_id
+
+        if self._sensor_type != 'total_cameras':
+            attrs['model'] = self._data.model_id
 
         return attrs
