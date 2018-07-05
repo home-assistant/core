@@ -407,7 +407,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
             if service_type not in SERVICE_TYPES.values():
                 continue
 
-            service.on_state_variable_change = self.on_state_variable_change
+            service.on_state_variable_change = self._on_state_variable_change
 
             sid = await service.async_subscribe(callback_url)
             if sid:
@@ -453,7 +453,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
             state_var.value = result['CurrentTransportState']
             changed.append(state_var)
 
-        self.on_state_variable_change(service, changed)
+        self._on_state_variable_change(service, changed)
 
     async def _async_poll_position_info(self, avt_service):
         """Update position info."""
@@ -472,9 +472,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
             time_position.value = result['RelTime']
             changed.append(time_position)
 
-        self.on_state_variable_change(service, changed)
+        self._on_state_variable_change(service, changed)
 
-    def on_state_variable_change(self, service, state_variables):
+    def _on_state_variable_change(self, service, state_variables):
         """State variable(s) changed, let home-assistant know."""
         for state_variable in state_variables:
             if state_variable.name == 'LastChange':
