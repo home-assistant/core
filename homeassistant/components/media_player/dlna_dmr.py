@@ -551,7 +551,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         # pylint: disable=arguments-differ
         avt_service = action.service
         state_var = avt_service.state_variable('CurrentTransportActions')
-        if 'Pause' not in state_var.value:
+        transport_actions = (state_var.value or '').split(',')
+        if 'Pause' not in transport_actions:
             _LOGGER.debug('Cannot do Pause')
             return
 
@@ -566,7 +567,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         # pylint: disable=arguments-differ
         avt_service = action.service
         state_var = avt_service.state_variable('CurrentTransportActions')
-        if 'Play' not in state_var.value:
+        transport_actions = (state_var.value or '').split(',')
+        if 'Play' not in transport_actions:
             _LOGGER.debug('Cannot do Play')
             return
 
@@ -581,7 +583,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         # pylint: disable=arguments-differ
         avt_service = action.service
         state_var = avt_service.state_variable('CurrentTransportActions')
-        if 'Stop' not in state_var.value:
+        transport_actions = (state_var.value or '').split(',')
+        if 'Stop' not in transport_actions:
             _LOGGER.debug('Cannot do Stop')
             return
 
@@ -613,8 +616,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         avt_service = action.service
         state_var = avt_service.state_variable('CurrentTransportActions')
         for i in range(20):  # wait max 5 seconds
-            actions = state_var.value.split(',')
-            if 'Play' in actions:
+            transport_actions = (state_var.value or '').split(',')
+            if 'Play' in transport_actions:
                 break
             await asyncio.sleep(0.25)
         else:
@@ -669,7 +672,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         # pylint: disable=arguments-differ
         avt_service = action.service
         state_var = avt_service.state_variable('CurrentTransportActions')
-        if 'Previous' not in state_var.value:
+        transport_actions = (state_var.value or '').split(',')
+        if 'Previous' not in transport_actions:
             _LOGGER.debug('Cannot do Previous')
             return
 
@@ -684,7 +688,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
         # pylint: disable=arguments-differ
         avt_service = action.service
         state_var = avt_service.state_variable('CurrentTransportActions')
-        if 'Next' not in state_var.value:
+        transport_actions = (state_var.value or '').split(',')
+        if 'Next' not in transport_actions:
             _LOGGER.debug('Cannot do Next')
             return
 
