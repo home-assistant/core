@@ -25,6 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string
 })
 
+
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """setup platform asynchronously"""
@@ -41,6 +42,7 @@ async def async_setup_platform(hass, config, async_add_devices,
 
     await controller.initialize(register_devices)
 
+
 """supported features, for now all units will show the same features"""
 SUPPORT_FLAGS = (
     SUPPORT_TARGET_TEMPERATURE
@@ -52,6 +54,7 @@ SUPPORT_FLAGS = (
 
 class MitsubishiHvacDevice(ClimateDevice):
     """Mitsubishi HVAC Device"""
+
     def __init__(self, device, unit_of_measurement=None,
                  current_fan_mode=None):
         """initialize device"""
@@ -61,7 +64,6 @@ class MitsubishiHvacDevice(ClimateDevice):
         self._unit_of_measurement = unit_of_measurement
         self._current_fan_mode = current_fan_mode
         self._device.refresh(self.schedule_update_ha_state)
-
 
     async def _refresh(self):
         """refresh function"""
