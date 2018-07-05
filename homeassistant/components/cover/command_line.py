@@ -1,6 +1,5 @@
 """
 Support for command line covers.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.command_line/
 """
@@ -22,6 +21,7 @@ COVER_SCHEMA = vol.Schema({
     vol.Optional(CONF_COMMAND_OPEN, default='true'): cv.string,
     vol.Optional(CONF_COMMAND_STATE): cv.string,
     vol.Optional(CONF_COMMAND_STOP, default='true'): cv.string,
+    vol.Optional('command_set_position', default='true'): cv.string,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
@@ -49,6 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 device_config.get(CONF_COMMAND_CLOSE),
                 device_config.get(CONF_COMMAND_STOP),
                 device_config.get(CONF_COMMAND_STATE),
+                device_config.get('command_set_position'),
                 value_template,
             )
         )
@@ -64,7 +65,7 @@ class CommandCover(CoverDevice):
     """Representation a command line cover."""
 
     def __init__(self, hass, name, command_open, command_close, command_stop,
-                 command_state, value_template):
+                 command_state, command_set_position, value_template):
         """Initialize the cover."""
         self._hass = hass
         self._name = name
@@ -73,6 +74,7 @@ class CommandCover(CoverDevice):
         self._command_close = command_close
         self._command_stop = command_stop
         self._command_state = command_state
+        self._command_set_position = command_set_position
         self._value_template = value_template
 
     @staticmethod
@@ -117,7 +119,6 @@ class CommandCover(CoverDevice):
     @property
     def current_cover_position(self):
         """Return current position of cover.
-
         None is unknown, 0 is closed, 100 is fully open.
         """
         return self._state
@@ -149,3 +150,10 @@ class CommandCover(CoverDevice):
     def stop_cover(self, **kwargs):
         """Stop the cover."""
         self._move_cover(self._command_stop)
+
+    def set_cover_position(self, **kwargs):
+        """Move the cover to a specific position."""
+        position = kwargs.get('position')
+        if self._state == position:
+            return
+        self._move_cover(self._command_set_position + str(position))
