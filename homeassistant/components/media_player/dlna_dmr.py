@@ -439,7 +439,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
                 self._notify_view.register_service(sid, service)
 
         # renew a bit earlier
-        delay = 1 * 60
+        delay = 20 * 60
         async_call_later(self.hass, delay, self._async_subscribe_services)
 
     async def async_update(self):
