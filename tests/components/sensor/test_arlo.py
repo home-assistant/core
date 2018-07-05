@@ -139,9 +139,8 @@ def test_sensor_name(default_sensor):
 
 async def test_async_added_to_hass(sensor_with_hass_data):
     """Test dispatcher called when added."""
-    with patch(
-        'homeassistant.components.sensor.arlo.async_dispatcher_connect',
-        MagicMock()) as mock:
+    target = 'homeassistant.components.sensor.arlo.async_dispatcher_connect'
+    with patch(target, MagicMock()) as mock:
         await sensor_with_hass_data.async_added_to_hass()
         assert len(mock.mock_calls) == 1
         kall = mock.call_args
