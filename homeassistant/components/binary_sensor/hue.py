@@ -13,8 +13,9 @@ from aiohue.sensors import (TYPE_CLIP_GENERICFLAG, TYPE_CLIP_OPENCLOSE, TYPE_CLI
                             TYPE_DAYLIGHT, TYPE_ZLL_PRESENCE)
 
 import homeassistant.components.hue as hue
-from homeassistant.components.hue.const import (ATTR_LAST_UPDATED, ICON_DAY, ICON_NIGHT)
-from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.components.hue.const import (ICON_DAY, ICON_NIGHT)
+from homeassistant.components.sensor.hue import HueSensor
+from homeassistant.const import (ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON)
 from homeassistant.components.binary_sensor import BinarySensorDevice
 
 DEPENDENCIES = ['hue']
@@ -120,7 +121,8 @@ async def async_update_items(hass, bridge, async_add_devices,
                              progress_waiting):
     """Update sensors from the bridge."""
     import aiohue
-    allow_clip_sensors = bridge.allow_clip_sensors
+    #allow_clip_sensors = bridge.allow_clip_sensors
+    allow_clip_sensors = True
 
     api = bridge.api.sensors
 
@@ -151,7 +153,8 @@ async def async_update_items(hass, bridge, async_add_devices,
     else:
         allowed_binary_sensor_types = HUE_BINARY_SENSORS
 
-    for item_id, binary_sensor in api.items():
+    for item_id in api:
+        binary_sensor = api[item_id]
         if binary_sensor.type in allowed_binary_sensor_types:
             if item_id not in current:
                 current[item_id] = create_binary_sensor(
@@ -167,42 +170,22 @@ async def async_update_items(hass, bridge, async_add_devices,
         async_add_devices(new_sensors)
 
 
-class CLIPBinarySensor(BinarySensorDevice):
-    """Base class representing a CLIP Binary Sensor.
-    Contains properties and methods common to all CLIP binary sensors."""
-    def __init__(self, sensor, request_bridge_update, bridge):
-        self.sensor = sensor
-        self.async_request_bridge_update = request_bridge_update
-        self.bridge = bridge
+class HueBinarySensor(HueSensor):
+    """Base class representing a Hue Binary Sensor.
+    Contains properties and methods common to all Hue binary sensors."""
 
     @property
-    def name(self):
-        """Return the name of the CLIP binary sensor."""
-        return self.sensor.name
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return None
 
     @property
-    def available(self):
-        """Return true if the CLIP binary sensor is available."""
-        return self.sensor.reachable
-
-    async def async_update(self):
-        """Synchronize state with bridge."""
-        await self.async_request_bridge_update(self.sensor.id)
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        attributes = {}
-        if self.sensor.battery is not None:
-            attributes[ATTR_BATTERY_LEVEL] = self.sensor.battery
-        attributes[ATTR_LAST_UPDATED] = self.sensor.lastupdated
-        return attributes
+    def state(self):
+        """Return the state of the Hue binary sensor."""
+        return STATE_ON if self.is_on else STATE_OFF
 
 
-class CLIPGenericFlag(CLIPBinarySensor):
-    def __init__(self, sensor, request_bridge_update, bridge):
-        """Initialize the sensor."""
-        super().__init__(sensor, request_bridge_update, bridge)
+class CLIPGenericFlag(HueBinarySensor):
 
     @property
     def is_on(self):
@@ -210,10 +193,7 @@ class CLIPGenericFlag(CLIPBinarySensor):
         return self.sensor.flag
 
 
-class CLIPOpenClose(CLIPBinarySensor):
-    def __init__(self, sensor, request_bridge_update, bridge):
-        """Initialize the sensor."""
-        super().__init__(sensor, request_bridge_update, bridge)
+class CLIPOpenClose(HueBinarySensor):
 
     @property
     def is_on(self):
@@ -226,10 +206,7 @@ class CLIPOpenClose(CLIPBinarySensor):
         return 'opening'
 
 
-class CLIPPresence(CLIPBinarySensor):
-    def __init__(self, sensor, request_bridge_update, bridge):
-        """Initialize the sensor."""
-        super().__init__(sensor, request_bridge_update, bridge)
+class CLIPPresence(HueBinarySensor):
 
     @property
     def is_on(self):
@@ -242,17 +219,13 @@ class CLIPPresence(CLIPBinarySensor):
         return 'presence'
 
 
-class Daylight(BinarySensorDevice):
+class Daylight(HueBinarySensor):
     """Class representing the Hue Daylight sensor."""
-    def __init__(self, sensor, request_bridge_update, bridge):
-        self.sensor = sensor
-        self.async_request_bridge_update = request_bridge_update
-        self.bridge = bridge
 
     @property
-    def name(self):
-        """Return the name of the Hue Daylight sensor."""
-        return self.sensor.name
+    def available(self):
+        """The daylight sensor is always available."""
+        return True
 
     @property
     def unique_id(self):
@@ -273,32 +246,16 @@ class Daylight(BinarySensorDevice):
         else:
             return ICON_NIGHT
 
-    async def async_update(self):
-        """Synchronize state with bridge."""
-        await self.async_request_bridge_update(self.sensor.id)
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = {}
+        return attributes
 
 
-class ZLLPresence(BinarySensorDevice):
+
+class ZLLPresence(HueBinarySensor):
     """Class representing a Hue Motion Sensor."""
-    def __init__(self, sensor, request_bridge_update, bridge):
-        self.sensor = sensor
-        self.async_request_bridge_update = request_bridge_update
-        self.bridge = bridge
-
-    @property
-    def name(self):
-        """Return the name of the Hue Motion Sensor."""
-        return self.sensor.name
-
-    @property
-    def available(self):
-        """Return true if the Hue Motion Sensor. is available."""
-        return self.sensor.reachable
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the Hue Motion Sensor.."""
-        return self.sensor.uniqueid
 
     @property
     def is_on(self):
@@ -309,18 +266,6 @@ class ZLLPresence(BinarySensorDevice):
     def device_class(self):
         """Return the device class of the Hue Motion Sensor."""
         return 'motion'
-
-    async def async_update(self):
-        """Synchronize state with bridge."""
-        await self.async_request_bridge_update(self.sensor.id)
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        attributes = {}
-        attributes[ATTR_BATTERY_LEVEL] = self.sensor.battery
-        attributes[ATTR_LAST_UPDATED] = self.sensor.lastupdated
-        return attributes
 
 
 def create_binary_sensor(sensor, request_bridge_update, bridge):

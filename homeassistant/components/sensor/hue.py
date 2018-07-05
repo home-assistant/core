@@ -20,8 +20,8 @@ from aiohue.sensors import (ZGP_SWITCH_BUTTON_1, ZGP_SWITCH_BUTTON_2, ZGP_SWITCH
                             TYPE_ZLL_TEMPERATURE, TYPE_CLIP_SWITCH)
 
 import homeassistant.components.hue as hue
-from homeassistant.components.hue.const import (ATTR_DARK, ATTR_DAYLIGHT, ATTR_LAST_UPDATED,
-                                                ICON_REMOTE, UOM_HUMIDITY, UOM_ILLUMINANCE)
+from homeassistant.components.hue.const import (ATTR_DARK, ATTR_DAYLIGHT, ICON_REMOTE,
+                                                UOM_HUMIDITY, UOM_ILLUMINANCE)
 from homeassistant.components.sensor import (DEVICE_CLASS_HUMIDITY,
                                              DEVICE_CLASS_ILLUMINANCE,
                                              DEVICE_CLASS_TEMPERATURE)
@@ -163,8 +163,9 @@ async def async_update_items(hass, bridge, async_add_devices,
     else:
         allowed_sensor_types = HUE_SENSORS
 
-    for item_id, sensor in api.items():
-        if sensor.type in allowed_sensor_types:
+    for item_id in api:
+        sensor = api[item_id]
+        if sensor.type in ALL_SENSORS:
             if item_id not in current:
                 current[item_id] = create_sensor(
                     sensor, request_bridge_update, bridge)
@@ -179,23 +180,29 @@ async def async_update_items(hass, bridge, async_add_devices,
         async_add_devices(new_sensors)
 
 
-class CLIPSensor(Entity):
-    """Base class representing a CLIP Sensor.
-    Contains properties and methods common to all CLIP sensors."""
+class HueSensor(Entity):
+    """Base class representing a Hue sensor.
+    Contains properties and methods common to all Hue sensors."""
     def __init__(self, sensor, request_bridge_update, bridge):
         self.sensor = sensor
         self.async_request_bridge_update = request_bridge_update
         self.bridge = bridge
+        self._hue_last_updated = getattr(self.sensor, 'lastupdated', None)
 
     @property
     def name(self):
-        """Return the name of the CLIP sensor."""
+        """Return the name of the Hue sensor."""
         return self.sensor.name
 
     @property
     def available(self):
-        """Return true if the CLIP sensor is available."""
+        """Reachable returns true if the Hue sensor is available."""
         return self.sensor.reachable
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the Hue sensor."""
+        return self.sensor.uniqueid
 
     async def async_update(self):
         """Synchronize state with bridge."""
@@ -207,14 +214,10 @@ class CLIPSensor(Entity):
         attributes = {}
         if self.sensor.battery is not None:
             attributes[ATTR_BATTERY_LEVEL] = self.sensor.battery
-        attributes[ATTR_LAST_UPDATED] = self.sensor.lastupdated
         return attributes
 
 
-class CLIPGenericStatus(CLIPSensor):
-    def __init__(self, sensor, request_bridge_update, bridge):
-        """Initialize the sensor."""
-        super().__init__(sensor, request_bridge_update, bridge)
+class CLIPGenericStatus(HueSensor):
 
     @property
     def state(self):
@@ -222,10 +225,7 @@ class CLIPGenericStatus(CLIPSensor):
         return self.sensor.status
 
 
-class CLIPHumidity(CLIPSensor):
-    def __init__(self, sensor, request_bridge_update, bridge):
-        """Initialize the sensor."""
-        super().__init__(sensor, request_bridge_update, bridge)
+class CLIPHumidity(HueSensor):
 
     @property
     def state(self):
@@ -243,10 +243,7 @@ class CLIPHumidity(CLIPSensor):
         return UOM_HUMIDITY
 
 
-class CLIPLightLevel(CLIPSensor):
-    def __init__(self, sensor, request_bridge_update, bridge):
-        """Initialize the sensor."""
-        super().__init__(sensor, request_bridge_update, bridge)
+class CLIPLightLevel(HueSensor):
 
     @property
     def state(self):
@@ -264,32 +261,25 @@ class CLIPLightLevel(CLIPSensor):
         return UOM_ILLUMINANCE
 
 
-class CLIPSwitch(CLIPSensor):
-    """Class representing a CLIP Switch."""
-    def __init__(self, sensor, request_bridge_update, bridge):
-        super().__init__(sensor, request_bridge_update, bridge)
-        self._last_update_time = self.sensor.lastupdated
-
-    @property
-    def state(self):
-        """Return the switch's buttonevent if the lastupdated variable changed."""
-        current_time = self.sensor.lastupdated
-        if current_time == self._last_update_time:
-            return None
-        else:
-            self._last_update_time = current_time
-            return self.sensor.buttonevent
+class CLIPSwitch(HueSensor):
 
     @property
     def icon(self):
         """Return the remote icon."""
         return ICON_REMOTE
 
+    @property
+    def state(self):
+        """Return the switch's buttonevent if the lastupdated variable changed."""
+        current_time = self.sensor.lastupdated
+        if current_time == self._hue_last_updated:
+            return None
+        else:
+            self._hue_last_updated = current_time
+            return self.sensor.buttonevent
 
-class CLIPTemperature(CLIPSensor):
-    def __init__(self, sensor, request_bridge_update, bridge):
-        """Initialize the sensor."""
-        super().__init__(sensor, request_bridge_update, bridge)
+
+class HueTemperature(HueSensor):
 
     @property
     def state(self):
@@ -307,101 +297,33 @@ class CLIPTemperature(CLIPSensor):
         return TEMP_CELSIUS
 
 
-class ZGPSwitch(Entity):
+class ZGPSwitch(HueSensor):
     """Class representing a ZGP (Hue Tap) Switch."""
-    def __init__(self, sensor, request_bridge_update, bridge):
-        self.sensor = sensor
-        self.async_request_bridge_update = request_bridge_update
-        self.bridge = bridge
-        self._last_update_time = self.sensor.lastupdated
-
-    @property
-    def name(self):
-        """Return the name of the ZGP (Hue Tap) Switch."""
-        return self.sensor.name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the ZGP (Hue Tap) Switch."""
-        return self.sensor.uniqueid
-
-    @property
-    def state(self):
-        """Return the switch's buttonevent if the lastupdated variable changed."""
-        current_time = self.sensor.lastupdated
-        if current_time == self._last_update_time:
-            return None
-        else:
-            self._last_update_time = current_time
-            if self.sensor.buttonevent == ZGP_SWITCH_BUTTON_1:
-                return 1
-            elif self.sensor.buttonevent == ZGP_SWITCH_BUTTON_2:
-                return 2
-            elif self.sensor.buttonevent == ZGP_SWITCH_BUTTON_3:
-                return 3
-            elif self.sensor.buttonevent == ZGP_SWITCH_BUTTON_4:
-                return 4
 
     @property
     def icon(self):
         """Return the remote icon."""
         return ICON_REMOTE
 
-    async def async_update(self):
-        """Synchronize state with bridge."""
-        await self.async_request_bridge_update(self.sensor.id)
-
     @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        attributes = {}
-        attributes[ATTR_LAST_UPDATED] = self.sensor.lastupdated
-        return attributes
+    def state(self):
+        """Return the switch's buttonevent if the lastupdated variable changed."""
+        current_time = self.sensor.lastupdated
+        if current_time == self._hue_last_updated:
+            return None
+        else:
+            self._hue_last_updated = current_time
+            if self.sensor.buttonevent == ZGP_SWITCH_BUTTON_1:
+                return '1_click'
+            elif self.sensor.buttonevent == ZGP_SWITCH_BUTTON_2:
+                return '2_click'
+            elif self.sensor.buttonevent == ZGP_SWITCH_BUTTON_3:
+                return '3_click'
+            elif self.sensor.buttonevent == ZGP_SWITCH_BUTTON_4:
+                return '4_click'
 
 
-class ZLLSensor(Entity):
-    """Base class representing a Hue ZLL Sensor.
-    Contains properties and methods common to all ZLL sensors.
-    """
-    def __init__(self, sensor, request_bridge_update, bridge):
-        self.sensor = sensor
-        self.async_request_bridge_update = request_bridge_update
-        self.bridge = bridge
-
-    @property
-    def name(self):
-        """Return the name of the Hue sensor."""
-        return self.sensor.name
-
-    @property
-    def available(self):
-        """Return true if the Hue sensor is available."""
-        return self.sensor.reachable
-
-    @property
-    def unique_id(self):
-        """Return the unique id of the Hue sensor."""
-        return self.sensor.uniqueid
-
-    async def async_update(self):
-        """Synchronize state with bridge."""
-        await self.async_request_bridge_update(self.sensor.id)
-
-    @property
-    def device_state_attributes(self):
-        """Return the device state attributes."""
-        attributes = {}
-        attributes[ATTR_BATTERY_LEVEL] = self.sensor.battery
-        attributes[ATTR_LAST_UPDATED] = self.sensor.lastupdated
-        return attributes
-
-
-class ZLLLightLevelSensor(ZLLSensor):
-    """Representation of a Hue ZLL Light Level sensor."""
-
-    def __init__(self, sensor, request_bridge_update, bridge):
-        """Initialize the sensor."""
-        super().__init__(sensor, request_bridge_update, bridge)
+class ZLLLightLevel(HueSensor):
 
     @property
     def state(self):
@@ -425,25 +347,26 @@ class ZLLLightLevelSensor(ZLLSensor):
         attributes[ATTR_BATTERY_LEVEL] = self.sensor.battery
         attributes[ATTR_DARK] = self.sensor.dark
         attributes[ATTR_DAYLIGHT] = self.sensor.daylight
-        attributes[ATTR_LAST_UPDATED] = self.sensor.lastupdated
         return attributes
 
 
-class ZLLSwitch(ZLLSensor):
+class ZLLSwitch(HueSensor):
     """Class representing a ZLL (Hue Wireless Dimmer) Switch."""
-    def __init__(self, sensor, request_bridge_update, bridge):
-        super().__init__(sensor, request_bridge_update, bridge)
-        self._last_update_time = self.sensor.lastupdated
+
+    @property
+    def icon(self):
+        """Return the remote icon."""
+        return ICON_REMOTE
 
     @property
     def state(self):
         """Return the switch's buttonevent if the lastupdated variable changed.
         If lastupdated hasn't changed, reset the sensor's state to None."""
         current_time = self.sensor.lastupdated
-        if current_time == self._last_update_time:
+        if current_time == self._hue_last_updated:
             return None
         else:
-            self._last_update_time = current_time
+            self._hue_last_updated = current_time
             if self.sensor.buttonevent == ZLL_SWITCH_BUTTON_1_SHORT_RELEASED:
                 return '1_click'
             elif self.sensor.buttonevent == ZLL_SWITCH_BUTTON_1_LONG_RELEASED:
@@ -461,34 +384,6 @@ class ZLLSwitch(ZLLSensor):
             elif self.sensor.buttonevent == ZLL_SWITCH_BUTTON_4_LONG_RELEASED:
                 return '4_hold'
 
-    @property
-    def icon(self):
-        """Return the remote icon."""
-        return ICON_REMOTE
-
-
-class ZLLTemperatureSensor(ZLLSensor):
-    """Representation of a Hue ZLL Temperature sensor."""
-
-    def __init__(self, sensor, request_bridge_update, bridge):
-        """Initialize the sensor."""
-        super().__init__(sensor, request_bridge_update, bridge)
-
-    @property
-    def state(self):
-        """Return the state of the Hue sensor."""
-        return round(self.sensor.temperature / 100, 1)
-
-    @property
-    def device_class(self):
-        """Return the device class of the Hue sensor."""
-        return DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def unit_of_measurement(self):
-        """Return the uom of the Hue sensor."""
-        return TEMP_CELSIUS
-
 
 def create_sensor(sensor, request_bridge_update, bridge):
     sensor_type = sensor.type
@@ -500,13 +395,11 @@ def create_sensor(sensor, request_bridge_update, bridge):
         return CLIPLightLevel(sensor, request_bridge_update, bridge)
     elif sensor_type == TYPE_CLIP_SWITCH:
         return CLIPSwitch(sensor, request_bridge_update, bridge)
-    elif sensor_type == TYPE_CLIP_TEMPERATURE:
-        return CLIPTemperature(sensor, request_bridge_update, bridge)
+    elif sensor_type in [TYPE_CLIP_TEMPERATURE, TYPE_ZLL_TEMPERATURE]:
+        return HueTemperature(sensor, request_bridge_update, bridge)
     elif sensor_type == TYPE_ZGP_SWITCH:
         return ZGPSwitch(sensor, request_bridge_update, bridge)
     elif sensor_type == TYPE_ZLL_LIGHTLEVEL:
-        return ZLLLightLevelSensor(sensor, request_bridge_update, bridge)
+        return ZLLLightLevel(sensor, request_bridge_update, bridge)
     elif sensor_type == TYPE_ZLL_SWITCH:
         return ZLLSwitch(sensor, request_bridge_update, bridge)
-    elif sensor_type == TYPE_ZLL_TEMPERATURE:
-        return ZLLTemperatureSensor(sensor, request_bridge_update, bridge)
