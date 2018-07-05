@@ -89,6 +89,8 @@ class APIEventStream(HomeAssistantView):
         if restrict:
             restrict = restrict.split(',') + [EVENT_HOMEASSISTANT_STOP]
 
+        fullstate = request.query.get('fullstate')
+
         async def forward_events(event):
             """Forward events to the open request."""
             if event.event_type == EVENT_TIME_CHANGED:
@@ -116,7 +118,13 @@ class APIEventStream(HomeAssistantView):
             _LOGGER.debug("STREAM %s ATTACHED", id(stop_obj))
 
             # Fire off one message so browsers fire open event right away
-            await to_write.put(STREAM_PING_PAYLOAD)
+            if fullstate:
+                msg = json.dumps(request.app['hass'].states.async_all(),
+                    cls=rem.JSONEncoder)
+            else:
+                msg = STREAM_PING_PAYLOAD
+
+            await to_write.put(msg)
 
             while True:
                 try:
