@@ -16,10 +16,8 @@ from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA,
 from homeassistant.const import CONF_URL, ATTR_TEMPERATURE
 from homeassistant.const import TEMP_FAHRENHEIT
 
-"""pypi requirements"""
 REQUIREMENTS = ['mitsPy==0.1.9']
 
-"""config params"""
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string
 })
@@ -32,17 +30,16 @@ async def async_setup_platform(hass, config, async_add_devices,
     controller = Manager(config.get(CONF_URL))
 
     async def register_devices(raw_devices):
+        """Register devices."""
         async_add_devices(
             [MitsubishiHvacDevice(
                 device=device,
-                unit_of_measurement=TEMP_FAHRENHEIT) for
-                device in raw_devices]
+                unit_of_measurement=TEMP_FAHRENHEIT) for device in raw_devices]
         )
 
     await controller.initialize(register_devices)
 
 
-"""supported features, for now all units will show the same features"""
 SUPPORT_FLAGS = (
     SUPPORT_TARGET_TEMPERATURE
     | SUPPORT_OPERATION_MODE
@@ -133,12 +130,11 @@ class MitsubishiHvacDevice(ClimateDevice):
         await self._device.set_air_direction(swing_mode)
         await self._refresh()
 
-    async def async_set_fan_mode(self, fan):
+    async def async_set_fan_mode(self, fan_mode):
         """Set the fan mode."""
-        await self._device.set_fan_speed(fan)
-        await self._refresh()
+        await self._device.set_fan_speed(fan_mode)
 
-    async def async_set_operation_mode(self, operation_mode, **kwargs):
+    async def async_set_operation_mode(self, operation_mode):
         """Set the operation mode."""
         await self._device.set_operation(operation_mode)
         await self._refresh()
