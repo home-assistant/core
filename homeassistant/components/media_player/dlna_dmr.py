@@ -31,6 +31,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     CONF_URL, CONF_NAME,
+    HTTP_ACCEPTED, HTTP_PRECONDITION_FAILED,
     STATE_OFF, STATE_ON, STATE_IDLE, STATE_PLAYING, STATE_PAUSED)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -264,7 +265,7 @@ class UpnpNotifyView(HomeAssistantView):
     async def async_notify(self, request):
         """Callback method for NOTIFY requests."""
         if 'SID' not in request.headers:
-            return aiohttp.web.Response(status=412)
+            return aiohttp.web.Response(status=HTTP_PRECONDITION_FAILED)
 
         headers = request.headers
         sid = headers['SID']
@@ -274,7 +275,7 @@ class UpnpNotifyView(HomeAssistantView):
         if sid not in self._registered_services:
             _LOGGER.debug('Storing NOTIFY in backlog for SID: %s', sid)
             self._backlog[sid] = {'headers': headers, 'body': body}
-            return aiohttp.web.Response(status=202)
+            return aiohttp.web.Response(status=HTTP_ACCEPTED)
 
         service = self._registered_services[sid]
         status = service.on_notify(headers, body)
