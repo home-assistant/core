@@ -98,7 +98,7 @@ class NADtcp(MediaPlayerDevice):
         # Update current volume
         self._volume = self.nad_vol_to_internal_vol(nad_status['volume'])
         self._nad_volume = nad_status['volume']
-        self._nad_volume_db = nad_vol_to_db_vol(nad_status['volume'])
+        self._nad_volume_db = self.nad_vol_to_db_vol(nad_status['volume'])
 
         # Update muted state
         self._mute = nad_status['muted']
@@ -121,9 +121,9 @@ class NADtcp(MediaPlayerDevice):
         return volume_internal
 		
     def nad_vol_to_db_vol(self, nad_volume):
-        """Convert nad volume range (0-200) dB volume range"""
+        """Convert nad volume range (0-200) to dB (-90 - +10) volume range"""
         
-        nad_volume_db = (nad_volume/2)+90
+        nad_volume_db = (nad_volume / 2) - 90
         
         return nad_volume_db
 
@@ -187,6 +187,10 @@ class NADtcp(MediaPlayerDevice):
         return self._mute
 
     @property
-    def nad_volume_db(self):
-        """Volume level in dB of the media player (-90dB..+10dB)."""
-        return self._nad_volume_db
+    def device_state_attributes(self):
+        """Return device specific state attributes.
+        NAD Volume in DB """
+        attr = {}
+        attr['nad_volume_db'] = self._nad_volume_db
+        
+        return attr
