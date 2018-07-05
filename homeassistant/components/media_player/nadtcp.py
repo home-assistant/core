@@ -25,7 +25,7 @@ DEFAULT_MAX_VOLUME = -10
 DEFAULT_VOLUME_STEP = 4
 
 SUPPORT_NAD = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | \
-              SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | SUPPORT_SELECT_SOURCE
+    SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | SUPPORT_SELECT_SOURCE
 
 CONF_MIN_VOLUME = 'min_volume'
 CONF_MAX_VOLUME = 'max_volume'
@@ -119,12 +119,12 @@ class NADtcp(MediaPlayerDevice):
             volume_internal = (nad_volume - self._min_vol) / \
                               (self._max_vol - self._min_vol)
         return volume_internal
-		
+
     def nad_vol_to_db_vol(self, nad_volume):
         """Convert nad volume range (0-200) to dB (-90 - +10) volume range"""
-        
+
         nad_volume_db = (nad_volume / 2) - 90
-        
+
         return nad_volume_db
 
     @property
@@ -192,5 +192,5 @@ class NADtcp(MediaPlayerDevice):
         NAD Volume in DB """
         attr = {}
         attr['nad_volume_db'] = self._nad_volume_db
-        
+
         return attr
