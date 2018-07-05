@@ -19,6 +19,7 @@ import async_timeout
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_call_later
 from homeassistant.components.http.view import (
     request_handler_factory, HomeAssistantView)
 from homeassistant.components.media_player import (
@@ -38,7 +39,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
 REQUIREMENTS = [
-    'async-upnp-client==0.11.0',
+    'async-upnp-client==0.11.1',
     'python-didl-lite==1.0.1',
 ]
 
@@ -287,6 +288,10 @@ class UpnpNotifyView(HomeAssistantView):
         base_url = self.hass.config.api.base_url
         return urllib.parse.urljoin(base_url, self.url)
 
+    def registered_service(self, sid):
+        """Get a registered service by SID."""
+        return self._registered_services.get(sid)
+
     def register_service(self, sid, service):
         """Register a UpnpService under SID."""
         if sid in self._registered_services:
@@ -357,7 +362,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
     async def _async_on_hass_stop(self, event):
         """Event handler on HASS stop."""
-        await self.async_unsubscribe_all()
+        await self._async_unsubscribe_all()
 
     def _service(self, service_type):
         """Get UpnpService by service_type or alias."""
@@ -367,7 +372,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         service_type = SERVICE_TYPES.get(service_type, service_type)
         return self._device.service(service_type)
 
-    async def async_unsubscribe_all(self):
+    async def _async_unsubscribe_all(self):
         """
         Disconnect from device.
 
@@ -391,6 +396,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def _async_init_device(self):
         """Fetch and init services."""
         self._device = await self._factory.async_create_device(self._url)
+        self._is_connected = True
 
         # ensure correct UDN
         if self._udn and self._device.udn != self._udn:
@@ -401,6 +407,14 @@ class DlnaDmrDevice(MediaPlayerDevice):
         if self.name is None or self.name == DEFAULT_NAME:
             self._name = self._device.name
 
+        # subscribe to events
+        await self._async_subscribe_services()
+
+    async def _async_subscribe_services(self, event=None):
+        """(Re-)Subscribe to services."""
+        if not self._device or not self._is_connected:
+            return
+
         # subscribe services for events
         callback_url = self._notify_view.callback_url
         for service_type, service in self._device.services.items():
@@ -409,9 +423,24 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
             service.on_state_variable_change = self._on_state_variable_change
 
-            sid = await service.async_subscribe(callback_url)
-            if sid:
+            subscribe_timeout = 30 * 60
+            try:
+                if not service.subscription_sid:
+                    sid = await service.async_subscribe(callback_url,
+                                                        subscribe_timeout)
+                else:
+                    sid = await service.async_subscribe_renew(
+                        subscribe_timeout)
+            except (asyncio.TimeoutError, aiohttp.ClientError):
+                _LOGGER.error('Unable to (re)subscribe to service')
+                return
+
+            if sid and not self._notify_view.registered_service(sid):
                 self._notify_view.register_service(sid, service)
+
+        # renew a bit earlier
+        delay = 1 * 60
+        async_call_later(self.hass, delay, self._async_subscribe_services)
 
     async def async_update(self):
         """Retrieve the latest data."""
@@ -421,6 +450,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 # Not yet seen alive, leave for now, gracefully
                 return
+
+        was_connected = self._is_connected
 
         # call GetTransportInfo/GetPositionInfo regularly
         try:
@@ -438,7 +469,11 @@ class DlnaDmrDevice(MediaPlayerDevice):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error('Error during update call')
             self._is_connected = False
-            await self.async_unsubscribe_all()
+            await self._async_unsubscribe_all()
+
+        # reconnected? then re-subscribe to services
+        if not was_connected and self._is_connected:
+            await self._async_subscribe_services()
 
     async def _async_poll_transport_info(self, avt_service):
         """Update transport info from device."""
