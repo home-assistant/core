@@ -188,13 +188,6 @@ class ArloSensor(Entity):
 
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
         attrs['brand'] = DEFAULT_BRAND
-
-        known = False
-        for sensor_type in SENSOR_TYPES:
-            if self._sensor_type == sensor_type:
-                known = True
-
-        if known:
-            attrs['model'] = self._data.model_id
+        attrs['model'] = self._data.model_id
 
         return attrs

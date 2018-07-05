@@ -6,7 +6,6 @@ from homeassistant.const import (
     DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY, ATTR_ATTRIBUTION)
 from homeassistant.components.sensor import arlo
 from homeassistant.components.arlo import DATA_ARLO
-from homeassistant.helpers import dispatcher
 
 
 def _get_named_tuple(input_dict):
@@ -87,6 +86,14 @@ def platform_setup():
     return PlatformSetupFixture()
 
 
+@pytest.fixture()
+def sensor_with_hass_data(default_sensor, hass):
+    """Create a sensor with async_dispatcher_connected mocked."""
+    hass.data = {}
+    default_sensor.hass = hass
+    return default_sensor
+
+
 def test_setup_with_no_data(platform_setup, hass):
     """Test setup_platform with no data."""
     arlo.setup_platform(hass, None, platform_setup.add_devices)
@@ -130,12 +137,19 @@ def test_sensor_name(default_sensor):
     assert default_sensor.name == 'Last'
 
 
-@patch('homeassistant.helpers.dispatcher.async_dispatcher_connect',
-       MagicMock())
-def test_async_added_to_hass(default_sensor):
+async def test_async_added_to_hass(sensor_with_hass_data):
     """Test dispatcher called when added."""
-    yield from default_sensor.async_added_to_hass()
-    assert len(dispatcher.async_dispatcher_connect.calls) == 1
+    with patch(
+        'homeassistant.components.sensor.arlo.async_dispatcher_connect',
+        MagicMock()) as mock:
+        await sensor_with_hass_data.async_added_to_hass()
+        assert len(mock.mock_calls) == 1
+        kall = mock.call_args
+        args, kwargs = kall
+        assert len(args) == 3
+        assert args[0] == sensor_with_hass_data.hass
+        assert args[1] == 'arlo_update'
+        assert not kwargs
 
 
 def test_sensor_state_default(default_sensor):
