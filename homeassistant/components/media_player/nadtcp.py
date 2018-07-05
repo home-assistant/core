@@ -183,8 +183,8 @@ class NADtcp(MediaPlayerDevice):
     def device_state_attributes(self):
         """Return device specific state attributes.
 
-		NAD Volume in DB.
-		"""
+                NAD Volume in DB.
+                """
         attr = {}
         attr['nad_volume_db'] = self._nad_volume_db
 
