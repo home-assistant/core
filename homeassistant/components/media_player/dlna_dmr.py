@@ -704,7 +704,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         """Title of current playing media."""
         # pylint: disable=arguments-differ
         xml = state_variable.value
-        if not xml:
+        if not xml or xml == 'NOT_IMPLEMENTED':
             return None
 
         from didl_lite import didl_lite
@@ -721,7 +721,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         # pylint: disable=arguments-differ
         xml = state_variable.value
-        if not xml:
+        if not xml or xml == 'NOT_IMPLEMENTED':
             return None
 
         from didl_lite import didl_lite
