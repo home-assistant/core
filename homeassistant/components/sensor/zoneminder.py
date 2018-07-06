@@ -162,7 +162,7 @@ class ZMSensorRunState(Entity):
 
     def update(self):
         """Update the sensor."""
-        s = zoneminder.get_run_states()[1]
+        s = zoneminder.get_active_state()
         if s is None:
             self._state = STATE_UNKNOWN
         else:
