@@ -11,7 +11,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD, CONF_USERNAME)
+    CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD, CONF_USERNAME, ATTR_NAME)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,6 +22,8 @@ DEFAULT_PATH_ZMS = '/zm/cgi-bin/nph-zms'
 DEFAULT_SSL = False
 DEFAULT_TIMEOUT = 10
 DOMAIN = 'zoneminder'
+
+SET_RUN_STATE = 'set_run_state'
 
 LOGIN_RETRIES = 2
 
@@ -38,6 +40,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_PASSWORD): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
+
+SET_RUN_STATE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_NAME): cv.string
+})
 
 
 def setup(hass, config):
@@ -63,6 +69,11 @@ def setup(hass, config):
     ZM['path_zms'] = conf.get(CONF_PATH_ZMS)
 
     hass.data[DOMAIN] = ZM
+
+    hass.services.register(
+        DOMAIN, SET_RUN_STATE, set_active_state,
+        schema=SET_RUN_STATE_SCHEMA
+    )
 
     return login()
 
@@ -93,14 +104,14 @@ def login():
     return True
 
 
-def _zm_request(method, api_url, data=None):
+def _zm_request(method, api_url, data=None, timeout=DEFAULT_TIMEOUT):
     """Perform a Zoneminder request."""
     # Since the API uses sessions that expire, sometimes we need to re-auth
     # if the call fails.
     for _ in range(LOGIN_RETRIES):
         req = requests.request(
             method, urljoin(ZM['url'], api_url), data=data,
-            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT)
+            cookies=ZM['cookies'], timeout=timeout)
 
         if not req.ok:
             login()
@@ -129,12 +140,26 @@ def change_state(api_url, post_data):
 
 # pylint: disable=no-member
 def get_active_state():
-    """
-    Get the current (string) run state from Zoneminder API.
-    """
+    """Get the current (string) run state from Zoneminder API."""
     active_state = None
     for i in get_state('api/states.json')['states']:
         # yes, the ZM API uses the *string* "1" for this...
         if i['State']['IsActive'] == '1':
             active_state = i['State']['Name']
     return active_state
+
+
+def set_active_state(call):
+    """
+    Set the ZoneMinder run state to the given state name, via ZM API.
+
+    Note that this is a long-running API call; ZoneMinder changes the state of
+    each camera in turn, and this GET does not receive a response until all
+    cameras have been updated. Even on a reasonably powerful machine, this call
+    can take ten (10) or more seconds **per camera**. This method sets a
+    timeout of 120, which should be adequate for most users.
+    """
+    state_name = call.data.get('name')
+    url = 'api/states/change/%s.json' % state_name
+    _LOGGER.debug('Setting ZoneMinder run state via GET %s', url)
+    return _zm_request('GET', url, timeout=120)
