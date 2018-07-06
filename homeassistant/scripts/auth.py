@@ -11,13 +11,16 @@ from homeassistant.auth_providers import homeassistant as hass_auth
 def run(args):
     """Handle Home Assistant auth provider script."""
     parser = argparse.ArgumentParser(
-        description=("Manage Home Assistant users"))
+        description="Manage Home Assistant users")
     parser.add_argument(
         '--script', choices=['auth'])
     parser.add_argument(
         '-c', '--config',
         default=get_default_config_dir(),
         help="Directory that contains the Home Assistant configuration")
+    parser.add_argument(
+        '-t', '--tfa', default=False,
+        help="Whether enable two factor authentication")
 
     subparsers = parser.add_subparsers(dest='func')
     subparsers.required = True
@@ -32,6 +35,7 @@ def run(args):
     parser_validate_login = subparsers.add_parser('validate')
     parser_validate_login.add_argument('username', type=str)
     parser_validate_login.add_argument('password', type=str)
+    parser_validate_login.add_argument('--code', default=None, type=str)
     parser_validate_login.set_defaults(func=validate_login)
 
     parser_change_pw = subparsers.add_parser('change_password')
@@ -43,7 +47,7 @@ def run(args):
     loop = asyncio.get_event_loop()
     hass = HomeAssistant(loop=loop)
     hass.config.config_dir = os.path.join(os.getcwd(), args.config)
-    data = hass_auth.Data(hass)
+    data = hass_auth.Data(hass, args.config)
     loop.run_until_complete(data.async_load())
     loop.run_until_complete(args.func(data, args))
 
@@ -61,9 +65,13 @@ async def list_users(data, args):
 
 async def add_user(data, args):
     """Create a user."""
-    data.add_user(args.username, args.password)
+    secret = data.add_user(args.username, args.password)
     await data.async_save()
-    print("User created")
+    if secret is not None:
+        print("User created, please set up Google Authenticator or any other"
+              " compatible apps like Authy with key: %s" % secret)
+    else:
+        print("User created")
 
 
 async def validate_login(data, args):
@@ -73,6 +81,12 @@ async def validate_login(data, args):
         print("Auth valid")
     except hass_auth.InvalidAuth:
         print("Auth invalid")
+    except hass_auth.Request2FA as request2fa:
+        try:
+            data.validate_2fa(request2fa.session_token, args.code)
+            print("Auth valid")
+        except hass_auth.InvalidAuth:
+            print("Auth invalid")
 
 
 async def change_password(data, args):
