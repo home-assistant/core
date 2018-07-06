@@ -53,7 +53,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sync_attributes()
     import zigate
-    zigate.dispatcher.connect(sync_attributes, zigate.ZIGATE_ATTRIBUTE_ADDED, weak=False)
+    zigate.dispatcher.connect(sync_attributes,
+                              zigate.ZIGATE_ATTRIBUTE_ADDED, weak=False)
 
 
 class ZiGateSensor(Entity):

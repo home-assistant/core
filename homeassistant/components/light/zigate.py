@@ -9,9 +9,8 @@ from functools import reduce
 from operator import ior
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
-    ATTR_WHITE_VALUE, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
-    SUPPORT_COLOR, SUPPORT_WHITE_VALUE, Light)
+    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
+    SUPPORT_COLOR, Light)
 
 DOMAIN = 'zigate'
 DATA_ZIGATE_DEVICES = 'zigate_devices'
@@ -113,22 +112,22 @@ class ZiGateLight(Light):
 #     def hs_color(self) -> tuple:
 #         """Return the hs color value."""
 #         return self._hs_color
-# 
+#
 #     @property
 #     def color_temp(self) -> int:
 #         """Return the CT color temperature."""
 #         return self._ct
-# 
+#
 #     @property
 #     def white_value(self) -> int:
 #         """Return the white value of this light between 0..255."""
 #         return self._white
-# 
+#
 #     @property
 #     def effect_list(self) -> list:
 #         """Return the list of supported effects."""
 #         return self._effect_list
-# 
+#
 #     @property
 #     def effect(self) -> str:
 #         """Return the current effect."""

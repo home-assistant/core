@@ -36,9 +36,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                             )
                     if key not in hass.data[DATA_ZIGATE_ATTRS]:
                         _LOGGER.debug(('Creating switch '
-                                           'for device '
-                                           '{} {}').format(device,
-                                                           endpoint))
+                                       'for device '
+                                       '{} {}').format(device,
+                                                       endpoint))
                         entity = ZiGateSwitch(device, endpoint)
                         devs.append(entity)
                         hass.data[DATA_ZIGATE_ATTRS][key] = entity

@@ -56,7 +56,7 @@ def setup(hass, config):
     _LOGGER.debug('Persistent file {}'.format(persistent_file))
 
     z = zigate.ZiGate(port,
-                      persistent_file, 
+                      persistent_file,
                       auto_start=False)
 
     hass.data[DOMAIN] = z
