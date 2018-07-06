@@ -133,7 +133,6 @@ def async_track_same_state(hass, period, action, async_check_same_func,
         """Clear all unsub listener."""
         nonlocal async_remove_state_for_cancel, async_remove_state_for_listener
 
-        # pylint: disable=not-callable
         if async_remove_state_for_listener is not None:
             async_remove_state_for_listener()
             async_remove_state_for_listener = None

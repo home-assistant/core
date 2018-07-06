@@ -4,7 +4,6 @@ Support for Satel Integra devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/satel_integra/
 """
-# pylint: disable=invalid-name
 
 import asyncio
 import logging

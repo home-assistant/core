@@ -28,7 +28,7 @@ mkdir -p ${LOCAL_DIR}
 
 docker run \
      -v ${LOCAL_DIR}:/opt/dest/locale \
-     lokalise/lokalise-cli@sha256:79b3108211ed1fcc9f7b09a011bfc53c240fc2f3b7fa7f0c8390f593271b4cd7 lokalise \
+     lokalise/lokalise-cli@sha256:ddf5677f58551261008342df5849731c88bcdc152ab645b133b21819aede8218 lokalise \
      --token ${LOKALISE_TOKEN} \
      export ${PROJECT_ID} \
      --export_empty skip \

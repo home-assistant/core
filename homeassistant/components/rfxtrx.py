@@ -162,7 +162,6 @@ def get_pt2262_cmd(device_id, data_bits):
     return hex(data[-1] & mask)
 
 
-# pylint: disable=unused-variable
 def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for device in RFX_DEVICES.values():
@@ -176,7 +175,6 @@ def get_pt2262_device(device_id):
     return None
 
 
-# pylint: disable=unused-variable
 def find_possible_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():
