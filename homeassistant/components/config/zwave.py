@@ -29,6 +29,7 @@ def async_setup(hass):
     hass.http.register_view(ZWaveUserCodeView)
     hass.http.register_view(ZWaveLogView)
     hass.http.register_view(ZWaveConfigWriteView)
+    hass.http.register_view(ZWaveProtecionView)
 
     return True
 
@@ -196,3 +197,56 @@ class ZWaveUserCodeView(HomeAssistantView):
                                       'label': value.label,
                                       'length': len(value.data)}
         return self.json(usercodes)
+
+
+class ZWaveProtecionView(HomeAssistantView):
+    """View for the protection commandclass of a node."""
+
+    url = r"/api/zwave/protection/{node_id:\d+}"
+    name = "api:zwave:protection"
+
+    @ha.callback
+    def get(self, request, node_id):
+        """Retrieve the protection commandclass options of node."""
+        nodeid = int(node_id)
+        hass = request.app['hass']
+        network = hass.data.get(const.DATA_NETWORK)
+        node = network.nodes.get(nodeid)
+        if node is None:
+            return self.json_message('Node not found', HTTP_NOT_FOUND)
+        protection_options = {}
+        if not node.has_command_class(const.COMMAND_CLASS_PROTECTION):
+            return self.json(protection_options)
+        for value in (
+                node.get_values(class_id=const.COMMAND_CLASS_PROTECTION)
+                .values()):
+            if value.genre != const.GENRE_SYSTEM:
+                continue
+            protection_options = {'label': value.label,
+                                  'selected': value.data,
+                                  'options': value.data_items}
+        return self.json(protection_options)
+
+    @ha.callback
+    def post(self, request, node_id, selection):
+        """Change the selected option in protection commandclass."""
+        nodeid = int(node_id)
+        hass = request.app['hass']
+        network = hass.data.get(const.DATA_NETWORK)
+        node = network.nodes.get(nodeid)
+        if node is None:
+            return self.json_message('Node not found', HTTP_NOT_FOUND)
+        if not node.has_command_class(const.COMMAND_CLASS_PROTECTION):
+            return self.json_message('No protection commandclass on this node',
+                                     HTTP_NOT_FOUND)
+        for value in (
+                node.get_values(class_id=const.COMMAND_CLASS_PROTECTION)
+                .values()):
+            if value.genre != const.GENRE_SYSTEM:
+                continue
+            value.data = str(selection)
+            _LOGGER.info("Setting protection commandclass option on Node %s "
+                         "to %s", nodeid, str(selection))
+
+        return self.json_message('Protection commandclass option set.',
+                                 HTTP_OK)
