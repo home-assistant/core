@@ -22,7 +22,6 @@ DEPENDENCIES = ['lifesos']
 async def async_setup_platform(
         hass, config, async_add_devices, discovery_info=None):
     """Set up the LifeSOS binary sensor devices."""
-
     device_id = discovery_info[CONF_ID]
     baseunit = hass.data[DATA_BASEUNIT]
     device = baseunit.devices[device_id]
@@ -41,6 +40,7 @@ class LifeSOSBinarySensor(LifeSOSBaseSensor, BinarySensorDevice):
     """Representation of a LifeSOS binary sensor."""
 
     def __init__(self, baseunit, name, device, trigger_duration):
+        """Initialize the LifeSOS binary sensor."""
         from lifesospy.enums import DeviceType
 
         super().__init__(baseunit, name, device)

@@ -253,6 +253,7 @@ class LifeSOSBaseSensor(LifeSOSDevice):
     """Common base class for all LifeSOS enrolled sensors."""
 
     def __init__(self, baseunit, name, device):
+        """Initialize the LifeSOS base sensor."""
         super().__init__(
             baseunit,
             "{0} {1} {2:06x}".format(
@@ -274,7 +275,6 @@ class LifeSOSBaseSensor(LifeSOSDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-
         # Device ID is assigned by the manufacturer to ensure each device
         # has a unique ID, so we can just use that
         return "{0:06x}".format(self._device.device_id)
