@@ -11,7 +11,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
-    STATE_IDLE, STATE_RECORDING
+    STATE_IDLE, STATE_RECORDING, DOMAIN
 from homeassistant.core import callback
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, HTTP_BAD_REQUEST
@@ -45,7 +45,9 @@ async def async_setup_platform(hass, config, async_add_devices,
                           config[CONF_BUFFER_SIZE],
                           config[CONF_TIMEOUT])]
 
-    hass.http.register_view(CameraPushReceiver(cameras,
+    component = hass.data.get(DOMAIN)
+
+    hass.http.register_view(CameraPushReceiver(component,
                                                config[CONF_IMAGE_FIELD]))
 
     async_add_devices(cameras)
@@ -57,19 +59,18 @@ class CameraPushReceiver(HomeAssistantView):
     url = "/api/camera_push/{entity_id}"
     name = 'api:camera_push:camera_entity'
 
-    def __init__(self, cameras, image_field):
+    def __init__(self, component, image_field):
         """Initialize CameraPushReceiver with camera entity."""
-        self._cameras = cameras
+        self._cameras = component
         self._image = image_field
 
     async def post(self, request, entity_id):
         """Accept the POST from Camera."""
-        try:
-            (_camera,) = [camera for camera in self._cameras
-                          if camera.entity_id == entity_id]
-        except ValueError:
-            _LOGGER.error("Unknown push camera %s", entity_id)
-            return self.json_message('Unknown Push Camera',
+        _camera = self._cameras.get_entity(entity_id)
+
+        if _camera is None:
+            _LOGGER.error("Unknown %s", entity_id)
+            return self.json_message('Unknown {}'.format(entity_id),
                                      HTTP_BAD_REQUEST)
 
         try:
