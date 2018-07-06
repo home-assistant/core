@@ -34,7 +34,6 @@ UOM_ILLUMINANCE = 'Lux'
 async def async_setup_platform(
         hass, config, async_add_devices, discovery_info=None):
     """Set up the LifeSOS sensor devices."""
-
     device_id = discovery_info[CONF_ID]
     baseunit = hass.data[DATA_BASEUNIT]
     device = baseunit.devices[device_id]
@@ -52,6 +51,7 @@ class LifeSOSSensor(LifeSOSBaseSensor):
     """Representation of a LifeSOS sensor."""
 
     def __init__(self, baseunit, name, device):
+        """Initialize the LifeSOS sensor."""
         super().__init__(baseunit, name, device)
 
         self._device_class = self._get_device_class_from_device_type()

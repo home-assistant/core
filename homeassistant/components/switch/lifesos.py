@@ -44,6 +44,7 @@ class LifeSOSSwitch(LifeSOSDevice, SwitchDevice):
     """Representation of a LifeSOS switch."""
 
     def __init__(self, baseunit, name, switch_number):
+        """Initialize the LifeSOS switch."""
         switch_name = "{0} {1}".format(
             name, switch_number.name)
         super().__init__(baseunit, switch_name)
@@ -85,7 +86,7 @@ class LifeSOSSwitch(LifeSOSDevice, SwitchDevice):
 
     @callback
     def handle_switch_state_changed(self, switch_number, state):
-        """When the switch state changes, notify HA"""
+        """When the switch state changes, notify HA."""
         if switch_number != self._switch_number:
             return
         self._is_on = state

@@ -49,7 +49,6 @@ SERVICE_SCHEMA_CLEAR_STATUS = vol.Schema({
 async def async_setup_platform(
         hass, config, async_add_devices, discovery_info=None):
     """Perform the setup for LifeSOS alarm panels."""
-
     alarm = LifeSOSAlarm(
         hass.data[DATA_BASEUNIT],
         discovery_info[CONF_NAME])
@@ -81,6 +80,7 @@ class LifeSOSAlarm(LifeSOSDevice, acp.AlarmControlPanel):
     """Representation of a LifeSOS alarm panel."""
 
     def __init__(self, baseunit, name):
+        """Initialize the LifeSOS alarm control panel."""
         super().__init__(baseunit, name)
         self._state = STATE_UNKNOWN
 
@@ -137,8 +137,7 @@ class LifeSOSAlarm(LifeSOSDevice, acp.AlarmControlPanel):
 
     @callback
     def handle_properties_changed(self, changes):
-        """Update the HA state when base unit state changes, and notify HA
-        we have updated state and device state attributes."""
+        """Update the HA state when base unit state changes, and notify HA."""
         from lifesospy.baseunit import BaseUnit
 
         for change in changes:
