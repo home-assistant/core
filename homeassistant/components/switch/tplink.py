@@ -23,11 +23,9 @@ ATTR_CURRENT_A = 'current_a'
 
 CONF_LEDS = 'enable_leds'
 
-DEFAULT_NAME = 'TP-Link Switch'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_LEDS): cv.boolean,
 })
 
@@ -39,21 +37,32 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
     leds_on = config.get(CONF_LEDS)
 
-    add_entities([SmartPlugSwitch(SmartPlug(host), name, leds_on)], True)
+    plug = SmartPlug(host)
+    unique_id = plug.sys_info['deviceId']
+    if name is None:
+        name = plug.alias
+
+    add_devices([SmartPlugSwitch(plug, unique_id, name, leds_on)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug, name, leds_on):
+    def __init__(self, smartplug, unique_id, name, leds_on):
         """Initialize the switch."""
         self.smartplug = smartplug
+        self._unique_id = unique_id
         self._name = name
         self._leds_on = leds_on
         self._state = None
         self._available = True
         # Set up emeter cache
         self._emeter_params = {}
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def name(self):
@@ -93,10 +102,6 @@ class SmartPlugSwitch(SwitchDevice):
             if self._leds_on is not None:
                 self.smartplug.led = self._leds_on
                 self._leds_on = None
-
-            # Pull the name from the device if a name was not specified
-            if self._name == DEFAULT_NAME:
-                self._name = self.smartplug.alias
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
