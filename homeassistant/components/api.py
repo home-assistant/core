@@ -120,7 +120,7 @@ class APIEventStream(HomeAssistantView):
             # Fire off one message so browsers fire open event right away
             if fullstate:
                 msg = json.dumps(request.app['hass'].states.async_all(),
-                    cls=rem.JSONEncoder)
+                                 cls=rem.JSONEncoder)
             else:
                 msg = STREAM_PING_PAYLOAD
 
