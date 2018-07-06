@@ -26,7 +26,7 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 from homeassistant.util.yaml import load_yaml
 
-REQUIREMENTS = ['home-assistant-frontend==20180625.0']
+REQUIREMENTS = ['home-assistant-frontend==20180704.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -200,8 +200,8 @@ def add_manifest_json_key(key, val):
 
 async def async_setup(hass, config):
     """Set up the serving of the frontend."""
-    if list(hass.auth.async_auth_providers):
-        client = await hass.auth.async_create_client(
+    if hass.auth.active:
+        client = await hass.auth.async_get_or_create_client(
             'Home Assistant Frontend',
             redirect_uris=['/'],
             no_secret=True,

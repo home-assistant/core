@@ -8,7 +8,8 @@ from pyhap.accessory import Accessory, Bridge
 from pyhap.accessory_driver import AccessoryDriver
 from pyhap.const import CATEGORY_OTHER
 
-from homeassistant.const import __version__
+from homeassistant.const import (
+    __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL)
 from homeassistant.core import callback as ha_callback
 from homeassistant.core import split_entity_id
 from homeassistant.helpers.event import (
@@ -16,10 +17,11 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER,
-    DEBOUNCE_TIMEOUT, MANUFACTURER)
+    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, CHAR_BATTERY_LEVEL,
+    CHAR_CHARGING_STATE, CHAR_STATUS_LOW_BATTERY, DEBOUNCE_TIMEOUT,
+    MANUFACTURER, SERV_BATTERY_SERVICE)
 from .util import (
-    show_setup_message, dismiss_setup_message)
+    convert_to_float, show_setup_message, dismiss_setup_message)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,6 +69,23 @@ class HomeAccessory(Accessory):
         self.entity_id = entity_id
         self.hass = hass
         self.debounce = {}
+        self._support_battery_level = False
+        self._support_battery_charging = True
+
+        """Add battery service if available"""
+        battery_level = self.hass.states.get(self.entity_id).attributes \
+            .get(ATTR_BATTERY_LEVEL)
+        if battery_level is None:
+            return
+        _LOGGER.debug('%s: Found battery level attribute', self.entity_id)
+        self._support_battery_level = True
+        serv_battery = self.add_preload_service(SERV_BATTERY_SERVICE)
+        self._char_battery = serv_battery.configure_char(
+            CHAR_BATTERY_LEVEL, value=0)
+        self._char_charging = serv_battery.configure_char(
+            CHAR_CHARGING_STATE, value=2)
+        self._char_low_battery = serv_battery.configure_char(
+            CHAR_STATUS_LOW_BATTERY, value=0)
 
     async def run(self):
         """Method called by accessory after driver is started.
@@ -85,7 +104,31 @@ class HomeAccessory(Accessory):
         _LOGGER.debug('New_state: %s', new_state)
         if new_state is None:
             return
+        if self._support_battery_level:
+            self.hass.async_add_job(self.update_battery, new_state)
         self.hass.async_add_job(self.update_state, new_state)
+
+    def update_battery(self, new_state):
+        """Update battery service if available.
+
+        Only call this function if self._support_battery_level is True.
+        """
+        battery_level = convert_to_float(
+            new_state.attributes.get(ATTR_BATTERY_LEVEL))
+        self._char_battery.set_value(battery_level)
+        self._char_low_battery.set_value(battery_level < 20)
+        _LOGGER.debug('%s: Updated battery level to %d', self.entity_id,
+                      battery_level)
+        if not self._support_battery_charging:
+            return
+        charging = new_state.attributes.get(ATTR_BATTERY_CHARGING)
+        if charging is None:
+            self._support_battery_charging = False
+            return
+        hk_charging = 1 if charging is True else 0
+        self._char_charging.set_value(hk_charging)
+        _LOGGER.debug('%s: Updated battery charging to %d', self.entity_id,
+                      hk_charging)
 
     def update_state(self, new_state):
         """Method called on state change to update HomeKit value.

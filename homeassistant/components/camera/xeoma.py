@@ -67,8 +67,6 @@ async def async_setup_platform(hass, config, async_add_devices,
         ]
 
         for cam in config.get(CONF_CAMERAS, []):
-            # https://github.com/PyCQA/pylint/issues/1830
-            # pylint: disable=stop-iteration-return
             camera = next(
                 (dc for dc in discovered_cameras
                  if dc[CONF_IMAGE_NAME] == cam[CONF_IMAGE_NAME]), None)

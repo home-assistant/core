@@ -446,8 +446,6 @@ class Profiles:
 class Light(ToggleEntity):
     """Representation of a light."""
 
-    # pylint: disable=no-self-use
-
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""

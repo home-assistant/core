@@ -4,7 +4,7 @@ from itertools import product
 import logging
 
 # Typing imports
-# pylint: disable=using-constant-test,unused-import,ungrouped-imports
+# pylint: disable=unused-import
 # if False:
 from aiohttp.web import Request, Response  # NOQA
 from typing import Dict, Tuple, Any, Optional  # NOQA
