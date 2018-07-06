@@ -22,7 +22,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PORT)
 
-REQUIREMENTS = ['aiofreepybox==0.0.3']
+REQUIREMENTS = ['aiofreepybox==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 

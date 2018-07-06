@@ -105,7 +105,6 @@ def setup(hass, config):
     Will automatically load thermostat and sensor components to support
     devices discovered on the network.
     """
-    # pylint: disable=import-error
     global NETWORK
 
     if 'ecobee' in _CONFIGURING:

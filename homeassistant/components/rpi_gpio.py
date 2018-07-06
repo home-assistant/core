@@ -17,7 +17,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'rpi_gpio'
 
 
-# pylint: disable=no-member
 def setup(hass, config):
     """Set up the Raspberry PI GPIO component."""
     import RPi.GPIO as GPIO

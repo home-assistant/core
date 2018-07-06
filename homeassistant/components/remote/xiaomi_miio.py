@@ -229,7 +229,6 @@ class XiaomiMiioRemote(RemoteDevice):
             return {'hidden': 'true'}
         return
 
-    # pylint: disable=R0201
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
