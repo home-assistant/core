@@ -83,6 +83,9 @@ holidays==0.9.5
 # homeassistant.components.frontend
 home-assistant-frontend==20180704.0
 
+# homeassistant.components.homematicip_cloud
+homematicip==0.9.6
+
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
 influxdb==5.0.0
