@@ -421,7 +421,7 @@ home-assistant-frontend==20180704.0
 # homekit==0.6
 
 # homeassistant.components.homematicip_cloud
-homematicip==0.9.4
+homematicip==0.9.6
 
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
