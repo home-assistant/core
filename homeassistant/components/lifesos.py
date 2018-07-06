@@ -16,7 +16,7 @@ from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['lifesospy==0.7.0']
+REQUIREMENTS = ['lifesospy==0.7.1']
 
 _LOGGER = logging.getLogger(__name__)
 
