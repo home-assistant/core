@@ -18,6 +18,7 @@ from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
+from homeassistant.exceptions import PlatformNotReady
 
 REQUIREMENTS = ['pyHS100==0.3.4']
 
@@ -35,14 +36,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Initialise pyLB100 SmartBulb."""
-    from pyHS100 import SmartBulb
+    from pyHS100 import SmartBulb, SmartDeviceException
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
     bulb = SmartBulb(host)
-    unique_id = bulb.sys_info['deviceId']
-    if name is None:
-        name = bulb.alias
+    try:
+        unique_id = bulb.sys_info['deviceId']
+        if name is None:
+            name = bulb.alias
+    except SmartDeviceException:
+        raise PlatformNotReady
 
     add_devices([TPLinkSmartBulb(bulb, unique_id, name)], True)
 

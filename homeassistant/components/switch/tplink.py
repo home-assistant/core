@@ -13,6 +13,7 @@ from homeassistant.components.switch import (
     SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
 from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 
 REQUIREMENTS = ['pyHS100==0.3.4']
 
@@ -32,15 +33,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TPLink switch platform."""
-    from pyHS100 import SmartPlug
+    from pyHS100 import SmartPlug, SmartDeviceException
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     leds_on = config.get(CONF_LEDS)
 
     plug = SmartPlug(host)
-    unique_id = plug.sys_info['deviceId']
-    if name is None:
-        name = plug.alias
+    try:
+        unique_id = plug.sys_info['deviceId']
+        if name is None:
+            name = plug.alias
+    except SmartDeviceException:
+        raise PlatformNotReady
 
     add_devices([SmartPlugSwitch(plug, unique_id, name, leds_on)], True)
 
