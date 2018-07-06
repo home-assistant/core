@@ -62,6 +62,7 @@ class ZiGateSwitch(SwitchDevice):
         self._unique_id = '{}-{}-{}'.format(device.addr,
                                             'switch',
                                             endpoint)
+        self.registry_name = '{} {}'.format(device, endpoint)
 
     @property
     def unique_id(self)->str:

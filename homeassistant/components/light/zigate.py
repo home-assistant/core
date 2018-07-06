@@ -72,6 +72,7 @@ class ZiGateLight(Light):
         self._unique_id = '{}-{}-{}'.format(device.addr,
                                             'light',
                                             endpoint)
+        self.registry_name = '{} {}'.format(device, endpoint)
         import zigate
         supported_features = set()
         for action_type in device.available_actions(endpoint)[endpoint]:

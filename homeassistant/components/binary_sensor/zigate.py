@@ -69,6 +69,7 @@ class ZiGateBinarySensor(BinarySensorDevice):
                                                attribute['cluster'],
                                                attribute['attribute'],
                                                )
+        self.registry_name = '{} {}'.format(name, device)
 
         if name == 'presence':
             self._device_class = 'motion'

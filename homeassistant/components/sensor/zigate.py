@@ -73,6 +73,7 @@ class ZiGateSensor(Entity):
                                                attribute['cluster'],
                                                attribute['attribute'],
                                                )
+        self.registry_name = '{} {}'.format(name, device)
         if 'temperature' in name:
             self._device_class = DEVICE_CLASS_TEMPERATURE
         elif 'humidity' in name:
