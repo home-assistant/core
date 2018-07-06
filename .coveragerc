@@ -592,6 +592,8 @@ omit =
     homeassistant/components/zeroconf.py
     homeassistant/components/zwave/util.py
     homeassistant/components/vacuum/mqtt.py
+    homeassistant/components/zigate.py
+    homeassistant/components/*/zigate.py
 
 
 [report]
