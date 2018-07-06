@@ -76,7 +76,7 @@ class PostNLSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return 'package(s)'
+        return 'packages'
 
     @property
     def device_state_attributes(self):

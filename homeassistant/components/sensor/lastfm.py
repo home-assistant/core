@@ -68,7 +68,6 @@ class LastfmSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    # pylint: disable=no-member
     def update(self):
         """Update device state."""
         self._cover = self._user.get_image()

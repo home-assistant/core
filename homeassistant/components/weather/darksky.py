@@ -12,7 +12,8 @@ from requests.exceptions import (
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, ATTR_FORECAST_CONDITION,
+    PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
     CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
@@ -24,6 +25,22 @@ REQUIREMENTS = ['python-forecastio==1.4.0']
 _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by Dark Sky"
+
+MAP_CONDITION = {
+    'clear-day': 'sunny',
+    'clear-night': 'clear-night',
+    'rain': 'rainy',
+    'snow': 'snowy',
+    'sleet': 'snowy-rainy',
+    'wind': 'windy',
+    'fog': 'fog',
+    'cloudy': 'cloudy',
+    'partly-cloudy-day': 'partlycloudy',
+    'partly-cloudy-night': 'partlycloudy',
+    'hail': 'hail',
+    'thunderstorm': 'lightning',
+    'tornado': None,
+}
 
 CONF_UNITS = 'units'
 
@@ -108,7 +125,7 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the weather condition."""
-        return self._ds_currently.get('summary')
+        return MAP_CONDITION.get(self._ds_currently.get('icon'))
 
     @property
     def forecast(self):
@@ -116,8 +133,11 @@ class DarkSkyWeather(WeatherEntity):
         return [{
             ATTR_FORECAST_TIME:
                 datetime.fromtimestamp(entry.d.get('time')).isoformat(),
-            ATTR_FORECAST_TEMP: entry.d.get('temperature')}
-                for entry in self._ds_hourly.data]
+            ATTR_FORECAST_TEMP:
+                entry.d.get('temperature'),
+            ATTR_FORECAST_CONDITION:
+                MAP_CONDITION.get(entry.d.get('icon'))
+        } for entry in self._ds_hourly.data]
 
     def update(self):
         """Get the latest data from Dark Sky."""

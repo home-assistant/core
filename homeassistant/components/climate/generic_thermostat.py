@@ -263,7 +263,6 @@ class GenericThermostat(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        # pylint: disable=no-member
         if self._min_temp:
             return self._min_temp
 
@@ -273,7 +272,6 @@ class GenericThermostat(ClimateDevice):
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        # pylint: disable=no-member
         if self._max_temp:
             return self._max_temp
 
