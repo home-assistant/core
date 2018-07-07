@@ -96,6 +96,9 @@ omit =
     homeassistant/components/enocean.py
     homeassistant/components/*/enocean.py
 
+    homeassistant/components/environment_canada.py
+    homeassistant/components/*/environment_canada.py
+
     homeassistant/components/envisalink.py
     homeassistant/components/*/envisalink.py
 
