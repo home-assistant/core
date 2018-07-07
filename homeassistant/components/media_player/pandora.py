@@ -22,7 +22,7 @@ from homeassistant.const import (STATE_OFF, STATE_PAUSED, STATE_PLAYING,
                                  STATE_IDLE)
 from homeassistant import util
 
-REQUIREMENTS = ['pexpect==4.0.1']
+REQUIREMENTS = ['pexpect==4.6.0']
 _LOGGER = logging.getLogger(__name__)
 
 # SUPPORT_VOLUME_SET is close to available but we need volume up/down
