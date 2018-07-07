@@ -65,7 +65,7 @@ async def async_setup_platform(
         schema=SEND_IR_CODE_SERVICE_SCHEMA)
 
 
-class MySensorsSwitch(mysensors.MySensorsEntity, SwitchDevice):
+class MySensorsSwitch(mysensors.device.MySensorsEntity, SwitchDevice):
     """Representation of the value of a MySensors Switch child node."""
 
     @property

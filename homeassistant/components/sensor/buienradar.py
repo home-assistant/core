@@ -287,7 +287,6 @@ class BrSensor(Entity):
 
                 img = condition.get(IMAGE, None)
 
-                # pylint: disable=protected-access
                 if new_state != self._state or img != self._entity_picture:
                     self._state = new_state
                     self._entity_picture = img
@@ -299,12 +298,10 @@ class BrSensor(Entity):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
             self._timeframe = nested.get(TIMEFRAME)
-            # pylint: disable=protected-access
             self._state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
             return True
 
         # update all other sensors
-        # pylint: disable=protected-access
         self._state = data.get(self.type)
         return True
 
@@ -329,7 +326,7 @@ class BrSensor(Entity):
         return self._state
 
     @property
-    def should_poll(self):  # pylint: disable=no-self-use
+    def should_poll(self):
         """No polling needed."""
         return False
 

@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.43']
+REQUIREMENTS = ['pyhomematic==0.1.44']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -148,6 +148,7 @@ CONF_PATH = 'path'
 CONF_CALLBACK_IP = 'callback_ip'
 CONF_CALLBACK_PORT = 'callback_port'
 CONF_RESOLVENAMES = 'resolvenames'
+CONF_JSONPORT = 'jsonport'
 CONF_VARIABLES = 'variables'
 CONF_DEVICES = 'devices'
 CONF_PRIMARY = 'primary'
@@ -155,6 +156,7 @@ CONF_PRIMARY = 'primary'
 DEFAULT_LOCAL_IP = '0.0.0.0'
 DEFAULT_LOCAL_PORT = 0
 DEFAULT_RESOLVENAMES = False
+DEFAULT_JSONPORT = 80
 DEFAULT_PORT = 2001
 DEFAULT_PATH = ''
 DEFAULT_USERNAME = 'Admin'
@@ -178,6 +180,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             vol.Optional(CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
                 vol.In(CONF_RESOLVENAMES_OPTIONS),
+            vol.Optional(CONF_JSONPORT, default=DEFAULT_JSONPORT): cv.port,
             vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
             vol.Optional(CONF_CALLBACK_IP): cv.string,
@@ -299,6 +302,7 @@ def setup(hass, config):
             'port': rconfig.get(CONF_PORT),
             'path': rconfig.get(CONF_PATH),
             'resolvenames': rconfig.get(CONF_RESOLVENAMES),
+            'jsonport': rconfig.get(CONF_JSONPORT),
             'username': rconfig.get(CONF_USERNAME),
             'password': rconfig.get(CONF_PASSWORD),
             'callbackip': rconfig.get(CONF_CALLBACK_IP),
