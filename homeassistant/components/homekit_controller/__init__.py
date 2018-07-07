@@ -9,6 +9,7 @@ import json
 import logging
 import os
 import uuid
+import threading
 
 from homeassistant.components.discovery import SERVICE_HOMEKIT
 from homeassistant.helpers import discovery
@@ -107,6 +108,7 @@ class HKDevice():
         import homekit
         self.controllerkey, self.accessorykey = \
             homekit.get_session_keys(self.conn, self.pairing_data)
+        self.lock = threading.Lock()
         self.securecon = homekit.SecureHttp(self.conn.sock,
                                             self.accessorykey,
                                             self.controllerkey)
@@ -185,6 +187,7 @@ class HomeKitEntity(Entity):
 
     def __init__(self, accessory, devinfo):
         """Initialise a generic HomeKit device."""
+        self._lock = accessory.lock
         self._name = accessory.model
         self._securecon = accessory.securecon
         self._aid = devinfo['aid']
@@ -195,7 +198,8 @@ class HomeKitEntity(Entity):
 
     def update(self):
         """Obtain a HomeKit device's state."""
-        response = self._securecon.get('/accessories')
+        with self._lock:
+            response = self._securecon.get('/accessories')
         data = json.loads(response.read().decode())
         for accessory in data['accessories']:
             if accessory['aid'] != self._aid:
@@ -223,7 +227,8 @@ class HomeKitEntity(Entity):
     def put_characteristics(self, characteristics):
         """Control a HomeKit device state from Home Assistant."""
         body = json.dumps({'characteristics': characteristics})
-        self._securecon.put('/characteristics', body)
+        with self._lock:
+            self._securecon.put('/characteristics', body)
 
 
 def setup(hass, config):
