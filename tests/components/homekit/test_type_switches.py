@@ -1,9 +1,9 @@
 """Test different accessory types: Switches."""
 import pytest
 
-from homeassistant.core import split_entity_id
 from homeassistant.components.homekit.type_switches import Outlet, Switch
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
+from homeassistant.core import split_entity_id
 
 from tests.common import async_mock_service
 

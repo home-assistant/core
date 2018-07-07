@@ -470,7 +470,6 @@ async def async_unload_entry(hass, entry):
 class ClimateDevice(Entity):
     """Representation of a climate device."""
 
-    # pylint: disable=no-self-use
     @property
     def state(self):
         """Return the current state."""

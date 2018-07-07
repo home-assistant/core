@@ -28,7 +28,7 @@ async def async_setup_platform(
         async_add_devices=async_add_devices)
 
 
-class MySensorsLight(mysensors.MySensorsEntity, Light):
+class MySensorsLight(mysensors.device.MySensorsEntity, Light):
     """Representation of a MySensors Light child node."""
 
     def __init__(self, *args):

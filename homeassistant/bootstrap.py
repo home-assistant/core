@@ -123,7 +123,6 @@ async def async_from_config_dict(config: Dict[str, Any],
     components.update(hass.config_entries.async_domains())
 
     # setup components
-    # pylint: disable=not-an-iterable
     res = await core_components.async_setup(hass, config)
     if not res:
         _LOGGER.error("Home Assistant core failed to initialize. "

@@ -163,9 +163,6 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         if CONF_API_KEY not in import_config:
             return await self.async_step_link()
 
-        self.deconz_config[CONF_ALLOW_CLIP_SENSOR] = True
-        self.deconz_config[CONF_ALLOW_DECONZ_GROUPS] = True
-        return self.async_create_entry(
-            title='deCONZ-' + self.deconz_config[CONF_BRIDGEID],
-            data=self.deconz_config
-        )
+        user_input = {CONF_ALLOW_CLIP_SENSOR: True,
+                      CONF_ALLOW_DECONZ_GROUPS: True}
+        return await self.async_step_options(user_input=user_input)
