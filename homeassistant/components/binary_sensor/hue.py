@@ -15,8 +15,7 @@ from aiohue.sensors import (TYPE_CLIP_GENERICFLAG, TYPE_CLIP_OPENCLOSE, TYPE_CLI
 import homeassistant.components.hue as hue
 from homeassistant.components.hue.const import (ICON_DAY, ICON_NIGHT)
 from homeassistant.components.sensor.hue import HueSensor
-from homeassistant.const import (ATTR_BATTERY_LEVEL, STATE_OFF, STATE_ON)
-from homeassistant.components.binary_sensor import BinarySensorDevice
+from homeassistant.const import (STATE_OFF, STATE_ON)
 
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=1)
@@ -121,8 +120,7 @@ async def async_update_items(hass, bridge, async_add_devices,
                              progress_waiting):
     """Update sensors from the bridge."""
     import aiohue
-    #allow_clip_sensors = bridge.allow_clip_sensors
-    allow_clip_sensors = True
+    allow_clip_sensors = bridge.allow_clip_sensors
 
     api = bridge.api.sensors
 
@@ -251,7 +249,6 @@ class Daylight(HueBinarySensor):
         """Return the device state attributes."""
         attributes = {}
         return attributes
-
 
 
 class ZLLPresence(HueBinarySensor):

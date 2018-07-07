@@ -165,7 +165,7 @@ async def async_update_items(hass, bridge, async_add_devices,
 
     for item_id in api:
         sensor = api[item_id]
-        if sensor.type in ALL_SENSORS:
+        if sensor.type in allowed_sensor_types:
             if item_id not in current:
                 current[item_id] = create_sensor(
                     sensor, request_bridge_update, bridge)
