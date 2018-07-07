@@ -1178,6 +1178,9 @@ raincloudy==0.0.5
 # homeassistant.components.rainmachine
 regenmaschine==1.0.2
 
+# homeassistant.components.light.httplight
+requests==2.19.1
+
 # homeassistant.components.python_script
 restrictedpython==4.0b4
 
