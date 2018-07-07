@@ -18,6 +18,7 @@ matrix:
       env: TOXENV=py36
     - python: "3.7"
       env: TOXENV=py37
+      dist: xenial
   # allow_failures:
   #   - python: "3.5"
   #     env: TOXENV=typing
