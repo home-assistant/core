@@ -9,19 +9,26 @@ from datetime import timedelta
 import logging
 import async_timeout
 
-from aiohue.sensors import (ZGP_SWITCH_BUTTON_1, ZGP_SWITCH_BUTTON_2, ZGP_SWITCH_BUTTON_3,
-                            ZGP_SWITCH_BUTTON_4, ZLL_SWITCH_BUTTON_1_LONG_RELEASED,
-                            ZLL_SWITCH_BUTTON_1_SHORT_RELEASED, ZLL_SWITCH_BUTTON_2_LONG_RELEASED,
-                            ZLL_SWITCH_BUTTON_2_SHORT_RELEASED, ZLL_SWITCH_BUTTON_3_LONG_RELEASED,
-                            ZLL_SWITCH_BUTTON_3_SHORT_RELEASED, ZLL_SWITCH_BUTTON_4_LONG_RELEASED,
-                            ZLL_SWITCH_BUTTON_4_SHORT_RELEASED, TYPE_CLIP_GENERICSTATUS,
-                            TYPE_CLIP_HUMIDITY, TYPE_CLIP_LIGHTLEVEL, TYPE_CLIP_TEMPERATURE,
-                            TYPE_ZGP_SWITCH, TYPE_ZLL_SWITCH, TYPE_ZLL_LIGHTLEVEL,
-                            TYPE_ZLL_TEMPERATURE, TYPE_CLIP_SWITCH)
+from aiohue.sensors import (ZGP_SWITCH_BUTTON_1, ZGP_SWITCH_BUTTON_2,
+                            ZGP_SWITCH_BUTTON_3, ZGP_SWITCH_BUTTON_4,
+                            ZLL_SWITCH_BUTTON_1_LONG_RELEASED,
+                            ZLL_SWITCH_BUTTON_1_SHORT_RELEASED,
+                            ZLL_SWITCH_BUTTON_2_LONG_RELEASED,
+                            ZLL_SWITCH_BUTTON_2_SHORT_RELEASED,
+                            ZLL_SWITCH_BUTTON_3_LONG_RELEASED,
+                            ZLL_SWITCH_BUTTON_3_SHORT_RELEASED,
+                            ZLL_SWITCH_BUTTON_4_LONG_RELEASED,
+                            ZLL_SWITCH_BUTTON_4_SHORT_RELEASED,
+                            TYPE_CLIP_GENERICSTATUS, TYPE_CLIP_HUMIDITY,
+                            TYPE_CLIP_LIGHTLEVEL, TYPE_CLIP_TEMPERATURE,
+                            TYPE_ZGP_SWITCH, TYPE_ZLL_SWITCH,
+                            TYPE_ZLL_LIGHTLEVEL, TYPE_ZLL_TEMPERATURE,
+                            TYPE_CLIP_SWITCH)
 
 import homeassistant.components.hue as hue
-from homeassistant.components.hue.const import (ATTR_DARK, ATTR_DAYLIGHT, ICON_REMOTE,
-                                                UOM_HUMIDITY, UOM_ILLUMINANCE)
+from homeassistant.components.hue.const import (ATTR_DARK, ATTR_DAYLIGHT,
+                                                ICON_REMOTE, UOM_HUMIDITY,
+                                                UOM_ILLUMINANCE)
 from homeassistant.components.sensor import (DEVICE_CLASS_HUMIDITY,
                                              DEVICE_CLASS_ILLUMINANCE,
                                              DEVICE_CLASS_TEMPERATURE)
@@ -31,10 +38,13 @@ from homeassistant.helpers.entity import Entity
 DEPENDENCIES = ['hue']
 SCAN_INTERVAL = timedelta(seconds=1)
 
-ALL_SENSORS = [TYPE_CLIP_GENERICSTATUS, TYPE_CLIP_HUMIDITY, TYPE_CLIP_LIGHTLEVEL,
-               TYPE_CLIP_SWITCH, TYPE_CLIP_TEMPERATURE, TYPE_CLIP_HUMIDITY, TYPE_ZGP_SWITCH,
-               TYPE_ZLL_LIGHTLEVEL, TYPE_ZLL_SWITCH, TYPE_ZLL_TEMPERATURE]
-HUE_SENSORS = [TYPE_ZGP_SWITCH, TYPE_ZLL_LIGHTLEVEL, TYPE_ZLL_SWITCH, TYPE_ZLL_TEMPERATURE]
+ALL_SENSORS = [TYPE_CLIP_GENERICSTATUS, TYPE_CLIP_HUMIDITY,
+               TYPE_CLIP_LIGHTLEVEL, TYPE_CLIP_SWITCH,
+               TYPE_CLIP_TEMPERATURE, TYPE_CLIP_HUMIDITY,
+               TYPE_ZGP_SWITCH, TYPE_ZLL_LIGHTLEVEL,
+               TYPE_ZLL_SWITCH, TYPE_ZLL_TEMPERATURE]
+HUE_SENSORS = [TYPE_ZGP_SWITCH, TYPE_ZLL_LIGHTLEVEL,
+               TYPE_ZLL_SWITCH, TYPE_ZLL_TEMPERATURE]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +102,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         Home Assistant will ask sensors for updates during a polling cycle or
         after it has called a service.
 
-        We keep track of the sensors that are waiting for the request to finish.
+        We keep track of sensors that are waiting for the request to finish.
         When new data comes in, we'll trigger an update for all non-waiting
         sensors. This covers the case where a service is called to modify 2
         sensors but in the meanwhile some other sensor has changed too.
@@ -270,7 +280,8 @@ class CLIPSwitch(HueSensor):
 
     @property
     def state(self):
-        """Return the switch's buttonevent if the lastupdated variable changed."""
+        """Return the switch's buttonevent if
+        the lastupdated variable changed."""
         current_time = self.sensor.lastupdated
         if current_time == self._hue_last_updated:
             return None
@@ -307,7 +318,8 @@ class ZGPSwitch(HueSensor):
 
     @property
     def state(self):
-        """Return the switch's buttonevent if the lastupdated variable changed."""
+        """Return the switch's buttonevent if
+        the lastupdated variable changed."""
         current_time = self.sensor.lastupdated
         if current_time == self._hue_last_updated:
             return None
