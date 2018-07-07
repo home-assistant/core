@@ -1,5 +1,8 @@
 """The tests for the MQTT component embedded server."""
 from unittest.mock import Mock, MagicMock, patch
+import sys
+
+import pytest
 
 from homeassistant.setup import setup_component
 import homeassistant.components.mqtt as mqtt
@@ -7,6 +10,9 @@ import homeassistant.components.mqtt as mqtt
 from tests.common import get_test_home_assistant, mock_coro
 
 
+# Until https://github.com/beerfactory/hbmqtt/pull/139 is released
+@pytest.mark.skipif(sys.version_info[:2] >= (3, 7),
+                    reason='Package incompatible with Python 3.7')
 class TestMQTT:
     """Test the MQTT component."""
 
