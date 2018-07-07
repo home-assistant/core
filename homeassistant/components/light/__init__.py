@@ -14,6 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.group import \
     ENTITY_ID_FORMAT as GROUP_ENTITY_ID_FORMAT
+from homeassistant.components.light_defaults import get_light_default
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     STATE_ON)
@@ -357,6 +358,10 @@ async def async_setup(hass, config):
         update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
+                params = params or \
+                         get_light_default(hass, light.entity_id) or \
+                         get_light_default(hass, ENTITY_ID_ALL_LIGHTS)
+                preprocess_turn_on_alternatives(params)
                 await light.async_turn_on(**params)
             elif service.service == SERVICE_TURN_OFF:
                 await light.async_turn_off(**params)
