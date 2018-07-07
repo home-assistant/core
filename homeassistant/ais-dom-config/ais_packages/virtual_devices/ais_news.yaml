@@ -1,8 +1,3 @@
-homeassistant:
-  customize:
-    sensor.rss_news_text:
-      custom_ui_state_card: state-card-text
-
 input_select:
   rss_news_category:
     name: 'Kategoria:'

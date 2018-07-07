@@ -6,10 +6,7 @@
 # them across the chromecasts, like a Sonos system      #
 #                                                       #
 #########################################################
-homeassistant:
-  customize:
-    media_player.wbudowany_glosnik:
-      friendly_name: "Podłączony głośnik"
+
 
 input_select:
   radio_type:

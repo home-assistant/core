@@ -5,6 +5,7 @@ homeassistant:
   latitude: 51.2483
   longitude: 16.933
   elevation: 134
+  customize: !include customize.yaml
   packages: !include_dir_named ais_packages/
 
 # Track the sun
@@ -20,8 +21,6 @@ ais_yt_service:
 ais_updater:
   include_used_components: false
 conversation:
-
-
 
 # for restore_state on input_select (radio stations etc.)
 recorder:

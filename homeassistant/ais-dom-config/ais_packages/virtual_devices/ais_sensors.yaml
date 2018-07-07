@@ -1,9 +1,3 @@
-homeassistant:
-  customize:
-    sensor.temperatura_si7021:
-      friendly_name: Temperatura
-    sensor.wilgotnosc_si7021:
-      friendly_name: Wilgotność
 sensor:
   - platform: mqtt
     name: "temperatura_si7021"

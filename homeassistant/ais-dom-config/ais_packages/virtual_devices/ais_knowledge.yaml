@@ -1,9 +1,3 @@
-homeassistant:
-  customize:
-    sensor.ais_knowledge_answer:
-      friendly_name: Odpowiedz
-      custom_ui_state_card: state-card-text
-
 input_text:
   ais_knowledge_query:
     name: Polecenie/Pytanie?

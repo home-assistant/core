@@ -22,7 +22,7 @@ def async_setup(hass, config=None):
 
     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        Cześć, witamy w AIS dom!
+        Cześć, witamy w systemie Asystent domowy!
 
         Mamy nadzieję, że spełnimy wszystkie twoje marzenia.
 
@@ -50,11 +50,12 @@ Mamy nadzieję, że spełnimy wszystkie twoje marzenia.
 
 Oto kilka informacji, od których możesz zacząć:
 
- - [Konfiguracja urządzeń](http://ai-speaker.com)
- - [Ustawiania audio](http://ai-speaker.com)
- - [Źródła programu](https://github.com/sviete)
- - [Odpowiedzi na najczęściej zadawane pytania](https://github.com/sviete)
+ - [Pierwsze kroki](https://github.com/sviete/AIS-WWW/wiki/1.-Pierwsze-kroki)
+ - [Komendy głosowe](https://github.com/sviete/AIS-WWW/wiki/3.-Komendy-g%C5%82osowe)
+ - [Zdalny dostęp](https://github.com/sviete/AIS-WWW/wiki/7.-Zdalny-dost%C4%99p)
+ - [Źródła systemu](https://github.com/sviete)
+ - [Strona projektu](https://ai-speaker.com)
 
-""", 'AIS dom, Witamy!')  # noqa
+""", 'Cześć, witamy w systemie Asystent domowy!')  # noqa
 
     return True

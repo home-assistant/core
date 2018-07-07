@@ -1,20 +1,3 @@
-homeassistant:
-  customize:
-    weblink.cloud:
-      friendly_name: Przejdz do konfiguracji usług online
-    binary_sensor.ping_binary_sensor:
-      friendly_name: Status serwisu AIS dom
-      icon: mdi:cloud
-    weblink.upgrade_log:
-      friendly_name: Logi aktualizacji
-      icon: mdi:file-document
-    sensor.version_info:
-      friendly_name: Wersja
-      icon: mdi:update
-      custom_ui_state_card: state-card-text
-    script.ais_update_system:
-      icon: mdi:download
-
 binary_sensor:
   - platform: ping
     host: powiedz.co

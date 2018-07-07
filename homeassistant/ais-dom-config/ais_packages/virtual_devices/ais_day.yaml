@@ -1,12 +1,3 @@
-homeassistant:
-  customize:
-    sun.sun:
-      friendly_name: Pozycja słońca
-    sensor.time:
-      friendly_name: Godzina
-    sensor.date_formated:
-      friendly_name: Dzień
-
 sensor:
   - platform: time_date
     display_options:

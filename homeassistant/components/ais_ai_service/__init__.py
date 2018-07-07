@@ -75,12 +75,11 @@ GROUP_ENTITIES = []
 CURR_GROUP = None
 CURR_ENTITIE = None
 CURR_BUTTON_CODE = None
+CURR_BUTTON_LONG_PRESS = False
 CURR_ENTITIE_POSITION = None
 ALL_SWITCHES = ["input_boolean", "automation", "switch", "light",
                 "media_player", "script"]
 GLOBAL_TTS_TEXT = None
-BUTTON_REPEAT_COUNT = 0
-
 
 def get_tts_text():
     return GLOBAL_TTS_TEXT
@@ -630,7 +629,7 @@ def can_entity_be_changed(hass, entity):
 
 def set_focus_on_down_entity(hass, long_press):
     # down on joystick
-    if long_press and CURR_ENTITIE is not None:
+    if CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
             # speed up on remote
             state = hass.states.get('input_number.media_player_speed')
@@ -651,7 +650,7 @@ def set_focus_on_down_entity(hass, long_press):
                 'set_value', {
                     "entity_id": "input_number.media_player_speed",
                     "value": _curr})
-        return
+            return
     # no group is selected go to next in the groups view menu
     if CURR_GROUP is None:
             select_entity(hass, False)
@@ -667,7 +666,7 @@ def set_focus_on_down_entity(hass, long_press):
 
 def set_focus_on_up_entity(hass, long_press):
     # on joystick up
-    if long_press and CURR_ENTITIE is not None:
+    if CURR_ENTITIE is not None:
         if CURR_ENTITIE.startswith("media_player."):
             # speed up on remote
             state = hass.states.get('input_number.media_player_speed')
@@ -688,7 +687,7 @@ def set_focus_on_up_entity(hass, long_press):
                 'set_value', {
                     "entity_id": "input_number.media_player_speed",
                     "value": _curr})
-        return
+            return
     # no group is selected go to prev in the groups view menu
     if CURR_GROUP is None:
             set_prev_group_view()
@@ -717,7 +716,7 @@ def set_focus_on_prev_entity(hass, long_press):
             # seek back on remote
             _LOGGER.info("seek back in the player - info from remote")
             hass.services.call('media_player', 'media_seek', {"entity_id": CURR_ENTITIE, "seek_position": 0})
-        return
+            return
     # no group is selected go to prev in the groups view menu
     if CURR_GROUP is None:
             set_prev_group_view()
@@ -745,7 +744,7 @@ def set_focus_on_next_entity(hass, long_press):
             # seek next on remote
             _LOGGER.info("seek next in the player - info from remote")
             hass.services.call('media_player', 'media_seek', {"entity_id": CURR_ENTITIE, "seek_position": 1})
-        return
+            return
     # no group is selected go to next in the groups view menu
     if CURR_GROUP is None:
             set_next_group_view()
@@ -1312,7 +1311,7 @@ def _create_matcher(utterance):
 def _process_code(hass, data, callback):
     """Process a code from remote."""
     global CURR_BUTTON_CODE
-    global BUTTON_REPEAT_COUNT
+    global CURR_BUTTON_LONG_PRESS
     if 'Action' not in data or 'KeyCode' not in data:
         return
     # check if we have callback
@@ -1322,15 +1321,22 @@ def _process_code(hass, data, callback):
 
     action = data["Action"]
     code = data["KeyCode"]
-    long_press = False
+
+    # fix - when the mouse mode on remote is on, the remote is sending only the code 23 (OK) as key down (action 0)
+    # to handle this we are ignoring the key up (action 1), and key down (action 0) is changing to key up (action 1)
+    if code == 23:
+        if action == 1:
+            return
+        else:
+            action = 1
+
     # ACTION_DOWN = 0; ACTION_UP = 1;
     if action == 0:
+        CURR_BUTTON_LONG_PRESS = False
         if "RepeatCount" in data:
-            BUTTON_REPEAT_COUNT = data["RepeatCount"]
-            if BUTTON_REPEAT_COUNT > 0 and BUTTON_REPEAT_COUNT % 10 == 0:
-                # long press on remote
-                long_press = True
-        if long_press is False or code not in [19, 20, 21, 22]:
+            if data["RepeatCount"] > 0:
+                CURR_BUTTON_LONG_PRESS = True
+        if CURR_BUTTON_LONG_PRESS is False:
             return
 
     elif action == 2:
@@ -1342,8 +1348,8 @@ def _process_code(hass, data, callback):
     elif action == 1:
         # ACTION_UP
         # to prevent up action after long press
-        if BUTTON_REPEAT_COUNT > 10:
-            BUTTON_REPEAT_COUNT = 0
+        if CURR_BUTTON_LONG_PRESS is True:
+            CURR_BUTTON_LONG_PRESS = False
             return
 
 
@@ -1378,20 +1384,20 @@ def _process_code(hass, data, callback):
         # MIC UP -> KEYCODE_RIGHT_BRACKET
         hass.states.set('binary_sensor.ais_remote_mic', 'off')
     elif code == 19:
-        # Dpad right -> KEYCODE_DPAD_UP
-        set_focus_on_up_entity(hass, long_press)
+        # Dpad up -> KEYCODE_DPAD_UP
+        set_focus_on_up_entity(hass, CURR_BUTTON_LONG_PRESS)
     elif code == 20:
         # Dpad down -> KEYCODE_DPAD_DOWN
-        set_focus_on_down_entity(hass, long_press)
+        set_focus_on_down_entity(hass, CURR_BUTTON_LONG_PRESS)
     elif code == 21:
         # Dpad left -> KEYCODE_DPAD_LEFT
-        set_focus_on_prev_entity(hass, long_press)
+        set_focus_on_prev_entity(hass, CURR_BUTTON_LONG_PRESS)
     elif code == 22:
         # Dpad right -> KEYCODE_DPAD_RIGHT
-        set_focus_on_next_entity(hass, long_press)
+        set_focus_on_next_entity(hass, CURR_BUTTON_LONG_PRESS)
     elif code == 23:
         # Dpad center -> KEYCODE_DPAD_CENTER
-        select_entity(hass, long_press)
+        select_entity(hass, CURR_BUTTON_LONG_PRESS)
     elif code == 25:
         # Volume down -> KEYCODE_VOLUME_DOWN
         pass

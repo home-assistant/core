@@ -221,23 +221,13 @@ async def async_from_config_file(config_path: str,
     finally:
         clear_secret_cache()
 
-    def dict_merge(dct, merge_dct):
-        """ Recursive dict merge. Inspired by :meth:``dict.update()``,
-        instead of updating only top-level keys, dict_merge recurses
-        down into dicts nested to an arbitrary depth, updating keys.
-        The ``merge_dct`` is merged into ``dct``.
-        :param dct: dict onto which the merge is executed
-        :param merge_dct: dct merged into dct
-        :return: None
-        """
-        import collections
-        for k, v in merge_dct.items():
-            if (k in dct and isinstance(dct[k], dict)
-                    and isinstance(merge_dct[k], collections.Mapping)):
-                dict_merge(dct[k], merge_dct[k])
-            else:
-                dct[k] = merge_dct[k]
-    dict_merge(user_config_dict, config_dict)
+    try:
+        import homeassistant.ais_dom.ais_utils as ais_utils
+        ais_utils.dict_merge(config_dict, user_config_dict)
+    except:
+        _LOGGER.error("Error loading user customize")
+
+
     return await async_from_config_dict(
         config_dict, hass, enable_log=False, skip_pip=skip_pip)
 
