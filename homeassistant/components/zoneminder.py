@@ -77,14 +77,14 @@ def login():
     if ZM['password']:
         login_post['password'] = ZM['password']
 
-    req = requests.post(ZM['url'] + '/index.php', data=login_post)
+    req = requests.post(ZM['url'] + '/index.php', data=login_post, verify=False)
     ZM['cookies'] = req.cookies
 
     # Login calls returns a 200 response on both failure and success.
     # The only way to tell if you logged in correctly is to issue an api call.
     req = requests.get(
         ZM['url'] + 'api/host/getVersion.json', cookies=ZM['cookies'],
-        timeout=DEFAULT_TIMEOUT)
+        timeout=DEFAULT_TIMEOUT, verify=False)
 
     if not req.ok:
         _LOGGER.error("Connection error logging into ZoneMinder")
@@ -100,7 +100,7 @@ def _zm_request(method, api_url, data=None):
     for _ in range(LOGIN_RETRIES):
         req = requests.request(
             method, urljoin(ZM['url'], api_url), data=data,
-            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT)
+            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT, verify=False)
 
         if not req.ok:
             login()
