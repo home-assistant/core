@@ -256,7 +256,10 @@ class HueOneLightChangeView(HomeAssistantView):
                         data[ATTR_BRIGHTNESS] = parsed[STATE_BRIGHTNESS]
                 if entity_features & SUPPORT_COLOR:
                     if parsed[STATE_HUE] is not None:
-                        sat = parsed[STATE_SATURATION] if parsed[STATE_SATURATION] else 0
+                        if parsed[STATE_SATURATION]:
+                            sat = parsed[STATE_SATURATION]
+                        else:
+                            sat = 0
                         hue = parsed[STATE_HUE]
 
                         # Convert hs values to hass hs values
@@ -349,7 +352,8 @@ class HueOneLightChangeView(HomeAssistantView):
                 domain, service, data, blocking=True))
 
         json_response = \
-            [create_hue_success_response(entity_id, HUE_API_STATE_ON, parsed[STATE_ON])]
+            [create_hue_success_response(
+                entity_id, HUE_API_STATE_ON, parsed[STATE_ON])]
 
         if parsed[STATE_BRIGHTNESS] is not None:
             json_response.append(create_hue_success_response(
@@ -394,7 +398,7 @@ def parse_hue_api_put_light_body(request_json, entity):
             # Clamp brightness from 0 to 65535
             data[STATE_HUE] = \
                 max(0, min(int(request_json[HUE_API_STATE_HUE]),
-                    HUE_API_STATE_HUE_MAX))
+                           HUE_API_STATE_HUE_MAX))
         except ValueError:
             return None
 
@@ -403,7 +407,7 @@ def parse_hue_api_put_light_body(request_json, entity):
             # Clamp saturation from 0 to 254
             data[STATE_SATURATION] = \
                 max(0, min(int(request_json[HUE_API_STATE_SAT]),
-                    HUE_API_STATE_SAT_MAX))
+                           HUE_API_STATE_SAT_MAX))
         except ValueError:
             return None
 
@@ -418,7 +422,7 @@ def parse_hue_api_put_light_body(request_json, entity):
 
         if entity.domain == light.DOMAIN:
             data[STATE_ON] = (data[STATE_BRIGHTNESS] > 0)
-            if (entity_features & SUPPORT_BRIGHTNESS) == False:
+            if not entity_features & SUPPORT_BRIGHTNESS:
                 data[STATE_BRIGHTNESS] = None
 
         elif entity.domain == scene.DOMAIN:
@@ -499,10 +503,9 @@ def get_entity_state(config, entity):
         if data[STATE_BRIGHTNESS] is None:
             data[STATE_BRIGHTNESS] = 255 if data[STATE_ON] else 0
         # Make sure hue/saturation are valid
-        if data[STATE_HUE] is None:
+        if (data[STATE_HUE] is None) or (data[STATE_SATURATION] is None):
             data[STATE_HUE] = 0
-        if data[STATE_SATURATION] is None:
-            data[STATE_SATURATION] is 0
+            data[STATE_SATURATION] = 0
 
         # If the light is off, set the color to off
         if data[STATE_BRIGHTNESS] == 0:
