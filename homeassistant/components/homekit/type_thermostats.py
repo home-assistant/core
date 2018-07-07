@@ -31,6 +31,7 @@ UNIT_HOMEKIT_TO_HASS = {c: s for s, c in UNIT_HASS_TO_HOMEKIT.items()}
 HC_HASS_TO_HOMEKIT = {STATE_OFF: 0, STATE_HEAT: 1,
                       STATE_COOL: 2, STATE_AUTO: 3}
 HC_HOMEKIT_TO_HASS = {c: s for s, c in HC_HASS_TO_HOMEKIT.items()}
+OPERATION_LIST_DEFAULT = [STATE_OFF, STATE_HEAT, STATE_COOL, STATE_AUTO]
 
 SUPPORT_TEMP_RANGE = SUPPORT_TARGET_TEMPERATURE_LOW | \
             SUPPORT_TARGET_TEMPERATURE_HIGH
@@ -99,6 +100,25 @@ class Thermostat(HomeAccessory):
                             PROP_MAX_VALUE: max_temp},
                 setter_callback=self.set_heating_threshold)
 
+        operation_list = self.get_operation_list()
+        self._operation_list_homekit_to_hass = {
+            k: v
+            for k, v in enumerate(operation_list)
+        }
+        self._operation_list_hass_to_homekit = {
+            c: s
+            for s, c in self._operation_list_homekit_to_hass.items()
+        }
+
+    def get_operation_list(self):
+        """get operation_list from device's state."""
+        operation_list = self.hass.states.get(
+            self.entity_id).attributes.get(ATTR_OPERATION_LIST)
+        if operation_list:
+            return [STATE_OFF] + operation_list
+
+        return OPERATION_LIST_DEFAULT
+
     def get_temperature_range(self):
         """Return min and max temperature range."""
         max_temp = self.hass.states.get(self.entity_id) \
@@ -115,10 +135,10 @@ class Thermostat(HomeAccessory):
 
     def set_heat_cool(self, value):
         """Move operation mode to value if call came from HomeKit."""
-        if value in HC_HOMEKIT_TO_HASS:
+        if value in self._operation_list_homekit_to_hass:
             _LOGGER.debug('%s: Set heat-cool to %d', self.entity_id, value)
             self.heat_cool_flag_target_state = True
-            hass_value = HC_HOMEKIT_TO_HASS[value]
+            hass_value = self._operation_list_homekit_to_hass[value]
             if self.support_power_state is True:
                 params = {ATTR_ENTITY_ID: self.entity_id}
                 if hass_value == STATE_OFF:
@@ -211,11 +231,11 @@ class Thermostat(HomeAccessory):
         operation_mode = new_state.attributes.get(ATTR_OPERATION_MODE)
         if self.support_power_state is True and new_state.state == STATE_OFF:
             self.char_target_heat_cool.set_value(
-                HC_HASS_TO_HOMEKIT[STATE_OFF])
-        elif operation_mode and operation_mode in HC_HASS_TO_HOMEKIT:
+                self._operation_list_hass_to_homekit[STATE_OFF])
+        elif operation_mode and operation_mode in self._operation_list_hass_to_homekit:
             if not self.heat_cool_flag_target_state:
                 self.char_target_heat_cool.set_value(
-                    HC_HASS_TO_HOMEKIT[operation_mode])
+                    self._operation_list_hass_to_homekit[operation_mode])
         self.heat_cool_flag_target_state = False
 
         # Set current operation mode based on temperatures and target mode
@@ -258,4 +278,4 @@ class Thermostat(HomeAccessory):
             current_operation_mode = STATE_OFF
 
         self.char_current_heat_cool.set_value(
-            HC_HASS_TO_HOMEKIT[current_operation_mode])
+            self._operation_list_hass_to_homekit[current_operation_mode])
