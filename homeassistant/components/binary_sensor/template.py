@@ -15,8 +15,9 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_ENTITY_ID, CONF_VALUE_TEMPLATE,
-    CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
-    CONF_SENSORS, CONF_DEVICE_CLASS, EVENT_HOMEASSISTANT_START)
+    CONF_AVAILABILITY_TEMPLATE, CONF_ICON_TEMPLATE,
+    CONF_ENTITY_PICTURE_TEMPLATE, CONF_SENSORS, CONF_DEVICE_CLASS,
+    EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
@@ -30,6 +31,7 @@ CONF_DELAY_OFF = 'delay_off'
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_AVAILABILITY_TEMPLATE): cv.template,
     vol.Optional(CONF_ICON_TEMPLATE): cv.template,
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(ATTR_FRIENDLY_NAME): cv.string,
@@ -53,6 +55,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     for device, device_config in config[CONF_SENSORS].items():
         value_template = device_config[CONF_VALUE_TEMPLATE]
+        availability_template = device_config.get(CONF_AVAILABILITY_TEMPLATE)
         icon_template = device_config.get(CONF_ICON_TEMPLATE)
         entity_picture_template = device_config.get(
             CONF_ENTITY_PICTURE_TEMPLATE)
@@ -66,6 +69,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if value_template is not None:
             value_template.hass = hass
 
+        availability_entity_ids = None
+        if availability_template is not None:
+            availability_template.hass = hass
+            availability_entity_ids = (
+                device_config.get(ATTR_ENTITY_ID) or
+                availability_template.extract_entities()
+            )
+
         if icon_template is not None:
             icon_template.hass = hass
 
@@ -75,8 +86,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         sensors.append(
             BinarySensorTemplate(
                 hass, device, friendly_name, device_class, value_template,
-                icon_template, entity_picture_template, entity_ids,
-                delay_on, delay_off)
+                availability_template, icon_template, entity_picture_template,
+                entity_ids, availability_entity_ids, delay_on, delay_off)
             )
     if not sensors:
         _LOGGER.error("No sensors added")
@@ -90,8 +101,9 @@ class BinarySensorTemplate(BinarySensorDevice):
     """A virtual binary sensor that triggers from another sensor."""
 
     def __init__(self, hass, device, friendly_name, device_class,
-                 value_template, icon_template, entity_picture_template,
-                 entity_ids, delay_on, delay_off):
+                 value_template, availability_template, icon_template,
+                 entity_picture_template, entity_ids, availability_entity_ids,
+                 delay_on, delay_off):
         """Initialize the Template binary sensor."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -99,12 +111,15 @@ class BinarySensorTemplate(BinarySensorDevice):
         self._name = friendly_name
         self._device_class = device_class
         self._template = value_template
+        self._available = availability_template is None
+        self._availability_template = availability_template
         self._state = None
         self._icon_template = icon_template
         self._entity_picture_template = entity_picture_template
         self._icon = None
         self._entity_picture = None
         self._entities = entity_ids
+        self._availability_entities = availability_entity_ids
         self._delay_on = delay_on
         self._delay_off = delay_off
 
@@ -117,12 +132,23 @@ class BinarySensorTemplate(BinarySensorDevice):
             self.async_check_state()
 
         @callback
+        def template_avail_state_listener(entity, old_state, new_state):
+            """Handle the availability target device state changes."""
+            self.async_check_availability()
+
+        @callback
         def template_bsensor_startup(event):
             """Update template on startup."""
             async_track_state_change(
                 self.hass, self._entities, template_bsensor_state_listener)
 
             self.hass.async_add_job(self.async_check_state)
+
+            if self._availability_template:
+                async_track_state_change(
+                    self.hass, self._availability_entities,
+                    template_avail_state_listener)
+                self.hass.async_add_job(self.async_check_availability)
 
         self.hass.bus.async_listen_once(
             EVENT_HOMEASSISTANT_START, template_bsensor_startup)
@@ -151,6 +177,11 @@ class BinarySensorTemplate(BinarySensorDevice):
     def device_class(self):
         """Return the sensor class of the sensor."""
         return self._device_class
+
+    @property
+    def available(self):
+        """Return the availability of this sensor."""
+        return self._available
 
     @property
     def should_poll(self):
@@ -196,6 +227,26 @@ class BinarySensorTemplate(BinarySensorDevice):
         return state
 
     @callback
+    def _async_render_availability(self):
+        """Get the availability from the template."""
+        # if template rendering fails consider availabile as false
+        available = False
+        try:
+            available = self._availability_template.async_render(
+            ).lower() == 'true'
+        except TemplateError as ex:
+            if ex.args and ex.args[0].startswith(
+                    "UndefinedError: 'None' has no attribute"):
+                # Common during HA startup - so just a warning
+                _LOGGER.warning("Could not render template %s, "
+                                "the state is unknown", self._name)
+            else:
+                _LOGGER.error(
+                    "Could not render template %s: %s", self._name, ex)
+
+        return available
+
+    @callback
     def async_check_state(self):
         """Update the state from the template."""
         state = self._async_render()
@@ -220,3 +271,13 @@ class BinarySensorTemplate(BinarySensorDevice):
         async_track_same_state(
             self.hass, period, set_state, entity_ids=self._entities,
             async_check_same_func=lambda *args: self._async_render() == state)
+
+    @callback
+    def async_check_availability(self):
+        """Update the availability from the template."""
+        availability = self._async_render_availability()
+
+        # return if the availability don't change
+        if availability != self._available:
+            self._available = availability
+            self.async_schedule_update_ha_state()
