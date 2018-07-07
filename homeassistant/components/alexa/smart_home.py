@@ -107,7 +107,6 @@ class _DisplayCategory(object):
     THERMOSTAT = "THERMOSTAT"
 
     # Indicates the endpoint is a television.
-    # pylint: disable=invalid-name
     TV = "TV"
 
 
@@ -1474,9 +1473,6 @@ async def async_api_set_thermostat_mode(hass, config, request, entity):
     mode = mode if isinstance(mode, str) else mode['value']
 
     operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST)
-    # Work around a pylint false positive due to
-    #  https://github.com/PyCQA/pylint/issues/1830
-    # pylint: disable=stop-iteration-return
     ha_mode = next(
         (k for k, v in API_THERMOSTAT_MODES.items() if v == mode),
         None

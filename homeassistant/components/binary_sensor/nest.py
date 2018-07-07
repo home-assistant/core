@@ -31,12 +31,10 @@ CAMERA_BINARY_TYPES = {
 
 STRUCTURE_BINARY_TYPES = {
     'away': None,
-    # 'security_state', # pending python-nest update
 }
 
 STRUCTURE_BINARY_STATE_MAP = {
     'away': {'away': True, 'home': False},
-    'security_state': {'deter': True, 'ok': False},
 }
 
 _BINARY_TYPES_DEPRECATED = [
@@ -135,7 +133,7 @@ class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
         value = getattr(self.device, self.variable)
         if self.variable in STRUCTURE_BINARY_TYPES:
             self._state = bool(STRUCTURE_BINARY_STATE_MAP
-                               [self.variable][value])
+                               [self.variable].get(value))
         else:
             self._state = bool(value)
 

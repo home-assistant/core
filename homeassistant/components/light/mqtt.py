@@ -442,8 +442,15 @@ class MqttLight(MqttAvailability, Light):
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
 
             hs_color = kwargs[ATTR_HS_COLOR]
-            brightness = kwargs.get(
-                ATTR_BRIGHTNESS, self._brightness if self._brightness else 255)
+
+            # If there's a brightness topic set, we don't want to scale the RGB
+            # values given using the brightness.
+            if self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
+                brightness = 255
+            else:
+                brightness = kwargs.get(
+                    ATTR_BRIGHTNESS, self._brightness if self._brightness else
+                    255)
             rgb = color_util.color_hsv_to_RGB(
                 hs_color[0], hs_color[1], brightness / 255 * 100)
             tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]
