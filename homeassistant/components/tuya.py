@@ -56,25 +56,19 @@ def setup(hass, config):
         'entities': {}
     }
 
-    devTypes = tuya.get_devTypes()
-    for devType in devTypes:
-        discovery.load_platform(hass, devType, DOMAIN, {}, config)
-
-    def check_accesstoken(event_time):
-        tuya = hass.data[DATA_TUYA]
-        tuya.check_access_token()
+    dev_types = tuya.get_devTypes()
+    for dev_type in dev_types:
+        discovery.load_platform(hass, dev_type, DOMAIN, {}, config)
 
     def poll_devices_update(event_time):
-        print('poll devices update start ======')
+        """Check if accesstoken is expired and pull device list from server."""
         devices = tuya.poll_devices_update()
-        devTypes = tuya.get_devTypes()
+        dev_types = tuya.get_devTypes()
 
         if devices is None:
             return None
-        """Add new discovered devices."""
-        for devType in devTypes:
-            discovery.load_platform(hass, devType, DOMAIN, {}, config)
-        """Delete not exist devices."""
+        for dev_type in dev_types:
+            discovery.load_platform(hass, dev_type, DOMAIN, {}, config)
         newlist_ids = []
         for device in devices:
             newlist_ids.append(device.get('id'))

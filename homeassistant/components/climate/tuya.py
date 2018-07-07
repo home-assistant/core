@@ -95,8 +95,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
             return TEMP_CELSIUS
         elif unit == 'FAHRENHEIT':
             return TEMP_FAHRENHEIT
-        else:
-            return TEMP_CELSIUS
+        return TEMP_CELSIUS
 
     @property
     def current_humidity(self):
@@ -114,8 +113,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         mode = self.tuya.current_operation()
         if mode is None:
             return None
-        else:
-            return TUYA_STATE_TO_HA.get(mode)
+        return TUYA_STATE_TO_HA.get(mode)
 
     @property
     def operation_list(self):

@@ -89,7 +89,7 @@ class TuyaLight(TuyaDevice, Light):
             params['color'] = kwargs[ATTR_HS_COLOR]
         if ATTR_COLOR_TEMP in kwargs:
             params['color_temp'] = colorutil.color_temperature_mired_to_kelvin(
-                    kwargs[ATTR_COLOR_TEMP])
+                kwargs[ATTR_COLOR_TEMP])
         self.tuya.device_control(True, **params)
         self.schedule_update_ha_state(True)
 
