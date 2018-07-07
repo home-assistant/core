@@ -88,7 +88,7 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
             # custom_components/switch/some_platform.py exists,
             # the import custom_components.switch would succeed.
             # __file__ was unset for namespaces before Python 3.7
-            if getattr(module, '__file__') is None:
+            if getattr(module, '__file__', None) is None:
                 continue
 
             _LOGGER.info("Loaded %s from %s", comp_or_platform, path)
