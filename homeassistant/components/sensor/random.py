@@ -4,7 +4,6 @@ Support for showing random numbers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.random/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -34,8 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up the Random number sensor."""
     name = config.get(CONF_NAME)
     minimum = config.get(CONF_MINIMUM)
@@ -84,8 +83,7 @@ class RandomSensor(Entity):
             ATTR_MINIMUM: self._minimum,
         }
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get a new number and updates the states."""
         from random import randrange
         self._state = randrange(self._minimum, self._maximum + 1)

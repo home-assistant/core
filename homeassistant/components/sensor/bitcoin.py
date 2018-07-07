@@ -15,7 +15,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['blockchain==1.4.0']
+REQUIREMENTS = ['blockchain==1.4.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,7 +121,6 @@ class BitcoinSensor(Entity):
         stats = self.data.stats
         ticker = self.data.ticker
 
-        # pylint: disable=no-member
         if self.type == 'exchangerate':
             self._state = ticker[self._currency].p15min
             self._unit_of_measurement = self._currency

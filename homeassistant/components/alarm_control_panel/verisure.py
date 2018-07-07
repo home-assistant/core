@@ -60,8 +60,8 @@ class VerisureAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """Return the code format as regex."""
-        return '^\\d{%s}$' % self._digits
+        """Return one or more digits/characters."""
+        return 'Number'
 
     @property
     def changed_by(self):

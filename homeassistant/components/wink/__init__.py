@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['python-wink==1.7.3', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.9.1', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -210,7 +210,6 @@ def _request_oauth_completion(hass, config):
             "Failed to register, please try again.")
         return
 
-    # pylint: disable=unused-argument
     def wink_configuration_callback(callback_data):
         """Call setup again."""
         setup(hass, config)

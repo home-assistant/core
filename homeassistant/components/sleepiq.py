@@ -51,7 +51,6 @@ def setup(hass, config):
     Will automatically load sensor components to support
     devices discovered on the account.
     """
-    # pylint: disable=global-statement
     global DATA
 
     from sleepyq import Sleepyq

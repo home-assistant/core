@@ -4,22 +4,21 @@ Support for Netgear Arlo IP cameras.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.arlo/
 """
-import asyncio
 import logging
-from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.arlo import DEFAULT_BRAND, DATA_ARLO
+from homeassistant.components.arlo import (
+    DEFAULT_BRAND, DATA_ARLO, SIGNAL_UPDATE_ARLO)
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.components.ffmpeg import DATA_FFMPEG
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
-
-SCAN_INTERVAL = timedelta(seconds=90)
 
 ARLO_MODE_ARMED = 'armed'
 ARLO_MODE_DISARMED = 'disarmed'
@@ -44,22 +43,19 @@ POWERSAVE_MODE_MAPPING = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_FFMPEG_ARGUMENTS):
-    cv.string,
+    vol.Optional(CONF_FFMPEG_ARGUMENTS): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up an Arlo IP Camera."""
-    arlo = hass.data.get(DATA_ARLO)
-    if not arlo:
-        return False
+    arlo = hass.data[DATA_ARLO]
 
     cameras = []
     for camera in arlo.cameras:
         cameras.append(ArloCam(hass, camera, config))
 
-    add_devices(cameras, True)
+    add_devices(cameras)
 
 
 class ArloCam(Camera):
@@ -74,31 +70,41 @@ class ArloCam(Camera):
         self._ffmpeg = hass.data[DATA_FFMPEG]
         self._ffmpeg_arguments = device_info.get(CONF_FFMPEG_ARGUMENTS)
         self._last_refresh = None
-        if self._camera.base_station:
-            self._camera.base_station.refresh_rate = \
-                SCAN_INTERVAL.total_seconds()
         self.attrs = {}
 
     def camera_image(self):
         """Return a still image response from the camera."""
-        return self._camera.last_image
+        return self._camera.last_image_from_cache
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def async_added_to_hass(self):
+        """Register callbacks."""
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_ARLO, self._update_callback)
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state()
+
+    async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
         video = self._camera.last_video
         if not video:
+            error_msg = \
+                'Video not found for {0}. Is it older than {1} days?'.format(
+                    self.name, self._camera.min_days_vdo_cache)
+            _LOGGER.error(error_msg)
             return
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
-        yield from stream.open_camera(
+        await stream.open_camera(
             video.video_url, extra_cmd=self._ffmpeg_arguments)
 
-        yield from async_aiohttp_proxy_stream(
+        await async_aiohttp_proxy_stream(
             self.hass, request, stream,
             'multipart/x-mixed-replace;boundary=ffserver')
-        yield from stream.close()
+        await stream.close()
 
     @property
     def name(self):
@@ -133,11 +139,6 @@ class ArloCam(Camera):
         return DEFAULT_BRAND
 
     @property
-    def should_poll(self):
-        """Camera should poll periodically."""
-        return True
-
-    @property
     def motion_detection_enabled(self):
         """Return the camera motion detection status."""
         return self._motion_status
@@ -164,7 +165,3 @@ class ArloCam(Camera):
         """Disable the motion detection in base station (Disarm)."""
         self._motion_status = False
         self.set_base_station_mode(ARLO_MODE_DISARMED)
-
-    def update(self):
-        """Add an attribute-update task to the executor pool."""
-        self._camera.update()

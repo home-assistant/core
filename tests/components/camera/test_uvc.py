@@ -7,6 +7,7 @@ import requests
 from uvcclient import camera
 from uvcclient import nvr
 
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 from homeassistant.components.camera import uvc
 from tests.common import get_test_home_assistant
@@ -34,21 +35,21 @@ class TestUVCSetup(unittest.TestCase):
             'port': 123,
             'key': 'secret',
         }
-        fake_cameras = [
+        mock_cameras = [
             {'uuid': 'one', 'name': 'Front', 'id': 'id1'},
             {'uuid': 'two', 'name': 'Back', 'id': 'id2'},
             {'uuid': 'three', 'name': 'Old AirCam', 'id': 'id3'},
         ]
 
-        def fake_get_camera(uuid):
-            """Create a fake camera."""
+        def mock_get_camera(uuid):
+            """Create a mock camera."""
             if uuid == 'id3':
                 return {'model': 'airCam'}
             else:
                 return {'model': 'UVC'}
 
-        mock_remote.return_value.index.return_value = fake_cameras
-        mock_remote.return_value.get_camera.side_effect = fake_get_camera
+        mock_remote.return_value.index.return_value = mock_cameras
+        mock_remote.return_value.get_camera.side_effect = mock_get_camera
         mock_remote.return_value.server_version = (3, 2, 0)
 
         assert setup_component(self.hass, 'camera', {'camera': config})
@@ -71,11 +72,11 @@ class TestUVCSetup(unittest.TestCase):
             'nvr': 'foo',
             'key': 'secret',
         }
-        fake_cameras = [
+        mock_cameras = [
             {'uuid': 'one', 'name': 'Front', 'id': 'id1'},
             {'uuid': 'two', 'name': 'Back', 'id': 'id2'},
         ]
-        mock_remote.return_value.index.return_value = fake_cameras
+        mock_remote.return_value.index.return_value = mock_cameras
         mock_remote.return_value.get_camera.return_value = {'model': 'UVC'}
         mock_remote.return_value.server_version = (3, 2, 0)
 
@@ -99,11 +100,11 @@ class TestUVCSetup(unittest.TestCase):
             'nvr': 'foo',
             'key': 'secret',
         }
-        fake_cameras = [
+        mock_cameras = [
             {'uuid': 'one', 'name': 'Front', 'id': 'id1'},
             {'uuid': 'two', 'name': 'Back', 'id': 'id2'},
         ]
-        mock_remote.return_value.index.return_value = fake_cameras
+        mock_remote.return_value.index.return_value = mock_cameras
         mock_remote.return_value.get_camera.return_value = {'model': 'UVC'}
         mock_remote.return_value.server_version = (3, 1, 3)
 
@@ -133,19 +134,62 @@ class TestUVCSetup(unittest.TestCase):
 
     @mock.patch.object(uvc, 'UnifiVideoCamera')
     @mock.patch('uvcclient.nvr.UVCRemote')
-    def test_setup_nvr_errors(self, mock_remote, mock_uvc):
-        """Test for NVR errors."""
-        errors = [nvr.NotAuthorized, nvr.NvrError,
-                  requests.exceptions.ConnectionError]
+    def setup_nvr_errors_during_indexing(self, error, mock_remote, mock_uvc):
+        """Setup test for NVR errors during indexing."""
         config = {
             'platform': 'uvc',
             'nvr': 'foo',
             'key': 'secret',
         }
-        for error in errors:
-            mock_remote.return_value.index.side_effect = error
-            assert setup_component(self.hass, 'camera', config)
-            assert not mock_uvc.called
+        mock_remote.return_value.index.side_effect = error
+        assert setup_component(self.hass, 'camera', {'camera': config})
+        assert not mock_uvc.called
+
+    def test_setup_nvr_error_during_indexing_notauthorized(self):
+        """Test for error: nvr.NotAuthorized."""
+        self.setup_nvr_errors_during_indexing(nvr.NotAuthorized)
+
+    def test_setup_nvr_error_during_indexing_nvrerror(self):
+        """Test for error: nvr.NvrError."""
+        self.setup_nvr_errors_during_indexing(nvr.NvrError)
+        self.assertRaises(PlatformNotReady)
+
+    def test_setup_nvr_error_during_indexing_connectionerror(self):
+        """Test for error: requests.exceptions.ConnectionError."""
+        self.setup_nvr_errors_during_indexing(
+            requests.exceptions.ConnectionError)
+        self.assertRaises(PlatformNotReady)
+
+    @mock.patch.object(uvc, 'UnifiVideoCamera')
+    @mock.patch('uvcclient.nvr.UVCRemote.__init__')
+    def setup_nvr_errors_during_initialization(self, error, mock_remote,
+                                               mock_uvc):
+        """Setup test for NVR errors during initialization."""
+        config = {
+            'platform': 'uvc',
+            'nvr': 'foo',
+            'key': 'secret',
+        }
+        mock_remote.return_value = None
+        mock_remote.side_effect = error
+        assert setup_component(self.hass, 'camera', {'camera': config})
+        assert not mock_remote.index.called
+        assert not mock_uvc.called
+
+    def test_setup_nvr_error_during_initialization_notauthorized(self):
+        """Test for error: nvr.NotAuthorized."""
+        self.setup_nvr_errors_during_initialization(nvr.NotAuthorized)
+
+    def test_setup_nvr_error_during_initialization_nvrerror(self):
+        """Test for error: nvr.NvrError."""
+        self.setup_nvr_errors_during_initialization(nvr.NvrError)
+        self.assertRaises(PlatformNotReady)
+
+    def test_setup_nvr_error_during_initialization_connectionerror(self):
+        """Test for error: requests.exceptions.ConnectionError."""
+        self.setup_nvr_errors_during_initialization(
+            requests.exceptions.ConnectionError)
+        self.assertRaises(PlatformNotReady)
 
 
 class TestUVC(unittest.TestCase):
@@ -208,8 +252,8 @@ class TestUVC(unittest.TestCase):
         """Test the login tries."""
         responses = [0]
 
-        def fake_login(*a):
-            """Fake login."""
+        def mock_login(*a):
+            """Mock login."""
             try:
                 responses.pop(0)
                 raise socket.error
@@ -217,7 +261,7 @@ class TestUVC(unittest.TestCase):
                 pass
 
         mock_store.return_value.get_camera_password.return_value = None
-        mock_camera.return_value.login.side_effect = fake_login
+        mock_camera.return_value.login.side_effect = mock_login
         self.uvc._login()
         self.assertEqual(2, mock_camera.call_count)
         self.assertEqual('host-b', self.uvc._connect_addr)
@@ -263,8 +307,8 @@ class TestUVC(unittest.TestCase):
         """Test the re-authentication."""
         responses = [0]
 
-        def fake_snapshot():
-            """Fake snapshot."""
+        def mock_snapshot():
+            """Mock snapshot."""
             try:
                 responses.pop()
                 raise camera.CameraAuthError()
@@ -273,7 +317,7 @@ class TestUVC(unittest.TestCase):
             return 'image'
 
         self.uvc._camera = mock.MagicMock()
-        self.uvc._camera.get_snapshot.side_effect = fake_snapshot
+        self.uvc._camera.get_snapshot.side_effect = mock_snapshot
         with mock.patch.object(self.uvc, '_login') as mock_login:
             self.assertEqual('image', self.uvc.camera_image())
             self.assertEqual(mock_login.call_count, 1)

@@ -39,10 +39,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Skybeacon sensor."""
-    # pylint: disable=unreachable
     name = config.get(CONF_NAME)
     mac = config.get(CONF_MAC)
     _LOGGER.debug("Setting up...")
@@ -140,7 +138,7 @@ class Monitor(threading.Thread):
 
     def run(self):
         """Thread that keeps connection alive."""
-        # pylint: disable=import-error, no-name-in-module, no-member
+        # pylint: disable=import-error
         import pygatt
         from pygatt.backends import Characteristic
         from pygatt.exceptions import (

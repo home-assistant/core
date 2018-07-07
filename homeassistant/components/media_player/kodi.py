@@ -294,6 +294,7 @@ class KodiDevice(MediaPlayerDevice):
             # Register notification listeners
             self._ws_server.Player.OnPause = self.async_on_speed_event
             self._ws_server.Player.OnPlay = self.async_on_speed_event
+            self._ws_server.Player.OnResume = self.async_on_speed_event
             self._ws_server.Player.OnSpeedChanged = self.async_on_speed_event
             self._ws_server.Player.OnStop = self.async_on_stop
             self._ws_server.Application.OnVolumeChanged = \
@@ -392,7 +393,7 @@ class KodiDevice(MediaPlayerDevice):
         if not self._players:
             return STATE_IDLE
 
-        if self._properties['speed'] == 0 and not self._properties['live']:
+        if self._properties['speed'] == 0:
             return STATE_PAUSED
 
         return STATE_PLAYING
@@ -541,8 +542,8 @@ class KodiDevice(MediaPlayerDevice):
     def media_title(self):
         """Title of current playing media."""
         # find a string we can use as a title
-        return self._item.get(
-            'title', self._item.get('label', self._item.get('file')))
+        item = self._item
+        return item.get('title') or item.get('label') or item.get('file')
 
     @property
     def media_series_title(self):

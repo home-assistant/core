@@ -8,10 +8,10 @@ import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util import json
 
 
-PATH_DATA = '.users.json'
+STORAGE_VERSION = 1
+STORAGE_KEY = 'auth_provider.homeassistant'
 
 CONFIG_SCHEMA = auth.AUTH_PROVIDER_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)
@@ -31,14 +31,22 @@ class InvalidUser(HomeAssistantError):
 class Data:
     """Hold the user data."""
 
-    def __init__(self, path, data):
+    def __init__(self, hass):
         """Initialize the user data store."""
-        self.path = path
+        self.hass = hass
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._data = None
+
+    async def async_load(self):
+        """Load stored data."""
+        data = await self._store.async_load()
+
         if data is None:
             data = {
                 'salt': auth.generate_secret(),
                 'users': []
             }
+
         self._data = data
 
     @property
@@ -99,14 +107,9 @@ class Data:
         else:
             raise InvalidUser
 
-    def save(self):
+    async def async_save(self):
         """Save data."""
-        json.save_json(self.path, self._data)
-
-
-def load_data(path):
-    """Load auth data."""
-    return Data(path, json.load_json(path, None))
+        await self._store.async_save(self._data)
 
 
 @auth.AUTH_PROVIDERS.register('homeassistant')
@@ -121,12 +124,10 @@ class HassAuthProvider(auth.AuthProvider):
 
     async def async_validate_login(self, username, password):
         """Helper to validate a username and password."""
-        def validate():
-            """Validate creds."""
-            data = self._auth_data()
-            data.validate_login(username, password)
-
-        await self.hass.async_add_job(validate)
+        data = Data(self.hass)
+        await data.async_load()
+        await self.hass.async_add_executor_job(
+            data.validate_login, username, password)
 
     async def async_get_or_create_credentials(self, flow_result):
         """Get credentials based on the flow result."""
@@ -140,10 +141,6 @@ class HassAuthProvider(auth.AuthProvider):
         return self.async_create_credentials({
             'username': username
         })
-
-    def _auth_data(self):
-        """Return the auth provider data."""
-        return load_data(self.hass.config.path(PATH_DATA))
 
 
 class LoginFlow(data_entry_flow.FlowHandler):

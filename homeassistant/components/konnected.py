@@ -10,7 +10,7 @@ import json
 import voluptuous as vol
 
 from aiohttp.hdrs import AUTHORIZATION
-from aiohttp.web import Request, Response  # NOQA
+from aiohttp.web import Request, Response
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.components.discovery import SERVICE_KONNECTED
@@ -31,6 +31,7 @@ REQUIREMENTS = ['konnected==0.1.2']
 DOMAIN = 'konnected'
 
 CONF_ACTIVATION = 'activation'
+CONF_API_HOST = 'api_host'
 STATE_LOW = 'low'
 STATE_HIGH = 'high'
 
@@ -56,10 +57,12 @@ _SWITCH_SCHEMA = vol.All(
     }), cv.has_at_least_one_key(CONF_PIN, CONF_ZONE)
 )
 
+# pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema({
             vol.Required(CONF_ACCESS_TOKEN): cv.string,
+            vol.Optional(CONF_API_HOST): vol.Url(),
             vol.Required(CONF_DEVICES): [{
                 vol.Required(CONF_ID): cv.string,
                 vol.Optional(CONF_BINARY_SENSORS): vol.All(
@@ -87,7 +90,10 @@ async def async_setup(hass, config):
 
     access_token = cfg.get(CONF_ACCESS_TOKEN)
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {CONF_ACCESS_TOKEN: access_token}
+        hass.data[DOMAIN] = {
+            CONF_ACCESS_TOKEN: access_token,
+            CONF_API_HOST: cfg.get(CONF_API_HOST)
+        }
 
     def device_discovered(service, info):
         """Call when a Konnected device has been discovered."""
@@ -254,14 +260,26 @@ class KonnectedDevice(object):
         _LOGGER.debug('%s: current actuator config: %s', self.device_id,
                       current_actuator_config)
 
+        desired_api_host = \
+            self.hass.data[DOMAIN].get(CONF_API_HOST) or \
+            self.hass.config.api.base_url
+        desired_api_endpoint = desired_api_host + ENDPOINT_ROOT
+        current_api_endpoint = self.status.get('endpoint')
+
+        _LOGGER.debug('%s: desired api endpoint: %s', self.device_id,
+                      desired_api_endpoint)
+        _LOGGER.debug('%s: current api endpoint: %s', self.device_id,
+                      current_api_endpoint)
+
         if (desired_sensor_configuration != current_sensor_configuration) or \
-                (current_actuator_config != desired_actuator_config):
+                (current_actuator_config != desired_actuator_config) or \
+                (current_api_endpoint != desired_api_endpoint):
             _LOGGER.debug('pushing settings to device %s', self.device_id)
             self.client.put_settings(
                 desired_sensor_configuration,
                 desired_actuator_config,
                 self.hass.data[DOMAIN].get(CONF_ACCESS_TOKEN),
-                self.hass.config.api.base_url + ENDPOINT_ROOT
+                desired_api_endpoint
             )
 
 

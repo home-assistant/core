@@ -34,7 +34,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=unused-argument
 def setup(hass, config):
     """Set up the BloomSky component."""
     api_key = config[DOMAIN][CONF_API_KEY]

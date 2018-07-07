@@ -22,6 +22,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
     PRECISION_TENTHS, )
+
+DEFAULT_MIN_TEMP = 7
+DEFAULT_MAX_TEMP = 35
+DEFAULT_MIN_HUMITIDY = 30
+DEFAULT_MAX_HUMIDITY = 99
+
 DOMAIN = 'climate'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
@@ -240,7 +246,8 @@ def set_swing_mode(hass, swing_mode, entity_id=None):
 
 async def async_setup(hass, config):
     """Set up climate devices."""
-    component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
+    component = hass.data[DOMAIN] = \
+        EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
 
     async def async_away_mode_set_service(service):
@@ -450,10 +457,19 @@ async def async_setup(hass, config):
     return True
 
 
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
 class ClimateDevice(Entity):
     """Representation of a climate device."""
 
-    # pylint: disable=no-self-use
     @property
     def state(self):
         """Return the current state."""
@@ -778,19 +794,21 @@ class ClimateDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(7, TEMP_CELSIUS, self.temperature_unit)
+        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_CELSIUS,
+                                   self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(35, TEMP_CELSIUS, self.temperature_unit)
+        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_CELSIUS,
+                                   self.temperature_unit)
 
     @property
     def min_humidity(self):
         """Return the minimum humidity."""
-        return 30
+        return DEFAULT_MIN_HUMITIDY
 
     @property
     def max_humidity(self):
         """Return the maximum humidity."""
-        return 99
+        return DEFAULT_MAX_HUMIDITY

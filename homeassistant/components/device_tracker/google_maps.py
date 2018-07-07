@@ -4,19 +4,20 @@ Support for Google Maps location sharing.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.google_maps/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, ATTR_ID
+from homeassistant.const import ATTR_ID, CONF_PASSWORD, CONF_USERNAME
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import slugify
 
-REQUIREMENTS = ['locationsharinglib==2.0.2']
+REQUIREMENTS = ['locationsharinglib==2.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ class GoogleMapsScanner(object):
     def _update_info(self, now=None):
         for person in self.service.get_all_people():
             try:
-                dev_id = 'google_maps_{0}'.format(person.id)
+                dev_id = 'google_maps_{0}'.format(slugify(person.id))
             except TypeError:
                 _LOGGER.warning("No location(s) shared with this account")
                 return

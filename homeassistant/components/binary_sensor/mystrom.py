@@ -29,6 +29,7 @@ class MyStromView(HomeAssistantView):
 
     url = '/api/mystrom'
     name = 'api:mystrom'
+    supported_actions = ['single', 'double', 'long', 'touch']
 
     def __init__(self, add_devices):
         """Initialize the myStrom URL endpoint."""
@@ -44,16 +45,18 @@ class MyStromView(HomeAssistantView):
     @asyncio.coroutine
     def _handle(self, hass, data):
         """Handle requests to the myStrom endpoint."""
-        button_action = list(data.keys())[0]
-        button_id = data[button_action]
-        entity_id = '{}.{}_{}'.format(DOMAIN, button_id, button_action)
+        button_action = next((
+            parameter for parameter in data
+            if parameter in self.supported_actions), None)
 
-        if button_action not in ['single', 'double', 'long', 'touch']:
+        if button_action is None:
             _LOGGER.error(
                 "Received unidentified message from myStrom button: %s", data)
             return ("Received unidentified message: {}".format(data),
                     HTTP_UNPROCESSABLE_ENTITY)
 
+        button_id = data[button_action]
+        entity_id = '{}.{}_{}'.format(DOMAIN, button_id, button_action)
         if entity_id not in self.buttons:
             _LOGGER.info("New myStrom button/action detected: %s/%s",
                          button_id, button_action)

@@ -136,7 +136,7 @@ def state(new_state):
     """
     def decorator(function):
         """Set up the decorator function."""
-        # pylint: disable=no-member,protected-access
+        # pylint: disable=protected-access
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
             from limitlessled.pipeline import Pipeline

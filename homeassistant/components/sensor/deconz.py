@@ -4,8 +4,9 @@ Support for deCONZ sensor.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.deconz/
 """
-from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
+from homeassistant.components.deconz.const import (
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
@@ -33,14 +34,17 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         """Add sensors from deCONZ."""
         from pydeconz.sensor import DECONZ_SENSOR, SWITCH as DECONZ_REMOTE
         entities = []
+        allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
         for sensor in sensors:
-            if sensor.type in DECONZ_SENSOR:
+            if sensor.type in DECONZ_SENSOR and \
+               not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
                 if sensor.type in DECONZ_REMOTE:
                     if sensor.battery:
                         entities.append(DeconzBattery(sensor))
                 else:
                     entities.append(DeconzSensor(sensor))
         async_add_devices(entities, True)
+
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
@@ -68,7 +72,8 @@ class DeconzSensor(Entity):
         """
         if reason['state'] or \
            'reachable' in reason['attr'] or \
-           'battery' in reason['attr']:
+           'battery' in reason['attr'] or \
+           'on' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property
@@ -114,9 +119,14 @@ class DeconzSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
+        from pydeconz.sensor import LIGHTLEVEL
         attr = {}
         if self._sensor.battery:
             attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
+        if self._sensor.on is not None:
+            attr[ATTR_ON] = self._sensor.on
+        if self._sensor.type in LIGHTLEVEL and self._sensor.dark is not None:
+            attr[ATTR_DARK] = self._sensor.dark
         if self.unit_of_measurement == 'Watts':
             attr[ATTR_CURRENT] = self._sensor.current
             attr[ATTR_VOLTAGE] = self._sensor.voltage

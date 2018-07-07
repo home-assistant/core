@@ -13,20 +13,26 @@ from homeassistant.components.fritzbox import (
     ATTR_STATE_DEVICE_LOCKED, ATTR_STATE_BATTERY_LOW, ATTR_STATE_LOCKED)
 from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ClimateDevice, STATE_ECO, STATE_HEAT, STATE_MANUAL,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE)
+    STATE_OFF, STATE_ON, SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     ATTR_TEMPERATURE, PRECISION_HALVES, TEMP_CELSIUS)
-
 DEPENDENCIES = ['fritzbox']
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
 
-OPERATION_LIST = [STATE_HEAT, STATE_ECO]
+OPERATION_LIST = [STATE_HEAT, STATE_ECO, STATE_OFF, STATE_ON]
 
 MIN_TEMPERATURE = 8
 MAX_TEMPERATURE = 28
+
+# special temperatures for on/off in Fritz!Box API (modified by pyfritzhome)
+ON_API_TEMPERATURE = 127.0
+OFF_API_TEMPERATURE = 126.5
+ON_REPORT_SET_TEMPERATURE = 30.0
+OFF_REPORT_SET_TEMPERATURE = 0.0
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -88,6 +94,9 @@ class FritzboxThermostat(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
+        if self._target_temperature in (ON_API_TEMPERATURE,
+                                        OFF_API_TEMPERATURE):
+            return None
         return self._target_temperature
 
     def set_temperature(self, **kwargs):
@@ -102,9 +111,13 @@ class FritzboxThermostat(ClimateDevice):
     @property
     def current_operation(self):
         """Return the current operation mode."""
+        if self._target_temperature == ON_API_TEMPERATURE:
+            return STATE_ON
+        if self._target_temperature == OFF_API_TEMPERATURE:
+            return STATE_OFF
         if self._target_temperature == self._comfort_temperature:
             return STATE_HEAT
-        elif self._target_temperature == self._eco_temperature:
+        if self._target_temperature == self._eco_temperature:
             return STATE_ECO
         return STATE_MANUAL
 
@@ -119,6 +132,10 @@ class FritzboxThermostat(ClimateDevice):
             self.set_temperature(temperature=self._comfort_temperature)
         elif operation_mode == STATE_ECO:
             self.set_temperature(temperature=self._eco_temperature)
+        elif operation_mode == STATE_OFF:
+            self.set_temperature(temperature=OFF_REPORT_SET_TEMPERATURE)
+        elif operation_mode == STATE_ON:
+            self.set_temperature(temperature=ON_REPORT_SET_TEMPERATURE)
 
     @property
     def min_temp(self):

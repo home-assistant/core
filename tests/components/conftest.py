@@ -34,5 +34,5 @@ def hass_access_token(hass):
         no_secret=True,
     ))
     refresh_token = hass.loop.run_until_complete(
-        hass.auth.async_create_refresh_token(user, client.id))
+        hass.auth.async_create_refresh_token(user, client))
     yield hass.auth.async_create_access_token(refresh_token)

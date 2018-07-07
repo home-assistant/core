@@ -16,16 +16,10 @@ import logging
 import sys
 from types import ModuleType
 
-# pylint: disable=unused-import
-from typing import Dict, List, Optional, Sequence, Set  # NOQA
+from typing import Optional, Set
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
-
-# Typing imports
-# pylint: disable=using-constant-test,unused-import
-if False:
-    from homeassistant.core import HomeAssistant  # NOQA
 
 PREPARED = False
 
@@ -81,7 +75,7 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
     potential_paths = ['custom_components.{}'.format(comp_or_platform),
                        'homeassistant.components.{}'.format(comp_or_platform)]
 
-    for path in potential_paths:
+    for index, path in enumerate(potential_paths):
         try:
             module = importlib.import_module(path)
 
@@ -99,6 +93,14 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
             _LOGGER.info("Loaded %s from %s", comp_or_platform, path)
 
             cache[comp_or_platform] = module
+
+            if index == 0:
+                _LOGGER.warning(
+                    'You are using a custom component for %s which has not '
+                    'been tested by Home Assistant. This component might '
+                    'cause stability problems, be sure to disable it if you '
+                    'do experience issues with Home Assistant.',
+                    comp_or_platform)
 
             return module
 

@@ -13,7 +13,7 @@ except ImportError:
     keyring = None
 
 try:
-    import credstash  # pylint: disable=import-error, no-member
+    import credstash
 except ImportError:
     credstash = None
 
@@ -246,7 +246,6 @@ def _load_secret_yaml(secret_path: str) -> Dict:
     return secrets
 
 
-# pylint: disable=protected-access
 def _secret_yaml(loader: SafeLineLoader,
                  node: yaml.nodes.Node):
     """Load secrets and embed it into the configuration YAML."""

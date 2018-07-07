@@ -70,6 +70,7 @@ homeassistant/components/sensor/filter.py @dgomes
 homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
 homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
+homeassistant/components/sensor/nsw_fuel_station.py @nickw444
 homeassistant/components/sensor/pollen.py @bachya
 homeassistant/components/sensor/qnap.py @colinodell
 homeassistant/components/sensor/sma.py @kellerza
@@ -78,7 +79,6 @@ homeassistant/components/sensor/sytadin.py @gautric
 homeassistant/components/sensor/tibber.py @danielhiversen
 homeassistant/components/sensor/upnp.py @dgomes
 homeassistant/components/sensor/waqi.py @andrey-git
-homeassistant/components/switch/rainmachine.py @bachya
 homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/vacuum/roomba.py @pschmitt
 homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
@@ -100,6 +100,8 @@ homeassistant/components/matrix.py @tinloaf
 homeassistant/components/*/matrix.py @tinloaf
 homeassistant/components/qwikswitch.py @kellerza
 homeassistant/components/*/qwikswitch.py @kellerza
+homeassistant/components/rainmachine/* @bachya
+homeassistant/components/*/rainmachine.py @bachya
 homeassistant/components/*/rfxtrx.py @danielhiversen
 homeassistant/components/tahoma.py @philklei
 homeassistant/components/*/tahoma.py @philklei

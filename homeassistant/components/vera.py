@@ -19,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_LIGHTS, CONF_EXCLUDE)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.42']
+REQUIREMENTS = ['pyvera==0.2.43']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,6 @@ VERA_COMPONENTS = [
 ]
 
 
-# pylint: disable=unused-argument, too-many-function-args
 def setup(hass, base_config):
     """Set up for Vera devices."""
     import pyvera as veraApi
@@ -148,12 +147,10 @@ class VeraDevice(Entity):
             slugify(vera_device.name), vera_device.device_id)
 
         self.controller.register(vera_device, self._update_callback)
-        self.update()
 
     def _update_callback(self, _device):
         """Update the state."""
-        self.update()
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     @property
     def name(self):
