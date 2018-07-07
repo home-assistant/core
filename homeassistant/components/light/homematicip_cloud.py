@@ -17,7 +17,7 @@ DEPENDENCIES = ['homematicip_cloud']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_POWER_CONSUMPTION = 'power_consumption'
-ATTR_ENERGIE_COUNTER = 'energie_counter'
+ATTR_ENERGIE_COUNTER = 'energie_counter_kwh'
 ATTR_PROFILE_MODE = 'profile_mode'
 
 
