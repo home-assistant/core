@@ -519,6 +519,9 @@ liveboxplaytv==2.0.2
 # homeassistant.components.notify.lametric
 lmnotify==0.0.4
 
+# homeassistant.components.sensor.linky
+pylinky==0.1.5
+
 # homeassistant.components.device_tracker.google_maps
 locationsharinglib==2.0.7
 
