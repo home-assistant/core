@@ -72,7 +72,8 @@ class HomematicipLightMeasuring(HomematicipLight):
         attr = super().device_state_attributes
         if self._device.currentPowerConsumption > 0.05:
             attr.update({
-                ATTR_POWER_CONSUMPTION: round(self._device.currentPowerConsumption, 2)
+                ATTR_POWER_CONSUMPTION:
+                    round(self._device.currentPowerConsumption, 2)
             })
         attr.update({
             ATTR_ENERGIE_COUNTER: round(self._device.energyCounter, 2)
