@@ -521,6 +521,12 @@ class DlnaDmrDevice(MediaPlayerDevice):
             self.schedule_update_ha_state()
 
     @property
+    @requires_state_variable('AV', 'CurrentTransportActions')
+    def _current_transport_actions(self, state_variable):
+        transport_actions = (state_variable.value or '').split(',')
+        return [a.lowercase.strip() for a in transport_actions]
+
+    @property
     def supported_features(self):
         """Flag media player features that are supported."""
         return SUPPORT_DLNA_DMR
@@ -584,10 +590,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def async_media_pause(self, action):
         """Send pause command."""
         # pylint: disable=arguments-differ
-        avt_service = action.service
-        state_var = avt_service.state_variable('CurrentTransportActions')
-        transport_actions = (state_var.value or '').split(',')
-        if 'Pause' not in transport_actions:
+        if 'pause' not in self._current_transport_actions:
             _LOGGER.debug('Cannot do Pause')
             return
 
@@ -600,10 +603,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def async_media_play(self, action):
         """Send play command."""
         # pylint: disable=arguments-differ
-        avt_service = action.service
-        state_var = avt_service.state_variable('CurrentTransportActions')
-        transport_actions = (state_var.value or '').split(',')
-        if 'Play' not in transport_actions:
+        if 'play' not in self._current_transport_actions:
             _LOGGER.debug('Cannot do Play')
             return
 
@@ -616,10 +616,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def async_media_stop(self, action):
         """Send stop command."""
         # pylint: disable=arguments-differ
-        avt_service = action.service
-        state_var = avt_service.state_variable('CurrentTransportActions')
-        transport_actions = (state_var.value or '').split(',')
-        if 'Stop' not in transport_actions:
+        if 'stop' not in self._current_transport_actions:
             _LOGGER.debug('Cannot do Stop')
             return
 
@@ -648,11 +645,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
             return
 
         # wait for state variable AVT.AVTransportURI to change
-        avt_service = action.service
-        state_var = avt_service.state_variable('CurrentTransportActions')
         for i in range(20):  # wait max 5 seconds
-            transport_actions = (state_var.value or '').split(',')
-            if 'Play' in transport_actions:
+            if 'play' in self._current_transport_actions:
                 break
             await asyncio.sleep(0.25)
         else:
@@ -705,10 +699,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def async_media_previous_track(self, action):
         """Send previous track command."""
         # pylint: disable=arguments-differ
-        avt_service = action.service
-        state_var = avt_service.state_variable('CurrentTransportActions')
-        transport_actions = (state_var.value or '').split(',')
-        if 'Previous' not in transport_actions:
+        if 'previous' not in self._current_transport_actions:
             _LOGGER.debug('Cannot do Previous')
             return
 
@@ -721,10 +712,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
     async def async_media_next_track(self, action):
         """Send next track command."""
         # pylint: disable=arguments-differ
-        avt_service = action.service
-        state_var = avt_service.state_variable('CurrentTransportActions')
-        transport_actions = (state_var.value or '').split(',')
-        if 'Next' not in transport_actions:
+        if 'next' not in self._current_transport_actions:
             _LOGGER.debug('Cannot do Next')
             return
 
