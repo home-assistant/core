@@ -4,10 +4,8 @@ Support for magicseaweed data from magicseaweed.com.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.magicseaweed/
 """
-from datetime import timedelta, datetime
+from datetime import timedelta
 import logging
-
-import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -158,7 +156,7 @@ class MagicSeaweedSensor(Entity):
 
     def update(self):
         """Get the latest data from Magicseaweed and updates the states."""
-        self.data._update()
+        self.data.update()
         if self.hour is None:
             forecast = self.data.currently
         else:
@@ -194,7 +192,7 @@ class MagicSeaweedData(object):
         """Initialize the data object."""
         import magicseaweed
         self._msw = magicseaweed.MSW_Forecast(api_key, spot_id,
-                None, units)
+                                              None, units)
         self.currently = None
         self.hourly = {}
 
@@ -208,8 +206,7 @@ class MagicSeaweedData(object):
             self.currently = forecasts.data[0]
             for forecast in forecasts.data[:8]:
                 hour = dt_util.utc_from_timestamp(
-                        forecast.localTimestamp).strftime("%-I%p")
+                    forecast.localTimestamp).strftime("%-I%p")
                 self.hourly[hour] = forecast
-        except:
+        except ConnectionError:
             _LOGGER.error("Unable to retrieve data from %s", API_URL)
-            data = None
