@@ -70,7 +70,7 @@ class CameraPushReceiver(HomeAssistantView):
     async def post(self, request, entity_id):
         """Accept the POST from Camera."""
         _camera = self._cameras.get(entity_id)
-        
+
         if _camera is None:
             _LOGGER.error("Unknown %s", entity_id)
             return self.json_message('Unknown {}'.format(entity_id),
