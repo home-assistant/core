@@ -32,7 +32,7 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Set up the HomematicIP climate from a config entry."""
+    """Set up the HomematicIP alarm control panel from a config entry."""
     from homematicip.aio.group import AsyncSecurityZoneGroup
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
@@ -57,11 +57,11 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        if (self._device.sabotage or self._device.motionDetected or
-                self._device.windowState == HMIP_OPEN):
-            return STATE_ALARM_TRIGGERED
-
         if self._device.active:
+            if (self._device.sabotage or self._device.motionDetected or
+                    self._device.windowState == HMIP_OPEN):
+                return STATE_ALARM_TRIGGERED
+
             if self._device.label == HMIP_ZONE_HOME:
                 return STATE_ALARM_ARMED_HOME
             return STATE_ALARM_ARMED_AWAY
@@ -83,4 +83,4 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the alarm control device."""
-        return {}
+        return None
