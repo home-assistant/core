@@ -35,9 +35,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a TP-Link scanner."""
-    for cls in [Tplink5DeviceScanner, Tplink4DeviceScanner,
-                Tplink3DeviceScanner, Tplink2DeviceScanner,
-                TplinkDeviceScanner]:
+    for cls in [Tplink6DeviceScanner, Tplink5DeviceScanner,
+                Tplink4DeviceScanner, Tplink3DeviceScanner,
+                Tplink2DeviceScanner, TplinkDeviceScanner]:
         scanner = cls(config[DOMAIN])
         if scanner.success_init:
             return scanner
@@ -409,6 +409,74 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
                 device['MAC'].replace('-', ':'): device['DeviceName']
                 for device in list_of_devices['data']
                 }
+            return True
+
+        return False
+
+
+class Tplink6DeviceScanner(DeviceScanner):
+    """
+    Works for Archer D9 Firmware version.
+
+    0.9.1 0.1 v0041.0 Build 160224 Rel.59129n
+    """
+
+    def __init__(self, config):
+        """Initialize the scanner."""
+        host = config[CONF_HOST]
+        password = config[CONF_PASSWORD]
+
+        self.host = host
+        self.password = password
+
+        self.parse_macs = re.compile(
+            'MACAddress=([0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:' +
+            '[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2})')
+
+        self.parse_names = re.compile('hostName=(.*)')
+
+        self.last_results = {}
+        self.success_init = self._update_info()
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found device IDs."""
+        self._update_info()
+        return self.last_results.keys()
+
+    def get_device_name(self, device):
+        """Get the name of the device."""
+        return self.last_results.get(device)
+
+    def _update_info(self):
+        """Ensure the information from the TP-Link router is up to date.
+
+        Return boolean if scanning successful.
+        """
+        _LOGGER.info("Loading wireless clients...")
+
+        b64_encoded_password = base64.b64encode(
+            self.password.encode('ascii')).decode('ascii')
+        cookie = 'Authorization=Basic {}' \
+            .format(b64_encoded_password)
+
+        payload = "[LAN_HOST_ENTRY#0,0,0,0,0,0#0,0,0,0,0,0]0,0\r\n"
+        page = requests.post(
+            f'http://{self.host}/cgi?5',
+            data=payload,
+            headers={
+                "Referer": f"http://{self.host}/",
+                "Cookie": cookie,
+                "Content-Type": "text/plain"
+            },
+            timeout=10)
+
+        mac_addresses = self.parse_macs.findall(page.text)
+        host_names = self.parse_names.findall(page.text)
+
+        result = dict(zip(mac_addresses, host_names))
+
+        if result:
+            self.last_results = result
             return True
 
         return False
