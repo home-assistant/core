@@ -18,6 +18,8 @@ import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['magicseaweed==1.0.0']
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_HOURS = 'hours'
@@ -156,68 +158,33 @@ class MagicSeaweedSensor(Entity):
 
     def update(self):
         """Get the latest data from Magicseaweed and updates the states."""
-        self.data.update()
+        self.data._update()
         if self.hour is None:
             forecast = self.data.currently
         else:
             forecast = self.data.hourly[self.hour]
 
-        occurs = dt_util.utc_from_timestamp(
-            forecast.get('localTimestamp')).strftime("%a %-I %p")
-        utc_issue = dt_util.utc_from_timestamp(
-            forecast.get('issueTimestamp')).strftime("%a %-I %p")
-        swell = forecast.get('swell')
-        wind = forecast.get('wind', None)
-        condition = forecast.get('condition', None)
-        rating = "{} stars, {} faded".format(
-            forecast.get('solidRating') + forecast.get('fadedRating'),
-            forecast.get('solidRating'))
-
-        self._unit_of_measurement = swell.get('unit', None)
+        self._unit_of_measurement = forecast.swell_unit
         if self.type == 'min_breaking_swell':
-            self._state = swell.get('minBreakingHeight')
+            self._state = forecast.swell_minBreakingHeight
         elif self.type == 'max_breaking_swell':
-            self._state = swell.get('maxBreakingHeight')
+            self._state = forecast.swell_maxBreakingHeight
         elif self.type == 'swell_forecast':
             summary = "{} - {}".format(
-                swell.get('minBreakingHeight'),
-                swell.get('maxBreakingHeight'))
+                forecast.swell_minBreakingHeight,
+                forecast.swell_maxBreakingHeight)
             self._state = summary
             if self.hour is None:
                 for hour, data in self.data.hourly.items():
                     occurs = hour
-                    hr_swell = data.get('swell')
                     hr_summary = "{} - {} {}".format(
-                        hr_swell.get('minBreakingHeight'),
-                        hr_swell.get('maxBreakingHeight'),
-                        hr_swell.get('unit'))
+                        data.swell_minBreakingHeight,
+                        data.swell_maxBreakingHeight,
+                        data.swell_unit)
                     self._attrs[occurs] = hr_summary
 
         if self.type != 'swell_forecast':
-            self._attrs.update({
-                'air_pressure': "{}{}".format(condition.get('pressure'),
-                                              condition.get('unitPressure')),
-                'air_temp': "{}° {}".format(condition.get('temperature'),
-                                            condition.get('unit')),
-                'rating': rating,
-                'begins': occurs,
-                'issued': utc_issue,
-                'max_breaking_height': swell.get('maxBreakingHeight'),
-                'min_breaking_height': swell.get('minBreakingHeight'),
-                'probability': "{}%".format(swell.get('probability')),
-                'swell_period': "{} seconds".format(
-                    swell.get('components', {})
-                    .get('combined', {})
-                    .get('period', {})),
-                'wind_chill': "{}°".format(wind.get('chill')),
-                'wind_direction': "{}° {}".format(
-                    wind.get('direction'),
-                    wind.get('compassDirection')),
-                'wind_gusts': "{} {}".format(wind.get('gusts'),
-                                             wind.get('unit')),
-                'wind_speed': "{} {}".format(wind.get('speed'),
-                                             wind.get('unit')),
-            })
+            self._attrs.update(forecast.attrs)
 
 
 class MagicSeaweedData(object):
@@ -225,12 +192,11 @@ class MagicSeaweedData(object):
 
     def __init__(self, api_key, spot_id, units, interval):
         """Initialize the data object."""
-        self._api_key = api_key
-        self._spot_id = spot_id
+        import magicseaweed
+        self._msw = magicseaweed.MSW_Forecast(api_key, spot_id,
+                None, units)
         self.currently = None
         self.hourly = {}
-        self.params = {'spot_id': self._spot_id,
-                       'units': units}
 
         # Apply throttling to methods using configured interval
         self.update = Throttle(interval)(self._update)
@@ -238,19 +204,12 @@ class MagicSeaweedData(object):
     def _update(self):
         """Get the latest data from MagicSeaweed."""
         try:
-            now = datetime.now()
-            plus_24 = now + timedelta(hours=24)
-            self.params['start'] = now.timestamp()
-            self.params['end'] = plus_24.timestamp()
-            response = requests.get(API_URL.format(self._api_key),
-                                    params=self.params, timeout=5)
-            data = response.json()
-            self.currently = data[0]
-            for forecast in data:
-                hour = datetime.utcfromtimestamp(
-                    forecast.get('localTimestamp')).strftime("%-I%p")
+            forecasts = self._msw.get_future()
+            self.currently = forecasts.data[0]
+            for forecast in forecasts.data[:8]:
+                hour = dt_util.utc_from_timestamp(
+                        forecast.localTimestamp).strftime("%-I%p")
                 self.hourly[hour] = forecast
-
-        except requests.exceptions.ConnectionError:
+        except:
             _LOGGER.error("Unable to retrieve data from %s", API_URL)
             data = None
