@@ -10,7 +10,7 @@ async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
         'handler': ['insecure_example', None],
         'redirect_uri': CLIENT_REDIRECT_URI,
     })
-    assert resp.status == 200, step
+    assert resp.status == 200
     step = await resp.json()
 
     resp = await client.post(
