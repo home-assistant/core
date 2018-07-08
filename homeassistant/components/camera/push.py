@@ -11,7 +11,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
-    STATE_IDLE, STATE_RECORDING, DOMAIN
+    STATE_IDLE, STATE_RECORDING
 from homeassistant.core import callback
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, HTTP_BAD_REQUEST
@@ -29,6 +29,8 @@ DEFAULT_NAME = "Push Camera"
 ATTR_FILENAME = 'filename'
 ATTR_LAST_TRIP = 'last_trip'
 
+PUSH_CAMERA_DATA = 'push_camera'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_BUFFER_SIZE, default=1): cv.positive_int,
@@ -41,13 +43,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the Push Camera platform."""
+    if PUSH_CAMERA_DATA not in hass.data:
+        hass.data[PUSH_CAMERA_DATA] = {}
+
     cameras = [PushCamera(config[CONF_NAME],
                           config[CONF_BUFFER_SIZE],
                           config[CONF_TIMEOUT])]
 
-    component = hass.data.get(DOMAIN)
-
-    hass.http.register_view(CameraPushReceiver(component,
+    hass.http.register_view(CameraPushReceiver(hass,
                                                config[CONF_IMAGE_FIELD]))
 
     async_add_devices(cameras)
@@ -59,15 +62,15 @@ class CameraPushReceiver(HomeAssistantView):
     url = "/api/camera_push/{entity_id}"
     name = 'api:camera_push:camera_entity'
 
-    def __init__(self, component, image_field):
+    def __init__(self, hass, image_field):
         """Initialize CameraPushReceiver with camera entity."""
-        self._cameras = component
+        self._cameras = hass.data[PUSH_CAMERA_DATA]
         self._image = image_field
 
     async def post(self, request, entity_id):
         """Accept the POST from Camera."""
-        _camera = self._cameras.get_entity(entity_id)
-
+        _camera = self._cameras.get(entity_id)
+        _LOGGER.error(self._cameras)
         if _camera is None:
             _LOGGER.error("Unknown %s", entity_id)
             return self.json_message('Unknown {}'.format(entity_id),
@@ -101,6 +104,10 @@ class PushCamera(Camera):
         self._timeout = timeout
         self.queue = deque([], buffer_size)
         self._current_image = None
+
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        self.hass.data[PUSH_CAMERA_DATA][self.entity_id] = self
 
     @property
     def state(self):
