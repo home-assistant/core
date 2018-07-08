@@ -9,7 +9,8 @@ from functools import reduce
 from operator import ior
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
     SUPPORT_COLOR, Light)
 
 DOMAIN = 'zigate'
@@ -109,30 +110,25 @@ class ZiGateLight(Light):
             return int(a.get('value', 0)*255/100)
         return 0
 
-#     @property
-#     def hs_color(self) -> tuple:
-#         """Return the hs color value."""
-#         return self._hs_color
-#
-#     @property
-#     def color_temp(self) -> int:
-#         """Return the CT color temperature."""
-#         return self._ct
-#
-#     @property
-#     def white_value(self) -> int:
-#         """Return the white value of this light between 0..255."""
-#         return self._white
-#
-#     @property
-#     def effect_list(self) -> list:
-#         """Return the list of supported effects."""
-#         return self._effect_list
-#
-#     @property
-#     def effect(self) -> str:
-#         """Return the current effect."""
-#         return self._effect
+    @property
+    def hs_color(self) -> tuple:
+        """Return the hs color value."""
+        h = 0
+        a = self._device.get_attribute(self._endpoint, 0x0300, 0x0000)
+        if a:
+            h = a.get('value', 0)
+        s = 0
+        a = self._device.get_attribute(self._endpoint, 0x0300, 0x0001)
+        if a:
+            s = a.get('value', 0)
+        return (h, s)
+
+    @property
+    def color_temp(self) -> int:
+        """Return the CT color temperature."""
+        a = self._device.get_attribute(self._endpoint, 0x0300, 0x0007)
+        if a:
+            return a.get('value')
 
     @property
     def is_on(self) -> bool:
@@ -161,6 +157,12 @@ class ZiGateLight(Light):
             self.hass.data[DOMAIN].action_onoff(self._device.addr,
                                                 self._endpoint,
                                                 1)
+        if ATTR_HS_COLOR in kwargs:
+            h, s = kwargs[ATTR_HS_COLOR]
+            self.hass.data[DOMAIN].actions_move_hue_saturation(self._device.addr,
+                                                               self._endpoint,
+                                                               int(h),
+                                                               int(s))
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
