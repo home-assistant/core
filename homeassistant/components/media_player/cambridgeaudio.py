@@ -1,18 +1,10 @@
 """
 Support for Cambridge Audio Network Audio Players (StreamMagic platform).
 
-Example configuration.yaml entry:
-media_player:
-    platform: cambridgeaudio
-    host: 192.168.x.y
-    command_off: "OFF"
-    name: "CA 851N"
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.cambridgeaudio/
 """
 import logging
-# pylint: disable=unused-import
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -23,41 +15,31 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC)
 
-from homeassistant.const import (STATE_ON, STATE_OFF, STATE_UNKNOWN,
-                                 STATE_PLAYING, STATE_PAUSED, STATE_IDLE,
+from homeassistant.const import (STATE_ON, STATE_OFF, STATE_PLAYING,
+                                 STATE_PAUSED, STATE_IDLE,
                                  CONF_HOST, CONF_NAME, CONF_COMMAND_OFF)
 
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['stream_magic==0.16']
-DOMAIN = 'cambridgeaudio'
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Cambridge Audio Streamer'
-CONF_SOURCES = 'sources'
-KNOWN_HOSTS = []
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default='Cambridge Audio Streamer'): cv.string,
     vol.Optional(CONF_COMMAND_OFF, default='OFF'): cv.string
 })
 
 # supported features in all configurations
-SUPPORT_CAMBRIDGE_COMMON = SUPPORT_TURN_OFF | SUPPORT_TURN_ON |\
-                           SUPPORT_PLAY | SUPPORT_SELECT_SOURCE |\
-                           SUPPORT_CLEAR_PLAYLIST | SUPPORT_STOP
-
-# supported features when device is configured as pre-amp
-SUPPORT_CAMBRIDGE_PREAMP = SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
-                           SUPPORT_VOLUME_STEP
-
-# supported features for file-based media (i.e. not internet streams)
-SUPPORT_CAMBRIDGE_FILEMEDIA = SUPPORT_SEEK | SUPPORT_PAUSE |\
-                              SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK |\
-                              SUPPORT_SHUFFLE_SET
+SUPPORT_CAMBRIDGE = SUPPORT_TURN_OFF | SUPPORT_TURN_ON |\
+                    SUPPORT_PLAY | SUPPORT_SELECT_SOURCE |\
+                    SUPPORT_CLEAR_PLAYLIST | SUPPORT_STOP |\
+                    SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET |\
+                    SUPPORT_VOLUME_STEP | SUPPORT_SEEK | SUPPORT_PAUSE |\
+                    SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK |\
+                    SUPPORT_SHUFFLE_SET
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -65,16 +47,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from stream_magic import device as cadevice
     from stream_magic import discovery as ca
 
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-
-    poweroff_command = config.get(CONF_COMMAND_OFF, 'OFF')
-
     hosts = []
     sm = ca.StreamMagic()   # pylint: disable=C0103
+    # key to access known host list in hass.data
+    host_key = 'cambridgeaudio_hosts'
+
+    if host_key not in hass.data:
+        hass.data[host_key] = []
 
     # found a new host that was specified in config file
-    if CONF_HOST in config and host not in KNOWN_HOSTS:
+    if discovery_info is None:
+        host = config[CONF_HOST]
+        if host in hass.data[host_key]:
+            return
+
+        name = config[CONF_NAME]
+        poweroff_command = config[CONF_COMMAND_OFF]
+
         try:
             # discover() always returns a list, even for a single host
             devices = sm.discover(host=host)
@@ -88,57 +77,59 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
                 smdevice = cadevice.StreamMagicDevice(addr, port,
                                                       desc, scpd_url)
-                hosts.append(CADevice(smdevice,
-                                      config.get(CONF_SOURCES),
-                                      poweroff_command,
-                                      name=name))
-                KNOWN_HOSTS.append(host)
+                hosts.append(CADevice(smdevice, poweroff_command, name))
+                hass.data[host_key].append(host)
                 _LOGGER.debug("Added StreamMagic device with ip %s (%s)",
                               addr, desc)
         except OSError:
             _LOGGER.debug("Unable to connect to device at %s", host)
 
-    elif discovery_info is not None:    # netdisco found the device
-        addr = discovery_info.get('host')
+    else:   # netdisco found the device
+        host = discovery_info.get('host')
         port = discovery_info.get('port')
 
         # if a name was set in the config, use it
-        if name is None:
+        if CONF_NAME in config:
+            name = config[CONF_NAME]
+        else:
             name = discovery_info.get('name')
 
+        # same for the poweroff command; default to OFF if unset
+        if CONF_COMMAND_OFF in config:
+            poweroff_command = config[CONF_COMMAND_OFF]
+        else:
+            poweroff_command = 'OFF'
+
         scpd_url = discovery_info.get('ssdp_description')
-        if addr not in KNOWN_HOSTS:
-            smdevice = cadevice.StreamMagicDevice(addr, port, name, scpd_url)
-            hosts.append(CADevice(smdevice, config.get(CONF_SOURCES),
-                                  poweroff_command, name=name))
-            KNOWN_HOSTS.append(host)
+        if host not in hass.data[host_key]:
+            smdevice = cadevice.StreamMagicDevice(host, port, name, scpd_url)
+            hosts.append(CADevice(smdevice, poweroff_command, name))
+            hass.data[host_key].append(host)
             _LOGGER.debug("Added StreamMagic device with ip %s (%s)",
-                          addr, name)
+                          host, name)
     add_devices(hosts, True)
 
 
 class CADevice(MediaPlayerDevice):
     """Representation of a Cambridge Audio Network Audio Player device."""
 
-    def __init__(self, smdevice, sources, poweroff_command, name=None):
+    def __init__(self, smdevice, poweroff_command, name):
         """Initialization."""
         self._smdevice = smdevice
+        sources_map = dict((pr_num, pr_name) for pr_num, pr_name, pr_state
+                           in self._smdevice.get_preset_list())
         self._name = name
-        self._pwstate = STATE_UNKNOWN
-        self._state = STATE_UNKNOWN
+        self._pwstate = None
+        self._state = None
         self._muted = False
         self._support_volumecontrol = self._smdevice.get_volume_control()
         self._volume = 0
         self._volume_max = self._smdevice.get_volume_max()
-        self._source = None
-        self._sources_map = dict((pr_num, pr_name)
-                                 for pr_num, pr_name, pr_state
-                                 in self._smdevice.get_preset_list())
-        self._sources_reverse = {name: id for id, name
-                                 in self._sources_map.items()}
-        self._source_list = list(self._sources_map.values())
+        self._sources_reverse = {name: sid for sid, name
+                                 in sources_map.items()}
+        self._source_list = list(sources_map.values())
         self._audio_source = None
-        self._power_off_cmd = poweroff_command.upper()  # IDLE or OFF
+        self._power_off_cmd = poweroff_command  # IDLE or OFF
         self._artist = None
         self._album_art = None
         self._album = None
@@ -161,7 +152,8 @@ class CADevice(MediaPlayerDevice):
     @property
     def is_volume_muted(self):
         """Return the state of the muting function."""
-        return self._muted
+        if self._support_volumecontrol:
+            return self._muted
 
     @property
     def source(self):
@@ -176,12 +168,7 @@ class CADevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Return supported features."""
-        features = SUPPORT_CAMBRIDGE_COMMON
-        if self._audio_source == "media player":
-            features = features | SUPPORT_CAMBRIDGE_FILEMEDIA
-        if self._support_volumecontrol:
-            features = features | SUPPORT_CAMBRIDGE_PREAMP
-        return features
+        return SUPPORT_CAMBRIDGE
 
     @property
     def media_content_type(self):
@@ -239,7 +226,8 @@ class CADevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Current volume level (0..1)."""
-        return float(self._volume) / float(self._volume_max)
+        if self._support_volumecontrol:
+            return float(self._volume) / float(self._volume_max)
 
     def clear_playlist(self):
         """Clear the playlist."""
@@ -260,13 +248,14 @@ class CADevice(MediaPlayerDevice):
         # there is no "pause" with internet radio streams
         if self._audio_source == "media player":
             self._smdevice.trnsprt_pause()
-            self._state = STATE_PAUSED
         elif self._audio_source == "internet radio":
             self.media_stop()
-            self._state = STATE_IDLE
 
     def media_seek(self, position):
         """Jump to the specified percent position within the current track."""
+        if self._audio_source != "media player":
+            return
+
         abs_pos = round(self._to_seconds(self._duration) * (position/100), 2)
         abs_pos_h = int(abs_pos / 3600)
         abs_pos_m = int((abs_pos % 3600) / 60)
@@ -283,11 +272,11 @@ class CADevice(MediaPlayerDevice):
     def media_play(self):
         """Start playing the current media."""
         self._smdevice.trnsprt_play()
-        self._state = STATE_PLAYING
 
     def mute_volume(self, mute):
         """Mute the volume. This only works in pre-amp mode."""
-        self._smdevice.volume_mute(mute)
+        if self._support_volumecontrol:
+            self._smdevice.volume_mute(mute)
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play the specified media."""
@@ -296,16 +285,17 @@ class CADevice(MediaPlayerDevice):
     def select_source(self, source):
         """Switch to the selected internet radio preset."""
         self._smdevice.play_preset(self._sources_reverse[source])
-        self.schedule_update_ha_state()
 
     def set_shuffle(self, shuffle):
         """Enable/disable shuffle play."""
-        self._smdevice.set_shuffle(shuffle)
+        if self._audio_source != "media player":
+            self._smdevice.set_shuffle(shuffle)
 
     def set_volume_level(self, volume):
         """Set the current volume level. This only works in pre-amp mode."""
-        volume = int(float(self._volume_max) * float(volume))
-        self._smdevice.set_volume(volume)
+        if self._support_volumecontrol:
+            volume = int(float(self._volume_max) * float(volume))
+            self._smdevice.set_volume(volume)
 
     def turn_off(self):
         """Switch the device OFF (default) or into IDLE mode."""
@@ -342,11 +332,6 @@ class CADevice(MediaPlayerDevice):
             'TRANSITIONING': STATE_PLAYING}.get(dev.get_transport_state())
         self._audio_source = dev.get_audio_source()
 
-        try:
-            self._source = dev.get_current_preset()['name']
-        except TypeError:   # in case get_current_preset() returns None
-            self._source = None
-
         # only need to update volume if the device supports changing it
         if self._support_volumecontrol:
             self._muted = dev.get_mute_state()
@@ -364,13 +349,12 @@ class CADevice(MediaPlayerDevice):
             self._title = dev.get_current_track_info()['trackTitle']
 
             # track position in seconds
-            self._position = dev.get_current_track_info()['currentPos']
-            self._position = self._to_seconds(self._position)
-            # self._position = "{:.1f}".format(float(pos / tracklen * 100))
+            position = dev.get_current_track_info()['currentPos']
+            self._position = self._to_seconds(position)
 
             # track length in seconds
-            self._duration = dev.get_current_track_info()['trackLength']
-            self._duration = self._to_seconds(self._duration)
+            duration = dev.get_current_track_info()['trackLength']
+            self._duration = self._to_seconds(duration)
 
             self._position_updated_at = dt_util.utcnow()
 
