@@ -61,8 +61,16 @@ SUPPORT_DLNA_DMR = \
     SUPPORT_PLAY_MEDIA
 
 SERVICE_TYPES = {
-    'RC': 'urn:schemas-upnp-org:service:RenderingControl:1',
-    'AVT': 'urn:schemas-upnp-org:service:AVTransport:1',
+    'RC': {
+        'urn:schemas-upnp-org:service:RenderingControl:3',
+        'urn:schemas-upnp-org:service:RenderingControl:2',
+        'urn:schemas-upnp-org:service:RenderingControl:1',
+    },
+    'AVT': {
+        'urn:schemas-upnp-org:service:AVTransport:3',
+        'urn:schemas-upnp-org:service:AVTransport:2',
+        'urn:schemas-upnp-org:service:AVTransport:1',
+    },
 }
 
 HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
@@ -320,10 +328,6 @@ class HassUpnpRequester:
 
     async def async_http_request(self, method, url, headers=None, body=None):
         """Do a HTTP request."""
-        soap_action = headers['SOAPAction'] \
-            if 'SOAPAction' in (headers or []) else ''
-        _LOGGER.debug('%s.async_http_request(): method: %s, soap_action: %s',
-                      self, method, soap_action)
         session = async_get_clientsession(self.hass)
         with async_timeout.timeout(5, loop=self.hass.loop):
             response = await session.request(method,
@@ -364,13 +368,20 @@ class DlnaDmrDevice(MediaPlayerDevice):
         """Event handler on HASS stop."""
         await self._async_unsubscribe_all()
 
-    def _service(self, service_type):
+    def _service(self, service_type_abbreviation):
         """Get UpnpService by service_type or alias."""
         if not self._device:
             return None
 
-        service_type = SERVICE_TYPES.get(service_type, service_type)
-        return self._device.service(service_type)
+        if service_type_abbreviation not in SERVICE_TYPES:
+            return None
+
+        for service_type in SERVICE_TYPES[service_type_abbreviation]:
+            service = self._device.service(service_type)
+            if service:
+                return service
+
+        return None
 
     async def _async_unsubscribe_all(self):
         """
@@ -418,8 +429,14 @@ class DlnaDmrDevice(MediaPlayerDevice):
         # subscribe services for events
         callback_url = self._notify_view.callback_url
         for service_type, service in self._device.services.items():
-            if service_type not in SERVICE_TYPES.values():
+            # ensure we are interested in this service_type
+            for service_types in SERVICE_TYPES.values():
+                if service_type in service_types:
+                    break
+            else:
                 continue
+
+            _LOGGER.debug('%s Subscribing to: %s', self, service_type)
 
             service.on_state_variable_change = self._on_state_variable_change
 
