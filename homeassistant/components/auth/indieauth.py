@@ -2,11 +2,13 @@
 from ipaddress import ip_address, ip_network
 from urllib.parse import urlparse
 
+# IP addresses of loopback interfaces
 ALLOWED_IPS = (
     ip_address('127.0.0.1'),
     ip_address('::1'),
 )
 
+# RFC1918 - Address allocation for Private Internets
 ALLOWED_NETWORKS = (
     ip_network('10.0.0.0/8'),
     ip_network('172.16.0.0/12'),
@@ -102,6 +104,10 @@ def _parse_client_id(client_id):
     # MUST be domain names or a loopback interface and
     # MUST NOT be IPv4 or IPv6 addresses except for IPv4 127.0.0.1
     # or IPv6 [::1]
+
+    # We are not goint to follow the spec here. We are going to allow
+    # any internal network IP to be used inside a client id.
+
     address = None
 
     try:
