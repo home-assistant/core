@@ -25,7 +25,6 @@ class EufySwitch(SwitchDevice):
 
     def __init__(self, device):
         """Initialize the light."""
-        # pylint: disable=import-error
         import lakeside
 
         self._state = None
