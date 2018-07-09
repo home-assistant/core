@@ -447,8 +447,8 @@ class TplinkEAPControllerDeviceScanner(TplinkDeviceScanner):
                              data=(('name', self.username),
                              ('password', self.password)))
         if(login.status_code != 200):
-            _LOGGER.error('HTTP Request failed with Status: '
-                          +str(login.status_code))
+            _LOGGER.error('HTTP Request failed with status {}'
+                          .format(login.status_code))
         else:
             json = login.json()
             if not json['success']:
@@ -456,7 +456,7 @@ class TplinkEAPControllerDeviceScanner(TplinkDeviceScanner):
             else:
                 _LOGGER.info("Loading wireless clients...")
                 client_list_url = '{}/monitor/allActiveClients'
-                                  .format(base_url)
+                                    .format(base_url)
                 post_data = (('currentPage', 1), ('currentPageSize', 1000))
 
                 clients = session.post(client_list_url, data=post_data)
