@@ -64,6 +64,8 @@ omit =
     homeassistant/components/cast/*
     homeassistant/components/*/cast.py
 
+    homeassistant/components/cloudflare.py
+
     homeassistant/components/comfoconnect.py
     homeassistant/components/*/comfoconnect.py
 
