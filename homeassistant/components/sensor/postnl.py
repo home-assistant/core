@@ -56,9 +56,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     if letter == True:
-      add_devices([PostNLSensor(api, name), PostNLletter(api, name)], True)
+        add_devices([PostNLSensor(api, name), PostNLletter(api, name)], True)
     else:
-      add_devices([PostNLSensor(api, name)], True)
+        add_devices([PostNLSensor(api, name)], True)
 
 
 class PostNLSensor(Entity):
@@ -115,7 +115,8 @@ class PostNLSensor(Entity):
         }
 
         self._state = len(status_counts)
-        
+
+
 class PostNLletter(Entity):
     """Representation of a PostNL sensor."""
 
