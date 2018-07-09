@@ -391,7 +391,6 @@ def test_get_protection_values(hass, client):
     node.get_protection_items.return_value = value.data_items
     node.get_protections.return_value = {value.value_id: 'Object'}
 
-
     resp = yield from client.get('/api/zwave/protection/18')
 
     assert resp.status == 200
@@ -432,7 +431,7 @@ def test_get_protection_values_nonexisting_node(hass, client):
     assert not node.get_protections.called
     assert not node.get_protection_item.called
     assert not node.get_protection_items.called
-    assert result == { 'message': 'Node not found' }
+    assert result == {'message': 'Node not found'}
 
 
 @asyncio.coroutine
@@ -454,7 +453,7 @@ def test_get_protection_values_without_protectionclass(hass, client):
     assert not node.get_protections.called
     assert not node.get_protection_item.called
     assert not node.get_protection_items.called
-    assert result == { }
+    assert result == {}
 
 
 @asyncio.coroutine
@@ -564,5 +563,3 @@ def test_set_protection_value_missing_class(hass, client):
     result = yield from resp.json()
     assert not node.set_protection.called
     assert result == {'message': 'No protection commandclass on this node'}
-
-

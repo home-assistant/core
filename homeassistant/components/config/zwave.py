@@ -218,11 +218,11 @@ class ZWaveProtectionView(HomeAssistantView):
         if not node.has_command_class(const.COMMAND_CLASS_PROTECTION):
             return self.json(protection_options)
         protections = node.get_protections()
-        protection_options = {'value_id': '{0:d}'.format(list(protections.keys())[0]),
-                              'selected': node.get_protection_item(list(protections.keys())[0]),
-                              'options': node.get_protection_items(list(protections.keys())[0])}
+        protection_options = {
+            'value_id': '{0:d}'.format(list(protections.keys())[0]),
+            'selected': node.get_protection_item(list(protections.keys())[0]),
+            'options': node.get_protection_items(list(protections.keys())[0])}
         return self.json(protection_options)
-
 
     async def post(self, request, node_id):
         """Change the selected option in protection commandclass."""
@@ -241,5 +241,7 @@ class ZWaveProtectionView(HomeAssistantView):
                                      HTTP_NOT_FOUND)
         state = node.set_protection(value_id, selection)
         if not state:
-            return self.json_message('Protection setting did not complete', 202)
-        return self.json_message('Protection setting succsessfully set', HTTP_OK)
+            return self.json_message(
+                'Protection setting did not complete', 202)
+        return self.json_message(
+            'Protection setting succsessfully set', HTTP_OK)
