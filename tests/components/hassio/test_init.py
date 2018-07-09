@@ -9,6 +9,12 @@ from homeassistant.components.hassio import async_check_config
 from tests.common import mock_coro
 
 
+MOCK_ENVIRON = {
+    'HASSIO': '127.0.0.1',
+    'HASSIO_TOKEN': 'abcdefgh',
+}
+
+
 @asyncio.coroutine
 def test_setup_api_ping(hass, aioclient_mock):
     """Test setup with API ping."""
@@ -18,7 +24,7 @@ def test_setup_api_ping(hass, aioclient_mock):
         "http://127.0.0.1/homeassistant/info", json={
             'result': 'ok', 'data': {'last_version': '10.0'}})
 
-    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = yield from async_setup_component(hass, 'hassio', {})
         assert result
 
@@ -38,7 +44,7 @@ def test_setup_api_push_api_data(hass, aioclient_mock):
     aioclient_mock.post(
         "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
 
-    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = yield from async_setup_component(hass, 'hassio', {
             'http': {
                 'api_password': "123456",
@@ -66,7 +72,7 @@ def test_setup_api_push_api_data_server_host(hass, aioclient_mock):
     aioclient_mock.post(
         "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
 
-    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = yield from async_setup_component(hass, 'hassio', {
             'http': {
                 'api_password': "123456",
@@ -95,7 +101,7 @@ def test_setup_api_push_api_data_default(hass, aioclient_mock):
     aioclient_mock.post(
         "http://127.0.0.1/homeassistant/options", json={'result': 'ok'})
 
-    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = yield from async_setup_component(hass, 'hassio', {
             'http': {},
             'hassio': {}
@@ -119,7 +125,7 @@ def test_setup_core_push_timezone(hass, aioclient_mock):
     aioclient_mock.post(
         "http://127.0.0.1/supervisor/options", json={'result': 'ok'})
 
-    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}):
+    with patch.dict(os.environ, MOCK_ENVIRON):
         result = yield from async_setup_component(hass, 'hassio', {
             'hassio': {},
             'homeassistant': {
@@ -143,7 +149,7 @@ def test_setup_hassio_no_additional_data(hass, aioclient_mock):
     aioclient_mock.get(
         "http://127.0.0.1/homeassistant/info", json={'result': 'ok'})
 
-    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}), \
+    with patch.dict(os.environ, MOCK_ENVIRON), \
             patch.dict(os.environ, {'HASSIO_TOKEN': "123456"}):
         result = yield from async_setup_component(hass, 'hassio', {
             'hassio': {},
@@ -165,7 +171,7 @@ def test_fail_setup_without_environ_var(hass):
 @asyncio.coroutine
 def test_fail_setup_cannot_connect(hass):
     """Fail setup if cannot connect."""
-    with patch.dict(os.environ, {'HASSIO': "127.0.0.1"}), \
+    with patch.dict(os.environ, MOCK_ENVIRON), \
             patch('homeassistant.components.hassio.HassIO.is_connected',
                   Mock(return_value=mock_coro(None))):
         result = yield from async_setup_component(hass, 'hassio', {})

@@ -27,7 +27,7 @@ activate_air_conditioning:
   description: >
     Start the air conditioning of the vehicle. What exactly is started here
     depends on the type of vehicle. It might range from just ventilation over
-    auxilary heating to real air conditioning. The vehicle is identified via
+    auxiliary heating to real air conditioning. The vehicle is identified via
     the vin (see below).
   fields:
     vin:

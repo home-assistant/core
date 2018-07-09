@@ -29,7 +29,7 @@ if TYPE_CHECKING:
 
 PREPARED = False
 
-DEPENDENCY_BLACKLIST = set(('config',))
+DEPENDENCY_BLACKLIST = {'config'}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
     potential_paths = ['custom_components.{}'.format(comp_or_platform),
                        'homeassistant.components.{}'.format(comp_or_platform)]
 
-    for path in potential_paths:
+    for index, path in enumerate(potential_paths):
         try:
             module = importlib.import_module(path)
 
@@ -94,12 +94,21 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
             # This prevents that when only
             # custom_components/switch/some_platform.py exists,
             # the import custom_components.switch would succeed.
-            if module.__spec__ and module.__spec__.origin == 'namespace':
+            # __file__ was unset for namespaces before Python 3.7
+            if getattr(module, '__file__', None) is None:
                 continue
 
             _LOGGER.info("Loaded %s from %s", comp_or_platform, path)
 
             cache[comp_or_platform] = module
+
+            if index == 0:
+                _LOGGER.warning(
+                    'You are using a custom component for %s which has not '
+                    'been tested by Home Assistant. This component might '
+                    'cause stability problems, be sure to disable it if you '
+                    'do experience issues with Home Assistant.',
+                    comp_or_platform)
 
             return module
 

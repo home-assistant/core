@@ -50,7 +50,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DemoVacuum(VacuumDevice):
     """Representation of a demo vacuum."""
 
-    # pylint: disable=no-self-use
     def __init__(self, name, supported_features):
         """Initialize the vacuum."""
         self._name = name

@@ -23,7 +23,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['PyXiaomiGateway==0.9.3']
+REQUIREMENTS = ['PyXiaomiGateway==0.9.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
 CONF_KEY = 'key'
+CONF_DISABLE = 'disable'
 
 DOMAIN = 'xiaomi_aqara'
 
@@ -73,6 +74,7 @@ GATEWAY_CONFIG = vol.Schema({
         vol.All(cv.string, vol.Length(min=16, max=16)),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=9898): cv.port,
+    vol.Optional(CONF_DISABLE, default=False): cv.boolean,
 })
 
 
@@ -137,7 +139,8 @@ def setup(hass, config):
     xiaomi.listen()
     _LOGGER.debug("Gateways discovered. Listening for broadcasts")
 
-    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover']:
+    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover',
+                      'lock']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def stop_xiaomi(event):

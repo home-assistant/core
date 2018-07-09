@@ -86,7 +86,8 @@ def test_save_timer_reset_on_subsequent_save(hass, registry):
 def test_loading_saving_data(hass, registry):
     """Test that we load/save data correctly."""
     orig_entry1 = registry.async_get_or_create('light', 'hue', '1234')
-    orig_entry2 = registry.async_get_or_create('light', 'hue', '5678')
+    orig_entry2 = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id')
 
     assert len(registry.entities) == 2
 

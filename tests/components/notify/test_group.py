@@ -53,7 +53,7 @@ class TestNotifyGroup(unittest.TestCase):
         assert self.service is not None
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """"Stop everything that was started."""
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_send_message_with_data(self):

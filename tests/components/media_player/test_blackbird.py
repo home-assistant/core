@@ -14,7 +14,7 @@ from homeassistant.components.media_player.blackbird import (
 
 
 class AttrDict(dict):
-    """Helper clas for mocking attributes."""
+    """Helper class for mocking attributes."""
 
     def __setattr__(self, name, value):
         """Set attribute."""

@@ -13,17 +13,17 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, ATTR_STATE, CONF_MONITORED_CONDITIONS
-)
+    ATTR_ATTRIBUTION, ATTR_STATE, CONF_MONITORED_CONDITIONS)
+from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle, slugify
+from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pypollencom==1.1.2']
+REQUIREMENTS = ['pypollencom==2.1.0']
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_ALLERGEN_GENUS = 'primary_allergen_genus'
-ATTR_ALLERGEN_NAME = 'primary_allergen_name'
-ATTR_ALLERGEN_TYPE = 'primary_allergen_type'
+ATTR_ALLERGEN_GENUS = 'allergen_genus'
+ATTR_ALLERGEN_NAME = 'allergen_name'
+ATTR_ALLERGEN_TYPE = 'allergen_type'
 ATTR_CITY = 'city'
 ATTR_OUTLOOK = 'outlook'
 ATTR_RATING = 'rating'
@@ -34,53 +34,30 @@ ATTR_ZIP_CODE = 'zip_code'
 CONF_ZIP_CODE = 'zip_code'
 
 DEFAULT_ATTRIBUTION = 'Data provided by IQVIA™'
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 
-MIN_TIME_UPDATE_AVERAGES = timedelta(hours=12)
-MIN_TIME_UPDATE_INDICES = timedelta(minutes=10)
+TYPE_ALLERGY_FORECAST = 'allergy_average_forecasted'
+TYPE_ALLERGY_HISTORIC = 'allergy_average_historical'
+TYPE_ALLERGY_INDEX = 'allergy_index'
+TYPE_ALLERGY_OUTLOOK = 'allergy_outlook'
+TYPE_ALLERGY_TODAY = 'allergy_index_today'
+TYPE_ALLERGY_TOMORROW = 'allergy_index_tomorrow'
+TYPE_ALLERGY_YESTERDAY = 'allergy_index_yesterday'
+TYPE_DISEASE_FORECAST = 'disease_average_forecasted'
 
-CONDITIONS = {
-    'allergy_average_forecasted': (
-        'Allergy Index: Forecasted Average',
-        'AllergyAverageSensor',
-        'allergy_average_data',
-        {'data_attr': 'extended_data'},
-        'mdi:flower'
-    ),
-    'allergy_average_historical': (
-        'Allergy Index: Historical Average',
-        'AllergyAverageSensor',
-        'allergy_average_data',
-        {'data_attr': 'historic_data'},
-        'mdi:flower'
-    ),
-    'allergy_index_today': (
-        'Allergy Index: Today',
-        'AllergyIndexSensor',
-        'allergy_index_data',
-        {'key': 'Today'},
-        'mdi:flower'
-    ),
-    'allergy_index_tomorrow': (
-        'Allergy Index: Tomorrow',
-        'AllergyIndexSensor',
-        'allergy_index_data',
-        {'key': 'Tomorrow'},
-        'mdi:flower'
-    ),
-    'allergy_index_yesterday': (
-        'Allergy Index: Yesterday',
-        'AllergyIndexSensor',
-        'allergy_index_data',
-        {'key': 'Yesterday'},
-        'mdi:flower'
-    ),
-    'disease_average_forecasted': (
-        'Cold & Flu: Forecasted Average',
-        'AllergyAverageSensor',
-        'disease_average_data',
-        {'data_attr': 'extended_data'},
-        'mdi:snowflake'
-    )
+SENSORS = {
+    TYPE_ALLERGY_FORECAST: (
+        'Allergy Index: Forecasted Average', None, 'mdi:flower', 'index'),
+    TYPE_ALLERGY_HISTORIC: (
+        'Allergy Index: Historical Average', None, 'mdi:flower', 'index'),
+    TYPE_ALLERGY_TODAY: (
+        'Allergy Index: Today', TYPE_ALLERGY_INDEX, 'mdi:flower', 'index'),
+    TYPE_ALLERGY_TOMORROW: (
+        'Allergy Index: Tomorrow', TYPE_ALLERGY_INDEX, 'mdi:flower', 'index'),
+    TYPE_ALLERGY_YESTERDAY: (
+        'Allergy Index: Yesterday', TYPE_ALLERGY_INDEX, 'mdi:flower', 'index'),
+    TYPE_DISEASE_FORECAST: (
+        'Cold & Flu: Forecasted Average', None, 'mdi:snowflake', 'index')
 }
 
 RATING_MAPPING = [{
@@ -105,69 +82,69 @@ RATING_MAPPING = [{
     'maximum': 12
 }]
 
+TREND_FLAT = 'Flat'
+TREND_INCREASING = 'Increasing'
+TREND_SUBSIDING = 'Subsiding'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ZIP_CODE): str,
-    vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(CONDITIONS)]),
+    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
+        vol.All(cv.ensure_list, [vol.In(SENSORS)])
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Configure the platform and add the sensors."""
     from pypollencom import Client
 
-    _LOGGER.debug('Configuration data: %s', config)
+    websession = aiohttp_client.async_get_clientsession(hass)
 
-    client = Client(config[CONF_ZIP_CODE])
-    datas = {
-        'allergy_average_data': AllergyAveragesData(client),
-        'allergy_index_data': AllergyIndexData(client),
-        'disease_average_data': DiseaseData(client)
-    }
-    classes = {
-        'AllergyAverageSensor': AllergyAverageSensor,
-        'AllergyIndexSensor': AllergyIndexSensor
-    }
+    data = PollenComData(
+        Client(config[CONF_ZIP_CODE], websession),
+        config[CONF_MONITORED_CONDITIONS])
 
-    for data in datas.values():
-        data.update()
+    await data.async_update()
 
     sensors = []
-    for condition in config[CONF_MONITORED_CONDITIONS]:
-        name, sensor_class, data_key, params, icon = CONDITIONS[condition]
-        sensors.append(classes[sensor_class](
-            datas[data_key],
-            params,
-            name,
-            icon,
-            config[CONF_ZIP_CODE]
-        ))
+    for kind in config[CONF_MONITORED_CONDITIONS]:
+        name, category, icon, unit = SENSORS[kind]
+        sensors.append(
+            PollencomSensor(
+                data, config[CONF_ZIP_CODE], kind, category, name, icon, unit))
 
-    add_devices(sensors, True)
+    async_add_devices(sensors, True)
 
 
-def calculate_trend(list_of_nums):
-    """Calculate the most common rating as a trend."""
+def calculate_average_rating(indices):
+    """Calculate the human-friendly historical allergy average."""
     ratings = list(
-        r['label'] for n in list_of_nums
-        for r in RATING_MAPPING
+        r['label'] for n in indices for r in RATING_MAPPING
         if r['minimum'] <= n <= r['maximum'])
     return max(set(ratings), key=ratings.count)
 
 
-class BaseSensor(Entity):
-    """Define a base class for all of our sensors."""
+class PollencomSensor(Entity):
+    """Define a Pollen.com sensor."""
 
-    def __init__(self, data, data_params, name, icon, unique_id):
+    def __init__(self, pollencom, zip_code, kind, category, name, icon, unit):
         """Initialize the sensor."""
         self._attrs = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
+        self._category = category
         self._icon = icon
         self._name = name
-        self._data_params = data_params
         self._state = None
-        self._unit = None
-        self._unique_id = unique_id
-        self.data = data
+        self._type = kind
+        self._unit = unit
+        self._zip_code = zip_code
+        self.pollencom = pollencom
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return bool(
+            self.pollencom.data.get(self._type)
+            or self.pollencom.data.get(self._category))
 
     @property
     def device_state_attributes(self):
@@ -192,187 +169,164 @@ class BaseSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}_{1}'.format(self._unique_id, slugify(self._name))
+        return '{0}_{1}'.format(self._zip_code, self._type)
 
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self._unit
 
-
-class AllergyAverageSensor(BaseSensor):
-    """Define a sensor to show allergy average information."""
-
-    def update(self):
-        """Update the status of the sensor."""
-        self.data.update()
-
-        try:
-            data_attr = getattr(self.data, self._data_params['data_attr'])
-            indices = [p['Index'] for p in data_attr['Location']['periods']]
-            self._attrs[ATTR_TREND] = calculate_trend(indices)
-        except KeyError:
-            _LOGGER.error("Pollen.com API didn't return any data")
+    async def async_update(self):
+        """Update the sensor."""
+        await self.pollencom.async_update()
+        if not self.pollencom.data:
             return
 
-        try:
-            self._attrs[ATTR_CITY] = data_attr['Location']['City'].title()
-            self._attrs[ATTR_STATE] = data_attr['Location']['State']
-            self._attrs[ATTR_ZIP_CODE] = data_attr['Location']['ZIP']
-        except KeyError:
-            _LOGGER.debug('Location data not included in API response')
-            self._attrs[ATTR_CITY] = None
-            self._attrs[ATTR_STATE] = None
-            self._attrs[ATTR_ZIP_CODE] = None
+        if self._category:
+            data = self.pollencom.data[self._category].get('Location')
+        else:
+            data = self.pollencom.data[self._type].get('Location')
 
+        if not data:
+            return
+
+        indices = [p['Index'] for p in data['periods']]
         average = round(mean(indices), 1)
         [rating] = [
             i['label'] for i in RATING_MAPPING
             if i['minimum'] <= average <= i['maximum']
         ]
-        self._attrs[ATTR_RATING] = rating
+        slope = (data['periods'][-1]['Index'] - data['periods'][-2]['Index'])
+        trend = TREND_FLAT
+        if slope > 0:
+            trend = TREND_INCREASING
+        elif slope < 0:
+            trend = TREND_SUBSIDING
 
-        self._state = average
-        self._unit = 'index'
+        if self._type == TYPE_ALLERGY_FORECAST:
+            outlook = self.pollencom.data[TYPE_ALLERGY_OUTLOOK]
 
-
-class AllergyIndexSensor(BaseSensor):
-    """Define a sensor to show allergy index information."""
-
-    def update(self):
-        """Update the status of the sensor."""
-        self.data.update()
-
-        try:
-            location_data = self.data.current_data['Location']
-            [period] = [
-                p for p in location_data['periods']
-                if p['Type'] == self._data_params['key']
-            ]
+            self._attrs.update({
+                ATTR_CITY: data['City'].title(),
+                ATTR_OUTLOOK: outlook['Outlook'],
+                ATTR_RATING: rating,
+                ATTR_SEASON: outlook['Season'].title(),
+                ATTR_STATE: data['State'],
+                ATTR_TREND: outlook['Trend'].title(),
+                ATTR_ZIP_CODE: data['ZIP']
+            })
+            self._state = average
+        elif self._type == TYPE_ALLERGY_HISTORIC:
+            self._attrs.update({
+                ATTR_CITY: data['City'].title(),
+                ATTR_RATING: calculate_average_rating(indices),
+                ATTR_STATE: data['State'],
+                ATTR_TREND: trend,
+                ATTR_ZIP_CODE: data['ZIP']
+            })
+            self._state = average
+        elif self._type in (TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
+                            TYPE_ALLERGY_YESTERDAY):
+            key = self._type.split('_')[-1].title()
+            [period] = [p for p in data['periods'] if p['Type'] == key]
             [rating] = [
                 i['label'] for i in RATING_MAPPING
                 if i['minimum'] <= period['Index'] <= i['maximum']
             ]
 
-            for i in range(3):
-                index = i + 1
-                try:
-                    data = period['Triggers'][i]
-                    self._attrs['{0}_{1}'.format(
-                        ATTR_ALLERGEN_GENUS, index)] = data['Genus']
-                    self._attrs['{0}_{1}'.format(
-                        ATTR_ALLERGEN_NAME, index)] = data['Name']
-                    self._attrs['{0}_{1}'.format(
-                        ATTR_ALLERGEN_TYPE, index)] = data['PlantType']
-                except IndexError:
-                    self._attrs['{0}_{1}'.format(
-                        ATTR_ALLERGEN_GENUS, index)] = None
-                    self._attrs['{0}_{1}'.format(
-                        ATTR_ALLERGEN_NAME, index)] = None
-                    self._attrs['{0}_{1}'.format(
-                        ATTR_ALLERGEN_TYPE, index)] = None
+            for idx, attrs in enumerate(period['Triggers']):
+                index = idx + 1
+                self._attrs.update({
+                    '{0}_{1}'.format(ATTR_ALLERGEN_GENUS, index):
+                        attrs['Genus'],
+                    '{0}_{1}'.format(ATTR_ALLERGEN_NAME, index):
+                        attrs['Name'],
+                    '{0}_{1}'.format(ATTR_ALLERGEN_TYPE, index):
+                        attrs['PlantType'],
+                })
 
-            self._attrs[ATTR_RATING] = rating
-
-        except KeyError:
-            _LOGGER.error("Pollen.com API didn't return any data")
-            return
-
-        try:
-            self._attrs[ATTR_CITY] = location_data['City'].title()
-            self._attrs[ATTR_STATE] = location_data['State']
-            self._attrs[ATTR_ZIP_CODE] = location_data['ZIP']
-        except KeyError:
-            _LOGGER.debug('Location data not included in API response')
-            self._attrs[ATTR_CITY] = None
-            self._attrs[ATTR_STATE] = None
-            self._attrs[ATTR_ZIP_CODE] = None
-
-        try:
-            self._attrs[ATTR_OUTLOOK] = self.data.outlook_data['Outlook']
-        except KeyError:
-            _LOGGER.debug('Outlook data not included in API response')
-            self._attrs[ATTR_OUTLOOK] = None
-
-        try:
-            self._attrs[ATTR_SEASON] = self.data.outlook_data['Season']
-        except KeyError:
-            _LOGGER.debug('Season data not included in API response')
-            self._attrs[ATTR_SEASON] = None
-
-        try:
-            self._attrs[ATTR_TREND] = self.data.outlook_data['Trend'].title()
-        except KeyError:
-            _LOGGER.debug('Trend data not included in API response')
-            self._attrs[ATTR_TREND] = None
-
-        self._state = period['Index']
-        self._unit = 'index'
+            self._attrs.update({
+                ATTR_CITY: data['City'].title(),
+                ATTR_RATING: rating,
+                ATTR_STATE: data['State'],
+                ATTR_ZIP_CODE: data['ZIP']
+            })
+            self._state = period['Index']
+        elif self._type == TYPE_DISEASE_FORECAST:
+            self._attrs.update({
+                ATTR_CITY: data['City'].title(),
+                ATTR_RATING: rating,
+                ATTR_STATE: data['State'],
+                ATTR_TREND: trend,
+                ATTR_ZIP_CODE: data['ZIP']
+            })
+            self._state = average
 
 
-class DataBase(object):
-    """Define a generic data object."""
+class PollenComData(object):
+    """Define a data object to retrieve info from Pollen.com."""
 
-    def __init__(self, client):
+    def __init__(self, client, sensor_types):
         """Initialize."""
         self._client = client
+        self._sensor_types = sensor_types
+        self.data = {}
 
-    def _get_client_data(self, module, operation):
-        """Get data from a particular point in the API."""
-        from pypollencom.exceptions import HTTPError
+    @Throttle(DEFAULT_SCAN_INTERVAL)
+    async def async_update(self):
+        """Update Pollen.com data."""
+        from pypollencom.errors import InvalidZipError, PollenComError
 
-        data = {}
+        # Pollen.com requires a bit more complicated error handling, given that
+        # it sometimes has parts (but not the whole thing) go down:
+        #
+        # 1. If `InvalidZipError` is thrown, quit everything immediately.
+        # 2. If an individual request throws any other error, try the others.
+
         try:
-            data = getattr(getattr(self._client, module), operation)()
-            _LOGGER.debug('Received "%s_%s" data: %s', module, operation, data)
-        except HTTPError as exc:
-            _LOGGER.error('An error occurred while retrieving data')
-            _LOGGER.debug(exc)
+            if TYPE_ALLERGY_FORECAST in self._sensor_types:
+                try:
+                    data = await self._client.allergens.extended()
+                    self.data[TYPE_ALLERGY_FORECAST] = data
+                except PollenComError as err:
+                    _LOGGER.error('Unable to get allergy forecast: %s', err)
+                    self.data[TYPE_ALLERGY_FORECAST] = {}
 
-        return data
+                try:
+                    data = await self._client.allergens.outlook()
+                    self.data[TYPE_ALLERGY_OUTLOOK] = data
+                except PollenComError as err:
+                    _LOGGER.error('Unable to get allergy outlook: %s', err)
+                    self.data[TYPE_ALLERGY_OUTLOOK] = {}
 
+            if TYPE_ALLERGY_HISTORIC in self._sensor_types:
+                try:
+                    data = await self._client.allergens.historic()
+                    self.data[TYPE_ALLERGY_HISTORIC] = data
+                except PollenComError as err:
+                    _LOGGER.error('Unable to get allergy history: %s', err)
+                    self.data[TYPE_ALLERGY_HISTORIC] = {}
 
-class AllergyAveragesData(DataBase):
-    """Define an object to averages on future and historical allergy data."""
+            if all(s in self._sensor_types
+                   for s in [TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
+                             TYPE_ALLERGY_YESTERDAY]):
+                try:
+                    data = await self._client.allergens.current()
+                    self.data[TYPE_ALLERGY_INDEX] = data
+                except PollenComError as err:
+                    _LOGGER.error('Unable to get current allergies: %s', err)
+                    self.data[TYPE_ALLERGY_TODAY] = {}
 
-    def __init__(self, client):
-        """Initialize."""
-        super().__init__(client)
-        self.extended_data = None
-        self.historic_data = None
+            if TYPE_DISEASE_FORECAST in self._sensor_types:
+                try:
+                    data = await self._client.disease.extended()
+                    self.data[TYPE_DISEASE_FORECAST] = data
+                except PollenComError as err:
+                    _LOGGER.error('Unable to get disease forecast: %s', err)
+                    self.data[TYPE_DISEASE_FORECAST] = {}
 
-    @Throttle(MIN_TIME_UPDATE_AVERAGES)
-    def update(self):
-        """Update with new data."""
-        self.extended_data = self._get_client_data('allergens', 'extended')
-        self.historic_data = self._get_client_data('allergens', 'historic')
-
-
-class AllergyIndexData(DataBase):
-    """Define an object to retrieve current allergy index info."""
-
-    def __init__(self, client):
-        """Initialize."""
-        super().__init__(client)
-        self.current_data = None
-        self.outlook_data = None
-
-    @Throttle(MIN_TIME_UPDATE_INDICES)
-    def update(self):
-        """Update with new index data."""
-        self.current_data = self._get_client_data('allergens', 'current')
-        self.outlook_data = self._get_client_data('allergens', 'outlook')
-
-
-class DiseaseData(DataBase):
-    """Define an object to retrieve current disease index info."""
-
-    def __init__(self, client):
-        """Initialize."""
-        super().__init__(client)
-        self.extended_data = None
-
-    @Throttle(MIN_TIME_UPDATE_INDICES)
-    def update(self):
-        """Update with new cold/flu data."""
-        self.extended_data = self._get_client_data('disease', 'extended')
+            _LOGGER.debug('New data retrieved: %s', self.data)
+        except InvalidZipError:
+            _LOGGER.error(
+                'Cannot retrieve data for ZIP code: %s', self._client.zip_code)
+            self.data = {}

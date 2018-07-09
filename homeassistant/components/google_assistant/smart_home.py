@@ -3,14 +3,6 @@ import collections
 from itertools import product
 import logging
 
-# Typing imports
-# pylint: disable=using-constant-test,unused-import,ungrouped-imports
-# if False:
-from aiohttp.web import Request, Response  # NOQA
-from typing import Dict, Tuple, Any, Optional  # NOQA
-from homeassistant.helpers.entity import Entity  # NOQA
-from homeassistant.core import HomeAssistant  # NOQA
-from homeassistant.util.unit_system import UnitSystem  # NOQA
 from homeassistant.util.decorator import Registry
 
 from homeassistant.core import callback

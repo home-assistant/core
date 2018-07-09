@@ -20,7 +20,7 @@ class TestNotifyFile(unittest.TestCase):
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """"Stop down everything that was started."""
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_bad_config(self):

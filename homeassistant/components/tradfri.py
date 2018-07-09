@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pytradfri[async]==5.4.2']
+REQUIREMENTS = ['pytradfri[async]==5.5.1']
 
 DOMAIN = 'tradfri'
 GATEWAY_IDENTITY = 'homeassistant'

@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.ifttt/
 """
 import logging
+import re
 
 import voluptuous as vol
 
@@ -124,8 +125,12 @@ class IFTTTAlarmPanel(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """Return one or more characters."""
-        return None if self._code is None else '.+'
+        """Return one or more digits/characters."""
+        if self._code is None:
+            return None
+        elif isinstance(self._code, str) and re.search('^\\d+$', self._code):
+            return 'Number'
+        return 'Any'
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

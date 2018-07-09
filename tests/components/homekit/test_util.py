@@ -2,17 +2,21 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.homekit.accessories import HomeBridge
-from homeassistant.components.homekit.const import HOMEKIT_NOTIFY_ID
+from homeassistant.components.homekit.const import (
+    CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
+    FEATURE_PLAY_PAUSE, TYPE_OUTLET)
 from homeassistant.components.homekit.util import (
-    show_setup_message, dismiss_setup_message, convert_to_float,
-    temperature_to_homekit, temperature_to_states, density_to_air_quality)
+    convert_to_float, density_to_air_quality, dismiss_setup_message,
+    show_setup_message, temperature_to_homekit, temperature_to_states,
+    validate_media_player_features)
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
-    DOMAIN, ATTR_NOTIFICATION_ID)
+    ATTR_MESSAGE, ATTR_NOTIFICATION_ID, DOMAIN)
 from homeassistant.const import (
-    ATTR_CODE, STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_NAME)
+    ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, STATE_UNKNOWN,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.core import State
 
 from tests.common import async_mock_service
 
@@ -21,7 +25,13 @@ def test_validate_entity_config():
     """Test validate entities."""
     configs = [{'invalid_entity_id': {}}, {'demo.test': 1},
                {'demo.test': 'test'}, {'demo.test': [1, 2]},
-               {'demo.test': None}, {'demo.test': {CONF_NAME: None}}]
+               {'demo.test': None}, {'demo.test': {CONF_NAME: None}},
+               {'media_player.test': {CONF_FEATURE_LIST: [
+                    {CONF_FEATURE: 'invalid_feature'}]}},
+               {'media_player.test': {CONF_FEATURE_LIST: [
+                    {CONF_FEATURE: FEATURE_ON_OFF},
+                    {CONF_FEATURE: FEATURE_ON_OFF}]}},
+               {'switch.test': {CONF_TYPE: 'invalid_type'}}]
 
     for conf in configs:
         with pytest.raises(vol.Invalid):
@@ -30,8 +40,39 @@ def test_validate_entity_config():
     assert vec({}) == {}
     assert vec({'demo.test': {CONF_NAME: 'Name'}}) == \
         {'demo.test': {CONF_NAME: 'Name'}}
+
+    assert vec({'alarm_control_panel.demo': {}}) == \
+        {'alarm_control_panel.demo': {ATTR_CODE: None}}
     assert vec({'alarm_control_panel.demo': {ATTR_CODE: '1234'}}) == \
         {'alarm_control_panel.demo': {ATTR_CODE: '1234'}}
+
+    assert vec({'lock.demo': {}}) == {'lock.demo': {ATTR_CODE: None}}
+    assert vec({'lock.demo': {ATTR_CODE: '1234'}}) == \
+        {'lock.demo': {ATTR_CODE: '1234'}}
+
+    assert vec({'media_player.demo': {}}) == \
+        {'media_player.demo': {CONF_FEATURE_LIST: {}}}
+    config = {CONF_FEATURE_LIST: [{CONF_FEATURE: FEATURE_ON_OFF},
+                                  {CONF_FEATURE: FEATURE_PLAY_PAUSE}]}
+    assert vec({'media_player.demo': config}) == \
+        {'media_player.demo': {CONF_FEATURE_LIST:
+                               {FEATURE_ON_OFF: {}, FEATURE_PLAY_PAUSE: {}}}}
+    assert vec({'switch.demo': {CONF_TYPE: TYPE_OUTLET}}) == \
+        {'switch.demo': {CONF_TYPE: TYPE_OUTLET}}
+
+
+def test_validate_media_player_features():
+    """Test validate modes for media players."""
+    config = {}
+    attrs = {ATTR_SUPPORTED_FEATURES: 20873}
+    entity_state = State('media_player.demo', 'on', attrs)
+    assert validate_media_player_features(entity_state, config) is True
+
+    config = {FEATURE_ON_OFF: None}
+    assert validate_media_player_features(entity_state, config) is True
+
+    entity_state = State('media_player.demo', 'on')
+    assert validate_media_player_features(entity_state, config) is False
 
 
 def test_convert_to_float():
@@ -67,16 +108,17 @@ def test_density_to_air_quality():
 
 async def test_show_setup_msg(hass):
     """Test show setup message as persistence notification."""
-    bridge = HomeBridge(hass)
+    pincode = b'123-45-678'
 
     call_create_notification = async_mock_service(hass, DOMAIN, 'create')
 
-    await hass.async_add_job(show_setup_message, hass, bridge)
+    await hass.async_add_job(show_setup_message, hass, pincode)
     await hass.async_block_till_done()
 
     assert call_create_notification
     assert call_create_notification[0].data[ATTR_NOTIFICATION_ID] == \
         HOMEKIT_NOTIFY_ID
+    assert pincode.decode() in call_create_notification[0].data[ATTR_MESSAGE]
 
 
 async def test_dismiss_setup_msg(hass):

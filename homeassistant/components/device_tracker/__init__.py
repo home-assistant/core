@@ -33,7 +33,7 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_MAC,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID,
-    CONF_ICON, ATTR_ICON)
+    CONF_ICON, ATTR_ICON, ATTR_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +71,6 @@ ATTR_GPS = 'gps'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_MAC = 'mac'
-ATTR_NAME = 'name'
 ATTR_SOURCE_TYPE = 'source_type'
 ATTR_CONSIDER_HOME = 'consider_home'
 

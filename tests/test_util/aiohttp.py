@@ -11,6 +11,8 @@ from yarl import URL
 
 from aiohttp.client_exceptions import ClientResponseError
 
+retype = type(re.compile(''))
+
 
 class AiohttpClientMocker:
     """Mock Aiohttp client requests."""
@@ -40,7 +42,7 @@ class AiohttpClientMocker:
         if content is None:
             content = b''
 
-        if not isinstance(url, re._pattern_type):
+        if not isinstance(url, retype):
             url = URL(url)
         if params:
                 url = url.with_query(params)
@@ -146,7 +148,7 @@ class AiohttpClientMockResponse:
             return False
 
         # regular expression matching
-        if isinstance(self._url, re._pattern_type):
+        if isinstance(self._url, retype):
             return self._url.search(str(url)) is not None
 
         if (self._url.scheme != url.scheme or self._url.host != url.host or

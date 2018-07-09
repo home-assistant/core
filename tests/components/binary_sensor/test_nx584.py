@@ -113,7 +113,7 @@ class TestNX584SensorSetup(unittest.TestCase):
         self._test_assert_graceful_fail({})
 
     def test_setup_version_too_old(self):
-        """"Test if version is too old."""
+        """Test if version is too old."""
         nx584_client.Client.return_value.get_version.return_value = '1.0'
         self._test_assert_graceful_fail({})
 

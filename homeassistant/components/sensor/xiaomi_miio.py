@@ -25,18 +25,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_CHARGING = 'charging'
 ATTR_BATTERY_LEVEL = 'battery_level'
-ATTR_TIME_STATE = 'time_state'
+ATTR_DISPLAY_CLOCK = 'display_clock'
+ATTR_NIGHT_MODE = 'night_mode'
+ATTR_NIGHT_TIME_BEGIN = 'night_time_begin'
+ATTR_NIGHT_TIME_END = 'night_time_end'
+ATTR_SENSOR_STATE = 'sensor_state'
 ATTR_MODEL = 'model'
 
 SUCCESS = ['ok']
 
 
-# pylint: disable=unused-argument
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
     """Set up the sensor from config."""
@@ -86,7 +89,11 @@ class XiaomiAirQualityMonitor(Entity):
             ATTR_POWER: None,
             ATTR_BATTERY_LEVEL: None,
             ATTR_CHARGING: None,
-            ATTR_TIME_STATE: None,
+            ATTR_DISPLAY_CLOCK: None,
+            ATTR_NIGHT_MODE: None,
+            ATTR_NIGHT_TIME_BEGIN: None,
+            ATTR_NIGHT_TIME_END: None,
+            ATTR_SENSOR_STATE: None,
             ATTR_MODEL: self._model,
         }
 
@@ -144,7 +151,11 @@ class XiaomiAirQualityMonitor(Entity):
                 ATTR_POWER: state.power,
                 ATTR_CHARGING: state.usb_power,
                 ATTR_BATTERY_LEVEL: state.battery,
-                ATTR_TIME_STATE: state.time_state,
+                ATTR_DISPLAY_CLOCK: state.display_clock,
+                ATTR_NIGHT_MODE: state.night_mode,
+                ATTR_NIGHT_TIME_BEGIN: state.night_time_begin,
+                ATTR_NIGHT_TIME_END: state.night_time_end,
+                ATTR_SENSOR_STATE: state.sensor_state,
             })
 
         except DeviceException as ex:

@@ -36,7 +36,7 @@ NOTIFICATION_TITLE = 'myLeviton Decora Setup'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Decora WiFi platform."""
-    # pylint: disable=import-error, no-member, no-name-in-module
+    # pylint: disable=import-error, no-name-in-module
     from decora_wifi import DecoraWiFiSession
     from decora_wifi.models.person import Person
     from decora_wifi.models.residential_account import ResidentialAccount

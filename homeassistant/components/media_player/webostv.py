@@ -61,7 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the LG WebOS TV platform."""
     if discovery_info is not None:
@@ -139,7 +138,6 @@ def request_configuration(
             _CONFIGURING[host], 'Failed to pair, please try again.')
         return
 
-    # pylint: disable=unused-argument
     def lgtv_configuration_callback(data):
         """Handle actions when configuration callback is called."""
         setup_tv(host, name, customize, config, timeout, hass,

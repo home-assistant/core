@@ -2,18 +2,18 @@
 Support for Loop Energy sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.loop_energy/
+https://home-assistant.io/components/sensor.loopenergy/
 """
 import logging
 
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
-from homeassistant.helpers.entity import Entity
-from homeassistant.const import (
-    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC,
+    EVENT_HOMEASSISTANT_STOP)
+import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,12 +47,12 @@ GAS_SCHEMA = vol.Schema({
     vol.Optional(CONF_GAS_TYPE, default=CONF_UNIT_SYSTEM_METRIC):
         GAS_TYPE_SCHEMA,
     vol.Optional(CONF_GAS_CALORIFIC, default=DEFAULT_CALORIFIC):
-        vol.Coerce(float)
+        vol.Coerce(float),
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ELEC): ELEC_SCHEMA,
-    vol.Optional(CONF_GAS): GAS_SCHEMA
+    vol.Optional(CONF_GAS): GAS_SCHEMA,
 })
 
 
@@ -63,7 +63,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elec_config = config.get(CONF_ELEC)
     gas_config = config.get(CONF_GAS, {})
 
-    # pylint: disable=too-many-function-args
     controller = pyloopenergy.LoopEnergy(
         elec_config.get(CONF_ELEC_SERIAL),
         elec_config.get(CONF_ELEC_SECRET),

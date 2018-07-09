@@ -5,8 +5,9 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.deconz/
 """
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
+from homeassistant.components.deconz.const import (
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -27,10 +28,13 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         """Add binary sensor from deCONZ."""
         from pydeconz.sensor import DECONZ_BINARY_SENSOR
         entities = []
+        allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
         for sensor in sensors:
-            if sensor.type in DECONZ_BINARY_SENSOR:
+            if sensor.type in DECONZ_BINARY_SENSOR and \
+               not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
                 entities.append(DeconzBinarySensor(sensor))
         async_add_devices(entities, True)
+
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
@@ -58,7 +62,8 @@ class DeconzBinarySensor(BinarySensorDevice):
         """
         if reason['state'] or \
            'reachable' in reason['attr'] or \
-           'battery' in reason['attr']:
+           'battery' in reason['attr'] or \
+           'on' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property
@@ -103,6 +108,8 @@ class DeconzBinarySensor(BinarySensorDevice):
         attr = {}
         if self._sensor.battery:
             attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
-        if self._sensor.type in PRESENCE and self._sensor.dark:
-            attr['dark'] = self._sensor.dark
+        if self._sensor.on is not None:
+            attr[ATTR_ON] = self._sensor.on
+        if self._sensor.type in PRESENCE and self._sensor.dark is not None:
+            attr[ATTR_DARK] = self._sensor.dark
         return attr

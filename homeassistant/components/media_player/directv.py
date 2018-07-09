@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_DEVICE, CONF_HOST, CONF_NAME, STATE_OFF, STATE_PLAYING, CONF_PORT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['directpy==0.2']
+REQUIREMENTS = ['directpy==0.5']
 
 DEFAULT_DEVICE = '0'
 DEFAULT_NAME = 'DirecTV Receiver'

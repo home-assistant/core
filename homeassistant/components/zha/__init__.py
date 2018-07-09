@@ -18,7 +18,7 @@ from homeassistant.util import slugify
 REQUIREMENTS = [
     'bellows==0.6.0',
     'zigpy==0.1.0',
-    'zigpy-xbee==0.1.0',
+    'zigpy-xbee==0.1.1',
 ]
 
 DOMAIN = 'zha'
@@ -151,6 +151,11 @@ class ApplicationListener:
         # Wait for device_initialized, instead
         pass
 
+    def raw_device_initialized(self, device):
+        """Handle a device initialization without quirks loaded."""
+        # Wait for device_initialized, instead
+        pass
+
     def device_initialized(self, device):
         """Handle device joined and basic information discovered."""
         self._hass.async_add_job(self.async_device_initialized(device, True))
@@ -256,11 +261,16 @@ class ApplicationListener:
         """Try to set up an entity from a "bare" cluster."""
         if cluster.cluster_id in profile_clusters:
             return
-        # pylint: disable=unidiomatic-typecheck
-        if type(cluster) not in device_classes:
+
+        component = None
+        for cluster_type, candidate_component in device_classes.items():
+            if isinstance(cluster, cluster_type):
+                component = candidate_component
+                break
+
+        if component is None:
             return
 
-        component = device_classes[type(cluster)]
         cluster_key = "{}-{}".format(device_key, cluster.cluster_id)
         discovery_info = {
             'application_listener': self,

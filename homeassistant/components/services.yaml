@@ -175,6 +175,12 @@ ffmpeg:
         example: 'binary_sensor.ffmpeg_noise'
 
 logger:
+  set_default_level:
+    description: Set the default log level for components.
+    fields:
+      level:
+        description: Default severity level. Possible values are notset, debug, info, warn, warning, error, fatal, critical
+        example: 'debug'
   set_level:
     description: Set log level for components.
 
@@ -556,3 +562,42 @@ xiaomi_aqara:
       device_id:
         description: Hardware address of the device to remove.
         example: 158d0000000000
+
+shopping_list:
+  add_item:
+    description: Adds an item to the shopping list.
+    fields:
+      name:
+        description: The name of the item to add.
+        example: Beer
+  complete_item:
+    description: Marks an item as completed in the shopping list. It does not remove the item.
+    fields:
+      name:
+        description: The name of the item to mark as completed.
+        example: Beer
+
+nest:
+  set_mode:
+    description: >
+                  Set the home/away mode for a Nest structure.
+                  Set to away mode will also set Estimated Arrival Time if provided.
+                  Set ETA will cause the thermostat to begin warming or cooling the home before the user arrives.
+                  After ETA set other Automation can read ETA sensor as a signal to prepare the home for
+                  the user's arrival.
+    fields:
+      home_mode:
+        description: home or away
+        example: home
+      structure:
+        description: Optional structure name. Default set all structures managed by Home Assistant.
+        example: My Home
+      eta:
+        description: Optional Estimated Arrival Time from now.
+        example: 0:10
+      eta_window:
+        description: Optional ETA window. Default is 1 minute.
+        example: 0:5
+      trip_id:
+        description: Optional identity of a trip. Using the same trip_ID will update the estimation.
+        example: trip_back_home
