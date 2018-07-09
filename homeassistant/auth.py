@@ -186,16 +186,6 @@ class Credentials:
     is_new = attr.ib(type=bool, default=True)
 
 
-@attr.s(slots=True)
-class Client:
-    """Client that interacts with Home Assistant on behalf of a user."""
-
-    name = attr.ib(type=str)
-    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
-    secret = attr.ib(type=str, default=attr.Factory(generate_secret))
-    redirect_uris = attr.ib(type=list, default=attr.Factory(list))
-
-
 async def load_auth_provider_module(hass, provider):
     """Load an auth provider."""
     try:
@@ -356,20 +346,20 @@ class AuthManager:
         """Remove a user."""
         await self._store.async_remove_user(user)
 
-    async def async_create_refresh_token(self, user, client=None):
+    async def async_create_refresh_token(self, user, client_id=None):
         """Create a new refresh token for a user."""
         if not user.is_active:
             raise ValueError('User is not active')
 
-        if user.system_generated and client is not None:
+        if user.system_generated and client_id is not None:
             raise ValueError(
                 'System generated users cannot have refresh tokens connected '
                 'to a client.')
 
-        if not user.system_generated and client is None:
+        if not user.system_generated and client_id is None:
             raise ValueError('Client is required to generate a refresh token.')
 
-        return await self._store.async_create_refresh_token(user, client)
+        return await self._store.async_create_refresh_token(user, client_id)
 
     async def async_get_refresh_token(self, token):
         """Get refresh token by token."""
@@ -395,26 +385,6 @@ class AuthManager:
             return None
 
         return tkn
-
-    async def async_create_client(self, name, *, redirect_uris=None,
-                                  no_secret=False):
-        """Create a new client."""
-        return await self._store.async_create_client(
-            name, redirect_uris, no_secret)
-
-    async def async_get_or_create_client(self, name, *, redirect_uris=None,
-                                         no_secret=False):
-        """Find a client, if not exists, create a new one."""
-        for client in await self._store.async_get_clients():
-            if client.name == name:
-                return client
-
-        return await self._store.async_create_client(
-            name, redirect_uris, no_secret)
-
-    async def async_get_client(self, client_id):
-        """Get a client."""
-        return await self._store.async_get_client(client_id)
 
     async def _async_create_login_flow(self, handler, *, source, data):
         """Create a login flow."""
@@ -456,7 +426,6 @@ class AuthStore:
         """Initialize the auth store."""
         self.hass = hass
         self._users = None
-        self._clients = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     async def async_get_users(self):
@@ -515,9 +484,8 @@ class AuthStore:
         self._users.pop(user.id)
         await self.async_save()
 
-    async def async_create_refresh_token(self, user, client=None):
+    async def async_create_refresh_token(self, user, client_id=None):
         """Create a new token for a user."""
-        client_id = client.id if client is not None else None
         refresh_token = RefreshToken(user=user, client_id=client_id)
         user.refresh_tokens[refresh_token.token] = refresh_token
         await self.async_save()
@@ -535,38 +503,6 @@ class AuthStore:
 
         return None
 
-    async def async_create_client(self, name, redirect_uris, no_secret):
-        """Create a new client."""
-        if self._clients is None:
-            await self.async_load()
-
-        kwargs = {
-            'name': name,
-            'redirect_uris': redirect_uris
-        }
-
-        if no_secret:
-            kwargs['secret'] = None
-
-        client = Client(**kwargs)
-        self._clients[client.id] = client
-        await self.async_save()
-        return client
-
-    async def async_get_clients(self):
-        """Return all clients."""
-        if self._clients is None:
-            await self.async_load()
-
-        return list(self._clients.values())
-
-    async def async_get_client(self, client_id):
-        """Get a client."""
-        if self._clients is None:
-            await self.async_load()
-
-        return self._clients.get(client_id)
-
     async def async_load(self):
         """Load the users."""
         data = await self._store.async_load()
@@ -578,7 +514,6 @@ class AuthStore:
 
         if data is None:
             self._users = {}
-            self._clients = {}
             return
 
         users = {
@@ -618,12 +553,7 @@ class AuthStore:
             )
             refresh_token.access_tokens.append(token)
 
-        clients = {
-            cl_dict['id']: Client(**cl_dict) for cl_dict in data['clients']
-        }
-
         self._users = users
-        self._clients = clients
 
     async def async_save(self):
         """Save users."""
@@ -676,19 +606,8 @@ class AuthStore:
             for access_token in refresh_token.access_tokens
         ]
 
-        clients = [
-            {
-                'id': client.id,
-                'name': client.name,
-                'secret': client.secret,
-                'redirect_uris': client.redirect_uris,
-            }
-            for client in self._clients.values()
-        ]
-
         data = {
             'users': users,
-            'clients': clients,
             'credentials': credentials,
             'access_tokens': access_tokens,
             'refresh_tokens': refresh_tokens,

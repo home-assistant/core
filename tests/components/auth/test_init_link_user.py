@@ -1,5 +1,7 @@
 """Tests for the link user flow."""
-from . import async_setup_auth, CLIENT_AUTH, CLIENT_ID, CLIENT_REDIRECT_URI
+from . import async_setup_auth
+
+from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 
 
 async def async_get_code(hass, aiohttp_client):
@@ -25,17 +27,19 @@ async def async_get_code(hass, aiohttp_client):
     client = await async_setup_auth(hass, aiohttp_client, config)
 
     resp = await client.post('/auth/login_flow', json={
+        'client_id': CLIENT_ID,
         'handler': ['insecure_example', None],
         'redirect_uri': CLIENT_REDIRECT_URI,
-    }, auth=CLIENT_AUTH)
+    })
     assert resp.status == 200
     step = await resp.json()
 
     resp = await client.post(
         '/auth/login_flow/{}'.format(step['flow_id']), json={
+            'client_id': CLIENT_ID,
             'username': 'test-user',
             'password': 'test-pass',
-        }, auth=CLIENT_AUTH)
+        })
 
     assert resp.status == 200
     step = await resp.json()
@@ -43,9 +47,10 @@ async def async_get_code(hass, aiohttp_client):
 
     # Exchange code for tokens
     resp = await client.post('/auth/token', data={
+            'client_id': CLIENT_ID,
             'grant_type': 'authorization_code',
             'code': code
-        }, auth=CLIENT_AUTH)
+        })
 
     assert resp.status == 200
     tokens = await resp.json()
@@ -57,17 +62,19 @@ async def async_get_code(hass, aiohttp_client):
 
     # Now authenticate with the 2nd flow
     resp = await client.post('/auth/login_flow', json={
+        'client_id': CLIENT_ID,
         'handler': ['insecure_example', '2nd auth'],
         'redirect_uri': CLIENT_REDIRECT_URI,
-    }, auth=CLIENT_AUTH)
+    })
     assert resp.status == 200
     step = await resp.json()
 
     resp = await client.post(
         '/auth/login_flow/{}'.format(step['flow_id']), json={
+            'client_id': CLIENT_ID,
             'username': '2nd-user',
             'password': '2nd-pass',
-        }, auth=CLIENT_AUTH)
+        })
 
     assert resp.status == 200
     step = await resp.json()
