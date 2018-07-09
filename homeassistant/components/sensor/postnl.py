@@ -129,7 +129,7 @@ class PostNLletter(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'postnl letter(s)'
+        return self._name
 
     @property
     def state(self):
@@ -139,7 +139,7 @@ class PostNLletter(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return self._name
+        return 'letters'
 
     @property
     def device_state_attributes(self):
