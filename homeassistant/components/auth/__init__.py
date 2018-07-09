@@ -102,6 +102,7 @@ a limited expiration.
     "token_type": "Bearer"
 }
 """
+from datetime import timedelta
 import logging
 import uuid
 
@@ -114,6 +115,7 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView, FlowManagerResourceView)
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.util import dt as dt_util
 
 from . import indieauth
 
@@ -349,12 +351,26 @@ def _create_cred_store():
     def store_credentials(client_id, credentials):
         """Store credentials and return a code to retrieve it."""
         code = uuid.uuid4().hex
-        temp_credentials[(client_id, code)] = credentials
+        temp_credentials[(client_id, code)] = (dt_util.utcnow(), credentials)
         return code
 
     @callback
     def retrieve_credentials(client_id, code):
         """Retrieve credentials."""
-        return temp_credentials.pop((client_id, code), None)
+        key = (client_id, code)
+
+        if key not in temp_credentials:
+            return None
+
+        created, credentials = temp_credentials.pop(key)
+
+        # OAuth 4.2.1
+        # The authorization code MUST expire shortly after it is issued to
+        # mitigate the risk of leaks.  A maximum authorization code lifetime of
+        # 10 minutes is RECOMMENDED.
+        if dt_util.utcnow() - created < timedelta(minutes=10):
+            return credentials
+
+        return None
 
     return store_credentials, retrieve_credentials
