@@ -470,6 +470,16 @@ def test_media_player(hass):
         'media_player.media_previous_track',
         hass)
 
+    yield from assert_request_calls_service(
+        'Alexa.PlaybackController', 'FastForward', 'media_player#test',
+        'media_player.media_next_track',
+        hass)
+
+    yield from assert_request_calls_service(
+        'Alexa.PlaybackController', 'Rewind', 'media_player#test',
+        'media_player.media_previous_track',
+        hass)
+
     call, _ = yield from assert_request_calls_service(
         'Alexa.Speaker', 'SetVolume', 'media_player#test',
         'media_player.volume_set',

@@ -1357,6 +1357,24 @@ def async_api_previous(hass, config, request, entity):
     return api_message(request)
 
 
+@HANDLERS.register(('Alexa.PlaybackController', 'FastForward'))
+@extract_entity
+@asyncio.coroutine
+def async_api_fastforward(hass, config, request, entity):
+    """Process a fast forward request."""
+    # pylint: disable=no-value-for-parameter
+    return (yield from async_api_next(hass, config, request))
+
+
+@HANDLERS.register(('Alexa.PlaybackController', 'Rewind'))
+@extract_entity
+@asyncio.coroutine
+def async_api_rewind(hass, config, request, entity):
+    """Process a rewind request."""
+    # pylint: disable=no-value-for-parameter
+    return (yield from async_api_previous(hass, config, request))
+
+
 def api_error_temp_range(request, temp, min_temp, max_temp, unit):
     """Create temperature value out of range API error response.
 
