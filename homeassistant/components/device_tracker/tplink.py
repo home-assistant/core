@@ -35,9 +35,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a TP-Link scanner."""
-    for cls in [Tplink5DeviceScanner, Tplink4DeviceScanner,
-                Tplink3DeviceScanner, Tplink2DeviceScanner,
-                TplinkDeviceScanner]:
+    for cls in [TplinkEAPControllerDeviceScanner, Tplink5DeviceScanner,
+                Tplink4DeviceScanner, Tplink3DeviceScanner,
+                Tplink2DeviceScanner, TplinkDeviceScanner]:
         scanner = cls(config[DOMAIN])
         if scanner.success_init:
             return scanner
@@ -407,6 +407,72 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
         if list_of_devices:
             self.last_results = {
                 device['MAC'].replace('-', ':'): device['DeviceName']
+                for device in list_of_devices['data']
+                }
+            return True
+
+        return False
+
+ class TplinkEAPControllerDeviceScanner(TplinkDeviceScanner):
+    """This class queries a TP-Link EAP Controller Server"""
+    _LOGGER.info("Using EAP Controller Scanner")
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found MAC IDs."""
+        self._update_info()
+        return self.last_results.keys()
+
+    def get_device_name(self, device):
+        """Get firmware doesn't save the name of the wireless device."""
+        return self.last_results.get(device)['name']
+
+    def get_extra_attributes(self, device):
+        return self.last_results.get(device)
+    def _update_info(self):
+        """Ensure the information from the TP-Link AP is up to date.
+
+        Return boolean if scanning successful.
+        """
+
+        base_url = 'https://{}:8043'.format(self.host)
+
+        # Create a session to handle cookie easier
+        session = requests.session()
+        session.verify=False
+
+        login = session.post('{}/login'.format(base_url), data=(('name',self.username),('password',self.password)))
+        if(login.status_code != 200): 
+            _LOGGER.error('HTTP Request failed with status'+str(login.status_code))
+        else: 
+            json = login.json()
+            if(json['success'] == False):
+                _LOGGER.error('Login failed, response was: '+json['message'])
+            else: 
+                _LOGGER.info("Loading wireless clients...")
+                client_list_url = '{}/monitor/allActiveClients'.format(base_url)
+                post_data = (('currentPage',1),('currentPageSize',1000))
+
+                clients = session.post(client_list_url,data=post_data)
+
+                try:  
+                    list_of_devices = clients.json()
+                except ValueError:
+                    _LOGGER.error("AP didn't respond with JSON. "
+                                  "Check if credentials are correct")
+                    return False 
+
+        session.close()
+
+        if list_of_devices:
+            self.last_results = {
+                device['mac'].replace('-', ':'): {
+                    'mac':  device['mac'].replace('-', ':'),
+                    'name': device['name'],
+                    'ap':   html.unescape(device['apName']),
+                    'ssid': device['ssid'],
+                    'snr':  device['snr'],
+                    'ip':   device['ip']
+                    }
                 for device in list_of_devices['data']
                 }
             return True
