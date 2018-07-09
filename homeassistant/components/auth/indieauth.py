@@ -1,6 +1,17 @@
 """Helpers to resolve client ID/secret."""
-from ipaddress import ip_address
+from ipaddress import ip_address, ip_network
 from urllib.parse import urlparse
+
+ALLOWED_IPS = (
+    ip_address('127.0.0.1'),
+    ip_address('::1'),
+)
+
+ALLOWED_NETWORKS = (
+    ip_network('10.0.0.0/8'),
+    ip_network('172.16.0.0/12'),
+    ip_network('192.168.0.0/16'),
+)
 
 
 def verify_redirect_uri(client_id, redirect_uri):
@@ -91,14 +102,23 @@ def _parse_client_id(client_id):
     # MUST be domain names or a loopback interface and
     # MUST NOT be IPv4 or IPv6 addresses except for IPv4 127.0.0.1
     # or IPv6 [::1]
-    if parts.netloc not in ('127.0.0.1', '[::1]'):
-        try:
-            # Raises ValueError if not valid IP address
-            ip_address(parts.netloc)
-        except ValueError:
-            # Not an ip address, win!
-            pass
-        else:
-            raise ValueError('Netloc cannot be an ip address')
+    address = None
 
-    return parts
+    try:
+        netloc = parts.netloc
+
+        # Strip the [, ] from ipv6 addresses before parsing
+        if netloc[0] == '[' and netloc[-1] == ']':
+            netloc = netloc[1:-1]
+
+        address = ip_address(netloc)
+    except ValueError:
+        # Not an ip address
+        pass
+
+    if (address is None or
+            address in ALLOWED_IPS or
+            any(address in network for network in ALLOWED_NETWORKS)):
+        return parts
+
+    raise ValueError('Hostname should be a domain name or local IP address')
