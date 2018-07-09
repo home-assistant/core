@@ -31,6 +31,8 @@ from homeassistant.util.async_ import (
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
+CLIENT_ID = 'https://example.com/app'
+CLIENT_REDIRECT_URI = 'https://example.com/app/callback'
 
 
 def threadsafe_callback_factory(func):
@@ -330,8 +332,6 @@ class MockUser(auth.User):
 def ensure_auth_manager_loaded(auth_mgr):
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
-    if store._clients is None:
-        store._clients = {}
     if store._users is None:
         store._users = {}
 
