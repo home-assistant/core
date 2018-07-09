@@ -31,6 +31,8 @@ from homeassistant.util.async_ import (
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
+CLIENT_ID = 'https://example.com/app'
+CLIENT_REDIRECT_URI = 'https://example.com/app/callback'
 
 
 def threadsafe_callback_factory(func):

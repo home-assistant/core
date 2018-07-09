@@ -514,7 +514,6 @@ class AuthStore:
 
         if data is None:
             self._users = {}
-            self._clients = {}
             return
 
         users = {

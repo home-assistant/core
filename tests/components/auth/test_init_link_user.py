@@ -1,5 +1,7 @@
 """Tests for the link user flow."""
-from . import async_setup_auth, CLIENT_ID, CLIENT_REDIRECT_URI
+from . import async_setup_auth
+
+from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 
 
 async def async_get_code(hass, aiohttp_client):

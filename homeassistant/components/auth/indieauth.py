@@ -7,7 +7,7 @@ def verify_redirect_uri(client_id, redirect_uri):
     """Verify that the client and redirect uri match."""
     try:
         client_id_parts = _parse_client_id(client_id)
-    except ValueError as err:
+    except ValueError:
         return False
 
     redirect_parts = _parse_url(redirect_uri)

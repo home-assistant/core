@@ -1,7 +1,7 @@
 """Tests for the login flow."""
-from aiohttp.helpers import BasicAuth
+from . import async_setup_auth
 
-from . import async_setup_auth, CLIENT_ID, CLIENT_REDIRECT_URI
+from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 
 
 async def test_fetch_auth_providers(hass, aiohttp_client):

@@ -175,6 +175,7 @@ class LoginFlowIndexView(FlowManagerIndexView):
                                              data['redirect_uri']):
             return self.json_message('invalid client id or redirect uri', 400)
 
+        # pylint: disable=no-value-for-parameter
         return await super().post(request)
 
 
@@ -190,7 +191,7 @@ class LoginFlowResourceView(FlowManagerResourceView):
         super().__init__(flow_mgr)
         self._store_credentials = store_credentials
 
-    async def get(self, request):
+    async def get(self, request, flow_id):
         """Do not allow getting status of a flow in progress."""
         return self.json_message('Invalid flow specified', 404)
 

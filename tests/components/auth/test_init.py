@@ -1,5 +1,7 @@
 """Integration tests for the auth component."""
-from . import async_setup_auth, CLIENT_ID, CLIENT_REDIRECT_URI
+from . import async_setup_auth
+
+from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 
 
 async def test_login_new_user_and_refresh_token(hass, aiohttp_client):
