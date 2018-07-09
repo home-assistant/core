@@ -391,7 +391,7 @@ gstreamer-player==1.1.0
 ha-ffmpeg==1.9
 
 # homeassistant.components.media_player.philips_js
-ha-philipsjs==0.0.4
+ha-philipsjs==0.0.5
 
 # homeassistant.components.sensor.geo_rss_events
 haversine==0.4.5
