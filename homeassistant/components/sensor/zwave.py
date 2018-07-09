@@ -5,8 +5,6 @@ For more details about this platform, please refer to the documentation
 at https://home-assistant.io/components/sensor.zwave/
 """
 import logging
-# Because we do not compile openzwave on CI
-# pylint: disable=import-error
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components import zwave
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT

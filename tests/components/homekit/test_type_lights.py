@@ -30,8 +30,7 @@ async def test_light_basic(hass, hk_driver, cls):
     """Test light with char state."""
     entity_id = 'light.demo'
 
-    hass.states.async_set(entity_id, STATE_ON,
-                          {ATTR_SUPPORTED_FEATURES: 0})
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
     acc = cls.light(hass, hk_driver, 'Light', entity_id, 2, None)
 
@@ -43,8 +42,7 @@ async def test_light_basic(hass, hk_driver, cls):
     await hass.async_block_till_done()
     assert acc.char_on.value == 1
 
-    hass.states.async_set(entity_id, STATE_OFF,
-                          {ATTR_SUPPORTED_FEATURES: 0})
+    hass.states.async_set(entity_id, STATE_OFF, {ATTR_SUPPORTED_FEATURES: 0})
     await hass.async_block_till_done()
     assert acc.char_on.value == 0
 

@@ -101,9 +101,11 @@ class DeconzLight(Light):
         return self._light.ct
 
     @property
-    def xy_color(self):
-        """Return the XY color value."""
-        return self._light.xy
+    def hs_color(self):
+        """Return the hs color value."""
+        if self._light.colormode in ('xy', 'hs') and self._light.xy:
+            return color_util.color_xy_to_hs(*self._light.xy)
+        return None
 
     @property
     def is_on(self):

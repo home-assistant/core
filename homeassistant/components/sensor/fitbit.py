@@ -225,7 +225,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 hass, config, add_devices, config_path, discovery_info=None)
             return False
     else:
-        config_file = save_json(config_path, DEFAULT_CONFIG)
+        save_json(config_path, DEFAULT_CONFIG)
         request_app_setup(
             hass, config, add_devices, config_path, discovery_info=None)
         return False

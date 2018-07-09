@@ -89,9 +89,7 @@ class GoogleCalendarData(object):
         params['timeMin'] = start_date.isoformat('T')
         params['timeMax'] = end_date.isoformat('T')
 
-        # pylint: disable=no-member
         events = await hass.async_add_job(service.events)
-        # pylint: enable=no-member
         result = await hass.async_add_job(events.list(**params).execute)
 
         items = result.get('items', [])
@@ -111,7 +109,7 @@ class GoogleCalendarData(object):
         service, params = self._prepare_query()
         params['timeMin'] = dt.now().isoformat('T')
 
-        events = service.events()  # pylint: disable=no-member
+        events = service.events()
         result = events.list(**params).execute()
 
         items = result.get('items', [])

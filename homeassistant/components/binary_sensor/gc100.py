@@ -39,7 +39,6 @@ class GC100BinarySensor(BinarySensorDevice):
 
     def __init__(self, name, port_addr, gc100):
         """Initialize the GC100 binary sensor."""
-        # pylint: disable=no-member
         self._name = name or DEVICE_DEFAULT_NAME
         self._port_addr = port_addr
         self._gc100 = gc100

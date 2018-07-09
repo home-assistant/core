@@ -107,8 +107,8 @@ def get_accessory(hass, driver, state, aid, config):
         a_type = 'Thermostat'
 
     elif state.domain == 'cover':
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if device_class == 'garage' and \
                 features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
@@ -134,8 +134,8 @@ def get_accessory(hass, driver, state, aid, config):
             a_type = 'MediaPlayer'
 
     elif state.domain == 'sensor':
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class == DEVICE_CLASS_TEMPERATURE or \
                 unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT):

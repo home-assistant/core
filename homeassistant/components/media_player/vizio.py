@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
 from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON,
     STATE_UNKNOWN)
@@ -39,7 +40,8 @@ MIN_TIME_BETWEEN_SCANS = timedelta(seconds=10)
 SUPPORTED_COMMANDS = SUPPORT_TURN_ON | SUPPORT_TURN_OFF \
                      | SUPPORT_SELECT_SOURCE \
                      | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK \
-                     | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP
+                     | SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP \
+                     | SUPPORT_VOLUME_SET
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -98,7 +100,9 @@ class VizioDevice(MediaPlayerDevice):
         else:
             self._state = STATE_ON
 
-        self._volume_level = self._device.get_current_volume()
+        volume = self._device.get_current_volume()
+        if volume is not None:
+            self._volume_level = float(volume) / 100.
         input_ = self._device.get_current_input()
         if input_ is not None:
             self._current_input = input_.meta_name
@@ -167,12 +171,26 @@ class VizioDevice(MediaPlayerDevice):
 
     def volume_up(self):
         """Increasing volume of the TV."""
+        self._volume_level += self._volume_step / 100.
         self._device.vol_up(num=self._volume_step)
 
     def volume_down(self):
         """Decreasing volume of the TV."""
+        self._volume_level -= self._volume_step / 100.
         self._device.vol_down(num=self._volume_step)
 
     def validate_setup(self):
         """Validate if host is available and key is correct."""
         return self._device.get_current_volume() is not None
+
+    def set_volume_level(self, volume):
+        """Set volume level."""
+        if self._volume_level is not None:
+            if volume > self._volume_level:
+                num = int(100*(volume - self._volume_level))
+                self._volume_level = volume
+                self._device.vol_up(num=num)
+            elif volume < self._volume_level:
+                num = int(100*(self._volume_level - volume))
+                self._volume_level = volume
+                self._device.vol_down(num=num)
