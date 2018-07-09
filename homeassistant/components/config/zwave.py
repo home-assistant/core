@@ -29,7 +29,7 @@ def async_setup(hass):
     hass.http.register_view(ZWaveUserCodeView)
     hass.http.register_view(ZWaveLogView)
     hass.http.register_view(ZWaveConfigWriteView)
-    hass.http.register_view(ZWaveProtecionView)
+    hass.http.register_view(ZWaveProtectionView)
 
     return True
 
@@ -199,7 +199,7 @@ class ZWaveUserCodeView(HomeAssistantView):
         return self.json(usercodes)
 
 
-class ZWaveProtecionView(HomeAssistantView):
+class ZWaveProtectionView(HomeAssistantView):
     """View for the protection commandclass of a node."""
 
     url = r"/api/zwave/protection/{node_id:\d+}"
