@@ -218,9 +218,6 @@ class ZWaveProtecionView(HomeAssistantView):
         if not node.has_command_class(const.COMMAND_CLASS_PROTECTION):
             return self.json(protection_options)
         protections = node.get_protections()
-        _LOGGER.info('GET protection data: %s', protections)
-        _LOGGER.info('Value_id=%d', list(protections.keys())[0])
-        _LOGGER.info('Value_id=%s', list(protections.keys())[0])
         protection_options = {'value_id': '{0:d}'.format(list(protections.keys())[0]),
                               'selected': node.get_protection_item(list(protections.keys())[0]),
                               'options': node.get_protection_items(list(protections.keys())[0])}
@@ -234,7 +231,6 @@ class ZWaveProtecionView(HomeAssistantView):
         network = hass.data.get(const.DATA_NETWORK)
         node = network.nodes.get(nodeid)
         protection_data = await request.json()
-        _LOGGER.info("POST protection_data: %s", protection_data)
 
         selection = protection_data["selection"]
         value_id = int(protection_data[const.ATTR_VALUE_ID])
@@ -244,8 +240,6 @@ class ZWaveProtecionView(HomeAssistantView):
             return self.json_message('No protection commandclass on this node',
                                      HTTP_NOT_FOUND)
         state = node.set_protection(value_id, selection)
-        _LOGGER.info("Setting protection commandclass option on Node %s "
-                     "to %s Success=%s", nodeid, selection, state)
-
-        return self.json_message('Protection commandclass option set.',
-                                 HTTP_OK)
+        if not state:
+            return self.json_message('Protection setting did not complete', 202)
+        return self.json_message('Protection setting succsessfully set', HTTP_OK)
