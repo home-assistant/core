@@ -107,3 +107,49 @@ class PostNLSensor(Entity):
         }
 
         self._state = len(status_counts)
+        
+class PostNLletter(Entity):
+    """Representation of a PostNL sensor."""
+
+    def __init__(self, api, name):
+        """Initialize the PostNL sensor."""
+        self._name = name
+        self._attributes = None
+        self._state = None
+        self._api = api
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return 'postnl letter(s)'
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return self._name
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
+    @property
+    def icon(self):
+        """Icon to use in the frontend."""
+        return ICON
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Update device state."""
+        letters = self._api.get_relevant_letters()
+
+        self._attributes = {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
+        }
+
+        self._state = len(letters)
