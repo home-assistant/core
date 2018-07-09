@@ -758,6 +758,9 @@ pyblackbird==0.5
 # homeassistant.components.neato
 pybotvac==0.0.7
 
+# homeassistant.components.cloudflare
+pycfdns==0.0.1
+
 # homeassistant.components.media_player.channels
 pychannels==1.0.0
 
