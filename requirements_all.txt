@@ -1341,7 +1341,7 @@ total_connect_client==0.18
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyapy==0.0.2
+tuyapy==0.1.0
 
 # homeassistant.components.twilio
 twilio==5.7.0

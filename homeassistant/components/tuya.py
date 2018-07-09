@@ -15,7 +15,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['tuyapy==0.0.2']
+REQUIREMENTS = ['tuyapy==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
