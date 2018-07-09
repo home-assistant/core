@@ -83,6 +83,6 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the alarm control device."""
-        "The base class is loading the battery proprety, but device doesnt"
-        "have this property - base class needs clean-up"
+        # The base class is loading the battery proprety, but device doesnt
+        # have this property - base class needs clean-up.
         return None
