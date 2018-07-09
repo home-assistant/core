@@ -28,10 +28,13 @@ ICON = 'mdi:package-variant-closed'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
+CONF_LETTER = 'letter'
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_LETTER, default=False): cv.boolean
 })
 
 
@@ -42,6 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     name = config.get(CONF_NAME)
+    letter = config.get(CONF_LETTER)
 
     try:
         api = PostNL_API(username, password)
@@ -50,7 +54,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception("Can't connect to the PostNL webservice")
         return
 
-    add_devices([PostNLSensor(api, name)], True)
+    if letter == True:
+      add_devices([PostNLSensor(api, name), PostNLletter(api, name)], True)
+    else:
+      add_devices([PostNLSensor(api, name)], True)
 
 
 class PostNLSensor(Entity):
