@@ -4,7 +4,10 @@ Support for Cambridge Audio Network Audio Players (StreamMagic platform).
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.cambridgeaudio/
 """
+
+from datetime import timedelta
 import logging
+import time
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -15,7 +18,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC)
 
-from homeassistant.const import (STATE_ON, STATE_OFF, STATE_PLAYING,
+from homeassistant.const import (STATE_OFF, STATE_PLAYING,
                                  STATE_PAUSED, STATE_IDLE,
                                  CONF_HOST, CONF_NAME, CONF_COMMAND_OFF)
 
@@ -29,8 +32,12 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default='Cambridge Audio Streamer'): cv.string,
-    vol.Optional(CONF_COMMAND_OFF, default='OFF'): cv.string
+    vol.Optional(CONF_COMMAND_OFF, default='OFF'):
+        vol.All(cv.string, vol.Upper)
 })
+
+# key to access known host list in hass.data
+HOST_KEY = 'cambridgeaudio_hosts'
 
 # supported features in all configurations
 SUPPORT_CAMBRIDGE = SUPPORT_TURN_OFF | SUPPORT_TURN_ON |\
@@ -49,16 +56,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hosts = []
     sm = ca.StreamMagic()   # pylint: disable=C0103
-    # key to access known host list in hass.data
-    host_key = 'cambridgeaudio_hosts'
 
-    if host_key not in hass.data:
-        hass.data[host_key] = []
+    if HOST_KEY not in hass.data:
+        hass.data[HOST_KEY] = []
 
     # found a new host that was specified in config file
     if discovery_info is None:
         host = config[CONF_HOST]
-        if host in hass.data[host_key]:
+        if host in hass.data[HOST_KEY]:
             return
 
         name = config[CONF_NAME]
@@ -78,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 smdevice = cadevice.StreamMagicDevice(addr, port,
                                                       desc, scpd_url)
                 hosts.append(CADevice(smdevice, poweroff_command, name))
-                hass.data[host_key].append(host)
+                hass.data[HOST_KEY].append(host)
                 _LOGGER.debug("Added StreamMagic device with ip %s (%s)",
                               addr, desc)
         except OSError:
@@ -88,23 +93,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         host = discovery_info.get('host')
         port = discovery_info.get('port')
 
-        # if a name was set in the config, use it
-        if CONF_NAME in config:
-            name = config[CONF_NAME]
-        else:
-            name = discovery_info.get('name')
-
-        # same for the poweroff command; default to OFF if unset
-        if CONF_COMMAND_OFF in config:
-            poweroff_command = config[CONF_COMMAND_OFF]
-        else:
-            poweroff_command = 'OFF'
+        name = discovery_info.get('name')
+        poweroff_command = 'OFF'
 
         scpd_url = discovery_info.get('ssdp_description')
-        if host not in hass.data[host_key]:
+        if host not in hass.data[HOST_KEY]:
             smdevice = cadevice.StreamMagicDevice(host, port, name, scpd_url)
             hosts.append(CADevice(smdevice, poweroff_command, name))
-            hass.data[host_key].append(host)
+            hass.data[HOST_KEY].append(host)
             _LOGGER.debug("Added StreamMagic device with ip %s (%s)",
                           host, name)
     add_devices(hosts, True)
@@ -119,7 +115,6 @@ class CADevice(MediaPlayerDevice):
         sources_map = dict((pr_num, pr_name) for pr_num, pr_name, pr_state
                            in self._smdevice.get_preset_list())
         self._name = name
-        self._pwstate = None
         self._state = None
         self._muted = False
         self._support_volumecontrol = self._smdevice.get_volume_control()
@@ -253,17 +248,10 @@ class CADevice(MediaPlayerDevice):
 
     def media_seek(self, position):
         """Jump to the specified percent position within the current track."""
-        if self._audio_source != "media player":
-            return
-
-        abs_pos = round(self._to_seconds(self._duration) * (position/100), 2)
-        abs_pos_h = int(abs_pos / 3600)
-        abs_pos_m = int((abs_pos % 3600) / 60)
-        abs_pos_s = int((abs_pos % 3600) % 60)
-        abs_pos = '{:01d}:{:02d}:{:02d}'.format(abs_pos_h,
-                                                abs_pos_m,
-                                                abs_pos_s)
-        self._smdevice.trnsprt_seek(abs_pos)
+        if self._audio_source == "media player":
+            abs_pos = int(self._duration * position/100)
+            abs_pos = time.strftime("%H:%M:%S", time.gmtime(abs_pos))
+            self._smdevice.trnsprt_seek(abs_pos)
 
     def media_stop(self):
         """Stop playing the current media."""
@@ -301,19 +289,11 @@ class CADevice(MediaPlayerDevice):
         """Switch the device OFF (default) or into IDLE mode."""
         _LOGGER.debug("Powering off (%s)", self._power_off_cmd)
         self._smdevice.power_off(power_state=self._power_off_cmd)
-        self._pwstate = STATE_OFF
 
     def turn_on(self):
         """Turn the device on if it's in IDLE (network standby) mode."""
         if self._smdevice.get_power_state() == 'idle':
             self._smdevice.power_on()
-            self._pwstate = STATE_ON
-
-    @staticmethod
-    def _to_seconds(timespec):
-        """Helper function to translate a h:mm:ss time spec into seconds."""
-        hours, minutes, seconds = timespec.split(':')
-        return int(hours) * 60 + int(minutes) * 60 + int(seconds)
 
     def update(self):
         """Fetch new state data from the media_player."""
@@ -321,10 +301,8 @@ class CADevice(MediaPlayerDevice):
 
         pwstate = dev.get_power_state()
         if pwstate is None or pwstate in ['idle', 'off']:
-            self._pwstate = STATE_OFF
             self._state = STATE_OFF
             return
-        self._pwstate = STATE_ON
         self._state = {
             'PLAYING': STATE_PLAYING,
             'PAUSED_PLAYBACK': STATE_PAUSED,
@@ -349,12 +327,18 @@ class CADevice(MediaPlayerDevice):
             self._title = dev.get_current_track_info()['trackTitle']
 
             # track position in seconds
-            position = dev.get_current_track_info()['currentPos']
-            self._position = self._to_seconds(position)
+            pos = dev.get_current_track_info()['currentPos']  # hh:mm:ss
+            pos = dt_util.parse_time(pos)
+            pos = timedelta(hours=pos.hour, minutes=pos.minute,
+                            seconds=pos.second).total_seconds()
+            self._position = int(pos)
 
             # track length in seconds
-            duration = dev.get_current_track_info()['trackLength']
-            self._duration = self._to_seconds(duration)
+            dur = dev.get_current_track_info()['trackLength']
+            dur = dt_util.parse_time(dur)
+            dur = timedelta(hours=dur.hour, minutes=dur.minute,
+                            seconds=dur.second).total_seconds()
+            self._duration = int(dur)
 
             self._position_updated_at = dt_util.utcnow()
 
