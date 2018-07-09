@@ -19,6 +19,9 @@ matrix:
     - python: "3.7"
       env: TOXENV=py37
       dist: xenial
+    - python: "3.8-dev"
+      env: TOXENV=py38
+      dist: xenial
   allow_failures:
     - python: "3.8-dev"
       env: TOXENV=py38
