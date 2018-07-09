@@ -24,7 +24,8 @@ ATTRIBUTION = 'Information provided by PostNL'
 
 DEFAULT_NAME = 'postnl'
 
-ICON = 'mdi:package-variant-closed'
+ICONpackage = 'mdi:package-variant-closed'
+ICONletters = 'mdi:email-outline'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
@@ -93,7 +94,7 @@ class PostNLSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return ICON
+        return ICONpackage
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -148,7 +149,7 @@ class PostNLletter(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return ICON
+        return ICONletters
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
