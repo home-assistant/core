@@ -21,16 +21,14 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON, CONF_ZONE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.7.3']
+REQUIREMENTS = ['denonavr==0.7.4']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 2
-DEFAULT_SOUND_MODE = True
 CONF_SHOW_ALL_SOURCES = 'show_all_sources'
 CONF_ZONES = 'zones'
-CONF_SOUND_MODE = 'sound_mode'
 CONF_VALID_ZONES = ['Zone2', 'Zone3']
 CONF_INVALID_ZONES_ERR = 'Invalid Zone (expected Zone2 or Zone3)'
 KEY_DENON_CACHE = 'denonavr_hosts'
@@ -53,7 +51,6 @@ DENON_ZONE_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_SOUND_MODE, default=DEFAULT_SOUND_MODE): cv.boolean,
     vol.Optional(CONF_SHOW_ALL_SOURCES, default=DEFAULT_SHOW_SOURCES):
         cv.boolean,
     vol.Optional(CONF_ZONES):
@@ -89,9 +86,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         add_zones = None
 
-    # Get config option for sound mode
-    sound_mode_support = config.get(CONF_SOUND_MODE)
-
     # Start assignment of host and name
     new_hosts = []
     # 1. option: manual setting
@@ -125,8 +119,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 show_all_inputs=show_all_sources, timeout=timeout,
                 add_zones=add_zones)
             for new_zone in new_device.zones.values():
-                receivers.append(DenonDevice(new_zone,
-                                             sound_mode_support))
+                receivers.append(DenonDevice(new_zone))
             cache.add(host)
             _LOGGER.info("Denon receiver at host %s initialized", host)
 
@@ -138,7 +131,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DenonDevice(MediaPlayerDevice):
     """Representation of a Denon Media Player Device."""
 
-    def __init__(self, receiver, sound_mode_support):
+    def __init__(self, receiver):
         """Initialize the device."""
         self._receiver = receiver
         self._name = self._receiver.name
@@ -156,8 +149,8 @@ class DenonDevice(MediaPlayerDevice):
         self._frequency = self._receiver.frequency
         self._station = self._receiver.station
 
-        self._sound_mode_support = sound_mode_support
-        if sound_mode_support:
+        self._sound_mode_support = self._receiver.support_sound_mode
+        if self._sound_mode_support:
             self._sound_mode = self._receiver.sound_mode
             self._sound_mode_raw = self._receiver.sound_mode_raw
             self._sound_mode_list = self._receiver.sound_mode_list
@@ -167,7 +160,7 @@ class DenonDevice(MediaPlayerDevice):
             self._sound_mode_list = None
 
         self._supported_features_base = SUPPORT_DENON
-        self._supported_features_base |= (sound_mode_support and
+        self._supported_features_base |= (self._sound_mode_support and
                                           SUPPORT_SELECT_SOUND_MODE)
 
     def update(self):
