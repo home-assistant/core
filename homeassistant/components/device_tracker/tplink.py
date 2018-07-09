@@ -413,7 +413,7 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
 
         return False
 
- class TplinkEAPControllerDeviceScanner(TplinkDeviceScanner):
+class TplinkEAPControllerDeviceScanner(TplinkDeviceScanner):
     """This class queries a TP-Link EAP Controller Server"""
     _LOGGER.info("Using EAP Controller Scanner")
 
