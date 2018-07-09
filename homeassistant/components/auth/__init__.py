@@ -115,7 +115,8 @@ from homeassistant.helpers.data_entry_flow import (
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
-from .client import verify_client
+from . import indieauth
+
 
 DOMAIN = 'auth'
 DEPENDENCIES = ['http']
@@ -143,8 +144,7 @@ class AuthProvidersView(HomeAssistantView):
     name = 'api:auth:providers'
     requires_auth = False
 
-    @verify_client
-    async def get(self, request, client):
+    async def get(self, request):
         """Get available auth providers."""
         return self.json([{
             'name': provider.name,
@@ -164,16 +164,16 @@ class LoginFlowIndexView(FlowManagerIndexView):
         """Do not allow index of flows in progress."""
         return aiohttp.web.Response(status=405)
 
-    # pylint: disable=arguments-differ
-    @verify_client
     @RequestDataValidator(vol.Schema({
+        vol.Required('client_id'): str,
         vol.Required('handler'): vol.Any(str, list),
         vol.Required('redirect_uri'): str,
     }))
-    async def post(self, request, client, data):
+    async def post(self, request, data):
         """Create a new login flow."""
-        if data['redirect_uri'] not in client.redirect_uris:
-            return self.json_message('invalid redirect uri', )
+        if not indieauth.verify_redirect_uri(data['client_id'],
+                                             data['redirect_uri']):
+            return self.json_message('invalid client id or redirect uri', 400)
 
         # pylint: disable=no-value-for-parameter
         return await super().post(request)
@@ -191,16 +191,20 @@ class LoginFlowResourceView(FlowManagerResourceView):
         super().__init__(flow_mgr)
         self._store_credentials = store_credentials
 
-    # pylint: disable=arguments-differ
-    async def get(self, request):
+    async def get(self, request, flow_id):
         """Do not allow getting status of a flow in progress."""
         return self.json_message('Invalid flow specified', 404)
 
-    # pylint: disable=arguments-differ
-    @verify_client
-    @RequestDataValidator(vol.Schema(dict), allow_empty=True)
-    async def post(self, request, client, flow_id, data):
+    @RequestDataValidator(vol.Schema({
+        'client_id': str
+    }, extra=vol.ALLOW_EXTRA))
+    async def post(self, request, flow_id, data):
         """Handle progressing a login flow request."""
+        client_id = data.pop('client_id')
+
+        if not indieauth.verify_client_id(client_id):
+            return self.json_message('Invalid client id', 400)
+
         try:
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
@@ -212,7 +216,7 @@ class LoginFlowResourceView(FlowManagerResourceView):
             return self.json(self._prepare_result_json(result))
 
         result.pop('data')
-        result['result'] = self._store_credentials(client.id, result['result'])
+        result['result'] = self._store_credentials(client_id, result['result'])
 
         return self.json(result)
 
@@ -228,24 +232,31 @@ class GrantTokenView(HomeAssistantView):
         """Initialize the grant token view."""
         self._retrieve_credentials = retrieve_credentials
 
-    @verify_client
-    async def post(self, request, client):
+    async def post(self, request):
         """Grant a token."""
         hass = request.app['hass']
         data = await request.post()
+
+        client_id = data.get('client_id')
+        if client_id is None or not indieauth.verify_client_id(client_id):
+            return self.json({
+                'error': 'invalid_request',
+            }, status_code=400)
+
         grant_type = data.get('grant_type')
 
         if grant_type == 'authorization_code':
-            return await self._async_handle_auth_code(hass, client, data)
+            return await self._async_handle_auth_code(hass, client_id, data)
 
         elif grant_type == 'refresh_token':
-            return await self._async_handle_refresh_token(hass, client, data)
+            return await self._async_handle_refresh_token(
+                hass, client_id, data)
 
         return self.json({
             'error': 'unsupported_grant_type',
         }, status_code=400)
 
-    async def _async_handle_auth_code(self, hass, client, data):
+    async def _async_handle_auth_code(self, hass, client_id, data):
         """Handle authorization code request."""
         code = data.get('code')
 
@@ -254,7 +265,7 @@ class GrantTokenView(HomeAssistantView):
                 'error': 'invalid_request',
             }, status_code=400)
 
-        credentials = self._retrieve_credentials(client.id, code)
+        credentials = self._retrieve_credentials(client_id, code)
 
         if credentials is None:
             return self.json({
@@ -263,7 +274,7 @@ class GrantTokenView(HomeAssistantView):
 
         user = await hass.auth.async_get_or_create_user(credentials)
         refresh_token = await hass.auth.async_create_refresh_token(user,
-                                                                   client)
+                                                                   client_id)
         access_token = hass.auth.async_create_access_token(refresh_token)
 
         return self.json({
@@ -274,7 +285,7 @@ class GrantTokenView(HomeAssistantView):
                 int(refresh_token.access_token_expiration.total_seconds()),
         })
 
-    async def _async_handle_refresh_token(self, hass, client, data):
+    async def _async_handle_refresh_token(self, hass, client_id, data):
         """Handle authorization code request."""
         token = data.get('refresh_token')
 
@@ -285,7 +296,7 @@ class GrantTokenView(HomeAssistantView):
 
         refresh_token = await hass.auth.async_get_refresh_token(token)
 
-        if refresh_token is None or refresh_token.client_id != client.id:
+        if refresh_token is None or refresh_token.client_id != client_id:
             return self.json({
                 'error': 'invalid_grant',
             }, status_code=400)
