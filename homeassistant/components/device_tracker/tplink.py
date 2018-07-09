@@ -9,6 +9,7 @@ from datetime import datetime
 import hashlib
 import logging
 import re
+import html
 
 from aiohttp.hdrs import (
     ACCEPT, COOKIE, PRAGMA, REFERER, CONNECTION, KEEP_ALIVE, USER_AGENT,
@@ -413,6 +414,7 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
 
         return False
 
+
 class TplinkEAPControllerDeviceScanner(TplinkDeviceScanner):
     """This class queries a TP-Link EAP Controller Server"""
     _LOGGER.info("Using EAP Controller Scanner")
@@ -428,6 +430,7 @@ class TplinkEAPControllerDeviceScanner(TplinkDeviceScanner):
 
     def get_extra_attributes(self, device):
         return self.last_results.get(device)
+    
     def _update_info(self):
         """Ensure the information from the TP-Link AP is up to date.
 
@@ -438,28 +441,30 @@ class TplinkEAPControllerDeviceScanner(TplinkDeviceScanner):
 
         # Create a session to handle cookie easier
         session = requests.session()
-        session.verify=False
+        session.verify = False
 
-        login = session.post('{}/login'.format(base_url), data=(('name',self.username),('password',self.password)))
-        if(login.status_code != 200): 
-            _LOGGER.error('HTTP Request failed with status'+str(login.status_code))
-        else: 
+        login = session.post('{}/login'.format(base_url),
+                             data=(('name',self.username),
+                             ('password',self.password)))
+        if(login.status_code != 200):
+            _LOGGER.error('HTTP Request failed! Status: '+str(login.status_code))
+        else:
             json = login.json()
-            if(json['success'] == False):
+            if not json['success']:
                 _LOGGER.error('Login failed, response was: '+json['message'])
-            else: 
+            else:
                 _LOGGER.info("Loading wireless clients...")
                 client_list_url = '{}/monitor/allActiveClients'.format(base_url)
-                post_data = (('currentPage',1),('currentPageSize',1000))
+                post_data = (('currentPage',1), ('currentPageSize',1000))
 
-                clients = session.post(client_list_url,data=post_data)
+                clients = session.post(client_list_url, data=post_data)
 
-                try:  
+                try:
                     list_of_devices = clients.json()
                 except ValueError:
                     _LOGGER.error("AP didn't respond with JSON. "
                                   "Check if credentials are correct")
-                    return False 
+                    return False
 
         session.close()
 
