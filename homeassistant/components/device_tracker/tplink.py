@@ -430,7 +430,7 @@ class TplinkEAPControllerDeviceScanner(TplinkDeviceScanner):
 
     def get_extra_attributes(self, device):
         return self.last_results.get(device)
-    
+
     def _update_info(self):
         """Ensure the information from the TP-Link AP is up to date.
 
@@ -444,18 +444,20 @@ class TplinkEAPControllerDeviceScanner(TplinkDeviceScanner):
         session.verify = False
 
         login = session.post('{}/login'.format(base_url),
-                             data=(('name',self.username),
-                             ('password',self.password)))
+                             data=(('name', self.username),
+                             ('password', self.password)))
         if(login.status_code != 200):
-            _LOGGER.error('HTTP Request failed! Status: '+str(login.status_code))
+            _LOGGER.error('HTTP Request failed with Status: '
+                          +str(login.status_code))
         else:
             json = login.json()
             if not json['success']:
                 _LOGGER.error('Login failed, response was: '+json['message'])
             else:
                 _LOGGER.info("Loading wireless clients...")
-                client_list_url = '{}/monitor/allActiveClients'.format(base_url)
-                post_data = (('currentPage',1), ('currentPageSize',1000))
+                client_list_url = '{}/monitor/allActiveClients'
+                                  .format(base_url)
+                post_data = (('currentPage', 1), ('currentPageSize', 1000))
 
                 clients = session.post(client_list_url, data=post_data)
 
