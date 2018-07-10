@@ -1,6 +1,5 @@
 """The tests for the panel_iframe component."""
 import unittest
-from unittest.mock import patch
 
 from homeassistant import setup
 from homeassistant.components import frontend
@@ -33,8 +32,6 @@ class TestPanelIframe(unittest.TestCase):
                     'panel_iframe': conf
                 })
 
-    @patch.dict('hass_frontend_es5.FINGERPRINTS',
-                {'iframe': 'md5md5'})
     def test_correct_config(self):
         """Test correct config."""
         assert setup.setup_component(
@@ -70,7 +67,6 @@ class TestPanelIframe(unittest.TestCase):
             'config': {'url': 'http://192.168.1.1'},
             'icon': 'mdi:network-wireless',
             'title': 'Router',
-            'url': '/frontend_es5/panels/ha-panel-iframe-md5md5.html',
             'url_path': 'router'
         }
 
@@ -79,7 +75,6 @@ class TestPanelIframe(unittest.TestCase):
             'config': {'url': 'https://www.wunderground.com/us/ca/san-diego'},
             'icon': 'mdi:weather',
             'title': 'Weather',
-            'url': '/frontend_es5/panels/ha-panel-iframe-md5md5.html',
             'url_path': 'weather',
         }
 
@@ -88,7 +83,6 @@ class TestPanelIframe(unittest.TestCase):
             'config': {'url': '/api'},
             'icon': 'mdi:weather',
             'title': 'Api',
-            'url': '/frontend_es5/panels/ha-panel-iframe-md5md5.html',
             'url_path': 'api',
         }
 
@@ -97,6 +91,5 @@ class TestPanelIframe(unittest.TestCase):
             'config': {'url': 'ftp://some/ftp'},
             'icon': 'mdi:weather',
             'title': 'FTP',
-            'url': '/frontend_es5/panels/ha-panel-iframe-md5md5.html',
             'url_path': 'ftp',
         }

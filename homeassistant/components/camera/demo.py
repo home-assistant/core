@@ -12,9 +12,10 @@ from homeassistant.components.camera import Camera
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the Demo camera platform."""
-    add_devices([
+    async_add_devices([
         DemoCamera(hass, config, 'Demo camera')
     ])
 

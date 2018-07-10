@@ -9,28 +9,28 @@ from zlib import adler32
 
 import voluptuous as vol
 
-from homeassistant.components.cover import (
-    SUPPORT_CLOSE, SUPPORT_OPEN, SUPPORT_SET_POSITION)
+import homeassistant.components.cover as cover
 from homeassistant.const import (
-    ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
-    ATTR_DEVICE_CLASS, CONF_IP_ADDRESS, CONF_PORT, TEMP_CELSIUS,
-    TEMP_FAHRENHEIT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
-    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE)
+    ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
+    CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
-    DOMAIN, HOMEKIT_FILE, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FILTER,
-    DEFAULT_PORT, DEFAULT_AUTO_START, SERVICE_HOMEKIT_START,
-    DEVICE_CLASS_CO2, DEVICE_CLASS_PM25)
+    CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST, CONF_FILTER,
+    DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25,
+    DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START, TYPE_OUTLET, TYPE_SWITCH)
 from .util import (
-    validate_entity_config, show_setup_message)
+    show_setup_message, validate_entity_config, validate_media_player_features)
 
 TYPES = Registry()
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['HAP-python==2.0.0']
+REQUIREMENTS = ['HAP-python==2.2.2']
 
 # #### Driver Status ####
 STATUS_READY = 0
@@ -38,6 +38,8 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
+SWITCH_TYPES = {TYPE_OUTLET: 'Outlet',
+                TYPE_SWITCH: 'Switch'}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
@@ -84,7 +86,7 @@ async def async_setup(hass, config):
     return True
 
 
-def get_accessory(hass, state, aid, config):
+def get_accessory(hass, driver, state, aid, config):
     """Take state and return an accessory object if supported."""
     if not aid:
         _LOGGER.warning('The entitiy "%s" is not supported, since it '
@@ -93,7 +95,7 @@ def get_accessory(hass, state, aid, config):
         return None
 
     a_type = None
-    config = config or {}
+    name = config.get(CONF_NAME, state.name)
 
     if state.domain == 'alarm_control_panel':
         a_type = 'SecuritySystem'
@@ -105,16 +107,19 @@ def get_accessory(hass, state, aid, config):
         a_type = 'Thermostat'
 
     elif state.domain == 'cover':
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
         if device_class == 'garage' and \
-                features & (SUPPORT_OPEN | SUPPORT_CLOSE):
+                features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = 'GarageDoorOpener'
-        elif features & SUPPORT_SET_POSITION:
+        elif features & cover.SUPPORT_SET_POSITION:
             a_type = 'WindowCovering'
-        elif features & (SUPPORT_OPEN | SUPPORT_CLOSE):
+        elif features & (cover.SUPPORT_OPEN | cover.SUPPORT_CLOSE):
             a_type = 'WindowCoveringBasic'
+
+    elif state.domain == 'fan':
+        a_type = 'Fan'
 
     elif state.domain == 'light':
         a_type = 'Light'
@@ -122,9 +127,15 @@ def get_accessory(hass, state, aid, config):
     elif state.domain == 'lock':
         a_type = 'Lock'
 
+    elif state.domain == 'media_player':
+        feature_list = config.get(CONF_FEATURE_LIST)
+        if feature_list and \
+                validate_media_player_features(state, feature_list):
+            a_type = 'MediaPlayer'
+
     elif state.domain == 'sensor':
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         device_class = state.attributes.get(ATTR_DEVICE_CLASS)
+        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
         if device_class == DEVICE_CLASS_TEMPERATURE or \
                 unit in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
@@ -140,14 +151,18 @@ def get_accessory(hass, state, aid, config):
         elif device_class == DEVICE_CLASS_ILLUMINANCE or unit in ('lm', 'lx'):
             a_type = 'LightSensor'
 
-    elif state.domain in ('switch', 'remote', 'input_boolean', 'script'):
+    elif state.domain == 'switch':
+        switch_type = config.get(CONF_TYPE, TYPE_SWITCH)
+        a_type = SWITCH_TYPES[switch_type]
+
+    elif state.domain in ('automation', 'input_boolean', 'remote', 'script'):
         a_type = 'Switch'
 
     if a_type is None:
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
-    return TYPES[a_type](hass, state.name, state.entity_id, aid, config=config)
+    return TYPES[a_type](hass, driver, name, state.entity_id, aid, config)
 
 
 def generate_aid(entity_id):
@@ -182,8 +197,9 @@ class HomeKit():
 
         ip_addr = self._ip_address or get_local_ip()
         path = self.hass.config.path(HOMEKIT_FILE)
-        self.bridge = HomeBridge(self.hass)
-        self.driver = HomeDriver(self.bridge, self._port, ip_addr, path)
+        self.driver = HomeDriver(self.hass, address=ip_addr,
+                                 port=self._port, persist_file=path)
+        self.bridge = HomeBridge(self.hass, self.driver)
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
@@ -191,7 +207,7 @@ class HomeKit():
             return
         aid = generate_aid(state.entity_id)
         conf = self._config.pop(state.entity_id, {})
-        acc = get_accessory(self.hass, state, aid, conf)
+        acc = get_accessory(self.hass, self.driver, state, aid, conf)
         if acc is not None:
             self.bridge.add_accessory(acc)
 
@@ -203,15 +219,16 @@ class HomeKit():
 
         # pylint: disable=unused-variable
         from . import (  # noqa F401
-            type_covers, type_lights, type_locks, type_security_systems,
-            type_sensors, type_switches, type_thermostats)
+            type_covers, type_fans, type_lights, type_locks,
+            type_media_players, type_security_systems, type_sensors,
+            type_switches, type_thermostats)
 
         for state in self.hass.states.all():
             self.add_bridge_accessory(state)
-        self.bridge.set_driver(self.driver)
+        self.driver.add_accessory(self.bridge)
 
-        if not self.bridge.paired:
-            show_setup_message(self.hass, self.bridge)
+        if not self.driver.state.paired:
+            show_setup_message(self.hass, self.driver.state.pincode)
 
         _LOGGER.debug('Driver start')
         self.hass.add_job(self.driver.start)

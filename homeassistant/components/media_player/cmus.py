@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pycmus==0.1.0']
+REQUIREMENTS = ['pycmus==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 

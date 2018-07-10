@@ -29,7 +29,7 @@ SUPPORT_LANGUAGES = [
     'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi',
     'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv',
     'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es',
-    'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy', 'uk',
+    'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy', 'uk', 'bg-BG'
 ]
 
 DEFAULT_LANG = 'en'

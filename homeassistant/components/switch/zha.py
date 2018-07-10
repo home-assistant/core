@@ -51,7 +51,7 @@ class Switch(zha.Entity, SwitchDevice):
     @property
     def is_on(self) -> bool:
         """Return if the switch is on based on the statemachine."""
-        if self._state == 'unknown':
+        if self._state is None:
             return False
         return bool(self._state)
 

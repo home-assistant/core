@@ -38,6 +38,7 @@ MAX_PENDING_MSG = 512
 ERR_ID_REUSE = 1
 ERR_INVALID_FORMAT = 2
 ERR_NOT_FOUND = 3
+ERR_UNKNOWN_COMMAND = 4
 
 TYPE_AUTH = 'auth'
 TYPE_AUTH_INVALID = 'auth_invalid'
@@ -60,7 +61,8 @@ JSON_DUMP = partial(json.dumps, cls=JSONEncoder)
 
 AUTH_MESSAGE_SCHEMA = vol.Schema({
     vol.Required('type'): TYPE_AUTH,
-    vol.Required('api_password'): str,
+    vol.Exclusive('api_password', 'auth'): str,
+    vol.Exclusive('access_token', 'auth'): str,
 })
 
 # Minimal requirements of a message
@@ -226,7 +228,6 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request):
         """Handle an incoming websocket connection."""
-        # pylint: disable=no-self-use
         return await ActiveConnection(request.app['hass'], request).handle()
 
 
@@ -314,22 +315,32 @@ class ActiveConnection:
                 authenticated = True
 
             else:
+                self.debug("Request auth")
                 await self.wsock.send_json(auth_required_message())
                 msg = await wsock.receive_json()
                 msg = AUTH_MESSAGE_SCHEMA(msg)
 
-                if validate_password(request, msg['api_password']):
-                    authenticated = True
+                if self.hass.auth.active and 'access_token' in msg:
+                    self.debug("Received access_token")
+                    token = self.hass.auth.async_get_access_token(
+                        msg['access_token'])
+                    authenticated = token is not None
 
-                else:
-                    self.debug("Invalid password")
-                    await self.wsock.send_json(
-                        auth_invalid_message('Invalid password'))
+                elif ((not self.hass.auth.active or
+                       self.hass.auth.support_legacy) and
+                      'api_password' in msg):
+                    self.debug("Received api_password")
+                    authenticated = validate_password(
+                        request, msg['api_password'])
 
             if not authenticated:
+                self.debug("Authorization failed")
+                await self.wsock.send_json(
+                    auth_invalid_message('Invalid access token or password'))
                 await process_wrong_login(request)
                 return wsock
 
+            self.debug("Auth OK")
             await self.wsock.send_json(auth_ok_message())
 
             # ---------- AUTH PHASE OVER ----------
@@ -349,8 +360,11 @@ class ActiveConnection:
                         'Identifier values have to increase.'))
 
                 elif msg['type'] not in handlers:
-                    # Unknown command
-                    break
+                    self.log_error(
+                        'Received invalid command: {}'.format(msg['type']))
+                    self.to_write.put_nowait(error_message(
+                        cur_id, ERR_UNKNOWN_COMMAND,
+                        'Unknown command.'))
 
                 else:
                     handler, schema = handlers[msg['type']]
@@ -384,7 +398,7 @@ class ActiveConnection:
             if wsock.closed:
                 self.debug("Connection closed by client")
             else:
-                _LOGGER.exception("Unexpected TypeError: %s", msg)
+                _LOGGER.exception("Unexpected TypeError: %s", err)
 
         except ValueError as err:
             msg = "Received invalid JSON"
@@ -395,7 +409,7 @@ class ActiveConnection:
             self._writer_task.cancel()
 
         except CANCELLATION_ERRORS:
-            self.debug("Connection cancelled by server")
+            self.debug("Connection cancelled")
 
         except asyncio.QueueFull:
             self.log_error("Client exceeded max pending messages [1]:",

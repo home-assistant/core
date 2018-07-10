@@ -8,7 +8,8 @@ import subprocess
 import sys
 import threading
 
-from typing import Optional, List
+from typing import Optional, List, Dict, Any  # noqa #pylint: disable=unused-import
+
 
 from homeassistant import monkey_patch
 from homeassistant.const import (
@@ -259,7 +260,7 @@ def setup_and_run_hass(config_dir: str,
         config = {
             'frontend': {},
             'demo': {}
-        }
+        }  # type: Dict[str, Any]
         hass = bootstrap.from_config_dict(
             config, config_dir=config_dir, verbose=args.verbose,
             skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,

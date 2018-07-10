@@ -2,10 +2,6 @@
 import asyncio
 from unittest import mock
 
-# Using third party package because of a bug reading binary data in Python 3.4
-# https://bugs.python.org/issue23004
-from mock_open import MockOpen
-
 from homeassistant.components.camera import DOMAIN
 from homeassistant.components.camera.local_file import (
     SERVICE_UPDATE_FILE_PATH)
@@ -30,7 +26,7 @@ def test_loading_file(hass, aiohttp_client):
 
     client = yield from aiohttp_client(hass.http.app)
 
-    m_open = MockOpen(read_data=b'hello')
+    m_open = mock.mock_open(read_data=b'hello')
     with mock.patch(
             'homeassistant.components.camera.local_file.open',
             m_open, create=True
@@ -90,7 +86,7 @@ def test_camera_content_type(hass, aiohttp_client):
     client = yield from aiohttp_client(hass.http.app)
 
     image = 'hello'
-    m_open = MockOpen(read_data=image.encode())
+    m_open = mock.mock_open(read_data=image.encode())
     with mock.patch('homeassistant.components.camera.local_file.open',
                     m_open, create=True):
         resp_1 = yield from client.get('/api/camera_proxy/camera.test_jpg')

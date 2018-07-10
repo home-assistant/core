@@ -176,6 +176,7 @@ class RestData(object):
                     self._request, timeout=10, verify=self._verify_ssl)
 
             self.data = response.text
-        except requests.exceptions.RequestException:
-            _LOGGER.error("Error fetching data: %s", self._request)
+        except requests.exceptions.RequestException as ex:
+            _LOGGER.error("Error fetching data: %s from %s failed with %s",
+                          self._request, self._request.url, ex)
             self.data = None

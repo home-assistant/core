@@ -28,7 +28,8 @@ DEVICE_SENSORS = {'10': {'temperature': 'temperature'},
                   '22': {'temperature': 'temperature'},
                   '26': {'temperature': 'temperature',
                          'humidity': 'humidity',
-                         'pressure': 'B1-R1-A/pressure'},
+                         'pressure': 'B1-R1-A/pressure',
+                         'illuminance': 'S3-R1-A/illuminance'},
                   '28': {'temperature': 'temperature'},
                   '3B': {'temperature': 'temperature'},
                   '42': {'temperature': 'temperature'}}
@@ -37,6 +38,7 @@ SENSOR_TYPES = {
     'temperature': ['temperature', TEMP_CELSIUS],
     'humidity': ['humidity', '%'],
     'pressure': ['pressure', 'mb'],
+    'illuminance': ['illuminance', 'lux'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -45,7 +47,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the one wire Sensors."""
     base_dir = config.get(CONF_MOUNT_DIR)

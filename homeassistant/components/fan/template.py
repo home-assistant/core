@@ -18,11 +18,10 @@ from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
-                                          SPEED_HIGH, SUPPORT_SET_SPEED,
-                                          SUPPORT_OSCILLATE, FanEntity,
-                                          ATTR_SPEED, ATTR_OSCILLATING,
-                                          ENTITY_ID_FORMAT)
+from homeassistant.components.fan import (
+    SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
+    FanEntity, ATTR_SPEED, ATTR_OSCILLATING, ENTITY_ID_FORMAT,
+    SUPPORT_DIRECTION, DIRECTION_FORWARD, DIRECTION_REVERSE, ATTR_DIRECTION)
 
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
@@ -33,25 +32,30 @@ CONF_FANS = 'fans'
 CONF_SPEED_LIST = 'speeds'
 CONF_SPEED_TEMPLATE = 'speed_template'
 CONF_OSCILLATING_TEMPLATE = 'oscillating_template'
+CONF_DIRECTION_TEMPLATE = 'direction_template'
 CONF_ON_ACTION = 'turn_on'
 CONF_OFF_ACTION = 'turn_off'
 CONF_SET_SPEED_ACTION = 'set_speed'
 CONF_SET_OSCILLATING_ACTION = 'set_oscillating'
+CONF_SET_DIRECTION_ACTION = 'set_direction'
 
 _VALID_STATES = [STATE_ON, STATE_OFF]
 _VALID_OSC = [True, False]
+_VALID_DIRECTIONS = [DIRECTION_FORWARD, DIRECTION_REVERSE]
 
 FAN_SCHEMA = vol.Schema({
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Required(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_SPEED_TEMPLATE): cv.template,
     vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
+    vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
 
     vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
     vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
 
     vol.Optional(CONF_SET_SPEED_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
 
     vol.Optional(
         CONF_SPEED_LIST,
@@ -80,18 +84,21 @@ async def async_setup_platform(
         oscillating_template = device_config.get(
             CONF_OSCILLATING_TEMPLATE
         )
+        direction_template = device_config.get(CONF_DIRECTION_TEMPLATE)
 
         on_action = device_config[CONF_ON_ACTION]
         off_action = device_config[CONF_OFF_ACTION]
         set_speed_action = device_config.get(CONF_SET_SPEED_ACTION)
         set_oscillating_action = device_config.get(CONF_SET_OSCILLATING_ACTION)
+        set_direction_action = device_config.get(CONF_SET_DIRECTION_ACTION)
 
         speed_list = device_config[CONF_SPEED_LIST]
 
         entity_ids = set()
         manual_entity_ids = device_config.get(CONF_ENTITY_ID)
 
-        for template in (state_template, speed_template, oscillating_template):
+        for template in (state_template, speed_template, oscillating_template,
+                         direction_template):
             if template is None:
                 continue
             template.hass = hass
@@ -114,8 +121,9 @@ async def async_setup_platform(
             TemplateFan(
                 hass, device, friendly_name,
                 state_template, speed_template, oscillating_template,
-                on_action, off_action, set_speed_action,
-                set_oscillating_action, speed_list, entity_ids
+                direction_template, on_action, off_action, set_speed_action,
+                set_oscillating_action, set_direction_action, speed_list,
+                entity_ids
             )
         )
 
@@ -127,8 +135,9 @@ class TemplateFan(FanEntity):
 
     def __init__(self, hass, device_id, friendly_name,
                  state_template, speed_template, oscillating_template,
-                 on_action, off_action, set_speed_action,
-                 set_oscillating_action, speed_list, entity_ids):
+                 direction_template, on_action, off_action, set_speed_action,
+                 set_oscillating_action, set_direction_action, speed_list,
+                 entity_ids):
         """Initialize the fan."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -138,6 +147,7 @@ class TemplateFan(FanEntity):
         self._template = state_template
         self._speed_template = speed_template
         self._oscillating_template = oscillating_template
+        self._direction_template = direction_template
         self._supported_features = 0
 
         self._on_script = Script(hass, on_action)
@@ -151,9 +161,14 @@ class TemplateFan(FanEntity):
         if set_oscillating_action:
             self._set_oscillating_script = Script(hass, set_oscillating_action)
 
+        self._set_direction_script = None
+        if set_direction_action:
+            self._set_direction_script = Script(hass, set_direction_action)
+
         self._state = STATE_OFF
         self._speed = None
         self._oscillating = None
+        self._direction = None
 
         self._template.hass = self.hass
         if self._speed_template:
@@ -162,6 +177,9 @@ class TemplateFan(FanEntity):
         if self._oscillating_template:
             self._oscillating_template.hass = self.hass
             self._supported_features |= SUPPORT_OSCILLATE
+        if self._direction_template:
+            self._direction_template.hass = self.hass
+            self._supported_features |= SUPPORT_DIRECTION
 
         self._entities = entity_ids
         # List of valid speeds
@@ -196,6 +214,11 @@ class TemplateFan(FanEntity):
     def oscillating(self):
         """Return the oscillation state."""
         return self._oscillating
+
+    @property
+    def direction(self):
+        """Return the oscillation state."""
+        return self._direction
 
     @property
     def should_poll(self):
@@ -236,10 +259,30 @@ class TemplateFan(FanEntity):
         if self._set_oscillating_script is None:
             return
 
-        await self._set_oscillating_script.async_run(
-            {ATTR_OSCILLATING: oscillating}
-        )
-        self._oscillating = oscillating
+        if oscillating in _VALID_OSC:
+            self._oscillating = oscillating
+            await self._set_oscillating_script.async_run(
+                {ATTR_OSCILLATING: oscillating})
+        else:
+            _LOGGER.error(
+                'Received invalid oscillating value: %s. ' +
+                'Expected: %s.',
+                oscillating, ', '.join(_VALID_OSC))
+
+    async def async_set_direction(self, direction: str) -> None:
+        """Set the direction of the fan."""
+        if self._set_direction_script is None:
+            return
+
+        if direction in _VALID_DIRECTIONS:
+            self._direction = direction
+            await self._set_direction_script.async_run(
+                {ATTR_DIRECTION: direction})
+        else:
+            _LOGGER.error(
+                'Received invalid direction: %s. ' +
+                'Expected: %s.',
+                direction, ', '.join(_VALID_DIRECTIONS))
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -308,6 +351,7 @@ class TemplateFan(FanEntity):
                 oscillating = self._oscillating_template.async_render()
             except TemplateError as ex:
                 _LOGGER.error(ex)
+                oscillating = None
                 self._state = None
 
             # Validate osc
@@ -322,3 +366,24 @@ class TemplateFan(FanEntity):
                     'Received invalid oscillating: %s. ' +
                     'Expected: True/False.', oscillating)
                 self._oscillating = None
+
+        # Update direction if 'direction_template' is configured
+        if self._direction_template is not None:
+            try:
+                direction = self._direction_template.async_render()
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                direction = None
+                self._state = None
+
+            # Validate speed
+            if direction in _VALID_DIRECTIONS:
+                self._direction = direction
+            elif direction == STATE_UNKNOWN:
+                self._direction = None
+            else:
+                _LOGGER.error(
+                    'Received invalid direction: %s. ' +
+                    'Expected: %s.',
+                    direction, ', '.join(_VALID_DIRECTIONS))
+                self._direction = None

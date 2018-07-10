@@ -82,7 +82,7 @@ def elevation(latitude, longitude):
 # Author: https://github.com/maurycyp
 # Source: https://github.com/maurycyp/vincenty
 # License: https://github.com/maurycyp/vincenty/blob/master/LICENSE
-# pylint: disable=invalid-name, unused-variable, invalid-sequence-index
+# pylint: disable=invalid-name
 def vincenty(point1: Tuple[float, float], point2: Tuple[float, float],
              miles: bool = False) -> Optional[float]:
     """

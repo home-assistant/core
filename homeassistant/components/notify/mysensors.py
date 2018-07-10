@@ -18,7 +18,7 @@ async def async_get_service(hass, config, discovery_info=None):
     return MySensorsNotificationService(hass)
 
 
-class MySensorsNotificationDevice(mysensors.MySensorsDevice):
+class MySensorsNotificationDevice(mysensors.device.MySensorsDevice):
     """Represent a MySensors Notification device."""
 
     def send_msg(self, msg):
@@ -36,13 +36,11 @@ class MySensorsNotificationDevice(mysensors.MySensorsDevice):
 class MySensorsNotificationService(BaseNotificationService):
     """Implement a MySensors notification service."""
 
-    # pylint: disable=too-few-public-methods
-
     def __init__(self, hass):
         """Initialize the service."""
         self.devices = mysensors.get_mysensors_devices(hass, DOMAIN)
 
-    def send_message(self, message="", **kwargs):
+    async def async_send_message(self, message="", **kwargs):
         """Send a message to a user."""
         target_devices = kwargs.get(ATTR_TARGET)
         devices = [device for device in self.devices.values()

@@ -59,7 +59,6 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
 class Entity(object):
     """An abstract class for Home Assistant entities."""
 
-    # pylint: disable=no-self-use
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inheriting
     # this class. These may be used to customize the behavior of the entity.
@@ -170,13 +169,6 @@ class Entity(object):
     def supported_features(self) -> int:
         """Flag supported features."""
         return None
-
-    def update(self):
-        """Retrieve latest state.
-
-        For asyncio use coroutine async_update.
-        """
-        pass
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
@@ -320,10 +312,10 @@ class Entity(object):
             )
 
         try:
+            # pylint: disable=no-member
             if hasattr(self, 'async_update'):
-                # pylint: disable=no-member
                 yield from self.async_update()
-            else:
+            elif hasattr(self, 'update'):
                 yield from self.hass.async_add_job(self.update)
         finally:
             self._update_staged = False
@@ -372,7 +364,6 @@ class Entity(object):
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
-    # pylint: disable=no-self-use
     @property
     def state(self) -> str:
         """Return the state."""

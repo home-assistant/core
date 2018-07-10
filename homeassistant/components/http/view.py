@@ -51,12 +51,6 @@ class HomeAssistantView(object):
             data['code'] = message_code
         return self.json(data, status_code, headers=headers)
 
-    # pylint: disable=no-self-use
-    async def file(self, request, fil):
-        """Return a file."""
-        assert isinstance(fil, str), 'only string paths allowed'
-        return web.FileResponse(fil)
-
     def register(self, router):
         """Register the view with a router."""
         assert self.url is not None, 'No url set for view'

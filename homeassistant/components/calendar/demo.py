@@ -4,8 +4,10 @@ Demo platform that has two fake binary sensors.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
+import copy
+
 import homeassistant.util.dt as dt_util
-from homeassistant.components.calendar import CalendarEventDevice
+from homeassistant.components.calendar import CalendarEventDevice, get_date
 from homeassistant.components.google import CONF_DEVICE_ID, CONF_NAME
 
 
@@ -15,13 +17,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     calendar_data_current = DemoGoogleCalendarDataCurrent()
     add_devices([
         DemoGoogleCalendar(hass, calendar_data_future, {
-            CONF_NAME: 'Future Event',
-            CONF_DEVICE_ID: 'future_event',
+            CONF_NAME: 'Calendar 1',
+            CONF_DEVICE_ID: 'calendar_1',
         }),
 
         DemoGoogleCalendar(hass, calendar_data_current, {
-            CONF_NAME: 'Current Event',
-            CONF_DEVICE_ID: 'current_event',
+            CONF_NAME: 'Calendar 2',
+            CONF_DEVICE_ID: 'calendar_2',
         }),
     ])
 
@@ -29,10 +31,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DemoGoogleCalendarData(object):
     """Representation of a Demo Calendar element."""
 
+    event = {}
+
     # pylint: disable=no-self-use
     def update(self):
         """Return true so entity knows we have new data."""
         return True
+
+    async def async_get_events(self, hass, start_date, end_date):
+        """Get all events in a specific time frame."""
+        event = copy.copy(self.event)
+        event['title'] = event['summary']
+        event['start'] = get_date(event['start']).isoformat()
+        event['end'] = get_date(event['end']).isoformat()
+        return [event]
 
 
 class DemoGoogleCalendarDataFuture(DemoGoogleCalendarData):
@@ -80,3 +92,7 @@ class DemoGoogleCalendar(CalendarEventDevice):
         """Initialize Google Calendar but without the API calls."""
         self.data = calendar_data
         super().__init__(hass, data)
+
+    async def async_get_events(self, hass, start_date, end_date):
+        """Get all events in a specific time frame."""
+        return await self.data.async_get_events(hass, start_date, end_date)

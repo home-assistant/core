@@ -27,14 +27,16 @@ If your light doesn't support white value feature, omit `white_value_template`.
 If your light doesn't support RGB feature, omit `(red|green|blue)_template`.
 """
 import unittest
+from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
 import homeassistant.components.light as light
+import homeassistant.core as ha
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message,
-    assert_setup_component)
+    assert_setup_component, mock_coro)
 
 
 class TestLightMQTTTemplate(unittest.TestCase):
@@ -207,26 +209,40 @@ class TestLightMQTTTemplate(unittest.TestCase):
     def test_optimistic(self): \
             # pylint: disable=invalid-name
         """Test optimistic mode."""
-        with assert_setup_component(1, light.DOMAIN):
-            assert setup_component(self.hass, light.DOMAIN, {
-                light.DOMAIN: {
-                    'platform': 'mqtt_template',
-                    'name': 'test',
-                    'command_topic': 'test_light_rgb/set',
-                    'command_on_template': 'on,'
-                                           '{{ brightness|d }},'
-                                           '{{ color_temp|d }},'
-                                           '{{ white_value|d }},'
-                                           '{{ red|d }}-'
-                                           '{{ green|d }}-'
-                                           '{{ blue|d }}',
-                    'command_off_template': 'off',
-                    'qos': 2
-                }
-            })
+        fake_state = ha.State('light.test', 'on', {'brightness': 95,
+                                                   'hs_color': [100, 100],
+                                                   'effect': 'random',
+                                                   'color_temp': 100,
+                                                   'white_value': 50})
+
+        with patch('homeassistant.components.light.mqtt_template'
+                   '.async_get_last_state',
+                   return_value=mock_coro(fake_state)):
+            with assert_setup_component(1, light.DOMAIN):
+                assert setup_component(self.hass, light.DOMAIN, {
+                    light.DOMAIN: {
+                        'platform': 'mqtt_template',
+                        'name': 'test',
+                        'command_topic': 'test_light_rgb/set',
+                        'command_on_template': 'on,'
+                                               '{{ brightness|d }},'
+                                               '{{ color_temp|d }},'
+                                               '{{ white_value|d }},'
+                                               '{{ red|d }}-'
+                                               '{{ green|d }}-'
+                                               '{{ blue|d }}',
+                        'command_off_template': 'off',
+                        'qos': 2
+                    }
+                })
 
         state = self.hass.states.get('light.test')
-        self.assertEqual(STATE_OFF, state.state)
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(95, state.attributes.get('brightness'))
+        self.assertEqual((100, 100), state.attributes.get('hs_color'))
+        self.assertEqual('random', state.attributes.get('effect'))
+        self.assertEqual(100, state.attributes.get('color_temp'))
+        self.assertEqual(50, state.attributes.get('white_value'))
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         # turn on the light

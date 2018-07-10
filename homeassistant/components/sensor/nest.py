@@ -4,52 +4,69 @@ Support for Nest Thermostat Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nest/
 """
-from itertools import chain
 import logging
 
-from homeassistant.components.nest import DATA_NEST
-from homeassistant.helpers.entity import Entity
+from homeassistant.components.nest import (
+    DATA_NEST, DATA_NEST_CONFIG, CONF_SENSORS, NestSensorDevice)
 from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT, CONF_MONITORED_CONDITIONS,
-    DEVICE_CLASS_TEMPERATURE)
+    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY)
 
 DEPENDENCIES = ['nest']
-SENSOR_TYPES = ['humidity',
-                'operation_mode',
-                'hvac_state']
+
+SENSOR_TYPES = ['humidity', 'operation_mode', 'hvac_state']
+
+TEMP_SENSOR_TYPES = ['temperature', 'target']
+
+PROTECT_SENSOR_TYPES = ['co_status',
+                        'smoke_status',
+                        'battery_health',
+                        # color_status: "gray", "green", "yellow", "red"
+                        'color_status']
+
+STRUCTURE_SENSOR_TYPES = ['eta']
+
+# security_state is structure level sensor, but only meaningful when
+# Nest Cam exist
+STRUCTURE_CAMERA_SENSOR_TYPES = ['security_state']
+
+_VALID_SENSOR_TYPES = SENSOR_TYPES + TEMP_SENSOR_TYPES + PROTECT_SENSOR_TYPES \
+                      + STRUCTURE_SENSOR_TYPES + STRUCTURE_CAMERA_SENSOR_TYPES
+
+SENSOR_UNITS = {'humidity': '%'}
+
+SENSOR_DEVICE_CLASSES = {'humidity': DEVICE_CLASS_HUMIDITY}
+
+VARIABLE_NAME_MAPPING = {'eta': 'eta_begin', 'operation_mode': 'mode'}
 
 SENSOR_TYPES_DEPRECATED = ['last_ip',
                            'local_ip',
-                           'last_connection']
+                           'last_connection',
+                           'battery_level']
 
-DEPRECATED_WEATHER_VARS = {'weather_humidity': 'humidity',
-                           'weather_temperature': 'temperature',
-                           'weather_condition': 'condition',
-                           'wind_speed': 'kph',
-                           'wind_direction': 'direction'}
+DEPRECATED_WEATHER_VARS = ['weather_humidity',
+                           'weather_temperature',
+                           'weather_condition',
+                           'wind_speed',
+                           'wind_direction']
 
-SENSOR_UNITS = {'humidity': '%', 'temperature': '°C'}
-
-PROTECT_VARS = ['co_status', 'smoke_status', 'battery_health']
-
-PROTECT_VARS_DEPRECATED = ['battery_level']
-
-SENSOR_TEMP_TYPES = ['temperature', 'target']
-
-_SENSOR_TYPES_DEPRECATED = SENSOR_TYPES_DEPRECATED \
-    + list(DEPRECATED_WEATHER_VARS.keys()) + PROTECT_VARS_DEPRECATED
-
-_VALID_SENSOR_TYPES = SENSOR_TYPES + SENSOR_TEMP_TYPES + PROTECT_VARS
+_SENSOR_TYPES_DEPRECATED = SENSOR_TYPES_DEPRECATED + DEPRECATED_WEATHER_VARS
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Nest Sensor."""
-    if discovery_info is None:
-        return
+    """Set up the Nest Sensor.
 
+    No longer used.
+    """
+
+
+async def async_setup_entry(hass, entry, async_add_devices):
+    """Set up a Nest sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
+
+    discovery_info = hass.data.get(DATA_NEST_CONFIG, {}).get(CONF_SENSORS, {})
 
     # Add all available sensors if no Nest sensor config is set
     if discovery_info == {}:
@@ -69,53 +86,43 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         "monitored_conditions. See "
                         "https://home-assistant.io/components/"
                         "binary_sensor.nest/ for valid options.")
-
             _LOGGER.error(wstr)
 
-    all_sensors = []
-    for structure, device in chain(nest.thermostats(), nest.smoke_co_alarms()):
-        sensors = [NestBasicSensor(structure, device, variable)
-                   for variable in conditions
-                   if variable in SENSOR_TYPES and device.is_thermostat]
-        sensors += [NestTempSensor(structure, device, variable)
-                    for variable in conditions
-                    if variable in SENSOR_TEMP_TYPES and device.is_thermostat]
-        sensors += [NestProtectSensor(structure, device, variable)
-                    for variable in conditions
-                    if variable in PROTECT_VARS and device.is_smoke_co_alarm]
-        all_sensors.extend(sensors)
+    def get_sensors():
+        """Get the Nest sensors."""
+        all_sensors = []
+        for structure in nest.structures():
+            all_sensors += [NestBasicSensor(structure, None, variable)
+                            for variable in conditions
+                            if variable in STRUCTURE_SENSOR_TYPES]
 
-    add_devices(all_sensors, True)
+        for structure, device in nest.thermostats():
+            all_sensors += [NestBasicSensor(structure, device, variable)
+                            for variable in conditions
+                            if variable in SENSOR_TYPES]
+            all_sensors += [NestTempSensor(structure, device, variable)
+                            for variable in conditions
+                            if variable in TEMP_SENSOR_TYPES]
 
+        for structure, device in nest.smoke_co_alarms():
+            all_sensors += [NestBasicSensor(structure, device, variable)
+                            for variable in conditions
+                            if variable in PROTECT_SENSOR_TYPES]
 
-class NestSensor(Entity):
-    """Representation of a Nest sensor."""
+        structures_has_camera = {}
+        for structure, device in nest.cameras():
+            structures_has_camera[structure] = True
+        for structure in structures_has_camera:
+            all_sensors += [NestBasicSensor(structure, None, variable)
+                            for variable in conditions
+                            if variable in STRUCTURE_CAMERA_SENSOR_TYPES]
 
-    def __init__(self, structure, device, variable):
-        """Initialize the sensor."""
-        self.structure = structure
-        self.device = device
-        self.variable = variable
+        return all_sensors
 
-        # device specific
-        self._location = self.device.where
-        self._name = "{} {}".format(self.device.name_long,
-                                    self.variable.replace("_", " "))
-        self._state = None
-        self._unit = None
-
-    @property
-    def name(self):
-        """Return the name of the nest, if any."""
-        return self._name
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit the value is expressed in."""
-        return self._unit
+    async_add_devices(await hass.async_add_job(get_sensors), True)
 
 
-class NestBasicSensor(NestSensor):
+class NestBasicSensor(NestSensorDevice):
     """Representation a basic Nest sensor."""
 
     @property
@@ -123,17 +130,28 @@ class NestBasicSensor(NestSensor):
         """Return the state of the sensor."""
         return self._state
 
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return SENSOR_DEVICE_CLASSES.get(self.variable)
+
     def update(self):
         """Retrieve latest state."""
-        self._unit = SENSOR_UNITS.get(self.variable, None)
+        self._unit = SENSOR_UNITS.get(self.variable)
 
-        if self.variable == 'operation_mode':
-            self._state = getattr(self.device, "mode")
+        if self.variable in VARIABLE_NAME_MAPPING:
+            self._state = getattr(self.device,
+                                  VARIABLE_NAME_MAPPING[self.variable])
+        elif self.variable in PROTECT_SENSOR_TYPES \
+                and self.variable != 'color_status':
+            # keep backward compatibility
+            state = getattr(self.device, self.variable)
+            self._state = state.capitalize() if state is not None else None
         else:
             self._state = getattr(self.device, self.variable)
 
 
-class NestTempSensor(NestSensor):
+class NestTempSensor(NestSensorDevice):
     """Representation of a Nest Temperature sensor."""
 
     @property
@@ -162,16 +180,3 @@ class NestTempSensor(NestSensor):
             self._state = "%s-%s" % (int(low), int(high))
         else:
             self._state = round(temp, 1)
-
-
-class NestProtectSensor(NestSensor):
-    """Return the state of nest protect."""
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    def update(self):
-        """Retrieve latest state."""
-        self._state = getattr(self.device, self.variable).capitalize()

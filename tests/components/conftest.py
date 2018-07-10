@@ -3,6 +3,8 @@ import pytest
 
 from homeassistant.setup import async_setup_component
 
+from tests.common import MockUser, CLIENT_ID
+
 
 @pytest.fixture
 def hass_ws_client(aiohttp_client):
@@ -20,3 +22,12 @@ def hass_ws_client(aiohttp_client):
         return websocket
 
     return create_client
+
+
+@pytest.fixture
+def hass_access_token(hass):
+    """Return an access token to access Home Assistant."""
+    user = MockUser().add_to_hass(hass)
+    refresh_token = hass.loop.run_until_complete(
+        hass.auth.async_create_refresh_token(user, CLIENT_ID))
+    yield hass.auth.async_create_access_token(refresh_token)

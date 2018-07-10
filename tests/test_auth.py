@@ -1,14 +1,17 @@
 """Tests for the Home Assistant auth module."""
-from unittest.mock import Mock
+from datetime import timedelta
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import auth, data_entry_flow
-from tests.common import MockUser, ensure_auth_manager_loaded
+from homeassistant.util import dt as dt_util
+from tests.common import (
+    MockUser, ensure_auth_manager_loaded, flush_store, CLIENT_ID)
 
 
 @pytest.fixture
-def mock_hass():
+def mock_hass(loop):
     """Hass mock with minimum amount of data set to make it work with auth."""
     hass = Mock()
     hass.config.skip_pip = True
@@ -53,9 +56,9 @@ async def test_auth_manager_from_config_validates_config_and_id(mock_hass):
     }]
 
 
-async def test_create_new_user(mock_hass):
+async def test_create_new_user(hass, hass_storage):
     """Test creating new user."""
-    manager = await auth.auth_manager_from_config(mock_hass, [{
+    manager = await auth.auth_manager_from_config(hass, [{
         'type': 'insecure_example',
         'users': [{
             'username': 'test-user',
@@ -124,9 +127,9 @@ async def test_login_as_existing_user(mock_hass):
     assert user.name == 'Paulus'
 
 
-async def test_linking_user_to_two_auth_providers(mock_hass):
+async def test_linking_user_to_two_auth_providers(hass, hass_storage):
     """Test linking user to two auth providers."""
-    manager = await auth.auth_manager_from_config(mock_hass, [{
+    manager = await auth.auth_manager_from_config(hass, [{
         'type': 'insecure_example',
         'users': [{
             'username': 'test-user',
@@ -157,3 +160,114 @@ async def test_linking_user_to_two_auth_providers(mock_hass):
     })
     await manager.async_link_user(user, step['result'])
     assert len(user.credentials) == 2
+
+
+async def test_saving_loading(hass, hass_storage):
+    """Test storing and saving data.
+
+    Creates one of each type that we store to test we restore correctly.
+    """
+    manager = await auth.auth_manager_from_config(hass, [{
+        'type': 'insecure_example',
+        'users': [{
+            'username': 'test-user',
+            'password': 'test-pass',
+        }]
+    }])
+
+    step = await manager.login_flow.async_init(('insecure_example', None))
+    step = await manager.login_flow.async_configure(step['flow_id'], {
+        'username': 'test-user',
+        'password': 'test-pass',
+    })
+    user = await manager.async_get_or_create_user(step['result'])
+
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+
+    manager.async_create_access_token(refresh_token)
+
+    await flush_store(manager._store._store)
+
+    store2 = auth.AuthStore(hass)
+    users = await store2.async_get_users()
+    assert len(users) == 1
+    assert users[0] == user
+
+
+def test_access_token_expired():
+    """Test that the expired property on access tokens work."""
+    refresh_token = auth.RefreshToken(
+        user=None,
+        client_id='bla'
+    )
+
+    access_token = auth.AccessToken(
+        refresh_token=refresh_token
+    )
+
+    assert access_token.expired is False
+
+    with patch('homeassistant.auth.dt_util.utcnow',
+               return_value=dt_util.utcnow() + auth.ACCESS_TOKEN_EXPIRATION):
+        assert access_token.expired is True
+
+    almost_exp = dt_util.utcnow() + auth.ACCESS_TOKEN_EXPIRATION - timedelta(1)
+    with patch('homeassistant.auth.dt_util.utcnow', return_value=almost_exp):
+        assert access_token.expired is False
+
+
+async def test_cannot_retrieve_expired_access_token(hass):
+    """Test that we cannot retrieve expired access tokens."""
+    manager = await auth.auth_manager_from_config(hass, [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    assert refresh_token.user.id is user.id
+    assert refresh_token.client_id == CLIENT_ID
+
+    access_token = manager.async_create_access_token(refresh_token)
+    assert manager.async_get_access_token(access_token.token) is access_token
+
+    with patch('homeassistant.auth.dt_util.utcnow',
+               return_value=dt_util.utcnow() + auth.ACCESS_TOKEN_EXPIRATION):
+        assert manager.async_get_access_token(access_token.token) is None
+
+    # Even with unpatched time, it should have been removed from manager
+    assert manager.async_get_access_token(access_token.token) is None
+
+
+async def test_generating_system_user(hass):
+    """Test that we can add a system user."""
+    manager = await auth.auth_manager_from_config(hass, [])
+    user = await manager.async_create_system_user('Hass.io')
+    token = await manager.async_create_refresh_token(user)
+    assert user.system_generated
+    assert token is not None
+    assert token.client_id is None
+
+
+async def test_refresh_token_requires_client_for_user(hass):
+    """Test that we can add a system user."""
+    manager = await auth.auth_manager_from_config(hass, [])
+    user = MockUser().add_to_auth_manager(manager)
+    assert user.system_generated is False
+
+    with pytest.raises(ValueError):
+        await manager.async_create_refresh_token(user)
+
+    token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    assert token is not None
+    assert token.client_id == CLIENT_ID
+
+
+async def test_refresh_token_not_requires_client_for_system_user(hass):
+    """Test that we can add a system user."""
+    manager = await auth.auth_manager_from_config(hass, [])
+    user = await manager.async_create_system_user('Hass.io')
+    assert user.system_generated is True
+
+    with pytest.raises(ValueError):
+        await manager.async_create_refresh_token(user, CLIENT_ID)
+
+    token = await manager.async_create_refresh_token(user)
+    assert token is not None
+    assert token.client_id is None

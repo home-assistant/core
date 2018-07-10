@@ -178,6 +178,7 @@ class MockValue(MagicMock):
             MockValue._mock_value_id += 1
             value_id = MockValue._mock_value_id
         self.value_id = value_id
+        self.object_id = value_id
         for attr_name in kwargs:
             setattr(self, attr_name, kwargs[attr_name])
 

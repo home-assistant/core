@@ -310,7 +310,7 @@ class YeelightLight(Light):
 
             bright = self._properties.get('bright', None)
             if bright:
-                self._brightness = 255 * (int(bright) / 100)
+                self._brightness = round(255 * (int(bright) / 100))
 
             temp_in_k = self._properties.get('ct', None)
             if temp_in_k:

@@ -20,7 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
 })
 
-REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
 
 
 def get_scanner(hass, config):
@@ -64,7 +64,7 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
             station_info = await self.hass.async_add_job(self.device.status)
             _LOGGER.debug("Got new station info: %s", station_info)
 
-            for device in station_info['mat']:
+            for device in station_info.associated_stations:
                 devices.append(device['mac'])
 
         except DeviceException as ex:

@@ -25,6 +25,7 @@ from homeassistant.util import convert, dt
 
 REQUIREMENTS = [
     'google-api-python-client==1.6.4',
+    'httplib2==0.10.3',
     'oauth2client==4.0.0',
 ]
 
@@ -197,7 +198,7 @@ def setup_services(hass, track_new_found_calendars, calendar_service):
     def _scan_for_calendars(service):
         """Scan for new calendars."""
         service = calendar_service.get()
-        cal_list = service.calendarList()  # pylint: disable=no-member
+        cal_list = service.calendarList()
         calendars = cal_list.list().execute()['items']
         for calendar in calendars:
             calendar['track'] = track_new_found_calendars

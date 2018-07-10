@@ -12,8 +12,6 @@ from homeassistant.bootstrap import DATA_LOGGING
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
-
 
 @pytest.fixture
 def mock_api_client(hass, aiohttp_client):
@@ -420,14 +418,14 @@ async def test_api_error_log(hass, aiohttp_client):
     assert resp.status == 401
 
     with patch(
-                'homeassistant.components.http.view.HomeAssistantView.file',
-                return_value=mock_coro(web.Response(status=200, text='Hello'))
+                'aiohttp.web.FileResponse',
+                return_value=web.Response(status=200, text='Hello')
             ) as mock_file:
         resp = await client.get(const.URL_API_ERROR_LOG, headers={
             'x-ha-access': 'yolo'
         })
 
     assert len(mock_file.mock_calls) == 1
-    assert mock_file.mock_calls[0][1][1] == hass.data[DATA_LOGGING]
+    assert mock_file.mock_calls[0][1][0] == hass.data[DATA_LOGGING]
     assert resp.status == 200
     assert await resp.text() == 'Hello'

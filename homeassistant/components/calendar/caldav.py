@@ -11,7 +11,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
-    PLATFORM_SCHEMA, CalendarEventDevice)
+    PLATFORM_SCHEMA, CalendarEventDevice, get_date)
 from homeassistant.const import (
     CONF_NAME, CONF_PASSWORD, CONF_URL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
@@ -92,7 +92,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
         if not config.get(CONF_CUSTOM_CALENDARS):
             device_data = {
                 CONF_NAME: calendar.name,
-                CONF_DEVICE_ID: calendar.name
+                CONF_DEVICE_ID: calendar.name,
             }
             calendar_devices.append(
                 WebDavCalendarEventDevice(hass, device_data, calendar)
@@ -120,6 +120,10 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         attributes = super().device_state_attributes
         return attributes
 
+    async def async_get_events(self, hass, start_date, end_date):
+        """Get all events in a specific time frame."""
+        return await self.data.async_get_events(hass, start_date, end_date)
+
 
 class WebDavCalendarData(object):
     """Class to utilize the calendar dav client object to get next event."""
@@ -130,6 +134,33 @@ class WebDavCalendarData(object):
         self.include_all_day = include_all_day
         self.search = search
         self.event = None
+
+    async def async_get_events(self, hass, start_date, end_date):
+        """Get all events in a specific time frame."""
+        # Get event list from the current calendar
+        vevent_list = await hass.async_add_job(self.calendar.date_search,
+                                               start_date, end_date)
+        event_list = []
+        for event in vevent_list:
+            vevent = event.instance.vevent
+            uid = None
+            if hasattr(vevent, 'uid'):
+                uid = vevent.uid.value
+            data = {
+                "uid": uid,
+                "title": vevent.summary.value,
+                "start": self.get_hass_date(vevent.dtstart.value),
+                "end": self.get_hass_date(self.get_end_date(vevent)),
+                "location": self.get_attr_value(vevent, "location"),
+                "description": self.get_attr_value(vevent, "description"),
+            }
+
+            data['start'] = get_date(data['start']).isoformat()
+            data['end'] = get_date(data['end']).isoformat()
+
+            event_list.append(data)
+
+        return event_list
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

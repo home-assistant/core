@@ -185,7 +185,7 @@ class CloudIoT:
                 yield from client.send_json(response)
 
         except client_exceptions.WSServerHandshakeError as err:
-            if err.code == 401:
+            if err.status == 401:
                 disconnect_warn = 'Invalid auth.'
                 self.close_requested = True
                 # Should we notify user?

@@ -20,13 +20,14 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+from homeassistant.components.sonos import DOMAIN as SONOS_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['SoCo==0.14']
+DEPENDENCIES = ('sonos',)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +50,7 @@ SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
 SERVICE_UPDATE_ALARM = 'sonos_update_alarm'
 SERVICE_SET_OPTION = 'sonos_set_option'
 
-DATA_SONOS = 'sonos'
+DATA_SONOS = 'sonos_devices'
 
 SOURCE_LINEIN = 'Line-in'
 SOURCE_TV = 'TV'
@@ -118,6 +119,26 @@ class SonosData:
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
+    """Set up the Sonos platform.
+
+    Deprecated.
+    """
+    _LOGGER.warning('Loading Sonos via platform config is deprecated.')
+    _setup_platform(hass, config, add_devices, discovery_info)
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up Sonos from a config entry."""
+    def add_devices(devices, update_before_add=False):
+        """Sync version of async add devices."""
+        hass.add_job(async_add_devices, devices, update_before_add)
+
+    hass.add_job(_setup_platform, hass,
+                 hass.data[SONOS_DOMAIN].get('media_player', {}),
+                 add_devices, None)
+
+
+def _setup_platform(hass, config, add_devices, discovery_info):
     """Set up the Sonos platform."""
     import soco
     import soco.events
@@ -427,15 +448,18 @@ class SonosDevice(MediaPlayerDevice):
         self.update_volume()
 
         self._favorites = []
-        for fav in self.soco.music_library.get_sonos_favorites():
-            # SoCo 0.14 raises a generic Exception on invalid xml in favorites.
-            # Filter those out now so our list is safe to use.
-            try:
-                if fav.reference.get_uri():
-                    self._favorites.append(fav)
-            # pylint: disable=broad-except
-            except Exception:
-                _LOGGER.debug("Ignoring invalid favorite '%s'", fav.title)
+        # SoCo 0.14 raises a generic Exception on invalid xml in favorites.
+        # Filter those out now so our list is safe to use.
+        # pylint: disable=broad-except
+        try:
+            for fav in self.soco.music_library.get_sonos_favorites():
+                try:
+                    if fav.reference.get_uri():
+                        self._favorites.append(fav)
+                except Exception:
+                    _LOGGER.debug("Ignoring invalid favorite '%s'", fav.title)
+        except Exception:
+            _LOGGER.debug("Ignoring invalid favorite list")
 
     def _radio_artwork(self, url):
         """Return the private URL with artwork for a radio stream."""
@@ -682,11 +706,15 @@ class SonosDevice(MediaPlayerDevice):
             if group:
                 # New group information is pushed
                 coordinator_uid, *slave_uids = group.split(',')
-            else:
+            elif self.soco.group:
                 # Use SoCo cache for existing topology
                 coordinator_uid = self.soco.group.coordinator.uid
                 slave_uids = [p.uid for p in self.soco.group.members
                               if p.uid != coordinator_uid]
+            else:
+                # Not yet in the cache, this can happen when a speaker boots
+                coordinator_uid = self.unique_id
+                slave_uids = []
 
             if self.unique_id == coordinator_uid:
                 sonos_group = []

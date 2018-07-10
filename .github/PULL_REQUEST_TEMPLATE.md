@@ -20,7 +20,7 @@ If user exposed functionality or configuration variables are added/changed:
 If the code communicates with devices, web services, or third-party tools:
   - [ ] New dependencies have been added to the `REQUIREMENTS` variable ([example][ex-requir]).
   - [ ] New dependencies are only imported inside functions that use them ([example][ex-import]).
-  - [ ] New dependencies have been added to `requirements_all.txt` by running `script/gen_requirements_all.py`.
+  - [ ] New or updated dependencies have been added to `requirements_all.txt` by running `script/gen_requirements_all.py`.
   - [ ] New files were added to `.coveragerc`.
 
 If the code does not interact with devices:

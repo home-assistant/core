@@ -1,4 +1,5 @@
 """The exceptions used by Home Assistant."""
+import jinja2
 
 
 class HomeAssistantError(Exception):
@@ -22,7 +23,7 @@ class NoEntitySpecifiedError(HomeAssistantError):
 class TemplateError(HomeAssistantError):
     """Error during template rendering."""
 
-    def __init__(self, exception):
+    def __init__(self, exception: jinja2.TemplateError) -> None:
         """Init the error."""
         super().__init__('{}: {}'.format(exception.__class__.__name__,
                                          exception))

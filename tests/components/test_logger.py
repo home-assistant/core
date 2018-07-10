@@ -10,6 +10,7 @@ from tests.common import get_test_home_assistant
 
 RECORD = namedtuple('record', ('name', 'levelno'))
 
+NO_DEFAULT_CONFIG = {'logger': {}}
 NO_LOGS_CONFIG = {'logger': {'default': 'info'}}
 TEST_CONFIG = {
     'logger': {
@@ -95,6 +96,32 @@ class TestUpdater(unittest.TestCase):
 
         self.hass.services.call(logger.DOMAIN, 'set_level',
                                 {'asdf': 'debug', 'dummy': 'info'})
+        self.hass.block_till_done()
+
+        self.assert_logged('asdf', logging.DEBUG)
+        self.assert_logged('dummy', logging.WARNING)
+
+    def test_set_default_filter_empty_config(self):
+        """Test change default log level from empty configuration."""
+        self.setup_logger(NO_DEFAULT_CONFIG)
+
+        self.assert_logged('test', logging.DEBUG)
+
+        self.hass.services.call(
+            logger.DOMAIN, 'set_default_level', {'level': 'warning'})
+        self.hass.block_till_done()
+
+        self.assert_not_logged('test', logging.DEBUG)
+
+    def test_set_default_filter(self):
+        """Test change default log level with existing default."""
+        self.setup_logger(TEST_CONFIG)
+
+        self.assert_not_logged('asdf', logging.DEBUG)
+        self.assert_logged('dummy', logging.WARNING)
+
+        self.hass.services.call(
+            logger.DOMAIN, 'set_default_level', {'level': 'debug'})
         self.hass.block_till_done()
 
         self.assert_logged('asdf', logging.DEBUG)

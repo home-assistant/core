@@ -4,44 +4,49 @@ Event parser and human readable log generator.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
-import logging
 from datetime import timedelta
 from itertools import groupby
+import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components import sun
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-    STATE_NOT_HOME, STATE_OFF, STATE_ON, ATTR_HIDDEN, HTTP_BAD_REQUEST,
-    EVENT_LOGBOOK_ENTRY)
-from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
-
-DOMAIN = 'logbook'
-DEPENDENCIES = ['recorder', 'frontend']
+    ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_HIDDEN, ATTR_NAME, CONF_EXCLUDE,
+    CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED, HTTP_BAD_REQUEST, STATE_NOT_HOME,
+    STATE_OFF, STATE_ON)
+from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.core import State, callback, split_entity_id
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXCLUDE = 'exclude'
-CONF_INCLUDE = 'include'
-CONF_ENTITIES = 'entities'
+ATTR_MESSAGE = 'message'
+
 CONF_DOMAINS = 'domains'
+CONF_ENTITIES = 'entities'
+CONTINUOUS_DOMAINS = ['proximity', 'sensor']
+
+DEPENDENCIES = ['recorder', 'frontend']
+
+DOMAIN = 'logbook'
+
+GROUP_BY_MINUTES = 15
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         CONF_EXCLUDE: vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
-                                                            [cv.string])
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
         }),
         CONF_INCLUDE: vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
-                                                            [cv.string])
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
         })
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -50,15 +55,6 @@ ALL_EVENT_TYPES = [
     EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 ]
-
-GROUP_BY_MINUTES = 15
-
-CONTINUOUS_DOMAINS = ['proximity', 'sensor']
-
-ATTR_NAME = 'name'
-ATTR_MESSAGE = 'message'
-ATTR_DOMAIN = 'domain'
-ATTR_ENTITY_ID = 'entity_id'
 
 LOG_MESSAGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
@@ -104,7 +100,7 @@ async def setup(hass, config):
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
     await hass.components.frontend.async_register_built_in_panel(
-        'logbook', 'logbook', 'mdi:format-list-bulleted-type')
+        'logbook', 'logbook', 'hass:format-list-bulleted-type')
 
     hass.services.async_register(
         DOMAIN, 'log', log_message, schema=LOG_MESSAGE_SCHEMA)
@@ -376,7 +372,6 @@ def _exclude_events(events, config):
     return filtered_events
 
 
-# pylint: disable=too-many-return-statements
 def _entry_message_from_state(domain, state):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again

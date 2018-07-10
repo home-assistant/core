@@ -44,7 +44,6 @@ def get_service(hass, config, discovery_info=None):
     context_b64 = base64.b64encode(context_str.encode('utf-8'))
     context = context_b64.decode('utf-8')
 
-    # pylint: disable=import-error
     import boto3
 
     aws_config = config.copy()

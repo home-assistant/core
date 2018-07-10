@@ -31,7 +31,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return an Actiontec scanner."""
     scanner = ActiontecDeviceScanner(config[DOMAIN])

@@ -210,7 +210,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MqttVacuum(MqttAvailability, VacuumDevice):
     """Representation of a MQTT-controlled vacuum."""
 
-    # pylint: disable=no-self-use
     def __init__(
             self, name, supported_features, qos, retain, command_topic,
             payload_turn_on, payload_turn_off, payload_return_to_base,
