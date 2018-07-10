@@ -537,7 +537,7 @@ async def test_set_protection_value_nonexisting_node(hass, client):
 
 
 async def test_set_protection_value_missing_class(hass, client):
-    """Test setting protection value on node without protectionclass"""
+    """Test setting protection value on node without protectionclass."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=17)
     value = MockValue(
