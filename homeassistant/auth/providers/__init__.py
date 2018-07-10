@@ -77,8 +77,6 @@ class AuthProvider:
 
     DEFAULT_TITLE = 'Unnamed auth provider'
 
-    initialized = False
-
     def __init__(self, hass, store, config):
         """Initialize an auth provider."""
         self.hass = hass
@@ -124,12 +122,6 @@ class AuthProvider:
         )
 
     # Implement by extending class
-
-    async def async_initialize(self):
-        """Initialize the auth provider.
-
-        Optional.
-        """
 
     async def async_credential_flow(self):
         """Return the data flow for logging in with auth provider."""
