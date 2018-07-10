@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         'package-variant-closed',
         'packeges',
         api)])
-									
+
     if letter:
         sensor_items.extend([PostNLSensor(
             hass,
@@ -130,7 +130,7 @@ class PostNLSensor(Entity):
         }
 
         self._state = 5
-        # self._state = len(status_counts)		
+        # self._state = len(status_counts)
         letters = self._api.get_relevant_letters()
 
         self._attributes = {
