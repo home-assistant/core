@@ -31,7 +31,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
         """Initialize the XiaomiGatewayLight."""
         self._data_key = 'rgb'
         self._hs = (0, 0)
-        self._brightness = 180
+        self._brightness = 100
 
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
 
@@ -64,7 +64,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
         brightness = rgba[0]
         rgb = rgba[1:]
 
-        self._brightness = int(255 * brightness / 100)
+        self._brightness = brightness
         self._hs = color_util.color_RGB_to_hs(*rgb)
         self._state = True
         return True
@@ -72,7 +72,7 @@ class XiaomiGatewayLight(XiaomiDevice, Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._brightness
+        return int(255 * self._brightness / 100)
 
     @property
     def hs_color(self):
