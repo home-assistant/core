@@ -24,7 +24,7 @@ ATTRIBUTION = 'Information provided by PostNL'
 
 DEFAULT_NAME = 'postnl'
 
-ICON_PACKEGE = 'mdi:package-variant-closed'
+ICON_PACKAGE = 'mdi:package-variant-closed'
 ICON_LETTERS = 'mdi:email-outline'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
