@@ -24,8 +24,8 @@ ATTRIBUTION = 'Information provided by PostNL'
 
 DEFAULT_NAME = 'postnl'
 
-ICONpackage = 'mdi:package-variant-closed'
-ICONletters = 'mdi:email-outline'
+ICON_PACKEGE = 'mdi:package-variant-closed'
+ICON_LETTERS = 'mdi:email-outline'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception("Can't connect to the PostNL webservice")
         return
 
-    if letter == True:
+    if letter is True:
         add_devices([PostNLSensor(api, name), PostNLletter(api, name)], True)
     else:
         add_devices([PostNLSensor(api, name)], True)
@@ -94,7 +94,7 @@ class PostNLSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return ICONpackage
+        return ICON_PACKEGE
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -150,7 +150,7 @@ class PostNLletter(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return ICONletters
+        return ICON_LETTERS
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
