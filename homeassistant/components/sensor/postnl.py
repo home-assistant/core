@@ -56,18 +56,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     sensor_items = []
-    sensor_items.extend([PostNLSensor(hass,
-                                    'PostNL-package',
-                                    'package-variant-closed',
-                                    'packeges',
-                                    api)])
+    sensor_items.extend([PostNLSensor(
+        hass,
+        'PostNL-package',
+        'package-variant-closed',
+        'packeges',
+        api)])
 									
     if letter:
-        sensor_items.extend([PostNLSensor(hass,
-                                        'PostNL-letter',
-                                        'email-outline',
-                                        'letters',
-                                        api)])
+        sensor_items.extend([PostNLSensor(
+            hass,
+            'PostNL-letter',
+            'email-outline',
+            'letters',
+            api)])
 
     add_devices(sensor_items)
 
