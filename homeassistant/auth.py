@@ -311,10 +311,7 @@ class AuthManager:
         if not credentials.is_new:
             for user in await self._store.async_get_users():
                 for creds in user.credentials:
-                    if (creds.auth_provider_type ==
-                            credentials.auth_provider_type
-                            and creds.auth_provider_id ==
-                            credentials.auth_provider_id):
+                    if creds.id == credentials.id:
                         return user
 
             raise ValueError('Unable to find the user.')
