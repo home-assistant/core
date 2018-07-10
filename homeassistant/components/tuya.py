@@ -19,7 +19,7 @@ REQUIREMENTS = ['tuyapy==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_COUNTRYCODE = 'countrycode'
+CONF_COUNTRYCODE = 'country_code'
 
 DOMAIN = 'tuya'
 DATA_TUYA = 'data_tuya'
@@ -79,7 +79,7 @@ def setup(hass, config):
                     entity_list.remove(entity)
                     hass.data[DOMAIN]['dev_ids'].remove(entity.object_id)
 
-    track_time_interval(hass, poll_devices_update, timedelta(minutes=2))
+    track_time_interval(hass, poll_devices_update, timedelta(minutes=5))
 
     hass.services.register(DOMAIN, SERVICE_PULL_DEVICES, poll_devices_update)
 
