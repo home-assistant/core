@@ -37,6 +37,9 @@ STATES_MAP = {
     1: STATE_OPEN
 }
 
+""" Update cycles before the internal move state will reset."""
+STATE_RESET_COUNTER = 2
+
 COVER_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICEKEY): cv.string,
     vol.Required(CONF_HOST): cv.string,
@@ -82,6 +85,7 @@ class OpenGarageCover(CoverDevice):
         self._devicekey = args[CONF_DEVICEKEY]
         self._state = STATE_UNKNOWN
         self._state_before_move = None
+        self._state_reset_count = 0
         self.dist = None
         self.signal = None
         self._available = True
@@ -124,6 +128,7 @@ class OpenGarageCover(CoverDevice):
         if self._state not in [STATE_CLOSED, STATE_CLOSING]:
             self._state_before_move = self._state
             self._state = STATE_CLOSING
+            self._state_reset_count = STATE_RESET_COUNTER
             self._push_button()
 
     def open_cover(self, **kwargs):
@@ -131,12 +136,17 @@ class OpenGarageCover(CoverDevice):
         if self._state not in [STATE_OPEN, STATE_OPENING]:
             self._state_before_move = self._state
             self._state = STATE_OPENING
+            self._state_reset_count = STATE_RESET_COUNTER
             self._push_button()
 
     def update(self):
         """Get updated status from API."""
         try:
             status = self._get_status()
+            if self._state_reset_count > 0:
+                self._state_reset_count -= 1;
+                if self._state_reset_count == 0:
+                    self._state_before_move = None
             if self._name is None:
                 if status["name"] is not None:
                     self._name = status["name"]
