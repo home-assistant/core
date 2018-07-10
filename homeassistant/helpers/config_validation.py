@@ -5,8 +5,10 @@ import os
 import re
 from urllib.parse import urlparse
 from socket import _GLOBAL_DEFAULT_TIMEOUT
+from ipaddress import ip_address
 import logging
 import inspect
+
 
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
@@ -444,6 +446,19 @@ def socket_timeout(value):
                               ' float > 0.0 required.')
         except Exception as _:
             raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
+
+
+def isip(value: Any) -> ip_address:
+    """Validate that the value is an valid ip."""
+    if value is None:
+        raise vol.Invalid('an empty string is not a valid ip address')
+
+    try:
+        ip = ip_address(value)
+    except ValueError:
+        raise vol.Invalid('not a valid ip address')
+
+    return ip
 
 
 # pylint: disable=no-value-for-parameter
