@@ -88,6 +88,8 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         import pyteleloisirs
         try:
             self._state = self.refresh_state()
+            # Update channel list
+            self.refresh_channel_list()
             # Update current channel
             channel = self._client.channel
             if channel is not None:
