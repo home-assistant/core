@@ -75,4 +75,3 @@ def _update_cloudflare(cfupdate, email, key, zone, records):
 
     if result is not True:
         _LOGGER.warning(result)
-    return True
