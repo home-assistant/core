@@ -335,7 +335,7 @@ class CADevice(MediaPlayerDevice):
             if self._position_updated_at is not None:
                 # calculate new position
                 newpos = self._position + \
-                (dt_util.utcnow() - self._position_updated_at).seconds
+                    (dt_util.utcnow() - self._position_updated_at).seconds
 
                 # update self._positiona andself._position_updated_at only
                 # when actual position differs from calculated position
