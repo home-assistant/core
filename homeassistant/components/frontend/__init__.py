@@ -26,7 +26,7 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 from homeassistant.util.yaml import load_yaml
 
-REQUIREMENTS = ['home-assistant-frontend==20180709.0']
+REQUIREMENTS = ['home-assistant-frontend==20180710.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
@@ -382,6 +382,8 @@ class IndexView(HomeAssistantView):
             # do not try to auto connect on load
             no_auth = '0'
 
+        use_oauth = '1' if self.auth_active else '0'
+
         template = await hass.async_add_job(self.get_template, latest)
 
         extra_key = DATA_EXTRA_HTML_URL if latest else DATA_EXTRA_HTML_URL_ES5
@@ -390,7 +392,7 @@ class IndexView(HomeAssistantView):
             no_auth=no_auth,
             theme_color=MANIFEST_JSON['theme_color'],
             extra_urls=hass.data[extra_key],
-            client_id=self.auth_active
+            use_oauth=use_oauth
         )
 
         return web.Response(text=template.render(**template_params),
