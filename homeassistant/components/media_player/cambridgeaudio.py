@@ -330,17 +330,28 @@ class CADevice(MediaPlayerDevice):
             pos = dev.get_current_track_info()['currentPos']  # hh:mm:ss
             pos = dt_util.parse_time(pos)
             pos = timedelta(hours=pos.hour, minutes=pos.minute,
-                            seconds=pos.second).total_seconds()
-            self._position = int(pos)
+                            seconds=pos.second).seconds
+
+            if self._position_updated_at is not None:
+                # calculate new position
+                newpos = self._position + \
+                (dt_util.utcnow() - self._position_updated_at).seconds
+
+                # update self._positiona andself._position_updated_at only
+                # when actual position differs from calculated position
+                if pos != newpos:
+                    self._position = pos
+                    self._position_updated_at = dt_util.utcnow()
+            else:
+                self._position = pos
+                self._position_updated_at = dt_util.utcnow()
 
             # track length in seconds
             dur = dev.get_current_track_info()['trackLength']
             dur = dt_util.parse_time(dur)
             dur = timedelta(hours=dur.hour, minutes=dur.minute,
-                            seconds=dur.second).total_seconds()
-            self._duration = int(dur)
-
-            self._position_updated_at = dt_util.utcnow()
+                            seconds=dur.second).seconds
+            self._duration = dur
 
         elif self._audio_source == "internet radio":
             self._artist = dev.get_playback_details()['artist']
