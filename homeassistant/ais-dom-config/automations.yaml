@@ -1,89 +1,320 @@
-- id: 9e81aa10297f4463ab1e523b46132ad4
-  alias: On System Start
+- id: '201807081853001'
+  alias: 'Asystent domowy Witamy'
   trigger:
   - event: start
     platform: homeassistant
   action:
-  - delay: '10'
-  - data:
-      key: relaunch
-      val: true
-      ip: 127.0.0.1
-    service: ais_ai_service.publish_command_to_frame
-  - data:
-      name: ais
-    service: frontend.set_theme
-  - service: ais_cloud.get_players
-  hide_entity: true
-- alias: Keyboard Command Received
+   - service: mqtt.publish
+     data:
+       payload: 1
+       topic: cmnd/dom/SetOption19
+   - delay: '5'
+   - service: mqtt.publish
+     data:
+       payload: ''
+       topic: cmnd/dom/Power1
+   - delay: '5'
+   - service: ais_updater.check_version
+   - service: ais_ai_service.publish_command_to_frame
+     data:
+       key: relaunch
+       val: true
+       ip: 127.0.0.1
+   - service: ais_cloud.get_players
+     data: {}
+   - service: frontend.set_theme
+     data:
+         name: ais
+   - delay: '20'
+   - service: ais_ai_service.prepare_remote_menu
+   - delay: '5'
+   - service: ais_ai_service.say_it
+     data:
+       text: Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?
+
+
+- id: '201807081853002'
+  alias: 'Keyboard Command Received'
   hide_entity: true
   trigger:
     platform: event
     event_type: keyboard_remote_command_received
   action:
-  - service: ais_ai_service.process_code
-    data_template:
-      code: '{{ trigger.event.data[''code''] }}'
-  id: 275e4b4dbe4d4fe3820ebc672fbe69c6
-- alias: Command Message Received
+    - service: ais_ai_service.process_code
+      data_template:
+        code: '{{ trigger.event.data[''code''] }}'
+
+- id: '201807081853003'
+  alias: 'Command Message Received'
   hide_entity: true
   trigger:
     platform: event
     event_type: speech_text_received
   action:
-  - service: ais_ai_service.process
-    data_template:
-      text: '{{ trigger.event.data[''text''] }}'
-  id: f6e61e93fc9a4af3957e81444bbaaf1a
-- alias: Command Message Received MQTT
+    - service: ais_ai_service.process
+      data_template:
+        text: '{{ trigger.event.data[''text''] }}'
+
+- id: '201807081853004'
+  alias: 'Command Message Received MQTT'
   hide_entity: true
   trigger:
     platform: mqtt
     topic: ais/speech_command
   action:
-  - service: ais_ai_service.process
-    data_template:
-      text: '{{ trigger.payload }}'
-  id: 007c9ff3517949c080ec0e7838dc539a
-- alias: Button Event Received MQTT
+    - service: ais_ai_service.process
+      data_template:
+        text: '{{ trigger.payload }}'
+
+- id: '201807081853005'
+  alias: 'Button Event Received MQTT'
   hide_entity: true
   trigger:
     platform: mqtt
     topic: ais/key_command
   action:
-  - service: ais_ai_service.process_code
-    data_template:
-      text: '{{ trigger.payload }}'
-  id: c9fe876e7953485ab36e8a4e017014d4
-- id: '1522134491340'
-  alias: Welcome in AIS dom - searching devices in network
+    - service: ais_ai_service.process_code
+      data_template:
+        text: '{{ trigger.payload }}'
+
+- id: '201807081858006'
+  alias: 'Get RSS Help Items For Selected Topic'
+  hide_entity: True
   trigger:
-  - event: start
-    platform: homeassistant
-  condition: []
+    platform: state
+    entity_id: input_select.ais_rss_help_topic
   action:
-  - alias: ''
-    data:
-      payload: 1
-      topic: cmnd/dom/SetOption19
-    service: mqtt.publish
-  - delay: '5'
-  - alias: ''
-    data:
-      payload: ''
-      topic: cmnd/dom/Power1
-    service: mqtt.publish
-  - delay: '5'
-  - alias: ''
-    data: {}
-    service: ais_updater.check_version
-  - data:
-      text: Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?
-    service: ais_ai_service.say_it
-  - alias: ''
-    data: {}
-    service: ais_ai_service.prepare_remote_menu
-  - delay: '20'
-  - alias: ''
-    data: {}
-    service: ais_shell_command.show_network_devices_info
+    - service: ais_cloud.select_rss_help_item
+      data_template:
+        rss_help_topic: "{{ states('input_select.ais_rss_help_topic') }}"
+
+- id: '201807081858007'
+  alias: 'Get Books'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.book_autor
+  action:
+    - service: ais_gm_service.get_books
+      data_template:
+        author: "{{ states('input_select.book_autor') }}"
+
+- id: '201807081858008'
+  alias: 'Get Chapters'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.book_name
+  action:
+    - service: ais_gm_service.get_chapters
+      data_template:
+        book: "{{ states('input_select.book_name') }}"
+
+- id: '201807081858009'
+  alias: 'Select Book Chapter'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.book_chapter
+  action:
+      service: ais_gm_service.select_chapter
+      data_template:
+        book_chapter: "{{ states('input_select.book_chapter') }}"
+
+- id: '201807081858010'
+  alias: 'Select Book Player'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.book_player
+  action:
+      service: ais_cloud.select_media_player
+      data_template:
+        media_player_type: "Book"
+
+- id: '201807081905011'
+  alias: 'Ask The Question'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_text.ais_knowledge_query
+  condition:
+    condition: template
+    value_template: "{{ states.input_text.ais_knowledge_query.state != '' }}"
+  action:
+    - service: ais_ai_service.process
+      data_template:
+        text: "{{ states('input_text.ais_knowledge_query') }}"
+
+
+- id: '201807081905012'
+  alias: 'Search YouTube Tracks'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_text.ais_youtube_query
+  condition:
+    condition: template
+    value_template: "{{ states.input_text.ais_youtube_query.state != ' ' }}"
+  action:
+    - service: ais_yt_service.search
+      data_template:
+        query: "{{ states('input_text.ais_youtube_query') }}"
+
+- id: '201807081905013'
+  alias: 'Select YouTube Track Name'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.ais_youtube_track_name
+  condition:
+    condition: template
+    value_template: "{{ states.input_select.ais_youtube_track_name.state != '-' }}"
+  action:
+    - service: ais_yt_service.select_track_name
+      data_template:
+        name: "{{ states('input_select.ais_youtube_track_name') }}"
+
+- id: '201807081905014'
+  alias: 'Select Music Player'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.ais_music_player
+  action:
+    - service: ais_cloud.select_media_player
+      data_template:
+        media_player_type: "Music"
+
+- id: '201807081916015'
+  alias: 'Get RSS News Channels'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.rss_news_category
+  action:
+    - service: ais_cloud.get_rss_news_channels
+      data_template:
+        rss_news_category: "{{ states('input_select.rss_news_category') }}"
+
+- id: '201807081916016'
+  alias: 'Get RSS News Items'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.rss_news_channel
+  action:
+    - service: ais_cloud.get_rss_news_items
+      data_template:
+        rss_news_channel: "{{ states('input_select.rss_news_channel') }}"
+
+- id: '201807081916017'
+  alias: 'Select RSS News Item'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.rss_news_item
+  action:
+    - service: ais_cloud.select_rss_news_item
+      data_template:
+        rss_news_item: "{{ states('input_select.rss_news_item') }}"
+
+- id: '201807081916018'
+  alias: 'Select Rss News Player'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.rss_news_player
+  action:
+    - service: ais_cloud.select_media_player
+      data_template:
+        media_player_type: "News"
+
+- id: '201807081919019'
+  alias: 'Get Podcast Names'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.podcast_type
+  action:
+    - service: ais_cloud.get_podcast_names
+      data_template:
+        podcast_type: "{{ states('input_select.podcast_type') }}"
+
+- id: '201807081919019'
+  alias: 'Get Podcast Tracks'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.podcast_name
+  action:
+    - service: ais_cloud.get_podcast_tracks
+      data_template:
+        podcast_name: "{{ states('input_select.podcast_name') }}"
+
+- id: '201807081919020'
+  alias: 'Select Podcast Track'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.podcast_track
+  action:
+    - service: ais_cloud.select_podcast_track
+      data_template:
+        podcast_track: "{{ states('input_select.podcast_track') }}"
+
+- id: '201807081919021'
+  alias: 'Select Podcast Player'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.podcast_player
+  action:
+    - service: ais_cloud.select_media_player
+      data_template:
+        media_player_type: "Podcast"
+
+- id: '201807081923022'
+  alias: 'Get Radio Names'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.radio_type
+  action:
+    - service: ais_cloud.get_radio_names
+      data_template:
+        radio_type: "{{ states('input_select.radio_type') }}"
+
+- id: '201807081923023'
+  alias: 'Select Radio Name'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.radio_station_name
+  action:
+    - service: ais_cloud.select_radio_name
+      data_template:
+        radio_name: "{{ states('input_select.radio_station_name') }}"
+
+- id: '201807081923024'
+  alias: 'Select Radio Player'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.radio_player
+  action:
+    - service: ais_cloud.select_media_player
+      data_template:
+        media_player_type: "Radio"
+
+- id: '201807081923025'
+  alias: 'Change Player Speed'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_number.media_player_speed
+  action:
+    - service: ais_ai_service.publish_command_to_frame
+      data_template:
+        key: "setPlaybackSpeed"
+        val: "{{ states('input_number.media_player_speed') }}"

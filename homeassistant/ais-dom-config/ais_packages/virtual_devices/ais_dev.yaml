@@ -66,7 +66,7 @@ input_text:
 
 input_select:
   assistant_voice:
-    name: "Głos:"
+    name: "Głos"
     options:
       - "Kobieta online"
       - "Kobieta lokalnie"
@@ -79,20 +79,20 @@ input_select:
     icon: mdi:voice
     initial: "Kobieta lokalnie"
   tts_player:
-    name: 'Powiadamiaj dodatkowo:'
+    name: 'Powiadamiaj dodatkowo'
     options:
       - "-"
     initial: "-"
     icon: mdi:cellphone-message
 input_number:
   assistant_rate:
-    name: "Szybkość mowy:"
+    name: "Szybkość mowy"
     min: 0.1
     max: 2
     step: 0.1
     initial: 1
   assistant_tone:
-    name: "Ton mowy:"
+    name: "Ton mowy"
     min: 0.1
     max: 2
     step: 0.1
@@ -147,39 +147,3 @@ group:
       - sensor.network_devices_info
       - sensor.network_devices_info_value
       - script.ais_scan_network_devices
-
-script:
-  ais_button_click:
-    alias: 'Button Click'
-    sequence:
-      - service: ais_ai_service.process_code
-        data_template:
-          text: '{{ code + " "}}'
-  ais_getsecure_android_id:
-    alias: 'Pobierz identyfikator urządzenia'
-    sequence:
-      - service: ais_ai_service.say_it
-        data:
-          text: "Pobieram."
-      - service: ais_shell_command.execute_command
-        data_template:
-          command: "sudo settings get secure android_id"
-          entity_id: "binary_sensor.secure_android_id"
-          friendly_name: "Identyfikator urządzenia"
-          icon: "mdi:android"
-
-  ais_change_host_name:
-    alias: 'Zatwierdz zmianę nazwy hosta'
-    sequence:
-      - service: ais_ai_service.say_it
-        data:
-          text: "Aktualizuje nazwę hosta. Zrestartuj urządzenie żeby zobaczyć zmiany."
-      - service: ais_shell_command.change_host_name
-
-  ais_scan_network_devices:
-    alias: 'Wykryj dostępne urządzenia'
-    sequence:
-      - service: ais_ai_service.say_it
-        data:
-          text: "Skanuje sieć w poszukiwaniu urządzeń."
-      - service: ais_shell_command.scan_network_for_devices

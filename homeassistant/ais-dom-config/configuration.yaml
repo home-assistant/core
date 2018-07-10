@@ -152,3 +152,4 @@ http:
 # Allows you to issue voice commands
 mqtt: !include mqtt.yaml
 automation:  !include automations.yaml
+script: !include scripts.yaml

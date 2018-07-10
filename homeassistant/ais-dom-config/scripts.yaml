@@ -1,0 +1,83 @@
+ais_update_system:
+  alias: 'Zainstaluj aktualizację'
+  sequence:
+    - service: ais_ai_service.say_it
+      data:
+        text: "Aktualizuje system do najnowszej wersji. Do usłyszenia."
+    - service: ais_shell_command.execute_upgrade
+
+ais_button_click:
+  alias: 'Button Click'
+  sequence:
+    - service: ais_ai_service.process_code
+      data_template:
+        text: '{{ code + " "}}'
+
+ais_getsecure_android_id:
+  alias: 'Pobierz identyfikator urządzenia'
+  sequence:
+    - service: ais_ai_service.say_it
+      data:
+        text: "Pobieram."
+    - service: ais_shell_command.execute_command
+      data_template:
+        command: "sudo settings get secure android_id"
+        entity_id: "binary_sensor.secure_android_id"
+        friendly_name: "Identyfikator urządzenia"
+        icon: "mdi:android"
+
+ais_change_host_name:
+  alias: 'Zatwierdz zmianę nazwy hosta'
+  sequence:
+    - service: ais_ai_service.say_it
+      data:
+        text: "Aktualizuje nazwę hosta. Zrestartuj urządzenie żeby zobaczyć zmiany."
+    - service: ais_shell_command.change_host_name
+
+ais_scan_network_devices:
+  alias: 'Wykryj dostępne urządzenia'
+  sequence:
+    - service: ais_ai_service.say_it
+      data:
+        text: "Skanuje sieć w poszukiwaniu urządzeń."
+    - service: ais_shell_command.scan_network_for_devices
+
+ais_scan_android_wifi_network:
+  alias: 'Skanowanie dostępnych sieci Wifi'
+  sequence:
+    - service: ais_ai_service.say_it
+      data:
+        text: "Sprawdzam dostępne sieci Wifi."
+    - delay: '3'
+    - service: ais_ai_service.publish_command_to_frame
+      data:
+        key: WifiScanInfo
+        val: true
+
+ais_connect_android_wifi_network:
+  alias: 'Połącz z wybraną siecią wifi'
+  sequence:
+    - service: ais_ai_service.publish_command_to_frame
+      data_template:
+        key: "WifiConnectToSid"
+        val: "{{ states('input_select.ais_android_wifi_network') }}"
+
+ais_scan_iot_devices_in_network:
+  alias: 'Skanuj w poszukiwaniu nowych urządzeń'
+  sequence:
+    - service: ais_ai_service.say_it
+      data:
+        text: "Skanuje w poszukiwaniu nowych urządzeń."
+    - delay: '3'
+    - service: ais_ai_service.publish_command_to_frame
+      data:
+        key: IotScanInfo
+        val: true
+
+ais_connect_iot_device_to_network:
+  alias: 'Dołącz nowe urządzenie'
+  sequence:
+    - service: ais_ai_service.publish_command_to_frame
+      data_template:
+        key: "WifiConnectTheDevice"
+        val: "{{ states('input_select.ais_iot_devices_in_network') }}"

@@ -254,7 +254,9 @@ async def async_setup(hass, config):
 
     async def reload_service_handler(service):
         """Remove all user-defined groups and load new ones from config."""
-        auto = list(filter(lambda e: not e.user_defined, component.entities))
+        #auto = list(filter(lambda e: not e.user_defined, component.entities))
+        # fix for ais-dom groups defined in packages
+        auto = list(component.entities)
 
         conf = await component.async_prepare_reload()
         if conf is None:

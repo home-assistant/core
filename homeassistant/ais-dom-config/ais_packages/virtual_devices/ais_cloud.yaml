@@ -20,12 +20,3 @@ group:
     control: hidden
     entities:
       - sensor.version_info
-
-script:
-  ais_update_system:
-    alias: 'Zainstaluj aktualizację'
-    sequence:
-      - service: ais_ai_service.say_it
-        data:
-          text: "Aktualizuje system do najnowszej wersji. Do usłyszenia."
-      - service: ais_shell_command.execute_upgrade

@@ -47,3 +47,10 @@ silent_scan_network_for_devices:
 
 show_network_devices_info:
   description: Raport wykrytych urządzeń
+
+led:
+  description: Sterowanie diodą led umieszczoną z przodu urządzenia
+  fields:
+    brightness:
+      description: Parametr do przekazania, 0 - czerwony, 255 - niebieski, timer - utuchomienie funkcji mrugania, heartbeat - uruchomienie funkcji bicia serca ...
+      example: '255'

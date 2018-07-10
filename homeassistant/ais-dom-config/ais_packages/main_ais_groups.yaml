@@ -1,5 +1,6 @@
 group:
   default_view:
+    name: Dom
     view: yes
     icon: mdi:home-outline
     entities:
@@ -32,13 +33,13 @@ group:
       - media_player.wbudowany_glosnik
       - input_number.media_player_speed
   news:
-    name: wiadomości
+    name: Wiadomości
     view: yes
     icon: mdi:newspaper
     entities:
       - group.ais_rss_news
   audio:
-    name: audio
+    name: Audio
     view: yes
     icon:  mdi:music
     entities:
@@ -47,8 +48,8 @@ group:
       - group.music_player
       - group.audiobooks_player
       - group.audio_player
-  setings:
-    name: setings
+  settings:
+    name: Ustawienia
     view: yes
     icon:  mdi:account-settings-variant
     entities:

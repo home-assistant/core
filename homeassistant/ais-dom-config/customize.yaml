@@ -320,8 +320,7 @@ group.ais_wyszukiwarka:
 group.ais_rss_news:
   order: 1
   context_key_words: wiadomości,informacje
-  context_answer: OK, powiedz jakie wiadomości Cię interesują lub wybierz pilotem
-    kategorię, kanał i pozycję wuadomości
+  context_answer: OK, wybierz pilotem kategorię, kanał i artykuł który mam przeczytać
   remote_group_view: Audio
 group.radio_player:
   context_key_words: radio,radia,radia internetowe

@@ -7,6 +7,7 @@ https://home-assistant.io/components/shell_command/
 from homeassistant.const import (CONF_IP_ADDRESS, CONF_MAC)
 import asyncio
 import logging
+import os
 import homeassistant.ais_dom.ais_global as ais_global
 REQUIREMENTS = ['requests_futures']
 DOMAIN = 'ais_shell_command'
@@ -54,6 +55,10 @@ def async_setup(hass, config):
     def show_network_devices_info(service):
         yield from _show_network_devices_info(hass, service)
 
+    @asyncio.coroutine
+    def led(service):
+        yield from _led(hass, service)
+
     # register services
     hass.services.async_register(
         DOMAIN, 'change_host_name', change_host_name)
@@ -74,6 +79,8 @@ def async_setup(hass, config):
         DOMAIN, 'scan_device', scan_device)
     hass.services.async_register(
         DOMAIN, 'show_network_devices_info', show_network_devices_info)
+    hass.services.async_register(
+        DOMAIN, 'led', led)
     return True
 
 
@@ -100,6 +107,22 @@ def _key_event(hass, call):
     import subprocess
     subprocess.Popen(
         "su -c 'input keyevent " + key_code + "'",
+        shell=True, stdout=None, stderr=None)
+
+
+@asyncio.coroutine
+def _led(hass, call):
+    if ("brightness" not in call.data):
+        _LOGGER.error("No brightness provided")
+        return
+    brightness = call.data["brightness"]
+
+    script = str(os.path.dirname(__file__))
+    script += '/scripts/led.sh'
+
+    import subprocess
+    subprocess.Popen(
+        "su -c ' ." + script + " " + str(brightness) + "'",
         shell=True, stdout=None, stderr=None)
 
 
@@ -183,13 +206,11 @@ def _execute_upgrade(hass, call):
 def _show_network_devices_info(hass, call):
     import homeassistant.ais_dom.sensor.ais_device_search_mqtt as dsm
     info = dsm.get_text()
-    hass.async_add_job(
-        hass.states.async_set(
-            'sensor.network_devices_info_value', '', {
-                'custom_ui_state_card': 'state-card-robot-disco',
-                'text': info
-            })
-    )
+    hass.states.async_set(
+        'sensor.network_devices_info_value', '', {
+            'custom_ui_state_card': 'state-card-robot-disco',
+            'text': info
+        })
 
 
 @asyncio.coroutine

@@ -47,9 +47,6 @@ CONFIG_SCHEMA = vol.Schema({DOMAIN: vol.Schema({
 
 INTENT_GET_TIME = 'AisGetTime'
 INTENT_GET_DATE = 'AisGetDate'
-INTENT_TURN_ON = 'AisTurnOn'
-INTENT_TURN_OFF = 'AisTurnOff'
-INTENT_STATUS = 'AisStatusInfo'
 INTENT_PLAY_RADIO = 'AisPlayRadio'
 INTENT_PLAY_PODCAST = 'AisPlayPodcast'
 INTENT_PLAY_YT_MUSIC = 'AisPlayYtMusic'
@@ -57,6 +54,9 @@ INTENT_ASK_QUESTION = 'AisAskQuestion'
 INTENT_CHANGE_CONTEXT = 'AisChangeContext'
 INTENT_GET_WEATHER = 'AisGetWeather'
 INTENT_GET_WEATHER_48 = 'AisGetWeather48'
+INTENT_STATUS = 'AisStatusInfo'
+INTENT_TURN_ON = 'AisTurnOn'
+INTENT_TURN_OFF = 'AisTurnOff'
 INTENT_LAMPS_ON = 'AisLampsOn'
 INTENT_LAMPS_OFF = 'AisLampsOff'
 INTENT_SWITCHES_ON = 'AisSwitchesOn'
@@ -116,6 +116,69 @@ def async_register(hass, intent_type, utterances):
             conf.append(utterance)
         else:
             conf.append(_create_matcher(utterance))
+
+
+def translate_state(info_data):
+    if not info_data:
+        info_data = ""
+    elif info_data == STATE_ON:
+        info_data = "włączone"
+    elif info_data == STATE_OFF:
+        info_data = "wyłączone"
+    elif info_data == STATE_HOME:
+        info_data = "w domu"
+    elif info_data == STATE_NOT_HOME:
+        info_data = "poza domem"
+    elif info_data == STATE_UNKNOWN:
+        info_data = "status nieznany"
+    elif info_data == STATE_OPEN:
+        info_data = "otwarty"
+    elif info_data == STATE_OPENING:
+        info_data = "otwieranie"
+    elif info_data == STATE_CLOSED:
+        info_data = "zamknięty"
+    elif info_data == STATE_CLOSING:
+        info_data = "zamykanie"
+    elif info_data == STATE_PAUSED:
+        info_data = "pauza"
+    elif info_data == STATE_PLAYING:
+        info_data = "odtwarzanie"
+    elif info_data == STATE_IDLE:
+        info_data = "status bezczynny"
+    elif info_data == STATE_STANDBY:
+        info_data = "status bezczynny"
+    elif info_data == STATE_ALARM_DISARMED:
+        info_data = "status rozbrojony"
+    elif info_data == STATE_ALARM_ARMED_HOME:
+        info_data = "status uzbrojony w domu"
+    elif info_data == STATE_ALARM_ARMED_AWAY:
+        info_data = "status uzbrojony poza domem"
+    elif info_data == STATE_ALARM_ARMED_NIGHT:
+        info_data = "status uzbrojony noc"
+    elif info_data == STATE_ALARM_ARMED_CUSTOM_BYPASS:
+        info_data = "status uzbrojony własny"
+    elif info_data == STATE_ALARM_ARMING:
+        info_data = "alarm uzbrajanie"
+    elif info_data == STATE_ALARM_DISARMING:
+        info_data = "alarm rozbrajanie"
+    elif info_data == STATE_ALARM_TRIGGERED:
+        info_data = "alarm powiadomiony"
+    elif info_data == STATE_LOCKED:
+        info_data = "zamknięty"
+    elif info_data == STATE_UNLOCKED:
+        info_data = "otwarty"
+    elif info_data == STATE_UNAVAILABLE:
+        info_data = "niedostępny"
+    elif info_data == STATE_OK:
+        info_data = "ok"
+    elif info_data == STATE_PROBLEM:
+        info_data = "problem"
+    elif info_data == "above_horizon":
+        info_data = "powyżej horyzontu"
+    elif info_data == "below_horizon":
+        info_data = "poniżej horyzontu"
+
+    return info_data
 
 
 def get_next(arra, curr):
@@ -368,60 +431,7 @@ def say_curr_entity(hass):
     # decode None
     if not info_name:
         info_name = ""
-    if not info_data:
-        info_data = ""
-    elif info_data == STATE_ON:
-        info_data = "włączone"
-    elif info_data == STATE_OFF:
-        info_data = "wyłączone"
-    elif info_data == STATE_HOME:
-        info_data = "w domu"
-    elif info_data == STATE_NOT_HOME:
-        info_data = "poza domem"
-    elif info_data == STATE_UNKNOWN:
-        info_data = "status nieznany"
-    elif info_data == STATE_OPEN:
-        info_data = "otwarty"
-    elif info_data == STATE_OPENING:
-        info_data = "otwieranie"
-    elif info_data == STATE_CLOSED:
-        info_data = "zamknięty"
-    elif info_data == STATE_CLOSING:
-        info_data = "zamykanie"
-    elif info_data == STATE_PAUSED:
-        info_data = "pauza"
-    elif info_data == STATE_PLAYING:
-        info_data = "odtwarzanie"
-    elif info_data == STATE_IDLE:
-        info_data = "status bezczynny"
-    elif info_data == STATE_STANDBY:
-        info_data = "status bezczynny"
-    elif info_data == STATE_ALARM_DISARMED:
-        info_data = "status rozbrojony"
-    elif info_data == STATE_ALARM_ARMED_HOME:
-        info_data = "status uzbrojony w domu"
-    elif info_data == STATE_ALARM_ARMED_AWAY:
-        info_data = "status uzbrojony poza domem"
-    elif info_data == STATE_ALARM_ARMED_NIGHT:
-        info_data = "status uzbrojony noc"
-    elif info_data == STATE_ALARM_ARMED_CUSTOM_BYPASS:
-        info_data = "status uzbrojony własny"
-    elif info_data == STATE_ALARM_ARMING:
-        info_data = "alarm uzbrajanie"
-    elif info_data == STATE_ALARM_DISARMING:
-        info_data = "alarm rozbrajanie"
-    elif info_data == STATE_ALARM_TRIGGERED:
-        info_data = "alarm powiadomiony"
-    elif info_data == STATE_LOCKED:
-        info_data = "zamknięty"
-    elif info_data == STATE_UNLOCKED:
-        info_data = "otwarty"
-    elif info_data == STATE_UNAVAILABLE:
-        info_data = "niedostępny"
-    elif info_data == STATE_OK:
-        info_data = "ok"
-    elif info_data == STATE_PROBLEM:
-        info_data = "problem"
+    info_data = translate_state(info_data)
     if not info_unit:
         info_unit = ""
     info = "%s %s %s" % (info_name, info_data, info_unit)
@@ -1615,13 +1625,7 @@ class StatusIntent(intent.IntentHandler):
         else:
             unit = entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
             state = entity.state
-            if state == 'unavailable':
-                state = 'niedostępny'
-            elif state == 'off':
-                state = 'wyłączony'
-            elif state == 'on':
-                state = 'włączony'
-
+            state = translate_state(state)
             if unit is None:
                 value = state
             else:
