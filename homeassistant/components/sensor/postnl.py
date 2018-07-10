@@ -24,8 +24,8 @@ ATTRIBUTION = 'Information provided by PostNL'
 
 DEFAULT_NAME = 'postnl'
 
-#ICONpackage = 'mdi:package-variant-closed'
-#ICONletters = 'mdi:email-outline'
+# ICONpackage = 'mdi:package-variant-closed'
+# ICONletters = 'mdi:email-outline'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    #name = config.get(CONF_NAME)
+    # name = config.get(CONF_NAME)
     letter = config.get(CONF_LETTER)
 
     try:
@@ -129,8 +129,6 @@ class PostNLSensor(Entity):
 
         self._state = 5
         # self._state = len(status_counts)		
-
-
         letters = self._api.get_relevant_letters()
 
         self._attributes = {
