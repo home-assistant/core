@@ -38,8 +38,8 @@ def test_async_add_job_schedule_callback():
     job = MagicMock()
 
     ha.HomeAssistant.async_add_job(hass, ha.callback(job))
-    assert len(hass.loop.call_soon.mock_calls) == 0
-    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.loop.call_soon.mock_calls) == 1
+    assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.add_job.mock_calls) == 0
 
 
@@ -65,6 +65,29 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.loop.run_in_executor.mock_calls) == 1
+
+
+def test_async_create_task_throw_on_non_coro():
+    """Test that async_create_task accepts only coroutines."""
+    hass = MagicMock()
+    job = MagicMock()
+
+    with pytest.raises(ValueError):
+        ha.HomeAssistant.async_create_task(hass, ha.callback(job))
+    with pytest.raises(ValueError):
+        ha.HomeAssistant.async_create_task(hass, lambda *args: None)
+
+
+@patch('asyncio.iscoroutinefunction', return_value=True)
+def test_async_create_task_schedule_coroutinefunction(mock_iscoro):
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock()
+    job = MagicMock()
+
+    ha.HomeAssistant.async_create_task(hass, job)
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
 
 
 def test_async_run_job_calls_callback():
@@ -215,8 +238,6 @@ class TestHomeAssistant(unittest.TestCase):
 
         run_coroutine_threadsafe(
             wait_finish_callback(), self.hass.loop).result()
-
-        assert len(self.hass._pending_tasks) == 2
 
         self.hass.block_till_done()
 

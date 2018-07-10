@@ -205,8 +205,8 @@ class HomeAssistant(object):
     def async_add_job(
             self,
             target: Callable[..., Any],
-            *args: Any) -> asyncio.tasks.Task:
-        """Add a job from within the eventloop.
+            *args: Any) -> Optional[asyncio.tasks.Task]:
+        """Add a job from within the event loop.
 
         This method must be run in the event loop.
 
@@ -218,10 +218,7 @@ class HomeAssistant(object):
         if asyncio.iscoroutine(target):
             task = self.loop.create_task(target)
         elif is_callback(target):
-            async def wrapper() -> Any:
-                """Wrapper coroutine around a callback."""
-                return target(*args)
-            task = self.loop.create_task(wrapper())
+            self.loop.call_soon(target, *args)
         elif asyncio.iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
         else:
@@ -229,6 +226,33 @@ class HomeAssistant(object):
 
         # If a task is scheduled
         if self._track_task and task is not None:
+            self._pending_tasks.append(task)
+
+        return task
+
+    @callback
+    def async_create_task(
+            self,
+            target: Callable,
+            *args: Any) -> asyncio.tasks.Task:
+        """Add a job from within the eventloop.
+
+        This method must be run in the event loop.
+
+        target: target to call.
+        args: parameters for method to call.
+        """
+        if asyncio.iscoroutine(target):
+            task = self.loop.create_task(target)
+        elif asyncio.iscoroutinefunction(target):
+            task = self.loop.create_task(target(*args))
+        else:
+            raise ValueError(
+                "async_create_task can be called on coroutine or coroutine "
+                "function only.")
+
+        # If a task is scheduled
+        if self._track_task:
             self._pending_tasks.append(task)
 
         return task
