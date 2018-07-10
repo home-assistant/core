@@ -369,8 +369,7 @@ def test_save_config(hass, client):
     assert result == {'message': 'Z-Wave configuration saved to file.'}
 
 
-@asyncio.coroutine
-def test_get_protection_values(hass, client):
+async def test_get_protection_values(hass, client):
     """Test getting protection values on node."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=18,
@@ -391,23 +390,22 @@ def test_get_protection_values(hass, client):
     node.get_protection_items.return_value = value.data_items
     node.get_protections.return_value = {value.value_id: 'Object'}
 
-    resp = yield from client.get('/api/zwave/protection/18')
+    resp = await client.get('/api/zwave/protection/18')
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
     assert node.get_protections.called
     assert node.get_protection_item.called
     assert node.get_protection_items.called
     assert result == {
-         'value_id': '123456',
-         'selected': 'Unprotected',
-         'options': ['Unprotected', 'Protection by Sequence',
-                     'No Operation Possible']
+        'value_id': '123456',
+        'selected': 'Unprotected',
+        'options': ['Unprotected', 'Protection by Sequence',
+                    'No Operation Possible']
     }
 
 
-@asyncio.coroutine
-def test_get_protection_values_nonexisting_node(hass, client):
+async def test_get_protection_values_nonexisting_node(hass, client):
     """Test getting protection values on node with wrong nodeid."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=18,
@@ -424,18 +422,17 @@ def test_get_protection_values_nonexisting_node(hass, client):
     network.nodes = {17: node}
     node.value = value
 
-    resp = yield from client.get('/api/zwave/protection/18')
+    resp = await client.get('/api/zwave/protection/18')
 
     assert resp.status == 404
-    result = yield from resp.json()
+    result = await resp.json()
     assert not node.get_protections.called
     assert not node.get_protection_item.called
     assert not node.get_protection_items.called
     assert result == {'message': 'Node not found'}
 
 
-@asyncio.coroutine
-def test_get_protection_values_without_protectionclass(hass, client):
+async def test_get_protection_values_without_protectionclass(hass, client):
     """Test getting protection values on node without protectionclass."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=18)
@@ -446,18 +443,17 @@ def test_get_protection_values_without_protectionclass(hass, client):
     network.nodes = {18: node}
     node.value = value
 
-    resp = yield from client.get('/api/zwave/protection/18')
+    resp = await client.get('/api/zwave/protection/18')
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
     assert not node.get_protections.called
     assert not node.get_protection_item.called
     assert not node.get_protection_items.called
     assert result == {}
 
 
-@asyncio.coroutine
-def test_set_protection_value(hass, client):
+async def test_set_protection_value(hass, client):
     """Test setting protection value on node."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=18,
@@ -474,18 +470,17 @@ def test_set_protection_value(hass, client):
     network.nodes = {18: node}
     node.value = value
 
-    resp = yield from client.post(
+    resp = await client.post(
         '/api/zwave/protection/18', data=json.dumps({
             'value_id': '123456', 'selection': 'Protection by Sequence'}))
 
     assert resp.status == 200
-    result = yield from resp.json()
+    result = await resp.json()
     assert node.set_protection.called
     assert result == {'message': 'Protection setting succsessfully set'}
 
 
-@asyncio.coroutine
-def test_set_protection_value_failed(hass, client):
+async def test_set_protection_value_failed(hass, client):
     """Test setting protection value failed on node."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=18,
@@ -503,18 +498,17 @@ def test_set_protection_value_failed(hass, client):
     node.value = value
     node.set_protection.return_value = False
 
-    resp = yield from client.post(
+    resp = await client.post(
         '/api/zwave/protection/18', data=json.dumps({
             'value_id': '123456', 'selection': 'Protecton by Seuence'}))
 
     assert resp.status == 202
-    result = yield from resp.json()
+    result = await resp.json()
     assert node.set_protection.called
     assert result == {'message': 'Protection setting did not complete'}
 
 
-@asyncio.coroutine
-def test_set_protection_value_nonexisting_node(hass, client):
+async def test_set_protection_value_nonexisting_node(hass, client):
     """Test setting protection value on nonexisting node."""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=17,
@@ -532,18 +526,17 @@ def test_set_protection_value_nonexisting_node(hass, client):
     node.value = value
     node.set_protection.return_value = False
 
-    resp = yield from client.post(
+    resp = await client.post(
         '/api/zwave/protection/18', data=json.dumps({
             'value_id': '123456', 'selection': 'Protecton by Seuence'}))
 
     assert resp.status == 404
-    result = yield from resp.json()
+    result = await resp.json()
     assert not node.set_protection.called
     assert result == {'message': 'Node not found'}
 
 
-@asyncio.coroutine
-def test_set_protection_value_missing_class(hass, client):
+async def test_set_protection_value_missing_class(hass, client):
     """Test setting protection value on node without protectionclass"""
     network = hass.data[DATA_NETWORK] = MagicMock()
     node = MockNode(node_id=17)
@@ -555,11 +548,11 @@ def test_set_protection_value_missing_class(hass, client):
     node.value = value
     node.set_protection.return_value = False
 
-    resp = yield from client.post(
+    resp = await client.post(
         '/api/zwave/protection/17', data=json.dumps({
             'value_id': '123456', 'selection': 'Protecton by Seuence'}))
 
     assert resp.status == 404
-    result = yield from resp.json()
+    result = await resp.json()
     assert not node.set_protection.called
     assert result == {'message': 'No protection commandclass on this node'}
