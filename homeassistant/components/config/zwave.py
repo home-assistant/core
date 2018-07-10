@@ -220,8 +220,8 @@ class ZWaveProtectionView(HomeAssistantView):
         protections = node.get_protections()
         protection_options = {
             'value_id': '{0:d}'.format(list(protections)[0]),
-            'selected': node.get_protection_item(list(protections.keys())[0]),
-            'options': node.get_protection_items(list(protections.keys())[0])}
+            'selected': node.get_protection_item(list(protections)[0]),
+            'options': node.get_protection_items(list(protections)[0])}
         return self.json(protection_options)
 
     async def post(self, request, node_id):
