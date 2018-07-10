@@ -94,7 +94,7 @@ class PostNLSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return ICON_PACKEGE
+        return ICON_PACKAGE
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
