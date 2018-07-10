@@ -59,14 +59,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensor_items.extend([PostNLSensor(hass,
                                     'PostNL-package',
                                     'package-variant-closed',
-									'packeges',
+                                    'packeges',
                                     api)])
 									
     if letter:
         sensor_items.extend([PostNLSensor(hass,
                                         'PostNL-letter',
                                         'email-outline',
-										'letters',
+                                        'letters',
                                         api)])
 
     add_devices(sensor_items)
@@ -128,10 +128,9 @@ class PostNLSensor(Entity):
         }
 
         self._state = 5
-        #self._state = len(status_counts)		
-		
-		
-		
+        # self._state = len(status_counts)		
+
+
         letters = self._api.get_relevant_letters()
 
         self._attributes = {
@@ -139,5 +138,4 @@ class PostNLSensor(Entity):
         }
 
         self._state = 2
-        #self._state = len(letters)
-		
+        # self._state = len(letters)
