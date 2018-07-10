@@ -94,6 +94,21 @@ async def test_login_as_existing_user(mock_hass):
     }])
     ensure_auth_manager_loaded(manager)
 
+    # Add a fake user that we're not going to log in with
+    user = MockUser(
+        id='mock-user2',
+        is_owner=False,
+        is_active=False,
+        name='Not user',
+    ).add_to_auth_manager(manager)
+    user.credentials.append(auth.Credentials(
+        id='mock-id2',
+        auth_provider_type='insecure_example',
+        auth_provider_id=None,
+        data={'username': 'other-user'},
+        is_new=False,
+    ))
+
     # Add fake user with credentials for example auth provider.
     user = MockUser(
         id='mock-user',
