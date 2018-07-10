@@ -24,9 +24,6 @@ ATTRIBUTION = 'Information provided by PostNL'
 
 DEFAULT_NAME = 'postnl'
 
-# ICONpackage = 'mdi:package-variant-closed'
-# ICONletters = 'mdi:email-outline'
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
 CONF_LETTER = 'letter'
@@ -114,28 +111,29 @@ class PostNLSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
-        shipments = self._api.get_relevant_shipments()
-        status_counts = {}
+        if self.name == 'PostNL-package':
+            shipments = self._api.get_relevant_shipments()
+            status_counts = {}
 
-        for shipment in shipments:
-            status = shipment['status']['formatted']['short']
-            status = self._api.parse_datetime(status, '%d-%m-%Y', '%H:%M')
+            for shipment in shipments:
+                status = shipment['status']['formatted']['short']
+                status = self._api.parse_datetime(status, '%d-%m-%Y', '%H:%M')
+                name = shipment['settings']['title']
+                status_counts[name] = status
 
-            name = shipment['settings']['title']
-            status_counts[name] = status
+            self._attributes = {
+                ATTR_ATTRIBUTION: ATTRIBUTION,
+                **status_counts
+            }
 
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            **status_counts
-        }
+            self._state = len(status_counts)
 
-        self._state = 5
-        # self._state = len(status_counts)
-        letters = self._api.get_relevant_letters()
+        elif self.name == 'PostNL-letter':
 
-        self._attributes = {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-        }
+            letters = self._api.get_relevant_letters()
 
-        self._state = 2
-        # self._state = len(letters)
+            self._attributes = {
+                ATTR_ATTRIBUTION: ATTRIBUTION,
+            }
+
+            self._state = len(letters)
