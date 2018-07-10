@@ -24,8 +24,8 @@ ATTRIBUTION = 'Information provided by PostNL'
 
 DEFAULT_NAME = 'postnl'
 
-ICON_PACKAGE = 'mdi:package-variant-closed'
-ICON_LETTERS = 'mdi:email-outline'
+#ICONpackage = 'mdi:package-variant-closed'
+#ICONletters = 'mdi:email-outline'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    name = config.get(CONF_NAME)
+    #name = config.get(CONF_NAME)
     letter = config.get(CONF_LETTER)
 
     try:
@@ -55,21 +55,34 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception("Can't connect to the PostNL webservice")
         return
 
-    if letter is True:
-        add_devices([PostNLSensor(api, name), PostNLletter(api, name)], True)
-    else:
-        add_devices([PostNLSensor(api, name)], True)
+    sensor_items = []
+    sensor_items.extend([PostNLSensor(hass,
+                                    'PostNL-package',
+                                    'package-variant-closed',
+									'packeges',
+                                    api)])
+									
+    if letter:
+        sensor_items.extend([PostNLSensor(hass,
+                                        'PostNL-letter',
+                                        'email-outline',
+										'letters',
+                                        api)])
+
+    add_devices(sensor_items)
 
 
 class PostNLSensor(Entity):
     """Representation of a PostNL sensor."""
 
-    def __init__(self, api, name):
+    def __init__(self, hass, name, icon, unit_of_measurement, api):
         """Initialize the PostNL sensor."""
         self._name = name
         self._attributes = None
         self._state = None
         self._api = api
+        self._icon = "mdi:" + icon
+        self._unit_of_measurement = unit_of_measurement
 
     @property
     def name(self):
@@ -84,7 +97,7 @@ class PostNLSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        return 'packages'
+        return self._unit_of_measurement
 
     @property
     def device_state_attributes(self):
@@ -94,7 +107,7 @@ class PostNLSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend."""
-        return ICON_PACKAGE
+        return self._icon
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -114,51 +127,17 @@ class PostNLSensor(Entity):
             **status_counts
         }
 
-        self._state = len(status_counts)
-
-
-class PostNLletter(Entity):
-    """Representation of a PostNL sensor."""
-
-    def __init__(self, api, name):
-        """Initialize the PostNL sensor."""
-        self._name = name
-        self._attributes = None
-        self._state = None
-        self._api = api
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return 'letters'
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return self._attributes
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return ICON_LETTERS
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Update device state."""
+        self._state = 5
+        #self._state = len(status_counts)		
+		
+		
+		
         letters = self._api.get_relevant_letters()
 
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
 
-        self._state = len(letters)
+        self._state = 2
+        #self._state = len(letters)
+		
