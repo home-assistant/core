@@ -114,6 +114,6 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     update_bluetooth(dt_util.utcnow())
 
-    hass.services.register(DOMAIN, "bluetooth_update", handle_update_bluetooth)
+    hass.services.register(DOMAIN, "bluetooth_tracker_update", handle_update_bluetooth)
 
     return True
