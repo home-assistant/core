@@ -80,7 +80,13 @@ def setup_scanner(hass, config, see, discovery_info=None):
 
     request_rssi = config.get(CONF_REQUEST_RSSI, False)
 
-    def update_bluetooth(now, once=False):
+    def update_bluetooth(now):
+        """Update Bluetooth and set timer for the next update"""
+        update_bluetooth_once()
+        track_point_in_utc_time(
+            hass, update_bluetooth, dt_util.utcnow() + interval)
+
+    def update_bluetooth_once():
         """Lookup Bluetooth device and update status."""
         try:
             if track_new:
@@ -100,9 +106,6 @@ def setup_scanner(hass, config, see, discovery_info=None):
                 see_device(mac, result, rssi)
         except bluetooth.BluetoothError:
             _LOGGER.exception("Error looking up Bluetooth device")
-        if not once:
-            track_point_in_utc_time(
-                hass, update_bluetooth, dt_util.utcnow() + interval)
 
     def handle_update_bluetooth(call):
         """Update bluetooth devices on demand."""
