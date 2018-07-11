@@ -29,6 +29,7 @@ CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
 CONF_FIRMWARE = 'firmware'
 CONF_PRODUCT_KEY = 'product_key'
+CONF_MODE = 'mode'
 CONF_X10 = 'x10_devices'
 CONF_HOUSECODE = 'housecode'
 CONF_UNITCODE = 'unitcode'
@@ -36,7 +37,6 @@ CONF_DIM_STEPS = 'dim_steps'
 CONF_X10_ALL_UNITS_OFF = 'x10_all_units_off'
 CONF_X10_ALL_LIGHTS_ON = 'x10_all_lights_on'
 CONF_X10_ALL_LIGHTS_OFF = 'x10_all_lights_off'
-EVENT_BINARY_SENSOR_ON = 'insteon_plm.binary_sensor_on'
 
 SRV_ADD_ALL_LINK = 'add_all_link'
 SRV_DEL_ALL_LINK = 'delete_all_link'
@@ -56,6 +56,11 @@ SRV_HOUSECODE = 'housecode'
 HOUSECODES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
 
+MOTION_DETECTED_STATE_NAME = 'motionSensor'
+LIGHT_DETECTED_STATE_NAME = 'lightSensor'
+BATTERY_LOW_STATE_NAME = 'batterySensor',
+BUTTON_PRESS_STATE_NAME = 'onLevelButton'
+
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
         vol.Required(CONF_ADDRESS): cv.string,
@@ -64,6 +69,7 @@ CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
         vol.Optional(CONF_FIRMWARE): cv.byte,
         vol.Optional(CONF_PRODUCT_KEY): cv.byte,
         vol.Optional(CONF_PLATFORM): cv.string,
+        vol.Optional(CONF_MODE, default='toggle'): vol.In('toggle', 'on_only')
         }))
 
 CONF_X10_SCHEMA = vol.All(
@@ -120,6 +126,7 @@ def async_setup(hass, config):
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
+    mode_conf = {}
     overrides = conf.get(CONF_OVERRIDE, [])
     x10_devices = conf.get(CONF_X10, [])
     x10_all_units_off_housecode = conf.get(CONF_X10_ALL_UNITS_OFF)
@@ -129,15 +136,40 @@ def async_setup(hass, config):
     @callback
     def async_plm_new_device(device):
         """Detect device from transport to be delegated to platform."""
+
+        from .events import (fire_battery_low_event,
+                             fire_button_pressed_event,
+                             fire_light_dark_detected_event,
+                             fire_motion_detected_event)
+
         for state_key in device.states:
             platform_info = ipdb[device.states[state_key]]
-            if platform_info:
+            if platform_info and platform_info.platform:
                 platform = platform_info.platform
-                if platform:
+                mode = mode_conf.get(device.address.hex)
+                state_name = device.states[state_key].name
+
+                if state_name == MOTION_DETECTED_STATE_NAME:
+                    device.states[state_key].register_updates(
+                        _fire_motion_detected_event)
+                elif state_name == LIGHT_DETECTED_STATE_NAME:
+                    device.states[state_key].register_updates(
+                        _fire_light_dark_detected_event)
+                elif state_name == BATTERY_LOW_STATE_NAME:
+                    device.states[state_key].register_updates(
+                        _fire_battery_low_event)
+                elif state_name[:-1] == BUTTON_PRESSED_STATE_NAME:
+                    device.states[state_key].register_updates(
+                        _fire_button_pressed_event)
+
+                # Do not create a device for binary sensors in 'on only' mode
+                if not (mode and
+                        platform == 'binary_sensor' and
+                        mode == 'on_only'):
                     _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
-                                 device.address,
-                                 device.states[state_key].name,
-                                 platform)
+                                    device.address,
+                                    device.states[state_key].name,
+                                    platform)
 
                     hass.async_add_job(
                         discovery.async_load_platform(
@@ -244,6 +276,8 @@ def async_setup(hass, config):
             elif prop in [CONF_FIRMWARE, CONF_PRODUCT_KEY]:
                 plm.devices.add_override(address, CONF_PRODUCT_KEY,
                                          device_override[prop])
+            elif prop == CONF_MODE:
+               mode_conf[address] = prop
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['plm'] = plm
@@ -404,19 +438,6 @@ class InsteonPLMEntity(Entity):
     def async_entity_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
         self.async_schedule_update_ha_state()
-
-        # Firing an ON event for binary sensors because some devices can
-        # be configured to send an 'on' message only. This allows the
-        # device to be useful in automations even if it never technically
-        # changes state
-        ipdb = IPDB()
-        platform_info = ipdb[self._insteon_device_state]
-        if platform_info and platform_info.platform == "binary_sensor":
-            if val:
-                _LOGGER.debug('Firing event insteon_plm.binary_sensor_on')
-                self.hass.bus.fire(EVENT_BINARY_SENSOR_ON, {
-                    CONF_ENTITY_ID: self.entity_id
-                    })
 
     @asyncio.coroutine
     def async_added_to_hass(self):
