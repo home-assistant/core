@@ -205,7 +205,7 @@ class HomeAssistant(object):
     def async_add_job(
             self,
             target: Callable[..., Any],
-            *args: Any) -> Optional[asyncio.tasks.Task]:
+            *args: Any) -> Optional[asyncio.Future]:
         """Add a job from within the event loop.
 
         This method must be run in the event loop.
@@ -261,7 +261,7 @@ class HomeAssistant(object):
     def async_add_executor_job(
             self,
             target: Callable[..., Any],
-            *args: Any) -> asyncio.tasks.Task:
+            *args: Any) -> asyncio.Future:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
 
