@@ -12,7 +12,8 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers import discovery
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
@@ -59,46 +60,36 @@ def setup(hass, config):
         'entities': {}
     }
 
-    device_list = tuya.get_all_devices()
-    device_type_list = {}
-    for device in device_list:
-        dev_type = device.device_type()
-        if (dev_type in TUYA_TYPE_TO_HA and
-                device.object_id() not in hass.data[DOMAIN]['entities']):
-            ha_type = TUYA_TYPE_TO_HA.get(dev_type)
-            if ha_type not in device_type_list:
-                device_type_list[ha_type] = []
-            device_type_list[ha_type].append(device.object_id())
-    for ha_type in device_type_list:
-        discovery.load_platform(
-            hass, ha_type, DOMAIN,
-            {'dev_ids': device_type_list.get(ha_type)}, config)
-
-    def poll_devices_update(event_time):
-        """Check if accesstoken is expired and pull device list from server."""
-        _LOGGER.info("Pull Devices From Tuya")
-        devices = tuya.poll_devices_update()
-        if devices is None:
-            return
-        # Add new discover device.
-        device_list = tuya.get_all_devices()
+    def load_devices(device_list):
+        """Load new devices by device_list."""
         device_type_list = {}
         for device in device_list:
             dev_type = device.device_type()
             if (dev_type in TUYA_TYPE_TO_HA and
                     device.object_id() not in hass.data[DOMAIN]['entities']):
-                ha_type = TUYA_TYPE_TO_HA.get(dev_type)
+                ha_type = TUYA_TYPE_TO_HA[dev_type]
                 if ha_type not in device_type_list:
                     device_type_list[ha_type] = []
                 device_type_list[ha_type].append(device.object_id())
-        for ha_type in device_type_list:
+        for ha_type, dev_ids in device_type_list.items():
             discovery.load_platform(
                 hass, ha_type, DOMAIN,
-                {'dev_ids': device_type_list.get(ha_type)}, config)
+                {'dev_ids': dev_ids}, config)
+
+    device_list = tuya.get_all_devices()
+    load_devices(device_list)
+
+    def poll_devices_update(event_time):
+        """Check if accesstoken is expired and pull device list from server."""
+        _LOGGER.info("Pull Devices From Tuya")
+        tuya.poll_devices_update()
+        # Add new discover device.
+        device_list = tuya.get_all_devices()
+        load_devices(device_list)
         # Delete not exist device.
         newlist_ids = []
-        for device in devices:
-            newlist_ids.append(device.get('id'))
+        for device in device_list:
+            newlist_ids.append(device.object_id())
         for dev_id in list(hass.data[DOMAIN]['entities']):
             if dev_id not in newlist_ids:
                 dispatcher_send(hass, SIGNAL_DELETE_ENTITY, dev_id)
@@ -124,6 +115,15 @@ class TuyaDevice(Entity):
     def __init__(self, tuya):
         """Init Tuya devices."""
         self.tuya = tuya
+
+    async def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        dev_id = self.tuya.object_id()
+        self.hass.data[DOMAIN]['entities'][dev_id] = self.entity_id
+        async_dispatcher_connect(
+            self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
 
     @property
     def object_id(self):
@@ -158,7 +158,7 @@ class TuyaDevice(Entity):
     def _delete_callback(self, dev_id):
         """Remove this entity."""
         if dev_id == self.object_id:
-            self.hass.add_job(self.async_remove())
+            self.hass.async_add_job(self.async_remove())
 
     @callback
     def _update_callback(self):

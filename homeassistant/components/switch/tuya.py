@@ -4,22 +4,17 @@ Support for Tuya switch.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.tuya/
 """
-from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.tuya import (
-    DOMAIN as TUYA_DOMAIN, DATA_TUYA, SIGNAL_DELETE_ENTITY,
-    SIGNAL_UPDATE_ENTITY, TuyaDevice)
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchDevice
+from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
 
 DEPENDENCIES = ['tuya']
-
-DEVICE_TYPE = 'switch'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up Tuya Switch device."""
-    tuya = hass.data[DATA_TUYA]
     if discovery_info is None:
         return
+    tuya = hass.data[DATA_TUYA]
     dev_ids = discovery_info.get('dev_ids')
     devices = []
     for dev_id in dev_ids:
@@ -36,16 +31,7 @@ class TuyaSwitch(TuyaDevice, SwitchDevice):
     def __init__(self, tuya):
         """Init Tuya switch device."""
         super().__init__(tuya)
-        self.entity_id = DEVICE_TYPE + '.' + tuya.object_id()
-
-    async def async_added_to_hass(self):
-        """Call when entity is added to hass."""
-        dev_id = self.tuya.object_id()
-        self.hass.data[TUYA_DOMAIN]['entities'][dev_id] = self.entity_id
-        async_dispatcher_connect(
-            self.hass, SIGNAL_DELETE_ENTITY, self._delete_callback)
-        async_dispatcher_connect(
-            self.hass, SIGNAL_UPDATE_ENTITY, self._update_callback)
+        self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
 
     @property
     def is_on(self):
