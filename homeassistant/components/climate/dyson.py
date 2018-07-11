@@ -4,7 +4,6 @@ Support for Dyson Pure Hot+Cool link fan.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.dyson/
 """
-import asyncio
 import logging
 
 from homeassistant.components.dyson import DYSON_DEVICES
@@ -26,37 +25,31 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Setup the Dyson fan components."""
-    from libpurecoollink.dyson_pure_hotcool_link import DysonPureHotCoolLink
+    if discovery_info is None:
+        return
 
-    _LOGGER.debug("Creating new Dyson fans")
+    from libpurecoollink.dyson_pure_hotcool_link import DysonPureHotCoolLink
     if DYSON_FAN_DEVICES not in hass.data:
         hass.data[DYSON_FAN_DEVICES] = []
 
     # Get Dyson Devices from parent component.
-    for device in [
-            d for d in hass.data[DYSON_DEVICES]
-            if isinstance(d, DysonPureHotCoolLink)
-    ]:
-        dyson_entity = DysonPureHotCoolLinkDevice(hass, device)
-        hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
-
-    add_devices(hass.data[DYSON_FAN_DEVICES])
+    add_devices(
+        [DysonPureHotCoolLinkDevice(device)
+         for device in hass.data[DYSON_DEVICES]
+         if isinstance(device, DysonPureHotCoolLink)]
+    )
 
 
 class DysonPureHotCoolLinkDevice(ClimateDevice):
     """Representation of a Dyson climate fan."""
 
-    def __init__(self, hass, device):
+    def __init__(self, device):
         """Initialize the fan."""
-        _LOGGER.debug("Creating device %s", device.name)
-        self.hass = hass
         self._device = device
-        self.temp_unit = hass.config.units.temperature_unit
         self._current_temp = None
         self._target_temp = None
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Callback when entity is added to hass."""
         self.hass.async_add_job(self._device.add_message_listener,
                                 self.on_message)
@@ -90,14 +83,9 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         return self._device.name
 
     @property
-    def entity_id(self):
-        """Return the entity id of this climate."""
-        return "climate.{}".format(self._device.name)
-
-    @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self.temp_unit
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
@@ -105,12 +93,8 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         if self._device.environmental_state:
             temperature_kelvin = self._device.environmental_state.temperature
             if temperature_kelvin != 0:
-                if self.temp_unit == TEMP_CELSIUS:
-                    self._current_temp = float("{0:.1f}".format(
-                        self.kelvin_to_celsius(temperature_kelvin)))
-                else:
-                    self._current_temp = float("{0:.1f}".format(
-                        self.kelvin_to_fahrenheit(temperature_kelvin)))
+                self._current_temp = float("{0:.1f}".format(
+                    temperature_kelvin - 273))
         return self._current_temp
 
     @property
@@ -118,9 +102,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         """Return the target temperature."""
         if self._target_temp is None:
             heat_target = int(self._device.state.heat_target) / 10
-            if self.temp_unit == TEMP_CELSIUS:
-                return int(self.kelvin_to_celsius(heat_target))
-            return int(self.kelvin_to_fahrenheit(heat_target))
+            return int(heat_target - 273)
         return self._target_temp
 
     @property
@@ -162,23 +144,23 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if kwargs.get(ATTR_TEMPERATURE) is None:
+        target_temp = kwargs.get(ATTR_TEMPERATURE)
+        if target_temp is None:
             return
-        target_temp = int(kwargs.get(ATTR_TEMPERATURE))
+        target_temp = int(target_temp)
         _LOGGER.debug("Set %s temperature %s", self.name, target_temp)
         # Limit the target temperature into acceptable range.
         target_temp = min(self.max_temp, target_temp)
         target_temp = max(self.min_temp, target_temp)
         self._target_temp = target_temp
-        self.schedule_update_ha_state()
         # Dyson only response when it is in heat mode.
         from libpurecoollink.const import HeatMode
         if self._device.state.heat_mode == HeatMode.HEAT_ON:
             from libpurecoollink.const import HeatTarget
-            if self.temp_unit == TEMP_CELSIUS:
+            if self.temperature_unit == TEMP_CELSIUS:
                 self._device.set_configuration(
                     heat_target=HeatTarget.celsius(self._target_temp))
-            elif self.temp_unit == TEMP_FAHRENHEIT:
+            elif self.temperature_unit == TEMP_FAHRENHEIT:
                 self._device.set_configuration(
                     heat_target=HeatTarget.fahrenheit(self._target_temp))
             self._target_temp = None
@@ -204,19 +186,9 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(1, TEMP_CELSIUS, self.temp_unit)
+        return convert_temperature(1, TEMP_CELSIUS, self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(37, TEMP_CELSIUS, self.temp_unit)
-
-    @staticmethod
-    def kelvin_to_celsius(kelvin):
-        """Convert temperature unit kelvin to celsius."""
-        return kelvin - 273
-
-    @staticmethod
-    def kelvin_to_fahrenheit(kelvin):
-        """Convert temperature unit kelvin to fahrenheit."""
-        return kelvin * 9 / 5 - 459.67
+        return convert_temperature(37, TEMP_CELSIUS, self.temperature_unit)

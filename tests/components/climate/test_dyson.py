@@ -112,7 +112,7 @@ class DysonTest(unittest.TestCase):
         self.hass.data[dyson.DYSON_DEVICES] = []
         add_devices = mock.MagicMock()
         dyson.setup_platform(self.hass, None, add_devices)
-        add_devices.assert_called_with([])
+        self.assertFalse(add_devices.called)
 
     def test_setup_component(self):
         """Test setup component with devices."""
@@ -130,7 +130,7 @@ class DysonTest(unittest.TestCase):
         """Test set climate temperature."""
         device = _get_device_heat_on()
         device.temp_unit = TEMP_CELSIUS
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertFalse(component.should_poll)
 
         def celsius_to_kelvin_str(celsius):
@@ -156,7 +156,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_set_fan_mode(self):
         """Test set fan mode."""
         device = _get_device_heat_on()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertFalse(component.should_poll)
 
         component.set_fan_mode(dyson.STATE_FOCUS)
@@ -170,7 +170,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_fan_list(self):
         """Test get fan list."""
         device = _get_device_heat_on()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertEqual(len(component.fan_list), 2)
         self.assertTrue(dyson.STATE_FOCUS in component.fan_list)
         self.assertTrue(dyson.STATE_DIFFUSE in component.fan_list)
@@ -178,19 +178,19 @@ class DysonTest(unittest.TestCase):
     def test_dyson_fan_mode_focus(self):
         """Test fan focus mode."""
         device = _get_device_focus()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertEqual(component.current_fan_mode, dyson.STATE_FOCUS)
 
     def test_dyson_fan_mode_diffuse(self):
         """Test fan diffuse mode."""
         device = _get_device_diffuse()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertEqual(component.current_fan_mode, dyson.STATE_DIFFUSE)
 
     def test_dyson_set_operation_mode(self):
         """Test set operation mode."""
         device = _get_device_heat_on()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertFalse(component.should_poll)
 
         component.set_operation_mode(dyson.STATE_HEAT)
@@ -204,7 +204,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_operation_list(self):
         """Test get operation list."""
         device = _get_device_heat_on()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertEqual(len(component.operation_list), 2)
         self.assertTrue(dyson.STATE_HEAT in component.operation_list)
         self.assertTrue(dyson.STATE_COOL in component.operation_list)
@@ -212,7 +212,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_heat_off(self):
         """Test turn off heat."""
         device = _get_device_heat_off()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         component.set_operation_mode(dyson.STATE_COOL)
         set_config = device.set_configuration
         set_config.assert_called_with(heat_mode=HeatMode.HEAT_OFF)
@@ -220,7 +220,7 @@ class DysonTest(unittest.TestCase):
     def test_dyson_heat_on(self):
         """Test turn on heat."""
         device = _get_device_heat_on()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         component.set_operation_mode(dyson.STATE_HEAT)
         set_config = device.set_configuration
         set_config.assert_called_with(heat_mode=HeatMode.HEAT_ON)
@@ -228,25 +228,25 @@ class DysonTest(unittest.TestCase):
     def test_dyson_heat_value_on(self):
         """Test get heat value on."""
         device = _get_device_heat_on()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertEqual(component.current_operation, dyson.STATE_HEAT)
 
     def test_dyson_heat_value_off(self):
         """Test get heat value off."""
         device = _get_device_cool()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertEqual(component.current_operation, dyson.STATE_COOL)
 
     def test_dyson_heat_value_idle(self):
         """Test get heat value idle."""
         device = _get_device_heat_off()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertEqual(component.current_operation, dyson.STATE_IDLE)
 
     def test_on_message(self):
         """Test when message is received."""
         device = _get_device_heat_on()
-        component = dyson.DysonPureHotCoolLinkDevice(self.hass, device)
+        component = dyson.DysonPureHotCoolLinkDevice(device)
         component.schedule_update_ha_state = mock.Mock()
         component.on_message(MockDysonState())
         component.schedule_update_ha_state.assert_called_with()
