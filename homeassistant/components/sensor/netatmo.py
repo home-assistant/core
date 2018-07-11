@@ -5,7 +5,8 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.netatmo/
 """
 import logging
-from datetime import timedelta
+from time import time
+import threading
 
 import voluptuous as vol
 
@@ -14,7 +15,6 @@ from homeassistant.const import (
     TEMP_CELSIUS, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_TEMPERATURE,
     STATE_UNKNOWN)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,8 +24,8 @@ CONF_STATION = 'station'
 
 DEPENDENCIES = ['netatmo']
 
-# NetAtmo Data is uploaded to server every 10 minutes
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=600)
+# This is the NetAtmo data upload interval in seconds
+NETATMO_UPDATE_INTERVAL = 600
 
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_CELSIUS, None,
@@ -50,7 +50,8 @@ SENSOR_TYPES = {
     'rf_status': ['Radio', '', 'mdi:signal', None],
     'rf_status_lvl': ['Radio_lvl', '', 'mdi:signal', None],
     'wifi_status': ['Wifi', '', 'mdi:wifi', None],
-    'wifi_status_lvl': ['Wifi_lvl', 'dBm', 'mdi:wifi', None]
+    'wifi_status_lvl': ['Wifi_lvl', 'dBm', 'mdi:wifi', None],
+    'lastupdated': ['Last Updated', 's', 'mdi:timer', None],
 }
 
 MODULE_SCHEMA = vol.Schema({
@@ -76,11 +77,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             # Iterate each module
             for module_name, monitored_conditions in\
                     config[CONF_MODULES].items():
-                # Test if module exist """
+                # Test if module exists
                 if module_name not in data.get_module_names():
                     _LOGGER.error('Module name: "%s" not found', module_name)
                     continue
-                # Only create sensor for monitored """
+                # Only create sensors for monitored properties
                 for variable in monitored_conditions:
                     dev.append(NetAtmoSensor(data, module_name, variable))
         else:
@@ -285,6 +286,8 @@ class NetAtmoSensor(Entity):
                 self._state = "High"
             elif data['wifi_status'] <= 55:
                 self._state = "Full"
+        elif self.type == 'lastupdated':
+            self._state = int(time() - data['When'])
 
 
 class NetAtmoData(object):
@@ -296,20 +299,57 @@ class NetAtmoData(object):
         self.data = None
         self.station_data = None
         self.station = station
+        self._next_update = time()
+        self._update_in_progress = threading.Lock()
 
     def get_module_names(self):
         """Return all module available on the API as a list."""
         self.update()
         return self.data.keys()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Call the Netatmo API to update the data."""
-        import pyatmo
-        self.station_data = pyatmo.WeatherStationData(self.auth)
+        """Call the Netatmo API to update the data.
 
-        if self.station is not None:
-            self.data = self.station_data.lastData(
-                station=self.station, exclude=3600)
-        else:
-            self.data = self.station_data.lastData(exclude=3600)
+        This method is not throttled by the builtin Throttle decorator
+        but with a custom logic, which takes into account the time
+        of the last update from the cloud.
+        """
+        if time() < self._next_update or \
+                not self._update_in_progress.acquire(False):
+            return
+
+        try:
+            import pyatmo
+            self.station_data = pyatmo.WeatherStationData(self.auth)
+
+            if self.station is not None:
+                self.data = self.station_data.lastData(
+                    station=self.station, exclude=3600)
+            else:
+                self.data = self.station_data.lastData(exclude=3600)
+
+            newinterval = 0
+            for module in self.data:
+                if 'When' in self.data[module]:
+                    newinterval = self.data[module]['When']
+                    break
+            if newinterval:
+                # Try and estimate when fresh data will be available
+                newinterval += NETATMO_UPDATE_INTERVAL - time()
+                if newinterval > NETATMO_UPDATE_INTERVAL - 30:
+                    newinterval = NETATMO_UPDATE_INTERVAL
+                else:
+                    if newinterval < NETATMO_UPDATE_INTERVAL / 2:
+                        # Never hammer the NetAtmo API more than
+                        # twice per update interval
+                        newinterval = NETATMO_UPDATE_INTERVAL / 2
+                    _LOGGER.warning(
+                        "NetAtmo refresh interval reset to %d seconds",
+                        newinterval)
+            else:
+                # Last update time not found, fall back to default value
+                newinterval = NETATMO_UPDATE_INTERVAL
+
+            self._next_update = time() + newinterval
+        finally:
+            self._update_in_progress.release()

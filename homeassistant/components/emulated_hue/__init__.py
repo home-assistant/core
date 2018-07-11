@@ -95,6 +95,7 @@ def setup(hass, yaml_config):
         ssl_key=None,
         cors_origins=None,
         use_x_forwarded_for=False,
+        trusted_proxies=[],
         trusted_networks=[],
         login_threshold=0,
         is_ban_enabled=False

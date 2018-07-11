@@ -1,7 +1,7 @@
 """Test the config manager."""
 import asyncio
 from datetime import timedelta
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -152,8 +152,7 @@ def test_domains_gets_uniques(manager):
     assert manager.async_domains() == ['test', 'test2', 'test3']
 
 
-@asyncio.coroutine
-def test_saving_and_loading(hass):
+async def test_saving_and_loading(hass):
     """Test that we're saving and loading correctly."""
     loader.set_component(
         hass, 'test',
@@ -172,7 +171,7 @@ def test_saving_and_loading(hass):
             )
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        yield from hass.config_entries.flow.async_init('test')
+        await hass.config_entries.flow.async_init('test')
 
     class Test2Flow(data_entry_flow.FlowHandler):
         VERSION = 3
@@ -186,27 +185,18 @@ def test_saving_and_loading(hass):
                 }
             )
 
-    json_path = 'homeassistant.util.json.open'
-
     with patch('homeassistant.config_entries.HANDLERS.get',
                return_value=Test2Flow):
-        yield from hass.config_entries.flow.async_init('test')
+        await hass.config_entries.flow.async_init('test')
 
-    with patch(json_path, mock_open(), create=True) as mock_write:
-        # To trigger the call_later
-        async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
-        # To execute the save
-        yield from hass.async_block_till_done()
-
-    # Mock open calls are: open file, context enter, write, context leave
-    written = mock_write.mock_calls[2][1][0]
+    # To trigger the call_later
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    # To execute the save
+    await hass.async_block_till_done()
 
     # Now load written data in new config manager
     manager = config_entries.ConfigEntries(hass, {})
-
-    with patch('os.path.isfile', return_value=False), \
-            patch(json_path, mock_open(read_data=written), create=True):
-        yield from manager.async_load()
+    await manager.async_load()
 
     # Ensure same order
     for orig, loaded in zip(hass.config_entries.async_entries(),
