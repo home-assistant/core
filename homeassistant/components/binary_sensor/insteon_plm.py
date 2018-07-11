@@ -17,7 +17,9 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPES = {'openClosedSensor': 'opening',
                 'motionSensor': 'motion',
                 'doorSensor': 'door',
-                'wetLeakSensor': 'moisture'}
+                'wetLeakSensor': 'moisture',
+                'lightSensor': 'light',
+                'batterySensor': 'battery'}
 
 
 @asyncio.coroutine
@@ -54,4 +56,6 @@ class InsteonPLMBinarySensor(InsteonPLMEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        return bool(self._insteon_device_state.value)
+        on_val = bool(self._insteon_device_state.value)
+        return (on_val if self._insteon_device_state.name != 'lightSensor' else
+                not on_val)
