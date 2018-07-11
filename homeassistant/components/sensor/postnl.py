@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = 'Information provided by PostNL'
 
-DEFAULT_NAME = 'postnl'
+DEFAULT_NAME = 'PostNL'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
 
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    # name = config.get(CONF_NAME)
+    name = config.get(CONF_NAME)
     letter = config.get(CONF_LETTER)
 
     try:
@@ -53,20 +53,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     sensor_items = []
-    sensor_items.extend([PostNLSensor(
-        hass,
-        'PostNL-package',
-        'package-variant-closed',
-        'packeges',
-        api)])
+    sensor_items.append(PostNLSensor(
+        name,
+        'mdi:package-variant-closed',
+        'packages',
+        api,
+        'package'))
 
     if letter:
-        sensor_items.extend([PostNLSensor(
-            hass,
-            'PostNL-letter',
-            'email-outline',
+        sensor_items.append(PostNLSensor(
+            name,
+            'mdi:email-outline',
             'letters',
-            api)])
+            api,
+            'letter'))
 
     add_devices(sensor_items)
 
@@ -74,14 +74,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class PostNLSensor(Entity):
     """Representation of a PostNL sensor."""
 
-    def __init__(self, hass, name, icon, unit_of_measurement, api):
+    def __init__(self, name, icon, unit_of_measurement, api, sensor_type):
         """Initialize the PostNL sensor."""
-        self._name = name
+        self._name = '{} {}'.format(name, sensor_type)
         self._attributes = None
         self._state = None
         self._api = api
-        self._icon = "mdi:" + icon
+        self._icon = icon
         self._unit_of_measurement = unit_of_measurement
+        self._type = sensor_type
 
     @property
     def name(self):
@@ -111,7 +112,7 @@ class PostNLSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update device state."""
-        if self.name == 'PostNL-package':
+        if self._type == 'package':
             shipments = self._api.get_relevant_shipments()
             status_counts = {}
 
@@ -128,7 +129,7 @@ class PostNLSensor(Entity):
 
             self._state = len(status_counts)
 
-        elif self.name == 'PostNL-letter':
+        elif self._type == 'letter':
 
             letters = self._api.get_relevant_letters()
 
