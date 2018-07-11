@@ -10,14 +10,15 @@ from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.climate import (
     ClimateDevice, STATE_HEAT, STATE_COOL, STATE_IDLE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE)
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE
+from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 from homeassistant.util.temperature import convert as convert_temperature
 
 _LOGGER = logging.getLogger(__name__)
 
-DYSON_FAN_DEVICES = "dyson_fan_devices"
 STATE_DIFFUSE = "Diffuse Mode"
 STATE_FOCUS = "Focus Mode"
+FAN_LIST = [STATE_FOCUS, STATE_DIFFUSE]
+OPERATION_LIST = [STATE_HEAT, STATE_COOL]
 
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
                  | SUPPORT_OPERATION_MODE)
@@ -29,9 +30,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     from libpurecoollink.dyson_pure_hotcool_link import DysonPureHotCoolLink
-    if DYSON_FAN_DEVICES not in hass.data:
-        hass.data[DYSON_FAN_DEVICES] = []
-
     # Get Dyson Devices from parent component.
     add_devices(
         [DysonPureHotCoolLinkDevice(device)
@@ -47,7 +45,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         """Initialize the fan."""
         self._device = device
         self._current_temp = None
-        self._target_temp = None
+        self._pending_target_temp = None
 
     async def async_added_to_hass(self):
         """Callback when entity is added to hass."""
@@ -63,9 +61,10 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
             _LOGGER.debug("Message received for fan device %s : %s", self.name,
                           message)
             self.schedule_update_ha_state()
-            if (self._device.state.heat_mode == HeatMode.HEAT_ON
-                    and self._target_temp is not None):
-                self.set_temperature()
+            if (self._device.state.heat_mode == HeatMode.HEAT_ON.value
+                    and self._pending_target_temp is not None):
+                # Set any pending new target temperature on dyson device.
+                self._set_temperature_on_device()
 
     @property
     def should_poll(self):
@@ -100,10 +99,10 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
     @property
     def target_temperature(self):
         """Return the target temperature."""
-        if self._target_temp is None:
+        if self._pending_target_temp is None:
             heat_target = int(self._device.state.heat_target) / 10
             return int(heat_target - 273)
-        return self._target_temp
+        return self._pending_target_temp
 
     @property
     def current_humidity(self):
@@ -118,8 +117,8 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         from libpurecoollink.const import HeatMode, HeatState
-        if self._device.state.heat_mode == HeatMode.HEAT_ON:
-            if self._device.state.heat_state == HeatState.HEAT_STATE_ON:
+        if self._device.state.heat_mode == HeatMode.HEAT_ON.value:
+            if self._device.state.heat_state == HeatState.HEAT_STATE_ON.value:
                 return STATE_HEAT
             return STATE_IDLE
         return STATE_COOL
@@ -127,20 +126,20 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return [STATE_HEAT, STATE_COOL]
+        return OPERATION_LIST
 
     @property
     def current_fan_mode(self):
         """Return the fan setting."""
         from libpurecoollink.const import FocusMode
-        if self._device.state.focus_mode == FocusMode.FOCUS_ON:
+        if self._device.state.focus_mode == FocusMode.FOCUS_ON.value:
             return STATE_FOCUS
         return STATE_DIFFUSE
 
     @property
     def fan_list(self):
         """Return the list of available fan modes."""
-        return [STATE_FOCUS, STATE_DIFFUSE]
+        return FAN_LIST
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -152,18 +151,20 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
         # Limit the target temperature into acceptable range.
         target_temp = min(self.max_temp, target_temp)
         target_temp = max(self.min_temp, target_temp)
-        self._target_temp = target_temp
+        self._pending_target_temp = target_temp
         # Dyson only response when it is in heat mode.
         from libpurecoollink.const import HeatMode
-        if self._device.state.heat_mode == HeatMode.HEAT_ON:
-            from libpurecoollink.const import HeatTarget
-            if self.temperature_unit == TEMP_CELSIUS:
-                self._device.set_configuration(
-                    heat_target=HeatTarget.celsius(self._target_temp))
-            elif self.temperature_unit == TEMP_FAHRENHEIT:
-                self._device.set_configuration(
-                    heat_target=HeatTarget.fahrenheit(self._target_temp))
-            self._target_temp = None
+        if self._device.state.heat_mode == HeatMode.HEAT_ON.value:
+            self._set_temperature_on_device()
+        else:
+            # Update the display of pending target temperature to user.
+            self.schedule_update_ha_state()
+
+    def _set_temperature_on_device(self):
+        from libpurecoollink.const import HeatTarget
+        self._device.set_configuration(
+            heat_target=HeatTarget.celsius(self._pending_target_temp))
+        self._pending_target_temp = None
 
     def set_fan_mode(self, fan_mode):
         """Set new fan mode."""

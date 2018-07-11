@@ -40,7 +40,7 @@ def _get_device_focus():
     """Return a device with fan state of focus mode."""
     device = mock.Mock()
     device.name = "Device_name"
-    device.state.focus_mode = FocusMode.FOCUS_ON
+    device.state.focus_mode = FocusMode.FOCUS_ON.value
     return device
 
 
@@ -48,7 +48,7 @@ def _get_device_diffuse():
     """Return a device with fan state of diffuse mode."""
     device = mock.Mock()
     device.name = "Device_name"
-    device.state.focus_mode = FocusMode.FOCUS_OFF
+    device.state.focus_mode = FocusMode.FOCUS_OFF.value
     return device
 
 
@@ -56,11 +56,11 @@ def _get_device_cool():
     """Return a device with state of cooling."""
     device = mock.Mock()
     device.name = "Device_name"
-    device.state.tilt = TiltState.TILT_FALSE
-    device.state.focus_mode = FocusMode.FOCUS_OFF
+    device.state.tilt = TiltState.TILT_FALSE.value
+    device.state.focus_mode = FocusMode.FOCUS_OFF.value
     device.state.heat_target = HeatTarget.celsius(12)
-    device.state.heat_mode = HeatMode.HEAT_OFF
-    device.state.heat_state = HeatState.HEAT_STATE_OFF
+    device.state.heat_mode = HeatMode.HEAT_OFF.value
+    device.state.heat_state = HeatState.HEAT_STATE_OFF.value
     device.environmental_state.temperature = 288
     device.environmental_state.humidity = 53
     return device
@@ -71,11 +71,11 @@ def _get_device_heat_off():
     device = mock.Mock()
     device.name = "Device_name"
     device.state = mock.Mock()
-    device.state.tilt = TiltState.TILT_FALSE
-    device.state.focus_mode = FocusMode.FOCUS_ON
+    device.state.tilt = TiltState.TILT_FALSE.value
+    device.state.focus_mode = FocusMode.FOCUS_ON.value
     device.state.heat_target = HeatTarget.celsius(20)
-    device.state.heat_mode = HeatMode.HEAT_ON
-    device.state.heat_state = HeatState.HEAT_STATE_OFF
+    device.state.heat_mode = HeatMode.HEAT_ON.value
+    device.state.heat_state = HeatState.HEAT_STATE_OFF.value
     device.environmental_state.temperature = 293
     device.environmental_state.humidity = 53
     return device
@@ -86,11 +86,11 @@ def _get_device_heat_on():
     device = mock.Mock(spec=DysonPureHotCoolLink)
     device.name = "Device_name"
     device.state = mock.Mock()
-    device.state.tilt = TiltState.TILT_FALSE
-    device.state.focus_mode = FocusMode.FOCUS_ON
+    device.state.tilt = TiltState.TILT_FALSE.value
+    device.state.focus_mode = FocusMode.FOCUS_ON.value
     device.state.heat_target = HeatTarget.celsius(23)
-    device.state.heat_mode = HeatMode.HEAT_ON
-    device.state.heat_state = HeatState.HEAT_STATE_ON
+    device.state.heat_mode = HeatMode.HEAT_ON.value
+    device.state.heat_state = HeatState.HEAT_STATE_ON.value
     device.environmental_state.temperature = 289
     device.environmental_state.humidity = 53
     return device
