@@ -6,16 +6,17 @@ https://home-assistant.io/components/tuya/
 """
 from datetime import timedelta
 import logging
-import time
 import voluptuous as vol
 
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers import discovery
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['tuyapy==0.1.0']
+REQUIREMENTS = ['tuyapy==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,8 +25,15 @@ CONF_COUNTRYCODE = 'country_code'
 DOMAIN = 'tuya'
 DATA_TUYA = 'data_tuya'
 
+SIGNAL_DELETE_ENTITY = 'tuya_delete'
+SIGNAL_UPDATE_ENTITY = 'tuya_update'
+
 SERVICE_FORCE_UPDATE = 'force_update'
 SERVICE_PULL_DEVICES = 'pull_devices'
+
+TUYA_TYPE_TO_HA = {
+    'switch': 'switch'
+}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -34,8 +42,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_COUNTRYCODE): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
-
-TUYA_COMPONENT = ['light']
 
 
 def setup(hass, config):
@@ -48,36 +54,55 @@ def setup(hass, config):
     country_code = config[DOMAIN][CONF_COUNTRYCODE]
 
     hass.data[DATA_TUYA] = tuya
-
     tuya.init(username, password, country_code)
-
     hass.data[DOMAIN] = {
-        'dev_ids': [],
         'entities': {}
     }
 
-    dev_types = tuya.get_devTypes()
-    for dev_type in dev_types:
-        discovery.load_platform(hass, dev_type, DOMAIN, {}, config)
+    device_list = tuya.get_all_devices()
+    device_type_list = {}
+    for device in device_list:
+        dev_type = device.device_type()
+        if (dev_type in TUYA_TYPE_TO_HA and
+                device.object_id() not in hass.data[DOMAIN]['entities']):
+            ha_type = TUYA_TYPE_TO_HA.get(dev_type)
+            if ha_type not in device_type_list:
+                device_type_list[ha_type] = []
+            device_type_list[ha_type].append(device.object_id())
+    for ha_type in device_type_list:
+        discovery.load_platform(
+            hass, ha_type, DOMAIN,
+            {'dev_ids': device_type_list.get(ha_type)}, config)
 
     def poll_devices_update(event_time):
         """Check if accesstoken is expired and pull device list from server."""
+        _LOGGER.info("Pull Devices From Tuya")
         devices = tuya.poll_devices_update()
-        dev_types = tuya.get_devTypes()
-
         if devices is None:
-            return None
-        for dev_type in dev_types:
-            discovery.load_platform(hass, dev_type, DOMAIN, {}, config)
+            return
+        # Add new discover device.
+        device_list = tuya.get_all_devices()
+        device_type_list = {}
+        for device in device_list:
+            dev_type = device.device_type()
+            if (dev_type in TUYA_TYPE_TO_HA and
+                    device.object_id() not in hass.data[DOMAIN]['entities']):
+                ha_type = TUYA_TYPE_TO_HA.get(dev_type)
+                if ha_type not in device_type_list:
+                    device_type_list[ha_type] = []
+                device_type_list[ha_type].append(device.object_id())
+        for ha_type in device_type_list:
+            discovery.load_platform(
+                hass, ha_type, DOMAIN,
+                {'dev_ids': device_type_list.get(ha_type)}, config)
+        # Delete not exist device.
         newlist_ids = []
         for device in devices:
             newlist_ids.append(device.get('id'))
-        for entity_list in hass.data[DOMAIN]['entities'].values():
-            for entity in entity_list:
-                if entity.object_id not in newlist_ids:
-                    hass.add_job(entity.async_remove())
-                    entity_list.remove(entity)
-                    hass.data[DOMAIN]['dev_ids'].remove(entity.object_id)
+        for dev_id in list(hass.data[DOMAIN]['entities']):
+            if dev_id not in newlist_ids:
+                dispatcher_send(hass, SIGNAL_DELETE_ENTITY, dev_id)
+                hass.data[DOMAIN]['entities'].pop(dev_id)
 
     track_time_interval(hass, poll_devices_update, timedelta(minutes=5))
 
@@ -86,10 +111,7 @@ def setup(hass, config):
     def force_update(call):
         """Force all devices to pull data."""
         _LOGGER.info("Refreshing Device Data From Tuya")
-        for entity_list in hass.data[DOMAIN]['entities'].values():
-            for entity in entity_list:
-                time.sleep(0.5)
-                entity.schedule_update_ha_state(True)
+        dispatcher_send(hass, SIGNAL_UPDATE_ENTITY)
 
     hass.services.register(DOMAIN, SERVICE_FORCE_UPDATE, force_update)
 
@@ -99,9 +121,8 @@ def setup(hass, config):
 class TuyaDevice(Entity):
     """Tuya base device."""
 
-    def __init__(self, tuya, hass):
+    def __init__(self, tuya):
         """Init Tuya devices."""
-        self.hass = hass
         self.tuya = tuya
 
     @property
@@ -120,7 +141,7 @@ class TuyaDevice(Entity):
         return self.tuya.state()
 
     @property
-    def entity_picture(self):
+    def icon(self):
         """Return the entity picture to use in the frontend, if any."""
         return self.tuya.iconurl()
 
@@ -132,3 +153,14 @@ class TuyaDevice(Entity):
     def update(self):
         """Refresh Tuya device data."""
         self.tuya.update()
+
+    @callback
+    def _delete_callback(self, dev_id):
+        """Remove this entity."""
+        if dev_id == self.object_id:
+            self.hass.add_job(self.async_remove())
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
