@@ -23,7 +23,7 @@ DEPENDENCIES = ['ring']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=5)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 # Sensor types: Name, category, device_class
 SENSOR_TYPES = {
