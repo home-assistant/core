@@ -78,7 +78,7 @@ def test_async_create_task_throw_on_non_coro():
         ha.HomeAssistant.async_create_task(hass, lambda *args: None)
 
 
-@patch('asyncio.iscoroutinefunction', return_value=True)
+@patch('asyncio.iscoroutine', return_value=True)
 def test_async_create_task_schedule_coroutinefunction(mock_iscoro):
     """Test that we schedule coroutines and add jobs to the job pool."""
     hass = MagicMock()

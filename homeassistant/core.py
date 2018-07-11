@@ -17,7 +17,8 @@ import threading
 from time import monotonic
 
 from types import MappingProxyType
-from typing import Optional, Any, Callable, List, TypeVar, Dict  # NOQA
+from typing import (  # NOQA
+    Optional, Any, Callable, List, TypeVar, Dict, Coroutine)
 
 from async_timeout import timeout
 import voluptuous as vol
@@ -233,7 +234,7 @@ class HomeAssistant(object):
     @callback
     def async_create_task(
             self,
-            target: Callable,
+            target: Coroutine,
             *args: Any) -> asyncio.tasks.Task:
         """Add a job from within the eventloop.
 
@@ -244,12 +245,9 @@ class HomeAssistant(object):
         """
         if asyncio.iscoroutine(target):
             task = self.loop.create_task(target)
-        elif asyncio.iscoroutinefunction(target):
-            task = self.loop.create_task(target(*args))
         else:
             raise ValueError(
-                "async_create_task can be called on coroutine or coroutine "
-                "function only.")
+                "async_create_task can be called on coroutine only.")
 
         # If a task is scheduled
         if self._track_task:
