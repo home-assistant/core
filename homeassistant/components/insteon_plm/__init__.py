@@ -151,16 +151,16 @@ def async_setup(hass, config):
 
                 if state_name == MOTION_DETECTED_STATE_NAME:
                     device.states[state_key].register_updates(
-                        _fire_motion_detected_event)
+                        fire_motion_detected_event)
                 elif state_name == LIGHT_DETECTED_STATE_NAME:
                     device.states[state_key].register_updates(
-                        _fire_light_dark_detected_event)
+                        fire_light_dark_detected_event)
                 elif state_name == BATTERY_LOW_STATE_NAME:
                     device.states[state_key].register_updates(
-                        _fire_battery_low_event)
+                        fire_battery_low_event)
                 elif state_name[:-1] == BUTTON_PRESSED_STATE_NAME:
                     device.states[state_key].register_updates(
-                        _fire_button_pressed_event)
+                        fire_button_pressed_event)
 
                 # Do not create a device for binary sensors in 'on only' mode
                 if not (mode and
