@@ -59,7 +59,7 @@ HOUSECODES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
 MOTION_DETECTED_STATE_NAME = 'motionSensor'
 LIGHT_DETECTED_STATE_NAME = 'lightSensor'
 BATTERY_LOW_STATE_NAME = 'batterySensor',
-BUTTON_PRESS_STATE_NAME = 'onLevelButton'
+BUTTON_PRESSED_STATE_NAME = 'onLevelButton'
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
