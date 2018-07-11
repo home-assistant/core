@@ -232,16 +232,12 @@ class HomeAssistant(object):
         return task
 
     @callback
-    def async_create_task(
-            self,
-            target: Coroutine,
-            *args: Any) -> asyncio.tasks.Task:
-        """Add a job from within the eventloop.
+    def async_create_task(self, target: Coroutine) -> asyncio.tasks.Task:
+        """Create a task from within the eventloop.
 
         This method must be run in the event loop.
 
         target: target to call.
-        args: parameters for method to call.
         """
         if asyncio.iscoroutine(target):
             task = self.loop.create_task(target)
