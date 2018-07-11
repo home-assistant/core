@@ -81,7 +81,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     request_rssi = config.get(CONF_REQUEST_RSSI, False)
 
     def update_bluetooth(now):
-        """Update Bluetooth and set timer for the next update"""
+        """Update Bluetooth and set timer for the next update."""
         update_bluetooth_once()
         track_point_in_utc_time(
             hass, update_bluetooth, dt_util.utcnow() + interval)
