@@ -239,13 +239,8 @@ class HomeAssistant(object):
 
         target: target to call.
         """
-        if asyncio.iscoroutine(target):
-            task = self.loop.create_task(target)
-        else:
-            raise ValueError(
-                "async_create_task can be called on coroutine only.")
+        task = self.loop.create_task(target)
 
-        # If a task is scheduled
         if self._track_task:
             self._pending_tasks.append(task)
 
