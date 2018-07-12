@@ -11,6 +11,7 @@ import logging
 import socket
 import urllib
 import re
+from time import time as ttime
 
 import aiohttp
 import voluptuous as vol
@@ -49,6 +50,8 @@ DEFAULT_TCP_PORT = 9090
 DEFAULT_TIMEOUT = 5
 DEFAULT_PROXY_SSL = False
 DEFAULT_ENABLE_WEBSOCKET = True
+
+TV_POLL_INTERVAL = 60
 
 DEPRECATED_TURN_OFF_ACTIONS = {
     None: None,
@@ -266,6 +269,7 @@ class KodiDevice(MediaPlayerDevice):
         import jsonrpc_websocket
         self.hass = hass
         self._name = name
+        self._last_update = 0
 
         kwargs = {
             'timeout': timeout,
@@ -429,6 +433,7 @@ class KodiDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_update(self):
         """Retrieve latest state."""
+        self._last_update = ttime()
         self._players = yield from self._get_players()
 
         if self._players is None:
@@ -481,7 +486,14 @@ class KodiDevice(MediaPlayerDevice):
     @property
     def should_poll(self):
         """Return True if entity has to be polled for state."""
-        return not (self._enable_websocket and self._ws_server.connected)
+        return not (
+            self._enable_websocket
+            and self._ws_server.connected
+            and not (
+                self._item.get('type') == 'channel'
+                and ttime() - self._last_update >= TV_POLL_INTERVAL
+            )
+        )
 
     @property
     def volume_level(self):
