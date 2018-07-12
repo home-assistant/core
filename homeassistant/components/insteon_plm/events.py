@@ -8,6 +8,7 @@ import logging
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'insteon_plm'
 EVENT_MOTION_DETECTED = 'motion_detected'
 EVENT_LIGHT_DETECTED = 'light_detected'
 EVENT_DARK_DETECTED = 'darK_detected'
