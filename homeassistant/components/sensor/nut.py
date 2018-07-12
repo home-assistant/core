@@ -147,7 +147,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ALIAS): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
-    vol.Required(CONF_RESOURCES):
+    vol.Optional(CONF_RESOURCES):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
@@ -171,7 +171,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     entities = []
 
-    for resource in config[CONF_RESOURCES]:
+    for resource in config.get(CONF_RESOURCES, SENSOR_TYPES.keys()):
         sensor_type = resource.lower()
 
         # Display status is a special case that falls back to the status value
@@ -179,7 +179,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if sensor_type in data.status or (sensor_type == KEY_STATUS_DISPLAY
                                           and KEY_STATUS in data.status):
             entities.append(NUTSensor(name, data, sensor_type))
-        else:
+        elif CONF_RESOURCES in config:
+            # Warn only if resources are specified explicitly in the config.
             _LOGGER.warning(
                 "Sensor type: %s does not appear in the NUT status "
                 "output, cannot add", sensor_type)
