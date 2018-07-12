@@ -33,4 +33,8 @@ RUN pip3 install --no-cache-dir -r requirements_all.txt && \
 # Copy source
 COPY . .
 
+# Enable Docker native health checks to give more detail about whether
+# the service is starting, healthy, or unhealthy.
+HEALTHCHECK CMD curl --fail http://localhost:8123/ || exit 1
+
 CMD [ "python", "-m", "homeassistant", "--config", "/config" ]
