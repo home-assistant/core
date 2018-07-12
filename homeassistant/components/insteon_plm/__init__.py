@@ -29,7 +29,7 @@ CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
 CONF_FIRMWARE = 'firmware'
 CONF_PRODUCT_KEY = 'product_key'
-CONF_MODE = 'mode'
+CONF_BUTTON_MODE = 'button_mode'
 CONF_X10 = 'x10_devices'
 CONF_HOUSECODE = 'housecode'
 CONF_UNITCODE = 'unitcode'
@@ -75,8 +75,8 @@ CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
         vol.Optional(CONF_SUBCAT): cv.byte,
         vol.Optional(CONF_FIRMWARE): cv.byte,
         vol.Optional(CONF_PRODUCT_KEY): cv.byte,
+        vol.Optional(CONF_BUTTON_MODE, default='toggle'): vol.In(['toggle', 'on_only']),
         vol.Optional(CONF_PLATFORM): cv.string,
-        vol.Optional(CONF_MODE, default='toggle'): vol.In('toggle', 'on_only')
         }))
 
 CONF_X10_SCHEMA = vol.All(
