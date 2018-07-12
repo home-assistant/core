@@ -290,7 +290,6 @@ def async_setup(hass, config):
         # Firing an event when a button is pressed.
         if val:
             _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_REMOTE_BUTTON_PRESSED))
-            button = device.states[group].name[:-1].lower()
             device = plm.devices[address.hex]
             state_name = device.states[group]
             button = state_name[-1].lower()
