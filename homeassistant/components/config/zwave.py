@@ -205,7 +205,7 @@ class ZWaveProtectionView(HomeAssistantView):
     url = r"/api/zwave/protection/{node_id:\d+}"
     name = "api:zwave:protection"
 
-    @ha.callback
+    @asyncio.coroutine
     def get(self, request, node_id):
         """Retrieve the protection commandclass options of node."""
         nodeid = int(node_id)
