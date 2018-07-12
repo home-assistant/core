@@ -214,13 +214,16 @@ class ZWaveProtectionView(HomeAssistantView):
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
         protection_options = {}
-        if not await hass.async_add_executor_job(node.has_command_class, const.COMMAND_CLASS_PROTECTION):
+        if not await hass.async_add_executor_job(
+                node.has_command_class, const.COMMAND_CLASS_PROTECTION):
             return self.json(protection_options)
         protections = await hass.async_add_executor_job(node.get_protections)
         protection_options = {
             'value_id': '{0:d}'.format(list(protections)[0]),
-            'selected': await hass.async_add_executor_job(node.get_protection_item, list(protections)[0]),
-            'options': await hass.async_add_executor_job(node.get_protection_items, list(protections)[0])}
+            'selected': await hass.async_add_executor_job(
+                node.get_protection_item, list(protections)[0]),
+            'options': await hass.async_add_executor_job(
+                node.get_protection_items, list(protections)[0])}
         return self.json(protection_options)
 
     async def post(self, request, node_id):
@@ -235,10 +238,12 @@ class ZWaveProtectionView(HomeAssistantView):
         value_id = int(protection_data[const.ATTR_VALUE_ID])
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
-        if not await hass.async_add_executor_job(node.has_command_class, const.COMMAND_CLASS_PROTECTION):
+        if not await hass.async_add_executor_job(
+                node.has_command_class, const.COMMAND_CLASS_PROTECTION):
             return self.json_message('No protection commandclass on this node',
                                      HTTP_NOT_FOUND)
-        state = await hass.async_add_executor_job(node.set_protection, value_id, selection)
+        state = await hass.async_add_executor_job(
+            node.set_protection, value_id, selection)
         if not state:
             return self.json_message(
                 'Protection setting did not complete', 202)
