@@ -60,10 +60,14 @@ class HangoutsNotificationService(BaseNotificationService):
                 target_conversations.append({'id':target})
         else:
             target_conversations = self._default_conversations
-
+        
+        messages = []
+        if 'title' in kwargs: messages.append({'text': kwargs['title'], 'is_bold': True})
+        
+        messages.append({'text': message, 'parse_str': True})
         service_data = {
             ATTR_TARGET: target_conversations,
-            ATTR_MESSAGE: [{'text': message, 'parse_str': True}]
+            ATTR_MESSAGE: messages
         }
 
         return self.hass.services.call(
