@@ -4,6 +4,7 @@ For more details about ebusd, please refer to the documentation at
 https://github.com/john30/ebusd
 """
 
+from datetime import timedelta
 import logging
 import socket
 
