@@ -90,12 +90,12 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
     def __init__(self, home, device):
         """Initialize the dimmer light device."""
         super().__init__(home, device)
-    
+
     @property
     def is_on(self):
         """Return true if device is on."""
         return self._device.dimLevel != 0
-    
+
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
@@ -105,11 +105,12 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
     def supported_features(self):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS
-    
+
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
-            await self._device.set_dim_level(float(kwargs[ATTR_BRIGHTNESS])/255.0)
+            await self._device.set_dim_level(
+                float(kwargs[ATTR_BRIGHTNESS])/255.0)
         else:
             await self._device.set_dim_level(1)
 
