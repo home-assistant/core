@@ -11,7 +11,6 @@ from homeassistant.components.climate import (
     ClimateDevice, STATE_HEAT, STATE_COOL, STATE_IDLE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE)
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
-from homeassistant.util.temperature import convert as convert_temperature
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -187,9 +186,9 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(1, TEMP_CELSIUS, self.temperature_unit)
+        return 1
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(37, TEMP_CELSIUS, self.temperature_unit)
+        return 37
