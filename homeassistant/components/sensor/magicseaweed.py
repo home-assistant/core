@@ -31,8 +31,6 @@ DEFAULT_ATTRIBUTION = "Data provided by magicseaweed.com"
 
 ICON = 'mdi:waves'
 
-API_URL = 'http://magicseaweed.com/api/{}/forecast/'
-
 HOURS = ['12AM', '3AM', '6AM', '9AM', '12PM', '3PM', '6PM', '9PM']
 
 SENSOR_TYPES = {
@@ -52,10 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(HOURS)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNITS): vol.In(UNITS),
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
-        vol.All(cv.time_period, cv.positive_timedelta)),
 })
-
 
 # Return cached results if last scan was less then this time ago.
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
@@ -78,8 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     forecast_data = MagicSeaweedData(
         api_key=api_key,
         spot_id=spot_id,
-        units=units,
-        interval=config.get(CONF_UPDATE_INTERVAL))
+        units=units)
     forecast_data.update()
 
     # If connection failed don't setup platform.
@@ -188,7 +182,7 @@ class MagicSeaweedSensor(Entity):
 class MagicSeaweedData(object):
     """Get the latest data from MagicSeaweed."""
 
-    def __init__(self, api_key, spot_id, units, interval):
+    def __init__(self, api_key, spot_id, units):
         """Initialize the data object."""
         import magicseaweed
         self._msw = magicseaweed.MSW_Forecast(api_key, spot_id,
@@ -197,7 +191,7 @@ class MagicSeaweedData(object):
         self.hourly = {}
 
         # Apply throttling to methods using configured interval
-        self.update = Throttle(interval)(self._update)
+        self.update = Throttle(MIN_TIME_BETWEEN_UPDATES)(self._update)
 
     def _update(self):
         """Get the latest data from MagicSeaweed."""
@@ -209,4 +203,4 @@ class MagicSeaweedData(object):
                     forecast.localTimestamp).strftime("%-I%p")
                 self.hourly[hour] = forecast
         except ConnectionError:
-            _LOGGER.error("Unable to retrieve data from %s", API_URL)
+            _LOGGER.error("Unable to retrieve data from Magicseaweed")
