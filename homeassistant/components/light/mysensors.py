@@ -173,8 +173,8 @@ class MySensorsLightDimmer(MySensorsLight):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
+        self._turn_on_light()
         if self.gateway.optimistic:
             self.async_schedule_update_ha_state()
 
@@ -198,9 +198,9 @@ class MySensorsLightRGB(MySensorsLight):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         self._turn_on_rgb_and_w('%02x%02x%02x', **kwargs)
+        self._turn_on_light()
         if self.gateway.optimistic:
             self.async_schedule_update_ha_state()
 
@@ -227,8 +227,8 @@ class MySensorsLightRGBW(MySensorsLightRGB):
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        self._turn_on_light()
         self._turn_on_dimmer(**kwargs)
         self._turn_on_rgb_and_w('%02x%02x%02x%02x', **kwargs)
+        self._turn_on_light()
         if self.gateway.optimistic:
             self.async_schedule_update_ha_state()
