@@ -324,11 +324,8 @@ class ZwaveColorLight(ZwaveDimmer):
                 else:
                     self._ct = TEMP_COLD_HASS
                     rgbw = '#00000000ff'
-
         elif ATTR_HS_COLOR in kwargs:
             self._hs = kwargs[ATTR_HS_COLOR]
-
-        if ATTR_HS_COLOR in kwargs:
             # white LED must be off in order for color to work
             self._white = 0
 
