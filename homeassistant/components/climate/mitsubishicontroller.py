@@ -29,7 +29,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     from mitsPy.manager import Manager
     controller = Manager(config.get(CONF_URL))
 
-    async def register_devices(raw_devices):
+    async def async_register_devices(raw_devices):
         """Register devices."""
         async_add_devices(
             [MitsubishiHvacDevice(
@@ -37,7 +37,7 @@ async def async_setup_platform(hass, config, async_add_devices,
                 unit_of_measurement=TEMP_FAHRENHEIT) for device in raw_devices]
         )
 
-    await controller.initialize(register_devices)
+    await controller.initialize(async_register_devices)
 
 
 SUPPORT_FLAGS = (
@@ -61,9 +61,9 @@ class MitsubishiHvacDevice(ClimateDevice):
         self._current_fan_mode = current_fan_mode
         self._device.refresh(self.schedule_update_ha_state)
 
-    async def _refresh(self):
+    async def _async_refresh(self):
         """Refresh function."""
-        await self._device.refresh(self.schedule_update_ha_state)
+        await self._device.refresh(lambda: 0)
 
     @property
     def should_poll(self):
@@ -123,12 +123,12 @@ class MitsubishiHvacDevice(ClimateDevice):
     async def async_set_temperature(self, **kwargs):
         """Set the temperature."""
         await self._device.set_temperature_f(kwargs[ATTR_TEMPERATURE])
-        await self._refresh()
+        await self.async_schedule_update_ha_state(True)
 
     async def async_set_swing_mode(self, swing_mode):
         """Set the swing mode."""
         await self._device.set_air_direction(swing_mode)
-        await self._refresh()
+        await self.async_schedule_update_ha_state(True)
 
     async def async_set_fan_mode(self, fan_mode):
         """Set the fan mode."""
@@ -137,7 +137,7 @@ class MitsubishiHvacDevice(ClimateDevice):
     async def async_set_operation_mode(self, operation_mode):
         """Set the operation mode."""
         await self._device.set_operation(operation_mode)
-        await self._refresh()
+        await self.async_schedule_update_ha_state(True)
 
     @property
     def current_swing_mode(self):
@@ -156,4 +156,4 @@ class MitsubishiHvacDevice(ClimateDevice):
 
     async def async_update(self):
         """Update."""
-        await self._device.refresh(self.schedule_update_ha_state)
+        await self._device.refresh(lambda: 0)
