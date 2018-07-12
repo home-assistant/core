@@ -117,6 +117,11 @@ class SnmpSensor(Entity):
         """Return the unit the value is expressed in."""
         return self._unit_of_measurement
 
+    @property
+    def unique_id(self):
+        """Return a unique id for the sensor, host + OID."""
+        return self.data.unique_id()
+
     def update(self):
         """Get the latest data and updates the states."""
         self.data.update()
@@ -145,6 +150,11 @@ class SnmpData(object):
         self._accept_errors = accept_errors
         self._default_value = default_value
         self.value = None
+
+    @property
+    def unique_id(self):
+        """Return a unique id for the sensor, host + OID."""
+        return self._host + self._baseoid
 
     def update(self):
         """Get the latest data from the remote SNMP capable host."""

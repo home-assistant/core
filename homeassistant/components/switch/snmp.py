@@ -145,6 +145,11 @@ class SnmpSwitch(SwitchDevice):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique ID for the switch, host plus OID."""
+        return self._host + self._baseoid
+
+    @property
     def is_on(self):
         """Return true if switch is on; False if off. None if unknown."""
         return self._state
