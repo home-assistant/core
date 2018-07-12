@@ -4,8 +4,6 @@ For more details about ebusd, please refer to the documentation at
 https://github.com/john30/ebusd
 """
 
-from datetime import timedelta
-from datetime import datetime
 import logging
 import socket
 
@@ -13,7 +11,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_MONITORED_VARIABLES, STATE_ON, STATE_OFF, STATE_UNKNOWN)
+    CONF_NAME, CONF_HOST, CONF_PORT, CONF_MONITORED_VARIABLES, STATE_ON, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
