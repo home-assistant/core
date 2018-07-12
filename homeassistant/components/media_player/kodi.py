@@ -160,6 +160,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if DATA_KODI not in hass.data:
         hass.data[DATA_KODI] = dict()
 
+    unique_id = None
     # Is this a manual configuration?
     if discovery_info is None:
         name = config.get(CONF_NAME)
@@ -168,7 +169,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         tcp_port = config.get(CONF_TCP_PORT)
         encryption = config.get(CONF_PROXY_SSL)
         websocket = config.get(CONF_ENABLE_WEBSOCKET)
-        unique_id = None
     else:
         name = "{} ({})".format(DEFAULT_NAME, discovery_info.get('hostname'))
         host = discovery_info.get('host')
@@ -176,7 +176,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         tcp_port = DEFAULT_TCP_PORT
         encryption = DEFAULT_PROXY_SSL
         websocket = DEFAULT_ENABLE_WEBSOCKET
-        unique_id = discovery_info.get('mac_address')
+        properties = discovery_info.get('properties')
+        if properties is not None:
+            unique_id = properties.get('uuid', None)
 
     # Only add a device once, so discovered devices do not override manual
     # config.
