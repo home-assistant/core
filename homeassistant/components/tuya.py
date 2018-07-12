@@ -71,17 +71,17 @@ def setup(hass, config):
                 if ha_type not in device_type_list:
                     device_type_list[ha_type] = []
                 device_type_list[ha_type].append(device.object_id())
+                hass.data[DOMAIN]['entities'][dev_id] = None
         for ha_type, dev_ids in device_type_list.items():
             discovery.load_platform(
-                hass, ha_type, DOMAIN,
-                {'dev_ids': dev_ids}, config)
+                hass, ha_type, DOMAIN, {'dev_ids': dev_ids}, config)
 
     device_list = tuya.get_all_devices()
     load_devices(device_list)
 
     def poll_devices_update(event_time):
         """Check if accesstoken is expired and pull device list from server."""
-        _LOGGER.info("Pull Devices From Tuya")
+        _LOGGER.debug("Pull devices from Tuya.")
         tuya.poll_devices_update()
         # Add new discover device.
         device_list = tuya.get_all_devices()
@@ -101,7 +101,6 @@ def setup(hass, config):
 
     def force_update(call):
         """Force all devices to pull data."""
-        _LOGGER.info("Refreshing Device Data From Tuya")
         dispatcher_send(hass, SIGNAL_UPDATE_ENTITY)
 
     hass.services.register(DOMAIN, SERVICE_FORCE_UPDATE, force_update)
@@ -134,11 +133,6 @@ class TuyaDevice(Entity):
     def name(self):
         """Return Tuya device name."""
         return self.tuya.name()
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self.tuya.state()
 
     @property
     def icon(self):
