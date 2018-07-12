@@ -229,17 +229,32 @@ class ZWaveProtectionView(HomeAssistantView):
         nodeid = int(node_id)
         hass = request.app['hass']
         network = hass.data.get(const.DATA_NETWORK)
-        node = network.nodes.get(nodeid)
+
+        def _get_node():
+            """Helper to get node."""
+            return network.nodes.get(nodeid)
+
+        node = await hass.async_add_executor_job(_get_node)
         protection_data = await request.json()
 
         selection = protection_data["selection"]
         value_id = int(protection_data[const.ATTR_VALUE_ID])
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
-        if not node.has_command_class(const.COMMAND_CLASS_PROTECTION):
+
+        def _check_commandclass():
+            """Helper to check for commandclass existence."""
+            return node.has_command_class(const.COMMAND_CLASS_PROTECTION)
+
+        if not await hass.async_add_executor_job(_check_commandclass):
             return self.json_message('No protection commandclass on this node',
                                      HTTP_NOT_FOUND)
-        state = node.set_protection(value_id, selection)
+
+        def _set_protection():
+            """Helper for setting protection."""
+            return node.set_protection(value_id, selection)
+
+        state = await hass.async_add_executor_job(_set_protection)
         if not state:
             return self.json_message(
                 'Protection setting did not complete', 202)
