@@ -75,7 +75,8 @@ CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
         vol.Optional(CONF_SUBCAT): cv.byte,
         vol.Optional(CONF_FIRMWARE): cv.byte,
         vol.Optional(CONF_PRODUCT_KEY): cv.byte,
-        vol.Optional(CONF_BUTTON_MODE, default='toggle'): vol.In(['toggle', 'on_only']),
+        vol.Optional(CONF_BUTTON_MODE, default='toggle'): vol.In(['toggle',
+                                                                  'on_only']),
         vol.Optional(CONF_PLATFORM): cv.string,
         }))
 
@@ -164,6 +165,8 @@ def async_setup(hass, config):
                         _fire_button_pressed_event)
 
                 # Do not create a device for binary sensors in 'on only' mode
+                _LOGGER.debug('Address: {}  Platform: {}  Mode: {}'.format(
+                    device.address.human, platform, mode))
                 if not (mode and
                         platform == 'binary_sensor' and
                         mode == 'on_only'):
@@ -260,7 +263,8 @@ def async_setup(hass, config):
     def _fire_motion_detected_event(address, group, val):
         # Firing an event when motion is detected.
         if val:
-            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_MOTION_DETECTED))
+            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN,
+                                                      EVENT_MOTION_DETECTED))
             hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_MOTION_DETECTED), {
                 CONF_ADDRESS: address.hex
                 })
@@ -292,12 +296,13 @@ def async_setup(hass, config):
             device = plm.devices[address.hex]
             state_name = device.states[group].name
             button = state_name[-1].lower()
-            _LOGGER.debug('Firing event {}.{} with address {} and button {}'.format(
+            _LOGGER.debug('Firing event {}.{} '
+                          'with address {} and button {}'.format(
                 DOMAIN, EVENT_REMOTE_BUTTON_PRESSED, address.hex, button))
-            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_REMOTE_BUTTON_PRESSED), {
-                CONF_ADDRESS: address.hex,
-                EVENT_CONF_BUTTON: button
-                })
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_REMOTE_BUTTON_PRESSED),
+                          {CONF_ADDRESS: address.hex,
+                           EVENT_CONF_BUTTON: button
+                           })
 
     _LOGGER.info("Looking for PLM on %s", port)
     conn = yield from insteonplm.Connection.create(
