@@ -291,7 +291,7 @@ def async_setup(hass, config):
         if val:
             _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_REMOTE_BUTTON_PRESSED))
             device = plm.devices[address.hex]
-            state_name = device.states[group]
+            state_name = device.states[group].name
             button = state_name[-1].lower()
             self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_REMOTE_BUTTON_PRESSED), {
                 CONF_ADDRESS: address.hex,
