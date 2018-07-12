@@ -343,6 +343,9 @@ omit =
     homeassistant/components/zoneminder.py
     homeassistant/components/*/zoneminder.py
 
+    homeassistant/components/tuya.py
+    homeassistant/components/*/tuya.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
