@@ -11,7 +11,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (ATTR_TARGET, ATTR_MESSAGE)
-from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD, CONF_NAME)
+from homeassistant.const import (CONF_EMAIL, CONF_PASSWORD, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['hangups==0.4.4']
@@ -26,6 +26,10 @@ CONF_WORD = 'word'
 CONF_EXPRESSION = 'expression'
 
 EVENT_HANGOUTS_COMMAND = 'hangouts_command'
+
+EVENT_HANGOUTS_CONNECTED = 'hangouts_connected'
+EVENT_HANGOUTS_USERS_CHANGED = 'hangouts_users_changed'
+EVENT_HANGOUTS_CONVERSATIONS_CHANGED = 'hangouts_conversations_changed'
 
 CONF_CONVERSATION_ID = 'id'
 CONF_CONVERSATION_NAME = 'name'
@@ -96,13 +100,8 @@ async def async_setup(hass, config):
         return False
     
     await bot.async_connect()
-    import homeassistant
-
-    homeassistant.util.async_.fire_coroutine_threadsafe(bot.async_handle_update_users_and_conversations(None), hass.loop)
-
-    hass.services.async_register(DOMAIN, SERVICE_SEND_MESSAGE, bot.async_handle_send_message,
-                                 schema=MESSAGE_SCHEMA)
     
+    hass.services.async_register(DOMAIN, SERVICE_SEND_MESSAGE, bot.async_handle_send_message, schema=MESSAGE_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_USERS_AND_CONVERSATIONS, bot.async_handle_update_users_and_conversations, schema=None)
 
     return True
@@ -126,8 +125,7 @@ class HangoutsCredentials(object):
 class HangoutsBot(object):
     """The Hangouts Bot."""
 
-    def __init__(self, hass, config_file,
-                 email, password, commands):
+    def __init__(self, hass, config_file, email, password, commands):
         """Set up the client."""
         self.hass = hass
 
@@ -135,71 +133,85 @@ class HangoutsBot(object):
 
         self._email = email
         self._password = password
+        self._commands = commands
 
-        # We have to fetch the aliases for every room to make sure we don't
-        # join it twice by accident. However, fetching aliases is costly,
-        # so we only do it once per room.
-        self._aliases_fetched_for = set()
-
-        # word commands are stored dict-of-dict: First dict indexes by room ID
-        #  / alias, second dict indexes by the word
+        self.__init_eventhandler__()
+    
+    
+    def __init_eventhandler__(self):
+        self.hass.bus.async_listen(EVENT_HANGOUTS_CONNECTED, self.async_handle_update_users_and_conversations)
+        self.hass.bus.async_listen(EVENT_HANGOUTS_CONVERSATIONS_CHANGED, self._async_update_conversaition_commands)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self._async_handle_hass_stop)
+        
+    def _async_update_conversaition_commands(self, _):
         self._word_commands = {}
 
-        # regular expression commands are stored as a list of commands per
-        # room, i.e., a dict-of-list
         self._expression_commands = {}
 
-        for command in commands:
+        for command in self._commands:
             if not command.get(CONF_CONVERSATIONS):
-                command[CONF_CONVERSATIONS] = None #TODO: all conversations
+                command[CONF_CONVERSATIONS] = [conv.id_ for conv in self._conversation_list.get_all() ]
 
             if command.get(CONF_WORD):
-                for room_id in command[CONF_CONVERSATIONS]:
-                    if room_id not in self._word_commands:
-                        self._word_commands[room_id] = {}
-                    self._word_commands[room_id][command[CONF_WORD]] = command
+                for conv_id in command[CONF_CONVERSATIONS]:
+                    if conv_id not in self._word_commands:
+                        self._word_commands[conv_id] = {}
+                    self._word_commands[conv_id][command[CONF_WORD].lower()] = command
             else:
-                for room_id in command[CONF_CONVERSATIONS]:
-                    if room_id not in self._expression_commands:
-                        self._expression_commands[room_id] = []
-                    self._expression_commands[room_id].append(command)
+                for conv_id in command[CONF_CONVERSATIONS]:
+                    if conv_id not in self._expression_commands:
+                        self._expression_commands[conv_id] = []
+                    self._expression_commands[conv_id].append(command)
         
-    def _handle_conversation_message(self, room_id, conversation, event):
-        """Handle a message sent to a conversatio."""
-        if event['content']['msgtype'] != 'm.text':
+        try:
+            self._conversation_list.on_event.remove_observer(self._handle_conversation_event)
+        except ValueError as error:
+            pass
+        self._conversation_list.on_event.add_observer(self._handle_conversation_event)
+
+    def _handle_conversation_event(self, event):
+        from hangups import ChatMessageEvent
+        if event.__class__ is ChatMessageEvent:
+            self._handle_conversation_message(event.conversation_id, event.user_id, event)
+        
+        
+    def _handle_conversation_message(self, conv_id, user_id, event):
+        """Handle a message sent to a conversation."""
+        user = self._user_list.get_user(user_id)
+        if user.is_self:
             return
+    
+        _LOGGER.debug("Handling message '%s' from %s", event.text, user.full_name)
 
-        if event['sender'] == self.username:
-            return
+        event_data = None
 
-        _LOGGER.debug("Handling message: %s", event['content']['body'])
-
-        if event['content']['body'][0] == "!":
-            # Could trigger a single-word command.
-            pieces = event['content']['body'].split(' ')
-            cmd = pieces[0][1:]
-
-            command = self._word_commands.get(room_id, {}).get(cmd)
-            if command:
-                event_data = {
-                    'command': command[CONF_NAME],
-                    'sender': event['sender'],
-                    'room': room_id,
-                    'args': pieces[1:]
-                }
-                self.hass.bus.fire(EVENT_HANGOUTS_COMMAND, event_data)
-
-        # After single-word commands, check all regex commands in the room
-        for command in self._expression_commands.get(room_id, []):
-            match = command[CONF_EXPRESSION].match(event['content']['body'])
-            if not match:
-                continue
+        pieces = event.text.split(' ')
+        cmd = pieces[0].lower()
+        command = self._word_commands.get(conv_id, {}).get(cmd)
+        if command:
             event_data = {
                 'command': command[CONF_NAME],
-                'sender': event['sender'],
-                'room': room_id,
-                'args': match.groupdict()
+                'conversation_id': conv_id,
+                'user': {
+                    'id_': user_id,
+                    'chat_id': user_id.chat_id,
+                    'full_name': user.full_name
+                },
+                'args': pieces[1:]
             }
+        else:
+            # After single-word commands, check all regex commands in the room
+            for command in self._expression_commands.get(conv_id, []):
+                match = command[CONF_EXPRESSION].match(event.text)
+                if not match: continue
+                event_data = {
+                    'command': command[CONF_NAME],
+                    'conversation': conv_id,
+                    'user_id': user_id,
+                    'user_name': user.full_name,
+                    'args': match.groupdict()
+                }
+        if event_data is not None:
             self.hass.bus.fire(EVENT_HANGOUTS_COMMAND, event_data)
 
 
@@ -221,10 +233,17 @@ class HangoutsBot(object):
 
     def _on_connect(self):
         _LOGGER.info('Connected!')
+        self.hass.bus.fire(EVENT_HANGOUTS_CONNECTED)
 
     def _on_disconnect(self):
         """Handle disconnecting"""
         _LOGGER.info('Connection lost!')
+        self.hass.bus.fire('hangouts.disconnected')
+
+    async def _async_handle_hass_stop(self, _):
+        """Run once when Home Assistant stops."""
+        await self._client.disconnect()
+
 
     async def _async_send_message(self, message, targets):
         conversations = []
@@ -272,7 +291,10 @@ class HangoutsBot(object):
             conversations[str(conv.id_)] = {'name': conv.name, 'users': u}
             
         self.hass.states.async_set("{}.users".format(DOMAIN), len(self._user_list.get_all()), attributes=users)
+        self.hass.bus.fire(EVENT_HANGOUTS_USERS_CHANGED, users)
         self.hass.states.async_set("{}.conversations".format(DOMAIN), len(self._conversation_list.get_all()), attributes=conversations)
+        self.hass.bus.fire(EVENT_HANGOUTS_CONVERSATIONS_CHANGED, conversations)
+        
 
     async def async_handle_send_message(self, service):
         """Handle the send_message service."""
