@@ -261,7 +261,7 @@ def async_setup(hass, config):
         # Firing an event when motion is detected.
         if val:
             _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_MOTION_DETECTED))
-            self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_MOTION_DETECTED), {
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_MOTION_DETECTED), {
                 CONF_ADDRESS: address.hex
                 })
 
@@ -269,12 +269,12 @@ def async_setup(hass, config):
         # Firing an event when light or dark is detected.
         if val:
             _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_DARK_DETECTED))
-            self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_DARK_DETECTED), {
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_DARK_DETECTED), {
                 CONF_ADDRESS: address.hex
                 })
         else:
             _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_LIGHT_DETECTED))
-            self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_LIGHT_DETECTED), {
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_LIGHT_DETECTED), {
                 CONF_ADDRESS: address.hex
                 })
 
@@ -282,7 +282,7 @@ def async_setup(hass, config):
         # Firing an event when battery low is detected.
         if not val:
             _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_BATTERY_LOW))
-            self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_BATTERY_LOW), {
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_BATTERY_LOW), {
                 CONF_ADDRESS: address.hex
                 })
 
@@ -293,7 +293,7 @@ def async_setup(hass, config):
             device = plm.devices[address.hex]
             state_name = device.states[group].name
             button = state_name[-1].lower()
-            self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_REMOTE_BUTTON_PRESSED), {
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_REMOTE_BUTTON_PRESSED), {
                 CONF_ADDRESS: address.hex,
                 EVENT_CONF_BUTTON: button
                 })
