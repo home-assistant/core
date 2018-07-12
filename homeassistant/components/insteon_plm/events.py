@@ -4,6 +4,9 @@ Support for INSTEON PowerLinc Modem.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/insteon_plm/
 """
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 EVENT_MOTION_DETECTED = 'motion_detected'
 EVENT_LIGHT_DETECTED = 'light_detected'
