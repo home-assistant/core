@@ -319,7 +319,7 @@ def async_setup(hass, config):
             elif prop in [CONF_FIRMWARE, CONF_PRODUCT_KEY]:
                 plm.devices.add_override(address, CONF_PRODUCT_KEY,
                                          device_override[prop])
-            elif prop == CONF_MODE:
+            elif prop == CONF_BUTTON_MODE:
                mode_conf[address] = prop
 
     hass.data[DOMAIN] = {}
