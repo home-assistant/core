@@ -61,6 +61,13 @@ LIGHT_DETECTED_STATE_NAME = 'lightSensor'
 BATTERY_LOW_STATE_NAME = 'batterySensor',
 BUTTON_PRESSED_STATE_NAME = 'onLevelButton'
 
+EVENT_MOTION_DETECTED = 'motion_detected'
+EVENT_LIGHT_DETECTED = 'light_detected'
+EVENT_DARK_DETECTED = 'darK_detected'
+EVENT_BATTERY_LOW = 'battery_low'
+EVENT_REMOTE_BUTTON_PRESSED = 'remote_button_pressed'
+EVENT_CONF_BUTTON = 'button'
+
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
         vol.Required(CONF_ADDRESS): cv.string,
@@ -136,12 +143,6 @@ def async_setup(hass, config):
     @callback
     def async_plm_new_device(device):
         """Detect device from transport to be delegated to platform."""
-
-        from .events import (fire_battery_low_event,
-                             fire_button_pressed_event,
-                             fire_light_dark_detected_event,
-                             fire_motion_detected_event)
-
         for state_key in device.states:
             platform_info = ipdb[device.states[state_key]]
             if platform_info and platform_info.platform:
@@ -151,16 +152,16 @@ def async_setup(hass, config):
 
                 if state_name == MOTION_DETECTED_STATE_NAME:
                     device.states[state_key].register_updates(
-                        fire_motion_detected_event)
+                        _fire_motion_detected_event)
                 elif state_name == LIGHT_DETECTED_STATE_NAME:
                     device.states[state_key].register_updates(
-                        fire_light_dark_detected_event)
+                        _fire_light_dark_detected_event)
                 elif state_name == BATTERY_LOW_STATE_NAME:
                     device.states[state_key].register_updates(
-                        fire_battery_low_event)
+                        _fire_battery_low_event)
                 elif state_name[:-1] == BUTTON_PRESSED_STATE_NAME:
                     device.states[state_key].register_updates(
-                        fire_button_pressed_event)
+                        _fire_button_pressed_event)
 
                 # Do not create a device for binary sensors in 'on only' mode
                 if not (mode and
@@ -255,6 +256,48 @@ def async_setup(hass, config):
                                x10_all_lights_on,
                                schema=X10_HOUSECODE_SCHEMA)
         _LOGGER.debug("Insteon_plm Services registered")
+
+    def _fire_motion_detected_event(address, group, val):
+        # Firing an event when motion is detected.
+        if val:
+            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_MOTION_DETECTED))
+            self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_MOTION_DETECTED), {
+                CONF_ADDRESS: address.hex
+                })
+
+    def _fire_light_dark_detected_event(address, group, val):
+        # Firing an event when light or dark is detected.
+        if val:
+            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_DARK_DETECTED))
+            self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_DARK_DETECTED), {
+                CONF_ADDRESS: address.hex
+                })
+        else:
+            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_LIGHT_DETECTED))
+            self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_LIGHT_DETECTED), {
+                CONF_ADDRESS: address.hex
+                })
+
+    def _fire_battery_low_event(address, group, val):
+        # Firing an event when battery low is detected.
+        if not val:
+            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_BATTERY_LOW))
+            self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_BATTERY_LOW), {
+                CONF_ADDRESS: address.hex
+                })
+
+    def _fire_button_pressed_event(address, group, val):
+        # Firing an event when a button is pressed.
+        if val:
+            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_REMOTE_BUTTON_PRESSED))
+            button = device.states[group].name[:-1].lower()
+            device = plm.devices[address.hex]
+            state_name = device.states[group]
+            button = state_name[-1].lower()
+            self.hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_REMOTE_BUTTON_PRESSED), {
+                CONF_ADDRESS: address.hex,
+                EVENT_CONF_BUTTON: button
+                })
 
     _LOGGER.info("Looking for PLM on %s", port)
     conn = yield from insteonplm.Connection.create(
