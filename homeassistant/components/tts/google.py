@@ -26,7 +26,7 @@ MESSAGE_SIZE = 148
 
 SUPPORT_LANGUAGES = [
     'af', 'sq', 'ar', 'hy', 'bn', 'ca', 'zh', 'zh-cn', 'zh-tw', 'zh-yue',
-    'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-uk', 'en-us', 'eo', 'fi',
+    'hr', 'cs', 'da', 'nl', 'en', 'en-au', 'en-in', 'en-uk', 'en-us', 'eo', 'fi',
     'fr', 'de', 'el', 'hi', 'hu', 'is', 'id', 'it', 'ja', 'ko', 'la', 'lv',
     'mk', 'no', 'pl', 'pt', 'pt-br', 'ro', 'ru', 'sr', 'sk', 'es', 'es-es',
     'es-us', 'sw', 'sv', 'ta', 'th', 'tr', 'vi', 'cy', 'uk', 'bg-BG'
