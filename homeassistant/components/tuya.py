@@ -71,7 +71,7 @@ def setup(hass, config):
                 if ha_type not in device_type_list:
                     device_type_list[ha_type] = []
                 device_type_list[ha_type].append(device.object_id())
-                hass.data[DOMAIN]['entities'][dev_id] = None
+                hass.data[DOMAIN]['entities'][device.object_id()] = None
         for ha_type, dev_ids in device_type_list.items():
             discovery.load_platform(
                 hass, ha_type, DOMAIN, {'dev_ids': dev_ids}, config)
