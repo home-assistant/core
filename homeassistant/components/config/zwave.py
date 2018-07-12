@@ -205,19 +205,32 @@ class ZWaveProtectionView(HomeAssistantView):
     url = r"/api/zwave/protection/{node_id:\d+}"
     name = "api:zwave:protection"
 
-    @asyncio.coroutine
-    def get(self, request, node_id):
+    async def get(self, request, node_id):
         """Retrieve the protection commandclass options of node."""
         nodeid = int(node_id)
         hass = request.app['hass']
         network = hass.data.get(const.DATA_NETWORK)
-        node = network.nodes.get(nodeid)
+
+        def _get_node():
+            """Helper to get node."""
+            return network.nodes.get(nodeid)
+
+        node = await hass.async_add_executor_job(_get_node)
         if node is None:
             return self.json_message('Node not found', HTTP_NOT_FOUND)
         protection_options = {}
-        if not node.has_command_class(const.COMMAND_CLASS_PROTECTION):
+
+        def _check_commandclass():
+            """Helper to check for commandclass existence."""
+            return node.has_command_class(const.COMMAND_CLASS_PROTECTION)
+
+        if not await hass.async_add_executor_job(_check_commandclass):
             return self.json(protection_options)
-        protections = node.get_protections()
+
+        def _get_protections():
+            """Helper to get protections."""
+            return node.get_protections()
+        protections = await hass.async_add_executor_job(_get_protections)
         protection_options = {
             'value_id': '{0:d}'.format(list(protections)[0]),
             'selected': node.get_protection_item(list(protections)[0]),
