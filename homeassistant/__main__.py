@@ -241,7 +241,7 @@ def cmdline() -> List[str]:
 
 
 def setup_and_run_hass(config_dir: str,
-                       args: argparse.Namespace) -> Optional[int]:
+                       args: argparse.Namespace) -> int:
     """Set up HASS and run."""
     from homeassistant import bootstrap
 
@@ -274,7 +274,7 @@ def setup_and_run_hass(config_dir: str,
             log_no_color=args.log_no_color)
 
     if hass is None:
-        return None
+        return -1
 
     if args.open_ui:
         # Imported here to avoid importing asyncio before monkey patch
