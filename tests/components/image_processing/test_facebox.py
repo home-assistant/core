@@ -196,16 +196,6 @@ async def test_teach_service(hass, mock_image, mock_isfile, mock_open_file):
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
 
-    teach_events = []
-
-    @callback
-    def mock_teach_event(event):
-        """Mock event."""
-        teach_events.append(event)
-
-    hass.bus.async_listen(
-        'image_processing.teach_classifier', mock_teach_event)
-
     # Patch out 'is_allowed_path' as the mock files aren't allowed
     hass.config.is_allowed_path = Mock(return_value=True)
 
@@ -219,13 +209,6 @@ async def test_teach_service(hass, mock_image, mock_isfile, mock_open_file):
             ip.DOMAIN, fb.SERVICE_TEACH_FACE, service_data=data)
         await hass.async_block_till_done()
 
-    assert len(teach_events) == 1
-    assert teach_events[0].data[fb.ATTR_CLASSIFIER] == fb.CLASSIFIER
-    assert teach_events[0].data[ATTR_NAME] == MOCK_NAME
-    assert teach_events[0].data[fb.FILE_PATH] == MOCK_FILE_PATH
-    assert teach_events[0].data['success']
-    assert not teach_events[0].data['message']
-
     # Now test the failed teaching.
     with requests_mock.Mocker() as mock_req:
         url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
@@ -237,13 +220,6 @@ async def test_teach_service(hass, mock_image, mock_isfile, mock_open_file):
                                        fb.SERVICE_TEACH_FACE,
                                        service_data=data)
         await hass.async_block_till_done()
-
-    assert len(teach_events) == 2
-    assert teach_events[1].data[fb.ATTR_CLASSIFIER] == fb.CLASSIFIER
-    assert teach_events[1].data[ATTR_NAME] == MOCK_NAME
-    assert teach_events[1].data[fb.FILE_PATH] == MOCK_FILE_PATH
-    assert not teach_events[1].data['success']
-    assert teach_events[1].data['message'] == MOCK_ERROR
 
 
 async def test_setup_platform_with_name(hass):
