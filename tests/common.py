@@ -1,5 +1,6 @@
 """Test the helper method for writing tests."""
 import asyncio
+from collections import OrderedDict
 from datetime import timedelta
 import functools as ft
 import json
@@ -351,7 +352,7 @@ def ensure_auth_manager_loaded(auth_mgr):
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
     if store._users is None:
-        store._users = {}
+        store._users = OrderedDict()
 
 
 class MockModule(object):
