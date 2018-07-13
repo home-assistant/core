@@ -10,7 +10,7 @@ import logging
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.auth import generate_secret
+from homeassistant.auth.util import generate_secret
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
 import homeassistant.helpers.config_validation as cv

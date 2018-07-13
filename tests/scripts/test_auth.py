@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant.scripts import auth as script_auth
-from homeassistant.auth_providers import homeassistant as hass_auth
+from homeassistant.auth.providers import homeassistant as hass_auth
 
 
 @pytest.fixture
