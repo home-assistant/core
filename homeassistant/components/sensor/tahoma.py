@@ -11,12 +11,16 @@ from datetime import timedelta
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.tahoma import (
     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
+from homeassistant.const import (ATTR_BATTERY_LEVEL)
 
 DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=120)
+
+ATTR_RSSI_LEVEL = 'rssi_level'
+ATTR_STATUS = 'status'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -53,6 +57,25 @@ class TahomaSensor(TahomaDevice, Entity):
         elif self.tahoma_device.type == 'Humidity Sensor':
             return '%'
 
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attr = {}
+        super_attr = super().device_state_attributes
+        if super_attr is not None:
+            attr.update(super_attr)
+
+        if 'core:RSSILevelState' in self.tahoma_device.active_states:
+            attr[ATTR_RSSI_LEVEL] = \
+                self.tahoma_device.active_states['core:RSSILevelState']
+        if 'core:SensorDefectState' in self.tahoma_device.active_states:
+            attr[ATTR_BATTERY_LEVEL] = \
+                self.tahoma_device.active_states['core:SensorDefectState']
+        if 'core:StatusState' in self.tahoma_device.active_states:
+            attr[ATTR_STATUS] = \
+                self.tahoma_device.active_states['core:StatusState']
+        return attr
+
     def update(self):
         """Update the state."""
         self.controller.get_states([self.tahoma_device])
@@ -62,3 +85,5 @@ class TahomaSensor(TahomaDevice, Entity):
         if self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:ContactState']
+
+        _LOGGER.debug("Update %s, value: %d", self._name, self.current_value)
