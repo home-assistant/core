@@ -60,7 +60,7 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
     def is_on(self):
         """Return true if the shutter contact is on/open."""
         from homematicip.base.enums import WindowState
-        
+
         if self._device.sabotage:
             return True
         if self._device.windowState is None:

@@ -101,7 +101,7 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
     def state(self):
         """Return the state of the radiator valve."""
         from homematicip.base.enums import ValveState
-        
+
         if self._device.valveState != ValveState.ADAPTION_DONE:
             return self._device.valveState
         return round(self._device.valvePosition*100)
