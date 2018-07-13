@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant import data_entry_flow
-from homeassistant.auth_providers import homeassistant as hass_auth
+from homeassistant.auth.providers import homeassistant as hass_auth
 
 
 @pytest.fixture

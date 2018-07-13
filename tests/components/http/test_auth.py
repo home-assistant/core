@@ -7,7 +7,7 @@ import pytest
 from aiohttp import BasicAuth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
 
-from homeassistant.auth import AccessToken, RefreshToken
+from homeassistant.auth.models import AccessToken, RefreshToken
 from homeassistant.components.http.auth import setup_auth
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.real_ip import setup_real_ip
