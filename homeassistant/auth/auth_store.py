@@ -132,7 +132,7 @@ class AuthStore:
             return
 
         for user_dict in data['users']:
-            user_dict['id'] = models.User(**user_dict)
+            users[user_dict['id']] = models.User(**user_dict)
 
         for cred_dict in data['credentials']:
             users[cred_dict['user_id']].credentials.append(models.Credentials(
