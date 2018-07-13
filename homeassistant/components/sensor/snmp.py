@@ -120,7 +120,7 @@ class SnmpSensor(Entity):
     @property
     def unique_id(self):
         """Return a unique id for the sensor, host + OID."""
-        return self.data.unique_id()
+        return self.data.unique_id
 
     def update(self):
         """Get the latest data and updates the states."""
