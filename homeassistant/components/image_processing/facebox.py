@@ -110,13 +110,9 @@ def teach_file(url, username, password, name, file_path):
                 )
         if response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
-            return None
         elif response.status_code == HTTP_BAD_REQUEST:
             _LOGGER.error("%s teaching of file %s failed with message:%s",
                           CLASSIFIER, file_path, response.text)
-            return None
-        else:
-            return response
     except requests.exceptions.ConnectionError:
         _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
 
