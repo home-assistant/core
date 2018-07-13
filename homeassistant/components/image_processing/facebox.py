@@ -10,7 +10,8 @@ import logging
 import requests
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_NAME)
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
@@ -27,7 +28,7 @@ ATTR_CLASSIFIER = 'classifier'
 ATTR_IMAGE_ID = 'image_id'
 ATTR_ID = 'id'
 ATTR_MATCHED = 'matched'
-ATTR_NAME = 'name'
+FACEBOX_NAME = 'name'
 CLASSIFIER = 'facebox'
 DATA_FACEBOX = 'facebox_classifiers'
 FILE_PATH = 'file_path'
@@ -67,10 +68,10 @@ def parse_faces(api_faces):
     for entry in api_faces:
         face = {}
         if entry['matched']:  # This data is only in matched faces.
-            face[ATTR_NAME] = entry['name']
+            face[FACEBOX_NAME] = entry['name']
             face[ATTR_IMAGE_ID] = entry['id']
         else:  # Lets be explicit.
-            face[ATTR_NAME] = None
+            face[FACEBOX_NAME] = None
             face[ATTR_IMAGE_ID] = None
         face[ATTR_CONFIDENCE] = round(100.0*entry['confidence'], 2)
         face[ATTR_MATCHED] = entry['matched']
@@ -104,7 +105,7 @@ def teach_file(url, username, password, name, file_path):
             response = requests.post(
                 url,
                 auth=requests.auth.HTTPBasicAuth(username, password),
-                data={ATTR_NAME: name, ATTR_ID: file_path},
+                data={FACEBOX_NAME: name, ATTR_ID: file_path},
                 files={'file': open_file},
                 timeout=TIMEOUT
                 )
