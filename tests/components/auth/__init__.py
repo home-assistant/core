@@ -1,6 +1,4 @@
 """Tests for the auth component."""
-from aiohttp.helpers import BasicAuth
-
 from homeassistant import auth
 from homeassistant.setup import async_setup_component
 
@@ -16,10 +14,6 @@ BASE_CONFIG = [{
         'name': 'Test Name'
     }]
 }]
-CLIENT_ID = 'test-id'
-CLIENT_SECRET = 'test-secret'
-CLIENT_AUTH = BasicAuth(CLIENT_ID, CLIENT_SECRET)
-CLIENT_REDIRECT_URI = 'http://example.com/callback'
 
 
 async def async_setup_auth(hass, aiohttp_client, provider_configs=BASE_CONFIG,
@@ -32,9 +26,6 @@ async def async_setup_auth(hass, aiohttp_client, provider_configs=BASE_CONFIG,
             'api_password': 'bla'
         }
     })
-    client = auth.Client('Test Client', CLIENT_ID, CLIENT_SECRET,
-                         redirect_uris=[CLIENT_REDIRECT_URI])
-    hass.auth._store.clients[client.id] = client
     if setup_api:
         await async_setup_component(hass, 'api', {})
     return await aiohttp_client(hass.http.app)

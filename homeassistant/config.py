@@ -7,12 +7,13 @@ import os
 import re
 import shutil
 # pylint: disable=unused-import
-from typing import Any, List, Tuple, Optional  # NOQA
+from typing import Any, Tuple, Optional  # noqa: F401
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import auth
+from homeassistant.auth import providers as auth_providers
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
@@ -159,7 +160,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.IsDir()]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
     vol.Optional(CONF_AUTH_PROVIDERS):
-        vol.All(cv.ensure_list, [auth.AUTH_PROVIDER_SCHEMA])
+        vol.All(cv.ensure_list, [auth_providers.AUTH_PROVIDER_SCHEMA])
 })
 
 

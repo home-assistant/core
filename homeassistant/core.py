@@ -17,7 +17,8 @@ import threading
 from time import monotonic
 
 from types import MappingProxyType
-from typing import Optional, Any, Callable, List, TypeVar, Dict  # NOQA
+from typing import (  # NOQA
+    Optional, Any, Callable, List, TypeVar, Dict, Coroutine)
 
 from async_timeout import timeout
 import voluptuous as vol
@@ -205,8 +206,8 @@ class HomeAssistant(object):
     def async_add_job(
             self,
             target: Callable[..., Any],
-            *args: Any) -> Optional[asyncio.tasks.Task]:
-        """Add a job from within the eventloop.
+            *args: Any) -> Optional[asyncio.Future]:
+        """Add a job from within the event loop.
 
         This method must be run in the event loop.
 
@@ -231,10 +232,25 @@ class HomeAssistant(object):
         return task
 
     @callback
+    def async_create_task(self, target: Coroutine) -> asyncio.tasks.Task:
+        """Create a task from within the eventloop.
+
+        This method must be run in the event loop.
+
+        target: target to call.
+        """
+        task = self.loop.create_task(target)
+
+        if self._track_task:
+            self._pending_tasks.append(task)
+
+        return task
+
+    @callback
     def async_add_executor_job(
             self,
             target: Callable[..., Any],
-            *args: Any) -> asyncio.tasks.Task:
+            *args: Any) -> asyncio.Future:
         """Add an executor job from within the event loop."""
         task = self.loop.run_in_executor(None, target, *args)
 

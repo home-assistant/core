@@ -270,11 +270,14 @@ class _AlexaInterface(object):
         """Return properties serialized for an API response."""
         for prop in self.properties_supported():
             prop_name = prop['name']
-            yield {
-                'name': prop_name,
-                'namespace': self.name(),
-                'value': self.get_property(prop_name),
-            }
+            # pylint: disable=assignment-from-no-return
+            prop_value = self.get_property(prop_name)
+            if prop_value is not None:
+                yield {
+                    'name': prop_name,
+                    'namespace': self.name(),
+                    'value': prop_value,
+                }
 
 
 class _AlexaPowerController(_AlexaInterface):
@@ -438,13 +441,16 @@ class _AlexaThermostatController(_AlexaInterface):
         unit = self.entity.attributes[CONF_UNIT_OF_MEASUREMENT]
         temp = None
         if name == 'targetSetpoint':
-            temp = self.entity.attributes.get(ATTR_TEMPERATURE)
+            temp = self.entity.attributes.get(climate.ATTR_TEMPERATURE)
         elif name == 'lowerSetpoint':
             temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
         elif name == 'upperSetpoint':
             temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)
-        if temp is None:
+        else:
             raise _UnsupportedProperty(name)
+
+        if temp is None:
+            return None
 
         return {
             'value': float(temp),

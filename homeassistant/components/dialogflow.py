@@ -99,7 +99,8 @@ async def async_handle_message(hass, message):
         return None
 
     action = req.get('action', '')
-    parameters = req.get('parameters')
+    parameters = req.get('parameters').copy()
+    parameters["dialogflow_query"] = message
     dialogflow_response = DialogflowResponse(parameters)
 
     if action == "":

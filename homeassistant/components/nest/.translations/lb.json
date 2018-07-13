@@ -1,0 +1,33 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Dir k\u00ebnnt n\u00ebmmen een eenzegen\u00a0Nest Kont\u00a0konfigur\u00e9ieren.",
+            "authorize_url_fail": "Onbekannte Feeler beim gener\u00e9ieren vun der Autorisatiouns URL.",
+            "authorize_url_timeout": "Z\u00e4it Iwwerschreidung\u00a0beim gener\u00e9ieren\u00a0vun der Autorisatiouns\u00a0URL.",
+            "no_flows": "Dir musst Nest konfigur\u00e9ieren, ier Dir d\u00ebs Authentifiz\u00e9ierung\u00a0k\u00ebnnt benotzen.[Liest w.e.g. d'Instruktioune](https://www.home-assistant.io/components/nest/)."
+        },
+        "error": {
+            "internal_error": "Interne Feeler beim valid\u00e9ieren vum Code",
+            "invalid_code": "Ong\u00ebltege Code",
+            "timeout": "Z\u00e4it Iwwerschreidung\u00a0beim valid\u00e9ieren vum Code",
+            "unknown": "Onbekannte Feeler beim valid\u00e9ieren vum Code"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Ubidder"
+                },
+                "description": "Wielt den Authentifikatioun Ubidder deen sech mat Nest verbanne soll.",
+                "title": "Authentifikatioun Ubidder"
+            },
+            "link": {
+                "data": {
+                    "code": "Pin code"
+                },
+                "description": "Fir den Nest Kont ze verbannen, [autoris\u00e9iert \u00e4ren Kont]({url}).\nKop\u00e9iert no der Autorisatioun den Pin hei \u00ebnnendr\u00ebnner",
+                "title": "Nest Kont verbannen"
+            }
+        },
+        "title": "Nest"
+    }
+}

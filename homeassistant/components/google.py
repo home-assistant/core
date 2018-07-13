@@ -25,6 +25,7 @@ from homeassistant.util import convert, dt
 
 REQUIREMENTS = [
     'google-api-python-client==1.6.4',
+    'httplib2==0.10.3',
     'oauth2client==4.0.0',
 ]
 

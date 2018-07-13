@@ -6,7 +6,11 @@ documentation as possible to keep it understandable.
 
 Components can be accessed via hass.components.switch from your code.
 If you want to retrieve a platform that is part of a component, you should
-call get_component(hass, 'switch.your_platform'). In both cases the config
+call get_component(hass, 'switch.your_platform'). In both cases the config>>>>>>> dev>>>>>>> dev
+194
+
+194
+
 directory is checked to see if it contains a user provided version. If not
 available it will check the built-in components and platforms.
 """
@@ -17,19 +21,19 @@ import sys
 from types import ModuleType
 
 # pylint: disable=unused-import
-from typing import Dict, List, Optional, Sequence, Set  # NOQA
+from typing import Dict, List, Optional, Sequence, Set, TYPE_CHECKING  # NOQA
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
 
-# Typing imports
+# Typing imports that create a circular dependency
 # pylint: disable=using-constant-test,unused-import
-if False:
+if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant  # NOQA
 
 PREPARED = False
 
-DEPENDENCY_BLACKLIST = set(('config',))
+DEPENDENCY_BLACKLIST = {'config'}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,8 +43,9 @@ PATH_CUSTOM_COMPONENTS = 'custom_components'
 PACKAGE_COMPONENTS = 'homeassistant.components'
 
 
-def set_component(hass, comp_name: str,
-                  component: Optional[ModuleType]) -> None:
+
+def set_component(hass,  # type: HomeAssistant
+                  comp_name: str, component: Optional[ModuleType]) -> None:
     """Set a component in the cache.
 
     Async friendly.
@@ -94,7 +99,8 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
             # This prevents that when only
             # custom_components/switch/some_platform.py exists,
             # the import custom_components.switch would succeed.
-            if module.__spec__ and module.__spec__.origin == 'namespace':
+            # __file__ was unset for namespaces before Python 3.7
+            if getattr(module, '__file__', None) is None:
                 continue
 
             _LOGGER.info("Loaded %s from %s", comp_or_platform, path)

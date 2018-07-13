@@ -1,86 +1,76 @@
-"""Example auth provider."""
+"""
+Support Legacy API password auth provider.
+
+It will be removed when auth system production ready
+"""
 from collections import OrderedDict
 import hmac
 
 import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant import auth, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.core import callback
+
+from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
 
 
 USER_SCHEMA = vol.Schema({
     vol.Required('username'): str,
-    vol.Required('password'): str,
-    vol.Optional('name'): str,
 })
 
 
-CONFIG_SCHEMA = auth.AUTH_PROVIDER_SCHEMA.extend({
-    vol.Required('users'): [USER_SCHEMA]
+CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)
+
+LEGACY_USER = 'homeassistant'
 
 
 class InvalidAuthError(HomeAssistantError):
     """Raised when submitting invalid authentication."""
 
 
-@auth.AUTH_PROVIDERS.register('insecure_example')
-class ExampleAuthProvider(auth.AuthProvider):
+@AUTH_PROVIDERS.register('legacy_api_password')
+class LegacyApiPasswordAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
+
+    DEFAULT_TITLE = 'Legacy API Password'
 
     async def async_credential_flow(self):
         """Return a flow to login."""
         return LoginFlow(self)
 
     @callback
-    def async_validate_login(self, username, password):
+    def async_validate_login(self, password):
         """Helper to validate a username and password."""
-        user = None
+        if not hasattr(self.hass, 'http'):
+            raise ValueError('http component is not loaded')
 
-        # Compare all users to avoid timing attacks.
-        for usr in self.config['users']:
-            if hmac.compare_digest(username.encode('utf-8'),
-                                   usr['username'].encode('utf-8')):
-                user = usr
+        if self.hass.http.api_password is None:
+            raise ValueError('http component is not configured using'
+                             ' api_password')
 
-        if user is None:
-            # Do one more compare to make timing the same as if user was found.
-            hmac.compare_digest(password.encode('utf-8'),
-                                password.encode('utf-8'))
-            raise InvalidAuthError
-
-        if not hmac.compare_digest(user['password'].encode('utf-8'),
+        if not hmac.compare_digest(self.hass.http.api_password.encode('utf-8'),
                                    password.encode('utf-8')):
             raise InvalidAuthError
 
     async def async_get_or_create_credentials(self, flow_result):
-        """Get credentials based on the flow result."""
-        username = flow_result['username']
-
+        """Return LEGACY_USER always."""
         for credential in await self.async_credentials():
-            if credential.data['username'] == username:
+            if credential.data['username'] == LEGACY_USER:
                 return credential
 
-        # Create new credentials.
         return self.async_create_credentials({
-            'username': username
+            'username': LEGACY_USER
         })
 
     async def async_user_meta_for_credentials(self, credentials):
-        """Return extra user metadata for credentials.
+        """
+        Set name as LEGACY_USER always.
 
         Will be used to populate info when creating a new user.
         """
-        username = credentials.data['username']
-
-        for user in self.config['users']:
-            if user['username'] == username:
-                return {
-                    'name': user.get('name')
-                }
-
-        return {}
+        return {'name': LEGACY_USER}
 
 
 class LoginFlow(data_entry_flow.FlowHandler):
@@ -97,18 +87,17 @@ class LoginFlow(data_entry_flow.FlowHandler):
         if user_input is not None:
             try:
                 self._auth_provider.async_validate_login(
-                    user_input['username'], user_input['password'])
+                    user_input['password'])
             except InvalidAuthError:
                 errors['base'] = 'invalid_auth'
 
             if not errors:
                 return self.async_create_entry(
                     title=self._auth_provider.name,
-                    data=user_input
+                    data={}
                 )
 
         schema = OrderedDict()
-        schema['username'] = str
         schema['password'] = str
 
         return self.async_show_form(

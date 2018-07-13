@@ -9,30 +9,33 @@ import logging
 
 from homeassistant.components.light import Light
 from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
-    ATTR_HOME_ID)
+    HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN,
+    HMIPC_HAPID)
 
 DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_POWER_CONSUMPTION = 'power_consumption'
-ATTR_ENERGIE_COUNTER = 'energie_counter'
+ATTR_ENERGIE_COUNTER = 'energie_counter_kwh'
 ATTR_PROFILE_MODE = 'profile_mode'
 
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the HomematicIP light devices."""
-    from homematicip.device import (
-        BrandSwitchMeasuring)
+    """Old way of setting up HomematicIP lights."""
+    pass
 
-    if discovery_info is None:
-        return
-    home = hass.data[HOMEMATICIP_CLOUD_DOMAIN][discovery_info[ATTR_HOME_ID]]
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up the HomematicIP lights from a config entry."""
+    from homematicip.aio.device import (
+        AsyncBrandSwitchMeasuring)
+
+    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
-        if isinstance(device, BrandSwitchMeasuring):
+        if isinstance(device, AsyncBrandSwitchMeasuring):
             devices.append(HomematicipLightMeasuring(home, device))
 
     if devices:
@@ -64,13 +67,15 @@ class HomematicipLightMeasuring(HomematicipLight):
     """MomematicIP measuring light device."""
 
     @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self._device.currentPowerConsumption
-
-    @property
-    def today_energy_kwh(self):
-        """Return the today total energy usage in kWh."""
-        if self._device.energyCounter is None:
-            return 0
-        return round(self._device.energyCounter)
+    def device_state_attributes(self):
+        """Return the state attributes of the generic device."""
+        attr = super().device_state_attributes
+        if self._device.currentPowerConsumption > 0.05:
+            attr.update({
+                ATTR_POWER_CONSUMPTION:
+                    round(self._device.currentPowerConsumption, 2)
+            })
+        attr.update({
+            ATTR_ENERGIE_COUNTER: round(self._device.energyCounter, 2)
+        })
+        return attr

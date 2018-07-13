@@ -12,6 +12,7 @@ import threading
 from contextlib import contextmanager
 
 from homeassistant import auth, core as ha, data_entry_flow, config_entries
+from homeassistant.auth import models as auth_models, auth_store
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -31,6 +32,8 @@ from homeassistant.util.async_ import (
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
+CLIENT_ID = 'https://example.com/app'
+CLIENT_REDIRECT_URI = 'https://example.com/app/callback'
 
 
 def threadsafe_callback_factory(func):
@@ -112,7 +115,7 @@ def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant(loop)
     hass.config.async_load = Mock()
-    store = auth.AuthStore(hass)
+    store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {})
     ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
@@ -306,13 +309,14 @@ def mock_registry(hass, mock_entries=None):
     return registry
 
 
-class MockUser(auth.User):
+class MockUser(auth_models.User):
     """Mock a user in Home Assistant."""
 
     def __init__(self, id='mock-id', is_owner=True, is_active=True,
                  name='Mock User'):
         """Initialize mock user."""
-        super().__init__(id, is_owner, is_active, name)
+        super().__init__(
+            id=id, is_owner=is_owner, is_active=is_active, name=name)
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
@@ -321,7 +325,7 @@ class MockUser(auth.User):
     def add_to_auth_manager(self, auth_mgr):
         """Test helper to add entry to hass."""
         ensure_auth_manager_loaded(auth_mgr)
-        auth_mgr._store.users[self.id] = self
+        auth_mgr._store._users[self.id] = self
         return self
 
 
@@ -329,10 +333,8 @@ class MockUser(auth.User):
 def ensure_auth_manager_loaded(auth_mgr):
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
-    if store.clients is None:
-        store.clients = {}
-    if store.users is None:
-        store.users = {}
+    if store._users is None:
+        store._users = {}
 
 
 class MockModule(object):

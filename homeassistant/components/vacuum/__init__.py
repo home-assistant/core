@@ -57,7 +57,7 @@ VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
 
 VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_COMMAND): cv.string,
-    vol.Optional(ATTR_PARAMS): vol.Any(cv.Dict, cv.ensure_list),
+    vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
 })
 
 SERVICE_TO_METHOD = {
