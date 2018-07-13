@@ -5,7 +5,7 @@ import os
 
 from homeassistant.core import HomeAssistant
 from homeassistant.config import get_default_config_dir
-from homeassistant.auth_providers import homeassistant as hass_auth
+from homeassistant.auth.providers import homeassistant as hass_auth
 
 
 def run(args):

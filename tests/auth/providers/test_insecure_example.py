@@ -4,8 +4,8 @@ import uuid
 
 import pytest
 
-from homeassistant import auth
-from homeassistant.auth_providers import insecure_example
+from homeassistant.auth import auth_store, models as auth_models
+from homeassistant.auth.providers import insecure_example
 
 from tests.common import mock_coro
 
@@ -13,7 +13,7 @@ from tests.common import mock_coro
 @pytest.fixture
 def store(hass):
     """Mock store."""
-    return auth.AuthStore(hass)
+    return auth_store.AuthStore(hass)
 
 
 @pytest.fixture
@@ -45,7 +45,7 @@ async def test_create_new_credential(provider):
 
 async def test_match_existing_credentials(store, provider):
     """See if we match existing users."""
-    existing = auth.Credentials(
+    existing = auth_models.Credentials(
         id=uuid.uuid4(),
         auth_provider_type='insecure_example',
         auth_provider_id=None,

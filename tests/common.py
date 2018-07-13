@@ -12,6 +12,7 @@ import threading
 from contextlib import contextmanager
 
 from homeassistant import auth, core as ha, data_entry_flow, config_entries
+from homeassistant.auth import models as auth_models, auth_store
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -114,7 +115,7 @@ def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant(loop)
     hass.config.async_load = Mock()
-    store = auth.AuthStore(hass)
+    store = auth_store.AuthStore(hass)
     hass.auth = auth.AuthManager(hass, store, {})
     ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
@@ -308,7 +309,7 @@ def mock_registry(hass, mock_entries=None):
     return registry
 
 
-class MockUser(auth.User):
+class MockUser(auth_models.User):
     """Mock a user in Home Assistant."""
 
     def __init__(self, id='mock-id', is_owner=True, is_active=True,

@@ -6,14 +6,17 @@ import hmac
 
 import voluptuous as vol
 
-from homeassistant import auth, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.exceptions import HomeAssistantError
 
+from homeassistant.auth.util import generate_secret
+
+from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth_provider.homeassistant'
 
-CONFIG_SCHEMA = auth.AUTH_PROVIDER_SCHEMA.extend({
+CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)
 
 
@@ -43,7 +46,7 @@ class Data:
 
         if data is None:
             data = {
-                'salt': auth.generate_secret(),
+                'salt': generate_secret(),
                 'users': []
             }
 
@@ -112,8 +115,8 @@ class Data:
         await self._store.async_save(self._data)
 
 
-@auth.AUTH_PROVIDERS.register('homeassistant')
-class HassAuthProvider(auth.AuthProvider):
+@AUTH_PROVIDERS.register('homeassistant')
+class HassAuthProvider(AuthProvider):
     """Auth provider based on a local storage of users in HASS config dir."""
 
     DEFAULT_TITLE = 'Home Assistant Local'

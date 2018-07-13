@@ -4,13 +4,14 @@ from unittest.mock import Mock
 import pytest
 
 from homeassistant import auth
-from homeassistant.auth_providers import legacy_api_password
+from homeassistant.auth import auth_store
+from homeassistant.auth.providers import legacy_api_password
 
 
 @pytest.fixture
 def store(hass):
     """Mock store."""
-    return auth.AuthStore(hass)
+    return auth_store.AuthStore(hass)
 
 
 @pytest.fixture
