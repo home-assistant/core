@@ -7,7 +7,8 @@ https://home-assistant.io/components/light.homematicip_cloud/
 
 import logging
 
-from homeassistant.components.light import Light
+from homeassistant.components.light import (
+    Light, ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS)
 from homeassistant.components.homematicip_cloud import (
     HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN,
     HMIPC_HAPID)
