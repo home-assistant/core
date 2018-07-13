@@ -6,11 +6,7 @@ documentation as possible to keep it understandable.
 
 Components can be accessed via hass.components.switch from your code.
 If you want to retrieve a platform that is part of a component, you should
-call get_component(hass, 'switch.your_platform'). In both cases the config>>>>>>> dev>>>>>>> dev
-194
-
-194
-
+call get_component(hass, 'switch.your_platform'). In both cases the config
 directory is checked to see if it contains a user provided version. If not
 available it will check the built-in components and platforms.
 """
