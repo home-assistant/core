@@ -146,12 +146,12 @@ class HassAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = 'Home Assistant Local'
 
-    _data = None
+    data = None
 
-    async def _async_initialize(self):
+    async def async_initialize(self):
         """Initialize the auth provider."""
-        self._data = Data(self.hass)
-        await self._data.async_load()
+        self.data = Data(self.hass)
+        await self.data.async_load()
 
     async def async_credential_flow(self):
         """Return a flow to login."""
@@ -159,11 +159,11 @@ class HassAuthProvider(AuthProvider):
 
     async def async_validate_login(self, username, password):
         """Helper to validate a username and password."""
-        if self._data is None:
-            await self._async_initialize()
+        if self.data is None:
+            await self.async_initialize()
 
         await self.hass.async_add_executor_job(
-            self._data.validate_login, username, password)
+            self.data.validate_login, username, password)
 
     async def async_get_or_create_credentials(self, flow_result):
         """Get credentials based on the flow result."""
@@ -186,12 +186,12 @@ class HassAuthProvider(AuthProvider):
 
     async def async_will_remove_credentials(self, credentials):
         """When credentials get removed, also remove the auth."""
-        if self._data is None:
-            await self._async_initialize()
+        if self.data is None:
+            await self.async_initialize()
 
         try:
-            self._data.async_remove_auth(credentials.data['username'])
-            await self._data.async_save()
+            self.data.async_remove_auth(credentials.data['username'])
+            await self.data.async_save()
         except InvalidUser:
             # Can happen if somehow we didn't clean up a credential
             pass

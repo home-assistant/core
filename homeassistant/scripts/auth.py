@@ -58,14 +58,14 @@ async def run_command(hass, args):
         'type': 'homeassistant',
     }])
     provider = hass.auth.auth_providers[0]
-    await provider._async_initialize()
-    await args.func(hass, provider, provider._data, args)
+    await provider.async_initialize()
+    await args.func(hass, provider, args)
 
 
-async def list_users(hass, provider, data, args):
+async def list_users(hass, provider, args):
     """List the users."""
     count = 0
-    for user in data.users:
+    for user in provider.data.users:
         count += 1
         print(user['username'])
 
@@ -73,10 +73,10 @@ async def list_users(hass, provider, data, args):
     print("Total users:", count)
 
 
-async def add_user(hass, provider, data, args):
+async def add_user(hass, provider, args):
     """Create a user."""
     try:
-        data.add_auth(args.username, args.password)
+        provider.data.add_auth(args.username, args.password)
     except hass_auth.InvalidUser:
         print("Username already exists!")
         return
@@ -89,24 +89,24 @@ async def add_user(hass, provider, data, args):
     await hass.auth.async_link_user(user, credentials)
 
     # Save username/password
-    await data.async_save()
+    await provider.data.async_save()
     print("User created")
 
 
-async def validate_login(hass, provider, data, args):
+async def validate_login(hass, provider, args):
     """Validate a login."""
     try:
-        data.validate_login(args.username, args.password)
+        provider.data.validate_login(args.username, args.password)
         print("Auth valid")
     except hass_auth.InvalidAuth:
         print("Auth invalid")
 
 
-async def change_password(hass, provider, data, args):
+async def change_password(hass, provider, args):
     """Change password."""
     try:
-        data.change_password(args.username, args.new_password)
-        await data.async_save()
+        provider.data.change_password(args.username, args.new_password)
+        await provider.data.async_save()
         print("Password changed")
     except hass_auth.InvalidUser:
         print("User not found")
