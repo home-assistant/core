@@ -67,7 +67,7 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
     Async friendly.
     """
     try:
-        return hass.data[DATA_KEY][comp_or_platform]
+        return hass.data[DATA_KEY][comp_or_platform]  # type: ignore
     except KeyError:
         pass
 
