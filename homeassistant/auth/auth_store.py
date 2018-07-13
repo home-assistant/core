@@ -1,4 +1,5 @@
 """Storage for auth models."""
+from collections import OrderedDict
 from datetime import timedelta
 
 from homeassistant.util import dt as dt_util
@@ -80,6 +81,22 @@ class AuthStore:
         self._users.pop(user.id)
         await self.async_save()
 
+    async def async_remove_credentials(self, credentials):
+        """Remove credentials."""
+        for user in self._users.values():
+            found = None
+
+            for index, cred in enumerate(user.credentials):
+                if cred is credentials:
+                    found = index
+                    break
+
+            if found is not None:
+                user.credentials.pop(found)
+                break
+
+        await self.async_save()
+
     async def async_create_refresh_token(self, user, client_id=None):
         """Create a new token for a user."""
         refresh_token = models.RefreshToken(user=user, client_id=client_id)
@@ -108,14 +125,14 @@ class AuthStore:
         if self._users is not None:
             return
 
+        users = OrderedDict()
+
         if data is None:
-            self._users = {}
+            self._users = users
             return
 
-        users = {
-            user_dict['id']: models.User(**user_dict)
-            for user_dict in data['users']
-        }
+        for user_dict in data['users']:
+            users[user_dict['id']] = models.User(**user_dict)
 
         for cred_dict in data['credentials']:
             users[cred_dict['user_id']].credentials.append(models.Credentials(
@@ -126,7 +143,7 @@ class AuthStore:
                 data=cred_dict['data'],
             ))
 
-        refresh_tokens = {}
+        refresh_tokens = OrderedDict()
 
         for rt_dict in data['refresh_tokens']:
             token = models.RefreshToken(

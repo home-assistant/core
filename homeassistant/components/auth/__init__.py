@@ -152,7 +152,7 @@ class AuthProvidersView(HomeAssistantView):
             'name': provider.name,
             'id': provider.id,
             'type': provider.type,
-        } for provider in request.app['hass'].auth.async_auth_providers])
+        } for provider in request.app['hass'].auth.auth_providers])
 
 
 class LoginFlowIndexView(FlowManagerIndexView):

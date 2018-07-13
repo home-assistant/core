@@ -51,7 +51,7 @@ class AuthManager:
         self.login_flow = data_entry_flow.FlowManager(
             hass, self._async_create_login_flow,
             self._async_finish_login_flow)
-        self._access_tokens = {}
+        self._access_tokens = OrderedDict()
 
     @property
     def active(self):
@@ -71,9 +71,13 @@ class AuthManager:
         return False
 
     @property
-    def async_auth_providers(self):
+    def auth_providers(self):
         """Return a list of available auth providers."""
-        return self._providers.values()
+        return list(self._providers.values())
+
+    async def async_get_users(self):
+        """Retrieve all users."""
+        return await self._store.async_get_users()
 
     async def async_get_user(self, user_id):
         """Retrieve a user."""
@@ -84,6 +88,13 @@ class AuthManager:
         return await self._store.async_create_user(
             name=name,
             system_generated=True,
+            is_active=True,
+        )
+
+    async def async_create_user(self, name):
+        """Create a user."""
+        return await self._store.async_create_user(
+            name=name,
             is_active=True,
         )
 
@@ -98,6 +109,10 @@ class AuthManager:
             raise ValueError('Unable to find the user.')
 
         auth_provider = self._async_get_auth_provider(credentials)
+
+        if auth_provider is None:
+            raise RuntimeError('Credential with unknown provider encountered')
+
         info = await auth_provider.async_user_meta_for_credentials(
             credentials)
 
@@ -122,7 +137,25 @@ class AuthManager:
 
     async def async_remove_user(self, user):
         """Remove a user."""
+        tasks = [
+            self.async_remove_credentials(credentials)
+            for credentials in user.credentials
+        ]
+
+        if tasks:
+            await asyncio.wait(tasks)
+
         await self._store.async_remove_user(user)
+
+    async def async_remove_credentials(self, credentials):
+        """Remove credentials."""
+        provider = self._async_get_auth_provider(credentials)
+
+        if (provider is not None and
+                hasattr(provider, 'async_will_remove_credentials')):
+            await provider.async_will_remove_credentials(credentials)
+
+        await self._store.async_remove_credentials(credentials)
 
     async def async_create_refresh_token(self, user, client_id=None):
         """Create a new refresh token for a user."""
@@ -168,10 +201,6 @@ class AuthManager:
         """Create a login flow."""
         auth_provider = self._providers[handler]
 
-        if not auth_provider.initialized:
-            auth_provider.initialized = True
-            await auth_provider.async_initialize()
-
         return await auth_provider.async_credential_flow()
 
     async def _async_finish_login_flow(self, result):
@@ -188,4 +217,4 @@ class AuthManager:
         """Helper to get auth provider from a set of credentials."""
         auth_provider_key = (credentials.auth_provider_type,
                              credentials.auth_provider_id)
-        return self._providers[auth_provider_key]
+        return self._providers.get(auth_provider_key)
