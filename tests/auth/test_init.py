@@ -46,7 +46,7 @@ async def test_auth_manager_from_config_validates_config_and_id(mock_hass):
             'name': provider.name,
             'id': provider.id,
             'type': provider.type,
-        } for provider in manager.async_auth_providers]
+        } for provider in manager.auth_providers]
     assert providers == [{
         'name': 'Test Name',
         'type': 'insecure_example',
