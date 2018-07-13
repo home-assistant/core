@@ -138,7 +138,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def timer_format(string):
-	"""Datetime formatter"""
+    """Datetime formatter"""
     _r = []
     _s = string.split(';')
     for i in range(0, len(_s) // 2):
