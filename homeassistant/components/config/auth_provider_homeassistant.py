@@ -49,8 +49,8 @@ def websocket_create(hass, connection, msg):
     """Create credentials and attach to a user."""
     async def create_creds():
         """Create credentials."""
-        data = auth_ha.Data(hass)
-        await data.async_load()
+        provider = _get_provider(hass)
+        await provider.async_initialize()
 
         user = await hass.auth.async_get_user(msg['user_id'])
 
@@ -67,19 +67,18 @@ def websocket_create(hass, connection, msg):
 
         try:
             await hass.async_add_executor_job(
-                data.add_auth, msg['username'], msg['password'])
+                provider.data.add_auth, msg['username'], msg['password'])
         except auth_ha.InvalidUser:
             connection.send_message_outside(websocket_api.error_message(
                 msg['id'], 'username_exists', 'Username already exists'))
             return
 
-        provider = _get_provider(hass)
         credentials = await provider.async_get_or_create_credentials({
             'username': msg['username']
         })
         await hass.auth.async_link_user(user, credentials)
 
-        await data.async_save()
+        await provider.data.async_save()
         connection.to_write.put_nowait(websocket_api.result_message(msg['id']))
 
     hass.async_add_job(create_creds())
@@ -91,10 +90,9 @@ def websocket_delete(hass, connection, msg):
     """Delete username and related credential."""
     async def delete_creds():
         """Delete user credentials."""
-        data = auth_ha.Data(hass)
-        await data.async_load()
-
         provider = _get_provider(hass)
+        await provider.async_initialize()
+
         credentials = await provider.async_get_or_create_credentials({
             'username': msg['username']
         })
@@ -109,8 +107,8 @@ def websocket_delete(hass, connection, msg):
             return
 
         try:
-            data.async_remove_auth(msg['username'])
-            await data.async_save()
+            provider.data.async_remove_auth(msg['username'])
+            await provider.data.async_save()
         except auth_ha.InvalidUser:
             connection.to_write.put_nowait(websocket_api.error_message(
                 msg['id'], 'auth_not_found', 'Given username was not found.'))
