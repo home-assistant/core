@@ -39,7 +39,7 @@ DISCOVERY_SCHEMAS = [
     {const.DISC_COMPONENT: 'climate',
      const.DISC_GENERIC_DEVICE_CLASS: [
          const.GENERIC_TYPE_THERMOSTAT,
-         const.GENERIC_TYPE_MULTILEVEL_SENSOR],
+         const.GENERIC_TYPE_SENSOR_MULTILEVEL],
      const.DISC_VALUES: dict(DEFAULT_VALUES_SCHEMA, **{
          const.DISC_PRIMARY: {
              const.DISC_COMMAND_CLASS: [
