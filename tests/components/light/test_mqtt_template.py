@@ -51,8 +51,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_fails(self): \
-            # pylint: disable=invalid-name
+    def test_setup_fails(self):
         """Test that setup fails with missing required configuration items."""
         with assert_setup_component(0, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -63,8 +62,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
             })
         self.assertIsNone(self.hass.states.get('light.test'))
 
-    def test_state_change_via_topic(self): \
-            # pylint: disable=invalid-name
+    def test_state_change_via_topic(self):
         """Test state change via topic."""
         with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -103,8 +101,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertIsNone(state.attributes.get('color_temp'))
         self.assertIsNone(state.attributes.get('white_value'))
 
-    def test_state_brightness_color_effect_temp_white_change_via_topic(self): \
-            # pylint: disable=invalid-name
+    def test_state_brightness_color_effect_temp_white_change_via_topic(self):
         """Test state, bri, color, effect, color temp, white val change."""
         with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -206,8 +203,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.assertEqual('rainbow', light_state.attributes.get('effect'))
 
-    def test_optimistic(self): \
-            # pylint: disable=invalid-name
+    def test_optimistic(self):
         """Test optimistic mode."""
         fake_state = ha.State('light.test', 'on', {'brightness': 95,
                                                    'hs_color': [100, 100],
@@ -289,8 +285,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.assertEqual(200, state.attributes['color_temp'])
         self.assertEqual(139, state.attributes['white_value'])
 
-    def test_flash(self): \
-            # pylint: disable=invalid-name
+    def test_flash(self):
         """Test flash."""
         with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -353,8 +348,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
         self.mock_publish.async_publish.assert_called_once_with(
             'test_light_rgb/set', 'off,4', 0, False)
 
-    def test_invalid_values(self): \
-            # pylint: disable=invalid-name
+    def test_invalid_values(self):
         """Test that invalid values are ignored."""
         with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
