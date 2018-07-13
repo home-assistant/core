@@ -38,7 +38,7 @@ class APIStatus(enum.Enum):
 
     def __str__(self) -> str:
         """Return the state."""
-        return self.value
+        return self.value  # type: ignore
 
 
 class API(object):

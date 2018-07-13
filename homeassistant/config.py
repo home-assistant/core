@@ -171,7 +171,8 @@ def get_default_config_dir() -> str:
     return os.path.join(data_dir, CONFIG_DIR_NAME)  # type: ignore
 
 
-def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
+def ensure_config_exists(config_dir: str, detect_location: bool = True)\
+        -> Optional[str]:
     """Ensure a configuration file exists in given configuration directory.
 
     Creating a default one if needed.
@@ -187,7 +188,8 @@ def ensure_config_exists(config_dir: str, detect_location: bool = True) -> str:
     return config_path
 
 
-def create_default_config(config_dir, detect_location=True):
+def create_default_config(config_dir: str, detect_location=True)\
+        -> Optional[str]:
     """Create a default configuration file in given configuration directory.
 
     Return path to new config file if success, None if failed.
@@ -286,11 +288,8 @@ async def async_hass_config_yaml(hass):
     return conf
 
 
-def find_config_file(config_dir):
-    """Look in given directory for supported configuration files.
-
-    Async friendly.
-    """
+def find_config_file(config_dir: str) -> Optional[str]:
+    """Look in given directory for supported configuration files."""
     config_path = os.path.join(config_dir, YAML_CONFIG_FILE)
 
     return config_path if os.path.isfile(config_path) else None
