@@ -1,5 +1,6 @@
 """Test the helper method for writing tests."""
 import asyncio
+from collections import OrderedDict
 from datetime import timedelta
 import functools as ft
 import json
@@ -12,7 +13,8 @@ import threading
 from contextlib import contextmanager
 
 from homeassistant import auth, core as ha, data_entry_flow, config_entries
-from homeassistant.auth import models as auth_models, auth_store
+from homeassistant.auth import (
+    models as auth_models, auth_store, providers as auth_providers)
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
@@ -312,11 +314,12 @@ def mock_registry(hass, mock_entries=None):
 class MockUser(auth_models.User):
     """Mock a user in Home Assistant."""
 
-    def __init__(self, id='mock-id', is_owner=True, is_active=True,
-                 name='Mock User'):
+    def __init__(self, id='mock-id', is_owner=False, is_active=True,
+                 name='Mock User', system_generated=False):
         """Initialize mock user."""
         super().__init__(
-            id=id, is_owner=is_owner, is_active=is_active, name=name)
+            id=id, is_owner=is_owner, is_active=is_active, name=name,
+            system_generated=system_generated)
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
@@ -329,12 +332,27 @@ class MockUser(auth_models.User):
         return self
 
 
+async def register_auth_provider(hass, config):
+    """Helper to register an auth provider."""
+    provider = await auth_providers.auth_provider_from_config(
+        hass, hass.auth._store, config)
+    assert provider is not None, 'Invalid config specified'
+    key = (provider.type, provider.id)
+    providers = hass.auth._providers
+
+    if key in providers:
+        raise ValueError('Provider already registered')
+
+    providers[key] = provider
+    return provider
+
+
 @ha.callback
 def ensure_auth_manager_loaded(auth_mgr):
     """Ensure an auth manager is considered loaded."""
     store = auth_mgr._store
     if store._users is None:
-        store._users = {}
+        store._users = OrderedDict()
 
 
 class MockModule(object):
@@ -731,7 +749,13 @@ def mock_storage(data=None):
             if store.key not in data:
                 return None
 
-            store._data = data.get(store.key)
+            mock_data = data.get(store.key)
+
+            if 'data' not in mock_data or 'version' not in mock_data:
+                _LOGGER.error('Mock data needs "version" and "data"')
+                raise ValueError('Mock data needs "version" and "data"')
+
+            store._data = mock_data
 
         # Route through original load so that we trigger migration
         loaded = await orig_load(store)
