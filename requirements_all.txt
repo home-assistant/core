@@ -194,6 +194,7 @@ braviarc-homeassistant==0.3.7.dev0
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
+# homeassistant.components.media_player.broadlink
 broadlink==0.9.0
 
 # homeassistant.components.device_tracker.bluetooth_tracker

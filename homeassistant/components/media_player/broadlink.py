@@ -34,11 +34,12 @@ from homeassistant.const import (
 
 import homeassistant.helpers.config_validation as cv
 
-DEFAULT_NAME    = "Broadlink IR Media Player"
-DEFAULT_TIMEOUT = 10
+REQUIREMENTS         = ['broadlink==0.9.0']
+DOMAIN               = 'broadlink'
 
-REQUIREMENTS    = ['broadlink==0.9.0']
-DOMAIN          = 'broadlink'
+DEFAULT_NAME         = "Broadlink IR Media Player"
+DEFAULT_TIMEOUT      = 10
+DEFAULT_DELAY        = 0.5
 
 CONF_VOLUME_UP       = 'volume_up'
 CONF_VOLUME_DOWN     = 'volume_down'
@@ -69,45 +70,52 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 
-    vol.Optional(CONF_DIGITDELAY, default=0.5): float,
-    vol.Optional(CONF_COMMAND_ON)    : cv.string,
-    vol.Optional(CONF_COMMAND_OFF)   : cv.string,
-    vol.Optional(CONF_VOLUME_UP)     : cv.string,
-    vol.Optional(CONF_VOLUME_DOWN)   : cv.string,
-    vol.Optional(CONF_VOLUME_MUTE)   : cv.string,
-    vol.Optional(CONF_NEXT_TRACK)    : cv.string,
+    vol.Optional(CONF_DIGITDELAY, default=DEFAULT_DELAY): float,
+    vol.Optional(CONF_COMMAND_ON): cv.string,
+    vol.Optional(CONF_COMMAND_OFF): cv.string,
+    vol.Optional(CONF_VOLUME_UP): cv.string,
+    vol.Optional(CONF_VOLUME_DOWN): cv.string,
+    vol.Optional(CONF_VOLUME_MUTE): cv.string,
+    vol.Optional(CONF_NEXT_TRACK): cv.string,
     vol.Optional(CONF_PREVIOUS_TRACK): cv.string,
-    vol.Optional(CONF_SOURCES, default = {}): dict,
+    vol.Optional(CONF_SOURCES, default={}): dict,
     vol.Optional(CONF_DIGITS): DIGITS_SCHEMA,
 })
 
 SUPPORT_MAPPING = [
-    (CONF_COMMAND_ON         , SUPPORT_TURN_ON),
-    (CONF_COMMAND_OFF        , SUPPORT_TURN_OFF),
-    (CONF_VOLUME_UP          , SUPPORT_VOLUME_STEP),
-    (CONF_VOLUME_DOWN        , SUPPORT_VOLUME_STEP),
-    (CONF_VOLUME_MUTE        , SUPPORT_VOLUME_MUTE),
-    (CONF_NEXT_TRACK         , SUPPORT_NEXT_TRACK),
-    (CONF_PREVIOUS_TRACK     , SUPPORT_PREVIOUS_TRACK ),
+    (CONF_COMMAND_ON, SUPPORT_TURN_ON),
+    (CONF_COMMAND_OFF, SUPPORT_TURN_OFF),
+    (CONF_VOLUME_UP, SUPPORT_VOLUME_STEP),
+    (CONF_VOLUME_DOWN, SUPPORT_VOLUME_STEP),
+    (CONF_VOLUME_MUTE, SUPPORT_VOLUME_MUTE),
+    (CONF_NEXT_TRACK, SUPPORT_NEXT_TRACK),
+    (CONF_PREVIOUS_TRACK, SUPPORT_PREVIOUS_TRACK),
 ]
 
 _LOGGER = logging.getLogger(__name__)
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+
+async def async_setup_platform(hass,
+                               config,
+                               async_add_devices,
+                               discovery_info=None):
     import broadlink
 
     host = config.get(CONF_HOST)
-    mac  = binascii.unhexlify(config.get(CONF_MAC).encode().replace(b':', b''))
+    mac  = get_broadlink_mac(config.get(CONF_MAC))
 
-    link = broadlink.rm( (host, 80)
-                       , mac
-                       , None)
+    link = broadlink.rm(
+        (host, 80),
+        mac,
+        None)
 
     await hass.async_add_job(link.auth)
 
     async_add_devices([BroadlinkRM(hass, link, config)])
 
+
 def get_supported_by_config(config):
+    """ Calculate support flags based on available configuration entries """
     support = 0
 
     for mapping in SUPPORT_MAPPING:
@@ -122,6 +130,12 @@ def get_supported_by_config(config):
 
     return support
 
+
+def get_broadlink_mac(mac: str):
+    """ Convert a mac address string with : in it to just a flat string """
+    binascii.unhexlify(mac.encode().replace(b':', b''))
+
+
 class BroadlinkRM(MediaPlayerDevice):
 
     def __init__(self, hass, link, config):
@@ -132,7 +146,6 @@ class BroadlinkRM(MediaPlayerDevice):
         self.hass    = hass
 
         self.host    = config.get(CONF_HOST)
-        self.mac     = binascii.unhexlify(config.get(CONF_MAC).encode().replace(b':', b''))
 
         self.link    = link
         self._state  = STATE_OFF
@@ -193,7 +206,7 @@ class BroadlinkRM(MediaPlayerDevice):
 
         for digit in media_id:
             await self.send(self.config.get(CONF_DIGITS).get(digit))
-            await asyncio.sleep(self.config.get(CONF_DIGITDELAY), self.hass.loop)
+            await asyncio.sleep(self.config.get(CONF_DIGITDELAY))
 
     @property
     def media_content_type(self):
