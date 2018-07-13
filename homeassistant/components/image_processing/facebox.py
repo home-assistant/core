@@ -17,7 +17,9 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.image_processing import (
     PLATFORM_SCHEMA, ImageProcessingFaceEntity, ATTR_CONFIDENCE, CONF_SOURCE,
     CONF_ENTITY_ID, CONF_NAME, DOMAIN)
-from homeassistant.const import (CONF_IP_ADDRESS, CONF_PORT)
+from homeassistant.const import (
+    CONF_IP_ADDRESS, CONF_PORT, CONF_PASSWORD, CONF_USERNAME,
+    HTTP_BAD_REQUEST, HTTP_OK, HTTP_UNAUTHORIZED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +38,8 @@ TIMEOUT = 9
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Required(CONF_PORT): cv.port,
+    vol.Optional(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_PASSWORD): cv.string,
 })
 
 SERVICE_TEACH_SCHEMA = vol.Schema({
@@ -75,15 +79,36 @@ def parse_faces(api_faces):
     return known_faces
 
 
-def post_image(url, image):
+def post_image(url, username, password, image):
     """Post an image to the classifier."""
     try:
         response = requests.post(
             url,
+            auth=requests.auth.HTTPBasicAuth(username, password),
             json={"base64": encode_image(image)},
             timeout=TIMEOUT
             )
-        return response
+        if response.status_code == HTTP_UNAUTHORIZED:
+            _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
+        else:
+            return response
+    except requests.exceptions.ConnectionError:
+        _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
+
+
+def teach_file(url, username, password, name, file_path):
+    """Teach the classifier a name associated with a file."""
+    try:
+        with open(file_path, 'rb') as open_file:
+            response = requests.post(
+                url,
+                auth=requests.auth.HTTPBasicAuth(username, password),
+                data={ATTR_NAME: name, 'id': file_path},
+                files={'file': open_file})
+        if response.status_code == HTTP_UNAUTHORIZED:
+            _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
+        else:
+            return response
     except requests.exceptions.ConnectionError:
         _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
 
@@ -104,11 +129,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if DATA_FACEBOX not in hass.data:
         hass.data[DATA_FACEBOX] = []
 
+    ip = config[CONF_IP_ADDRESS]
+    port = config[CONF_PORT]
+    username = None
+    if CONF_USERNAME in config:
+        username = config[CONF_USERNAME]
+    password = None
+    if CONF_PASSWORD in config:
+        password = config[CONF_PASSWORD]
+
     entities = []
     for camera in config[CONF_SOURCE]:
         facebox = FaceClassifyEntity(
-            config[CONF_IP_ADDRESS],
-            config[CONF_PORT],
+            ip,
+            port,
+            username,
+            password,
             camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME))
         entities.append(facebox)
@@ -138,11 +174,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FaceClassifyEntity(ImageProcessingFaceEntity):
     """Perform a face classification."""
 
-    def __init__(self, ip, port, camera_entity, name=None):
+    def __init__(self, ip, port, username, password, camera_entity, name=None):
         """Init with the API key and model id."""
         super().__init__()
         self._url_check = "http://{}:{}/{}/check".format(ip, port, CLASSIFIER)
         self._url_teach = "http://{}:{}/{}/teach".format(ip, port, CLASSIFIER)
+        self._username = username
+        self._password = password
         self._camera = camera_entity
         if name:
             self._name = name
@@ -154,7 +192,10 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
 
     def process_image(self, image):
         """Process an image."""
-        response = post_image(self._url_check, image)
+        response = post_image(self._url_check,
+                              self._username,
+                              self._password,
+                              image)
         if response is not None:
             response_json = response.json()
             if response_json['success']:
@@ -173,34 +214,36 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
         if (not self.hass.config.is_allowed_path(file_path)
                 or not valid_file_path(file_path)):
             return
-        with open(file_path, 'rb') as open_file:
-            response = requests.post(
-                self._url_teach,
-                data={ATTR_NAME: name, 'id': file_path},
-                files={'file': open_file})
 
-        if response.status_code == 200:
-            self.hass.bus.fire(
-                EVENT_CLASSIFIER_TEACH, {
-                    ATTR_CLASSIFIER: CLASSIFIER,
-                    ATTR_NAME: name,
-                    FILE_PATH: file_path,
-                    'success': True,
-                    'message': None
-                    })
+        response = teach_file(self._url_teach,
+                              self._username,
+                              self._password,
+                              name,
+                              file_path)
 
-        elif response.status_code == 400:
-            _LOGGER.warning(
-                "%s teaching of file %s failed with message:%s",
-                CLASSIFIER, file_path, response.text)
-            self.hass.bus.fire(
-                EVENT_CLASSIFIER_TEACH, {
-                    ATTR_CLASSIFIER: CLASSIFIER,
-                    ATTR_NAME: name,
-                    FILE_PATH: file_path,
-                    'success': False,
-                    'message': response.text
-                    })
+        if response is not None:
+            if response.status_code == HTTP_OK:
+                self.hass.bus.fire(
+                    EVENT_CLASSIFIER_TEACH, {
+                        ATTR_CLASSIFIER: CLASSIFIER,
+                        ATTR_NAME: name,
+                        FILE_PATH: file_path,
+                        'success': True,
+                        'message': None
+                        })
+
+            elif response.status_code == HTTP_BAD_REQUEST:
+                _LOGGER.warning(
+                    "%s teaching of file %s failed with message:%s",
+                    CLASSIFIER, file_path, response.text)
+                self.hass.bus.fire(
+                    EVENT_CLASSIFIER_TEACH, {
+                        ATTR_CLASSIFIER: CLASSIFIER,
+                        ATTR_NAME: name,
+                        FILE_PATH: file_path,
+                        'success': False,
+                        'message': response.text
+                        })
 
     @property
     def camera_entity(self):

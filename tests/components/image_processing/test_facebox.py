@@ -7,8 +7,8 @@ import requests_mock
 
 from homeassistant.core import callback
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_NAME, CONF_FRIENDLY_NAME,
-    CONF_IP_ADDRESS, CONF_PORT, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, ATTR_NAME, CONF_FRIENDLY_NAME, CONF_PASSWORD,
+    CONF_USERNAME, CONF_IP_ADDRESS, CONF_PORT, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.image_processing.facebox as fb
@@ -33,6 +33,8 @@ MOCK_JSON = {"facesCount": 1,
              "faces": [MOCK_FACE]}
 
 MOCK_NAME = 'mock_name'
+MOCK_USERNAME = 'mock_username'
+MOCK_PASSWORD = 'mock_password'
 
 # Faces data after parsing.
 PARSED_FACES = [{ATTR_NAME: 'John Lennon',
@@ -111,6 +113,17 @@ def mock_image():
 async def test_setup_platform(hass):
     """Setup platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
+    assert hass.states.get(VALID_ENTITY_ID)
+
+
+async def test_setup_platform_with_auth(hass):
+    """Setup platform with one entity and auth."""
+
+    valid_config_auth = VALID_CONFIG.copy()
+    valid_config_auth[ip.DOMAIN][CONF_USERNAME] = MOCK_USERNAME
+    valid_config_auth[ip.DOMAIN][CONF_PASSWORD] = MOCK_PASSWORD
+
+    await async_setup_component(hass, ip.DOMAIN, valid_config_auth)
     assert hass.states.get(VALID_ENTITY_ID)
 
 
