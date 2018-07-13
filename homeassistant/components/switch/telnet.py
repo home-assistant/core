@@ -38,7 +38,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Find and return switches controlled by telnet commands."""
     devices = config.get(CONF_SWITCHES, {})

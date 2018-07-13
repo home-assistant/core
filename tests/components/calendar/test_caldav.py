@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEVICE_DATA = {
     "name": "Private Calendar",
-    "device_id": "Private Calendar"
+    "device_id": "Private Calendar",
 }
 
 EVENTS = [
@@ -163,6 +163,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.http = Mock()
         self.calendar = _mock_calendar("Private")
 
     # pylint: disable=invalid-name
@@ -255,7 +256,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "start_time": "2017-11-27 17:00:00",
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
-            "description": "Surprisingly rainy"
+            "description": "Surprisingly rainy",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 30))
@@ -274,7 +275,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "start_time": "2017-11-27 17:00:00",
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
-            "description": "Surprisingly rainy"
+            "description": "Surprisingly rainy",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 00))
@@ -293,7 +294,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "start_time": "2017-11-27 16:30:00",
             "description": "Sunny day",
             "end_time": "2017-11-27 17:30:00",
-            "location": "San Francisco"
+            "location": "San Francisco",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(8, 30))
@@ -311,7 +312,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "start_time": "2017-11-27 10:00:00",
             "end_time": "2017-11-27 11:00:00",
             "location": "Hamburg",
-            "description": "Surprisingly shiny"
+            "description": "Surprisingly shiny",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
@@ -332,7 +333,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "start_time": "2017-11-27 17:00:00",
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
-            "description": "Surprisingly rainy"
+            "description": "Surprisingly rainy",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
@@ -353,7 +354,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "start_time": "2017-11-27 17:00:00",
             "end_time": "2017-11-27 18:00:00",
             "location": "Hamburg",
-            "description": "Surprisingly rainy"
+            "description": "Surprisingly rainy",
         })
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(20, 00))
@@ -395,5 +396,5 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "start_time": "2017-11-27 00:00:00",
             "end_time": "2017-11-28 00:00:00",
             "location": "Hamburg",
-            "description": "What a beautiful day"
+            "description": "What a beautiful day",
         })

@@ -46,7 +46,6 @@ def async_setup(hass, config):
     return True
 
 
-# pylint: disable=no-member, no-self-use
 class WeatherEntity(Entity):
     """ABC for weather data."""
 

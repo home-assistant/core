@@ -19,6 +19,12 @@
             "link": {
                 "description": "Odblokuj bramk\u0119 deCONZ, aby zarejestrowa\u0107 j\u0105 w Home Assistant. \n\n 1. Przejd\u017a do ustawie\u0144 systemu deCONZ \n 2. Naci\u015bnij przycisk \"Odblokuj bramk\u0119\"",
                 "title": "Po\u0142\u0105cz z deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Zezwalaj na importowanie wirtualnych sensor\u00f3w"
+                },
+                "title": "Dodatkowe opcje konfiguracji dla deCONZ"
             }
         },
         "title": "deCONZ"

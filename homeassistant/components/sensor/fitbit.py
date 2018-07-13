@@ -156,7 +156,6 @@ def request_app_setup(hass, config, add_devices, config_path,
     """Assist user with configuring the Fitbit dev application."""
     configurator = hass.components.configurator
 
-    # pylint: disable=unused-argument
     def fitbit_configuration_callback(callback_data):
         """Handle configuration updates."""
         config_path = hass.config.path(FITBIT_CONFIG_FILE)
@@ -202,7 +201,6 @@ def request_oauth_completion(hass):
 
         return
 
-    # pylint: disable=unused-argument
     def fitbit_configuration_callback(callback_data):
         """Handle configuration updates."""
 
@@ -227,7 +225,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 hass, config, add_devices, config_path, discovery_info=None)
             return False
     else:
-        config_file = save_json(config_path, DEFAULT_CONFIG)
+        save_json(config_path, DEFAULT_CONFIG)
         request_app_setup(
             hass, config, add_devices, config_path, discovery_info=None)
         return False

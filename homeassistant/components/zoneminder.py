@@ -67,7 +67,6 @@ def setup(hass, config):
     return login()
 
 
-# pylint: disable=no-member
 def login():
     """Login to the ZoneMinder API."""
     _LOGGER.debug("Attempting to login to ZoneMinder")
@@ -118,13 +117,11 @@ def _zm_request(method, api_url, data=None):
                           'decode "%s"', req.text)
 
 
-# pylint: disable=no-member
 def get_state(api_url):
     """Get a state from the ZoneMinder API service."""
     return _zm_request('get', api_url)
 
 
-# pylint: disable=no-member
 def change_state(api_url, post_data):
     """Update a state using the Zoneminder API."""
     return _zm_request('post', api_url, data=post_data)

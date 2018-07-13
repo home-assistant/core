@@ -216,6 +216,10 @@ class EntityPlatform(object):
                                    component_entities, registry)
             for entity in new_entities]
 
+        # No entities for processing
+        if not tasks:
+            return
+
         await asyncio.wait(tasks, loop=self.hass.loop)
         self.async_entities_added_callback()
 

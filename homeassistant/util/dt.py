@@ -27,7 +27,7 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
 
     Async friendly.
     """
-    global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
+    global DEFAULT_TIME_ZONE
 
     # NOTE: Remove in the future in favour of typing
     assert isinstance(time_zone, dt.tzinfo)
@@ -184,7 +184,6 @@ def get_age(date: dt.datetime) -> str:
         elif number > 1:
             return "%d %ss" % (number, unit)
 
-    # pylint: disable=invalid-sequence-index
     def q_n_r(first: int, second: int) -> Tuple[int, int]:
         """Return quotient and remaining."""
         return first // second, first % second

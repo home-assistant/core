@@ -9,6 +9,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SOURCE_USER = 'user'
 SOURCE_DISCOVERY = 'discovery'
+SOURCE_IMPORT = 'import'
 
 RESULT_TYPE_FORM = 'form'
 RESULT_TYPE_CREATE_ENTRY = 'create_entry'

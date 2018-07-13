@@ -84,7 +84,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([WinkWaterHeater(water_heater, hass)])
 
 
-# pylint: disable=abstract-method
 class WinkThermostat(WinkDevice, ClimateDevice):
     """Representation of a Wink thermostat."""
 

@@ -548,15 +548,15 @@ def _identify_config_schema(module):
     return '', schema
 
 
-def _recursive_merge(pack_name, comp_name, config, conf, package):
+def _recursive_merge(conf, package):
     """Merge package into conf, recursively."""
+    error = False
     for key, pack_conf in package.items():
         if isinstance(pack_conf, dict):
             if not pack_conf:
                 continue
             conf[key] = conf.get(key, OrderedDict())
-            _recursive_merge(pack_name, comp_name, config,
-                             conf=conf[key], package=pack_conf)
+            error = _recursive_merge(conf=conf[key], package=pack_conf)
 
         elif isinstance(pack_conf, list):
             if not pack_conf:
@@ -566,11 +566,10 @@ def _recursive_merge(pack_name, comp_name, config, conf, package):
 
         else:
             if conf.get(key) is not None:
-                _log_pkg_error(
-                    pack_name, comp_name, config,
-                    'has keys that are defined multiple times')
+                return key
             else:
                 conf[key] = pack_conf
+    return error
 
 
 def merge_packages_config(hass, config, packages,
@@ -605,39 +604,34 @@ def merge_packages_config(hass, config, packages,
                     config[comp_name].extend(cv.ensure_list(comp_conf))
                     continue
 
-                if merge_type == 'dict':
-                    if comp_conf is None:
-                        comp_conf = OrderedDict()
+            if comp_conf is None:
+                comp_conf = OrderedDict()
 
-                    if not isinstance(comp_conf, dict):
-                        _log_pkg_error(
-                            pack_name, comp_name, config,
-                            "cannot be merged. Expected a dict.")
-                        continue
-
-                    if comp_name not in config:
-                        config[comp_name] = OrderedDict()
-
-                    if not isinstance(config[comp_name], dict):
-                        _log_pkg_error(
-                            pack_name, comp_name, config,
-                            "cannot be merged. Dict expected in main config.")
-                        continue
-
-                    for key, val in comp_conf.items():
-                        if key in config[comp_name]:
-                            _log_pkg_error(pack_name, comp_name, config,
-                                           "duplicate key '{}'".format(key))
-                            continue
-                        config[comp_name][key] = val
-                    continue
-
-            # The last merge type are sections that require recursive merging
-            if comp_name in config:
-                _recursive_merge(pack_name, comp_name, config,
-                                 conf=config[comp_name], package=comp_conf)
+            if not isinstance(comp_conf, dict):
+                _log_pkg_error(
+                    pack_name, comp_name, config,
+                    "cannot be merged. Expected a dict.")
                 continue
-            config[comp_name] = comp_conf
+
+            if comp_name not in config or config[comp_name] is None:
+                config[comp_name] = OrderedDict()
+
+            if not isinstance(config[comp_name], dict):
+                _log_pkg_error(
+                    pack_name, comp_name, config,
+                    "cannot be merged. Dict expected in main config.")
+                continue
+            if not isinstance(comp_conf, dict):
+                _log_pkg_error(
+                    pack_name, comp_name, config,
+                    "cannot be merged. Dict expected in package.")
+                continue
+
+            error = _recursive_merge(conf=config[comp_name],
+                                     package=comp_conf)
+            if error:
+                _log_pkg_error(pack_name, comp_name, config,
+                               "has duplicate key '{}'".format(error))
 
     return config
 

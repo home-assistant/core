@@ -19,6 +19,13 @@
             "link": {
                 "description": "Odklenite va\u0161 deCONZ gateway za registracijo z Home Assistant-om. \n1. Pojdite v deCONT sistemske nastavitve\n2. Pritisnite tipko \"odkleni prehod\"",
                 "title": "Povezava z deCONZ"
+            },
+            "options": {
+                "data": {
+                    "allow_clip_sensor": "Dovoli uvoz virtualnih senzorjev",
+                    "allow_deconz_groups": "Dovoli uvoz deCONZ skupin"
+                },
+                "title": "Dodatne mo\u017enosti konfiguracije za deCONZ"
             }
         },
         "title": "deCONZ"
