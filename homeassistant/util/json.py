@@ -25,7 +25,7 @@ def load_json(filename: str, default: Union[List, Dict, None] = None) \
     """
     try:
         with open(filename, encoding='utf-8') as fdesc:
-            return json.loads(fdesc.read())
+            return json.loads(fdesc.read())  # type: ignore
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug('JSON file not found: %s', filename)
