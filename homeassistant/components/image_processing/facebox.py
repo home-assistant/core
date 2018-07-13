@@ -31,8 +31,6 @@ ATTR_NAME = 'name'
 CLASSIFIER = 'facebox'
 DATA_FACEBOX = 'facebox_classifiers'
 FILE_PATH = 'file_path'
-NOTIFICATION_ID = 'facebox_notification'
-NOTIFICATION_TITLE = 'facebox teach'
 SERVICE_TEACH_FACE = 'facebox_teach_face'
 TIMEOUT = 9
 
