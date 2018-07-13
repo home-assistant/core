@@ -50,7 +50,7 @@ async def async_setup_component(hass: core.HomeAssistant, domain: str,
     if setup_tasks is None:
         setup_tasks = hass.data[DATA_SETUP] = {}
 
-    task = setup_tasks[domain] = hass.async_add_job(
+    task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config))
 
     return await task
@@ -142,7 +142,7 @@ async def _async_setup_component(hass: core.HomeAssistant,
             result = await component.async_setup(  # type: ignore
                 hass, processed_config)
         else:
-            result = await hass.async_add_job(
+            result = await hass.async_add_executor_job(
                 component.setup, hass, processed_config)  # type: ignore
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)

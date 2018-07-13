@@ -81,7 +81,8 @@ def test_from_config_dict_not_mount_deps_folder(loop):
 
 async def test_async_from_config_file_not_mount_deps_folder(loop):
     """Test that we not mount the deps folder inside async_from_config_file."""
-    hass = Mock(async_add_job=Mock(side_effect=lambda *args: mock_coro()))
+    hass = Mock(
+        async_add_executor_job=Mock(side_effect=lambda *args: mock_coro()))
 
     with patch('homeassistant.bootstrap.is_virtual_env', return_value=False), \
         patch('homeassistant.bootstrap.async_enable_logging',

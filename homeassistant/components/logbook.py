@@ -83,7 +83,7 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
 
 
-async def setup(hass, config):
+async def async_setup(hass, config):
     """Listen for download events to download files."""
     @callback
     def log_message(service):
