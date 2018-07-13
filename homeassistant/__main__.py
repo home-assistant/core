@@ -370,7 +370,7 @@ def main() -> int:
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 
-    return exit_code or 0
+    return exit_code
 
 
 if __name__ == "__main__":
