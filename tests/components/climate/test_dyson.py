@@ -24,6 +24,7 @@ def _get_device_with_no_state():
     device = mock.Mock()
     device.name = "Device_name"
     device.state = None
+    device.environmental_state = None
     return device
 
 
@@ -112,7 +113,30 @@ class DysonTest(unittest.TestCase):
         self.hass.data[dyson.DYSON_DEVICES] = []
         add_devices = mock.MagicMock()
         dyson.setup_platform(self.hass, None, add_devices)
-        self.assertFalse(add_devices.called)
+        add_devices.assert_not_called()
+
+    def test_setup_component_with_devices(self):
+        """Test setup component with valid devices."""
+        devices = [
+            _get_device_with_no_state(),
+            _get_device_off(),
+            _get_device_heat_on()
+        ]
+        self.hass.data[dyson.DYSON_DEVICES] = devices
+        add_devices = mock.MagicMock()
+        dyson.setup_platform(self.hass, None, add_devices, discovery_info={})
+        add_devices.assert_called_once()
+
+    def test_setup_component_with_invalid_devices(self):
+        """Test setup component with invalid devices."""
+        devices = [
+            None,
+            "foo_bar"
+        ]
+        self.hass.data[dyson.DYSON_DEVICES] = devices
+        add_devices = mock.MagicMock()
+        dyson.setup_platform(self.hass, None, add_devices, discovery_info={})
+        add_devices.assert_called_with([])
 
     def test_setup_component(self):
         """Test setup component with devices."""
@@ -137,6 +161,12 @@ class DysonTest(unittest.TestCase):
             """Convert celssius to kelvin in string format."""
             return str((celsius + 273) * 10)
 
+        # Without target temp.
+        kwargs = {}
+        entity.set_temperature(**kwargs)
+        set_config = device.set_configuration
+        set_config.assert_not_called()
+
         kwargs = {ATTR_TEMPERATURE: 23}
         entity.set_temperature(**kwargs)
         set_config = device.set_configuration
@@ -152,6 +182,19 @@ class DysonTest(unittest.TestCase):
         entity.set_temperature(**kwargs)
         set_config = device.set_configuration
         set_config.assert_called_with(heat_target=celsius_to_kelvin_str(1))
+
+    def test_dyson_set_temperature_when_cooling_mode(self):
+        """Test set climate temperature when heating is off."""
+        device = _get_device_cool()
+        device.temp_unit = TEMP_CELSIUS
+        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity.schedule_update_ha_state = mock.Mock()
+
+        kwargs = {ATTR_TEMPERATURE: 23}
+        entity.set_temperature(**kwargs)
+        set_config = device.set_configuration
+        set_config.assert_not_called()
+        entity.schedule_update_ha_state.assert_called_once()
 
     def test_dyson_set_fan_mode(self):
         """Test set fan mode."""
@@ -250,3 +293,61 @@ class DysonTest(unittest.TestCase):
         entity.schedule_update_ha_state = mock.Mock()
         entity.on_message(MockDysonState())
         entity.schedule_update_ha_state.assert_called_with()
+
+    def test_on_message_with_pending_target_temp(self):
+        """Test when message is received with pending target temp."""
+        device = _get_device_heat_on()
+        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity.schedule_update_ha_state = mock.Mock()
+        entity._set_temperature_on_device = mock.Mock()
+        entity._pending_target_temp = 24
+        entity.on_message(MockDysonState())
+        entity.schedule_update_ha_state.assert_called_with()
+        entity._set_temperature_on_device.assert_called_with()
+
+    def test_general_properties(self):
+        """Test properties of entity."""
+        device = _get_device_with_no_state()
+        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        self.assertEqual(entity.should_poll, False)
+        self.assertEqual(entity.supported_features, dyson.SUPPORT_FLAGS)
+        self.assertEqual(entity.temperature_unit, TEMP_CELSIUS)
+
+    def test_property_current_humidity(self):
+        """Test properties of current humidity."""
+        device = _get_device_heat_on()
+        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        self.assertEqual(entity.current_humidity, 53)
+
+    def test_property_current_humidity_with_invalid_env_state(self):
+        """Test properties of current humidity with invalid env state."""
+        device = _get_device_off()
+        device.environmental_state.humidity = 0
+        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        self.assertEqual(entity.current_humidity, None)
+
+    def test_property_current_humidity_without_env_state(self):
+        """Test properties of current humidity without env state."""
+        device = _get_device_with_no_state()
+        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        self.assertEqual(entity.current_humidity, None)
+
+    def test_property_current_temperature(self):
+        """Test properties of current temperature."""
+        device = _get_device_heat_on()
+        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        # Result should be in celsius, hence then subtraction of 273.
+        self.assertEqual(entity.current_temperature, 289 - 273)
+
+    def test_property_target_temperature(self):
+        """Test properties of target temperature."""
+        device = _get_device_heat_on()
+        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        self.assertEqual(entity.target_temperature, 23)
+
+    def test_property_target_temperature_with_pending_value(self):
+        """Test properties of target temperature with pending value."""
+        device = _get_device_heat_on()
+        entity = dyson.DysonPureHotCoolLinkDevice(device)
+        entity._pending_target_temp = 30
+        self.assertEqual(entity.target_temperature, 30)
