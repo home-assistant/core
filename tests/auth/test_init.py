@@ -5,6 +5,8 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import auth, data_entry_flow
+from homeassistant.auth import (
+    models as auth_models, auth_store, const as auth_const)
 from homeassistant.util import dt as dt_util
 from tests.common import (
     MockUser, ensure_auth_manager_loaded, flush_store, CLIENT_ID)
@@ -101,7 +103,7 @@ async def test_login_as_existing_user(mock_hass):
         is_active=False,
         name='Not user',
     ).add_to_auth_manager(manager)
-    user.credentials.append(auth.Credentials(
+    user.credentials.append(auth_models.Credentials(
         id='mock-id2',
         auth_provider_type='insecure_example',
         auth_provider_id=None,
@@ -116,7 +118,7 @@ async def test_login_as_existing_user(mock_hass):
         is_active=False,
         name='Paulus',
     ).add_to_auth_manager(manager)
-    user.credentials.append(auth.Credentials(
+    user.credentials.append(auth_models.Credentials(
         id='mock-id',
         auth_provider_type='insecure_example',
         auth_provider_id=None,
@@ -203,7 +205,7 @@ async def test_saving_loading(hass, hass_storage):
 
     await flush_store(manager._store._store)
 
-    store2 = auth.AuthStore(hass)
+    store2 = auth_store.AuthStore(hass)
     users = await store2.async_get_users()
     assert len(users) == 1
     assert users[0] == user
@@ -211,23 +213,25 @@ async def test_saving_loading(hass, hass_storage):
 
 def test_access_token_expired():
     """Test that the expired property on access tokens work."""
-    refresh_token = auth.RefreshToken(
+    refresh_token = auth_models.RefreshToken(
         user=None,
         client_id='bla'
     )
 
-    access_token = auth.AccessToken(
+    access_token = auth_models.AccessToken(
         refresh_token=refresh_token
     )
 
     assert access_token.expired is False
 
-    with patch('homeassistant.auth.dt_util.utcnow',
-               return_value=dt_util.utcnow() + auth.ACCESS_TOKEN_EXPIRATION):
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=dt_util.utcnow() +
+               auth_const.ACCESS_TOKEN_EXPIRATION):
         assert access_token.expired is True
 
-    almost_exp = dt_util.utcnow() + auth.ACCESS_TOKEN_EXPIRATION - timedelta(1)
-    with patch('homeassistant.auth.dt_util.utcnow', return_value=almost_exp):
+    almost_exp = \
+        dt_util.utcnow() + auth_const.ACCESS_TOKEN_EXPIRATION - timedelta(1)
+    with patch('homeassistant.util.dt.utcnow', return_value=almost_exp):
         assert access_token.expired is False
 
 
@@ -242,8 +246,9 @@ async def test_cannot_retrieve_expired_access_token(hass):
     access_token = manager.async_create_access_token(refresh_token)
     assert manager.async_get_access_token(access_token.token) is access_token
 
-    with patch('homeassistant.auth.dt_util.utcnow',
-               return_value=dt_util.utcnow() + auth.ACCESS_TOKEN_EXPIRATION):
+    with patch('homeassistant.util.dt.utcnow',
+               return_value=dt_util.utcnow() +
+               auth_const.ACCESS_TOKEN_EXPIRATION):
         assert manager.async_get_access_token(access_token.token) is None
 
     # Even with unpatched time, it should have been removed from manager
