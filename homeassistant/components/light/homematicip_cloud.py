@@ -99,7 +99,7 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._device.dimLevel*255.0
+        return int(self._device.dimLevel*255)
 
     @property
     def supported_features(self):
@@ -110,7 +110,7 @@ class HomematicipDimmer(HomematicipGenericDevice, Light):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
             await self._device.set_dim_level(
-                float(kwargs[ATTR_BRIGHTNESS])/255.0)
+                kwargs[ATTR_BRIGHTNESS]/255.0)
         else:
             await self._device.set_dim_level(1)
 
