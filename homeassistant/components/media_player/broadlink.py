@@ -26,23 +26,23 @@ from homeassistant.const import (
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS         = ['broadlink==0.9.0']
-DOMAIN               = 'broadlink'
+REQUIREMENTS = ['broadlink==0.9.0']
+DOMAIN = 'broadlink'
 
-DEFAULT_NAME         = "Broadlink IR Media Player"
-DEFAULT_TIMEOUT      = 10
-DEFAULT_DELAY        = 0.5
-DEFAULT_PORT         = 80
+DEFAULT_NAME = "Broadlink IR Media Player"
+DEFAULT_TIMEOUT = 10
+DEFAULT_DELAY = 0.5
+DEFAULT_PORT = 80
 
-CONF_VOLUME_UP       = 'volume_up'
-CONF_VOLUME_DOWN     = 'volume_down'
-CONF_VOLUME_MUTE     = 'volume_mute'
-CONF_NEXT_TRACK      = 'next_track'
-CONF_PREVIOUS_TRACK  = 'previous_track'
-CONF_SOURCES         = 'sources'
-CONF_CHANNELS        = 'channels'
-CONF_DIGITS          = 'digits'
-CONF_DIGITDELAY      = 'digitdelay'
+CONF_VOLUME_UP = 'volume_up'
+CONF_VOLUME_DOWN = 'volume_down'
+CONF_VOLUME_MUTE = 'volume_mute'
+CONF_NEXT_TRACK = 'next_track'
+CONF_PREVIOUS_TRACK = 'previous_track'
+CONF_SOURCES = 'sources'
+CONF_CHANNELS = 'channels'
+CONF_DIGITS = 'digits'
+CONF_DIGITDELAY = 'digitdelay'
 
 DIGITS_SCHEMA = vol.Schema({
     vol.Required('0'): cv.string,
@@ -97,7 +97,7 @@ async def async_setup_platform(hass,
 
     host = (config.get(CONF_HOST),
             config.get(CONF_PORT))
-    mac  = get_broadlink_mac(config.get(CONF_MAC))
+    mac = get_broadlink_mac(config.get(CONF_MAC))
 
     link = broadlink.rm(
         host,
@@ -141,10 +141,10 @@ class BroadlinkRM(MediaPlayerDevice):
         super().__init__()
 
         self._support = get_supported_by_config(config)
-        self._config  = config
-        self._link    = link
-        self._state   = STATE_OFF
-        self._source  = None
+        self._config = config
+        self._link = link
+        self._state = STATE_OFF
+        self._source = None
 
     async def send(self, command):
         if command is None:
