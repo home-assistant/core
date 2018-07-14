@@ -2,9 +2,11 @@
 import asyncio
 from unittest.mock import mock_open, patch, PropertyMock
 
+import pytest
+
 from homeassistant.components import camera, http
-from homeassistant.components.camera import STATE_STREAMING, STATE_IDLE, \
-    SUPPORT_TURN_ON
+from homeassistant.components.camera import STATE_STREAMING, STATE_IDLE
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component, setup_component
 from tests.common import get_test_home_assistant, get_test_instance_port
 
@@ -72,19 +74,13 @@ class TestTurnOnOffDemoCamera(object):
                 in ['_0.jpg', '_1.jpg', '_2.jpg', '_3.jpg']
             assert image.content == b'ON'
 
-    def test_turn_off_image(self):
+    async def test_turn_off_image(self):
         """After turn off, Demo camera return off image."""
-        camera.turn_off(self.hass, 'camera.demo_camera')
+        await camera.async_turn_off(self.hass, 'camera.demo_camera')
         self.hass.block_till_done()
 
-        mock_off_img = mock_open(read_data=b'OFF')
-        with patch('homeassistant.components.camera.demo.open', mock_off_img,
-                   create=True):
-            image = asyncio.run_coroutine_threadsafe(camera.async_get_image(
-                self.hass, 'camera.demo_camera'), self.hass.loop).result()
-            assert mock_off_img.called
-            assert mock_off_img.call_args_list[0][0][0][-8:] == '_off.jpg'
-            assert image.content == b'OFF'
+        with pytest.raises(HomeAssistantError):
+            await camera.async_get_image(self.hass, 'camera.demo_camera')
 
     def test_turn_on_state_back_to_streaming(self):
         """After turn on state back to streaming."""
@@ -112,7 +108,7 @@ class TestTurnOnOffDemoCamera(object):
         """Turn off unsupported camera should quietly fail."""
         with patch('homeassistant.components.camera.demo.DemoCamera'
                    '.supported_features', new_callable=PropertyMock) as m:
-            m.return_value = SUPPORT_TURN_ON
+            m.return_value = 0
 
             camera.turn_off(self.hass, 'camera.demo_camera')
             self.hass.block_till_done()

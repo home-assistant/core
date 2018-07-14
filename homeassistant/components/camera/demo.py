@@ -60,7 +60,7 @@ class DemoCamera(Camera):
 
     @property
     def is_on(self):
-        """Whether camera is on (streaming)"""
+        """Whether camera is on (streaming)."""
         return self.is_streaming
 
     @property
