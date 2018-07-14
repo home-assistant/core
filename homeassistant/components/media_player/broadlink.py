@@ -1,4 +1,11 @@
 
+"""
+Support for broadlink remote control of a media device
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/media_player.broadlink/
+"""
+
 import asyncio
 import voluptuous as vol
 import logging
