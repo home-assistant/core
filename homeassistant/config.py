@@ -14,6 +14,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant import auth
 from homeassistant.auth import providers as auth_providers
+from homeassistant.auth.util import generate_secret
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
@@ -123,7 +124,7 @@ script: !include scripts.yaml
 DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
 # Learn more at https://home-assistant.io/docs/configuration/secrets/
-http_password: welcome
+http_password: %(http_password)s
 """
 
 
@@ -247,7 +248,9 @@ def create_default_config(config_dir: str, detect_location=True)\
             config_file.write(DEFAULT_CONFIG)
 
         with open(secret_path, 'wt') as secret_file:
-            secret_file.write(DEFAULT_SECRETS)
+            secret_file.write(DEFAULT_SECRETS % dict(
+                http_password=generate_secret(4),
+            ))
 
         with open(version_path, 'wt') as version_file:
             version_file.write(__version__)
