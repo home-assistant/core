@@ -206,7 +206,7 @@ class BroadlinkRM(MediaPlayerDevice):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         if media_type != MEDIA_TYPE_CHANNEL:
-            _LOGGER.error('Unsupported media type')
+            _LOGGER.error('Unsupported media type %s', media_type)
             return
 
         cv.positive_int(media_id)
