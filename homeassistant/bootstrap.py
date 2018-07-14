@@ -28,9 +28,8 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 # hass.data key for logging information.
 DATA_LOGGING = 'logging'
 
-FIRST_INIT_COMPONENT = set((
-    'system_log', 'recorder', 'mqtt', 'mqtt_eventstream', 'logger',
-    'introduction', 'frontend', 'history'))
+FIRST_INIT_COMPONENT = {'system_log', 'recorder', 'mqtt', 'mqtt_eventstream',
+                        'logger', 'introduction', 'frontend', 'history'}
 
 
 def from_config_dict(config: Dict[str, Any],
@@ -95,7 +94,8 @@ async def async_from_config_dict(config: Dict[str, Any],
         conf_util.async_log_exception(ex, 'homeassistant', core_config, hass)
         return None
 
-    await hass.async_add_job(conf_util.process_ha_config_upgrade, hass)
+    await hass.async_add_executor_job(
+        conf_util.process_ha_config_upgrade, hass)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
@@ -137,7 +137,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     for component in components:
         if component not in FIRST_INIT_COMPONENT:
             continue
-        hass.async_add_job(async_setup_component(hass, component, config))
+        hass.async_create_task(async_setup_component(hass, component, config))
 
     await hass.async_block_till_done()
 
@@ -145,7 +145,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     for component in components:
         if component in FIRST_INIT_COMPONENT:
             continue
-        hass.async_add_job(async_setup_component(hass, component, config))
+        hass.async_create_task(async_setup_component(hass, component, config))
 
     await hass.async_block_till_done()
 
@@ -162,7 +162,8 @@ def from_config_file(config_path: str,
                      skip_pip: bool = True,
                      log_rotate_days: Any = None,
                      log_file: Any = None,
-                     log_no_color: bool = False):
+                     log_no_color: bool = False)\
+        -> Optional[core.HomeAssistant]:
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -187,7 +188,8 @@ async def async_from_config_file(config_path: str,
                                  skip_pip: bool = True,
                                  log_rotate_days: Any = None,
                                  log_file: Any = None,
-                                 log_no_color: bool = False):
+                                 log_no_color: bool = False)\
+        -> Optional[core.HomeAssistant]:
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
@@ -204,7 +206,7 @@ async def async_from_config_file(config_path: str,
                          log_no_color)
 
     try:
-        config_dict = await hass.async_add_job(
+        config_dict = await hass.async_add_executor_job(
             conf_util.load_yaml_config_file, config_path)
     except HomeAssistantError as err:
         _LOGGER.error("Error loading %s: %s", config_path, err)

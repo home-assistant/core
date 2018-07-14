@@ -4,13 +4,14 @@ from unittest.mock import Mock
 import pytest
 
 from homeassistant import auth
-from homeassistant.auth_providers import legacy_api_password
+from homeassistant.auth import auth_store
+from homeassistant.auth.providers import legacy_api_password
 
 
 @pytest.fixture
 def store(hass):
     """Mock store."""
-    return auth.AuthStore(hass)
+    return auth_store.AuthStore(hass)
 
 
 @pytest.fixture
@@ -21,6 +22,14 @@ def provider(hass, store):
     })
 
 
+@pytest.fixture
+def manager(hass, store, provider):
+    """Mock manager."""
+    return auth.AuthManager(hass, store, {
+        (provider.type, provider.id): provider
+    })
+
+
 async def test_create_new_credential(provider):
     """Test that we create a new credential."""
     credentials = await provider.async_get_or_create_credentials({})
@@ -28,13 +37,13 @@ async def test_create_new_credential(provider):
     assert credentials.is_new is True
 
 
-async def test_only_one_credentials(store, provider):
+async def test_only_one_credentials(manager, provider):
     """Call create twice will return same credential."""
     credentials = await provider.async_get_or_create_credentials({})
-    await store.async_get_or_create_user(credentials, provider)
+    await manager.async_get_or_create_user(credentials)
     credentials2 = await provider.async_get_or_create_credentials({})
-    assert credentials2.data["username"] is legacy_api_password.LEGACY_USER
-    assert credentials2.id is credentials.id
+    assert credentials2.data["username"] == legacy_api_password.LEGACY_USER
+    assert credentials2.id == credentials.id
     assert credentials2.is_new is False
 
 

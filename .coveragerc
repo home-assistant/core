@@ -64,6 +64,8 @@ omit =
     homeassistant/components/cast/*
     homeassistant/components/*/cast.py
 
+    homeassistant/components/cloudflare.py
+
     homeassistant/components/comfoconnect.py
     homeassistant/components/*/comfoconnect.py
 
@@ -340,6 +342,9 @@ omit =
 
     homeassistant/components/zoneminder.py
     homeassistant/components/*/zoneminder.py
+
+    homeassistant/components/tuya.py
+    homeassistant/components/*/tuya.py
 
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
