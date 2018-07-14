@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.11.3']
+REQUIREMENTS = ['insteonplm==0.11.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
 CONF_FIRMWARE = 'firmware'
 CONF_PRODUCT_KEY = 'product_key'
+CONF_BUTTON_MODE = 'button_mode'
 CONF_X10 = 'x10_devices'
 CONF_HOUSECODE = 'housecode'
 CONF_UNITCODE = 'unitcode'
@@ -55,6 +56,18 @@ SRV_HOUSECODE = 'housecode'
 HOUSECODES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
 
+MOTION_DETECTED_STATE_NAME = 'motionSensor'
+LIGHT_DETECTED_STATE_NAME = 'lightSensor'
+BATTERY_LOW_STATE_NAME = 'batterySensor',
+BUTTON_PRESSED_STATE_NAME = 'onLevelButton'
+
+EVENT_MOTION_DETECTED = 'motion_detected'
+EVENT_LIGHT_DETECTED = 'light_detected'
+EVENT_DARK_DETECTED = 'darK_detected'
+EVENT_BATTERY_LOW = 'battery_low'
+EVENT_REMOTE_BUTTON_PRESSED = 'remote_button_pressed'
+EVENT_CONF_BUTTON = 'button'
+
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
         vol.Required(CONF_ADDRESS): cv.string,
@@ -62,6 +75,8 @@ CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
         vol.Optional(CONF_SUBCAT): cv.byte,
         vol.Optional(CONF_FIRMWARE): cv.byte,
         vol.Optional(CONF_PRODUCT_KEY): cv.byte,
+        vol.Optional(CONF_BUTTON_MODE, default='toggle'): vol.In(['toggle',
+                                                                  'on_only']),
         vol.Optional(CONF_PLATFORM): cv.string,
         }))
 
@@ -119,6 +134,7 @@ def async_setup(hass, config):
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
+    mode_conf = {}
     overrides = conf.get(CONF_OVERRIDE, [])
     x10_devices = conf.get(CONF_X10, [])
     x10_all_units_off_housecode = conf.get(CONF_X10_ALL_UNITS_OFF)
@@ -130,13 +146,34 @@ def async_setup(hass, config):
         """Detect device from transport to be delegated to platform."""
         for state_key in device.states:
             platform_info = ipdb[device.states[state_key]]
-            if platform_info:
+            if platform_info and platform_info.platform:
                 platform = platform_info.platform
-                if platform:
+                mode = mode_conf.get(device.address.hex)
+                state_name = device.states[state_key].name
+
+                if state_name == MOTION_DETECTED_STATE_NAME:
+                    device.states[state_key].register_updates(
+                        _fire_motion_detected_event)
+                elif state_name == LIGHT_DETECTED_STATE_NAME:
+                    device.states[state_key].register_updates(
+                        _fire_light_dark_detected_event)
+                elif state_name == BATTERY_LOW_STATE_NAME:
+                    device.states[state_key].register_updates(
+                        _fire_battery_low_event)
+                elif state_name[:-1] == BUTTON_PRESSED_STATE_NAME:
+                    device.states[state_key].register_updates(
+                        _fire_button_pressed_event)
+
+                # Do not create a device for binary sensors in 'on only' mode
+                _LOGGER.debug('Address: {}  Platform: {}  Mode: {}'.format(
+                    device.address.human, platform, mode))
+                if not (mode and
+                        platform == 'binary_sensor' and
+                        mode == 'on_only'):
                     _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
-                                 device.address,
-                                 device.states[state_key].name,
-                                 platform)
+                                    device.address,
+                                    device.states[state_key].name,
+                                    platform)
 
                     hass.async_add_job(
                         discovery.async_load_platform(
@@ -223,6 +260,50 @@ def async_setup(hass, config):
                                schema=X10_HOUSECODE_SCHEMA)
         _LOGGER.debug("Insteon_plm Services registered")
 
+    def _fire_motion_detected_event(address, group, val):
+        # Firing an event when motion is detected.
+        if val:
+            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN,
+                                                      EVENT_MOTION_DETECTED))
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_MOTION_DETECTED), {
+                CONF_ADDRESS: address.hex
+                })
+
+    def _fire_light_dark_detected_event(address, group, val):
+        # Firing an event when light or dark is detected.
+        if val:
+            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_DARK_DETECTED))
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_DARK_DETECTED), {
+                CONF_ADDRESS: address.hex
+                })
+        else:
+            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_LIGHT_DETECTED))
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_LIGHT_DETECTED), {
+                CONF_ADDRESS: address.hex
+                })
+
+    def _fire_battery_low_event(address, group, val):
+        # Firing an event when battery low is detected.
+        if not val:
+            _LOGGER.debug('Firing event {}.{}'.format(DOMAIN, EVENT_BATTERY_LOW))
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_BATTERY_LOW), {
+                CONF_ADDRESS: address.hex
+                })
+
+    def _fire_button_pressed_event(address, group, val):
+        # Firing an event when a button is pressed.
+        if val:
+            device = plm.devices[address.hex]
+            state_name = device.states[group].name
+            button = state_name[-1].lower()
+            _LOGGER.debug('Firing event {}.{} '
+                          'with address {} and button {}'.format(
+                DOMAIN, EVENT_REMOTE_BUTTON_PRESSED, address.hex, button))
+            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_REMOTE_BUTTON_PRESSED),
+                          {CONF_ADDRESS: address.hex,
+                           EVENT_CONF_BUTTON: button
+                           })
+
     _LOGGER.info("Looking for PLM on %s", port)
     conn = yield from insteonplm.Connection.create(
         device=port,
@@ -243,6 +324,8 @@ def async_setup(hass, config):
             elif prop in [CONF_FIRMWARE, CONF_PRODUCT_KEY]:
                 plm.devices.add_override(address, CONF_PRODUCT_KEY,
                                          device_override[prop])
+            elif prop == CONF_BUTTON_MODE:
+               mode_conf[address] = device_override[prop]
 
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['plm'] = plm
