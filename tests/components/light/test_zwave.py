@@ -255,6 +255,32 @@ def test_set_white_value(mock_openzwave):
     assert color.data == '#ffffffc800'
 
 
+def test_disable_white_if_set_color(mock_openzwave):
+    """
+    Test that _white is set to 0 if turn_on with ATTR_HS_COLOR.
+
+    See Issue #13930 - many RGBW ZWave bulbs will only activate the RGB LED to
+    produce color if _white is set to zero.
+    """
+    node = MockNode(command_classes=[const.COMMAND_CLASS_SWITCH_COLOR])
+    value = MockValue(data=0, node=node)
+    color = MockValue(data='#0000000000', node=node)
+    # Supports RGB only
+    color_channels = MockValue(data=0x1c, node=node)
+    values = MockLightValues(primary=value, color=color,
+                             color_channels=color_channels)
+    device = zwave.get_device(node=node, values=values, node_config={})
+    device._white = 234
+
+    assert color.data == '#0000000000'
+    assert device.white_value == 234
+
+    device.turn_on(**{ATTR_HS_COLOR: (30, 50)})
+
+    assert device.white_value == 0
+    assert color.data == '#ffbf7f0000'
+
+
 def test_zw098_set_color_temp(mock_openzwave):
     """Test setting zwave light color."""
     node = MockNode(manufacturer_id='0086', product_id='0062',

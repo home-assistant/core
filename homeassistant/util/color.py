@@ -267,8 +267,8 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
 def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
     """Convert a hsb into its rgb representation."""
     if fS == 0:
-        fV = fB * 255
-        return (fV, fV, fV)
+        fV = int(fB * 255)
+        return fV, fV, fV
 
     r = g = b = 0
     h = fH / 60

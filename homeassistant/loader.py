@@ -16,14 +16,20 @@ import logging
 import sys
 from types import ModuleType
 
-from typing import Optional, Set
+# pylint: disable=unused-import
+from typing import Dict, List, Optional, Sequence, Set, TYPE_CHECKING  # NOQA
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
 
+# Typing imports that create a circular dependency
+# pylint: disable=using-constant-test,unused-import
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant  # NOQA
+
 PREPARED = False
 
-DEPENDENCY_BLACKLIST = set(('config',))
+DEPENDENCY_BLACKLIST = {'config'}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +39,8 @@ PATH_CUSTOM_COMPONENTS = 'custom_components'
 PACKAGE_COMPONENTS = 'homeassistant.components'
 
 
-def set_component(hass, comp_name: str, component: ModuleType) -> None:
+def set_component(hass,  # type: HomeAssistant
+                  comp_name: str, component: Optional[ModuleType]) -> None:
     """Set a component in the cache.
 
     Async friendly.
@@ -60,7 +67,7 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
     Async friendly.
     """
     try:
-        return hass.data[DATA_KEY][comp_or_platform]
+        return hass.data[DATA_KEY][comp_or_platform]  # type: ignore
     except KeyError:
         pass
 

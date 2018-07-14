@@ -7,7 +7,7 @@ https://home-assistant.io/developers/websocket_api/
 import asyncio
 from concurrent import futures
 from contextlib import suppress
-from functools import partial
+from functools import partial, wraps
 import json
 import logging
 
@@ -196,6 +196,23 @@ def async_register_command(hass, command, handler, schema):
     handlers[command] = (handler, schema)
 
 
+def require_owner(func):
+    """Websocket decorator to require user to be an owner."""
+    @wraps(func)
+    def with_owner(hass, connection, msg):
+        """Check owner and call function."""
+        user = connection.request.get('hass_user')
+
+        if user is None or not user.is_owner:
+            connection.to_write.put_nowait(error_message(
+                msg['id'], 'unauthorized', 'This command is for owners only.'))
+            return
+
+        func(hass, connection, msg)
+
+    return with_owner
+
+
 async def async_setup(hass, config):
     """Initialize the websocket API."""
     hass.http.register_view(WebsocketAPIView)
@@ -325,6 +342,8 @@ class ActiveConnection:
                     token = self.hass.auth.async_get_access_token(
                         msg['access_token'])
                     authenticated = token is not None
+                    if authenticated:
+                        request['hass_user'] = token.refresh_token.user
 
                 elif ((not self.hass.auth.active or
                        self.hass.auth.support_legacy) and
