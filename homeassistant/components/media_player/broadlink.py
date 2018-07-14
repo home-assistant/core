@@ -11,6 +11,8 @@ import voluptuous as vol
 import logging
 from base64 import b64decode, b64encode
 import binascii
+from homeassistant.exceptions import PlatformNotReady
+import socket
 
 from homeassistant.components.media_player import (
     MediaPlayerDevice,
@@ -120,7 +122,11 @@ async def async_setup_platform(hass,
         mac,
         None)
 
-    await hass.async_add_job(link.auth)
+    try:
+        await hass.async_add_job(link.auth)
+    except socket.timeout:
+        _LOGGER.warning("Timeout trying to authenticate to broadlink")
+        raise PlatformNotReady
 
     async_add_devices([BroadlinkRM(link, config)])
 
