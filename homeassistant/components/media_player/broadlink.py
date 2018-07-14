@@ -158,7 +158,7 @@ class BroadlinkRM(MediaPlayerDevice):
 
         self.host    = config.get(CONF_HOST)
 
-        self.link    = link
+        self._link   = link
         self._state  = STATE_OFF
         self._source = None
 
@@ -167,7 +167,7 @@ class BroadlinkRM(MediaPlayerDevice):
             raise Exception('No command defined!')
 
         packet = b64decode(command)
-        await self.hass.async_add_job(self.link.send_data, packet)
+        await self.hass.async_add_job(self._link.send_data, packet)
 
     @property
     def name(self):
