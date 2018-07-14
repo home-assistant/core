@@ -152,11 +152,11 @@ class BroadlinkRM(MediaPlayerDevice):
     def __init__(self, link, config):
         super().__init__()
 
-        self.support = get_supported_by_config(config)
-        self.config  = config
-        self._link   = link
-        self._state  = STATE_OFF
-        self._source = None
+        self._support = get_supported_by_config(config)
+        self._config  = config
+        self._link    = link
+        self._state   = STATE_OFF
+        self._source  = None
 
     async def send(self, command):
         if command is None:
@@ -167,7 +167,7 @@ class BroadlinkRM(MediaPlayerDevice):
 
     @property
     def name(self):
-        return self.config.get(CONF_NAME)
+        return self._config.get(CONF_NAME)
 
     @property
     def state(self):
@@ -175,33 +175,33 @@ class BroadlinkRM(MediaPlayerDevice):
 
     @property
     def supported_features(self):
-        return self.support
+        return self._support
 
     async def async_turn_on(self):
-        await self.send(self.config.get(CONF_COMMAND_ON))
+        await self.send(self._config.get(CONF_COMMAND_ON))
         self._state = STATE_ON
 
     async def async_turn_off(self):
-        await self.send(self.config.get(CONF_COMMAND_OFF))
+        await self.send(self._config.get(CONF_COMMAND_OFF))
         self._state = STATE_OFF
 
     async def async_volume_up(self):
-        await self.send(self.config.get(CONF_VOLUME_UP))
+        await self.send(self._config.get(CONF_VOLUME_UP))
 
     async def async_volume_down(self):
-        await self.send(self.config.get(CONF_VOLUME_DOWN))
+        await self.send(self._config.get(CONF_VOLUME_DOWN))
 
     async def async_volume_mute(self):
-        await self.send(self.config.get(CONF_VOLUME_MUTE))
+        await self.send(self._config.get(CONF_VOLUME_MUTE))
 
     async def async_media_next_track(self):
-        await self.send(self.config.get(CONF_NEXT_TRACK))
+        await self.send(self._config.get(CONF_NEXT_TRACK))
 
     async def async_media_previous_track(self):
-        await self.send(self.config.get(CONF_PREVIOUS_TRACK))
+        await self.send(self._config.get(CONF_PREVIOUS_TRACK))
 
     async def async_select_source(self, source):
-        await self.send(self.config.get(CONF_SOURCES)[source])
+        await self.send(self._config.get(CONF_SOURCES)[source])
         self._source = source
 
     async def async_play_media(self, media_type, media_id, **kwargs):
@@ -212,8 +212,8 @@ class BroadlinkRM(MediaPlayerDevice):
         cv.positive_int(media_id)
 
         for digit in media_id:
-            await self.send(self.config.get(CONF_DIGITS).get(digit))
-            await asyncio.sleep(self.config.get(CONF_DIGITDELAY))
+            await self.send(self._config.get(CONF_DIGITS).get(digit))
+            await asyncio.sleep(self._config.get(CONF_DIGITDELAY))
 
     @property
     def media_content_type(self):
@@ -225,4 +225,4 @@ class BroadlinkRM(MediaPlayerDevice):
 
     @property
     def source_list(self):
-        return list(self.config.get(CONF_SOURCES).keys())
+        return list(self._config.get(CONF_SOURCES).keys())
