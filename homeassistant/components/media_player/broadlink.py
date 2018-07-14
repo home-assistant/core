@@ -122,7 +122,7 @@ async def async_setup_platform(hass,
 
     await hass.async_add_job(link.auth)
 
-    async_add_devices([BroadlinkRM(hass, link, config)])
+    async_add_devices([BroadlinkRM(link, config)])
 
 
 def get_supported_by_config(config):
@@ -149,13 +149,11 @@ def get_broadlink_mac(mac: str):
 
 class BroadlinkRM(MediaPlayerDevice):
 
-    def __init__(self, hass, link, config):
+    def __init__(self, link, config):
         super().__init__()
 
         self.support = get_supported_by_config(config)
         self.config  = config
-        self.hass    = hass
-
         self._link   = link
         self._state  = STATE_OFF
         self._source = None
