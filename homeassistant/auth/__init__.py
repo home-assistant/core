@@ -194,7 +194,7 @@ class AuthManager:
         if tkn is None:
             return None
 
-        if tkn.expired:
+        if tkn.expired or not tkn.refresh_token.user.is_active:
             self._access_tokens.pop(token)
             return None
 
