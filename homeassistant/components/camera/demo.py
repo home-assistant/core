@@ -30,23 +30,18 @@ class DemoCamera(Camera):
         self._name = name
         self._motion_status = False
         self.is_streaming = True
-        self._images = {}
+        self._images_index = 0
 
     def camera_image(self):
-        """Return a faked still image response.
+        """Return a faked still image response."""
+        self._images_index = (self._images_index + 1) % 4
 
-        Please do not cache image in camera entity.
-        This cache deign is bad, shall only used in Demo camera platform.
-        """
-        index = str(dt_util.utcnow().second % 4)
-        _LOGGER.debug('camera_image: %s', index)
-
-        if index not in self._images:
-            image_path = os.path.join(
-                os.path.dirname(__file__), 'demo_{}.jpg'.format(index))
-            with open(image_path, 'rb') as file:
-                self._images[index] = file.read()
-        return self._images.get(index)
+        image_path = os.path.join(
+            os.path.dirname(__file__),
+            'demo_{}.jpg'.format(self._images_index))
+        _LOGGER.debug('Loading camera_image: %s', image_path)
+        with open(image_path, 'rb') as file:
+            return file.read()
 
     @property
     def name(self):

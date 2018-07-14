@@ -399,37 +399,46 @@ class Camera(Entity):
         """Turn off camera."""
         raise NotImplementedError()
 
-    @callback
-    def async_turn_off(self):
-        """Turn off camera."""
-        return self.hass.async_add_job(self.turn_off)
+    async def async_turn_off(self):
+        """Turn off camera.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return await self.hass.async_add_job(self.turn_off)
 
     def turn_on(self):
-        """Turn off camera."""
+        """Turn on camera."""
         raise NotImplementedError()
 
-    @callback
-    def async_turn_on(self):
-        """Turn off camera."""
-        return self.hass.async_add_job(self.turn_on)
+    async def async_turn_on(self):
+        """Turn on camera.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return await self.hass.async_add_job(self.turn_on)
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
         raise NotImplementedError()
 
-    @callback
-    def async_enable_motion_detection(self):
-        """Call the job and enable motion detection."""
-        return self.hass.async_add_job(self.enable_motion_detection)
+    async def async_enable_motion_detection(self):
+        """Call the job and enable motion detection.
+
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return await self.hass.async_add_job(self.enable_motion_detection)
 
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
         raise NotImplementedError()
 
-    @callback
-    def async_disable_motion_detection(self):
-        """Call the job and disable motion detection."""
-        return self.hass.async_add_job(self.disable_motion_detection)
+    async def async_disable_motion_detection(self):
+        """Call the job and disable motion detection.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return await self.hass.async_add_job(self.disable_motion_detection)
 
     @property
     def state_attributes(self):
