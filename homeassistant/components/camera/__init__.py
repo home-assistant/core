@@ -20,7 +20,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, \
-    SERVICE_TURN_ON, ATTR_OPTION
+    SERVICE_TURN_ON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
@@ -49,8 +49,7 @@ STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
 
 # Bitfield of features supported by the camera entity
-SUPPORT_TURN_OFF = 1
-SUPPORT_TURN_ON = 2
+SUPPORT_ON_OFF = 1
 
 DEFAULT_CONTENT_TYPE = 'image/jpeg'
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
@@ -63,10 +62,6 @@ MIN_STREAM_INTERVAL = 0.5  # seconds
 
 CAMERA_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
-})
-
-CAMERA_TURN_ON_SERVICE_SCHEMA = CAMERA_SERVICE_SCHEMA.extend({
-    vol.Optional(ATTR_OPTION): cv.string
 })
 
 CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
@@ -102,19 +97,17 @@ async def async_turn_off(hass, entity_id=None):
 
 
 @bind_hass
-def turn_on(hass, entity_id=None, option=None):
+def turn_on(hass, entity_id=None):
     """Turn on camera."""
-    hass.add_job(async_turn_on, hass, entity_id, option)
+    hass.add_job(async_turn_on, hass, entity_id)
 
 
 @bind_hass
-async def async_turn_on(hass, entity_id=None, option=None):
+async def async_turn_on(hass, entity_id=None):
     """Turn on camera, and set operation mode."""
     data = {}
     if entity_id is not None:
         data[ATTR_ENTITY_ID] = entity_id
-    if option is not None:
-        data[ATTR_OPTION] = option
 
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data)
 
@@ -158,6 +151,9 @@ async def async_get_image(hass, entity_id, timeout=10):
 
     if camera is None:
         raise HomeAssistantError('Camera not found')
+
+    if not camera.is_on:
+        raise HomeAssistantError('Camera is off')
 
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
         with async_timeout.timeout(timeout, loop=hass.loop):
@@ -204,11 +200,11 @@ async def async_setup(hass, config):
             elif service.service == SERVICE_DISABLE_MOTION:
                 await camera.async_disable_motion_detection()
             elif service.service == SERVICE_TURN_OFF and \
-                    camera.supported_features & SUPPORT_TURN_OFF:
+                    camera.supported_features & SUPPORT_ON_OFF:
                 await camera.async_turn_off()
             elif service.service == SERVICE_TURN_ON and \
-                    camera.supported_features & SUPPORT_TURN_ON:
-                await camera.async_turn_on(service.data.get(ATTR_OPTION))
+                    camera.supported_features & SUPPORT_ON_OFF:
+                await camera.async_turn_on()
 
             if not camera.should_poll:
                 continue
@@ -251,7 +247,7 @@ async def async_setup(hass, config):
         schema=CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_ON, async_handle_camera_service,
-        schema=CAMERA_TURN_ON_SERVICE_SCHEMA)
+        schema=CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_ENABLE_MOTION, async_handle_camera_service,
         schema=CAMERA_SERVICE_SCHEMA)
@@ -394,6 +390,11 @@ class Camera(Entity):
             return STATE_STREAMING
         return STATE_IDLE
 
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return True
+
     def turn_off(self):
         """Turn off camera."""
         raise NotImplementedError()
@@ -403,14 +404,14 @@ class Camera(Entity):
         """Turn off camera."""
         return self.hass.async_add_job(self.turn_off)
 
-    def turn_on(self, option=None):
+    def turn_on(self):
         """Turn off camera."""
         raise NotImplementedError()
 
     @callback
-    def async_turn_on(self, option=None):
+    def async_turn_on(self):
         """Turn off camera."""
-        return self.hass.async_add_job(self.turn_on, option)
+        return self.hass.async_add_job(self.turn_on)
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
@@ -478,6 +479,10 @@ class CameraView(HomeAssistantView):
 
         if not authenticated:
             raise web.HTTPUnauthorized()
+
+        if not camera.is_on:
+            _LOGGER.debug('Camera is off.')
+            return web.Response(status=503)
 
         return await self.handle(request, camera)
 

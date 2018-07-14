@@ -13,9 +13,6 @@ turn_on:
     entity_id:
       description: Entity id.
       example: 'camera.living_room'
-    option:
-      description: Optional operation mode.
-      example: 'recording'
 
 enable_motion_detection:
   description: Enable the motion detection in a camera.

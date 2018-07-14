@@ -7,8 +7,7 @@ https://home-assistant.io/components/demo/
 import os
 import logging
 import homeassistant.util.dt as dt_util
-from homeassistant.components.camera import Camera, SUPPORT_TURN_OFF, \
-    SUPPORT_TURN_ON
+from homeassistant.components.camera import Camera, SUPPORT_ON_OFF
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,10 +33,13 @@ class DemoCamera(Camera):
         self._images = {}
 
     def camera_image(self):
-        """Return a faked still image response."""
-        index = 'off'
-        if self.is_streaming:
-            index = str(dt_util.utcnow().second % 4)
+        """Return a faked still image response.
+
+        Please do not cache image in camera entity.
+        This cache deign is bad, shall only used in Demo camera platform.
+        """
+        index = str(dt_util.utcnow().second % 4)
+        _LOGGER.debug('camera_image: %s', index)
 
         if index not in self._images:
             image_path = os.path.join(
@@ -59,7 +61,12 @@ class DemoCamera(Camera):
     @property
     def supported_features(self):
         """Camera support turn on/off features."""
-        return SUPPORT_TURN_OFF + SUPPORT_TURN_ON
+        return SUPPORT_ON_OFF
+
+    @property
+    def is_on(self):
+        """Whether camera is on (streaming)"""
+        return self.is_streaming
 
     @property
     def motion_detection_enabled(self):
@@ -78,6 +85,6 @@ class DemoCamera(Camera):
         """Turn off camera."""
         self.is_streaming = False
 
-    def turn_on(self, option=None):
+    def turn_on(self):
         """Turn on camera."""
         self.is_streaming = True
