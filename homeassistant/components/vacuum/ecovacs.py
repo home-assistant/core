@@ -97,7 +97,6 @@ class EcovacsVacuum(VacuumDevice):
         This will not change the entity's state. If the error caused the state
         to change, that will come through as a separate on_status event
         """
-
         if error == 'no_error':
             self._error = None
         else:
