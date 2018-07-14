@@ -7,8 +7,8 @@ https://home-assistant.io/components/sensor.mvglive/
 import logging
 from datetime import timedelta
 
-import voluptuous as vol
 from copy import deepcopy
+import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
