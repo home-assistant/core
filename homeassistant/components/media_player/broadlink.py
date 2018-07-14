@@ -144,7 +144,7 @@ def get_supported_by_config(config):
 
 def get_broadlink_mac(mac: str):
     """ Convert a mac address string with : in it to just a flat string. """
-    binascii.unhexlify(mac.encode().replace(b':', b''))
+    return binascii.unhexlify(mac.encode().replace(b':', b''))
 
 
 class BroadlinkRM(MediaPlayerDevice):
