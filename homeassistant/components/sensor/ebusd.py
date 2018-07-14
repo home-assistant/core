@@ -1,5 +1,6 @@
 """
 Support for Ebusd daemon for communication with eBUS heating systems.
+
 For more details about ebusd, please refer to the documentation at
 https://github.com/john30/ebusd
 """
@@ -105,7 +106,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 def timer_format(string):
-    """Datetime formatter"""
+    """Datetime formatter."""
     _r = []
     _s = string.split(';')
     for i in range(0, len(_s) // 2):
@@ -151,7 +152,7 @@ class EbusdData(object):
             sock.close()
 
     def write(self, call):
-        """Call write methon on ebusd"""
+        """Call write methon on ebusd."""
         name = call.data.get('name')
         value = call.data.get('value')
         command = WRITE_COMMAND.format(self._circuit, name, value)
