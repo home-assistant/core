@@ -402,9 +402,9 @@ class Camera(Entity):
     async def async_turn_off(self):
         """Turn off camera.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return await self.hass.async_add_job(self.turn_off)
+        await self.hass.async_add_executor_job(self.turn_off)
 
     def turn_on(self):
         """Turn on camera."""
@@ -413,9 +413,9 @@ class Camera(Entity):
     async def async_turn_on(self):
         """Turn on camera.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return await self.hass.async_add_job(self.turn_on)
+        await self.hass.async_add_executor_job(self.turn_on)
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
@@ -424,9 +424,9 @@ class Camera(Entity):
     async def async_enable_motion_detection(self):
         """Call the job and enable motion detection.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return await self.hass.async_add_job(self.enable_motion_detection)
+        await self.hass.async_add_executor_job(self.enable_motion_detection)
 
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
@@ -435,9 +435,9 @@ class Camera(Entity):
     async def async_disable_motion_detection(self):
         """Call the job and disable motion detection.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return await self.hass.async_add_job(self.disable_motion_detection)
+        await self.hass.async_add_executor_job(self.disable_motion_detection)
 
     @property
     def state_attributes(self):
