@@ -1295,6 +1295,9 @@ statsd==3.2.1
 # homeassistant.components.sensor.steam_online
 steamodd==4.21
 
+# homeassistant.components.ecovacs
+sucks==0.9.0
+
 # homeassistant.components.camera.onvif
 suds-passworddigest-homeassistant==0.1.2a0.dev0
 
