@@ -81,7 +81,6 @@ async def test_create_new_user(hass, hass_storage):
     user = await manager.async_get_or_create_user(credentials)
     assert user is not None
     assert user.is_owner is False
-    print(user.name)
     assert user.name == 'Test Name'
 
 
