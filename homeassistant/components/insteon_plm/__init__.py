@@ -143,14 +143,9 @@ def async_setup(hass, config):
 
                 if platform == 'on_off_events':
                     device.states[state_key].register_updates(
-                        _fire_on_button_on_off_event)
+                        _fire_button_on_off_event)
 
-                # Do not create a device for binary sensors in 'on only' mode
-                _LOGGER.debug('Address: {}  Platform: {}  Mode: {}'.format(
-                    device.address.human, platform, mode))
-                if not (mode and
-                        platform == 'binary_sensor' and
-                        mode == 'on_only'):
+                else:
                     _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
                                     device.address,
                                     device.states[state_key].name,
