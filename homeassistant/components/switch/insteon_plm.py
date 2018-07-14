@@ -46,8 +46,7 @@ class InsteonPLMSwitchDevice(InsteonPLMEntity, SwitchDevice):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        onlevel = self._insteon_device_state.value
-        return bool(onlevel)
+        return bool(self._insteon_device_state.value)
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
@@ -66,8 +65,7 @@ class InsteonPLMOpenClosedDevice(InsteonPLMEntity, SwitchDevice):
     @property
     def is_on(self):
         """Return the boolean response if the node is on."""
-        onlevel = self._insteon_device_state.value
-        return bool(onlevel)
+        return bool(self._insteon_device_state.value)
 
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
