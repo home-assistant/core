@@ -156,8 +156,6 @@ class BroadlinkRM(MediaPlayerDevice):
         self.config  = config
         self.hass    = hass
 
-        self.host    = config.get(CONF_HOST)
-
         self._link   = link
         self._state  = STATE_OFF
         self._source = None
