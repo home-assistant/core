@@ -465,6 +465,22 @@ def x10_address(value):
     return str(value).lower()
 
 
+def ipv4_address(value):
+    """Validate an ipv4 address."""
+    regex = re.compile(r'^\d+.\d+.\d+.\d+$')
+    if not regex.match(value):
+        raise vol.Invalid('Invalid Ipv4 address, expected a.b.c.d')
+    return value
+
+
+def mac_address(value):
+    """Validate an mac address."""
+    regex = re.compile(r'^([0-9a-fA-F]{2})(:[0-9a-fA-F]{2}){5}$')
+    if not regex.match(value):
+        raise vol.Invalid('Invalid MAC address, expected AA:BB:CC:DD:EE:FF')
+    return str(value).lower()
+
+
 def ensure_list_csv(value: Any) -> Sequence:
     """Ensure that input is a list or make one from comma-separated string."""
     if isinstance(value, str):

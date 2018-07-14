@@ -74,9 +74,9 @@ DIGITS_SCHEMA = vol.Schema({
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_HOST): cv.ipv4_address,
     vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
-    vol.Required(CONF_MAC): cv.string,
+    vol.Required(CONF_MAC): cv.mac_address,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 
