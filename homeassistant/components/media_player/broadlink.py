@@ -7,41 +7,23 @@ https://home-assistant.io/components/media_player.broadlink/
 """
 
 import asyncio
-import voluptuous as vol
-import logging
 from base64 import b64decode, b64encode
 import binascii
-from homeassistant.exceptions import PlatformNotReady
+import logging
 import socket
 
+import voluptuous as vol
+
 from homeassistant.components.media_player import (
-    MediaPlayerDevice,
-    PLATFORM_SCHEMA,
-    ENTITY_ID_FORMAT,
-    MEDIA_TYPE_CHANNEL,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PLAY_MEDIA)
-
+    ENTITY_ID_FORMAT, MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_NAME,
-    CONF_HOST,
-    CONF_MAC,
-    CONF_TIMEOUT,
-    CONF_TYPE,
-    CONF_COMMAND_ON,
-    CONF_COMMAND_OFF,
-    CONF_PORT,
-    STATE_OFF,
-    STATE_ON,
-    STATE_PLAYING,
+    CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_HOST, CONF_MAC, CONF_NAME,
+    CONF_PORT, CONF_TIMEOUT, CONF_TYPE, STATE_OFF, STATE_ON, STATE_PLAYING,
     STATE_UNKNOWN)
-
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS         = ['broadlink==0.9.0']
