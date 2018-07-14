@@ -76,6 +76,11 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
         return self._home.connected
 
     @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return '%'
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes of the access point."""
         return {}
@@ -125,11 +130,6 @@ class HomematicipHumiditySensor(HomematicipGenericDevice):
         return DEVICE_CLASS_HUMIDITY
 
     @property
-    def icon(self):
-        """Return the icon."""
-        return 'mdi:water-percent'
-
-    @property
     def state(self):
         """Return the state."""
         return self._device.humidity
@@ -151,11 +151,6 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
     def device_class(self):
         """Return the device class of the sensor."""
         return DEVICE_CLASS_TEMPERATURE
-
-    @property
-    def icon(self):
-        """Return the icon."""
-        return 'mdi:thermometer'
 
     @property
     def state(self):
