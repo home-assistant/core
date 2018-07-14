@@ -122,7 +122,7 @@ async def async_setup_platform(hass,
 
 
 def get_supported_by_config(config):
-    """ Calculate support flags based on available configuration entries """
+    """ Calculate support flags based on available configuration entries. """
     support = 0
 
     for mapping in SUPPORT_MAPPING:
@@ -139,7 +139,7 @@ def get_supported_by_config(config):
 
 
 def get_broadlink_mac(mac: str):
-    """ Convert a mac address string with : in it to just a flat string """
+    """ Convert a mac address string with : in it to just a flat string. """
     binascii.unhexlify(mac.encode().replace(b':', b''))
 
 
