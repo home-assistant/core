@@ -34,6 +34,7 @@ from homeassistant.const import (
     CONF_TYPE,
     CONF_COMMAND_ON,
     CONF_COMMAND_OFF,
+    CONF_PORT,
     STATE_OFF,
     STATE_ON,
     STATE_PLAYING,
@@ -47,6 +48,7 @@ DOMAIN               = 'broadlink'
 DEFAULT_NAME         = "Broadlink IR Media Player"
 DEFAULT_TIMEOUT      = 10
 DEFAULT_DELAY        = 0.5
+DEFAULT_PORT         = 80
 
 CONF_VOLUME_UP       = 'volume_up'
 CONF_VOLUME_DOWN     = 'volume_down'
@@ -73,6 +75,7 @@ DIGITS_SCHEMA = vol.Schema({
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
+    vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.positive_int,
     vol.Required(CONF_MAC): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
@@ -108,11 +111,12 @@ async def async_setup_platform(hass,
                                discovery_info=None):
     import broadlink
 
-    host = config.get(CONF_HOST)
+    host = (config.get(CONF_HOST),
+            config.get(CONF_PORT))
     mac  = get_broadlink_mac(config.get(CONF_MAC))
 
     link = broadlink.rm(
-        (host, 80),
+        host,
         mac,
         None)
 
