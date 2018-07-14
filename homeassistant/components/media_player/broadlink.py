@@ -1,6 +1,6 @@
 
 """
-Support for broadlink remote control of a media device
+Support for broadlink remote control of a media device.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.broadlink/
@@ -92,6 +92,7 @@ async def async_setup_platform(hass,
                                config,
                                async_add_devices,
                                discovery_info=None):
+    """Set up platform."""
     import broadlink
 
     host = (config.get(CONF_HOST),
@@ -135,8 +136,10 @@ def get_broadlink_mac(mac: str):
 
 
 class BroadlinkRM(MediaPlayerDevice):
+    """Representation of a media device."""
 
     def __init__(self, link, config):
+        """Initialize device."""
         super().__init__()
 
         self._support = get_supported_by_config(config)
@@ -146,6 +149,7 @@ class BroadlinkRM(MediaPlayerDevice):
         self._source = None
 
     async def send(self, command):
+        """Send b64 encoded command to device."""
         if command is None:
             raise Exception('No command defined!')
 
@@ -154,37 +158,47 @@ class BroadlinkRM(MediaPlayerDevice):
 
     @property
     def name(self):
+        """Return the name of the controlled device."""
         return self._config.get(CONF_NAME)
 
     @property
     def state(self):
+        """Return the state of the device."""
         return self._state
 
     @property
     def supported_features(self):
+        """Flag media player features that are supported."""
         return self._support
 
     async def async_turn_on(self):
+        """Turn on media player."""
         await self.send(self._config.get(CONF_COMMAND_ON))
         self._state = STATE_ON
 
     async def async_turn_off(self):
+        """Turn off media player."""
         await self.send(self._config.get(CONF_COMMAND_OFF))
         self._state = STATE_OFF
 
     async def async_volume_up(self):
+        """Volume up media player."""
         await self.send(self._config.get(CONF_VOLUME_UP))
 
     async def async_volume_down(self):
+        """Volume down media player."""
         await self.send(self._config.get(CONF_VOLUME_DOWN))
 
     async def async_volume_mute(self):
+        """Send mute command."""
         await self.send(self._config.get(CONF_VOLUME_MUTE))
 
     async def async_media_next_track(self):
+        """Send next track command."""
         await self.send(self._config.get(CONF_NEXT_TRACK))
 
     async def async_media_previous_track(self):
+        """Send the previous track command."""
         await self.send(self._config.get(CONF_PREVIOUS_TRACK))
 
     async def async_select_source(self, source):
@@ -204,12 +218,15 @@ class BroadlinkRM(MediaPlayerDevice):
 
     @property
     def media_content_type(self):
+        """Return content type currently active."""
         return MEDIA_TYPE_CHANNEL
 
     @property
     def source(self):
+        """Return the current input source."""
         return self._source
 
     @property
     def source_list(self):
+        """List of available input sources."""
         return list(self._config.get(CONF_SOURCES).keys())
