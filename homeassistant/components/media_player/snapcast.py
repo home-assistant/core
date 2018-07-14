@@ -208,7 +208,7 @@ class SnapcastClientDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return '{}{}'.format(CLIENT_PREFIX, self._client.identifier)
+        return self._client.name
 
     @property
     def volume_level(self):
