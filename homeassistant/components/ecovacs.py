@@ -10,27 +10,30 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_TIMEOUT, \
-    CONF_DEVICES, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, \
+    EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['sucks==0.8.4']
+REQUIREMENTS = ['sucks==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "ecovacs"
 
+CONF_COUNTRY = "country"
+CONF_CONTINENT = "continent"
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_DEVICES, default=[]):
-            vol.All(cv.ensure_list, [dict]),
+        vol.Required(CONF_COUNTRY): cv.string,
+        vol.Required(CONF_CONTINENT): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
 ECOVACS_DEVICES = "ecovacs_devices"
-# TODO: const or generated?
-ECOVACS_API_DEVICEID = "6d6ce034ef01ae6c66b21729ffa3b23e"
+ECOVACS_API_DEVICEID = "homeasst"
+
 
 def setup(hass, config):
     """Set up the Ecovacs component."""
@@ -42,15 +45,15 @@ def setup(hass, config):
     from sucks import EcoVacsAPI, VacBot
 
     # Convenient hack for debugging to pipe sucks logging to the Hass logger
-    # TODO: Comment out before commit
-    import sucks
-    sucks.logging = _LOGGER
+    if _LOGGER.getEffectiveLevel() <= logging.DEBUG:
+        import sucks
+        sucks.logging = _LOGGER
 
     ecovacs_api = EcoVacsAPI(ECOVACS_API_DEVICEID,
                              config[DOMAIN].get(CONF_USERNAME),
                              EcoVacsAPI.md5(config[DOMAIN].get(CONF_PASSWORD)),
-                             'us', #TODO: Make configurable
-                             'na') #TODO: Make configurable
+                             config[DOMAIN].get(CONF_COUNTRY).lower(),
+                             config[DOMAIN].get(CONF_CONTINENT).lower())
 
     devices = ecovacs_api.devices()
     _LOGGER.debug("Ecobot devices: %s", devices)
@@ -63,11 +66,13 @@ def setup(hass, config):
                         ecovacs_api.resource,
                         ecovacs_api.user_access_token,
                         device,
-                        'na') #TODO: Make configurable
+                        config[DOMAIN].get(CONF_CONTINENT).lower(),
+                        monitor=True)
         hass.data[ECOVACS_DEVICES].append(vacbot)
 
     # pylint: disable=unused-argument
     def stop(event: object) -> None:
+        """Shut down open connections to Ecovacs XMPP server."""
         for device in hass.data[ECOVACS_DEVICES]:
             _LOGGER.info("Shutting down connection to Ecovacs device %s",
                          device.vacuum['nick'])

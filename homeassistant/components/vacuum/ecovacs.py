@@ -4,7 +4,6 @@ Support for Ecovacs Ecovacs Vaccums.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/vacuum.neato/
 """
-import asyncio
 import logging
 
 from homeassistant.components.vacuum import (
@@ -19,17 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['ecovacs']
 
-# Note: SUPPORT_FAN_SPEED gets dynamically added to this list based on vacuum
-# state in the supported_features Property getter
 SUPPORT_ECOVACS = (
     SUPPORT_BATTERY | SUPPORT_RETURN_HOME | SUPPORT_CLEAN_SPOT |
-    SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON |
-    SUPPORT_STATUS | SUPPORT_LOCATE | SUPPORT_SEND_COMMAND)
+    SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | SUPPORT_LOCATE |
+    SUPPORT_STATUS | SUPPORT_SEND_COMMAND | SUPPORT_FAN_SPEED)
 
 ECOVACS_FAN_SPEED_LIST = ['normal', 'high']
 
 # These consts represent bot statuses that can come from the `sucks` library
-# TODO: These should probably be exposed in the sucks library and just imported
 STATUS_AUTO = 'auto'
 STATUS_EDGE = 'edge'
 STATUS_SPOT = 'spot'
@@ -45,7 +41,9 @@ STATUSES_CLEANING = [STATUS_AUTO, STATUS_EDGE, STATUS_SPOT, STATUS_SINGLE_ROOM]
 # Any status that represents sitting on the charger
 STATUSES_CHARGING = [STATUS_CHARGING, STATUS_IDLE]
 
-ICON = "mdi:roomba"
+ATTR_ERROR = 'error'
+ATTR_COMPONENT_PREFIX = 'component_'
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Ecovacs vacuums."""
@@ -69,34 +67,28 @@ class EcovacsVacuum(VacuumDevice):
             # In case there is no nickname defined, use the device id
             self._name = '{}'.format(self.device.vacuum['did'])
 
-        self._status = None
         self._fan_speed = None
-        self._battery_level = None
+        self._error = None
         _LOGGER.debug("Vacuum initialized: %s", self.name)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self) -> None:
+    async def async_added_to_hass(self) -> None:
+        """d."""
         # Fire off some queries to get initial state
-        from sucks import VacBotCommand
         self.device.statusEvents.subscribe(self.on_status)
         self.device.batteryEvents.subscribe(self.on_battery)
         self.device.errorEvents.subscribe(self.on_error)
-
-        # TODO: Once sucks does internal state handling, these shouldn't be
-        # TODO: necessary. Perhaps this will be replaced by a single call to
-        # TODO: turn on state handling, or turn on each feature to track?
-        self.device.run(VacBotCommand('GetCleanState', {}))
-        self.device.run(VacBotCommand('GetChargeState', {}))
-        self.device.run(VacBotCommand('GetBatteryInfo', {}))
+        self.device.lifespanEvents.subscribe(self.on_lifespan)
 
     def on_status(self, status):
         """Handle the status of the robot changing."""
-        self._status = status
         self.schedule_update_ha_state()
 
     def on_battery(self, battery_level):
         """Handle the battery level changing on the robot."""
-        self._battery_level = battery_level * 100
+        self.schedule_update_ha_state()
+
+    def on_lifespan(self, lifespan):
+        """Handle component lifespan reports from the robot."""
         self.schedule_update_ha_state()
 
     def on_error(self, error):
@@ -105,33 +97,40 @@ class EcovacsVacuum(VacuumDevice):
         This will not change the entity's state. If the error caused the state
         to change, that will come through as a separate on_status event
         """
+
+        if error == 'no_error':
+            self._error = None
+        else:
+            self._error = error
+
         self.hass.bus.fire('ecovacs_error', {
             'entity_id': self.entity_id,
             'error': error
         })
+        self.schedule_update_ha_state()
 
     @property
     def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state.
-        """
+        """Return True if entity has to be polled for state."""
         return False
 
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
         if hasattr(self.device.vacuum, 'did'):
+            # `did` is the Ecovacs-reported Device ID
             return self.device.vacuum['did']
         return None
 
     @property
     def is_on(self):
         """Return true if vacuum is currently cleaning."""
-        return self._status in STATUSES_CLEANING
+        return self.device.vacuum_status in STATUSES_CLEANING
 
     @property
     def is_charging(self):
         """Return true if vacuum is currently charging."""
-        return self._status in STATUSES_CHARGING
+        return self.device.vacuum_status in STATUSES_CHARGING
 
     @property
     def name(self):
@@ -139,19 +138,14 @@ class EcovacsVacuum(VacuumDevice):
         return self._name
 
     @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return ICON
-
-    @property
     def supported_features(self):
         """Flag vacuum cleaner robot features that are supported."""
-        support = SUPPORT_ECOVACS
-        if self.is_on:
-            # Fan speed can only be adjusted while cleaning
-            support = support | SUPPORT_FAN_SPEED
+        return SUPPORT_ECOVACS
 
-        return support
+    @property
+    def status(self):
+        """Return the status of the vacuum cleaner."""
+        return self.device.vacuum_status
 
     def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
@@ -167,12 +161,15 @@ class EcovacsVacuum(VacuumDevice):
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
-        return self._battery_level
+        if self.device.battery_status is not None:
+            return self.device.battery_status * 100
+
+        return super().battery_level
 
     @property
     def fan_speed(self):
         """Return the fan speed of the vacuum cleaner."""
-        return self._fan_speed
+        return self.device.fan_speed
 
     @property
     def fan_speed_list(self):
@@ -200,18 +197,15 @@ class EcovacsVacuum(VacuumDevice):
 
     def locate(self, **kwargs):
         """Locate the vacuum cleaner."""
-        raise NotImplementedError()
-
-        # TODO: Needs support in sucks library
-        from sucks import Locate
-        self.device.run(Locate())
+        from sucks import PlaySound
+        self.device.run(PlaySound())
 
     def set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
         if self.is_on:
             from sucks import Clean
             self.device.run(Clean(
-                mode=self._status, speed=fan_speed))
+                mode=self.device.clean_status, speed=fan_speed))
 
     def send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
@@ -223,7 +217,10 @@ class EcovacsVacuum(VacuumDevice):
         """Return the state attributes of the vacuum cleaner."""
         data = super().state_attributes
 
-        # TODO: attribute names should be consts
-        data['status'] = self._status
+        data[ATTR_ERROR] = self._error
+
+        for key, val in self.device.components.items():
+            attr_name = ATTR_COMPONENT_PREFIX + key
+            data[attr_name] = int(val * 100)
 
         return data
