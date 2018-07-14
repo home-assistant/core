@@ -424,7 +424,6 @@ class Camera(Entity):
     async def async_enable_motion_detection(self):
         """Call the job and enable motion detection.
 
-
         This method must be run in the event loop and returns a coroutine.
         """
         return await self.hass.async_add_job(self.enable_motion_detection)

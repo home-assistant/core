@@ -4,9 +4,9 @@ Demo camera platform that has a fake camera.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-import os
 import logging
-import homeassistant.util.dt as dt_util
+import os
+
 from homeassistant.components.camera import Camera, SUPPORT_ON_OFF
 
 _LOGGER = logging.getLogger(__name__)
