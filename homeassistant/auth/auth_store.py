@@ -81,6 +81,16 @@ class AuthStore:
         self._users.pop(user.id)
         await self.async_save()
 
+    async def async_activate_user(self, user):
+        """Activate a user."""
+        user.is_active = True
+        await self.async_save()
+
+    async def async_deactivate_user(self, user):
+        """Activate a user."""
+        user.is_active = False
+        await self.async_save()
+
     async def async_remove_credentials(self, credentials):
         """Remove credentials."""
         for user in self._users.values():
