@@ -27,7 +27,7 @@ DEFAULT_NAME = 'Command Sensor'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-CONF_COMMAND_TIMEOUT ='command_timeout'
+CONF_COMMAND_TIMEOUT = 'command_timeout'
 DEFAULT_TIMEOUT = 15
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -35,7 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Optional(
+        CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 

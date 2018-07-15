@@ -21,7 +21,8 @@ class TestCommandSensorSensor(unittest.TestCase):
         """Test sensor setup."""
         config = {'name': 'Test',
                   'unit_of_measurement': 'in',
-                  'command': 'echo 5'
+                  'command': 'echo 5',
+                  'command_timeout': 15
                   }
         devices = []
 
@@ -41,7 +42,7 @@ class TestCommandSensorSensor(unittest.TestCase):
 
     def test_template(self):
         """Test command sensor with template."""
-        data = command_line.CommandSensorData(self.hass, 'echo 50')
+        data = command_line.CommandSensorData(self.hass, 'echo 50', 15)
 
         entity = command_line.CommandSensor(
             self.hass, data, 'test', 'in',
@@ -55,7 +56,7 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.hass.states.set('sensor.test_state', 'Works')
         data = command_line.CommandSensorData(
             self.hass,
-            'echo {{ states.sensor.test_state.state }}'
+            'echo {{ states.sensor.test_state.state }}', 15
         )
         data.update()
 
@@ -63,7 +64,7 @@ class TestCommandSensorSensor(unittest.TestCase):
 
     def test_bad_command(self):
         """Test bad command."""
-        data = command_line.CommandSensorData(self.hass, 'asdfasdf')
+        data = command_line.CommandSensorData(self.hass, 'asdfasdf', 15)
         data.update()
 
         self.assertEqual(None, data.value)
