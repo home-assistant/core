@@ -291,3 +291,14 @@ async def test_refresh_token_not_requires_client_for_system_user(hass):
     token = await manager.async_create_refresh_token(user)
     assert token is not None
     assert token.client_id is None
+
+
+async def test_cannot_deactive_owner(mock_hass):
+    """Test that we cannot deactive the owner."""
+    manager = await auth.auth_manager_from_config(mock_hass, [])
+    owner = MockUser(
+        is_owner=True,
+    ).add_to_auth_manager(manager)
+
+    with pytest.raises(ValueError):
+        await manager.async_deactivate_user(owner)
