@@ -5,6 +5,8 @@ https://home-assistant.io/components/ecovacs/
 """
 
 import logging
+import random
+import string
 
 import voluptuous as vol
 
@@ -32,7 +34,11 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 ECOVACS_DEVICES = "ecovacs_devices"
-ECOVACS_API_DEVICEID = "homeasst"
+
+# Generate a random device ID on each bootup
+ECOVACS_API_DEVICEID = ''.join(
+    random.choices(string.ascii_uppercase + string.digits, k=8)
+)
 
 
 def setup(hass, config):
