@@ -63,9 +63,15 @@ class HomematicipGenericDevice(Entity):
         return not self._device.unreach
 
     @property
+    def icon(self):
+        """Return the icon."""
+        if hasattr(self._device, 'lowBat') and self._device.lowBat:
+            return 'mdi:battery-outline'
+
+    @property
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
         attr = {ATTR_MODEL_TYPE: self._device.modelType}
-        if hasattr(self._device, 'lowBat') and self._device.lowBat: 
+        if hasattr(self._device, 'lowBat') and self._device.lowBat:
             attr.update({ATTR_LOW_BATTERY: self._device.lowBat})
         return attr
