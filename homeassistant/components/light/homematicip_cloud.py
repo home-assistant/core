@@ -31,14 +31,14 @@ async def async_setup_platform(hass, config, async_add_devices,
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the HomematicIP lights from a config entry."""
     from homematicip.aio.device import (
-        AsyncBrandSwitchMeasuring, AsyncPluggableDimmer)
+        AsyncBrandSwitchMeasuring, AsyncDimmer)
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
         if isinstance(device, AsyncBrandSwitchMeasuring):
             devices.append(HomematicipLightMeasuring(home, device))
-        elif isinstance(device, AsyncPluggableDimmer):
+        elif isinstance(device, AsyncDimmer):
             devices.append(HomematicipDimmer(home, device))
 
     if devices:
