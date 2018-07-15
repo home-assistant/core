@@ -143,11 +143,11 @@ class AuthManager:
         await self._store.async_remove_user(user)
 
     async def async_activate_user(self, user):
-        """Activates a user."""
+        """Activate a user."""
         await self._store.async_activate_user(user)
 
     async def async_deactivate_user(self, user):
-        """Activates a user."""
+        """Deactivate a user."""
         await self._store.async_deactivate_user(user)
 
     async def async_remove_credentials(self, credentials):
