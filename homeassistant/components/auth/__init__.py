@@ -243,6 +243,7 @@ class GrantTokenView(HomeAssistantView):
         if client_id is None or not indieauth.verify_client_id(client_id):
             return self.json({
                 'error': 'invalid_request',
+                'error_description': 'Invalid client id',
             }, status_code=400)
 
         grant_type = data.get('grant_type')
@@ -272,14 +273,16 @@ class GrantTokenView(HomeAssistantView):
         if credentials is None:
             return self.json({
                 'error': 'invalid_request',
+                'error_description': 'Invalid code',
             }, status_code=400)
 
         user = await hass.auth.async_get_or_create_user(credentials)
 
         if not user.is_active:
             return self.json({
-                'error': 'invalid_request',
-            }, status_code=400)
+                'error': 'access_denied',
+                'error_description': 'User is not active',
+            }, status_code=403)
 
         refresh_token = await hass.auth.async_create_refresh_token(user,
                                                                    client_id)
