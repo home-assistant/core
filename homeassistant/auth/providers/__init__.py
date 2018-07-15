@@ -152,6 +152,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
         """Initialize the login flow."""
         self._auth_provider = auth_provider
         self._auth_module_id = None
+        self._auth_modules = []
         self._auth_manager = auth_provider.hass.auth
         self._user = None
         self._username = None
@@ -171,14 +172,14 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
         if user_input is not None:
             auth_module = user_input.get('multi_factor_auth_module')
-            if auth_module in self._user.mfa_modules:
+            if auth_module in self._auth_modules:
                 self._auth_module_id = auth_module
                 return await self.async_step_mfa()
             else:
-                errors['base'] = 'invalid_auth'
+                errors['base'] = 'invalid_auth_module'
 
         schema = OrderedDict()
-        schema['multi_factor_auth_module'] = vol.In(self._user.mfa_modules)
+        schema['multi_factor_auth_module'] = vol.In(self._auth_modules)
 
         return self.async_show_form(
             step_id='select_mfa_module',
@@ -189,21 +190,14 @@ class LoginFlow(data_entry_flow.FlowHandler):
     async def async_step_mfa(self, user_input=None):
         """Handle the step of mfa validation."""
         errors = {}
-        result = None
 
         auth_module = self._auth_manager.get_auth_mfa_module(
             self._auth_module_id)
         if auth_module is None:
-            errors['base'] = 'invalid_auth_module'
-
-            schema = OrderedDict()
-            schema['multi_factor_auth_module'] = vol.In(self._user.mfa_modules)
-
-            return self.async_show_form(
-                step_id='select_mfa_module',
-                data_schema=vol.Schema(schema),
-                errors=errors,
-            )
+            # Given an invalid input to async_ste[_select_mfa_module
+            # will show invalid_auth_module error
+            return await self.async_step_select_mfa_module(
+                user_input={'multi_factor_auth_module': None})
 
         if user_input is not None:
             expires = self.created_at + SESSION_EXPIRATION
@@ -220,7 +214,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
         return self.async_show_form(
             step_id='mfa',
-            data_schema=vol.Schema(auth_module.input_schema),
+            data_schema=auth_module.input_schema,
             errors=errors,
         )
 
@@ -228,22 +222,31 @@ class LoginFlow(data_entry_flow.FlowHandler):
         """Handle the pass of login flow."""
         if not mfa_valid:
             self._username = username
+
+            # We need get user from username, so we need get credential first
+            # async_get_or_create_credentials would not save data, it is safe
+            # to be called here. It will be called later in end of workflow.
             credentials = await self._auth_provider.\
                 async_get_or_create_credentials({'username': username})
 
             # multi-factor module cannot enabled for new credential
+            # which has not linked to a user yet
             if not credentials.is_new:
                 self._user = await self._auth_manager.\
                     async_get_user_by_credentials(credentials)
 
-                if self._user.mfa_modules:
+                # module in user.mfa_modules may not loaded
+                # the config may have changed after the user enabled module
+                # we need double check available mfa_modules for this user
+                if self._user and self._user.mfa_modules:
                     modules = [m_id for m_id in self._user.mfa_modules
                                if self._auth_manager.
                                get_auth_mfa_module(m_id)]
 
                     if modules:
-                        if len(modules) == 1:
-                            self._auth_module_id = modules[0]
+                        self._auth_modules = modules
+                        if len(self._auth_modules) == 1:
+                            self._auth_module_id = self._auth_modules[0]
                             return await self.async_step_mfa()
                         # need select mfa module first
                         return await self.async_step_select_mfa_module()

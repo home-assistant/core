@@ -105,6 +105,7 @@ def _user_info(user):
         'is_owner': user.is_owner,
         'is_active': user.is_active,
         'system_generated': user.system_generated,
+        'enabled_multi_factor_auth': user.mfa_modules,
         'credentials': [
             {
                 'type': c.auth_provider_type,

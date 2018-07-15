@@ -15,7 +15,7 @@ CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)
 
 STORAGE_VERSION = 1
-STORAGE_KEY = 'auth_module.insecure_example'
+STORAGE_KEY = 'mfa_modules.insecure_example'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,40 +30,41 @@ class InsecureExampleModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._data = None
-        self._users = config.get('users', [])
+        self._users = config['users']
 
     @property
     def input_schema(self):
-        """Input schema."""
+        """Validate login flow input data."""
         schema = OrderedDict()
         schema['pin'] = str
-        return schema
+        return vol.Schema(schema)
 
     @property
-    def users(self):
-        """Return users."""
-        return self._users
+    def setup_schema(self):
+        """Validate async_setup_user input data."""
+        schema = OrderedDict()
+        schema['pin'] = str
+        return vol.Schema(schema)
 
     async def async_setup_user(self, user_id, data=None):
-        """Setup auth module for user."""
-        if not data:
-            raise ValueError('Expect data parameter')
+        """Setup mfa module for user."""
+        try:
+            data = self.setup_schema(data)  # pylint: disable=not-callable
+        except vol.Invalid as err:
+            raise ValueError('Data does not match schema: {}'.format(err))
 
-        pin = data.get('pin')
-        if not pin:
-            raise ValueError('Expect pin in data parameter')
+        pin = data['pin']
 
         for user in self._users:
             if user and user.get('user_id') == user_id:
                 # already setup, override
                 user['pin'] = pin
-                return pin
+                return
 
         self._users.append({'user_id': user_id, 'pin': pin})
-        return pin
 
     async def async_depose_user(self, user_id):
-        """Depose auth module for user."""
+        """Remove user from mfa module."""
         found = None
         for user in self._users:
             if user and user.get('user_id') == user_id:
@@ -74,12 +75,10 @@ class InsecureExampleModule(MultiFactorAuthModule):
 
     async def async_validation(self, user_id, user_input):
         """Return True if validation passed."""
-        if user_id is None or user_input is None:
-            return False
-
-        for user in self.users:
+        for user in self._users:
             if user_id == user.get('user_id'):
-                if user.get('pin') == user_input.get('pin'):
+                # user_input has been validate in caller
+                if user.get('pin') == user_input['pin']:
                     return True
 
         return False

@@ -315,7 +315,7 @@ class MockUser(auth_models.User):
     """Mock a user in Home Assistant."""
 
     def __init__(self, id='mock-id', is_owner=False, is_active=True,
-                 name='Mock User', system_generated=False, mfa_modules=None):
+                 name='Mock User', system_generated=False, mfa_modules=[]):
         """Initialize mock user."""
         super().__init__(
             id=id, is_owner=is_owner, is_active=is_active, name=name,

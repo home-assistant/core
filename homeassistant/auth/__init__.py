@@ -123,7 +123,7 @@ class AuthManager:
                 if creds.id == credentials.id:
                     return user
 
-        raise ValueError('Unable to find the user.')
+        return None
 
     async def async_create_system_user(self, name):
         """Create a system user."""
