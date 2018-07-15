@@ -16,9 +16,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ["https://github.com/robbiet480/pygtfs/archive/"
-                "00546724e4bbcb3053110d844ca44e2246267dd8.zip#"
-                "pygtfs==0.1.3"]
+REQUIREMENTS = ['pygtfs-homeassistant==0.1.3.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 
