@@ -63,6 +63,18 @@ async def test_list(hass, hass_ws_client):
         is_active=False,
     ).add_to_hass(hass)
 
+    mfa = MockUser(
+        id='klm',
+        name='MFA Enabled User',
+        is_active=True,
+        mfa_modules=['insecure_example', 'invalid']
+    ).add_to_hass(hass)
+    mfa.credentials.append(auth_models.Credentials(
+        auth_provider_type='insecure_example',
+        auth_provider_id='insecure_example',
+        data={},
+    ))
+
     refresh_token = await hass.auth.async_create_refresh_token(
         owner, CLIENT_ID)
     access_token = hass.auth.async_create_access_token(refresh_token)
@@ -76,13 +88,14 @@ async def test_list(hass, hass_ws_client):
     result = await client.receive_json()
     assert result['success'], result
     data = result['result']
-    assert len(data) == 3
+    assert len(data) == 4
     assert data[0] == {
         'id': owner.id,
         'name': 'Test Owner',
         'is_owner': True,
         'is_active': True,
         'system_generated': False,
+        'enabled_multi_factor_auth': [],
         'credentials': [{'type': 'homeassistant'}]
     }
     assert data[1] == {
@@ -91,6 +104,7 @@ async def test_list(hass, hass_ws_client):
         'is_owner': False,
         'is_active': True,
         'system_generated': True,
+        'enabled_multi_factor_auth': [],
         'credentials': [],
     }
     assert data[2] == {
@@ -99,7 +113,17 @@ async def test_list(hass, hass_ws_client):
         'is_owner': False,
         'is_active': False,
         'system_generated': False,
+        'enabled_multi_factor_auth': [],
         'credentials': [],
+    }
+    assert data[3] == {
+        'id': mfa.id,
+        'name': 'MFA Enabled User',
+        'is_owner': False,
+        'is_active': True,
+        'system_generated': False,
+        'enabled_multi_factor_auth': ['insecure_example', 'invalid'],
+        'credentials': [{'type': 'insecure_example'}],
     }
 
 
