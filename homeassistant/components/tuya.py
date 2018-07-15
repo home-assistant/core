@@ -33,8 +33,8 @@ SERVICE_FORCE_UPDATE = 'force_update'
 SERVICE_PULL_DEVICES = 'pull_devices'
 
 TUYA_TYPE_TO_HA = {
-    'switch': 'switch',
     'light': 'light',
+    'switch': 'switch',
 }
 
 CONFIG_SCHEMA = vol.Schema({
@@ -133,7 +133,7 @@ class TuyaDevice(Entity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return 'tuya.' + self.tuya.object_id()
+        return 'tuya.{}'.format(self.tuya.object_id())
 
     @property
     def name(self):
