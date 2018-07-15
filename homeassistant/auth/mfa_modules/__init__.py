@@ -110,6 +110,13 @@ class MultiFactorAuthModule:
         """Return a voluptuous schema to define mfa auth module's input."""
         raise NotImplementedError
 
+    @property
+    def setup_schema(self):
+        """Return a vol.Schema to validate mfa auth module's setup input.
+
+        Optional"""
+        return None
+
     # Implement by extending class
 
     async def async_setup_user(self, user_id, data=None):

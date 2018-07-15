@@ -34,19 +34,28 @@ class InsecureExampleModule(MultiFactorAuthModule):
 
     @property
     def input_schema(self):
-        """Input schema."""
+        """Validate login flow input data"""
+        schema = OrderedDict()
+        schema['pin'] = str
+        return vol.Schema(schema)
+
+    @property
+    def setup_schema(self):
+        """Validate async_setup_user input data.
+
+        """
         schema = OrderedDict()
         schema['pin'] = str
         return vol.Schema(schema)
 
     async def async_setup_user(self, user_id, data=None):
         """Setup mfa module for user."""
-        if not data:
-            raise ValueError('Expect data parameter')
+        try:
+            data = self.setup_schema(data)
+        except vol.Invalid as err:
+            raise ValueError('Data does not match schema: {}'.format(err))
 
-        pin = data.get('pin')
-        if not pin:
-            raise ValueError('Expect pin in data parameter')
+        pin = data['pin']
 
         for user in self._users:
             if user and user.get('user_id') == user_id:
@@ -70,7 +79,8 @@ class InsecureExampleModule(MultiFactorAuthModule):
         """Return True if validation passed."""
         for user in self._users:
             if user_id == user.get('user_id'):
-                if user.get('pin') == user_input.get('pin'):
+                # user_input has been validate in caller
+                if user.get('pin') == user_input['pin']:
                     return True
 
         return False
