@@ -7,19 +7,15 @@ https://home-assistant.io/components/media_player.dlna_dmr/
 """
 
 import asyncio
-import functools
 import logging
-import re
 import urllib.parse
-import time
-from datetime import timedelta
+from datetime import datetime
 
 import aiohttp
 import async_timeout
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_call_later
 from homeassistant.components.http.view import (
     request_handler_factory, HomeAssistantView)
 from homeassistant.components.media_player import (
@@ -32,25 +28,22 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     CONF_URL, CONF_NAME,
-    HTTP_ACCEPTED, HTTP_PRECONDITION_FAILED,
     STATE_OFF, STATE_ON, STATE_IDLE, STATE_PLAYING, STATE_PAUSED)
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
 REQUIREMENTS = [
-    'async-upnp-client==0.11.1',
-    'python-didl-lite==1.0.1',
+    'async-upnp-client==0.12.0',
 ]
 
 DEPENDENCIES = ['http']
 
 DEFAULT_NAME = 'DLNA Digital Media Renderer'
 
-CONF_UDN = 'udn'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
-    vol.Optional(CONF_UDN): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
@@ -59,19 +52,6 @@ SUPPORT_DLNA_DMR = \
     SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_PAUSE | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
     SUPPORT_PLAY_MEDIA
-
-SERVICE_TYPES = {
-    'RC': {
-        'urn:schemas-upnp-org:service:RenderingControl:3',
-        'urn:schemas-upnp-org:service:RenderingControl:2',
-        'urn:schemas-upnp-org:service:RenderingControl:1',
-    },
-    'AVT': {
-        'urn:schemas-upnp-org:service:AVTransport:3',
-        'urn:schemas-upnp-org:service:AVTransport:2',
-        'urn:schemas-upnp-org:service:AVTransport:1',
-    },
-}
 
 HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
     'music': 'object.item.audioItem',
@@ -96,89 +76,7 @@ UPNP_DEVICE_MEDIA_RENDERER = 'urn:schemas-upnp-org:device:MediaRenderer:1'
 _LOGGER = logging.getLogger(__name__)
 
 
-def requires_action(service_type, action_name, value_not_connected=None):
-    """
-    Ensure service/action is available.
-
-    If not available, then raise NotImplemented.
-    """
-    def call_wrapper(func):
-        """Call wrapper for decorator."""
-        @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
-            """
-            Require device is connected and has service/action.
-
-            If device is not connected, value_not_connected is returned.
-            """
-            # pylint: disable=protected-access
-
-            if not self._is_connected:
-                return value_not_connected
-
-            service = self._service(service_type)
-            if not service:
-                _LOGGER.error('requires_state_variable(): '
-                              '%s.%s: no service: %s',
-                              self, func.__name__, service_type)
-                raise NotImplementedError()
-
-            action = service.action(action_name)
-            if not action:
-                _LOGGER.error('requires_action(): %s.%s: no action: %s.%s',
-                              self, func.__name__, service_type, action_name)
-                raise NotImplementedError()
-            return func(self, action, *args, **kwargs)
-
-        return wrapper
-
-    return call_wrapper
-
-
-def requires_state_variable(service_type,
-                            state_variable_name,
-                            value_not_connected=None):
-    """
-    Ensure service/state_variable is available.
-
-    If not available, then raise NotImplemented.
-    """
-    def call_wrapper(func):
-        """Call wrapper for decorator."""
-        @functools.wraps(func)
-        def wrapper(self, *args, **kwargs):
-            """
-            Require device is connected and has service/state_variable.
-
-            If device is not connected, value_not_connected is returned.
-            """
-            # pylint: disable=protected-access
-            if not self._is_connected:
-                return value_not_connected
-
-            service = self._service(service_type)
-            if not service:
-                _LOGGER.error('requires_state_variable(): '
-                              '%s.%s: no service: %s',
-                              self,
-                              func.__name__, service_type)
-                raise NotImplementedError()
-
-            state_var = service.state_variable(state_variable_name)
-            if not state_var:
-                _LOGGER.error('requires_state_variable(): '
-                              '%s.%s: no state_variable: %s.%s',
-                              self,
-                              func.__name__,
-                              service_type,
-                              state_variable_name)
-                raise NotImplementedError()
-            return func(self, state_var, *args, **kwargs)
-        return wrapper
-    return call_wrapper
-
-
-def start_notify_view(hass):
+def start_notify_view(hass, requester):
     """Register notify view."""
     hass_data = hass.data[__name__]
     name = 'notify_view'
@@ -189,68 +87,56 @@ def start_notify_view(hass):
     hass.http.register_view(view)
     hass_data[name] = view
 
+    from async_upnp_client import UpnpEventHandler
+    view.event_handler = UpnpEventHandler(view.callback_url, requester)
 
-def setup_platform(hass: HomeAssistant,
-                   config,
-                   add_devices,
-                   discovery_info=None):
+
+async def async_setup_platform(hass: HomeAssistant,
+                               config,
+                               async_add_devices,
+                               discovery_info=None):
     """Set up DLNA DMR platform."""
+    # ensure this is a DLNA DMR device, if found via discovery
     if discovery_info and \
        'upnp_device_type' in discovery_info and \
        discovery_info['upnp_device_type'] != UPNP_DEVICE_MEDIA_RENDERER:
-        _LOGGER.debug('Device is not a MediaRenderer: %s',
-                      discovery_info.get('ssdp_description'))
+        _LOGGER.debug('Device is not a MediaRenderer: %s, device_type: %s',
+                      discovery_info.get('ssdp_description'),
+                      discovery_info['upnp_device_type'])
         return
 
     if config.get(CONF_URL) is not None:
         url = config.get(CONF_URL)
         name = config.get(CONF_NAME)
-        udn = config.get(CONF_UDN)
     elif discovery_info is not None:
         url = discovery_info['ssdp_description']
         name = discovery_info['name']
-        udn = discovery_info['udn']
 
-    # set up our Views, if not already done so
     if __name__ not in hass.data:
         hass.data[__name__] = {}
 
+    requester = build_requester(hass)
+
     # ensure view has been started
-    hass.async_run_job(start_notify_view, hass)
+    hass.async_run_job(start_notify_view, hass, requester)
     while 'notify_view' not in hass.data[__name__]:
-        time.sleep(0.1)
+        asyncio.sleep(0.1)
     notify_view = hass.data[__name__]['notify_view']
 
     # create device
     from async_upnp_client import UpnpFactory
-    requester = HassUpnpRequester(hass)
+    from async_upnp_client.dlna import DmrDevice
     factory = UpnpFactory(requester, disable_state_variable_validation=True)
-    device = DlnaDmrDevice(hass, url, udn, name, factory, notify_view)
+    try:
+        upnp_device = await factory.async_create_device(url)
+    except (asyncio.TimeoutError, aiohttp.ClientError):
+        raise PlatformNotReady()
+
+    dlna_device = DmrDevice(upnp_device, notify_view.event_handler)
+    device = DlnaDmrDevice(hass, dlna_device, name)
 
     _LOGGER.debug("Adding device: %s", device)
-    add_devices([device])
-
-
-async def fetch_headers(hass, url, headers):
-    """Fetch headers from URL, first by trying HEAD, then by trying a GET."""
-    # try a HEAD request to the source
-    src_response = None
-    try:
-        session = async_get_clientsession(hass)
-        src_response = await session.head(url, headers=headers)
-        await src_response.release()
-    except aiohttp.ClientError:
-        pass
-
-    if src_response and 200 <= src_response.status < 300:
-        return src_response.headers
-
-    # try a GET request to the source, but ignore all the data
-    session = async_get_clientsession(hass)
-    src_response = await session.get(url, headers=headers)
-    await src_response.release()
-
-    return src_response.headers
+    async_add_devices([device])
 
 
 class UpnpNotifyView(HomeAssistantView):
@@ -263,6 +149,7 @@ class UpnpNotifyView(HomeAssistantView):
     def __init__(self, hass):
         """Initializer."""
         self.hass = hass
+        self.event_handler = None
         self._registered_services = {}
         self._backlog = {}
 
@@ -273,21 +160,9 @@ class UpnpNotifyView(HomeAssistantView):
 
     async def async_notify(self, request):
         """Callback method for NOTIFY requests."""
-        if 'SID' not in request.headers:
-            return aiohttp.web.Response(status=HTTP_PRECONDITION_FAILED)
-
         headers = request.headers
-        sid = headers['SID']
         body = await request.text()
-
-        # find UpnpService by SID
-        if sid not in self._registered_services:
-            _LOGGER.debug('Storing NOTIFY in backlog for SID: %s', sid)
-            self._backlog[sid] = {'headers': headers, 'body': body}
-            return aiohttp.web.Response(status=HTTP_ACCEPTED)
-
-        service = self._registered_services[sid]
-        status = service.on_notify(headers, body)
+        status = await self.event_handler.handle_notify(headers, body)
         return aiohttp.web.Response(status=status)
 
     @property
@@ -296,557 +171,301 @@ class UpnpNotifyView(HomeAssistantView):
         base_url = self.hass.config.api.base_url
         return urllib.parse.urljoin(base_url, self.url)
 
-    def registered_service(self, sid):
-        """Get a registered service by SID."""
-        return self._registered_services.get(sid)
 
-    def register_service(self, sid, service):
-        """Register a UpnpService under SID."""
-        if sid in self._registered_services:
-            raise RuntimeError('SID {} already registered.'.format(sid))
+def build_requester(hass):
+    """Build a derived instance of UpnpRequester, specific for hass."""
+    from async_upnp_client import UpnpRequester
 
-        self._registered_services[sid] = service
+    class HassUpnpRequester(UpnpRequester):
+        """async_upnp_client.UpnpRequester for home-assistant."""
 
-        if sid in self._backlog:
-            item = self._backlog[sid]
-            _LOGGER.debug('Re-playing backlogged NOTIFY for SID: %s', sid)
-            service.on_notify(item['headers'], item['body'])
-            del self._backlog[sid]
+        def __init__(self, hass_):
+            """Initializer."""
+            self.hass = hass_
 
-    def unregister_service(self, sid):
-        """Unregister service by SID."""
-        if sid in self._registered_services:
-            del self._registered_services[sid]
+        async def async_do_http_request(self,
+                                        method,
+                                        url,
+                                        headers=None,
+                                        body=None,
+                                        body_type='text'):
+            """Do a HTTP request."""
+            # work around an unknown hass or aiohttp error
+            await asyncio.sleep(0.01)
 
+            session = async_get_clientsession(self.hass)
+            with async_timeout.timeout(5, loop=self.hass.loop):
+                response = await session.request(method,
+                                                 url,
+                                                 headers=headers,
+                                                 data=body)
+                if body_type == 'text':
+                    response_body = await response.text()
+                elif body_type == 'raw':
+                    response_body = await response.read()
+                elif body_type == 'ignore':
+                    response_body = None
 
-class HassUpnpRequester:
-    """async_upnp_client.UpnpRequester for home-assistant."""
+            return response.status, response.headers, response_body
 
-    def __init__(self, hass):
-        """Initializer."""
-        self.hass = hass
-
-    async def async_http_request(self, method, url, headers=None, body=None):
-        """Do a HTTP request."""
-        session = async_get_clientsession(self.hass)
-        with async_timeout.timeout(5, loop=self.hass.loop):
-            response = await session.request(method,
-                                             url,
-                                             headers=headers,
-                                             data=body)
-            response_body = await response.text()
-
-        await asyncio.sleep(0.25)
-
-        return response.status, response.headers, response_body
+    return HassUpnpRequester(hass)
 
 
 class DlnaDmrDevice(MediaPlayerDevice):
     """Representation of a DLNA DMR device."""
 
-    def __init__(self, hass, url, udn, name, factory, notify_view):
+    def __init__(self, hass: HomeAssistant, dmr_device, name=None):
         """Initializer."""
         self.hass = hass
-        self._url = url
-        self._udn = udn
         self._name = name
-        self._factory = factory
-        self._notify_view = notify_view
 
-        self._device = None
-        self._is_connected = False
+        self._device = dmr_device
+        self._device.on_event = self._on_event
 
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                             self._async_on_hass_stop)
+        self._available = False
+        self._on_stop_unsubscriber = None
+        self._subscription_renew_time = None
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                   self._async_on_hass_stop)
+
+    @property
+    def udn(self):
+        """Get UDN of DLNA DMR device."""
+        return self._device.udn
 
     @property
     def available(self):
         """Device is available."""
-        return self._is_connected
+        return self._available
 
     async def _async_on_hass_stop(self, event):
         """Event handler on HASS stop."""
-        await self._async_unsubscribe_all()
-
-    def _service(self, service_type_abbreviation):
-        """Get UpnpService by service_type or alias."""
-        if not self._device:
-            return None
-
-        if service_type_abbreviation not in SERVICE_TYPES:
-            return None
-
-        for service_type in SERVICE_TYPES[service_type_abbreviation]:
-            service = self._device.service(service_type)
-            if service:
-                return service
-
-        return None
-
-    async def _async_unsubscribe_all(self):
-        """
-        Disconnect from device.
-
-        This removes all UpnpServices.
-        """
-        if not self._device:
-            return
-
-        for service in self._device.services.values():
-            if not service.subscription_sid:
-                continue
-
-            try:
-                sid = service.subscription_sid
-                if sid:
-                    self._notify_view.unregister_service(sid)
-                    await service.async_unsubscribe(True)
-            except (asyncio.TimeoutError, aiohttp.ClientError):
-                pass
-
-    async def _async_init_device(self):
-        """Fetch and init services."""
-        self._device = await self._factory.async_create_device(self._url)
-        self._is_connected = True
-
-        # ensure correct UDN
-        if self._udn and self._device.udn != self._udn:
-            _LOGGER.warning('Given UDN (%s) does not match device UDN: %s',
-                            self._udn, self._device.udn)
-
-        # set name
-        if self.name is None or self.name == DEFAULT_NAME:
-            self._name = self._device.name
-
-        # subscribe to events
-        await self._async_subscribe_services()
-
-    async def _async_subscribe_services(self, event=None):
-        """(Re-)Subscribe to services."""
-        if not self._device or not self._is_connected:
-            return
-
-        # subscribe services for events
-        callback_url = self._notify_view.callback_url
-        for service_type, service in self._device.services.items():
-            # ensure we are interested in this service_type
-            for service_types in SERVICE_TYPES.values():
-                if service_type in service_types:
-                    break
-            else:
-                continue
-
-            _LOGGER.debug('%s Subscribing to: %s', self, service_type)
-
-            service.on_state_variable_change = self._on_state_variable_change
-
-            subscribe_timeout = 30 * 60
-            try:
-                if not service.subscription_sid:
-                    sid = await service.async_subscribe(callback_url,
-                                                        subscribe_timeout)
-                else:
-                    sid = await service.async_subscribe_renew(
-                        subscribe_timeout)
-            except (asyncio.TimeoutError, aiohttp.ClientError):
-                _LOGGER.error('Unable to (re)subscribe to service')
-                return
-
-            if sid and not self._notify_view.registered_service(sid):
-                self._notify_view.register_service(sid, service)
-
-        # renew a bit earlier
-        delay = 20 * 60
-        async_call_later(self.hass, delay, self._async_subscribe_services)
+        await self._device.async_unsubscribe_services()
 
     async def async_update(self):
         """Retrieve the latest data."""
-        if not self._device:
-            try:
-                await self._async_init_device()
-            except (asyncio.TimeoutError, aiohttp.ClientError):
-                # Not yet seen alive, leave for now, gracefully
-                return
+        was_available = self._available
 
-        was_connected = self._is_connected
-
-        # call GetTransportInfo/GetPositionInfo regularly
         try:
-            avt_service = self._service('AVT')
-            if avt_service:
-                await self._async_poll_transport_info(avt_service)
-                if self.state == STATE_PLAYING or \
-                   self.state == STATE_PAUSED:
-                    # playing something... get position info
-                    await self._async_poll_position_info(avt_service)
-            else:
-                await self._device.async_ping()
-
-            self._is_connected = True
+            await self._device.async_update()
+            self._available = True
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error('Error during update call')
-            self._is_connected = False
-            await self._async_unsubscribe_all()
+            self._available = False
+            _LOGGER.debug("Device unavailable 1")
+            raise
 
-        # reconnected? then re-subscribe to services
-        if not was_connected and self._is_connected:
-            await self._async_subscribe_services()
+        # do we need to (re-)subscribe?
+        now = datetime.now()
+        should_renew = self._subscription_renew_time and \
+            now >= self._subscription_renew_time
+        if should_renew or \
+           not was_available and self._available:
+            try:
+                timeout = await self._device.async_subscribe_services()
+                self._subscription_renew_time = datetime.now() + timeout / 2
+            except (asyncio.TimeoutError, aiohttp.ClientError):
+                self._available = False
+                _LOGGER.debug("Device unavailable 2")
+                raise
 
-    async def _async_poll_transport_info(self, avt_service):
-        """Update transport info from device."""
-        action = avt_service.action('GetTransportInfo')
-        result = await action.async_call(InstanceID=0)
-
-        # set/update state_variable 'TransportState'
-        changed = []
-        service = action.service
-        state_var = service.state_variable('TransportState')
-        if state_var.value != result['CurrentTransportState']:
-            state_var.value = result['CurrentTransportState']
-            changed.append(state_var)
-
-        self._on_state_variable_change(service, changed)
-
-    async def _async_poll_position_info(self, avt_service):
-        """Update position info."""
-        action = avt_service.action('GetPositionInfo')
-        result = await action.async_call(InstanceID=0)
-
-        changed = []
-        service = action.service
-        track_duration = service.state_variable('CurrentTrackDuration')
-        if track_duration.value != result['TrackDuration']:
-            track_duration.value = result['TrackDuration']
-            changed.append(track_duration)
-
-        time_position = service.state_variable('RelativeTimePosition')
-        if time_position.value != result['RelTime']:
-            time_position.value = result['RelTime']
-            changed.append(time_position)
-
-        self._on_state_variable_change(service, changed)
-
-    def _on_state_variable_change(self, service, state_variables):
+    def _on_event(self, service, state_variables):
         """State variable(s) changed, let home-assistant know."""
-        for state_variable in state_variables:
-            if state_variable.name == 'LastChange':
-                from async_upnp_client.utils import \
-                    dlna_handle_notify_last_change
-                dlna_handle_notify_last_change(state_variable)
-
-        if state_variables:
-            self.schedule_update_ha_state()
-
-    @property
-    @requires_state_variable('AV', 'CurrentTransportActions')
-    def _current_transport_actions(self, state_variable):
-        transport_actions = (state_variable.value or '').split(',')
-        return [a.lowercase.strip() for a in transport_actions]
+        self.schedule_update_ha_state()
 
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_DLNA_DMR
+        supported_features = 0
+
+        if self._device.has_volume_level:
+            supported_features |= SUPPORT_VOLUME_SET
+        if self._device.has_volume_mute:
+            supported_features |= SUPPORT_VOLUME_MUTE
+        if self._device.has_play:
+            supported_features |= SUPPORT_PLAY
+        if self._device.has_pause:
+            supported_features |= SUPPORT_PAUSE
+        if self._device.has_stop:
+            supported_features |= SUPPORT_STOP
+        if self._device.has_previous:
+            supported_features |= SUPPORT_PREVIOUS_TRACK
+        if self._device.has_next:
+            supported_features |= SUPPORT_NEXT_TRACK
+        if self._device.has_play_media:
+            supported_features |= SUPPORT_PLAY_MEDIA
+
+        return supported_features
 
     @property
-    @requires_state_variable('RC', 'Volume')
-    def volume_level(self, state_variable):
+    def volume_level(self):
         """Volume level of the media player (0..1)."""
-        # pylint: disable=arguments-differ
-        value = state_variable.value
-        if value is None:
-            _LOGGER.debug('%s.volume_level(): Got no value', self)
-            return None
+        return self._device.volume_level
 
-        max_value = state_variable.max_value or 100
-        return min(value / max_value, 1.0)
-
-    @requires_action('RC', 'SetVolume')
-    async def async_set_volume_level(self, action, volume):
+    async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        # pylint: disable=arguments-differ
-        argument = action.argument('DesiredVolume')
-        state_variable = argument.related_state_variable
-        min_ = state_variable.min_value or 0
-        max_ = state_variable.max_value or 100
-        desired_volume = int(min_ + volume * (max_ - min_))
-
         try:
-            await action.async_call(InstanceID=0,
-                                    Channel='Master',
-                                    DesiredVolume=desired_volume)
+            await self._device.async_set_volume_level(volume)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error during RC/SetVolume call")
 
     @property
-    @requires_state_variable('RC', 'Mute')
-    def is_volume_muted(self, state_variable):
+    def is_volume_muted(self):
         """Boolean if volume is currently muted."""
-        # pylint: disable=arguments-differ
-        value = state_variable.value
-        if value is None:
-            _LOGGER.debug('%s.is_volume_muted(): Got no value', self)
-            return None
+        return self._device.is_volume_muted
 
-        return value
-
-    @requires_action('RC', 'SetMute')
-    async def async_mute_volume(self, action, mute):
+    async def async_mute_volume(self, mute):
         """Mute the volume."""
-        # pylint: disable=arguments-differ
         desired_mute = bool(mute)
-
         try:
-            await action.async_call(InstanceID=0,
-                                    Channel='Master',
-                                    DesiredMute=desired_mute)
+            await self._device.async_mute_volume(desired_mute)
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error during RC/SetMute call")
 
-    @requires_action('AVT', 'Pause')
-    async def async_media_pause(self, action):
+    async def async_media_pause(self):
         """Send pause command."""
-        # pylint: disable=arguments-differ
-        if 'pause' not in self._current_transport_actions:
+        if not self._device.can_pause:
             _LOGGER.debug('Cannot do Pause')
             return
 
         try:
-            await action.async_call(InstanceID=0)
+            await self._device.async_pause()
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error during AVT/Pause call")
 
-    @requires_action('AVT', 'Play')
-    async def async_media_play(self, action):
+    async def async_media_play(self):
         """Send play command."""
-        # pylint: disable=arguments-differ
-        if 'play' not in self._current_transport_actions:
+        if not self._device.can_play:
             _LOGGER.debug('Cannot do Play')
             return
 
         try:
-            await action.async_call(InstanceID=0, Speed='1')
+            await self._device.async_play()
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error during AVT/Play call")
 
-    @requires_action('AVT', 'Stop')
-    async def async_media_stop(self, action):
+    async def async_media_stop(self):
         """Send stop command."""
-        # pylint: disable=arguments-differ
-        if 'stop' not in self._current_transport_actions:
+        if not self._device.can_stop:
             _LOGGER.debug('Cannot do Stop')
             return
 
         try:
-            await action.async_call(InstanceID=0)
+            await self._device.async_stop()
         except (asyncio.TimeoutError, aiohttp.ClientError):
             _LOGGER.error("Error during AVT/Stop call")
 
-    @requires_action('AVT', 'SetAVTransportURI')
-    async def async_play_media(self, action, media_type, media_id, **kwargs):
+    async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
-        # pylint: disable=arguments-differ,unused-variable
-        # queue media
-        meta_data = await self._construct_play_media_metadata(media_type,
-                                                              media_id)
-        try:
-            await action.async_call(InstanceID=0,
-                                    CurrentURI=media_id,
-                                    CurrentURIMetaData=meta_data)
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during AVT/SetAVTransportURI call")
-            return
-
-        if self.state == STATE_PLAYING:
-            # already playing, no need to call Play
-            return
-
-        # wait for state variable AVT.AVTransportURI to change
-        for i in range(20):  # wait max 5 seconds
-            if 'play' in self._current_transport_actions:
-                break
-            await asyncio.sleep(0.25)
-        else:
-            _LOGGER.debug('break out of waiting game')
-
-        # send play command
-        await self.async_media_play()
-
-    async def _construct_play_media_metadata(self, media_type, media_id):
-        """Construct the metadata for play_media command."""
-        media_info = {
-            'mime_type': HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING[media_type],
-            'dlna_features': 'DLNA.ORG_OP=01;DLNA.ORG_CI=0;'
-                             'DLNA.ORG_FLAGS=00000000000000000000000000000000',
-        }
-
-        # do a HEAD/GET, to retrieve content-type/mime-type
-        try:
-            req_src_headers = {
-                'GetContentFeatures.dlna.org': '1'
-            }
-            src_headers = await fetch_headers(self.hass,
-                                              media_id,
-                                              req_src_headers)
-
-            if 'Content-Type' in src_headers:
-                media_info['mime_type'] = src_headers['Content-Type']
-
-            if 'ContentFeatures.dlna.org' in media_info:
-                media_info['dlna_features'] = \
-                    src_headers['contentFeatures.dlna.org']
-        except aiohttp.ClientError:
-            pass
-
-        # build DIDL-Lite item + resource
+        title = "Home Assistant"
+        mime_type = HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING[media_type]
         upnp_class = HOME_ASSISTANT_UPNP_CLASS_MAPPING[media_type]
 
-        from didl_lite import didl_lite
-        protocol_info = "http-get:*:{mime_type}:{dlna_features}".format(
-            **media_info)
-        resource = didl_lite.Resource(uri=media_id,
-                                      protocol_info=protocol_info)
-        item_type = didl_lite.type_by_upnp_class(upnp_class)
-        item = item_type(id="0", parent_id="0", title="Home Assistant",
-                         restricted="1", resources=[resource])
+        # stop current playing media
+        if self._device.can_stop:
+            await self.async_media_stop()
 
-        return didl_lite.to_xml_string(item).decode('utf-8')
+        # queue media
+        try:
+            await self._device.async_set_transport_uri(media_id,
+                                                       title,
+                                                       mime_type,
+                                                       upnp_class)
+            await self._device.async_wait_for_can_play()
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error during SetAVTransportURI or wait call")
+            return
 
-    @requires_action('AVT', 'Previous')
-    async def async_media_previous_track(self, action):
+        # if already playing, no need to call Play
+        from async_upnp_client import dlna
+        if self._device.state == dlna.STATE_PLAYING:
+            return
+
+        # play it
+        await self.async_media_play()
+
+    async def async_media_previous_track(self):
         """Send previous track command."""
-        # pylint: disable=arguments-differ
-        if 'previous' not in self._current_transport_actions:
+        if not self._device.can_previous:
             _LOGGER.debug('Cannot do Previous')
             return
 
         try:
-            await action.async_call(InstanceID=0)
+            await self._device.async_previous()
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during AVT/Previous call")
+            _LOGGER.error("Error during Previous call")
 
-    @requires_action('AVT', 'Next')
-    async def async_media_next_track(self, action):
+    async def async_media_next_track(self):
         """Send next track command."""
-        # pylint: disable=arguments-differ
-        if 'next' not in self._current_transport_actions:
+        if self._device.can_next:
             _LOGGER.debug('Cannot do Next')
             return
 
         try:
-            await action.async_call(InstanceID=0)
+            await self._device.async_next()
         except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during AVT/Next call")
+            _LOGGER.error("Error during Next call")
 
     @property
-    @requires_state_variable('AVT', 'CurrentTrackMetaData')
-    def media_title(self, state_variable):
+    def media_title(self):
         """Title of current playing media."""
-        # pylint: disable=arguments-differ
-        xml = state_variable.value
-        if not xml or xml == 'NOT_IMPLEMENTED':
-            return None
-
-        from didl_lite import didl_lite
-        items = didl_lite.from_xml_string(xml)
-        if not items:
-            return None
-
-        item = items[0]
-        return item.title
+        return self._device.media_title
 
     @property
-    @requires_state_variable('AVT', 'CurrentTrackMetaData')
-    def media_image_url(self, state_variable):
+    def media_image_url(self):
         """Image url of current playing media."""
-        # pylint: disable=arguments-differ
-        xml = state_variable.value
-        if not xml or xml == 'NOT_IMPLEMENTED':
-            return None
-
-        from didl_lite import didl_lite
-        items = didl_lite.from_xml_string(xml)
-        if not items or not items[0].resources:
-            return None
-        item = items[0]
-        for res in item.resources:
-            protocol_info = res.protocol_info
-            if protocol_info.startswith('http-get:*:image/'):
-                return res.url
-
-        return None
+        return self._device.media_image_url
 
     @property
     def state(self):
         """State of the player."""
-        if not self._is_connected:
+        if not self._available:
             return STATE_OFF
 
-        avt_service = self._service('AVT')
-        if not avt_service:
+        from async_upnp_client import dlna
+        if self._device.state is None:
             return STATE_ON
-
-        transport_state = avt_service.state_variable('TransportState')
-        if not transport_state:
-            return STATE_ON
-        elif transport_state.value == 'PLAYING':
+        elif self._device.state == dlna.STATE_PLAYING:
             return STATE_PLAYING
-        elif transport_state.value == 'PAUSED_PLAYBACK':
+        elif self._device.state == dlna.STATE_PAUSED:
             return STATE_PAUSED
 
         return STATE_IDLE
 
     @property
-    @requires_state_variable('AVT', 'CurrentTrackDuration')
-    def media_duration(self, state_variable):
+    def media_duration(self):
         """Duration of current playing media in seconds."""
-        # pylint: disable=arguments-differ
-        if state_variable is None or \
-           state_variable.value is None or \
-           state_variable.value == 'NOT_IMPLEMENTED':
-            return None
-
-        split = [int(v) for v in re.findall(r"[\w']+", state_variable.value)]
-        delta = timedelta(hours=split[0], minutes=split[1], seconds=split[2])
-        return delta.seconds
+        return self._device.media_duration
 
     @property
-    @requires_state_variable('AVT', 'RelativeTimePosition')
-    def media_position(self, state_variable):
+    def media_position(self):
         """Position of current playing media in seconds."""
-        # pylint: disable=arguments-differ
-        if state_variable is None or \
-           state_variable.value is None or \
-           state_variable.value == 'NOT_IMPLEMENTED':
-            return None
-
-        split = [int(v) for v in re.findall(r"[\w']+", state_variable.value)]
-        delta = timedelta(hours=split[0], minutes=split[1], seconds=split[2])
-        return delta.seconds
+        return self._device.media_position
 
     @property
-    @requires_state_variable('AVT', 'RelativeTimePosition')
-    def media_position_updated_at(self, state_variable):
+    def media_position_updated_at(self):
         """When was the position of the current playing media valid.
 
         Returns value from homeassistant.util.dt.utcnow().
         """
-        # pylint: disable=arguments-differ
-        return state_variable.updated_at
+        return self._device.media_position_updated_at
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
-        return self._name
+        if self._name:
+            return self._name
+        return self._device.name
 
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        if not self._udn:
-            return None
+        return "{}.{}".format(__name__, self.udn)
 
-        return "{}.{}".format(__name__, self._udn)
-
-    def __str__(self):
+    def __str__(self) -> str:
         """To string."""
-        return "<DlnaDmrDevice('{}')>".format(self._udn)
+        return "<DlnaDmrDevice('{}')>".format(self.udn)
+
+    def __repr__(self) -> str:
+        """Repr."""
+        return "<DlnaDmrDevice('{}')>".format(self.udn)
