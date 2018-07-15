@@ -93,10 +93,15 @@ class AuthManager:
 
     async def async_create_user(self, name):
         """Create a user."""
-        return await self._store.async_create_user(
-            name=name,
-            is_active=True,
-        )
+        kwargs = {
+            'name': name,
+            'is_active': True,
+        }
+
+        if await self._user_should_be_owner():
+            kwargs['is_owner'] = True
+
+        return await self._store.async_create_user(**kwargs)
 
     async def async_get_or_create_user(self, credentials):
         """Get or create a user."""
@@ -116,20 +121,10 @@ class AuthManager:
         info = await auth_provider.async_user_meta_for_credentials(
             credentials)
 
-        kwargs = {
-            'credentials': credentials,
-            'name': info.get('name')
-        }
-
-        # Make owner and activate user if it's the first user.
-        if await self._store.async_get_users():
-            kwargs['is_owner'] = False
-            kwargs['is_active'] = False
-        else:
-            kwargs['is_owner'] = True
-            kwargs['is_active'] = True
-
-        return await self._store.async_create_user(**kwargs)
+        return await self._store.async_create_user(
+            credentials=credentials,
+            name=info.get('name'),
+        )
 
     async def async_link_user(self, user, credentials):
         """Link credentials to an existing user."""
@@ -146,6 +141,14 @@ class AuthManager:
             await asyncio.wait(tasks)
 
         await self._store.async_remove_user(user)
+
+    async def async_activate_user(self, user):
+        """Activate a user."""
+        await self._store.async_activate_user(user)
+
+    async def async_deactivate_user(self, user):
+        """Deactivate a user."""
+        await self._store.async_deactivate_user(user)
 
     async def async_remove_credentials(self, credentials):
         """Remove credentials."""
@@ -191,7 +194,7 @@ class AuthManager:
         if tkn is None:
             return None
 
-        if tkn.expired:
+        if tkn.expired or not tkn.refresh_token.user.is_active:
             self._access_tokens.pop(token)
             return None
 
@@ -218,3 +221,15 @@ class AuthManager:
         auth_provider_key = (credentials.auth_provider_type,
                              credentials.auth_provider_id)
         return self._providers.get(auth_provider_key)
+
+    async def _user_should_be_owner(self):
+        """Determine if user should be owner.
+
+        A user should be an owner if it is the first non-system user that is
+        being created.
+        """
+        for user in await self._store.async_get_users():
+            if not user.system_generated:
+                return False
+
+        return True
