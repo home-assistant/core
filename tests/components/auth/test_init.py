@@ -40,7 +40,10 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     })
 
     # User is not active
-    assert resp.status == 400
+    assert resp.status == 403
+    data = await resp.json()
+    assert data['error'] == 'access_denied'
+    assert data['error_description'] == 'User is not active'
 
 
 def test_credential_store_expiration():
