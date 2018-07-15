@@ -116,10 +116,7 @@ class EcovacsVacuum(VacuumDevice):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        if hasattr(self.device.vacuum, 'did'):
-            # `did` is the Ecovacs-reported Device ID
-            return self.device.vacuum['did']
-        return None
+        return self.device.vacuum.get('did', None)
 
     @property
     def is_on(self):
