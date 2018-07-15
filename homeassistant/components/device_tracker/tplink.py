@@ -22,6 +22,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_HEADER_X_REQUESTED_WITH)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['tplink==0.2.1']
+
 _LOGGER = logging.getLogger(__name__)
 
 HTTP_HEADER_NO_CACHE = 'no-cache'
@@ -34,10 +36,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_scanner(hass, config):
-    """Validate the configuration and return a TP-Link scanner."""
-    for cls in [Tplink6DeviceScanner, Tplink5DeviceScanner,
-                Tplink4DeviceScanner, Tplink3DeviceScanner,
-                Tplink2DeviceScanner, TplinkDeviceScanner]:
+    """
+    Validate the configuration and return a TP-Link scanner.
+
+    The default way of integrating devices is to use a pypi
+
+    package, The TplinkDeviceScanner has been refactored
+
+    to depend on a pypi package, the other implementations
+
+    should be gradually migrated in the pypi package
+
+    """
+    for cls in [
+            TplinkDeviceScanner, Tplink5DeviceScanner, Tplink4DeviceScanner,
+            Tplink3DeviceScanner, Tplink2DeviceScanner, Tplink1DeviceScanner
+    ]:
         scanner = cls(config[DOMAIN])
         if scanner.success_init:
             return scanner
@@ -46,6 +60,45 @@ def get_scanner(hass, config):
 
 
 class TplinkDeviceScanner(DeviceScanner):
+    """Queries the router for connected devices."""
+
+    def __init__(self, config):
+        """Initialize the scanner."""
+        self.host = config[CONF_HOST]
+        self.password = config[CONF_PASSWORD]
+        self.username = config[CONF_USERNAME]
+
+        self.last_results = {}
+        self.success_init = self._update_info()
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found device IDs."""
+        self._update_info()
+        return self.last_results.keys()
+
+    def get_device_name(self, device):
+        """Get the name of the device."""
+        return self.last_results.get(device)
+
+    def _update_info(self):
+        """Ensure the information from the TP-Link router is up to date.
+
+        Return boolean if scanning successful.
+        """
+        from tplink.tplink import TpLinkClient
+        _LOGGER.info("Loading wireless clients...")
+        client = TpLinkClient(
+            self.password, host=self.host, username=self.username)
+        result = client.get_connected_devices()
+
+        if result:
+            self.last_results = result
+            return True
+
+        return False
+
+
+class Tplink1DeviceScanner(DeviceScanner):
     """This class queries a wireless router running TP-Link firmware."""
 
     def __init__(self, config):
@@ -94,7 +147,7 @@ class TplinkDeviceScanner(DeviceScanner):
         return False
 
 
-class Tplink2DeviceScanner(TplinkDeviceScanner):
+class Tplink2DeviceScanner(Tplink1DeviceScanner):
     """This class queries a router with newer version of TP-Link firmware."""
 
     def scan_devices(self):
@@ -147,7 +200,7 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
         return False
 
 
-class Tplink3DeviceScanner(TplinkDeviceScanner):
+class Tplink3DeviceScanner(Tplink1DeviceScanner):
     """This class queries the Archer C9 router with version 150811 or high."""
 
     def __init__(self, config):
@@ -256,7 +309,7 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
         self.sysauth = ''
 
 
-class Tplink4DeviceScanner(TplinkDeviceScanner):
+class Tplink4DeviceScanner(Tplink1DeviceScanner):
     """This class queries an Archer C7 router with TP-Link firmware 150427."""
 
     def __init__(self, config):
@@ -337,7 +390,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         return True
 
 
-class Tplink5DeviceScanner(TplinkDeviceScanner):
+class Tplink5DeviceScanner(Tplink1DeviceScanner):
     """This class queries a TP-Link EAP-225 AP with newer TP-Link FW."""
 
     def scan_devices(self):
@@ -409,74 +462,6 @@ class Tplink5DeviceScanner(TplinkDeviceScanner):
                 device['MAC'].replace('-', ':'): device['DeviceName']
                 for device in list_of_devices['data']
                 }
-            return True
-
-        return False
-
-
-class Tplink6DeviceScanner(DeviceScanner):
-    """
-    Works for Archer D9 Firmware version.
-
-    0.9.1 0.1 v0041.0 Build 160224 Rel.59129n
-    """
-
-    def __init__(self, config):
-        """Initialize the scanner."""
-        host = config[CONF_HOST]
-        password = config[CONF_PASSWORD]
-
-        self.host = host
-        self.password = password
-
-        self.parse_macs = re.compile(
-            'MACAddress=([0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2}:' +
-            '[0-9A-F]{2}:[0-9A-F]{2}:[0-9A-F]{2})')
-
-        self.parse_names = re.compile('hostName=(.*)')
-
-        self.last_results = {}
-        self.success_init = self._update_info()
-
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-        return self.last_results.keys()
-
-    def get_device_name(self, device):
-        """Get the name of the device."""
-        return self.last_results.get(device)
-
-    def _update_info(self):
-        """Ensure the information from the TP-Link router is up to date.
-
-        Return boolean if scanning successful.
-        """
-        _LOGGER.info("Loading wireless clients...")
-
-        b64_encoded_password = base64.b64encode(
-            self.password.encode('ascii')).decode('ascii')
-        cookie = 'Authorization=Basic {}' \
-            .format(b64_encoded_password)
-
-        payload = "[LAN_HOST_ENTRY#0,0,0,0,0,0#0,0,0,0,0,0]0,0\r\n"
-        page = requests.post(
-            f'http://{self.host}/cgi?5',
-            data=payload,
-            headers={
-                "Referer": f"http://{self.host}/",
-                "Cookie": cookie,
-                "Content-Type": "text/plain"
-            },
-            timeout=10)
-
-        mac_addresses = self.parse_macs.findall(page.text)
-        host_names = self.parse_names.findall(page.text)
-
-        result = dict(zip(mac_addresses, host_names))
-
-        if result:
-            self.last_results = result
             return True
 
         return False
