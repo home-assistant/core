@@ -275,6 +275,12 @@ class GrantTokenView(HomeAssistantView):
             }, status_code=400)
 
         user = await hass.auth.async_get_or_create_user(credentials)
+
+        if not user.is_active:
+            return self.json({
+                'error': 'invalid_request',
+            }, status_code=400)
+
         refresh_token = await hass.auth.async_create_refresh_token(user,
                                                                    client_id)
         access_token = hass.auth.async_create_access_token(refresh_token)
