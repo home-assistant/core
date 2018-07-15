@@ -96,6 +96,7 @@ homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
 homeassistant/components/konnected.py @heythisisnate
 homeassistant/components/*/konnected.py @heythisisnate
+homeassistant/components/light_defaults.py @kalimaul
 homeassistant/components/matrix.py @tinloaf
 homeassistant/components/*/matrix.py @tinloaf
 homeassistant/components/qwikswitch.py @kellerza
