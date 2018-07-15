@@ -65,7 +65,7 @@ class HomematicipGenericDevice(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the generic device."""
-        return {
-            ATTR_LOW_BATTERY: self._device.lowBat,
-            ATTR_MODEL_TYPE: self._device.modelType
-        }
+        attr = {ATTR_MODEL_TYPE: self._device.modelType}
+        if hasattr(self._device, 'lowBat') and self._device.lowBat: 
+            attr.update({ATTR_LOW_BATTERY: self._device.lowBat})
+        return attr
