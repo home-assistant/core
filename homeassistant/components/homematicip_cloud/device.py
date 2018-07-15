@@ -67,6 +67,8 @@ class HomematicipGenericDevice(Entity):
         """Return the icon."""
         if hasattr(self._device, 'lowBat') and self._device.lowBat:
             return 'mdi:battery-outline'
+        if hasattr(self._device, 'sabotage') and self._device.sabotage:
+            return 'mdi:alert'
         return None
 
     @property
@@ -75,4 +77,6 @@ class HomematicipGenericDevice(Entity):
         attr = {ATTR_MODEL_TYPE: self._device.modelType}
         if hasattr(self._device, 'lowBat') and self._device.lowBat:
             attr.update({ATTR_LOW_BATTERY: self._device.lowBat})
+        if hasattr(self._device, 'sabotage') and self._device.sabotage:
+            attr.update({ATTR_SABOTAGE: self._device.sabotage})
         return attr
