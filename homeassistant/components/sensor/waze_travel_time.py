@@ -54,21 +54,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Waze travel time sensor platform."""
-    def run_setup(event):
-        """Delay the setup until Home Assistant is fully initialized.
-        This allows any entities to be created already
-        """
-        destination = config.get(CONF_DESTINATION)
-        name = config.get(CONF_NAME)
-        origin = config.get(CONF_ORIGIN)
-        region = config.get(CONF_REGION)
-        incl_filter = config.get(CONF_INCL_FILTER)
-        excl_filter = config.get(CONF_EXCL_FILTER)
+    destination = config.get(CONF_DESTINATION)
+    name = config.get(CONF_NAME)
+    origin = config.get(CONF_ORIGIN)
+    region = config.get(CONF_REGION)
+    incl_filter = config.get(CONF_INCL_FILTER)
+    excl_filter = config.get(CONF_EXCL_FILTER)
 
-        sensor = WazeTravelTime(name, origin, destination, region,
-                                incl_filter, excl_filter)
+    sensor = WazeTravelTime(name, origin, destination, region,
+                            incl_filter, excl_filter)
 
-        add_devices([sensor])
+    add_devices([sensor])
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, sensor.update)
