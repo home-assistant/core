@@ -34,16 +34,14 @@ class InsecureExampleModule(MultiFactorAuthModule):
 
     @property
     def input_schema(self):
-        """Validate login flow input data"""
+        """Validate login flow input data."""
         schema = OrderedDict()
         schema['pin'] = str
         return vol.Schema(schema)
 
     @property
     def setup_schema(self):
-        """Validate async_setup_user input data.
-
-        """
+        """Validate async_setup_user input data."""
         schema = OrderedDict()
         schema['pin'] = str
         return vol.Schema(schema)
@@ -51,7 +49,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
     async def async_setup_user(self, user_id, data=None):
         """Setup mfa module for user."""
         try:
-            data = self.setup_schema(data)
+            data = self.setup_schema(data)  # pylint: disable=not-callable
         except vol.Invalid as err:
             raise ValueError('Data does not match schema: {}'.format(err))
 

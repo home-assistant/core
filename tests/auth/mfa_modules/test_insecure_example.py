@@ -1,4 +1,6 @@
 """Test the example module auth module."""
+import pytest
+
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth.mfa_modules import auth_mfa_module_from_config
 from homeassistant.auth.models import Credentials
@@ -31,6 +33,11 @@ async def test_setup_user(hass):
         'type': 'insecure_example',
         'users': []
     })
+
+    with pytest.raises(ValueError):
+        await auth_module.async_setup_user(
+            'test-user', {'code': '123456'})
+    assert len(auth_module._users) == 0
 
     await auth_module.async_setup_user(
         'test-user', {'pin': '123456'})

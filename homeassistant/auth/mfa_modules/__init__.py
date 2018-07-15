@@ -112,9 +112,10 @@ class MultiFactorAuthModule:
 
     @property
     def setup_schema(self):
-        """Return a vol.Schema to validate mfa auth module's setup input.
+        """Return a vol schema to validate mfa auth module's setup input.
 
-        Optional"""
+        Optional
+        """
         return None
 
     # Implement by extending class
