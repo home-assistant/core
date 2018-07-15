@@ -107,6 +107,24 @@ class AuthStore:
 
         await self.async_save()
 
+    async def async_enable_user_mfa(self, user, mfa_module_id):
+        """Enable a mfa module for user."""
+        local_user = await self.async_get_user(user.id)
+        if mfa_module_id in local_user.mfa_modules:
+            return
+
+        local_user.mfa_modules.append(mfa_module_id)
+        await self.async_save()
+
+    async def async_disable_user_mfa(self, user, mfa_module_id):
+        """Disable a mfa module for user."""
+        local_user = await self.async_get_user(user.id)
+        if mfa_module_id not in local_user.mfa_modules:
+            return
+
+        local_user.mfa_modules.remove(mfa_module_id)
+        await self.async_save()
+
     async def async_create_refresh_token(self, user, client_id=None):
         """Create a new token for a user."""
         refresh_token = models.RefreshToken(user=user, client_id=client_id)
@@ -141,10 +159,10 @@ class AuthStore:
             self._users = users
             return
 
-        for user_dict in data['users']:
+        for user_dict in data.get('users', []):
             users[user_dict['id']] = models.User(**user_dict)
 
-        for cred_dict in data['credentials']:
+        for cred_dict in data.get('credentials', []):
             users[cred_dict['user_id']].credentials.append(models.Credentials(
                 id=cred_dict['id'],
                 is_new=False,
@@ -155,7 +173,7 @@ class AuthStore:
 
         refresh_tokens = OrderedDict()
 
-        for rt_dict in data['refresh_tokens']:
+        for rt_dict in data.get('refresh_tokens', []):
             token = models.RefreshToken(
                 id=rt_dict['id'],
                 user=users[rt_dict['user_id']],
@@ -168,7 +186,7 @@ class AuthStore:
             refresh_tokens[token.id] = token
             users[rt_dict['user_id']].refresh_tokens[token.token] = token
 
-        for ac_dict in data['access_tokens']:
+        for ac_dict in data.get('access_tokens', []):
             refresh_token = refresh_tokens[ac_dict['refresh_token_id']]
             token = models.AccessToken(
                 refresh_token=refresh_token,
@@ -188,6 +206,7 @@ class AuthStore:
                 'is_active': user.is_active,
                 'name': user.name,
                 'system_generated': user.system_generated,
+                'mfa_modules': user.mfa_modules
             }
             for user in self._users.values()
         ]

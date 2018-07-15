@@ -26,6 +26,9 @@ class User:
     # Tokens associated with a user.
     refresh_tokens = attr.ib(type=dict, default=attr.Factory(dict), cmp=False)
 
+    # Enabled multi-factor auth modules of a user.
+    mfa_modules = attr.ib(type=list, default=attr.Factory(list), cmp=False)
+
 
 @attr.s(slots=True)
 class RefreshToken:
