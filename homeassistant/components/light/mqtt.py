@@ -205,7 +205,7 @@ class MqttLight(MqttAvailability, Light):
             topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None and
             SUPPORT_COLOR_TEMP)
         self._supported_features |= (
-            topic[CONF_EFFECT_STATE_TOPIC] is not None and
+            topic[CONF_EFFECT_COMMAND_TOPIC] is not None and
             SUPPORT_EFFECT)
         self._supported_features |= (
             topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None and
