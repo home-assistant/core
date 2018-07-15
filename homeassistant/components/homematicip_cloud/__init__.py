@@ -19,7 +19,7 @@ from .config_flow import configured_haps
 from .hap import HomematicipHAP, HomematicipAuth  # noqa: F401
 from .device import HomematicipGenericDevice  # noqa: F401
 
-REQUIREMENTS = ['homematicip==0.9.6']
+REQUIREMENTS = ['homematicip==0.9.8']
 
 _LOGGER = logging.getLogger(__name__)
 
