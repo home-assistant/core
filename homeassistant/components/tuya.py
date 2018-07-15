@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['tuyapy==0.1.1']
+REQUIREMENTS = ['tuyapy==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,8 @@ SERVICE_FORCE_UPDATE = 'force_update'
 SERVICE_PULL_DEVICES = 'pull_devices'
 
 TUYA_TYPE_TO_HA = {
-    'switch': 'switch'
+    'light': 'light',
+    'switch': 'switch',
 }
 
 CONFIG_SCHEMA = vol.Schema({
@@ -130,12 +131,17 @@ class TuyaDevice(Entity):
         return self.tuya.object_id()
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return 'tuya.{}'.format(self.tuya.object_id())
+
+    @property
     def name(self):
         """Return Tuya device name."""
         return self.tuya.name()
 
     @property
-    def icon(self):
+    def entity_picture(self):
         """Return the entity picture to use in the frontend, if any."""
         return self.tuya.iconurl()
 
