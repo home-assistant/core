@@ -67,6 +67,7 @@ class HomematicipGenericDevice(Entity):
         """Return the icon."""
         if hasattr(self._device, 'lowBat') and self._device.lowBat:
             return 'mdi:battery-outline'
+        return None
 
     @property
     def device_state_attributes(self):
