@@ -17,7 +17,7 @@ MULTI_FACTOR_AUTH_MODULE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): str,
     # Specify ID if you have two auth module for same type.
     vol.Optional(CONF_ID): str,
-})
+}, extra=vol.ALLOW_EXTRA)
 
 SESSION_EXPIRATION = timedelta(minutes=5)
 
@@ -107,19 +107,19 @@ class MultiFactorAuthModule:
 
     @property
     def input_schema(self):
-        """Return the input schema of the auth module."""
+        """Return a voluptuous schema to define mfa auth module's input."""
         raise NotImplementedError
 
     # Implement by extending class
 
     async def async_setup_user(self, user_id, data=None):
-        """Setup auth module for user."""
+        """Setup mfa auth module for user."""
         raise NotImplementedError
 
     async def async_depose_user(self, user_id):
-        """Setup auth module for user."""
+        """Remove user from mfa module."""
         raise NotImplementedError
 
     async def async_validation(self, user_id, user_input):
-        """Return the validation result."""
+        """Return True if validation passed."""
         raise NotImplementedError

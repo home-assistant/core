@@ -593,35 +593,35 @@ async def test_enable_mfa_for_user(hass, hass_storage):
 
     module = manager.get_auth_mfa_module('insecure_example')
     # mfa module don't have data
-    assert bool(module.users) is False
+    assert bool(module._users) is False
 
     # test enable mfa for user
     await manager.async_enable_user_mfa(user, 'insecure_example',
                                         {'pin': 'test-pin'})
     assert len(user.mfa_modules) == 1
     assert 'insecure_example' in user.mfa_modules
-    assert len(module.users) == 1
-    assert module.users[0] == {'user_id': user.id, 'pin': 'test-pin'}
+    assert len(module._users) == 1
+    assert module._users[0] == {'user_id': user.id, 'pin': 'test-pin'}
 
     # re-enable mfa for user will override
     await manager.async_enable_user_mfa(user, 'insecure_example',
                                         {'pin': 'test-pin-new'})
     assert len(user.mfa_modules) == 1
     assert 'insecure_example' in user.mfa_modules
-    assert len(module.users) == 1
-    assert module.users[0] == {'user_id': user.id, 'pin': 'test-pin-new'}
+    assert len(module._users) == 1
+    assert module._users[0] == {'user_id': user.id, 'pin': 'test-pin-new'}
 
     # system user cannot enable mfa
     system_user = await manager.async_create_system_user('system-user')
     with pytest.raises(ValueError):
         await manager.async_enable_user_mfa(system_user, 'insecure_example',
                                             {'pin': 'test-pin'})
-    assert len(module.users) == 1
+    assert len(module._users) == 1
 
     # disable mfa for user
     await manager.async_disable_user_mfa(user, 'insecure_example')
     assert bool(user.mfa_modules) is False
-    assert bool(module.users) is False
+    assert bool(module._users) is False
 
     # disable mfa for user don't enabled just silent fail
     await manager.async_disable_user_mfa(user, 'insecure_example')

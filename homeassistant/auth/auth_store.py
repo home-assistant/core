@@ -149,10 +149,10 @@ class AuthStore:
             self._users = users
             return
 
-        for user_dict in data['users']:
+        for user_dict in data.get('users', []):
             users[user_dict['id']] = models.User(**user_dict)
 
-        for cred_dict in data['credentials']:
+        for cred_dict in data.get('credentials', []):
             users[cred_dict['user_id']].credentials.append(models.Credentials(
                 id=cred_dict['id'],
                 is_new=False,
@@ -163,7 +163,7 @@ class AuthStore:
 
         refresh_tokens = OrderedDict()
 
-        for rt_dict in data['refresh_tokens']:
+        for rt_dict in data.get('refresh_tokens', []):
             token = models.RefreshToken(
                 id=rt_dict['id'],
                 user=users[rt_dict['user_id']],
@@ -176,7 +176,7 @@ class AuthStore:
             refresh_tokens[token.id] = token
             users[rt_dict['user_id']].refresh_tokens[token.token] = token
 
-        for ac_dict in data['access_tokens']:
+        for ac_dict in data.get('access_tokens', []):
             refresh_token = refresh_tokens[ac_dict['refresh_token_id']]
             token = models.AccessToken(
                 refresh_token=refresh_token,

@@ -76,7 +76,6 @@ TEST_REQUIREMENTS = (
     'pylitejet',
     'pymonoprice',
     'pynx584',
-    'pyotp',
     'pyqwikswitch',
     'python-forecastio',
     'python-nest',
