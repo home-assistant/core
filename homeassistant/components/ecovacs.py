@@ -37,7 +37,7 @@ ECOVACS_DEVICES = "ecovacs_devices"
 
 # Generate a random device ID on each bootup
 ECOVACS_API_DEVICEID = ''.join(
-    random.choices(string.ascii_uppercase + string.digits, k=8)
+    random.choice(string.ascii_uppercase + string.digits) for _ in range(8)
 )
 
 
