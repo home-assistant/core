@@ -1,6 +1,7 @@
 """Helper to create SSL contexts."""
-import certifi
 import ssl
+
+import certifi
 
 
 def client_context():
