@@ -528,9 +528,9 @@ class BluesoundPlayer(MediaPlayerDevice):
             return STATE_GROUPED
 
         status = self._status.get('state', None)
-        if status == 'pause' or status == 'stop':
+        if status in ('pause', 'stop'):
             return STATE_PAUSED
-        elif status == 'stream' or status == 'play':
+        elif status in ('stream', 'play'):
             return STATE_PLAYING
         return STATE_IDLE
 
