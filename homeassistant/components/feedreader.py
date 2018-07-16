@@ -189,7 +189,7 @@ class StoredData(object):
                 with self._lock, open(self._data_file, 'rb') as myfile:
                     self._data = pickle.load(myfile) or {}
                     self._cache_outdated = False
-            except:  # noqa: E722  # pylint: disable=bare-except
+            except:  # noqa: E722 pylint: disable=bare-except
                 _LOGGER.error("Error loading data from pickled file %s",
                               self._data_file)
 
@@ -207,7 +207,7 @@ class StoredData(object):
                           feed_id, self._data_file)
             try:
                 pickle.dump(self._data, myfile)
-            except:  # noqa: E722  # pylint: disable=bare-except
+            except:  # noqa: E722 pylint: disable=bare-except
                 _LOGGER.error(
                     "Error saving pickled data to %s", self._data_file)
         self._cache_outdated = True
