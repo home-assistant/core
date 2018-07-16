@@ -34,7 +34,7 @@ class OnboardingView(HomeAssistantView):
             {
                 'step': key,
                 'done': key in self._data['done'],
-             } for key in STEPS
+            } for key in STEPS
         ])
 
 
