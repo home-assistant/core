@@ -125,7 +125,7 @@ class DysonTest(unittest.TestCase):
         self.hass.data[dyson.DYSON_DEVICES] = devices
         add_devices = mock.MagicMock()
         dyson.setup_platform(self.hass, None, add_devices, discovery_info={})
-        add_devices.assert_called_once()
+        self.assertTrue(add_devices.called)
 
     def test_setup_component_with_invalid_devices(self):
         """Test setup component with invalid devices."""
@@ -194,7 +194,7 @@ class DysonTest(unittest.TestCase):
         entity.set_temperature(**kwargs)
         set_config = device.set_configuration
         set_config.assert_not_called()
-        entity.schedule_update_ha_state.assert_called_once()
+        entity.schedule_update_ha_state.assert_called_once_with()
 
     def test_dyson_set_fan_mode(self):
         """Test set fan mode."""
