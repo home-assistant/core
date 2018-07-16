@@ -64,9 +64,12 @@ class TplinkDeviceScanner(DeviceScanner):
 
     def __init__(self, config):
         """Initialize the scanner."""
+        from tplink.tplink import TpLinkClient
         self.host = config[CONF_HOST]
         self.password = config[CONF_PASSWORD]
         self.username = config[CONF_USERNAME]
+        self.tplink_client = TpLinkClient(
+            self.password, host=self.host, username=self.username)
 
         self.last_results = {}
         self.success_init = self._update_info()
@@ -85,11 +88,8 @@ class TplinkDeviceScanner(DeviceScanner):
 
         Return boolean if scanning successful.
         """
-        from tplink.tplink import TpLinkClient
         _LOGGER.info("Loading wireless clients...")
-        client = TpLinkClient(
-            self.password, host=self.host, username=self.username)
-        result = client.get_connected_devices()
+        result = self.tplink_client.get_connected_devices()
 
         if result:
             self.last_results = result
