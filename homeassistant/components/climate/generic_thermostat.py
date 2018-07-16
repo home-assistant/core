@@ -288,12 +288,13 @@ class GenericThermostat(ClimateDevice):
         self._async_control_heating()
         yield from self.async_update_ha_state()
 
-    @callback
+    @asyncio.coroutine
     def _async_switch_changed(self, entity_id, old_state, new_state):
         """Handle heater switch state changes."""
         if new_state is None:
             return
-        self.async_schedule_update_ha_state()
+
+        yield from self.async_update_ha_state()
 
     @callback
     def _async_keep_alive(self, time):
