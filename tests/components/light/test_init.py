@@ -308,6 +308,56 @@ class TestLight(unittest.TestCase):
             light.ATTR_BRIGHTNESS: 100
         }, data)
 
+    def test_default_profiles(self):
+        """Test default turn-on light profiles."""
+        platform = loader.get_component(self.hass, 'light.test')
+        platform.init()
+
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
+
+        with open(user_light_file, 'w') as user_file:
+            user_file.write('id,x,y,brightness\n')
+            user_file.write('group.all_lights.default,.4,.6,100\n')
+
+        self.assertTrue(setup_component(
+            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+        ))
+
+        dev1, _, _ = platform.DEVICES
+
+        light.turn_on(self.hass, dev1.entity_id)
+
+        self.hass.block_till_done()
+
+        _, data = dev1.last_call('turn_on')
+
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (71.059, 100),
+            light.ATTR_BRIGHTNESS: 100
+        }, data)
+
+        with open(user_light_file, 'w') as user_file:
+            user_file.write('id,x,y,brightness\n')
+            user_file.write('group.all_lights.default,.3,.5,200\n')
+            user_file.write('light.ceiling_2.default,.4,.6,100\n')
+
+        self.assertTrue(setup_component(
+            self.hass, light.DOMAIN, {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+        ))
+
+        dev1, _, _ = platform.DEVICES
+
+        light.turn_on(self.hass, dev1.entity_id)
+
+        self.hass.block_till_done()
+
+        _, data = dev1.last_call('turn_on')
+
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (71.059, 100),
+            light.ATTR_BRIGHTNESS: 100
+        }, data)
+
 
 async def test_intent_set_color(hass):
     """Test the set color intent."""
