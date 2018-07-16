@@ -29,7 +29,7 @@ from homeassistant.util.yaml import load_yaml
 REQUIREMENTS = ['home-assistant-frontend==20180716.0']
 
 DOMAIN = 'frontend'
-DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
+DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log', 'onboarding']
 
 CONF_THEMES = 'themes'
 CONF_EXTRA_HTML_URL = 'extra_html_url'
@@ -377,6 +377,16 @@ class IndexView(HomeAssistantView):
         latest = self.repo_path is not None or \
             _is_latest(self.js_option, request)
 
+        if not hass.components.onboarding.async_is_onboarded():
+            if latest:
+                location = '/frontend_latest/onboarding.html'
+            else:
+                location = '/frontend_es5/onboarding.html'
+
+            return web.Response(status=302, headers={
+                'location': location
+            })
+
         no_auth = '1'
         if hass.config.api.api_password and not request[KEY_AUTHENTICATED]:
             # do not try to auto connect on load
@@ -480,7 +490,7 @@ def websocket_get_translations(hass, connection, msg):
     Async friendly.
     """
     async def send_translations():
-        """Send a camera still."""
+        """Send a translation."""
         resources = await async_get_translations(hass, msg['language'])
         connection.send_message_outside(websocket_api.result_message(
             msg['id'], {

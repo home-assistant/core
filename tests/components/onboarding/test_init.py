@@ -1,0 +1,60 @@
+"""Tests for the init."""
+from unittest.mock import patch, Mock
+
+from homeassistant.setup import async_setup_component
+from homeassistant.components import onboarding
+
+from tests.common import mock_coro
+
+from . import mock_storage
+
+# Temporarily: if auth not active, always set onboarded=True
+
+
+async def test_not_setup_views_if_onboarded(hass, hass_storage):
+    """Test if onboarding is done, we don't setup views."""
+    mock_storage(hass_storage, {
+        'done': onboarding.STEPS
+    })
+
+    with patch(
+        'homeassistant.components.onboarding.views.async_setup'
+    ) as mock_setup:
+        assert await async_setup_component(hass, 'onboarding', {})
+
+    assert len(mock_setup.mock_calls) == 0
+    assert onboarding.DOMAIN not in hass.data
+    assert onboarding.async_is_onboarded(hass)
+
+
+async def test_setup_views_if_not_onboarded(hass):
+    """Test if onboarding is not done, we setup views."""
+    with patch(
+        'homeassistant.components.onboarding.views.async_setup',
+        return_value=mock_coro()
+    ) as mock_setup:
+        assert await async_setup_component(hass, 'onboarding', {})
+
+    assert len(mock_setup.mock_calls) == 1
+    assert onboarding.DOMAIN in hass.data
+
+    with patch('homeassistant.auth.AuthManager.active', return_value=True):
+        assert not onboarding.async_is_onboarded(hass)
+
+
+async def test_is_onboarded():
+    """Test the is onboarded function."""
+    hass = Mock()
+    hass.data = {}
+
+    with patch('homeassistant.auth.AuthManager.active', return_value=False):
+        assert onboarding.async_is_onboarded(hass)
+
+    with patch('homeassistant.auth.AuthManager.active', return_value=True):
+        assert onboarding.async_is_onboarded(hass)
+
+        hass.data[onboarding.DOMAIN] = True
+        assert onboarding.async_is_onboarded(hass)
+
+        hass.data[onboarding.DOMAIN] = False
+        assert not onboarding.async_is_onboarded(hass)
