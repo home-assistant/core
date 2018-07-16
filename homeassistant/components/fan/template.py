@@ -250,8 +250,7 @@ class TemplateFan(FanEntity):
             await self._set_speed_script.async_run({ATTR_SPEED: speed})
         else:
             _LOGGER.error(
-                'Received invalid speed: %s. ' +
-                'Expected: %s.',
+                'Received invalid speed: %s. Expected: %s.',
                 speed, self._speed_list)
 
     async def async_oscillate(self, oscillating: bool) -> None:
@@ -265,8 +264,7 @@ class TemplateFan(FanEntity):
                 {ATTR_OSCILLATING: oscillating})
         else:
             _LOGGER.error(
-                'Received invalid oscillating value: %s. ' +
-                'Expected: %s.',
+                'Received invalid oscillating value: %s. Expected: %s.',
                 oscillating, ', '.join(_VALID_OSC))
 
     async def async_set_direction(self, direction: str) -> None:
@@ -280,8 +278,7 @@ class TemplateFan(FanEntity):
                 {ATTR_DIRECTION: direction})
         else:
             _LOGGER.error(
-                'Received invalid direction: %s. ' +
-                'Expected: %s.',
+                'Received invalid direction: %s. Expected: %s.',
                 direction, ', '.join(_VALID_DIRECTIONS))
 
     async def async_added_to_hass(self):
@@ -319,8 +316,7 @@ class TemplateFan(FanEntity):
             self._state = None
         else:
             _LOGGER.error(
-                'Received invalid fan is_on state: %s. ' +
-                'Expected: %s.',
+                'Received invalid fan is_on state: %s. Expected: %s.',
                 state, ', '.join(_VALID_STATES))
             self._state = None
 
@@ -340,8 +336,7 @@ class TemplateFan(FanEntity):
                 self._speed = None
             else:
                 _LOGGER.error(
-                    'Received invalid speed: %s. ' +
-                    'Expected: %s.',
+                    'Received invalid speed: %s. Expected: %s.',
                     speed, self._speed_list)
                 self._speed = None
 
@@ -363,8 +358,8 @@ class TemplateFan(FanEntity):
                 self._oscillating = None
             else:
                 _LOGGER.error(
-                    'Received invalid oscillating: %s. ' +
-                    'Expected: True/False.', oscillating)
+                    'Received invalid oscillating: %s. Expected: True/False.',
+                    oscillating)
                 self._oscillating = None
 
         # Update direction if 'direction_template' is configured
@@ -383,7 +378,6 @@ class TemplateFan(FanEntity):
                 self._direction = None
             else:
                 _LOGGER.error(
-                    'Received invalid direction: %s. ' +
-                    'Expected: %s.',
+                    'Received invalid direction: %s. Expected: %s.',
                     direction, ', '.join(_VALID_DIRECTIONS))
                 self._direction = None
