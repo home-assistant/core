@@ -65,11 +65,12 @@ class TplinkDeviceScanner(DeviceScanner):
     def __init__(self, config):
         """Initialize the scanner."""
         from tplink.tplink import TpLinkClient
-        self.host = config[CONF_HOST]
-        self.password = config[CONF_PASSWORD]
-        self.username = config[CONF_USERNAME]
+        host = config[CONF_HOST]
+        password = config[CONF_PASSWORD]
+        username = config[CONF_USERNAME]
+
         self.tplink_client = TpLinkClient(
-            self.password, host=self.host, username=self.username)
+            password, host=host, username=username)
 
         self.last_results = {}
         self.success_init = self._update_info()
