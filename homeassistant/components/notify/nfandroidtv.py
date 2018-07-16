@@ -86,7 +86,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_service(hass, config, discovery_info=None):
     """Get the Notifications for Android TV notification service."""
     remoteip = config.get(CONF_IP)

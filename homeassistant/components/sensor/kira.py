@@ -18,7 +18,6 @@ ICON = 'mdi:remote'
 CONF_SENSOR = 'sensor'
 
 
-# pylint: disable=unused-argument, too-many-function-args
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a Kira sensor."""
     if discovery_info is not None:

@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = NetAtmoData(netatmo.NETATMO_AUTH, config.get(CONF_STATION, None))
 
     dev = []
-    import lnetatmo
+    import pyatmo
     try:
         if CONF_MODULES in config:
             # Iterate each module
@@ -92,7 +92,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     else:
                         _LOGGER.warning("Ignoring unknown var %s for mod %s",
                                         variable, module_name)
-    except lnetatmo.NoDevice:
+    except pyatmo.NoDevice:
         return None
 
     add_devices(dev, True)
@@ -305,8 +305,8 @@ class NetAtmoData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the Netatmo API to update the data."""
-        import lnetatmo
-        self.station_data = lnetatmo.WeatherStationData(self.auth)
+        import pyatmo
+        self.station_data = pyatmo.WeatherStationData(self.auth)
 
         if self.station is not None:
             self.data = self.station_data.lastData(

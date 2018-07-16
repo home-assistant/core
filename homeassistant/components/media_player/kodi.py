@@ -393,7 +393,7 @@ class KodiDevice(MediaPlayerDevice):
         if not self._players:
             return STATE_IDLE
 
-        if self._properties['speed'] == 0 and not self._properties['live']:
+        if self._properties['speed'] == 0:
             return STATE_PAUSED
 
         return STATE_PLAYING

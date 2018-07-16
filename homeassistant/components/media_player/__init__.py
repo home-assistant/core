@@ -57,6 +57,7 @@ ENTITY_IMAGE_CACHE = {
 
 SERVICE_PLAY_MEDIA = 'play_media'
 SERVICE_SELECT_SOURCE = 'select_source'
+SERVICE_SELECT_SOUND_MODE = 'select_sound_mode'
 SERVICE_CLEAR_PLAYLIST = 'clear_playlist'
 
 ATTR_MEDIA_VOLUME_LEVEL = 'volume_level'
@@ -81,6 +82,8 @@ ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
+ATTR_SOUND_MODE = 'sound_mode'
+ATTR_SOUND_MODE_LIST = 'sound_mode_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
 ATTR_MEDIA_SHUFFLE = 'shuffle'
 
@@ -109,6 +112,7 @@ SUPPORT_STOP = 4096
 SUPPORT_CLEAR_PLAYLIST = 8192
 SUPPORT_PLAY = 16384
 SUPPORT_SHUFFLE_SET = 32768
+SUPPORT_SELECT_SOUND_MODE = 65536
 
 # Service call validation schemas
 MEDIA_PLAYER_SCHEMA = vol.Schema({
@@ -130,6 +134,10 @@ MEDIA_PLAYER_MEDIA_SEEK_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
 
 MEDIA_PLAYER_SELECT_SOURCE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_INPUT_SOURCE): cv.string,
+})
+
+MEDIA_PLAYER_SELECT_SOUND_MODE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_SOUND_MODE): cv.string,
 })
 
 MEDIA_PLAYER_PLAY_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
@@ -167,6 +175,9 @@ SERVICE_TO_METHOD = {
     SERVICE_SELECT_SOURCE: {
         'method': 'async_select_source',
         'schema': MEDIA_PLAYER_SELECT_SOURCE_SCHEMA},
+    SERVICE_SELECT_SOUND_MODE: {
+        'method': 'async_select_sound_mode',
+        'schema': MEDIA_PLAYER_SELECT_SOUND_MODE_SCHEMA},
     SERVICE_PLAY_MEDIA: {
         'method': 'async_play_media',
         'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
@@ -197,6 +208,8 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_SOUND_MODE,
+    ATTR_SOUND_MODE_LIST,
     ATTR_MEDIA_SHUFFLE,
 ]
 
@@ -347,6 +360,17 @@ def select_source(hass, source, entity_id=None):
 
 
 @bind_hass
+def select_sound_mode(hass, sound_mode, entity_id=None):
+    """Send the media player the command to select sound mode."""
+    data = {ATTR_SOUND_MODE: sound_mode}
+
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_SELECT_SOUND_MODE, data)
+
+
+@bind_hass
 def clear_playlist(hass, entity_id=None):
     """Send the media player the command for clear playlist."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -399,6 +423,8 @@ async def async_setup(hass, config):
             params['position'] = service.data.get(ATTR_MEDIA_SEEK_POSITION)
         elif service.service == SERVICE_SELECT_SOURCE:
             params['source'] = service.data.get(ATTR_INPUT_SOURCE)
+        elif service.service == SERVICE_SELECT_SOUND_MODE:
+            params['sound_mode'] = service.data.get(ATTR_SOUND_MODE)
         elif service.service == SERVICE_PLAY_MEDIA:
             params['media_type'] = \
                 service.data.get(ATTR_MEDIA_CONTENT_TYPE)
@@ -430,12 +456,21 @@ async def async_setup(hass, config):
     return True
 
 
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
 class MediaPlayerDevice(Entity):
     """ABC for media player devices."""
 
     _access_token = None
 
-    # pylint: disable=no-self-use
     # Implement these for your media player
     @property
     def state(self):
@@ -581,6 +616,16 @@ class MediaPlayerDevice(Entity):
         return None
 
     @property
+    def sound_mode(self):
+        """Name of the current sound mode."""
+        return None
+
+    @property
+    def sound_mode_list(self):
+        """List of available sound modes."""
+        return None
+
+    @property
     def shuffle(self):
         """Boolean if shuffle is enabled."""
         return None
@@ -723,6 +768,17 @@ class MediaPlayerDevice(Entity):
         """
         return self.hass.async_add_job(self.select_source, source)
 
+    def select_sound_mode(self, sound_mode):
+        """Select sound mode."""
+        raise NotImplementedError()
+
+    def async_select_sound_mode(self, sound_mode):
+        """Select sound mode.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.select_sound_mode, sound_mode)
+
     def clear_playlist(self):
         """Clear players playlist."""
         raise NotImplementedError()
@@ -795,6 +851,11 @@ class MediaPlayerDevice(Entity):
     def support_select_source(self):
         """Boolean if select source command supported."""
         return bool(self.supported_features & SUPPORT_SELECT_SOURCE)
+
+    @property
+    def support_select_sound_mode(self):
+        """Boolean if select sound mode command supported."""
+        return bool(self.supported_features & SUPPORT_SELECT_SOUND_MODE)
 
     @property
     def support_clear_playlist(self):

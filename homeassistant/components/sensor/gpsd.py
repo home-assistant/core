@@ -86,7 +86,6 @@ class GpsdSensor(Entity):
         """Return the name."""
         return self._name
 
-    # pylint: disable=no-member
     @property
     def state(self):
         """Return the state of GPSD."""

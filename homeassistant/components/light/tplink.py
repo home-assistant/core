@@ -19,7 +19,7 @@ from homeassistant.util.color import \
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
 
-REQUIREMENTS = ['pyHS100==0.3.0']
+REQUIREMENTS = ['pyHS100==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,6 +103,16 @@ class TPLinkSmartBulb(Light):
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self.smartbulb.state = self.smartbulb.BULB_STATE_OFF
+
+    @property
+    def min_mireds(self):
+        """Return minimum supported color temperature."""
+        return kelvin_to_mired(self.smartbulb.valid_temperature_range[1])
+
+    @property
+    def max_mireds(self):
+        """Return maximum supported color temperature."""
+        return kelvin_to_mired(self.smartbulb.valid_temperature_range[0])
 
     @property
     def color_temp(self):

@@ -171,14 +171,20 @@ def async_setup(hass, config):
     development_repo = config.get(DOMAIN, {}).get(CONF_FRONTEND_REPO)
     if development_repo is not None:
         hass.http.register_static_path(
-            '/api/hassio/app-es5',
-            os.path.join(development_repo, 'hassio/build-es5'), False)
+            '/api/hassio/app',
+            os.path.join(development_repo, 'hassio/build'), False)
 
     hass.http.register_view(HassIOView(host, websession))
 
     if 'frontend' in hass.config.components:
-        yield from hass.components.frontend.async_register_built_in_panel(
-            'hassio', 'Hass.io', 'hass:home-assistant')
+        yield from hass.components.panel_custom.async_register_panel(
+            frontend_url_path='hassio',
+            webcomponent_name='hassio-main',
+            sidebar_title='Hass.io',
+            sidebar_icon='hass:home-assistant',
+            js_url='/api/hassio/app/entrypoint.js',
+            embed_iframe=True,
+        )
 
     if 'http' in config:
         yield from hassio.update_hass_api(config['http'])

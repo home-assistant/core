@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.rainmachine/
 import logging
 
 from homeassistant.components.rainmachine import (
-    DATA_RAINMACHINE, DATA_UPDATE_TOPIC, SENSORS, RainMachineEntity)
+    DATA_RAINMACHINE, SENSOR_UPDATE_TOPIC, SENSORS, RainMachineEntity)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -17,7 +17,8 @@ DEPENDENCIES = ['rainmachine']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up the RainMachine Switch platform."""
     if discovery_info is None:
         return
@@ -30,7 +31,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(
             RainMachineSensor(rainmachine, sensor_type, name, icon, unit))
 
-    add_devices(sensors, True)
+    async_add_devices(sensors, True)
 
 
 class RainMachineSensor(RainMachineEntity):
@@ -73,16 +74,16 @@ class RainMachineSensor(RainMachineEntity):
         return self._unit
 
     @callback
-    def update_data(self):
+    def _update_data(self):
         """Update the state."""
         self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, DATA_UPDATE_TOPIC,
-                                 self.update_data)
+        async_dispatcher_connect(
+            self.hass, SENSOR_UPDATE_TOPIC, self._update_data)
 
-    def update(self):
+    async def async_update(self):
         """Update the sensor's state."""
         self._state = self.rainmachine.restrictions['global'][
             'freezeProtectTemp']

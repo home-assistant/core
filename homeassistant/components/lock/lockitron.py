@@ -26,7 +26,6 @@ API_STATE_URL = BASE_URL + '/v2/locks/{}?access_token={}'
 API_ACTION_URL = BASE_URL + '/v2/locks/{}?access_token={}&state={}'
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Lockitron platform."""
     access_token = config.get(CONF_ACCESS_TOKEN)

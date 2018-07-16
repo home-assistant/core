@@ -7,6 +7,7 @@ https://home-assistant.io/components/sensor.simulated/
 import logging
 import math
 from random import Random
+from datetime import datetime
 
 import voluptuous as vol
 
@@ -25,6 +26,7 @@ CONF_PERIOD = 'period'
 CONF_PHASE = 'phase'
 CONF_SEED = 'seed'
 CONF_UNIT = 'unit'
+CONF_RELATIVE_TO_EPOCH = 'relative_to_epoch'
 
 DEFAULT_AMP = 1
 DEFAULT_FWHM = 0
@@ -34,6 +36,7 @@ DEFAULT_PERIOD = 60
 DEFAULT_PHASE = 0
 DEFAULT_SEED = 999
 DEFAULT_UNIT = 'value'
+DEFAULT_RELATIVE_TO_EPOCH = True
 
 ICON = 'mdi:chart-line'
 
@@ -46,6 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PHASE, default=DEFAULT_PHASE): vol.Coerce(float),
     vol.Optional(CONF_SEED, default=DEFAULT_SEED): cv.positive_int,
     vol.Optional(CONF_UNIT, default=DEFAULT_UNIT): cv.string,
+    vol.Optional(CONF_RELATIVE_TO_EPOCH, default=DEFAULT_RELATIVE_TO_EPOCH):
+        cv.boolean,
 })
 
 
@@ -59,15 +64,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     phase = config.get(CONF_PHASE)
     fwhm = config.get(CONF_FWHM)
     seed = config.get(CONF_SEED)
+    relative_to_epoch = config.get(CONF_RELATIVE_TO_EPOCH)
 
-    sensor = SimulatedSensor(name, unit, amp, mean, period, phase, fwhm, seed)
+    sensor = SimulatedSensor(name, unit, amp, mean, period, phase, fwhm, seed,
+                             relative_to_epoch)
     add_devices([sensor], True)
 
 
 class SimulatedSensor(Entity):
     """Class for simulated sensor."""
 
-    def __init__(self, name, unit, amp, mean, period, phase, fwhm, seed):
+    def __init__(self, name, unit, amp, mean, period, phase, fwhm, seed,
+                 relative_to_epoch):
         """Init the class."""
         self._name = name
         self._unit = unit
@@ -78,7 +86,11 @@ class SimulatedSensor(Entity):
         self._fwhm = fwhm
         self._seed = seed
         self._random = Random(seed)  # A local seeded Random
-        self._start_time = dt_util.utcnow()
+        self._start_time = (
+            datetime(1970, 1, 1, tzinfo=dt_util.UTC) if relative_to_epoch
+            else dt_util.utcnow()
+        )
+        self._relative_to_epoch = relative_to_epoch
         self._state = None
 
     def time_delta(self):
@@ -100,7 +112,7 @@ class SimulatedSensor(Entity):
         else:
             periodic = amp * (math.sin((2*math.pi*time_delta/period) + phase))
         noise = self._random.gauss(mu=0, sigma=fwhm)
-        return mean + periodic + noise
+        return round(mean + periodic + noise, 3)
 
     async def async_update(self):
         """Update the sensor."""
@@ -136,5 +148,6 @@ class SimulatedSensor(Entity):
             'phase': self._phase,
             'spread': self._fwhm,
             'seed': self._seed,
+            'relative_to_epoch': self._relative_to_epoch,
             }
         return attr

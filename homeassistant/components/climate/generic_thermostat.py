@@ -14,8 +14,7 @@ from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_IDLE, STATE_AUTO, ClimateDevice,
     ATTR_OPERATION_MODE, ATTR_AWAY_MODE, SUPPORT_OPERATION_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA,
-    DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
+    SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
     CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
@@ -264,20 +263,20 @@ class GenericThermostat(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        # pylint: disable=no-member
         if self._min_temp:
             return self._min_temp
 
-        return DEFAULT_MIN_TEMP
+        # get default temp from super class
+        return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        # pylint: disable=no-member
         if self._max_temp:
             return self._max_temp
 
-        return DEFAULT_MAX_TEMP
+        # Get default temp from super class
+        return super().max_temp
 
     @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):

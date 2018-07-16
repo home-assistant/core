@@ -74,6 +74,7 @@ class VerisureThermometer(Entity):
         """Return the unit of measurement of this entity."""
         return TEMP_CELSIUS
 
+    # pylint: disable=no-self-use
     def update(self):
         """Update the sensor."""
         hub.update_overview()
@@ -112,6 +113,7 @@ class VerisureHygrometer(Entity):
         """Return the unit of measurement of this entity."""
         return '%'
 
+    # pylint: disable=no-self-use
     def update(self):
         """Update the sensor."""
         hub.update_overview()
@@ -150,6 +152,7 @@ class VerisureMouseDetection(Entity):
         """Return the unit of measurement of this entity."""
         return 'Mice'
 
+    # pylint: disable=no-self-use
     def update(self):
         """Update the sensor."""
         hub.update_overview()

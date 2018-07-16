@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     netatmo = hass.components.netatmo
     device = config.get(CONF_RELAY)
 
-    import lnetatmo
+    import pyatmo
     try:
         data = ThermostatData(netatmo.NETATMO_AUTH, device)
         for module_name in data.get_module_names():
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    module_name not in config[CONF_THERMOSTAT]:
                     continue
             add_devices([NetatmoThermostat(data, module_name)], True)
-    except lnetatmo.NoDevice:
+    except pyatmo.NoDevice:
         return None
 
 
@@ -168,8 +168,8 @@ class ThermostatData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the NetAtmo API to update the data."""
-        import lnetatmo
-        self.thermostatdata = lnetatmo.ThermostatData(self.auth)
+        import pyatmo
+        self.thermostatdata = pyatmo.ThermostatData(self.auth)
         self.target_temperature = self.thermostatdata.setpoint_temp
         self.setpoint_mode = self.thermostatdata.setpoint_mode
         self.current_temperature = self.thermostatdata.temp

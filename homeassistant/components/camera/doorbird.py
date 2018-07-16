@@ -17,9 +17,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 DEPENDENCIES = ['doorbird']
 
-_CAMERA_LAST_VISITOR = "DoorBird Last Ring"
-_CAMERA_LAST_MOTION = "DoorBird Last Motion"
-_CAMERA_LIVE = "DoorBird Live"
+_CAMERA_LAST_VISITOR = "{} Last Ring"
+_CAMERA_LAST_MOTION = "{} Last Motion"
+_CAMERA_LIVE = "{} Live"
 _LAST_VISITOR_INTERVAL = datetime.timedelta(minutes=1)
 _LAST_MOTION_INTERVAL = datetime.timedelta(minutes=1)
 _LIVE_INTERVAL = datetime.timedelta(seconds=1)
@@ -30,16 +30,22 @@ _TIMEOUT = 10  # seconds
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the DoorBird camera platform."""
-    device = hass.data.get(DOORBIRD_DOMAIN)
-    async_add_devices([
-        DoorBirdCamera(device.live_image_url, _CAMERA_LIVE, _LIVE_INTERVAL),
-        DoorBirdCamera(
-            device.history_image_url(1, 'doorbell'), _CAMERA_LAST_VISITOR,
-            _LAST_VISITOR_INTERVAL),
-        DoorBirdCamera(
-            device.history_image_url(1, 'motionsensor'), _CAMERA_LAST_MOTION,
-            _LAST_MOTION_INTERVAL),
-    ])
+    for doorstation in hass.data[DOORBIRD_DOMAIN]:
+        device = doorstation.device
+        async_add_devices([
+            DoorBirdCamera(
+                device.live_image_url,
+                _CAMERA_LIVE.format(doorstation.name),
+                _LIVE_INTERVAL),
+            DoorBirdCamera(
+                device.history_image_url(1, 'doorbell'),
+                _CAMERA_LAST_VISITOR.format(doorstation.name),
+                _LAST_VISITOR_INTERVAL),
+            DoorBirdCamera(
+                device.history_image_url(1, 'motionsensor'),
+                _CAMERA_LAST_MOTION.format(doorstation.name),
+                _LAST_MOTION_INTERVAL),
+        ])
 
 
 class DoorBirdCamera(Camera):

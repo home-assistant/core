@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.9.2']
+REQUIREMENTS = ['insteonplm==0.11.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,17 +29,31 @@ CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
 CONF_FIRMWARE = 'firmware'
 CONF_PRODUCT_KEY = 'product_key'
+CONF_X10 = 'x10_devices'
+CONF_HOUSECODE = 'housecode'
+CONF_UNITCODE = 'unitcode'
+CONF_DIM_STEPS = 'dim_steps'
+CONF_X10_ALL_UNITS_OFF = 'x10_all_units_off'
+CONF_X10_ALL_LIGHTS_ON = 'x10_all_lights_on'
+CONF_X10_ALL_LIGHTS_OFF = 'x10_all_lights_off'
 
 SRV_ADD_ALL_LINK = 'add_all_link'
 SRV_DEL_ALL_LINK = 'delete_all_link'
 SRV_LOAD_ALDB = 'load_all_link_database'
 SRV_PRINT_ALDB = 'print_all_link_database'
 SRV_PRINT_IM_ALDB = 'print_im_all_link_database'
+SRV_X10_ALL_UNITS_OFF = 'x10_all_units_off'
+SRV_X10_ALL_LIGHTS_OFF = 'x10_all_lights_off'
+SRV_X10_ALL_LIGHTS_ON = 'x10_all_lights_on'
 SRV_ALL_LINK_GROUP = 'group'
 SRV_ALL_LINK_MODE = 'mode'
 SRV_LOAD_DB_RELOAD = 'reload'
 SRV_CONTROLLER = 'controller'
 SRV_RESPONDER = 'responder'
+SRV_HOUSECODE = 'housecode'
+
+HOUSECODES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
+              'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
@@ -51,11 +65,24 @@ CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
         vol.Optional(CONF_PLATFORM): cv.string,
         }))
 
+CONF_X10_SCHEMA = vol.All(
+    vol.Schema({
+        vol.Required(CONF_HOUSECODE): cv.string,
+        vol.Required(CONF_UNITCODE): vol.Range(min=1, max=16),
+        vol.Required(CONF_PLATFORM): cv.string,
+        vol.Optional(CONF_DIM_STEPS): vol.Range(min=2, max=255)
+        }))
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(CONF_OVERRIDE): vol.All(
-            cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA])
+            cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
+        vol.Optional(CONF_X10_ALL_UNITS_OFF): vol.In(HOUSECODES),
+        vol.Optional(CONF_X10_ALL_LIGHTS_ON): vol.In(HOUSECODES),
+        vol.Optional(CONF_X10_ALL_LIGHTS_OFF): vol.In(HOUSECODES),
+        vol.Optional(CONF_X10): vol.All(
+            cv.ensure_list_csv, [CONF_X10_SCHEMA])
         })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -77,6 +104,10 @@ PRINT_ALDB_SCHEMA = vol.Schema({
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     })
 
+X10_HOUSECODE_SCHEMA = vol.Schema({
+    vol.Required(SRV_HOUSECODE): vol.In(HOUSECODES),
+    })
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -89,6 +120,10 @@ def async_setup(hass, config):
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
     overrides = conf.get(CONF_OVERRIDE, [])
+    x10_devices = conf.get(CONF_X10, [])
+    x10_all_units_off_housecode = conf.get(CONF_X10_ALL_UNITS_OFF)
+    x10_all_lights_on_housecode = conf.get(CONF_X10_ALL_LIGHTS_ON)
+    x10_all_lights_off_housecode = conf.get(CONF_X10_ALL_LIGHTS_OFF)
 
     @callback
     def async_plm_new_device(device):
@@ -106,7 +141,7 @@ def async_setup(hass, config):
                     hass.async_add_job(
                         discovery.async_load_platform(
                             hass, platform, DOMAIN,
-                            discovered={'address': device.address.hex,
+                            discovered={'address': device.address.id,
                                         'state_key': state_key},
                             hass_config=config))
 
@@ -151,6 +186,21 @@ def async_setup(hass, config):
         # Furture direction is to create an INSTEON control panel.
         print_aldb_to_log(plm.aldb)
 
+    def x10_all_units_off(service):
+        """Send the X10 All Units Off command."""
+        housecode = service.data.get(SRV_HOUSECODE)
+        plm.x10_all_units_off(housecode)
+
+    def x10_all_lights_off(service):
+        """Send the X10 All Lights Off command."""
+        housecode = service.data.get(SRV_HOUSECODE)
+        plm.x10_all_lights_off(housecode)
+
+    def x10_all_lights_on(service):
+        """Send the X10 All Lights On command."""
+        housecode = service.data.get(SRV_HOUSECODE)
+        plm.x10_all_lights_on(housecode)
+
     def _register_services():
         hass.services.register(DOMAIN, SRV_ADD_ALL_LINK, add_all_link,
                                schema=ADD_ALL_LINK_SCHEMA)
@@ -162,6 +212,15 @@ def async_setup(hass, config):
                                schema=PRINT_ALDB_SCHEMA)
         hass.services.register(DOMAIN, SRV_PRINT_IM_ALDB, print_im_aldb,
                                schema=None)
+        hass.services.register(DOMAIN, SRV_X10_ALL_UNITS_OFF,
+                               x10_all_units_off,
+                               schema=X10_HOUSECODE_SCHEMA)
+        hass.services.register(DOMAIN, SRV_X10_ALL_LIGHTS_OFF,
+                               x10_all_lights_off,
+                               schema=X10_HOUSECODE_SCHEMA)
+        hass.services.register(DOMAIN, SRV_X10_ALL_LIGHTS_ON,
+                               x10_all_lights_on,
+                               schema=X10_HOUSECODE_SCHEMA)
         _LOGGER.debug("Insteon_plm Services registered")
 
     _LOGGER.info("Looking for PLM on %s", port)
@@ -192,6 +251,36 @@ def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
 
     plm.devices.add_device_callback(async_plm_new_device)
+
+    if x10_all_units_off_housecode:
+        device = plm.add_x10_device(x10_all_units_off_housecode,
+                                    20,
+                                    'allunitsoff')
+    if x10_all_lights_on_housecode:
+        device = plm.add_x10_device(x10_all_lights_on_housecode,
+                                    21,
+                                    'alllightson')
+    if x10_all_lights_off_housecode:
+        device = plm.add_x10_device(x10_all_lights_off_housecode,
+                                    22,
+                                    'alllightsoff')
+    for device in x10_devices:
+        housecode = device.get(CONF_HOUSECODE)
+        unitcode = device.get(CONF_UNITCODE)
+        x10_type = 'onoff'
+        steps = device.get(CONF_DIM_STEPS, 22)
+        if device.get(CONF_PLATFORM) == 'light':
+            x10_type = 'dimmable'
+        elif device.get(CONF_PLATFORM) == 'binary_sensor':
+            x10_type = 'sensor'
+        _LOGGER.debug("Adding X10 device to insteonplm: %s %d %s",
+                      housecode, unitcode, x10_type)
+        device = plm.add_x10_device(housecode,
+                                    unitcode,
+                                    x10_type)
+        if device and hasattr(device.states[0x01], 'steps'):
+            device.states[0x01].steps = steps
+
     hass.async_add_job(_register_services)
 
     return True
@@ -211,13 +300,21 @@ class IPDB(object):
                                              OpenClosedRelay)
 
         from insteonplm.states.dimmable import (DimmableSwitch,
-                                                DimmableSwitch_Fan)
+                                                DimmableSwitch_Fan,
+                                                DimmableRemote)
 
         from insteonplm.states.sensor import (VariableSensor,
                                               OnOffSensor,
                                               SmokeCO2Sensor,
                                               IoLincSensor,
                                               LeakSensorDryWet)
+
+        from insteonplm.states.x10 import (X10DimmableSwitch,
+                                           X10OnOffSwitch,
+                                           X10OnOffSensor,
+                                           X10AllUnitsOffSensor,
+                                           X10AllLightsOnSensor,
+                                           X10AllLightsOffSensor)
 
         self.states = [State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
@@ -231,7 +328,15 @@ class IPDB(object):
                        State(VariableSensor, 'sensor'),
 
                        State(DimmableSwitch_Fan, 'fan'),
-                       State(DimmableSwitch, 'light')]
+                       State(DimmableSwitch, 'light'),
+                       State(DimmableRemote, 'binary_sensor'),
+
+                       State(X10DimmableSwitch, 'light'),
+                       State(X10OnOffSwitch, 'switch'),
+                       State(X10OnOffSensor, 'binary_sensor'),
+                       State(X10AllUnitsOffSensor, 'binary_sensor'),
+                       State(X10AllLightsOnSensor, 'binary_sensor'),
+                       State(X10AllLightsOffSensor, 'binary_sensor')]
 
     def __len__(self):
         """Return the number of INSTEON state types mapped to HA platforms."""

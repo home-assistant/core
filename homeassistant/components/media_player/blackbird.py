@@ -61,7 +61,6 @@ PLATFORM_SCHEMA = vol.All(
     }))
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Monoprice Blackbird 4k 8x8 HDBaseT Matrix platform."""
     if DATA_BLACKBIRD not in hass.data:

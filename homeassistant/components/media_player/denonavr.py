@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_ON, CONF_ZONE, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['denonavr==0.7.2']
+REQUIREMENTS = ['denonavr==0.7.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,6 @@ NewHost = namedtuple('NewHost', ['host', 'name'])
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Denon platform."""
-    # pylint: disable=import-error
     import denonavr
 
     # Initialize list with receivers to be started

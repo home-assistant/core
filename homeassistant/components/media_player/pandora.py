@@ -43,7 +43,6 @@ CURRENT_SONG_PATTERN = re.compile(r'"(.*?)"\s+by\s+"(.*?)"\son\s+"(.*?)"',
 STATION_PATTERN = re.compile(r'Station\s"(.+?)"', re.MULTILINE)
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Pandora media player platform."""
     if not _pianobar_exists():

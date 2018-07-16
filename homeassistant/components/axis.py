@@ -145,7 +145,7 @@ def request_configuration(hass, config, name, host, serialnumber):
 
 def setup(hass, config):
     """Set up for Axis devices."""
-    def _shutdown(call):  # pylint: disable=unused-argument
+    def _shutdown(call):
         """Stop the event stream on shutdown."""
         for serialnumber, device in AXIS_DEVICES.items():
             _LOGGER.info("Stopping event stream for %s.", serialnumber)
@@ -272,8 +272,7 @@ class AxisDeviceEvent(Entity):
 
     def _update_callback(self):
         """Update the sensor's state, if needed."""
-        self.update()
-        self.schedule_update_ha_state()
+        self.schedule_update_ha_state(True)
 
     @property
     def name(self):

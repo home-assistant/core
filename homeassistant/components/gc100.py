@@ -31,7 +31,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=no-member, import-self
+# pylint: disable=no-member
 def setup(hass, base_config):
     """Set up the gc100 component."""
     import gc100

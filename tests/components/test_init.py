@@ -74,30 +74,6 @@ class TestComponentsCore(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(calls))
 
-    @patch('homeassistant.core.ServiceRegistry.call')
-    async def test_turn_on_to_not_block_for_domains_without_service(self,
-                                                                    mock_call):
-        """Test if turn_on is blocking domain with no service."""
-        async_mock_service(self.hass, 'light', SERVICE_TURN_ON)
-
-        # We can't test if our service call results in services being called
-        # because by mocking out the call service method, we mock out all
-        # So we mimic how the service registry calls services
-        service_call = ha.ServiceCall('homeassistant', 'turn_on', {
-            'entity_id': ['light.test', 'sensor.bla', 'light.bla']
-        })
-        service = self.hass.services._services['homeassistant']['turn_on']
-        await service.func(service_call)
-
-        self.assertEqual(2, mock_call.call_count)
-        self.assertEqual(
-            ('light', 'turn_on', {'entity_id': ['light.bla', 'light.test']},
-             True),
-            mock_call.call_args_list[0][0])
-        self.assertEqual(
-            ('sensor', 'turn_on', {'entity_id': ['sensor.bla']}, False),
-            mock_call.call_args_list[1][0])
-
     @patch('homeassistant.config.os.path.isfile', Mock(return_value=True))
     def test_reload_core_conf(self):
         """Test reload core conf service."""
@@ -284,3 +260,29 @@ async def test_turn_on_multiple_intent(hass):
     assert call.domain == 'light'
     assert call.service == 'turn_on'
     assert call.data == {'entity_id': ['light.test_lights_2']}
+
+
+async def test_turn_on_to_not_block_for_domains_without_service(hass):
+    """Test if turn_on is blocking domain with no service."""
+    await comps.async_setup(hass, {})
+    async_mock_service(hass, 'light', SERVICE_TURN_ON)
+    hass.states.async_set('light.Bowl', STATE_ON)
+    hass.states.async_set('light.Ceiling', STATE_OFF)
+
+    # We can't test if our service call results in services being called
+    # because by mocking out the call service method, we mock out all
+    # So we mimic how the service registry calls services
+    service_call = ha.ServiceCall('homeassistant', 'turn_on', {
+        'entity_id': ['light.test', 'sensor.bla', 'light.bla']
+    })
+    service = hass.services._services['homeassistant']['turn_on']
+
+    with patch('homeassistant.core.ServiceRegistry.async_call',
+               side_effect=lambda *args: mock_coro()) as mock_call:
+        await service.func(service_call)
+
+    assert mock_call.call_count == 2
+    assert mock_call.call_args_list[0][0] == (
+        'light', 'turn_on', {'entity_id': ['light.bla', 'light.test']}, True)
+    assert mock_call.call_args_list[1][0] == (
+        'sensor', 'turn_on', {'entity_id': ['sensor.bla']}, False)
