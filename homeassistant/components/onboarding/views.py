@@ -53,7 +53,6 @@ class _BaseOnboardingView(HomeAssistantView):
     @callback
     def _async_is_done(self):
         """Return if this step is done."""
-        print(self.step, self._data)
         return self.step in self._data['done']
 
     async def _async_mark_done(self, hass):

@@ -127,9 +127,9 @@ async def test_onboarding_user_race(hass, hass_storage, aiohttp_client):
         'password': '1-pass',
     })
     resp2 = client.post('/api/onboarding/users', json={
-        'name': 'Test 1',
-        'username': '1-user',
-        'password': '1-pass',
+        'name': 'Test 2',
+        'username': '2-user',
+        'password': '2-pass',
     })
 
     res1, res2 = await asyncio.gather(resp1, resp2)
