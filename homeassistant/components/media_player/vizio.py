@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON,
     STATE_UNKNOWN)
 from homeassistant.helpers import config_validation as cv
-import homeassistant.util as util
+from homeassistant import util
 
 REQUIREMENTS = ['pyvizio==0.0.3']
 

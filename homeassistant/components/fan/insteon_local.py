@@ -11,7 +11,7 @@ from homeassistant.components.fan import (
     ATTR_SPEED, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.helpers.entity import ToggleEntity
-import homeassistant.util as util
+from homeassistant import util
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)

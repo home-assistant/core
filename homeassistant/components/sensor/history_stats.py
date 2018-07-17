@@ -10,7 +10,7 @@ import math
 
 import voluptuous as vol
 
-import homeassistant.components.history as history
+from homeassistant.components import history
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA

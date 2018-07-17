@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 import requests
 
-import homeassistant.util.dt as dt
+from homeassistant.util import dt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (

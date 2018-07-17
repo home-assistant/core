@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
-import homeassistant.components.bbb_gpio as bbb_gpio
+from homeassistant.components import bbb_gpio
 from homeassistant.const import (DEVICE_DEFAULT_NAME, CONF_NAME)
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
