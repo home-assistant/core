@@ -65,10 +65,14 @@ def _chain_future(source, destination):
     if not isinstance(destination, (Future, concurrent.futures.Future)):
         raise TypeError('A future is required for destination argument')
     # pylint: disable=protected-access
-    source_loop = source._loop if isinstance(  # type: ignore
-        source, Future) else None
-    dest_loop = destination._loop if isinstance(  # type: ignore
-        destination, Future) else None
+    if isinstance(source, Future):
+        source_loop = source._loop  # type: ignore
+    else:
+        source_loop = None
+    if isinstance(destination, Future):
+        dest_loop = destination._loop  # type: ignore
+    else:
+        dest_loop = None
 
     def _set_state(future, other):
         if isinstance(future, Future):
