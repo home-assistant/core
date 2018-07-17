@@ -64,8 +64,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensor = WazeTravelTime(name, origin, destination, region,
                             incl_filter, excl_filter)
 
-    add_devices([sensor], True)
+    add_devices([sensor])
 
+    # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, sensor.update)
 
 
