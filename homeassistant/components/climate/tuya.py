@@ -63,7 +63,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
 
     async def async_added_to_hass(self):
         """Create operation list when add to hass."""
-        super().async_added_to_hass()
+        await super().async_added_to_hass()
         modes = self.tuya.operation_list()
         if modes is None:
             return
