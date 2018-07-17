@@ -92,6 +92,7 @@ class UserOnboardingView(_BaseOnboardingView):
             credentials = await provider.async_get_or_create_credentials({
                 'username': data['username']
             })
+            await provider.data.async_save()
             await hass.auth.async_link_user(user, credentials)
             await self._async_mark_done(hass)
 
