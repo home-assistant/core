@@ -176,7 +176,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     gtfs = pygtfs.Schedule(joined_path)
 
     # pylint: disable=no-member
-    if len(gtfs.feeds) < 1:
+    if not gtfs.feeds:
         pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
     add_devices([GTFSDepartureSensor(gtfs, name, origin, destination, offset)])
