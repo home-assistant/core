@@ -640,7 +640,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         volume = self.volume_level
         if not volume:
             return None
-        return volume < 0.001 and volume >= 0
+        return 0 <= volume < 0.001
 
     @property
     def name(self):
