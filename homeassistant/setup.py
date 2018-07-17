@@ -163,8 +163,9 @@ async def _async_setup_component(hass: core.HomeAssistant,
         loader.set_component(hass, domain, None)
         return False
 
-    for entry in hass.config_entries.async_entries(domain):
-        await entry.async_setup(hass, component=component)
+    if hass.config_entries:
+        for entry in hass.config_entries.async_entries(domain):
+            await entry.async_setup(hass, component=component)
 
     hass.config.components.add(component.DOMAIN)  # type: ignore
 

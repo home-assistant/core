@@ -293,7 +293,7 @@ def async_enable_logging(hass: core.HomeAssistant,
 
         async def async_stop_async_handler(event):
             """Cleanup async handler."""
-            logging.getLogger('').removeHandler(async_handler)
+            logging.getLogger('').removeHandler(async_handler)  # type: ignore
             await async_handler.async_close(blocking=True)
 
         hass.bus.async_listen_once(

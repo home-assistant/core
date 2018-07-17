@@ -653,7 +653,7 @@ def async_process_component_config(hass, config, domain):
 
     if hasattr(component, 'CONFIG_SCHEMA'):
         try:
-            config = component.CONFIG_SCHEMA(config)
+            config = component.CONFIG_SCHEMA(config)  # type: ignore
         except vol.Invalid as ex:
             async_log_exception(ex, domain, config, hass)
             return None
@@ -663,7 +663,8 @@ def async_process_component_config(hass, config, domain):
         for p_name, p_config in config_per_platform(config, domain):
             # Validate component specific platform schema
             try:
-                p_validated = component.PLATFORM_SCHEMA(p_config)
+                p_validated = component.PLATFORM_SCHEMA(  # type: ignore
+                    p_config)
             except vol.Invalid as ex:
                 async_log_exception(ex, domain, config, hass)
                 continue
@@ -684,7 +685,8 @@ def async_process_component_config(hass, config, domain):
             if hasattr(platform, 'PLATFORM_SCHEMA'):
                 # pylint: disable=no-member
                 try:
-                    p_validated = platform.PLATFORM_SCHEMA(p_validated)
+                    p_validated = platform.PLATFORM_SCHEMA(  # type: ignore
+                        p_validated)
                 except vol.Invalid as ex:
                     async_log_exception(ex, '{}.{}'.format(domain, p_name),
                                         p_validated, hass)
