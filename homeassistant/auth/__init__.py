@@ -194,9 +194,14 @@ class AuthManager:
         tkn = self._access_tokens.get(token)
 
         if tkn is None:
+            _LOGGER.debug('Attempt to get non-existing access token')
             return None
 
         if tkn.expired or not tkn.refresh_token.user.is_active:
+            if tkn.expired:
+                _LOGGER.debug('Attempt to get expired access token')
+            else:
+                _LOGGER.debug('Attempt to get access token for inactive user')
             self._access_tokens.pop(token)
             return None
 
