@@ -1,12 +1,12 @@
 {
   "state": {
-    "new moon": "New moon",
-    "waxing crescent": "Waxing crescent",
-    "first quarter": "First quarter",
-    "waxing gibbous": "Waxing gibbous",
-    "full moon": "Full moon",
-    "waning gibbous": "Waning gibbous",
-    "last quarter": "Last quarter",
-    "waning crescent": "Waning crescent"
+    "new_moon": "New moon",
+    "waxing_crescent": "Waxing crescent",
+    "first_quarter": "First quarter",
+    "waxing_gibbous": "Waxing gibbous",
+    "full_moon": "Full moon",
+    "waning_gibbous": "Waning gibbous",
+    "last_quarter": "Last quarter",
+    "waning_crescent": "Waning crescent"
   }
 }
