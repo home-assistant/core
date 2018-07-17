@@ -1,7 +1,7 @@
 """Classes to help gather user submissions."""
 import logging
 import uuid
-
+from typing import Dict, Any  # noqa pylint: disable=unused-import
 from .core import callback
 from .exceptions import HomeAssistantError
 
@@ -38,7 +38,7 @@ class FlowManager:
     def __init__(self, hass, async_create_flow, async_finish_flow):
         """Initialize the flow manager."""
         self.hass = hass
-        self._progress = {}
+        self._progress = {}  # type: Dict[str, Any]
         self._async_create_flow = async_create_flow
         self._async_finish_flow = async_finish_flow
 
