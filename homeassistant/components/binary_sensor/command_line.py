@@ -25,6 +25,9 @@ DEFAULT_PAYLOAD_OFF = 'OFF'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
+CONF_COMMAND_TIMEOUT = 'command_timeout'
+DEFAULT_TIMEOUT = 15
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -32,6 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(
+        CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 
@@ -43,9 +48,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     payload_on = config.get(CONF_PAYLOAD_ON)
     device_class = config.get(CONF_DEVICE_CLASS)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    command_timeout = config.get(CONF_COMMAND_TIMEOUT)
     if value_template is not None:
         value_template.hass = hass
-    data = CommandSensorData(hass, command)
+    data = CommandSensorData(hass, command, command_timeout)
 
     add_devices([CommandBinarySensor(
         hass, data, name, device_class, payload_on, payload_off,
