@@ -149,7 +149,7 @@ async def async_start_notify_view(hass, server_host, server_port, requester):
     view.event_handler = UpnpEventHandler(view.callback_url, requester)
 
     await server.start()
-    _LOGGER.debug('started notify server on: %s', base_url)
+    _LOGGER.info('UPNP/DLNA notify server listening on: %s', base_url)
     return view
 
 
