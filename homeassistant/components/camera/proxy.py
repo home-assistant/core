@@ -69,7 +69,7 @@ def _resize_image(image, opts):
 
     img = Image.open(io.BytesIO(image))
     imgfmt = str(img.format)
-    if imgfmt != 'PNG' and imgfmt != 'JPEG':
+    if imgfmt not in ('PNG', 'JPEG'):
         _LOGGER.debug("Image is of unsupported type: %s", imgfmt)
         return image
 
