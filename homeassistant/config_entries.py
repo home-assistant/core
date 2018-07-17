@@ -113,6 +113,7 @@ the flow from the config panel.
 
 import logging
 import uuid
+from typing import Set # noqa pylint: disable=unused-import
 
 from homeassistant import data_entry_flow
 from homeassistant.core import callback
@@ -279,7 +280,7 @@ class ConfigEntries:
     @callback
     def async_domains(self):
         """Return domains for which we have entries."""
-        seen = set()
+        seen = set()  # type: Set[ConfigEntry]
         result = []
 
         for entry in self._entries:
