@@ -4,7 +4,7 @@ from unittest.mock import patch, Mock
 from homeassistant.setup import async_setup_component
 from homeassistant.components import onboarding
 
-from tests.common import mock_coro
+from tests.common import mock_coro, MockUser
 
 from . import mock_storage
 
@@ -58,3 +58,20 @@ async def test_is_onboarded():
 
         hass.data[onboarding.DOMAIN] = False
         assert not onboarding.async_is_onboarded(hass)
+
+
+async def test_having_owner_finishes_user_step(hass, hass_storage):
+    """If owner user already exists, mark user step as complete."""
+    MockUser(is_owner=True).add_to_hass(hass)
+
+    with patch(
+        'homeassistant.components.onboarding.views.async_setup'
+    ) as mock_setup, patch.object(onboarding, 'STEPS', [onboarding.STEP_USER]):
+        assert await async_setup_component(hass, 'onboarding', {})
+
+    assert len(mock_setup.mock_calls) == 0
+    assert onboarding.DOMAIN not in hass.data
+    assert onboarding.async_is_onboarded(hass)
+
+    done = hass_storage[onboarding.STORAGE_KEY]['data']['done']
+    assert onboarding.STEP_USER in done
