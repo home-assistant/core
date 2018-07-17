@@ -59,6 +59,17 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         """Init climate device."""
         super().__init__(tuya)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
+        self.operations = []
+
+    async def async_added_to_hass(self):
+        """Create operation list when add to hass."""
+        super().async_added_to_hass()
+        modes = self.tuya.operation_list()
+        if modes is None:
+            return
+        for mode in modes:
+            if mode in TUYA_STATE_TO_HA:
+                self.operations.append(TUYA_STATE_TO_HA[mode])
 
     @property
     def is_on(self):
@@ -91,11 +102,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        modes = self.tuya.operation_list()
-        operation_list = []
-        for mode in modes:
-            operation_list.append(TUYA_STATE_TO_HA.get(mode))
-        return operation_list
+        return self.operations
 
     @property
     def current_temperature(self):
@@ -124,8 +131,8 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        self.tuya.set_temperature(temperature)
+        if ATTR_TEMPERATURE in kwargs:
+            self.tuya.set_temperature(kwargs[ATTR_TEMPERATURE])
 
     def set_fan_mode(self, fan_mode):
         """Set new target fan mode."""
