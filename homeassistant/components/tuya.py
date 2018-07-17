@@ -33,6 +33,7 @@ SERVICE_FORCE_UPDATE = 'force_update'
 SERVICE_PULL_DEVICES = 'pull_devices'
 
 TUYA_TYPE_TO_HA = {
+    'climate': 'climate',
     'light': 'light',
     'switch': 'switch',
 }
