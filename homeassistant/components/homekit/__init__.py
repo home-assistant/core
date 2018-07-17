@@ -168,7 +168,7 @@ def get_accessory(hass, driver, state, aid, config):
 def generate_aid(entity_id):
     """Generate accessory aid with zlib adler32."""
     aid = adler32(entity_id.encode('utf-8'))
-    if aid == 0 or aid == 1:
+    if aid in (0, 1):
         return None
     return aid
 
