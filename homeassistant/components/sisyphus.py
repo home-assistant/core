@@ -4,6 +4,7 @@ Support for controlling Sisyphus Kinetic Art Tables.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sisyphus/
 """
+import asyncio
 import logging
 
 import voluptuous as vol
@@ -13,10 +14,11 @@ from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['sisyphus-control==2.0.0']
+REQUIREMENTS = ['sisyphus-control==2.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,10 +44,11 @@ async def async_setup(hass, config):
     from sisyphus_control import Table
     tables = hass.data.setdefault(DATA_SISYPHUS, {})
     table_configs = config.get(DOMAIN)
+    session = async_get_clientsession(hass)
 
     async def add_table(host, name=None):
         """Add platforms for a single table with the given hostname."""
-        table = await Table.connect(host)
+        table = await Table.connect(host, session)
         if name is None:
             name = table.name
         tables[name] = table
@@ -64,16 +67,17 @@ async def async_setup(hass, config):
         ))
 
     if isinstance(table_configs, dict):  # AUTODETECT_SCHEMA
-        for ip_address in await Table.find_table_ips():
+        for ip_address in await Table.find_table_ips(session):
             await add_table(ip_address)
     else:  # TABLES_SCHEMA
         for conf in table_configs:
-            await add_table(conf.get(CONF_HOST), conf.get(CONF_NAME))
+            await add_table(conf[CONF_HOST], conf[CONF_NAME])
 
     async def close_tables(*args):
         """Close all table objects."""
-        for table in tables.values():
-            await table.close()
+        tasks = [table.close() for table in tables.values()]
+        if tasks:
+            await asyncio.wait(tasks)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, close_tables)
 

@@ -27,6 +27,16 @@ DEPENDENCIES = ['sisyphus']
 
 MEDIA_TYPE_TRACK = "sisyphus_track"
 
+SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE \
+    | SUPPORT_VOLUME_SET \
+    | SUPPORT_TURN_OFF \
+    | SUPPORT_TURN_ON \
+    | SUPPORT_PAUSE \
+    | SUPPORT_SHUFFLE_SET \
+    | SUPPORT_PREVIOUS_TRACK \
+    | SUPPORT_NEXT_TRACK \
+    | SUPPORT_PLAY
+
 
 # pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -52,18 +62,11 @@ class SisyphusPlayer(MediaPlayerDevice):
         self._name = name
         self._host = host
         self._table = table
-        self._initialized = False
 
-    def update(self):
-        """Lazily initializes the table."""
-        if not self._initialized:
-            # We wait until update before adding the listener because
-            # otherwise there's a race condition by which this entity
-            # might not have had its hass field set, and thus
-            # the schedule_update_ha_state call will fail
-            self._table.add_listener(
-                lambda: self.schedule_update_ha_state(False))
-            self._initialized = True
+    async def async_added_to_hass(self):
+        """Add listeners after this object has been initialized."""
+        self._table.add_listener(
+            lambda: self.async_schedule_update_ha_state(False))
 
     @property
     def name(self):
@@ -132,15 +135,7 @@ class SisyphusPlayer(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Return the features supported by this table."""
-        return SUPPORT_VOLUME_MUTE \
-            | SUPPORT_VOLUME_SET \
-            | SUPPORT_TURN_OFF \
-            | SUPPORT_TURN_ON \
-            | SUPPORT_PAUSE \
-            | SUPPORT_SHUFFLE_SET \
-            | SUPPORT_PREVIOUS_TRACK \
-            | SUPPORT_NEXT_TRACK \
-            | SUPPORT_PLAY
+        return SUPPORTED_FEATURES
 
     @property
     def media_image_url(self):

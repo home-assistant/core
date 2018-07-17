@@ -14,6 +14,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['sisyphus']
 
+SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up a single Sisyphus table."""
@@ -39,7 +41,7 @@ class SisyphusLight(Light):
     async def async_added_to_hass(self):
         """Add listeners after this object has been initialized."""
         self._table.add_listener(
-            lambda: self.schedule_update_ha_state(False))
+            lambda: self.async_schedule_update_ha_state(False))
 
     @property
     def name(self):
@@ -59,7 +61,7 @@ class SisyphusLight(Light):
     @property
     def supported_features(self):
         """Return the features supported by the table; i.e. brightness."""
-        return SUPPORT_BRIGHTNESS
+        return SUPPORTED_FEATURES
 
     async def async_turn_off(self, **kwargs):
         """Put the table to sleep."""
