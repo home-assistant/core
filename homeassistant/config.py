@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
-    CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS)
+    CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS, CONF_TYPE)
 from homeassistant.core import callback, DOMAIN as CONF_CORE
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
@@ -160,7 +160,12 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.IsDir()]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
     vol.Optional(CONF_AUTH_PROVIDERS):
-        vol.All(cv.ensure_list, [auth_providers.AUTH_PROVIDER_SCHEMA])
+        vol.All(cv.ensure_list,
+                [auth_providers.AUTH_PROVIDER_SCHEMA.extend({
+                    CONF_TYPE: vol.NotIn(['insecure_example'],
+                                         'The insecure_example auth provider'
+                                         ' is for testing only.')
+                })])
 })
 
 
