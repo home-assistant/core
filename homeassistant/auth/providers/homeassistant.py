@@ -150,6 +150,9 @@ class HassAuthProvider(AuthProvider):
 
     async def async_initialize(self):
         """Initialize the auth provider."""
+        if self.data is not None:
+            return
+
         self.data = Data(self.hass)
         await self.data.async_load()
 
