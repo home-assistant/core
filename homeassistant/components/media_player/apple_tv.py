@@ -100,15 +100,14 @@ class AppleTvDevice(MediaPlayerDevice):
         if self._playing:
             from pyatv import const
             state = self._playing.play_state
-            if state == const.PLAY_STATE_IDLE or \
-                    state == const.PLAY_STATE_NO_MEDIA or \
-                    state == const.PLAY_STATE_LOADING:
+            if state in (const.PLAY_STATE_IDLE, const.PLAY_STATE_NO_MEDIA,
+                         const.PLAY_STATE_LOADING):
                 return STATE_IDLE
             elif state == const.PLAY_STATE_PLAYING:
                 return STATE_PLAYING
-            elif state == const.PLAY_STATE_PAUSED or \
-                    state == const.PLAY_STATE_FAST_FORWARD or \
-                    state == const.PLAY_STATE_FAST_BACKWARD:
+            elif state in (const.PLAY_STATE_PAUSED,
+                           const.PLAY_STATE_FAST_FORWARD,
+                           const.PLAY_STATE_FAST_BACKWARD):
                 # Catch fast forward/backward here so "play" is default action
                 return STATE_PAUSED
             return STATE_STANDBY  # Bad or unknown state?
@@ -162,7 +161,7 @@ class AppleTvDevice(MediaPlayerDevice):
     def media_position_updated_at(self):
         """Last valid time of media position."""
         state = self.state
-        if state == STATE_PLAYING or state == STATE_PAUSED:
+        if state in (STATE_PLAYING, STATE_PAUSED):
             return dt_util.utcnow()
 
     @asyncio.coroutine

@@ -192,7 +192,7 @@ class QNAPStatsAPI(object):
             self.data["smart_drive_health"] = self._api.get_smart_disk_health()
             self.data["volumes"] = self._api.get_volumes()
             self.data["bandwidth"] = self._api.get_bandwidth()
-        except:  # noqa: E722  # pylint: disable=bare-except
+        except:  # noqa: E722 pylint: disable=bare-except
             _LOGGER.exception("Failed to fetch QNAP stats from the NAS")
 
 
