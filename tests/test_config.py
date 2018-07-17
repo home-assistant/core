@@ -7,7 +7,7 @@ import unittest.mock as mock
 from collections import OrderedDict
 
 import pytest
-from voluptuous import MultipleInvalid
+from voluptuous import MultipleInvalid, Invalid
 
 from homeassistant.core import DOMAIN, HomeAssistantError, Config
 import homeassistant.config as config_util
@@ -15,7 +15,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIT_SYSTEM, CONF_NAME,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
-    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
+    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT,
+    CONF_AUTH_PROVIDERS)
 from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.util.async_ import run_coroutine_threadsafe
@@ -790,3 +791,42 @@ def test_merge_customize(hass):
 
     assert hass.data[config_util.DATA_CUSTOMIZE].get('b.b') == \
         {'friendly_name': 'BB'}
+
+
+async def test_auth_provider_config(hass):
+    """Test loading auth provider config onto hass object."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_PROVIDERS: [
+            {'type': 'homeassistant'},
+            {'type': 'legacy_api_password'},
+        ]
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config)
+
+    assert len(hass.auth.auth_providers) == 2
+    assert hass.auth.active is True
+
+
+async def test_disallowed_auth_provider_config(hass):
+    """Test loading insecure example auth provider is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_PROVIDERS: [
+            {'type': 'insecure_example'},
+        ]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
