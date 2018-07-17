@@ -123,6 +123,7 @@ class GenericThermostat(ClimateDevice):
             self._enabled = True
         self._active = False
         self._cur_temp = None
+        self._temp_lock = asyncio.Lock()
         self._min_temp = min_temp
         self._max_temp = max_temp
         self._target_temp = target_temp
@@ -306,41 +307,42 @@ class GenericThermostat(ClimateDevice):
 
     async def _async_control_air_conditioner(self, time=None):
         """Check if we need to turn A/C on or off."""
-        if not self._active and None not in (self._cur_temp,
-                                             self._target_temp):
-            self._active = True
-            _LOGGER.info("Obtained current and target temperature. "
-                         "Generic thermostat active. %s, %s",
-                         self._cur_temp, self._target_temp)
+        async with self._temp_lock:
+            if not self._active and None not in (self._cur_temp,
+                                                self._target_temp):
+                self._active = True
+                _LOGGER.info("Obtained current and target temperature. "
+                            "Generic thermostat active. %s, %s",
+                            self._cur_temp, self._target_temp)
 
-        if not self._active or not self._enabled:
-            return
-
-        if self.min_cycle_duration:
-            if self._is_device_active:
-                current_state = STATE_ON
-            else:
-                current_state = STATE_OFF
-            long_enough = condition.state(
-                self.hass, self.ac_entity_id, current_state,
-                self.min_cycle_duration)
-            if not long_enough:
+            if not self._active or not self._enabled:
                 return
 
-        too_cold = self._target_temp - self._cur_temp >= self._cold_tolerance
-        too_hot = self._cur_temp - self._target_temp >= self._hot_tolerance
-        if self._is_device_active:
-            if (self.ac_mode and too_cold) or (not self.ac_mode and too_hot):
-                _LOGGER.info("Turning off AC %s", self.ac_entity_id)
-                await self._ac_turn_off()
-            elif time is not None:
-                await self._ac_turn_on()
-        else:
-            if (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
-                _LOGGER.info("Turning on AC %s", self.ac_entity_id)
-                await self._ac_turn_on()
-            elif time is not None:
-                await self._ac_turn_off()
+            if self.min_cycle_duration:
+                if self._is_device_active:
+                    current_state = STATE_ON
+                else:
+                    current_state = STATE_OFF
+                long_enough = condition.state(
+                    self.hass, self.ac_entity_id, current_state,
+                    self.min_cycle_duration)
+                if not long_enough:
+                    return
+
+            too_cold = self._target_temp - self._cur_temp >= self._cold_tolerance
+            too_hot = self._cur_temp - self._target_temp >= self._hot_tolerance
+            if self._is_device_active:
+                if (self.ac_mode and too_cold) or (not self.ac_mode and too_hot):
+                    _LOGGER.info("Turning off AC %s", self.ac_entity_id)
+                    await self._ac_turn_off()
+                elif time is not None:
+                    await self._ac_turn_on()
+            else:
+                if (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
+                    _LOGGER.info("Turning on AC %s", self.ac_entity_id)
+                    await self._ac_turn_on()
+                elif time is not None:
+                    await self._ac_turn_off()
 
     @property
     def _is_device_active(self):
