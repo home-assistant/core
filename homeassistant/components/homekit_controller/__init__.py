@@ -14,7 +14,7 @@ from homeassistant.components.discovery import SERVICE_HOMEKIT
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['homekit==0.6']
+REQUIREMENTS = ['homekit==0.10']
 
 DOMAIN = 'homekit_controller'
 HOMEKIT_DIR = '.homekit'
