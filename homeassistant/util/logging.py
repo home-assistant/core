@@ -29,7 +29,7 @@ class AsyncHandler(object):
         """Initialize async logging handler wrapper."""
         self.handler = handler
         self.loop = loop
-        self._queue = asyncio.Queue(loop=loop)
+        self._queue = asyncio.Queue(loop=loop)  # type: asyncio.Queue
         self._thread = threading.Thread(target=self._process)
 
         # Delegate from handler

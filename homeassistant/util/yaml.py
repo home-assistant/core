@@ -311,7 +311,7 @@ yaml.SafeLoader.add_constructor('!include_dir_merge_named',
 # pylint: disable=redefined-outer-name
 def represent_odict(dump, tag, mapping, flow_style=None):
     """Like BaseRepresenter.represent_mapping but does not issue the sort()."""
-    value = []
+    value = []  # type: list
     node = yaml.MappingNode(tag, value, flow_style=flow_style)
     if dump.alias_key is not None:
         dump.represented_objects[dump.alias_key] = node

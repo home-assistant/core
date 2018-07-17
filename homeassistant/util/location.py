@@ -49,12 +49,18 @@ def detect_location_info():
     return LocationInfo(**data)
 
 
-def distance(lat1, lon1, lat2, lon2):
+def distance(lat1: Optional[float], lon1: Optional[float],
+             lat2: float, lon2: float) -> Optional[float]:
     """Calculate the distance in meters between two points.
 
     Async friendly.
     """
-    return vincenty((lat1, lon1), (lat2, lon2)) * 1000
+    if lat1 is None or lon1 is None:
+        return None
+    result = vincenty((lat1, lon1), (lat2, lon2))
+    if result is None:
+        return None
+    return result * 1000
 
 
 def elevation(latitude, longitude):
