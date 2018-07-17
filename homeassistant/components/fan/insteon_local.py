@@ -94,10 +94,7 @@ class InsteonLocalFanDevice(FanEntity):
     def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn device on."""
         if speed is None:
-            if ATTR_SPEED in kwargs:
-                speed = kwargs[ATTR_SPEED]
-            else:
-                speed = SPEED_MEDIUM
+            speed = kwargs.get(ATTR_SPEED, SPEED_MEDIUM)
 
         self.set_speed(speed)
 
