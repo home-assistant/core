@@ -22,6 +22,8 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_HEADER_X_REQUESTED_WITH)
 import homeassistant.helpers.config_validation as cv
 
+REQUIREMENTS = ['tplink==0.2.1']
+
 _LOGGER = logging.getLogger(__name__)
 
 HTTP_HEADER_NO_CACHE = 'no-cache'
@@ -34,10 +36,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def get_scanner(hass, config):
-    """Validate the configuration and return a TP-Link scanner."""
-    for cls in [Tplink5DeviceScanner, Tplink4DeviceScanner,
-                Tplink3DeviceScanner, Tplink2DeviceScanner,
-                TplinkDeviceScanner]:
+    """
+    Validate the configuration and return a TP-Link scanner.
+
+    The default way of integrating devices is to use a pypi
+
+    package, The TplinkDeviceScanner has been refactored
+
+    to depend on a pypi package, the other implementations
+
+    should be gradually migrated in the pypi package
+
+    """
+    for cls in [
+            TplinkDeviceScanner, Tplink5DeviceScanner, Tplink4DeviceScanner,
+            Tplink3DeviceScanner, Tplink2DeviceScanner, Tplink1DeviceScanner
+    ]:
         scanner = cls(config[DOMAIN])
         if scanner.success_init:
             return scanner
@@ -46,6 +60,46 @@ def get_scanner(hass, config):
 
 
 class TplinkDeviceScanner(DeviceScanner):
+    """Queries the router for connected devices."""
+
+    def __init__(self, config):
+        """Initialize the scanner."""
+        from tplink.tplink import TpLinkClient
+        host = config[CONF_HOST]
+        password = config[CONF_PASSWORD]
+        username = config[CONF_USERNAME]
+
+        self.tplink_client = TpLinkClient(
+            password, host=host, username=username)
+
+        self.last_results = {}
+        self.success_init = self._update_info()
+
+    def scan_devices(self):
+        """Scan for new devices and return a list with found device IDs."""
+        self._update_info()
+        return self.last_results.keys()
+
+    def get_device_name(self, device):
+        """Get the name of the device."""
+        return self.last_results.get(device)
+
+    def _update_info(self):
+        """Ensure the information from the TP-Link router is up to date.
+
+        Return boolean if scanning successful.
+        """
+        _LOGGER.info("Loading wireless clients...")
+        result = self.tplink_client.get_connected_devices()
+
+        if result:
+            self.last_results = result
+            return True
+
+        return False
+
+
+class Tplink1DeviceScanner(DeviceScanner):
     """This class queries a wireless router running TP-Link firmware."""
 
     def __init__(self, config):
@@ -94,7 +148,7 @@ class TplinkDeviceScanner(DeviceScanner):
         return False
 
 
-class Tplink2DeviceScanner(TplinkDeviceScanner):
+class Tplink2DeviceScanner(Tplink1DeviceScanner):
     """This class queries a router with newer version of TP-Link firmware."""
 
     def scan_devices(self):
@@ -147,7 +201,7 @@ class Tplink2DeviceScanner(TplinkDeviceScanner):
         return False
 
 
-class Tplink3DeviceScanner(TplinkDeviceScanner):
+class Tplink3DeviceScanner(Tplink1DeviceScanner):
     """This class queries the Archer C9 router with version 150811 or high."""
 
     def __init__(self, config):
@@ -256,7 +310,7 @@ class Tplink3DeviceScanner(TplinkDeviceScanner):
         self.sysauth = ''
 
 
-class Tplink4DeviceScanner(TplinkDeviceScanner):
+class Tplink4DeviceScanner(Tplink1DeviceScanner):
     """This class queries an Archer C7 router with TP-Link firmware 150427."""
 
     def __init__(self, config):
@@ -337,7 +391,7 @@ class Tplink4DeviceScanner(TplinkDeviceScanner):
         return True
 
 
-class Tplink5DeviceScanner(TplinkDeviceScanner):
+class Tplink5DeviceScanner(Tplink1DeviceScanner):
     """This class queries a TP-Link EAP-225 AP with newer TP-Link FW."""
 
     def scan_devices(self):
