@@ -124,7 +124,6 @@ def async_setup(hass, config):
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
-    mode_conf = {}
     overrides = conf.get(CONF_OVERRIDE, [])
     x10_devices = conf.get(CONF_X10, [])
     x10_all_units_off_housecode = conf.get(CONF_X10_ALL_UNITS_OFF)
@@ -138,7 +137,7 @@ def async_setup(hass, config):
             platform_info = ipdb[device.states[state_key]]
             if platform_info and platform_info.platform:
                 platform = platform_info.platform
-                
+
                 if platform == 'on_off_events':
                     device.states[state_key].register_updates(
                         _fire_button_on_off_event)
