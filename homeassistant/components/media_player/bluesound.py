@@ -333,10 +333,10 @@ class BluesoundPlayer(MediaPlayerDevice):
 
             if response.status == 200:
                 result = await response.text()
-                if len(result) < 1:
-                    data = None
-                else:
+                if result:
                     data = xmltodict.parse(result)
+                else:
+                    data = None
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
                 raise BluesoundPlayer._TimeoutException()
@@ -640,7 +640,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         volume = self.volume_level
         if not volume:
             return None
-        return volume < 0.001 and volume >= 0
+        return 0 <= volume < 0.001
 
     @property
     def name(self):
@@ -847,12 +847,12 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         items = [x for x in self._preset_items if x['title'] == source]
 
-        if len(items) < 1:
+        if not items:
             items = [x for x in self._services_items if x['title'] == source]
-        if len(items) < 1:
+        if not items:
             items = [x for x in self._capture_items if x['title'] == source]
 
-        if len(items) < 1:
+        if not items:
             return
 
         selected_source = items[0]
