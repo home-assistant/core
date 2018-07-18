@@ -87,7 +87,7 @@ input_text.buttons_ais_remote:
       color: silver
     - entity: script.ais_button_click
       data:
-        code: '{"KeyCode":23, "Action": 1}'
+        code: '{"KeyCode":23, "Action": 0}'
       label: OK
       row: 3
       column: 2
@@ -349,10 +349,16 @@ group.audiobooks_player:
   context_suffix: Książka
   remote_group_view: Audio
   order: 5
+group.local_audio:
+  context_key_words: lokalne pliki
+  context_answer: OK, wybierz pilotem plik
+  context_suffix: Plik
+  remote_group_view: Audio
+  order: 6
 group.audio_player:
   context_key_words: odtwarzacz, odtwarzacze
   context_answer: OK, wybrano odtwarzacz.
-  order: 6
+  order: 7
   remote_group_view: Audio
 group.internet_status:
   context_key_words: internet,sieć,ustawienia sieci,wifi

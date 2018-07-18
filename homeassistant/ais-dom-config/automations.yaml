@@ -318,3 +318,17 @@
       data_template:
         key: "setPlaybackSpeed"
         val: "{{ states('input_number.media_player_speed') }}"
+
+- id: '201807181643234'
+  alias: 'Select Local Folder'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.folder_name
+  condition:
+    condition: template
+    value_template: "{{ states.input_select.folder_name.state != '-' }}"
+  action:
+    - service: ais_local_audio_service.browse_path
+      data_template:
+        path: "{{ states('input_select.folder_name') }}"

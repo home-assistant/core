@@ -1,0 +1,7 @@
+# Describes the format for available AIS local audio services
+browse_path:
+  description: Listowanie zawartości (foldery i pliki) wskazanej ścieżki na dysku
+  fields:
+    path:
+      description: Śeieżka
+      example: '/sdcard/dom/Muzyka/Zalewski/Zelig'

@@ -100,7 +100,7 @@ class GMusicData:
             return False
         else:
             _LOGGER.info("OK - we are in Gmusic")
-            _LOGGER.error(
+            _LOGGER.info(
                 "devices: " + str(
                     G_GM_MOBILE_CLIENT_API.get_registered_devices()))
 

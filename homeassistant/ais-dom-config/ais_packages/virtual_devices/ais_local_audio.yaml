@@ -1,0 +1,19 @@
+input_select:
+  folder_name:
+    name: Przeglądaj
+    options:
+     - "-"
+    icon: mdi:folder-search
+    #icon: mdi:folder-google-drive
+  file_player:
+    name: 'Głośnik:'
+    options:
+     - Podłączony głośnik
+    icon: mdi:speaker-wireless
+# OPTIONAL
+group:
+  local_audio:
+    name: Lokalne zasoby
+    entities:
+    - input_select.folder_name
+    - input_select.file_player

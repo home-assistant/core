@@ -48,6 +48,7 @@ group:
       - group.music_player
       - group.audiobooks_player
       - group.audio_player
+      - group.local_audio
   settings:
     name: Ustawienia
     view: yes

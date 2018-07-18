@@ -23,7 +23,7 @@ input_select:
 # OPTIONAL
 group:
   audiobooks_player:
-    name: Audio Książki
+    name: Audio Książki Online
     entities:
     - input_select.book_autor
     - input_select.book_name

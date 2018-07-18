@@ -10,6 +10,7 @@ import json
 import voluptuous as vol
 import datetime
 import requests
+import os
 from homeassistant import core
 from homeassistant.loader import bind_hass
 from homeassistant.const import (
@@ -470,6 +471,8 @@ def commit_current_position(hass):
 
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0], None)
+    elif CURR_ENTITIE == "input_select.folder_name":
+        _say_it(hass, "wybrano")
     else:
         _say_it(hass, "ok", None)
 
@@ -490,7 +493,10 @@ def set_next_position(hass):
             CURR_ENTITIE_POSITION = get_next(
                 arr,
                 CURR_ENTITIE_POSITION)
-            _say_it(hass, CURR_ENTITIE_POSITION, None)
+            if CURR_ENTITIE == "input_select.folder_name":
+                _say_it(hass, os.path.basename(CURR_ENTITIE_POSITION), None)
+            else:
+                _say_it(hass, CURR_ENTITIE_POSITION, None)
     elif CURR_ENTITIE.startswith('input_number.'):
         _max = float(state.attributes.get('max'))
         _step = float(state.attributes.get('step'))
@@ -514,7 +520,10 @@ def set_prev_position(hass):
             CURR_ENTITIE_POSITION = get_prev(
                 arr,
                 CURR_ENTITIE_POSITION)
-            _say_it(hass, CURR_ENTITIE_POSITION, None)
+            if CURR_ENTITIE == "input_select.folder_name":
+                _say_it(hass, os.path.basename(CURR_ENTITIE_POSITION), None)
+            else:
+                _say_it(hass, CURR_ENTITIE_POSITION, None)
     elif CURR_ENTITIE.startswith('input_number.'):
         _min = float(state.attributes.get('min'))
         _step = float(state.attributes.get('step'))
@@ -1236,6 +1245,7 @@ def _process_command_from_frame(hass, service):
 def _post_message(message, host):
     """Post the message to TTS service."""
     try:
+        message = message.replace("°C", "stopni Celsjusza")
         url = G_HTTP_REST_SERVICE_BASE_URL.format(host)
         requests.post(
             url + '/text_to_speech',
