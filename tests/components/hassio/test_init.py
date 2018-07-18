@@ -17,6 +17,7 @@ MOCK_ENVIRON = {
     'HASSIO_TOKEN': 'abcdefgh',
 }
 
+
 @pytest.fixture(autouse=True)
 def mock_all(aioclient_mock):
     """Mock all setup requests."""
@@ -29,6 +30,7 @@ def mock_all(aioclient_mock):
     aioclient_mock.get(
         "http://127.0.0.1/homeassistant/info", json={
             'result': 'ok', 'data': {'last_version': '10.0'}})
+
 
 @asyncio.coroutine
 def test_setup_api_ping(hass, aioclient_mock):
