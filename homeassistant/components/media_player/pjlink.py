@@ -36,8 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SUPPORT_PJLINK = SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
-KNOWN_HOSTS = []
-
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the PJLink platform."""
@@ -46,14 +44,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     encoding = config.get(CONF_ENCODING)
     password = config.get(CONF_PASSWORD)
-    devices = []
 
-    if CONF_HOST in config and host not in KNOWN_HOSTS:
-        device = PjLinkDevice(host, port, name, encoding, password)
-        KNOWN_HOSTS.append("%s:%s" % (host, port))
-        devices.append(device)
+    if 'pjlink' not in hass.data:
+        hass.data['pjlink'] = {}
+    hass_data = hass.data['pjlink']
 
-    add_devices(devices)
+    device_label = "{}:{}".format(host, port)
+    if device_label in hass_data:
+        return
+
+    device = PjLinkDevice(host, port, name, encoding, password)
+    hass_data[device_label] = device
+    add_devices([device], True)
 
 
 class PjLinkDevice(MediaPlayerDevice):
@@ -64,6 +66,7 @@ class PjLinkDevice(MediaPlayerDevice):
         self._host = host
         self._port = port
         self._name = name
+        self._password = password
         self._encoding = encoding
         self._muted = False
         self._pwstate = STATE_OFF
@@ -72,17 +75,20 @@ class PjLinkDevice(MediaPlayerDevice):
             if not self._name:
                 self._name = projector.get_name()
             inputs = projector.get_inputs()
-        self._source_name_mapping = dict([("%s %s" % x, x) for x in inputs])
+        self._source_name_mapping = {self.format_input_source(*x): x for x in inputs}
         self._source_list = sorted(self._source_name_mapping.keys())
-        self.update()
 
     def projector(self):
         """Create PJLink Projector instance."""
         from pypjlink import Projector
         projector = Projector.from_address(self._host, self._port,
                                            self._encoding)
-        projector.authenticate()
+        projector.authenticate(self._password)
         return projector
+
+    def format_input_source(self, input_source_name, input_source_number):
+        """Format input source for display in UI"""
+        return "{} {}".format(input_source_name, input_source_number).title()
 
     def update(self):
         """Get the latest state from the device."""
@@ -93,7 +99,7 @@ class PjLinkDevice(MediaPlayerDevice):
             else:
                 self._pwstate = STATE_ON
             self._muted = projector.get_mute()[1]
-            self._current_source = "%s %s" % projector.get_input()
+            self._current_source = self.format_input_source(*projector.get_input())
 
     @property
     def name(self):
