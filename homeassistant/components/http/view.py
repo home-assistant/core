@@ -71,17 +71,11 @@ class HomeAssistantView(object):
                 routes.append(router.add_route(method, url, handler))
 
         if not self.cors_allowed:
-            return False
+            return
 
         methods = [meth.upper() for meth in ('get', 'post', 'delete', 'put')]
         for route in routes:
             app['allow_cors'](route, methods)
-
-        # aiohttp_cors does not work with class based views
-        # self.app.router.add_route('*', self.url, self, name=self.name)
-
-        # for url in self.extra_urls:
-        #     self.app.router.add_route('*', url, self)
 
 
 def request_handler_factory(view, handler):
