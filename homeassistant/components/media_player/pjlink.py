@@ -58,6 +58,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([device], True)
 
 
+def format_input_source(input_source_name, input_source_number):
+    """Format input source for display in UI."""
+    return "{}_{}".format(
+        input_source_name.lower().replace(' ', '_'),
+        input_source_number)
+
+
 class PjLinkDevice(MediaPlayerDevice):
     """Representation of a PJLink device."""
 
@@ -76,7 +83,7 @@ class PjLinkDevice(MediaPlayerDevice):
                 self._name = projector.get_name()
             inputs = projector.get_inputs()
         self._source_name_mapping = \
-            {self.format_input_source(*x): x for x in inputs}
+            {format_input_source(*x): x for x in inputs}
         self._source_list = sorted(self._source_name_mapping.keys())
 
     def projector(self):
@@ -86,12 +93,6 @@ class PjLinkDevice(MediaPlayerDevice):
                                            self._encoding)
         projector.authenticate(self._password)
         return projector
-
-    def format_input_source(self, input_source_name, input_source_number):
-        """Format input source for display in UI."""
-        return "{}_{}".format(
-            input_source_name.lower().replace(' ', '_'),
-            input_source_number)
 
     def update(self):
         """Get the latest state from the device."""
@@ -103,7 +104,7 @@ class PjLinkDevice(MediaPlayerDevice):
                 self._pwstate = STATE_ON
             self._muted = projector.get_mute()[1]
             self._current_source = \
-                self.format_input_source(*projector.get_input())
+                format_input_source(*projector.get_input())
 
     @property
     def name(self):
