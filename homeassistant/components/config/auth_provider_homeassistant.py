@@ -23,7 +23,6 @@ SCHEMA_WS_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 WS_TYPE_CHANGE_PASSWORD = 'config/auth_provider/homeassistant/change_password'
 SCHEMA_WS_CHANGE_PASSWORD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_CHANGE_PASSWORD,
-    vol.Required('current_password'): str,
     vol.Required('new_password'): str
 })
 
@@ -136,34 +135,28 @@ def websocket_change_password(hass, connection, msg):
     """Change user password."""
     async def change_password():
         """Change user password."""
-        provider = _get_provider(hass)
-        await provider.async_initialize()
-
         user = connection.request.get('hass_user')
         if user is None:
             connection.send_message_outside(websocket_api.error_message(
                 msg['id'], 'user_not_found', 'User not found'))
             return
 
+        provider = _get_provider(hass)
+        await provider.async_initialize()
+
         username = None
         for credential in user.credentials:
             if credential.auth_provider_type == provider.type:
                 username = credential.data['username']
+                break
 
         if username is None:
             connection.send_message_outside(websocket_api.error_message(
                 msg['id'], 'credentials_not_found', 'Credentials not found'))
             return
 
-        try:
-            await provider.async_validate_login(
-                username, msg['current_password'])
-        except auth_ha.InvalidAuth:
-            connection.send_message_outside(websocket_api.error_message(
-                msg['id'], 'invalid_password', 'Invalid password'))
-            return
-
-        await provider.async_change_password(username, msg['new_password'])
+        await hass.async_add_executor_job(
+            provider.data.change_password, username, msg['new_password'])
         await provider.data.async_save()
 
         connection.to_write.put_nowait(
