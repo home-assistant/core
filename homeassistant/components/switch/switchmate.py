@@ -1,4 +1,8 @@
-"""Support for Switchmate"""
+"""Support for Switchmate
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/switch.switchmate/
+"""
 import logging
 from datetime import timedelta
 
@@ -20,11 +24,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FRIENDLY_NAME, default=DEFAULT_NAME): cv.string,
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None) -> None:
     """Perform the setup for Xiaomi devices."""
     friendly_name = config.get(CONF_FRIENDLY_NAME)
     mac_addr = config.get(CONF_MAC)
     add_devices([Switchmate(mac_addr, friendly_name)], True)
+
 
 class Switchmate(SwitchDevice):
     """Representation of a Switchmate."""
