@@ -1,4 +1,5 @@
-"""Support for Switchmate
+"""
+Support for Switchmate.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.switchmate/
@@ -14,10 +15,12 @@ from homeassistant.const import CONF_FRIENDLY_NAME, CONF_MAC
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import Throttle
 
+REQUIREMENTS = ['bluepy==1.1.4']
+
 _LOGGER = logging.getLogger(__name__)
+
 DEFAULT_NAME = 'Switchmate'
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=30)
-REQUIREMENTS = ['bluepy==1.1.4']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC): cv.string,
@@ -37,14 +40,16 @@ class Switchmate(SwitchDevice):
 
     def __init__(self, mac, friendly_name) -> None:
         """Initialize the Switchmate."""
+        # pylint: disable=import-error
         import bluepy
         self._state = False
         self._friendly_name = friendly_name
         self._handle = 0x2e
         self._mac = mac
         try:
-            self._device = bluepy.btle.Peripheral(self._mac, bluepy.btle.ADDR_TYPE_RANDOM)
-        except bluepy.btle.BTLEException as ex:
+            self._device = bluepy.btle.Peripheral(self._mac,
+                                                  bluepy.btle.ADDR_TYPE_RANDOM)
+        except bluepy.btle.BTLEException:
             _LOGGER.error("Failed to setup switchmate", exc_info=True)
             raise PlatformNotReady()
 
