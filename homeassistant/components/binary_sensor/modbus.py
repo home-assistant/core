@@ -7,7 +7,7 @@ https://home-assistant.io/components/binary_sensor.modbus/
 import logging
 import voluptuous as vol
 
-import homeassistant.components.modbus as modbus
+from homeassistant.components import modbus
 from homeassistant.const import CONF_NAME, CONF_SLAVE
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers import config_validation as cv

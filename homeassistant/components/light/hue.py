@@ -11,7 +11,7 @@ import random
 
 import async_timeout
 
-import homeassistant.components.hue as hue
+from homeassistant.components import hue
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
     ATTR_TRANSITION, ATTR_HS_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,

@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.modbus/
 import logging
 import voluptuous as vol
 
-import homeassistant.components.modbus as modbus
+from homeassistant.components import modbus
 from homeassistant.const import (
     CONF_NAME, CONF_SLAVE, CONF_COMMAND_ON, CONF_COMMAND_OFF)
 from homeassistant.helpers.entity import ToggleEntity
