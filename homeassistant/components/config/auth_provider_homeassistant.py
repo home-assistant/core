@@ -23,6 +23,7 @@ SCHEMA_WS_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 WS_TYPE_CHANGE_PASSWORD = 'config/auth_provider/homeassistant/change_password'
 SCHEMA_WS_CHANGE_PASSWORD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_CHANGE_PASSWORD,
+    vol.Required('current_password'): str,
     vol.Required('new_password'): str
 })
 
@@ -153,6 +154,14 @@ def websocket_change_password(hass, connection, msg):
         if username is None:
             connection.send_message_outside(websocket_api.error_message(
                 msg['id'], 'credentials_not_found', 'Credentials not found'))
+            return
+
+        try:
+            await provider.async_validate_login(
+                username, msg['current_password'])
+        except auth_ha.InvalidAuth:
+            connection.send_message_outside(websocket_api.error_message(
+                msg['id'], 'invalid_password', 'Invalid password'))
             return
 
         await hass.async_add_executor_job(
