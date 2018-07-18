@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.4.1']
+REQUIREMENTS = ['netdisco==1.5.0']
 
 DOMAIN = 'discovery'
 
@@ -46,7 +46,9 @@ SERVICE_HOMEKIT = 'homekit'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
+    'google_cast': 'cast',
     SERVICE_HUE: 'hue',
+    'sonos': 'sonos',
 }
 
 SERVICE_HANDLERS = {
@@ -64,11 +66,9 @@ SERVICE_HANDLERS = {
     SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     SERVICE_KONNECTED: ('konnected', None),
-    'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
     'roku': ('media_player', 'roku'),
-    'sonos': ('media_player', 'sonos'),
     'yamaha': ('media_player', 'yamaha'),
     'logitech_mediaserver': ('media_player', 'squeezebox'),
     'directv': ('media_player', 'directv'),
@@ -83,6 +83,8 @@ SERVICE_HANDLERS = {
     'songpal': ('media_player', 'songpal'),
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
+    'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
+    'freebox': ('device_tracker', 'freebox'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {

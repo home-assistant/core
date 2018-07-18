@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Anbieter"
+                },
+                "description": "W\u00e4hlen Sie, \u00fcber welchen Authentifizierungsanbieter Sie sich bei Nest authentifizieren m\u00f6chten.",
+                "title": "Authentifizierungsanbieter"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN Code"
+                },
+                "description": "[Autorisieren Sie ihr Konto] ( {url} ), um ihren Nest-Account zu verkn\u00fcpfen.\n\n F\u00fcgen Sie anschlie\u00dfend den erhaltenen PIN Code hier ein.",
+                "title": "Nest-Konto verkn\u00fcpfen"
+            }
+        },
+        "title": ""
+    }
+}

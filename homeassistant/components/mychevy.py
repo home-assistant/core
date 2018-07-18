@@ -16,7 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ["mychevy==0.1.1"]
+REQUIREMENTS = ["mychevy==0.4.0"]
 
 DOMAIN = 'mychevy'
 UPDATE_TOPIC = DOMAIN
@@ -73,9 +73,6 @@ def setup(hass, base_config):
     hass.data[DOMAIN] = MyChevyHub(mc.MyChevy(email, password), hass)
     hass.data[DOMAIN].start()
 
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
-    discovery.load_platform(hass, 'binary_sensor', DOMAIN, {}, config)
-
     return True
 
 
@@ -98,8 +95,9 @@ class MyChevyHub(threading.Thread):
         super().__init__()
         self._client = client
         self.hass = hass
-        self.car = None
+        self.cars = []
         self.status = None
+        self.ready = False
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -109,7 +107,22 @@ class MyChevyHub(threading.Thread):
         (like 2 to 3 minutes long time)
 
         """
-        self.car = self._client.data()
+        self._client.login()
+        self._client.get_cars()
+        self.cars = self._client.cars
+        if self.ready is not True:
+            discovery.load_platform(self.hass, 'sensor', DOMAIN, {}, {})
+            discovery.load_platform(self.hass, 'binary_sensor', DOMAIN, {}, {})
+            self.ready = True
+        self.cars = self._client.update_cars()
+
+    def get_car(self, vid):
+        """Compatibility to work with one car."""
+        if self.cars:
+            for car in self.cars:
+                if car.vid == vid:
+                    return car
+        return None
 
     def run(self):
         """Thread run loop."""

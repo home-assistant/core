@@ -4,7 +4,6 @@ Support for transport.opendata.ch.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.swiss_public_transport/
 """
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -17,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['python_opendata_transport==0.0.3']
+REQUIREMENTS = ['python_opendata_transport==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,8 +47,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up the Swiss public transport sensor."""
     from opendata_transport import OpendataTransport, exceptions
 
@@ -61,7 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     opendata = OpendataTransport(start, destination, hass.loop, session)
 
     try:
-        yield from opendata.async_get_data()
+        await opendata.async_get_data()
     except exceptions.OpendataTransportError:
         _LOGGER.error(
             "Check at http://transport.opendata.ch/examples/stationboard.html "
@@ -122,12 +121,11 @@ class SwissPublicTransportSensor(Entity):
         """Icon to use in the frontend, if any."""
         return ICON
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from opendata.ch and update the states."""
         from opendata_transport.exceptions import OpendataTransportError
 
         try:
-            yield from self._opendata.async_get_data()
+            await self._opendata.async_get_data()
         except OpendataTransportError:
             _LOGGER.error("Unable to retrieve data from transport.opendata.ch")

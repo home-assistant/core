@@ -12,7 +12,7 @@ from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-mystrom==0.4.2']
+REQUIREMENTS = ['python-mystrom==0.4.4']
 
 DEFAULT_NAME = 'myStrom Switch'
 
@@ -34,8 +34,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         MyStromPlug(host).get_status()
     except exceptions.MyStromConnectionError:
-        _LOGGER.error("No route to device '%s'", host)
-        return False
+        _LOGGER.error("No route to device: %s", host)
+        return
 
     add_devices([MyStromSwitch(name, host)])
 
@@ -74,8 +74,7 @@ class MyStromSwitch(SwitchDevice):
         try:
             self.plug.set_relay_on()
         except exceptions.MyStromConnectionError:
-            _LOGGER.error("No route to device '%s'. Is device offline?",
-                          self._resource)
+            _LOGGER.error("No route to device: %s", self._resource)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
@@ -83,8 +82,7 @@ class MyStromSwitch(SwitchDevice):
         try:
             self.plug.set_relay_off()
         except exceptions.MyStromConnectionError:
-            _LOGGER.error("No route to device '%s'. Is device offline?",
-                          self._resource)
+            _LOGGER.error("No route to device: %s", self._resource)
 
     def update(self):
         """Get the latest data from the device and update the data."""
@@ -93,5 +91,4 @@ class MyStromSwitch(SwitchDevice):
             self.data = self.plug.get_status()
         except exceptions.MyStromConnectionError:
             self.data = {'power': 0, 'relay': False}
-            _LOGGER.error("No route to device '%s'. Is device offline?",
-                          self._resource)
+            _LOGGER.error("No route to device: %s", self._resource)

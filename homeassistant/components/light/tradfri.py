@@ -19,12 +19,16 @@ import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_DIMMER = 'dimmer'
+ATTR_HUE = 'hue'
+ATTR_SAT = 'saturation'
 ATTR_TRANSITION_TIME = 'transition_time'
 DEPENDENCIES = ['tradfri']
 PLATFORM_SCHEMA = LIGHT_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
 TRADFRI_LIGHT_MANAGER = 'Tradfri Light Manager'
-SUPPORTED_FEATURES = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
+SUPPORTED_FEATURES = SUPPORT_TRANSITION
+SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
 
 async def async_setup_platform(hass, config,
@@ -79,7 +83,7 @@ class TradfriGroup(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORTED_FEATURES
+        return SUPPORTED_GROUP_FEATURES
 
     @property
     def name(self):
@@ -225,75 +229,97 @@ class TradfriLight(Light):
         """HS color of the light."""
         if self._light_control.can_set_color:
             hsbxy = self._light_data.hsb_xy_color
-            hue = hsbxy[0] / (65535 / 360)
-            sat = hsbxy[1] / (65279 / 100)
+            hue = hsbxy[0] / (self._light_control.max_hue / 360)
+            sat = hsbxy[1] / (self._light_control.max_saturation / 100)
             if hue is not None and sat is not None:
                 return hue, sat
 
     async def async_turn_off(self, **kwargs):
         """Instruct the light to turn off."""
-        await self._api(self._light_control.set_state(False))
-
-    async def async_turn_on(self, **kwargs):
-        """Instruct the light to turn on."""
-        params = {}
+        # This allows transitioning to off, but resets the brightness
+        # to 1 for the next set_state(True) command
         transition_time = None
         if ATTR_TRANSITION in kwargs:
             transition_time = int(kwargs[ATTR_TRANSITION]) * 10
 
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
+            dimmer_data = {ATTR_DIMMER: 0, ATTR_TRANSITION_TIME:
+                           transition_time}
+            await self._api(self._light_control.set_dimmer(**dimmer_data))
+        else:
+            await self._api(self._light_control.set_state(False))
 
-        if brightness is not None:
+    async def async_turn_on(self, **kwargs):
+        """Instruct the light to turn on."""
+        transition_time = None
+        if ATTR_TRANSITION in kwargs:
+            transition_time = int(kwargs[ATTR_TRANSITION]) * 10
+
+        dimmer_command = None
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs[ATTR_BRIGHTNESS]
             if brightness > 254:
                 brightness = 254
             elif brightness < 0:
                 brightness = 0
+            dimmer_data = {ATTR_DIMMER: brightness, ATTR_TRANSITION_TIME:
+                           transition_time}
+            dimmer_command = self._light_control.set_dimmer(**dimmer_data)
+            transition_time = None
+        else:
+            dimmer_command = self._light_control.set_state(True)
 
+        color_command = None
         if ATTR_HS_COLOR in kwargs and self._light_control.can_set_color:
-            params[ATTR_BRIGHTNESS] = brightness
-            hue = int(kwargs[ATTR_HS_COLOR][0] * (65535 / 360))
-            sat = int(kwargs[ATTR_HS_COLOR][1] * (65279 / 100))
-            if brightness is None:
-                params[ATTR_TRANSITION_TIME] = transition_time
-            await self._api(
-                self._light_control.set_hsb(hue, sat, **params))
-            return
+            hue = int(kwargs[ATTR_HS_COLOR][0] *
+                      (self._light_control.max_hue / 360))
+            sat = int(kwargs[ATTR_HS_COLOR][1] *
+                      (self._light_control.max_saturation / 100))
+            color_data = {ATTR_HUE: hue, ATTR_SAT: sat, ATTR_TRANSITION_TIME:
+                          transition_time}
+            color_command = self._light_control.set_hsb(**color_data)
+            transition_time = None
 
+        temp_command = None
         if ATTR_COLOR_TEMP in kwargs and (self._light_control.can_set_temp or
                                           self._light_control.can_set_color):
             temp = kwargs[ATTR_COLOR_TEMP]
-            if temp > self.max_mireds:
-                temp = self.max_mireds
-            elif temp < self.min_mireds:
-                temp = self.min_mireds
-
-            if brightness is None:
-                params[ATTR_TRANSITION_TIME] = transition_time
             # White Spectrum bulb
-            if (self._light_control.can_set_temp and
-                    not self._light_control.can_set_color):
-                await self._api(
-                    self._light_control.set_color_temp(temp, **params))
+            if self._light_control.can_set_temp:
+                if temp > self.max_mireds:
+                    temp = self.max_mireds
+                elif temp < self.min_mireds:
+                    temp = self.min_mireds
+                temp_data = {ATTR_COLOR_TEMP: temp, ATTR_TRANSITION_TIME:
+                             transition_time}
+                temp_command = self._light_control.set_color_temp(**temp_data)
+                transition_time = None
             # Color bulb (CWS)
             # color_temp needs to be set with hue/saturation
-            if self._light_control.can_set_color:
-                params[ATTR_BRIGHTNESS] = brightness
+            elif self._light_control.can_set_color:
                 temp_k = color_util.color_temperature_mired_to_kelvin(temp)
                 hs_color = color_util.color_temperature_to_hs(temp_k)
-                hue = int(hs_color[0] * (65535 / 360))
-                sat = int(hs_color[1] * (65279 / 100))
-                await self._api(
-                    self._light_control.set_hsb(hue, sat,
-                                                **params))
+                hue = int(hs_color[0] * (self._light_control.max_hue / 360))
+                sat = int(hs_color[1] *
+                          (self._light_control.max_saturation / 100))
+                color_data = {ATTR_HUE: hue, ATTR_SAT: sat,
+                              ATTR_TRANSITION_TIME: transition_time}
+                color_command = self._light_control.set_hsb(**color_data)
+                transition_time = None
 
-        if brightness is not None:
-            params[ATTR_TRANSITION_TIME] = transition_time
-            await self._api(
-                self._light_control.set_dimmer(brightness,
-                                               **params))
+        # HSB can always be set, but color temp + brightness is bulb dependant
+        command = dimmer_command
+        if command is not None:
+            command += color_command
         else:
-            await self._api(
-                self._light_control.set_state(True))
+            command = color_command
+
+        if self._light_control.can_combine_commands:
+            await self._api(command + temp_command)
+        else:
+            if temp_command is not None:
+                await self._api(temp_command)
+            if command is not None:
+                await self._api(command)
 
     @callback
     def _async_start_observe(self, exc=None):
@@ -324,6 +350,8 @@ class TradfriLight(Light):
         self._name = light.name
         self._features = SUPPORTED_FEATURES
 
+        if light.light_control.can_set_dimmer:
+            self._features |= SUPPORT_BRIGHTNESS
         if light.light_control.can_set_color:
             self._features |= SUPPORT_COLOR
         if light.light_control.can_set_temp:

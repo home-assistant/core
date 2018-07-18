@@ -267,7 +267,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
                 print(' ', indent_str, i)
 
 
-CheckConfigError = namedtuple(  # pylint: disable=invalid-name
+CheckConfigError = namedtuple(
     'CheckConfigError', "message domain config")
 
 
@@ -378,7 +378,6 @@ def check_ha_config_file(hass):
 
             # Validate platform specific schema
             if hasattr(platform, 'PLATFORM_SCHEMA'):
-                # pylint: disable=no-member
                 try:
                     p_validated = platform.PLATFORM_SCHEMA(p_validated)
                 except vol.Invalid as ex:

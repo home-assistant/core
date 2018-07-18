@@ -88,7 +88,6 @@ class RainCloudSwitch(RainCloudEntity, SwitchDevice):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'current_time': self.data.current_time,
             'default_manual_timer': self._default_watering_timer,
             'identifier': self.data.serial
         }

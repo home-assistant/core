@@ -1,6 +1,5 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
-import ssl
 import sys
 
 import aiohttp
@@ -8,11 +7,11 @@ from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPGatewayTimeout, HTTPBadGateway
 import async_timeout
-import certifi
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.loader import bind_hass
+from homeassistant.util import ssl as ssl_util
 
 DATA_CONNECTOR = 'aiohttp_connector'
 DATA_CONNECTOR_NOTVERIFY = 'aiohttp_connector_notverify'
@@ -128,7 +127,6 @@ async def async_aiohttp_proxy_stream(hass, request, stream, content_type,
 
 
 @callback
-# pylint: disable=invalid-name
 def _async_register_clientsession_shutdown(hass, clientsession):
     """Register ClientSession close on Home Assistant shutdown.
 
@@ -155,9 +153,7 @@ def _async_get_connector(hass, verify_ssl=True):
         return hass.data[key]
 
     if verify_ssl:
-        ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-        ssl_context.load_verify_locations(cafile=certifi.where(),
-                                          capath=None)
+        ssl_context = ssl_util.client_context()
     else:
         ssl_context = False
 

@@ -13,7 +13,7 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_ACCESS_TOKEN
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['Mastodon.py==1.2.2']
+REQUIREMENTS = ['Mastodon.py==1.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 

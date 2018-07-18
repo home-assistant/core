@@ -18,7 +18,7 @@ from homeassistant.util import slugify
 REQUIREMENTS = [
     'bellows==0.6.0',
     'zigpy==0.1.0',
-    'zigpy-xbee==0.1.0',
+    'zigpy-xbee==0.1.1',
 ]
 
 DOMAIN = 'zha'
@@ -148,6 +148,11 @@ class ApplicationListener:
         At this point, no information about the device is known other than its
         address
         """
+        # Wait for device_initialized, instead
+        pass
+
+    def raw_device_initialized(self, device):
+        """Handle a device initialization without quirks loaded."""
         # Wait for device_initialized, instead
         pass
 

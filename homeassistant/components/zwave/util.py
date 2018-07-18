@@ -68,8 +68,10 @@ def check_value_schema(value, schema):
 
 def node_name(node):
     """Return the name of the node."""
-    return node.name or '{} {}'.format(
-        node.manufacturer_name, node.product_name)
+    if is_node_parsed(node):
+        return node.name or '{} {}'.format(
+            node.manufacturer_name, node.product_name)
+    return 'Unknown Node {}'.format(node.node_id)
 
 
 async def check_has_unique_id(entity, ready_callback, timeout_callback, loop):
@@ -89,4 +91,4 @@ async def check_has_unique_id(entity, ready_callback, timeout_callback, loop):
 
 def is_node_parsed(node):
     """Check whether the node has been parsed or still waiting to be parsed."""
-    return node.manufacturer_name and node.product_name
+    return bool((node.manufacturer_name and node.product_name) or node.name)

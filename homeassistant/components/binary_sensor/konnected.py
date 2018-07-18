@@ -4,13 +4,16 @@ Support for wired binary sensors attached to a Konnected device.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.konnected/
 """
-import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.konnected import (DOMAIN, PIN_TO_ZONE)
+from homeassistant.components.konnected import (
+    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, SIGNAL_SENSOR_UPDATE)
 from homeassistant.const import (
-    CONF_DEVICES, CONF_TYPE, CONF_NAME, CONF_BINARY_SENSORS, ATTR_STATE)
+    CONF_DEVICES, CONF_TYPE, CONF_NAME, CONF_BINARY_SENSORS, ATTR_ENTITY_ID,
+    ATTR_STATE)
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +26,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     if discovery_info is None:
         return
 
-    data = hass.data[DOMAIN]
+    data = hass.data[KONNECTED_DOMAIN]
     device_id = discovery_info['device_id']
     sensors = [KonnectedBinarySensor(device_id, pin_num, pin_data)
                for pin_num, pin_data in
@@ -43,7 +46,6 @@ class KonnectedBinarySensor(BinarySensorDevice):
         self._device_class = self._data.get(CONF_TYPE)
         self._name = self._data.get(CONF_NAME, 'Konnected {} Zone {}'.format(
             device_id, PIN_TO_ZONE[pin_num]))
-        self._data['entity'] = self
         _LOGGER.debug('Created new Konnected sensor: %s', self._name)
 
     @property
@@ -66,9 +68,15 @@ class KonnectedBinarySensor(BinarySensorDevice):
         """Return the device class."""
         return self._device_class
 
-    @asyncio.coroutine
+    async def async_added_to_hass(self):
+        """Store entity_id and register state change callback."""
+        self._data[ATTR_ENTITY_ID] = self.entity_id
+        async_dispatcher_connect(
+            self.hass, SIGNAL_SENSOR_UPDATE.format(self.entity_id),
+            self.async_set_state)
+
+    @callback
     def async_set_state(self, state):
         """Update the sensor's state."""
         self._state = state
-        self._data[ATTR_STATE] = state
         self.async_schedule_update_ha_state()

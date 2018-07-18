@@ -116,5 +116,4 @@ def async_setup(hass, config):
     if sub_topic:
         yield from mqtt.async_subscribe(sub_topic, _event_receiver)
 
-    hass.states.async_set('{domain}.initialized'.format(domain=DOMAIN), True)
     return True

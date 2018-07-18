@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/lock.isy994/
 """
 import logging
-from typing import Callable  # noqa
+from typing import Callable
 
 from homeassistant.components.lock import LockDevice, DOMAIN
 from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
@@ -21,7 +21,6 @@ VALUE_TO_STATE = {
 }
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 lock platform."""

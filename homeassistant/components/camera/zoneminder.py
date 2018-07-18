@@ -49,7 +49,6 @@ def _get_image_url(hass, monitor, mode):
 
 
 @asyncio.coroutine
-# pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the ZoneMinder cameras."""
     cameras = []

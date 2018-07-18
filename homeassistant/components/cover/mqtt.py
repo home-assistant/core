@@ -236,6 +236,11 @@ class MqttCover(MqttAvailability, CoverDevice):
         return False
 
     @property
+    def assumed_state(self):
+        """Return true if we do optimistic updates."""
+        return self._optimistic
+
+    @property
     def name(self):
         """Return the name of the cover."""
         return self._name

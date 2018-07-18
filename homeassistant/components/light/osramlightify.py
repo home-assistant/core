@@ -27,8 +27,10 @@ REQUIREMENTS = ['lightify==1.0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ALLOW_LIGHTIFY_NODES = 'allow_lightify_nodes'
 CONF_ALLOW_LIGHTIFY_GROUPS = 'allow_lightify_groups'
 
+DEFAULT_ALLOW_LIGHTIFY_NODES = True
 DEFAULT_ALLOW_LIGHTIFY_GROUPS = True
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(milliseconds=100)
@@ -40,6 +42,8 @@ SUPPORT_OSRAMLIGHTIFY = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_ALLOW_LIGHTIFY_NODES,
+                 default=DEFAULT_ALLOW_LIGHTIFY_NODES): cv.boolean,
     vol.Optional(CONF_ALLOW_LIGHTIFY_GROUPS,
                  default=DEFAULT_ALLOW_LIGHTIFY_GROUPS): cv.boolean,
 })
@@ -50,6 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import lightify
 
     host = config.get(CONF_HOST)
+    add_nodes = config.get(CONF_ALLOW_LIGHTIFY_NODES)
     add_groups = config.get(CONF_ALLOW_LIGHTIFY_GROUPS)
 
     try:
@@ -60,10 +65,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception(msg)
         return
 
-    setup_bridge(bridge, add_devices, add_groups)
+    setup_bridge(bridge, add_devices, add_nodes, add_groups)
 
 
-def setup_bridge(bridge, add_devices, add_groups):
+def setup_bridge(bridge, add_devices, add_nodes, add_groups):
     """Set up the Lightify bridge."""
     lights = {}
 
@@ -80,14 +85,15 @@ def setup_bridge(bridge, add_devices, add_groups):
 
         new_lights = []
 
-        for (light_id, light) in bridge.lights().items():
-            if light_id not in lights:
-                osram_light = OsramLightifyLight(
-                    light_id, light, update_lights)
-                lights[light_id] = osram_light
-                new_lights.append(osram_light)
-            else:
-                lights[light_id].light = light
+        if add_nodes:
+            for (light_id, light) in bridge.lights().items():
+                if light_id not in lights:
+                    osram_light = OsramLightifyLight(
+                        light_id, light, update_lights)
+                    lights[light_id] = osram_light
+                    new_lights.append(osram_light)
+                else:
+                    lights[light_id].light = light
 
         if add_groups:
             for (group_name, group) in bridge.groups().items():

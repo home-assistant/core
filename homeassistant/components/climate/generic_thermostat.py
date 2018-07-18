@@ -263,22 +263,20 @@ class GenericThermostat(ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        # pylint: disable=no-member
         if self._min_temp:
             return self._min_temp
 
         # get default temp from super class
-        return ClimateDevice.min_temp.fget(self)
+        return super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        # pylint: disable=no-member
         if self._max_temp:
             return self._max_temp
 
         # Get default temp from super class
-        return ClimateDevice.max_temp.fget(self)
+        return super().max_temp
 
     @asyncio.coroutine
     def _async_sensor_changed(self, entity_id, old_state, new_state):

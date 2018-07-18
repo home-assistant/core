@@ -4,7 +4,6 @@ Support for Eight smart mattress covers and mattresses.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/eight_sleep/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -22,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['pyeight==0.0.8']
+REQUIREMENTS = ['pyeight==0.0.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,8 +85,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Eight Sleep component."""
     from pyeight.eight import EightSleep
 
@@ -107,31 +105,29 @@ def async_setup(hass, config):
     hass.data[DATA_EIGHT] = eight
 
     # Authenticate, build sensors
-    success = yield from eight.start()
+    success = await eight.start()
     if not success:
         # Authentication failed, cannot continue
         return False
 
-    @asyncio.coroutine
-    def async_update_heat_data(now):
+    async def async_update_heat_data(now):
         """Update heat data from eight in HEAT_SCAN_INTERVAL."""
-        yield from eight.update_device_data()
+        await eight.update_device_data()
         async_dispatcher_send(hass, SIGNAL_UPDATE_HEAT)
 
         async_track_point_in_utc_time(
             hass, async_update_heat_data, utcnow() + HEAT_SCAN_INTERVAL)
 
-    @asyncio.coroutine
-    def async_update_user_data(now):
+    async def async_update_user_data(now):
         """Update user data from eight in USER_SCAN_INTERVAL."""
-        yield from eight.update_user_data()
+        await eight.update_user_data()
         async_dispatcher_send(hass, SIGNAL_UPDATE_USER)
 
         async_track_point_in_utc_time(
             hass, async_update_user_data, utcnow() + USER_SCAN_INTERVAL)
 
-    yield from async_update_heat_data(None)
-    yield from async_update_user_data(None)
+    await async_update_heat_data(None)
+    await async_update_user_data(None)
 
     # Load sub components
     sensors = []
@@ -157,8 +153,7 @@ def async_setup(hass, config):
             CONF_BINARY_SENSORS: binary_sensors,
         }, config))
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Handle eight sleep service calls."""
         params = service.data.copy()
 
@@ -170,7 +165,7 @@ def async_setup(hass, config):
             side = sens.split('_')[1]
             userid = eight.fetch_userid(side)
             usrobj = eight.users[userid]
-            yield from usrobj.set_heating_level(target, duration)
+            await usrobj.set_heating_level(target, duration)
 
         async_dispatcher_send(hass, SIGNAL_UPDATE_HEAT)
 
@@ -179,10 +174,9 @@ def async_setup(hass, config):
         DOMAIN, SERVICE_HEAT_SET, async_service_handler,
         schema=SERVICE_EIGHT_SCHEMA)
 
-    @asyncio.coroutine
-    def stop_eight(event):
+    async def stop_eight(event):
         """Handle stopping eight api session."""
-        yield from eight.stop()
+        await eight.stop()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_eight)
 
@@ -196,8 +190,7 @@ class EightSleepUserEntity(Entity):
         """Initialize the data object."""
         self._eight = eight
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register update dispatcher."""
         @callback
         def async_eight_user_update():
@@ -220,8 +213,7 @@ class EightSleepHeatEntity(Entity):
         """Initialize the data object."""
         self._eight = eight
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register update dispatcher."""
         @callback
         def async_eight_heat_update():

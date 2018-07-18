@@ -4,10 +4,10 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.doorbird import DOMAIN as DOORBIRD_DOMAIN
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import CONF_SWITCHES
-import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['doorbird']
 
@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SWITCHES = {
     "open_door": {
-        "name": "Open Door",
+        "name": "{} Open Door",
         "icon": {
             True: "lock-open",
             False: "lock"
@@ -23,7 +23,7 @@ SWITCHES = {
         "time": datetime.timedelta(seconds=3)
     },
     "open_door_2": {
-        "name": "Open Door 2",
+        "name": "{} Open Door 2",
         "icon": {
             True: "lock-open",
             False: "lock"
@@ -31,7 +31,7 @@ SWITCHES = {
         "time": datetime.timedelta(seconds=3)
     },
     "light_on": {
-        "name": "Light On",
+        "name": "{} Light On",
         "icon": {
             True: "lightbulb-on",
             False: "lightbulb"
@@ -48,31 +48,36 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the DoorBird switch platform."""
-    device = hass.data.get(DOORBIRD_DOMAIN)
-
     switches = []
-    for switch in SWITCHES:
-        _LOGGER.debug("Adding DoorBird switch %s", SWITCHES[switch]["name"])
-        switches.append(DoorBirdSwitch(device, switch))
+
+    for doorstation in hass.data[DOORBIRD_DOMAIN]:
+
+        device = doorstation.device
+
+        for switch in SWITCHES:
+
+            _LOGGER.debug("Adding DoorBird switch %s",
+                          SWITCHES[switch]["name"].format(doorstation.name))
+            switches.append(DoorBirdSwitch(device, switch, doorstation.name))
 
     add_devices(switches)
-    _LOGGER.info("Added DoorBird switches")
 
 
 class DoorBirdSwitch(SwitchDevice):
     """A relay in a DoorBird device."""
 
-    def __init__(self, device, switch):
+    def __init__(self, device, switch, name):
         """Initialize a relay in a DoorBird device."""
         self._device = device
         self._switch = switch
+        self._name = name
         self._state = False
         self._assume_off = datetime.datetime.min
 
     @property
     def name(self):
         """Return the name of the switch."""
-        return SWITCHES[self._switch]["name"]
+        return SWITCHES[self._switch]["name"].format(self._name)
 
     @property
     def icon(self):

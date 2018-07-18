@@ -10,7 +10,9 @@ import logging
 from homeassistant.components.homematicip_cloud import (
     HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
     ATTR_HOME_ID)
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (
+    TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY,
+    DEVICE_CLASS_ILLUMINANCE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +38,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     """Set up the HomematicIP sensors devices."""
     from homematicip.device import (
         HeatingThermostat, TemperatureHumiditySensorWithoutDisplay,
-        TemperatureHumiditySensorDisplay)
+        TemperatureHumiditySensorDisplay, MotionDetectorIndoor)
 
     if discovery_info is None:
         return
@@ -50,6 +52,8 @@ async def async_setup_platform(hass, config, async_add_devices,
                                TemperatureHumiditySensorWithoutDisplay)):
             devices.append(HomematicipTemperatureSensor(home, device))
             devices.append(HomematicipHumiditySensor(home, device))
+        if isinstance(device, MotionDetectorIndoor):
+            devices.append(HomematicipIlluminanceSensor(home, device))
 
     if devices:
         async_add_devices(devices)
@@ -150,6 +154,11 @@ class HomematicipHumiditySensor(HomematicipGenericDevice):
         super().__init__(home, device, 'Humidity')
 
     @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_HUMIDITY
+
+    @property
     def icon(self):
         """Return the icon."""
         return 'mdi:water-percent'
@@ -173,6 +182,11 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
         super().__init__(home, device, 'Temperature')
 
     @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TEMPERATURE
+
+    @property
     def icon(self):
         """Return the icon."""
         return 'mdi:thermometer'
@@ -186,3 +200,26 @@ class HomematicipTemperatureSensor(HomematicipGenericDevice):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return TEMP_CELSIUS
+
+
+class HomematicipIlluminanceSensor(HomematicipGenericDevice):
+    """MomematicIP the thermometer device."""
+
+    def __init__(self, home, device):
+        """Initialize the  device."""
+        super().__init__(home, device, 'Illuminance')
+
+    @property
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_ILLUMINANCE
+
+    @property
+    def state(self):
+        """Return the state."""
+        return self._device.illumination
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return 'lx'
