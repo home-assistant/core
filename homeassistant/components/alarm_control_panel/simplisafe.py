@@ -10,7 +10,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-        PLATFORM_SCHEMA, AlarmControlPanel)
+    PLATFORM_SCHEMA, AlarmControlPanel)
 from homeassistant.const import (
     CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME,
