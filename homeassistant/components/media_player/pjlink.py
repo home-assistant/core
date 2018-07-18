@@ -75,7 +75,8 @@ class PjLinkDevice(MediaPlayerDevice):
             if not self._name:
                 self._name = projector.get_name()
             inputs = projector.get_inputs()
-        self._source_name_mapping = {self.format_input_source(*x): x for x in inputs}
+        self._source_name_mapping = \
+            {self.format_input_source(*x): x for x in inputs}
         self._source_list = sorted(self._source_name_mapping.keys())
 
     def projector(self):
@@ -99,7 +100,8 @@ class PjLinkDevice(MediaPlayerDevice):
             else:
                 self._pwstate = STATE_ON
             self._muted = projector.get_mute()[1]
-            self._current_source = self.format_input_source(*projector.get_input())
+            self._current_source = \
+                self.format_input_source(*projector.get_input())
 
     @property
     def name(self):
