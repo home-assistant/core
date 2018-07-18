@@ -243,14 +243,12 @@ def async_setup(hass, config):
         if button != "":
             schema[EVENT_CONF_BUTTON] = button
         if val:
-            _LOGGER.debug('Firing event {}.{} '
-                          'with address {} and button {}'.format(
-                              DOMAIN, EVENT_BUTTON_ON, address.hex, button))
+            _LOGGER.debug('Firing event %s.%s with address %s and button %s',
+                          DOMAIN, EVENT_BUTTON_ON, address.hex, button)
             hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_BUTTON_ON), schema)
         else:
-            _LOGGER.debug('Firing event {}.{} '
-                          'with address {} and button {}'.format(
-                              DOMAIN, EVENT_BUTTON_OFF, address.hex, button))
+            _LOGGER.debug('Firing event %s.%s with address %s and button %s',
+                          DOMAIN, EVENT_BUTTON_OFF, address.hex, button)
             hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_BUTTON_OFF), schema)
 
     _LOGGER.info("Looking for PLM on %s", port)
