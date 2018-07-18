@@ -5,12 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/fan.tuya/
 """
 
-import asyncio
-
 from homeassistant.components.fan import (
     ENTITY_ID_FORMAT, FanEntity, SUPPORT_DIRECTION, SUPPORT_OSCILLATE,
     SUPPORT_SET_SPEED)
-from homeassistant.components.tuya import DOMAIN, DATA_TUYA, TuyaDevice
+from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
 from homeassistant.const import STATE_OFF
 
 DEPENDENCIES = ['tuya']
