@@ -88,7 +88,7 @@ class PjLinkDevice(MediaPlayerDevice):
         return projector
 
     def format_input_source(self, input_source_name, input_source_number):
-        """Format input source for display in UI"""
+        """Format input source for display in UI."""
         return "{}_{}".format(
             input_source_name.lower().replace(' ', '_'),
             input_source_number)
