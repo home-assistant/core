@@ -8,7 +8,7 @@ import subprocess
 import sys
 import threading
 
-from typing import Optional, List, Dict, Any  # noqa #pylint: disable=unused-import
+from typing import List, Dict, Any  # noqa pylint: disable=unused-import
 
 
 from homeassistant import monkey_patch
