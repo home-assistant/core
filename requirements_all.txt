@@ -452,7 +452,7 @@ influxdb==5.0.0
 insteonlocal==0.53
 
 # homeassistant.components.insteon_plm
-insteonplm==0.11.3
+insteonplm==0.11.7
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
