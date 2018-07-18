@@ -60,5 +60,5 @@ class InsteonPLMBinarySensor(InsteonPLMEntity, BinarySensorDevice):
 
         if self._insteon_device_state.name == 'lightSensor':
             return not on_val
-        else:
-            return on_val
+
+        return on_val
