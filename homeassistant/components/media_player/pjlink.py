@@ -89,7 +89,9 @@ class PjLinkDevice(MediaPlayerDevice):
 
     def format_input_source(self, input_source_name, input_source_number):
         """Format input source for display in UI"""
-        return "{} {}".format(input_source_name, input_source_number).title()
+        return "{}_{}".format(
+            input_source_name.lower().replace(' ', '_'),
+            input_source_number)
 
     def update(self):
         """Get the latest state from the device."""
@@ -153,4 +155,4 @@ class PjLinkDevice(MediaPlayerDevice):
         """Set the input source."""
         source = self._source_name_mapping[source]
         with self.projector() as projector:
-            projector.set_input(source[0], source[1])
+            projector.set_input(*source)
