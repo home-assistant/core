@@ -2,8 +2,9 @@
 import logging
 from datetime import timedelta
 
-import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_FRIENDLY_NAME, CONF_MAC
 from homeassistant.exceptions import PlatformNotReady
@@ -30,15 +31,15 @@ class Switchmate(SwitchDevice):
 
     def __init__(self, mac, friendly_name) -> None:
         """Initialize the Switchmate."""
-        from bluepy.btle import ADDR_TYPE_RANDOM, Peripheral, BTLEException
+        import bluepy
         self._state = False
         self._friendly_name = friendly_name
         self._handle = 0x2e
         self._mac = mac
         try:
-            self._device = Peripheral(self._mac, ADDR_TYPE_RANDOM)
-        except BTLEException as ex:
-            _LOGGER.error("Failed to setup switchmate: " + ex.message)
+            self._device = bluepy.btle.Peripheral(self._mac, bluepy.btle.ADDR_TYPE_RANDOM)
+        except bluepy.btle.BTLEException as ex:
+            _LOGGER.error("Failed to setup switchmate", exc_info=True)
             raise PlatformNotReady()
 
     @property
@@ -54,8 +55,7 @@ class Switchmate(SwitchDevice):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:
         """Synchronize state with switch."""
-        self._state = b'\x00' == self._device.readCharacteristic(self._handle)
-        print("state", self._state)
+        self._state = self._device.readCharacteristic(self._handle) == b'\x00'
 
     @property
     def is_on(self) -> bool:
