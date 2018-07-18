@@ -138,18 +138,16 @@ def async_setup(hass, config):
             platform_info = ipdb[device.states[state_key]]
             if platform_info and platform_info.platform:
                 platform = platform_info.platform
-                mode = mode_conf.get(device.address.hex)
-                state_name = device.states[state_key].name
-
+                
                 if platform == 'on_off_events':
                     device.states[state_key].register_updates(
                         _fire_button_on_off_event)
 
                 else:
                     _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
-                                    device.address,
-                                    device.states[state_key].name,
-                                    platform)
+                                 device.address,
+                                 device.states[state_key].name,
+                                 platform)
 
                     hass.async_add_job(
                         discovery.async_load_platform(
@@ -248,12 +246,12 @@ def async_setup(hass, config):
         if val:
             _LOGGER.debug('Firing event {}.{} '
                           'with address {} and button {}'.format(
-                DOMAIN, EVENT_BUTTON_ON, address.hex, button))
+                              DOMAIN, EVENT_BUTTON_ON, address.hex, button))
             hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_BUTTON_ON), schema)
         else:
             _LOGGER.debug('Firing event {}.{} '
                           'with address {} and button {}'.format(
-                DOMAIN, EVENT_BUTTON_OFF, address.hex, button))
+                              DOMAIN, EVENT_BUTTON_OFF, address.hex, button))
             hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_BUTTON_OFF), schema)
 
     _LOGGER.info("Looking for PLM on %s", port)
@@ -276,7 +274,7 @@ def async_setup(hass, config):
             elif prop in [CONF_FIRMWARE, CONF_PRODUCT_KEY]:
                 plm.devices.add_override(address, CONF_PRODUCT_KEY,
                                          device_override[prop])
-            
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN]['plm'] = plm
     hass.data[DOMAIN]['entities'] = {}
