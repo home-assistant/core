@@ -199,6 +199,14 @@ class HassAuthProvider(AuthProvider):
             # Can happen if somehow we didn't clean up a credential
             pass
 
+    async def async_change_password(self, username, new_password):
+        """Helper to change a user's password."""
+        if self.data is None:
+            await self.async_initialize()
+
+        await self.hass.async_add_executor_job(
+            self.data.change_password, username, new_password)
+
 
 class LoginFlow(data_entry_flow.FlowHandler):
     """Handler for the login flow."""
