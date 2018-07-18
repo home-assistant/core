@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.scsgate as scsgate
+from homeassistant.components import scsgate
 from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_DEVICES, CONF_NAME)
 import homeassistant.helpers.config_validation as cv

@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
-import homeassistant.util as util
+from homeassistant import util
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)

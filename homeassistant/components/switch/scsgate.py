@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.scsgate as scsgate
+from homeassistant.components import scsgate
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_STATE, CONF_NAME, CONF_DEVICES)

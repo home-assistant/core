@@ -14,7 +14,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
     ATTR_LATITUDE, ATTR_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.location as location
+from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 

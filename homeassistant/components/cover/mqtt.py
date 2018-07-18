@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.components.cover import (
     CoverDevice, ATTR_TILT_POSITION, SUPPORT_OPEN_TILT,
     SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,

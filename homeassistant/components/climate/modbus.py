@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE)
 
-import homeassistant.components.modbus as modbus
+from homeassistant.components import modbus
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['modbus']

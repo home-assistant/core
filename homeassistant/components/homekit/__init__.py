@@ -9,7 +9,7 @@ from zlib import adler32
 
 import voluptuous as vol
 
-import homeassistant.components.cover as cover
+from homeassistant.components import cover
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,

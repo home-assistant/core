@@ -80,7 +80,7 @@ async def setup_gateways(hass, config):
 
 async def _get_gateway(hass, config, gateway_conf, persistence_file):
     """Return gateway after setup of the gateway."""
-    import mysensors.mysensors as mysensors
+    from mysensors import mysensors
 
     conf = config[DOMAIN]
     persistence = conf[CONF_PERSISTENCE]

@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.rpi_gpio as rpi_gpio
+from homeassistant.components import rpi_gpio
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import DEVICE_DEFAULT_NAME

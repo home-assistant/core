@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.helpers import intent, config_validation as cv
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 
 DOMAIN = 'snips'
 DEPENDENCIES = ['mqtt']

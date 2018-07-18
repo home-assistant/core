@@ -123,7 +123,7 @@ async def async_get_all_descriptions(hass):
     def domain_yaml_file(domain):
         """Return the services.yaml location for a domain."""
         if domain == ha.DOMAIN:
-            import homeassistant.components as components
+            from homeassistant import components
             component_path = path.dirname(components.__file__)
         else:
             component_path = path.dirname(get_component(hass, domain).__file__)
