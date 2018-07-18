@@ -17,7 +17,7 @@ import sys
 from types import ModuleType
 
 # pylint: disable=unused-import
-from typing import Dict, List, Optional, Sequence, Set, TYPE_CHECKING  # NOQA
+from typing import Optional, Set, TYPE_CHECKING  # NOQA
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
