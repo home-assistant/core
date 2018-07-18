@@ -9,7 +9,7 @@ from datetime import timedelta
 
 import requests
 
-import homeassistant.components.nest as nest
+from homeassistant.components import nest
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
 from homeassistant.util.dt import utcnow
 

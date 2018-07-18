@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN,

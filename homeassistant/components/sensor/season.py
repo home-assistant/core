@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
-import homeassistant.util as util
+from homeassistant import util
 
 REQUIREMENTS = ['ephem==3.7.6.0']
 

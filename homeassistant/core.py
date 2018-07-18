@@ -38,9 +38,9 @@ from homeassistant.exceptions import (
 from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe,
     fire_coroutine_threadsafe)
-import homeassistant.util as util
+from homeassistant import util
 import homeassistant.util.dt as dt_util
-import homeassistant.util.location as location
+from homeassistant.util import location
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
 # Typing imports that create a circular dependency
