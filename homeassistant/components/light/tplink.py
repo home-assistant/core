@@ -40,7 +40,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from pyHS100 import SmartBulb
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
-    add_devices([TPLinkSmartBulb(SmartBulb(host), name)], True)
+    bulb = TPLinkSmartBulb(SmartBulb(host), name)
+    bulb.get_features()
+    add_devices([bulb], True)
 
 
 def brightness_to_percentage(byt):
@@ -139,9 +141,6 @@ class TPLinkSmartBulb(Light):
         from pyHS100 import SmartDeviceException
         try:
             self._available = True
-
-            if self._supported_features == 0:
-                self.get_features()
 
             self._state = (
                 self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
