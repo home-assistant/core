@@ -57,5 +57,8 @@ class InsteonPLMBinarySensor(InsteonPLMEntity, BinarySensorDevice):
     def is_on(self):
         """Return the boolean response if the node is on."""
         on_val = bool(self._insteon_device_state.value)
-        return (on_val if self._insteon_device_state.name != 'lightSensor' else
-                not on_val)
+
+        if self._insteon_device_state.name == 'lightSensor':
+            return not on_val
+        else:
+            return on_val

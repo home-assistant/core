@@ -56,8 +56,8 @@ HOUSECODES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
 
 BUTTON_PRESSED_STATE_NAME = 'onLevelButton'
-EVENT_BUTTON_ON = 'button_on'
-EVENT_BUTTON_OFF = 'button_off'
+EVENT_BUTTON_ON = 'insteon_plm.button_on'
+EVENT_BUTTON_OFF = 'insteon_plm.button_off'
 EVENT_CONF_BUTTON = 'button'
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
@@ -243,13 +243,12 @@ def async_setup(hass, config):
         if button != "":
             schema[EVENT_CONF_BUTTON] = button
         if val:
-            _LOGGER.debug('Firing event %s.%s with address %s and button %s',
-                          DOMAIN, EVENT_BUTTON_ON, address.hex, button)
-            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_BUTTON_ON), schema)
+            event = EVENT_BUTTON_ON
         else:
-            _LOGGER.debug('Firing event %s.%s with address %s and button %s',
-                          DOMAIN, EVENT_BUTTON_OFF, address.hex, button)
-            hass.bus.fire('{}.{}'.format(DOMAIN, EVENT_BUTTON_OFF), schema)
+            event = EVENT_BUTTON_OFF
+        _LOGGER.debug('Firing event %s with address %s and button %s',
+                      event, address.hex, button)
+        hass.bus.fire(event, schema)
 
     _LOGGER.info("Looking for PLM on %s", port)
     conn = yield from insteonplm.Connection.create(
