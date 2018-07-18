@@ -25,7 +25,7 @@ DEFAULT_MAX_VOLUME = -10
 DEFAULT_VOLUME_STEP = 4
 
 SUPPORT_NAD = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | \
-              SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | SUPPORT_SELECT_SOURCE
+    SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | SUPPORT_SELECT_SOURCE
 
 CONF_MIN_VOLUME = 'min_volume'
 CONF_MAX_VOLUME = 'max_volume'
@@ -68,6 +68,7 @@ class NADtcp(MediaPlayerDevice):
         self._volume = None
         self._source = None
         self._source_list = self.nad_device.available_sources()
+        self._nad_volume_db = None
 
     @property
     def name(self):
@@ -97,6 +98,7 @@ class NADtcp(MediaPlayerDevice):
         # Update current volume
         self._volume = self.nad_vol_to_internal_vol(nad_status['volume'])
         self._nad_volume = nad_status['volume']
+        self._nad_volume_db = ((nad_status['volume'] / 2) - 90)
 
         # Update muted state
         self._mute = nad_status['muted']
@@ -176,3 +178,14 @@ class NADtcp(MediaPlayerDevice):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes.
+
+        NAD Volume in DB.
+        """
+        attr = {}
+        attr['nad_volume_db'] = self._nad_volume_db
+
+        return attr
