@@ -271,28 +271,24 @@ class GrantTokenView(HomeAssistantView):
         grant_type = data.get('grant_type')
 
         if grant_type == 'authorization_code':
-            resp = await self._async_handle_auth_code(hass, client_id, data)
-            if resp.get('status_code', 200) != 200:
-                await process_wrong_login(request)
-            return resp
+            return await self._async_handle_auth_code(
+                hass, request, client_id, data)
 
         elif grant_type == 'refresh_token':
-            resp = await self._async_handle_refresh_token(
-                hass, client_id, data)
-            if resp.get('status_code', 200) != 200:
-                await process_wrong_login(request)
-            return resp
+            return await self._async_handle_refresh_token(
+                hass, request, client_id, data)
 
         await process_wrong_login(request)
         return self.json({
             'error': 'unsupported_grant_type',
         }, status_code=400)
 
-    async def _async_handle_auth_code(self, hass, client_id, data):
+    async def _async_handle_auth_code(self, hass, request, client_id, data):
         """Handle authorization code request."""
         code = data.get('code')
 
         if code is None:
+            await process_wrong_login(request)
             return self.json({
                 'error': 'invalid_request',
             }, status_code=400)
@@ -300,6 +296,7 @@ class GrantTokenView(HomeAssistantView):
         credentials = self._retrieve_credentials(client_id, code)
 
         if credentials is None:
+            await process_wrong_login(request)
             return self.json({
                 'error': 'invalid_request',
                 'error_description': 'Invalid code',
@@ -308,6 +305,7 @@ class GrantTokenView(HomeAssistantView):
         user = await hass.auth.async_get_or_create_user(credentials)
 
         if not user.is_active:
+            await process_wrong_login(request)
             return self.json({
                 'error': 'access_denied',
                 'error_description': 'User is not active',
@@ -325,11 +323,13 @@ class GrantTokenView(HomeAssistantView):
                 int(refresh_token.access_token_expiration.total_seconds()),
         })
 
-    async def _async_handle_refresh_token(self, hass, client_id, data):
+    async def _async_handle_refresh_token(
+            self, hass, request, client_id, data):
         """Handle authorization code request."""
         token = data.get('refresh_token')
 
         if token is None:
+            await process_wrong_login(request)
             return self.json({
                 'error': 'invalid_request',
             }, status_code=400)
@@ -337,6 +337,7 @@ class GrantTokenView(HomeAssistantView):
         refresh_token = await hass.auth.async_get_refresh_token(token)
 
         if refresh_token is None or refresh_token.client_id != client_id:
+            await process_wrong_login(request)
             return self.json({
                 'error': 'invalid_grant',
             }, status_code=400)
