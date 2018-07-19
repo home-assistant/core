@@ -75,14 +75,16 @@ class ExampleAuthProvider(AuthProvider):
         Will be used to populate info when creating a new user.
         """
         username = credentials.data['username']
+        info = {
+            'is_active': True,
+        }
 
         for user in self.config['users']:
             if user['username'] == username:
-                return {
-                    'name': user.get('name')
-                }
+                info['name'] = user.get('name')
+                break
 
-        return {}
+        return info
 
 
 class LoginFlow(data_entry_flow.FlowHandler):
