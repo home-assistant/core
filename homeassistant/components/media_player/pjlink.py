@@ -60,9 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 def format_input_source(input_source_name, input_source_number):
     """Format input source for display in UI."""
-    return "{}_{}".format(
-        input_source_name.lower().replace(' ', '_'),
-        input_source_number)
+    return "{} {}".format(input_source_name, input_source_number)
 
 
 class PjLinkDevice(MediaPlayerDevice):
