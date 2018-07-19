@@ -48,7 +48,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Failed to setup SimpliSafe")
         return
 
-    add_devices([SimpliSafeAlarm(alarm, name, code) for alarm in simplisafe.get_systems()])
+    systems = []
+
+    for system in simplisafe.get_systems():
+        systems.append(SimpliSafeAlarm(system, name, code))
+
+    add_devices(systems)
 
 
 class SimpliSafeAlarm(AlarmControlPanel):
