@@ -70,7 +70,10 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
 
         Will be used to populate info when creating a new user.
         """
-        return {'name': LEGACY_USER}
+        return {
+            'name': LEGACY_USER,
+            'is_active': True,
+        }
 
 
 class LoginFlow(data_entry_flow.FlowHandler):
