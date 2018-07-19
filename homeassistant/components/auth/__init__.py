@@ -241,6 +241,7 @@ class GrantTokenView(HomeAssistantView):
     url = '/auth/token'
     name = 'api:auth:token'
     requires_auth = False
+    cors_allowed = True
 
     def __init__(self, retrieve_credentials):
         """Initialize the grant token view."""
