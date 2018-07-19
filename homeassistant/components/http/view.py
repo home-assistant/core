@@ -26,7 +26,9 @@ class HomeAssistantView(object):
 
     url = None
     extra_urls = []
-    requires_auth = True  # Views inheriting from this class can override this
+    # Views inheriting from this class can override this
+    requires_auth = True
+    cors_allowed = False
 
     # pylint: disable=no-self-use
     def json(self, result, status_code=200, headers=None):
@@ -51,10 +53,11 @@ class HomeAssistantView(object):
             data['code'] = message_code
         return self.json(data, status_code, headers=headers)
 
-    def register(self, router):
+    def register(self, app, router):
         """Register the view with a router."""
         assert self.url is not None, 'No url set for view'
         urls = [self.url] + self.extra_urls
+        routes = []
 
         for method in ('get', 'post', 'delete', 'put'):
             handler = getattr(self, method, None)
@@ -65,13 +68,15 @@ class HomeAssistantView(object):
             handler = request_handler_factory(self, handler)
 
             for url in urls:
-                router.add_route(method, url, handler)
+                routes.append(
+                    (method, router.add_route(method, url, handler))
+                )
 
-        # aiohttp_cors does not work with class based views
-        # self.app.router.add_route('*', self.url, self, name=self.name)
+        if not self.cors_allowed:
+            return
 
-        # for url in self.extra_urls:
-        #     self.app.router.add_route('*', url, self)
+        for method, route in routes:
+            app['allow_cors'](route, [method.upper()])
 
 
 def request_handler_factory(view, handler):
