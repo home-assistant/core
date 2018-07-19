@@ -481,9 +481,10 @@ class BrData(object):
 
         _LOGGER.debug("Buienradar parsed data: %s", result)
         if result.get(SUCCESS) is not True:
-            _LOGGER.warning("Unable to parse data from Buienradar."
-                            "(Msg: %s)",
-                            result.get(MESSAGE),)
+            if (int(datetime.now().strftime('%H'))>0):
+                _LOGGER.warning("Unable to parse data from Buienradar."
+                                "(Msg: %s)",
+                                result.get(MESSAGE),)
             yield from self.schedule_update(SCHEDULE_NOK)
             return
 
