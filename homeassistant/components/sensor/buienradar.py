@@ -374,7 +374,7 @@ class BrSensor(Entity):
         return self._force_update
 
 
-class BrData(object):
+class BrData:
     """Get the latest data and updates the states."""
 
     def __init__(self, hass, coordinates, timeframe, devices):

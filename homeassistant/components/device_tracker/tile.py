@@ -74,7 +74,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     return await scanner.async_init()
 
 
-class TileScanner(object):
+class TileScanner:
     """Define an object to retrieve Tile data."""
 
     def __init__(self, client, hass, async_see, types, show_inactive):

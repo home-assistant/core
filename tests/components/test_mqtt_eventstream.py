@@ -18,7 +18,7 @@ from tests.common import (
 )
 
 
-class TestMqttEventStream(object):
+class TestMqttEventStream:
     """Test the MQTT eventstream module."""
 
     def setup_method(self):

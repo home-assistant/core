@@ -287,7 +287,7 @@ class NetAtmoSensor(Entity):
                 self._state = "Full"
 
 
-class NetAtmoData(object):
+class NetAtmoData:
     """Get the latest data from NetAtmo."""
 
     def __init__(self, auth, station):

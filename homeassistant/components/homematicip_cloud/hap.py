@@ -14,7 +14,7 @@ from .errors import HmipcConnectionError
 _LOGGER = logging.getLogger(__name__)
 
 
-class HomematicipAuth(object):
+class HomematicipAuth:
     """Manages HomematicIP client registration."""
 
     def __init__(self, hass, config):
@@ -73,7 +73,7 @@ class HomematicipAuth(object):
         return auth
 
 
-class HomematicipHAP(object):
+class HomematicipHAP:
     """Manages HomematicIP http and websocket connection."""
 
     def __init__(self, hass, config_entry):

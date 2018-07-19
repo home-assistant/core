@@ -260,7 +260,7 @@ class NUTSensor(Entity):
             self._state = self._data.status[self.type]
 
 
-class PyNUTData(object):
+class PyNUTData:
     """Stores the data retrieved from NUT.
 
     For each entity to use, acts as the single point responsible for fetching

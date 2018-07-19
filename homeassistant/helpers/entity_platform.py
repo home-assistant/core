@@ -15,7 +15,7 @@ SLOW_SETUP_MAX_WAIT = 60
 PLATFORM_NOT_READY_RETRIES = 10
 
 
-class EntityPlatform(object):
+class EntityPlatform:
     """Manage the entities for a single platform."""
 
     def __init__(self, *, hass, logger, domain, platform_name, platform,

@@ -104,7 +104,7 @@ class YahooFinanceSensor(Entity):
         self._state = self.data.state
 
 
-class YahooFinanceData(object):
+class YahooFinanceData:
     """Get data from Yahoo Finance."""
 
     def __init__(self, symbol):

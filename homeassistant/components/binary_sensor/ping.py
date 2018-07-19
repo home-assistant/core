@@ -96,7 +96,7 @@ class PingBinarySensor(BinarySensorDevice):
         self.ping.update()
 
 
-class PingData(object):
+class PingData:
     """The Class for handling the data retrieval."""
 
     def __init__(self, host, count):

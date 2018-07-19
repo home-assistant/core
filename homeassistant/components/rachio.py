@@ -130,7 +130,7 @@ def setup(hass, config) -> bool:
     return True
 
 
-class RachioPerson(object):
+class RachioPerson:
     """Represent a Rachio user."""
 
     def __init__(self, hass, rachio):
@@ -162,7 +162,7 @@ class RachioPerson(object):
         return self._controllers
 
 
-class RachioIro(object):
+class RachioIro:
     """Represent a Rachio Iro."""
 
     def __init__(self, hass, rachio, data):

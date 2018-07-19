@@ -372,7 +372,7 @@ def convert_to_camel(data):
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-class DarkSkyData(object):
+class DarkSkyData:
     """Get the latest data from Darksky."""
 
     def __init__(self, api_key, latitude, longitude, units, language,

@@ -137,7 +137,7 @@ class LuftdatenSensor(Entity):
         await self.luftdaten.async_update()
 
 
-class LuftdatenData(object):
+class LuftdatenData:
     """Class for handling the data retrieval."""
 
     def __init__(self, data):

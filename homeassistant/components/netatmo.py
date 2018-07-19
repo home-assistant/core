@@ -64,7 +64,7 @@ def setup(hass, config):
     return True
 
 
-class CameraData(object):
+class CameraData:
     """Get the latest data from Netatmo."""
 
     def __init__(self, auth, home=None):

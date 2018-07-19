@@ -108,7 +108,7 @@ class OpenHardwareMonitorDevice(Entity):
                 })
 
 
-class OpenHardwareMonitorData(object):
+class OpenHardwareMonitorData:
     """Class used to pull data from OHM and create sensors."""
 
     def __init__(self, config, hass):

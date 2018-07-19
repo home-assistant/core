@@ -22,7 +22,7 @@ class HideSensitiveDataFilter(logging.Filter):
 
 
 # pylint: disable=invalid-name
-class AsyncHandler(object):
+class AsyncHandler:
     """Logging handler wrapper to add an async layer."""
 
     def __init__(self, loop, handler):
