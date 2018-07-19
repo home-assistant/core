@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.buienradar/
 """
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import async_timeout
@@ -481,7 +481,7 @@ class BrData(object):
 
         _LOGGER.debug("Buienradar parsed data: %s", result)
         if result.get(SUCCESS) is not True:
-            if (int(datetime.now().strftime('%H'))>0):
+            if (int(datetime.now().strftime('%H')) > 0):
                 _LOGGER.warning("Unable to parse data from Buienradar."
                                 "(Msg: %s)",
                                 result.get(MESSAGE),)
