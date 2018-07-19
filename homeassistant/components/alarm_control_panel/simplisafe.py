@@ -17,12 +17,11 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['simplisafe-python==2.0.1']
+REQUIREMENTS = ['simplisafe-python==2.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'SimpliSafe'
-DOMAIN = 'simplisafe'
 
 ATTR_ALARM_ACTIVE = "alarm_active"
 ATTR_TEMPERATURE = "temperature"
@@ -37,13 +36,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the SimpliSafe platform."""
-    from simplipy.api import SimpliSafeApiInterface
+    from simplipy.api import SimpliSafeApiInterface, SimpliSafeAPIException
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
 
-    simplisafe = SimpliSafeApiInterface(username, password)
+    try:
+        simplisafe = SimpliSafeApiInterface(username, password)
+    except SimpliSafeAPIException:
+        _LOGGER.error("Failed to setup SimpliSafe.")
+        return False
 
     for system in simplisafe.get_systems():
         add_devices([SimpliSafeAlarm(system, name, code)])
