@@ -168,7 +168,7 @@ def websocket_change_password(hass, connection, msg):
             provider.data.change_password, username, msg['new_password'])
         await provider.data.async_save()
 
-        connection.to_write.put_nowait(
+        connection.send_message_outside(
             websocket_api.result_message(msg['id']))
 
     hass.async_add_job(change_password())
