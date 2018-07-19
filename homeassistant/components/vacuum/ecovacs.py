@@ -23,24 +23,6 @@ SUPPORT_ECOVACS = (
     SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | SUPPORT_LOCATE |
     SUPPORT_STATUS | SUPPORT_SEND_COMMAND | SUPPORT_FAN_SPEED)
 
-ECOVACS_FAN_SPEED_LIST = ['normal', 'high']
-
-# These consts represent bot statuses that can come from the `sucks` library
-STATUS_AUTO = 'auto'
-STATUS_EDGE = 'edge'
-STATUS_SPOT = 'spot'
-STATUS_SINGLE_ROOM = 'single_room'
-STATUS_STOP = 'stop'
-STATUS_RETURNING = 'returning'
-STATUS_CHARGING = 'charging'
-STATUS_IDLE = 'idle'
-STATUS_ERROR = 'error'
-
-# Any status that represents active cleaning
-STATUSES_CLEANING = [STATUS_AUTO, STATUS_EDGE, STATUS_SPOT, STATUS_SINGLE_ROOM]
-# Any status that represents sitting on the charger
-STATUSES_CHARGING = [STATUS_CHARGING, STATUS_IDLE]
-
 ATTR_ERROR = 'error'
 ATTR_COMPONENT_PREFIX = 'component_'
 
@@ -72,24 +54,14 @@ class EcovacsVacuum(VacuumDevice):
         _LOGGER.debug("Vacuum initialized: %s", self.name)
 
     async def async_added_to_hass(self) -> None:
-        """d."""
-        # Fire off some queries to get initial state
-        self.device.statusEvents.subscribe(self.on_status)
-        self.device.batteryEvents.subscribe(self.on_battery)
+        """Set up the event listeners now that hass is ready."""
+        self.device.statusEvents.subscribe(lambda _:
+                                           self.schedule_update_ha_state())
+        self.device.batteryEvents.subscribe(lambda _:
+                                            self.schedule_update_ha_state())
+        self.device.lifespanEvents.subscribe(lambda _:
+                                             self.schedule_update_ha_state())
         self.device.errorEvents.subscribe(self.on_error)
-        self.device.lifespanEvents.subscribe(self.on_lifespan)
-
-    def on_status(self, status):
-        """Handle the status of the robot changing."""
-        self.schedule_update_ha_state()
-
-    def on_battery(self, battery_level):
-        """Handle the battery level changing on the robot."""
-        self.schedule_update_ha_state()
-
-    def on_lifespan(self, lifespan):
-        """Handle component lifespan reports from the robot."""
-        self.schedule_update_ha_state()
 
     def on_error(self, error):
         """Handle an error event from the robot.
@@ -121,12 +93,12 @@ class EcovacsVacuum(VacuumDevice):
     @property
     def is_on(self):
         """Return true if vacuum is currently cleaning."""
-        return self.device.vacuum_status in STATUSES_CLEANING
+        return self.device.is_cleaning
 
     @property
     def is_charging(self):
         """Return true if vacuum is currently charging."""
-        return self.device.vacuum_status in STATUSES_CHARGING
+        return self.device.is_charging
 
     @property
     def name(self):
@@ -170,7 +142,8 @@ class EcovacsVacuum(VacuumDevice):
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        return ECOVACS_FAN_SPEED_LIST
+        from sucks import FAN_SPEED_NORMAL, FAN_SPEED_HIGH
+        return [FAN_SPEED_NORMAL, FAN_SPEED_HIGH]
 
     def turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning."""

@@ -28,8 +28,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Required(CONF_COUNTRY): cv.string,
-        vol.Required(CONF_CONTINENT): cv.string,
+        vol.Required(CONF_COUNTRY): vol.All(vol.Lower, cv.string),
+        vol.Required(CONF_CONTINENT): vol.All(vol.Lower, cv.string),
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -43,23 +43,17 @@ ECOVACS_API_DEVICEID = ''.join(
 
 def setup(hass, config):
     """Set up the Ecovacs component."""
-    _LOGGER.info("Creating new Ecovacs component")
+    _LOGGER.debug("Creating new Ecovacs component")
 
-    if ECOVACS_DEVICES not in hass.data:
-        hass.data[ECOVACS_DEVICES] = []
+    hass.data[ECOVACS_DEVICES] = []
 
     from sucks import EcoVacsAPI, VacBot
-
-    # Convenient hack for debugging to pipe sucks logging to the Hass logger
-    if _LOGGER.getEffectiveLevel() <= logging.DEBUG:
-        import sucks
-        sucks.logging = _LOGGER
 
     ecovacs_api = EcoVacsAPI(ECOVACS_API_DEVICEID,
                              config[DOMAIN].get(CONF_USERNAME),
                              EcoVacsAPI.md5(config[DOMAIN].get(CONF_PASSWORD)),
-                             config[DOMAIN].get(CONF_COUNTRY).lower(),
-                             config[DOMAIN].get(CONF_CONTINENT).lower())
+                             config[DOMAIN].get(CONF_COUNTRY),
+                             config[DOMAIN].get(CONF_CONTINENT))
 
     devices = ecovacs_api.devices()
     _LOGGER.debug("Ecobot devices: %s", devices)
@@ -76,7 +70,6 @@ def setup(hass, config):
                         monitor=True)
         hass.data[ECOVACS_DEVICES].append(vacbot)
 
-    # pylint: disable=unused-argument
     def stop(event: object) -> None:
         """Shut down open connections to Ecovacs XMPP server."""
         for device in hass.data[ECOVACS_DEVICES]:
@@ -89,7 +82,6 @@ def setup(hass, config):
 
     if hass.data[ECOVACS_DEVICES]:
         _LOGGER.debug("Starting vacuum components")
-        # discovery.load_platform(hass, "sensor", DOMAIN, {}, config)
         discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
 
     return True
