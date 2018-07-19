@@ -81,16 +81,9 @@ async def add_user(hass, provider, args):
         print("Username already exists!")
         return
 
-    credentials = await provider.async_get_or_create_credentials({
-        'username': args.username
-    })
-
-    user = await hass.auth.async_create_user(args.username)
-    await hass.auth.async_link_user(user, credentials)
-
     # Save username/password
     await provider.data.async_save()
-    print("User created")
+    print("Auth created")
 
 
 async def validate_login(hass, provider, args):

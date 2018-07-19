@@ -4,7 +4,7 @@ import uuid
 
 import pytest
 
-from homeassistant.auth import auth_store, models as auth_models
+from homeassistant.auth import auth_store, models as auth_models, AuthManager
 from homeassistant.auth.providers import insecure_example
 
 from tests.common import mock_coro
@@ -23,6 +23,7 @@ def provider(hass, store):
         'type': 'insecure_example',
         'users': [
             {
+                'name': 'Test Name',
                 'username': 'user-test',
                 'password': 'password-test',
             },
@@ -34,13 +35,25 @@ def provider(hass, store):
     })
 
 
-async def test_create_new_credential(provider):
+@pytest.fixture
+def manager(hass, store, provider):
+    """Mock manager."""
+    return AuthManager(hass, store, {
+        (provider.type, provider.id): provider
+    })
+
+
+async def test_create_new_credential(manager, provider):
     """Test that we create a new credential."""
     credentials = await provider.async_get_or_create_credentials({
         'username': 'user-test',
         'password': 'password-test',
     })
     assert credentials.is_new is True
+
+    user = await manager.async_get_or_create_user(credentials)
+    assert user.name == 'Test Name'
+    assert user.is_active
 
 
 async def test_match_existing_credentials(store, provider):
