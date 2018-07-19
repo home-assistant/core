@@ -20,6 +20,13 @@ SCHEMA_WS_DELETE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('username'): str,
 })
 
+WS_TYPE_CHANGE_PASSWORD = 'config/auth_provider/homeassistant/change_password'
+SCHEMA_WS_CHANGE_PASSWORD = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_CHANGE_PASSWORD,
+    vol.Required('current_password'): str,
+    vol.Required('new_password'): str
+})
+
 
 async def async_setup(hass):
     """Enable the Home Assistant views."""
@@ -30,6 +37,10 @@ async def async_setup(hass):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_DELETE, websocket_delete,
         SCHEMA_WS_DELETE
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_CHANGE_PASSWORD, websocket_change_password,
+        SCHEMA_WS_CHANGE_PASSWORD
     )
     return True
 
@@ -118,3 +129,46 @@ def websocket_delete(hass, connection, msg):
             websocket_api.result_message(msg['id']))
 
     hass.async_add_job(delete_creds())
+
+
+@callback
+def websocket_change_password(hass, connection, msg):
+    """Change user password."""
+    async def change_password():
+        """Change user password."""
+        user = connection.request.get('hass_user')
+        if user is None:
+            connection.send_message_outside(websocket_api.error_message(
+                msg['id'], 'user_not_found', 'User not found'))
+            return
+
+        provider = _get_provider(hass)
+        await provider.async_initialize()
+
+        username = None
+        for credential in user.credentials:
+            if credential.auth_provider_type == provider.type:
+                username = credential.data['username']
+                break
+
+        if username is None:
+            connection.send_message_outside(websocket_api.error_message(
+                msg['id'], 'credentials_not_found', 'Credentials not found'))
+            return
+
+        try:
+            await provider.async_validate_login(
+                username, msg['current_password'])
+        except auth_ha.InvalidAuth:
+            connection.send_message_outside(websocket_api.error_message(
+                msg['id'], 'invalid_password', 'Invalid password'))
+            return
+
+        await hass.async_add_executor_job(
+            provider.data.change_password, username, msg['new_password'])
+        await provider.data.async_save()
+
+        connection.send_message_outside(
+            websocket_api.result_message(msg['id']))
+
+    hass.async_add_job(change_password())
