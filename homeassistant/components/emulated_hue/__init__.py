@@ -90,12 +90,12 @@ def setup(hass, yaml_config):
     handler = None
     server = None
 
-    DescriptionXmlView(config).register(app.router)
-    HueUsernameView().register(app.router)
-    HueAllLightsStateView(config).register(app.router)
-    HueOneLightStateView(config).register(app.router)
-    HueOneLightChangeView(config).register(app.router)
-    HueGroupView(config).register(app.router)
+    DescriptionXmlView(config).register(app, app.router)
+    HueUsernameView().register(app, app.router)
+    HueAllLightsStateView(config).register(app, app.router)
+    HueOneLightStateView(config).register(app, app.router)
+    HueOneLightChangeView(config).register(app, app.router)
+    HueGroupView(config).register(app, app.router)
 
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port,
