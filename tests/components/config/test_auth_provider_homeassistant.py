@@ -227,3 +227,77 @@ async def test_delete_unknown_auth(hass, hass_ws_client, hass_access_token):
     result = await client.receive_json()
     assert not result['success'], result
     assert result['error']['code'] == 'auth_not_found'
+
+
+async def test_change_password(hass, hass_ws_client, hass_access_token):
+    """Test that change password succeeds with valid password."""
+    provider = hass.auth.auth_providers[0]
+    await provider.async_initialize()
+    await hass.async_add_executor_job(
+        provider.data.add_auth, 'test-user', 'test-pass')
+
+    credentials = await provider.async_get_or_create_credentials({
+        'username': 'test-user'
+    })
+
+    user = hass_access_token.refresh_token.user
+    await hass.auth.async_link_user(user, credentials)
+
+    client = await hass_ws_client(hass, hass_access_token)
+    await client.send_json({
+        'id': 6,
+        'type': auth_ha.WS_TYPE_CHANGE_PASSWORD,
+        'current_password': 'test-pass',
+        'new_password': 'new-pass'
+    })
+
+    result = await client.receive_json()
+    assert result['success'], result
+    await provider.async_validate_login('test-user', 'new-pass')
+
+
+async def test_change_password_wrong_pw(hass, hass_ws_client,
+                                        hass_access_token):
+    """Test that change password fails with invalid password."""
+    provider = hass.auth.auth_providers[0]
+    await provider.async_initialize()
+    await hass.async_add_executor_job(
+        provider.data.add_auth, 'test-user', 'test-pass')
+
+    credentials = await provider.async_get_or_create_credentials({
+        'username': 'test-user'
+    })
+
+    user = hass_access_token.refresh_token.user
+    await hass.auth.async_link_user(user, credentials)
+
+    client = await hass_ws_client(hass, hass_access_token)
+    await client.send_json({
+        'id': 6,
+        'type': auth_ha.WS_TYPE_CHANGE_PASSWORD,
+        'current_password': 'wrong-pass',
+        'new_password': 'new-pass'
+    })
+
+    result = await client.receive_json()
+    assert not result['success'], result
+    assert result['error']['code'] == 'invalid_password'
+    with pytest.raises(prov_ha.InvalidAuth):
+        await provider.async_validate_login('test-user', 'new-pass')
+
+
+async def test_change_password_no_creds(hass, hass_ws_client,
+                                        hass_access_token):
+    """Test that change password fails with no credentials."""
+    client = await hass_ws_client(hass, hass_access_token)
+
+    await client.send_json({
+        'id': 6,
+        'type': auth_ha.WS_TYPE_CHANGE_PASSWORD,
+        'current_password': 'test-pass',
+        'new_password': 'new-pass'
+    })
+
+    result = await client.receive_json()
+    assert not result['success'], result
+    assert result['error']['code'] == 'credentials_not_found'
