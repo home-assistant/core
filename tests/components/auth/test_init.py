@@ -93,3 +93,20 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     assert user_dict['name'] == user.name
     assert user_dict['id'] == user.id
     assert user_dict['is_owner'] == user.is_owner
+
+
+async def test_cors_on_token(hass, aiohttp_client):
+    """Test logging in with new user and refreshing tokens."""
+    client = await async_setup_auth(hass, aiohttp_client)
+
+    resp = await client.options('/auth/token', headers={
+        'origin': 'http://example.com',
+        'Access-Control-Request-Method': 'POST',
+    })
+    assert resp.headers['Access-Control-Allow-Origin'] == 'http://example.com'
+    assert resp.headers['Access-Control-Allow-Methods'] == 'POST'
+
+    resp = await client.post('/auth/token', headers={
+        'origin': 'http://example.com'
+    })
+    assert resp.headers['Access-Control-Allow-Origin'] == 'http://example.com'
