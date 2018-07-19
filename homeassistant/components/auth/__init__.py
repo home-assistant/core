@@ -110,6 +110,7 @@ import aiohttp.web
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components.http.ban import process_wrong_login
 from homeassistant.core import callback
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView, FlowManagerResourceView)
@@ -187,6 +188,7 @@ class LoginFlowIndexView(FlowManagerIndexView):
         """Create a new login flow."""
         if not indieauth.verify_redirect_uri(data['client_id'],
                                              data['redirect_uri']):
+            await process_wrong_login(request)
             return self.json_message('invalid client id or redirect uri', 400)
 
         # pylint: disable=no-value-for-parameter
@@ -217,16 +219,22 @@ class LoginFlowResourceView(FlowManagerResourceView):
         client_id = data.pop('client_id')
 
         if not indieauth.verify_client_id(client_id):
+            await process_wrong_login(request)
             return self.json_message('Invalid client id', 400)
 
         try:
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
+            await process_wrong_login(request)
             return self.json_message('Invalid flow specified', 404)
         except vol.Invalid:
+            await process_wrong_login(request)
             return self.json_message('User input malformed', 400)
 
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            if result['errors'] is not None and \
+                    result['errors'].get('base') == 'invalid_auth':
+                await process_wrong_login(request)
             return self.json(self._prepare_result_json(result))
 
         result.pop('data')
@@ -254,6 +262,7 @@ class GrantTokenView(HomeAssistantView):
 
         client_id = data.get('client_id')
         if client_id is None or not indieauth.verify_client_id(client_id):
+            await process_wrong_login(request)
             return self.json({
                 'error': 'invalid_request',
                 'error_description': 'Invalid client id',
@@ -262,12 +271,19 @@ class GrantTokenView(HomeAssistantView):
         grant_type = data.get('grant_type')
 
         if grant_type == 'authorization_code':
-            return await self._async_handle_auth_code(hass, client_id, data)
+            resp = await self._async_handle_auth_code(hass, client_id, data)
+            if resp.get('status_code', 200) != 200:
+                await process_wrong_login(request)
+            return resp
 
         elif grant_type == 'refresh_token':
-            return await self._async_handle_refresh_token(
+            resp = await self._async_handle_refresh_token(
                 hass, client_id, data)
+            if resp.get('status_code', 200) != 200:
+                await process_wrong_login(request)
+            return resp
 
+        await process_wrong_login(request)
         return self.json({
             'error': 'unsupported_grant_type',
         }, status_code=400)
