@@ -135,5 +135,9 @@ class AuthProvider:
         """Return extra user metadata for credentials.
 
         Will be used to populate info when creating a new user.
+
+        Values to populate:
+         - name: string
+         - is_active: boolean
         """
         return {}
