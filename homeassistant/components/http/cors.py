@@ -27,6 +27,20 @@ def setup_cors(app, origins):
         ) for host in origins
     })
 
+    def allow_cors(route, methods):
+        """Allow cors on a route."""
+        cors.add(route, {
+            '*': aiohttp_cors.ResourceOptions(
+                allow_headers=ALLOWED_CORS_HEADERS,
+                allow_methods=methods,
+            )
+        })
+
+    app['allow_cors'] = allow_cors
+
+    if not origins:
+        return
+
     async def cors_startup(app):
         """Initialize cors when app starts up."""
         cors_added = set()
