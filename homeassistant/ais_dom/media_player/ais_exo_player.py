@@ -64,7 +64,12 @@ class ExoPlayerDevice(MediaPlayerDevice):
         self._stream_image = None
         self._media_title = None
         self._media_source = None
-        self._playlists = ['Radio', 'Podcast', 'Music', 'AudioBook']
+        self._playlists = [ais_global.G_AN_RADIO,
+                           ais_global.G_AN_PODCAST,
+                           ais_global.G_AN_MUSIC,
+                           ais_global.G_AN_AUDIOBOOK,
+                           ais_global.G_AN_NEWS,
+                           ais_global.G_AN_LOCAL]
         self._currentplaylist = None
 
     @asyncio.coroutine

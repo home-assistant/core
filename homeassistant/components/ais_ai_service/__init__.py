@@ -471,10 +471,11 @@ def commit_current_position(hass):
 
     if CURR_ENTITIE == "input_select.ais_android_wifi_network":
         _say_it(hass, "wybrano wifi: " + get_curent_position(hass).split(';')[0], None)
-    elif CURR_ENTITIE == "input_select.folder_name":
-        _say_it(hass, "wybrano")
+    # elif CURR_ENTITIE == "input_select.folder_name":
+    #     _say_it(hass, "wybrano", None)
     else:
-        _say_it(hass, "ok", None)
+        _beep_it(hass, 33)
+
 
     # TODO - run the script for the item,
     # the automation on state should be executed only from app not from remote
@@ -878,6 +879,13 @@ async def async_setup(hass, config):
         text = service.data[ATTR_TEXT]
         _say_it(hass, text, None)
 
+    def welcome_home(service):
+        """Welcome message."""
+        text = "Witaj w Domu. Powiedz proszę w czym mogę Ci pomóc?"
+        if ais_global.G_OFFLINE_MODE:
+            text = "Uwaga, uruchomienie bez dostępu do sieci, część usług może nie działać poprawnie. Sprawdź połączenie z Internetem."
+        _say_it(hass, text, None)
+
     @asyncio.coroutine
     def publish_command_to_frame(service):
         key = service.data['key']
@@ -905,12 +913,10 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'process', process)
     hass.services.async_register(DOMAIN, 'process_code', process_code)
     hass.services.async_register(DOMAIN, 'say_it', say_it)
-    hass.services.async_register(
-        DOMAIN, 'publish_command_to_frame', publish_command_to_frame)
-    hass.services.async_register(
-        DOMAIN, 'process_command_from_frame', process_command_from_frame)
-    hass.services.async_register(
-        DOMAIN, 'prepare_remote_menu', prepare_remote_menu)
+    hass.services.async_register(DOMAIN, 'welcome_home', welcome_home)
+    hass.services.async_register(DOMAIN, 'publish_command_to_frame', publish_command_to_frame)
+    hass.services.async_register(DOMAIN, 'process_command_from_frame', process_command_from_frame)
+    hass.services.async_register(DOMAIN, 'prepare_remote_menu', prepare_remote_menu)
 
     hass.helpers.intent.async_register(GetTimeIntent())
     hass.helpers.intent.async_register(GetDateIntent())
@@ -1051,7 +1057,7 @@ def _publish_command_to_frame(hass, key, val, ip):
         requests.post(
             url + '/command',
             json={key: ssid, "ip": ip, "WifiNetworkPass": password, "WifiNetworkType": wifi_type})
-    if key == "WifiConnectTheDevice":
+    elif key == "WifiConnectTheDevice":
         iot = val.split(';')[0]
         if iot == ais_global.G_EMPTY_OPTION:
             _say_it(hass, "wybierz wifi do której mam dołączyć urządzenie", None)
@@ -1259,6 +1265,17 @@ def _post_message(message, host):
         if host != 'localhost':
             _LOGGER.error(
                 "problem to send the text to speech via http: " + str(e))
+
+
+def _beep_it(hass, tone):
+    """Post the beep to Android frame."""
+    hass.services.call(
+        'ais_ai_service',
+        'publish_command_to_frame', {
+            "key": 'tone',
+            "val": tone
+        }
+    )
 
 
 def _say_it(hass, message, caller_ip=None):

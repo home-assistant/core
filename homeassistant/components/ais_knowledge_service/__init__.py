@@ -8,6 +8,7 @@ https://ai-speaker.com
 import asyncio
 import logging
 import voluptuous as vol
+from homeassistant.ais_dom import ais_global
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components import ais_cloud
 aisCloud = ais_cloud.AisCloudWS()
@@ -23,7 +24,7 @@ SERVICE_ASK_SCHEMA = vol.Schema({
 })
 _LOGGER = logging.getLogger(__name__)
 GKS_URL = 'https://kgsearch.googleapis.com/v1/entities:search'
-GKS_KEY = None
+G_GKS_KEY = None
 
 
 @asyncio.coroutine
@@ -47,15 +48,28 @@ def async_setup(hass, config):
 @asyncio.coroutine
 def _process_ask_async(hass, call):
     import requests
+    global G_GKS_KEY
     """Ask the service about text."""
     query = call.data[ATTR_TEXT]
     full_message = ""
+    if G_GKS_KEY is None:
+        try:
+            ws_resp = aisCloud.key("kgsearch")
+            json_ws_resp = ws_resp.json()
+            G_GKS_KEY = json_ws_resp["key"]
+        except:
+            yield from hass.services.async_call(
+                'ais_ai_service', 'say_it', {
+                    "text": "Nie udało się wykonać, sprawdz połączenie z Intenetem"
+                })
+            return
+
     req = requests.get(
         GKS_URL,
         params={'query': query,
                 'limit': 1,
                 'indent': True,
-                'key': GKS_KEY,
+                'key': G_GKS_KEY,
                 'languages': 'pl'
                 })
     try:
@@ -82,9 +96,13 @@ def _process_ask_async(hass, call):
 @asyncio.coroutine
 def get_key_async(hass):
     def load():
-        global GKS_KEY
-        ws_resp = aisCloud.key("kgsearch")
-        json_ws_resp = ws_resp.json()
-        GKS_KEY = json_ws_resp["key"]
+        global G_GKS_KEY
+        try:
+            ws_resp = aisCloud.key("kgsearch")
+            json_ws_resp = ws_resp.json()
+            G_GKS_KEY = json_ws_resp["key"]
+        except:
+            ais_global.G_OFFLINE_MODE = True
+
 
     yield from hass.async_add_job(load)

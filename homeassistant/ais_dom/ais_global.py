@@ -20,6 +20,11 @@ G_AN_AUDIOBOOK = "AudioBook"
 G_AN_NEWS = "News"
 G_AN_LOCAL = "Local"
 
+
+# tokens
+G_OFFLINE_MODE = False
+
+
 GLOBAL_MY_IP = None
 _LOGGER = logging.getLogger(__name__)
 

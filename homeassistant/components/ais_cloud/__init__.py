@@ -3,6 +3,7 @@ import asyncio
 import logging
 import requests
 import json
+import os
 from homeassistant.ais_dom import ais_global
 from homeassistant.const import EVENT_PLATFORM_DISCOVERED, EVENT_STATE_CHANGED
 from homeassistant.helpers.discovery import async_load_platform
@@ -279,9 +280,13 @@ class AisCloudWS:
         return ws_resp
 
     def audio_type(self, nature):
-        rest_url = self.url + "audio_type?nature=" + nature
-        ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
-        return ws_resp
+        try:
+            rest_url = self.url + "audio_type?nature=" + nature
+            ws_resp = requests.get(rest_url, headers=CLOUD_WS_HEADER)
+            return ws_resp
+        except:
+            _LOGGER.error("Can't connect to AIS Cloud!!!")
+            ais_global.G_OFFLINE_MODE = True
 
     def audio_name(self, nature, type):
         rest_url = self.url + "audio_name?nature=" + nature
@@ -305,35 +310,40 @@ class AisCacheData:
     def __init__(self, hass):
         """Initialize the files cache"""
         self.hass = hass
-        self.persistence_radio = '/.dom/radio_stations.json'
-        self.persistence_podcast = '/.dom/podcast.json'
-        self.persistence_news = '/.dom/news_chanels.json'
+        self.persistence_radio = '/dom/radio_stations.json'
+        self.persistence_podcast = '/dom/podcast.json'
+        self.persistence_news = '/dom/news_chanels.json'
 
     def get_path(self, nature):
+        path = str(os.path.dirname(__file__))
         if nature == ais_global.G_AN_RADIO:
-            path = self.hass.config.path() + self.persistence_radio
+            path = path + self.persistence_radio
         elif nature == ais_global.G_AN_PODCAST:
-            path = self.hass.config.path() + self.persistence_podcast
+            path = path + self.persistence_podcast
         elif nature == ais_global.G_AN_NEWS:
-            path = self.hass.config.path() + self.persistence_podcast
+            path = path + self.persistence_news
         return path
 
     def audio_type(self, nature):
         # get types from cache file
-        return None
         # types = [ais_global.G_EMPTY_OPTION]
-        # path = self.get_path(nature)
-        # if not os.path.isfile(path):
-        #     return None
-        # else:
-        #     with open(path) as file:
-        #         data = json.loads(file.read())
-        #         items = data["data"]
-        #         values = set()
-        #         for item in items:
-        #             values.add(item['type'])
-        #             types = list(sorted(values))
-        # return types
+        path = self.get_path(nature)
+        if not os.path.isfile(path):
+            return None
+        else:
+            with open(path) as file:
+                data = json.loads(file.read())
+                # items = data["data"]
+                # values = set()
+                # for item in items:
+                #     values.add(item['type'])
+                #     types = list(sorted(values))
+        return data
+
+    def store_audio_type(self, nature, json_data):
+        path = self.get_path(nature)
+        with open(path, 'w') as outfile:
+            json.dump(json_data, outfile)
 
     def audio_name(self, nature, type):
         # get names from cache file
@@ -371,10 +381,13 @@ class AisColudData:
             # ----------------
             # ----- RADIO ----
             # ----------------
-            ws_resp = self.cache.audio_type(ais_global.G_AN_RADIO)
+            ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)
             if ws_resp is None:
-                ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)
-            json_ws_resp = ws_resp.json()
+                json_ws_resp = self.cache.audio_type(ais_global.G_AN_RADIO)
+            else:
+                json_ws_resp = ws_resp.json()
+                self.cache.store_audio_type(ais_global.G_AN_RADIO, json_ws_resp)
+
             types = [ais_global.G_EMPTY_OPTION]
             for item in json_ws_resp["data"]:
                 types.append(item)
@@ -387,10 +400,12 @@ class AisColudData:
             # ----------------
             # --- PODCASTS ---
             # ----------------
-            ws_resp = self.cache.audio_type(ais_global.G_AN_PODCAST)
+            ws_resp = self.cloud.audio_type(ais_global.G_AN_PODCAST)
             if ws_resp is None:
-                ws_resp = self.cloud.audio_type(ais_global.G_AN_PODCAST)
-            json_ws_resp = ws_resp.json()
+                json_ws_resp = self.cache.audio_type(ais_global.G_AN_PODCAST)
+            else:
+                json_ws_resp = ws_resp.json()
+                self.cache.store_audio_type(ais_global.G_AN_PODCAST, json_ws_resp)
             types = [ais_global.G_EMPTY_OPTION]
             for item in json_ws_resp["data"]:
                 types.append(item)
@@ -403,10 +418,12 @@ class AisColudData:
             # ----------------
             # ----- NEWS -----
             # ----------------
-            ws_resp = self.cache.audio_type(ais_global.G_AN_NEWS)
+            ws_resp = self.cloud.audio_type(ais_global.G_AN_NEWS)
             if ws_resp is None:
-                ws_resp = self.cloud.audio_type(ais_global.G_AN_NEWS)
-            json_ws_resp = ws_resp.json()
+                json_ws_resp = self.cache.audio_type(ais_global.G_AN_NEWS)
+            else:
+                json_ws_resp = ws_resp.json()
+                self.cache.store_audio_type(ais_global.G_AN_NEWS, json_ws_resp)
             types = [ais_global.G_EMPTY_OPTION]
             for item in json_ws_resp["data"]:
                 types.append(item)

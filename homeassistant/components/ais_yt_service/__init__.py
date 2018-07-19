@@ -24,6 +24,7 @@ SERVICE_SEARCH_SCHEMA = vol.Schema({
     vol.Required(ATTR_QUERY): cv.string,
 })
 G_YT_FOUND = []
+G_YT_KEY = None
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -61,14 +62,17 @@ class YouTubeData:
     def __init__(self, hass):
         """Initialize the radio stations."""
         self.hass = hass
-        self.YT_KEY = None
 
     @asyncio.coroutine
     def get_key_async(self):
         def load():
-            ws_resp = aisCloud.key("ytsearch")
-            json_ws_resp = ws_resp.json()
-            self.YT_KEY = json_ws_resp["key"]
+            global G_YT_KEY
+            try:
+                ws_resp = aisCloud.key("ytsearch")
+                json_ws_resp = ws_resp.json()
+                G_YT_KEY = json_ws_resp["key"]
+            except:
+                ais_global.G_OFFLINE_MODE = True
 
         yield from self.hass.async_add_job(load)
 
@@ -76,11 +80,25 @@ class YouTubeData:
     def process_search_async(self, call):
         """Search in service."""
         global G_YT_FOUND
+        global G_YT_KEY
         query = call.data[ATTR_QUERY]
+
+        if G_YT_KEY is None:
+            try:
+                ws_resp = aisCloud.key("ytsearch")
+                json_ws_resp = ws_resp.json()
+                G_YT_KEY = json_ws_resp["key"]
+            except:
+                ais_global.G_OFFLINE_MODE = True
+                yield from self.hass.services.async_call(
+                    'ais_ai_service', 'say_it', {
+                        "text": "Brak odpowiedzi, sprawdz połączenie z Intenetem"
+                    })
+                return
 
         params = dict(order='relevance',
                       part='snippet',
-                      key=self.YT_KEY,
+                      key=G_YT_KEY,
                       maxResults=10)
         params.update({'q': query})
         data = requests.get(URL_BASE, params=params).json()

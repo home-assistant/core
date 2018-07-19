@@ -33,7 +33,6 @@ def async_setup(hass, config):
         _LOGGER.info("browse_path")
         data.browse_path(call)
 
-
     hass.services.async_register(
         DOMAIN, 'browse_path', browse_path)
 
@@ -58,12 +57,11 @@ class LocalData:
             _LOGGER.error("No path")
             return []
         else:
-            # validation
-            if os.path.isdir(call.data["path"]):
-                os.chdir(call.data["path"])
-                self.path = os.path.abspath(os.curdir)
+            if call.data["path"] == "..":
+                k = self.path.rfind("/" + os.path.basename(self.path))
+                self.path = self.path[:k]
             else:
-                self.path = call.data["path"]
+                self.path = G_LOCAL_FILES_ROOT + call.data["path"]
 
         if os.path.isdir(self.path):
             # browse dir
@@ -72,7 +70,7 @@ class LocalData:
                 self.folders.append('..')
             dirs = os.listdir(self.path)
             for dir in dirs:
-                self.folders.append(self.path + "/" + dir)
+                self.folders.append(self.path.replace(G_LOCAL_FILES_ROOT, "") + "/" + dir)
             self.hass.services.call(
                 'input_select',
                 'set_options', {
@@ -86,6 +84,12 @@ class LocalData:
                     'say_it', {
                         "text": "Czytam zawartość pliku"
                     })
+                with open(self.path) as file:
+                    self.hass.services.call(
+                        'ais_ai_service',
+                        'say_it', {
+                            "text": file.read()
+                        })
             elif self.path.endswith('.mp3'):
                 self.hass.services.call(
                     'ais_ai_service',
@@ -93,8 +97,9 @@ class LocalData:
                         "text": "Włączam"
                     })
                 _url = self.path
-                _audio_info = {"IMAGE_URL": "/sdcard/dom/.dom/dom.jpeg",
-                               "NAME": os.path.basename(self.path),
+                # TODO search the image in the folder
+                # "IMAGE_URL": "file://sdcard/dom/.dom/dom.jpeg",
+                _audio_info = {"NAME": os.path.basename(self.path),
                                "MEDIA_SOURCE": ais_global.G_AN_LOCAL}
                 _audio_info = json.dumps(_audio_info)
 
@@ -119,6 +124,7 @@ class LocalData:
                                 "media_content_id": _audio_info
                             })
             else:
+                _LOGGER.info("Tego typu plików jeszcze nie obsługuję." + str(self.path))
                 self.hass.services.call(
                     'ais_ai_service',
                     'say_it', {
@@ -134,9 +140,9 @@ class LocalData:
             self.path = os.path.abspath(G_LOCAL_FILES_ROOT)
             dirs = os.listdir(self.path)
             self.folders = [ais_global.G_EMPTY_OPTION]
-            for dir in dirs:
-                self.folders.append(self.path + '/' + dir)
-            
+            for d in dirs:
+                self.folders.append(self.path.replace(G_LOCAL_FILES_ROOT, "") + '/' + d)
+
             """Load the folders and files synchronously."""
             self.hass.services.call(
                 'input_select',

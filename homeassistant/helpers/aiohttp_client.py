@@ -23,7 +23,7 @@ SERVER_SOFTWARE = 'HomeAssistant/{0} aiohttp/{1} Python/{2[0]}.{2[1]}'.format(
 
 @callback
 @bind_hass
-def async_get_clientsession(hass, verify_ssl=True):
+def async_get_clientsession(hass, verify_ssl=False):
     """Return default aiohttp ClientSession.
 
     This method must be run in the event loop.
