@@ -66,6 +66,8 @@ class TPLinkSmartBulb(Light):
         self._brightness = None
         self._hs = None
         self._supported_features = 0
+        self._min_mireds = None
+        self._max_mireds = None
         self._emeter_params = {}
 
     @property
@@ -107,12 +109,12 @@ class TPLinkSmartBulb(Light):
     @property
     def min_mireds(self):
         """Return minimum supported color temperature."""
-        return kelvin_to_mired(self.smartbulb.valid_temperature_range[1])
+        return self._min_mireds
 
     @property
     def max_mireds(self):
         """Return maximum supported color temperature."""
-        return kelvin_to_mired(self.smartbulb.valid_temperature_range[0])
+        return self._max_mireds
 
     @property
     def color_temp(self):
@@ -195,5 +197,9 @@ class TPLinkSmartBulb(Light):
             self._supported_features += SUPPORT_BRIGHTNESS
         if self.smartbulb.is_variable_color_temp:
             self._supported_features += SUPPORT_COLOR_TEMP
+            self._min_mireds = kelvin_to_mired(
+                self.smartbulb.valid_temperature_range[1])
+            self._max_mireds = kelvin_to_mired(
+                self.smartbulb.valid_temperature_range[0])
         if self.smartbulb.is_color:
             self._supported_features += SUPPORT_COLOR
