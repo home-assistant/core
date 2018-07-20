@@ -11,6 +11,7 @@ from homeassistant.components import (
     scene,
     script,
     switch,
+    vacuum,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -33,6 +34,8 @@ TRAIT_COLOR_SPECTRUM = PREFIX_TRAITS + 'ColorSpectrum'
 TRAIT_COLOR_TEMP = PREFIX_TRAITS + 'ColorTemperature'
 TRAIT_SCENE = PREFIX_TRAITS + 'Scene'
 TRAIT_TEMPERATURE_SETTING = PREFIX_TRAITS + 'TemperatureSetting'
+TRAIT_STARTSTOP = PREFIX_TRAITS + 'StartStop'
+TRAIT_DOCK = PREFIX_TRAITS + 'Dock'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
 COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
@@ -44,7 +47,9 @@ COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
 COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
     PREFIX_COMMANDS + 'ThermostatTemperatureSetRange')
 COMMAND_THERMOSTAT_SET_MODE = PREFIX_COMMANDS + 'ThermostatSetMode'
-
+COMMAND_STARTSTOP = PREFIX_COMMANDS + 'StartStop'
+COMMAND_PAUSEUNPAUSE = PREFIX_COMMANDS + 'PauseUnpause'
+COMMAND_DOCK = PREFIX_COMMANDS + 'Dock'
 
 TRAITS = []
 
@@ -520,3 +525,123 @@ class TemperatureSettingTrait(_Trait):
                     climate.ATTR_OPERATION_MODE:
                         self.google_to_hass[params['thermostatMode']],
                 }, blocking=True)
+
+
+@register_trait
+class StartStopTrait(_Trait):
+    """Trait to offer start, stop, and pause functionality.
+
+    https://developers.google.com/actions/smarthome/traits/startstop
+    """
+
+    name = TRAIT_STARTSTOP
+    commands = [
+        COMMAND_STARTSTOP,
+        COMMAND_PAUSEUNPAUSE
+    ]
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        if domain != vacuum.DOMAIN:
+            return False
+
+        return True
+
+    def sync_attributes(self):
+        """Assume that all vacuum support pause."""
+        return {'pausable': True}
+
+    def query_attributes(self):
+        """Return the running/paused state."""
+        domain = self.state.domain
+        response = {}
+
+        if domain == vacuum.DOMAIN:
+
+            attrs = self.state.attributes
+
+            if attrs[vacuum.ATTR_STATUS] == vacuum.STATE_PAUSED:
+                response['isPaused'] = True
+                response['isRunning'] = False
+            elif attrs[vacuum.ATTR_STATUS] == vacuum.STATE_CLEANING:
+                response['isPaused'] = False
+                response['isRunning'] = True
+            else:
+                response['isPaused'] = False
+                response['isRunning'] = False
+
+        return response
+
+    async def execute(self, hass, command, params):
+        """Execute a start, stop, pause, or unpause command."""
+        domain = self.state.domain
+        param_start = 'start'
+        param_pause = 'pause'
+
+        if domain == vacuum.DOMAIN:
+            service_domain = domain
+            if param_start in params:
+                if[param_start]:
+                    if params[param_start]:
+                        service = vacuum.SERVICE_START_PAUSE
+                    else:
+                        service = vacuum.SERVICE_STOP
+
+            if param_pause in params:
+                if[param_pause]:
+                    service = vacuum.SERVICE_START_PAUSE
+                else:
+                    service = vacuum.SERVICE_START_PAUSE
+
+        await hass.services.async_call(service_domain, service, {
+            ATTR_ENTITY_ID: self.state.entity_id
+            }, blocking=True)
+
+
+@register_trait
+class DockTrait(_Trait):
+    """Trait to offer docking.
+
+    https://developers.google.com/actions/smarthome/traits/dock
+    """
+
+    name = TRAIT_DOCK
+    commands = {COMMAND_DOCK}
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        if domain != vacuum.DOMAIN:
+            return False
+
+        return True
+
+    def sync_attributes(self):
+        """No attributes required."""
+        return {}
+
+    def query_attributes(self):
+        """Return if docked."""
+        domain = self.state.domain
+        response = {}
+
+        if domain == vacuum.DOMAIN:
+            attrs = self.state.attributes
+
+            response['isDocked'] = bool(attrs[vacuum.ATTR_STATUS] ==
+                                        vacuum.STATE_DOCKED)
+
+        return response
+
+    async def execute(self, hass, command, params):
+        """Execute a return to dock command."""
+        domain = self.state.domain
+
+        if domain == vacuum.DOMAIN:
+            service_domain = domain
+            service = vacuum.SERVICE_RETURN_TO_BASE
+
+        await hass.services.async_call(service_domain, service, {
+            ATTR_ENTITY_ID: self.state.entity_id
+            }, blocking=True)
