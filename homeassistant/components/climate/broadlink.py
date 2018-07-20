@@ -1,19 +1,17 @@
 """
 Support for Chinese wifi thermostats (Floureon, Beok, Beca Energy)
-configuration.yaml
-climate:
-  - platform: broadlink
-    name: xxx
-    mac: xxxx
-    host: xxxx
+
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/climate.broadlink/
 """
-import logging
+import asyncio
 import json
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    STATE_AUTO, ClimateDevice,
+    DOMAIN, STATE_AUTO, ClimateDevice,
     SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA, STATE_MANUAL, STATE_IDLE)
 from homeassistant.const import (
@@ -24,11 +22,9 @@ from socket import timeout
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'broadlink'
 REQUIREMENTS = ['broadlink==0.9.0']
 
 DEFAULT_NAME = 'broadlink'
-
 POWER_ON = 1
 POWER_OFF = 0
 AUTO = 1
@@ -50,204 +46,152 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
     vol.Optional(CONF_MAX_TEMP, default=35): cv.positive_int,
     vol.Optional(CONF_ADVANCED_CONFIG,
-                 default='{"loop_mode": "0", '
-                         '"sen": "0", '
-                         '"osv": "42", '
-                         '"dif": "2", '
-                         '"svh": "35", '
-                         '"svl": "5", '
-                         '"adj": "0", '
-                         '"fre": "01", '
-                         '"pon": "00"}'): cv.string,
+                 default='{"loop_mode": 0, '
+                         '"sen": 0, '
+                         '"osv": 42, '
+                         '"dif": 2, '
+                         '"svh": 35, '
+                         '"svl": 5, '
+                         '"adj": 0, '
+                         '"fre": 1, '
+                         '"pon": 0}'): cv.string,
     vol.Optional(CONF_SCHEDULE_WEEKDAY,
-                 default='[{"start_hour":"06", '
-                         '"start_minute":"30", '
-                         '"temp":"20"}, '
-                         '{"start_hour":"09", '
-                         '"start_minute":"00", '
-                         '"temp":"17"}, '
-                         '{"start_hour":"12", '
-                         '"start_minute":"00", '
-                         '"temp":"20" }, '
-                         '{"start_hour":"14", '
-                         '"start_minute":"00", '
-                         '"temp":"17"}, '
-                         '{"start_hour":"18", '
-                         '"start_minute":"00", '
-                         '"temp":"20" }, '
+                 default='[{"start_hour":6, '
+                         '"start_minute":30, '
+                         '"temp":20}, '
+                         '{"start_hour":9, '
+                         '"start_minute":0, '
+                         '"temp":17}, '
+                         '{"start_hour":12, '
+                         '"start_minute":0, '
+                         '"temp":20}, '
+                         '{"start_hour":14, '
+                         '"start_minute":0, '
+                         '"temp":17}, '
+                         '{"start_hour":18, '
+                         '"start_minute":0, '
+                         '"temp":20}, '
                          '{"start_hour":22, '
                          '"start_minute":30, '
                          '"temp":17}]'): cv.string,
     vol.Optional(CONF_SCHEDULE_WEEKEND,
-                 default='[{"start_hour":"08", '
-                         '"start_minute":"30", '
-                         '"temp":"20"}, '
-                         '{"start_hour":"23", '
-                         '"start_minute":"00", '
-                         '"temp":"17"}]'): cv.string
+                 default='[{"start_hour":8, '
+                         '"start_minute":30, '
+                         '"temp":20}, '
+                         '{"start_hour":23, '
+                         '"start_minute":0, '
+                         '"temp":17}]'): cv.string
 })
 
 SET_SCHEDULE_SCHEMA = vol.Schema({
     vol.Required(CONF_WEEKDAY,
                  default='[{'
-                         '"start_hour":"06", '
-                         '"start_minute":"30", '
-                         '"temp":"20"}, '
-                         '{"start_hour":"09", '
-                         '"start_minute":"00", '
-                         '"temp":"17"}, '
-                         '{"start_hour":"12", '
-                         '"start_minute":"00", '
-                         '"temp":"20" }, '
-                         '{"start_hour":"14", '
-                         '"start_minute":"00", '
-                         '"temp":"17"}, '
-                         '{"start_hour":"18", '
-                         '"start_minute":"00", '
-                         '"temp":"20" }, '
+                         '"start_hour":6, '
+                         '"start_minute":30, '
+                         '"temp":20}, '
+                         '{"start_hour":9, '
+                         '"start_minute":0, '
+                         '"temp":17}, '
+                         '{"start_hour":12, '
+                         '"start_minute":0, '
+                         '"temp":20}, '
+                         '{"start_hour":14, '
+                         '"start_minute":0, '
+                         '"temp":17}, '
+                         '{"start_hour":18, '
+                         '"start_minute":0, '
+                         '"temp":20}, '
                          '{"start_hour":22, '
                          '"start_minute":30, '
                          '"temp":17}]'): cv.string,
     vol.Required(CONF_WEEKEND,
-                 default='[{"start_hour":"08", '
-                         '"start_minute":"30", '
-                         '"temp":"20"}, '
-                         '{"start_hour":"23", '
-                         '"start_minute":"00", '
-                         '"temp":"17"}]'): cv.string
+                 default='[{"start_hour":8, '
+                         '"start_minute":30, '
+                         '"temp":20}, '
+                         '{"start_hour":23, '
+                         '"start_minute":0, '
+                         '"temp":17}]'): cv.string
 })
 
 SET_ADVANCED_CONF_SCHEMA = vol.Schema({
     vol.Required(CONF_ADVANCED_CONFIG,
-                 default='{"loop_mode": "0", '
-                         '"sen": "0", '
-                         '"osv": "42", '
-                         '"dif": "2", '
-                         '"svh": "35", '
-                         '"svl": "5", '
-                         '"adj": "0", '
-                         '"fre": "01", '
-                         '"pon": "00"}'): cv.string,
+                 default='{"loop_mode": 0, '
+                         '"sen": 0, '
+                         '"osv": 42, '
+                         '"dif": 2, '
+                         '"svh": 35, '
+                         '"svl": 5, '
+                         '"adj": 0, '
+                         '"fre": 1, '
+                         '"pon": 0}'): cv.string,
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the broadlink thermostat platform."""
-    _LOGGER.debug("Adding component: wifi_thermostat ...")
 
-    mac_addr = config.get(CONF_MAC)
-    ip_addr = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-
-    if mac_addr is None:
-        _LOGGER.error("Wifi Thermostat: Invalid mac_addr !")
-        return False
-
-    if ip_addr is None:
-        _LOGGER.error("Wifi Thermostat: Invalid ip_addr !")
-        return False
-
-    if name is None:
-        _LOGGER.error("Wifi Thermostat: Invalid name !")
-        return False
-
-    wifi_thermostat = WifiThermostat(mac_addr,
-                        ip_addr,
-                        name,
-                        config.get(CONF_ADVANCED_CONFIG),
-                        config.get(CONF_SCHEDULE_WEEKDAY),
-                        config.get(CONF_SCHEDULE_WEEKDAY),
-                        config.get(CONF_MIN_TEMP),
-                        config.get(CONF_MAX_TEMP))
+    wifi_thermostat = WifiThermostat(config[CONF_MAC],
+                                     config[CONF_HOST],
+                                     config[CONF_NAME],
+                                     config[CONF_ADVANCED_CONFIG],
+                                     config[CONF_SCHEDULE_WEEKDAY],
+                                     config[CONF_SCHEDULE_WEEKDAY],
+                                     config[CONF_MIN_TEMP],
+                                     config[CONF_MAX_TEMP])
 
     add_devices([BroadlinkThermostat(wifi_thermostat)], True)
 
+    @asyncio.coroutine
     def handle_set_schedule(service):
         """Handle data for the set_schedule service call."""
-        thermostat = WifiThermostat(config.get(CONF_MAC),
-                                    config.get(CONF_HOST),
-                                    config.get(CONF_NAME),
-                                    config.get(CONF_ADVANCED_CONFIG),
-                                    config.get(CONF_SCHEDULE_WEEKDAY),
-                                    config.get(CONF_SCHEDULE_WEEKDAY),
-                                    config.get(CONF_MIN_TEMP),
-                                    config.get(CONF_MAX_TEMP))
         schedule_wd = service.data.get(CONF_SCHEDULE_WEEKDAY)
         schedule_we = service.data.get(CONF_SCHEDULE_WEEKEND)
-        thermostat.set_schedule(
+        wifi_thermostat.set_schedule(
             {CONF_WEEKDAY:
-             json.loads(schedule_wd.replace("'", '"'), cls=Decoder),
+             json.loads(schedule_wd.replace("'", '"')),
              CONF_WEEKEND:
-             json.loads(schedule_we.replace("'", '"'), cls=Decoder)})
+             json.loads(schedule_we.replace("'", '"'))})
 
-    #hass.services.register(DOMAIN, 'set_schedule', handle_set_schedule, schema=SET_SCHEDULE_SCHEMA)
+    hass.services.register(DOMAIN,
+                           'set_schedule',
+                           handle_set_schedule,
+                           schema=SET_SCHEDULE_SCHEMA)
 
+    @asyncio.coroutine
     def handle_set_advanced_conf(service):
         """Handle data for the set_advanced_conf service call."""
-        thermostat = WifiThermostat(config.get(CONF_MAC),
-                                    config.get(CONF_HOST),
-                                    config.get(CONF_NAME),
-                                    config.get(CONF_ADVANCED_CONFIG),
-                                    config.get(CONF_SCHEDULE_WEEKDAY),
-                                    config.get(CONF_SCHEDULE_WEEKDAY),
-                                    config.get(CONF_MIN_TEMP),
-                                    config.get(CONF_MAX_TEMP))
         advanced_conf = service.data.get(CONF_ADVANCED_CONFIG)
-        thermostat.set_advanced_config(
-            json.loads(advanced_conf.replace("'", '"'), cls=Decoder))
+        wifi_thermostat.set_advanced_config(
+            json.loads(advanced_conf.replace("'", '"')))
 
-    #hass.services.register(DOMAIN, 'set_advanced_conf', handle_set_advanced_conf, schema=SET_ADVANCED_CONF_SCHEMA)
+    hass.services.register(DOMAIN,
+                           'set_advanced_conf',
+                           handle_set_advanced_conf,
+                           schema=SET_ADVANCED_CONF_SCHEMA)
 
     _LOGGER.debug("Wifi Thermostat: Component successfully added !")
-
-
-class Decoder(json.JSONDecoder):
-    import re
-
-    FLAGS = re.VERBOSE | re.MULTILINE | re.DOTALL
-    WHITESPACE = re.compile(r'[ \t\n\r]*', FLAGS)
-
-    def decode(self, s, _w=WHITESPACE.match):
-        result = super(Decoder, self).decode(s)
-        return self._decode(result)
-
-    def _decode(self, o):
-        if isinstance(o, str):
-            try:
-                return int(o)
-            except ValueError:
-                try:
-                    return float(o)
-                except ValueError:
-                    return o
-        elif isinstance(o, dict):
-            return {k: self._decode(v) for k, v in o.items()}
-        elif isinstance(o, list):
-            return [self._decode(v) for v in o]
-        else:
-            return o
 
 
 class WifiThermostat:
     def __init__(self, mac, ip, name, advanced_config,
                  schedule_wd, schedule_we, min_temp, max_temp):
-        self.HOST = ip
-        self.PORT = 80
-        self.MAC = bytes.fromhex(''.join(reversed(mac.split(':'))))
+        self.host = ip
+        self.port = 80
+        self.mac = bytes.fromhex(''.join(reversed(mac.split(':'))))
         self.current_temp = None
         self.current_operation = None
         self.power = None
         self.target_temperature = None
         self.name = name
-        self.loop_mode = json.loads(advanced_config, cls=Decoder)["loop_mode"]
+        self.loop_mode = json.loads(advanced_config)["loop_mode"]
         self.operation_list = [STATE_AUTO, STATE_IDLE, STATE_MANUAL]
         self.min_temp = min_temp
         self.max_temp = max_temp
         self.state = 0
         self.freeze = 0
-        self.advanced_config = json.loads(advanced_config, cls=Decoder)
-        self.schedule = {CONF_WEEKDAY: json.loads(schedule_wd, cls=Decoder),
-                         CONF_WEEKEND: json.loads(schedule_we, cls=Decoder)}
+        self.advanced_config = json.loads(advanced_config)
+        self.schedule = {CONF_WEEKDAY: json.loads(schedule_wd),
+                         CONF_WEEKEND: json.loads(schedule_we)}
         self.set_advanced_config(self.advanced_config)
         self.set_schedule(self.schedule)
 
@@ -327,19 +271,18 @@ class WifiThermostat:
             device = self.connect()
             if device.auth():
                 data = device.get_full_status()
-                json_data = json.loads(json.dumps(data))
-                self.current_temp = json_data['room_temp']
-                self.target_temperature = json_data['thermostat_temp']
+                self.current_temp = data['room_temp']
+                self.target_temperature = data['thermostat_temp']
                 self.current_operation = STATE_IDLE \
                     if \
-                    json_data["power"] == 0 \
+                    data["power"] == 0 \
                     else \
                     (STATE_AUTO
                      if
-                     json_data["auto_mode"] == 1
+                     data["auto_mode"] == 1
                      else
                      STATE_MANUAL)
-                self.state = STATE_MANUAL if json_data["active"] == 0 \
+                self.state = STATE_MANUAL if data["active"] == 0 \
                     else STATE_IDLE
                 self.freeze = data['fre']
         except timeout:
@@ -349,9 +292,9 @@ class WifiThermostat:
         """Open a connexion"""
         import broadlink
         return broadlink.gendevice(0x4EAD,
-                                   (self.HOST,
-                                    self.PORT),
-                                   self.MAC)
+                                   (self.host,
+                                    self.port),
+                                   self.mac)
 
 
 class BroadlinkThermostat(ClimateDevice):
@@ -434,12 +377,12 @@ class BroadlinkThermostat(ClimateDevice):
 
     def set_advance_config(self, config_json):
         """Set the thermostat advanced config"""
-        self._device.set_advanced_config(json.loads(config_json, cls=Decoder))
+        self._device.set_advanced_config(json.loads(config_json))
         self.schedule_update_ha_state()
 
     def set_schedule(self, schedule_json):
         """Set the thermostat schedule"""
-        self._device.set_schedule(json.loads(schedule_json, cls=Decoder))
+        self._device.set_schedule(json.loads(schedule_json))
         self.schedule_update_ha_state()
 
     def update(self):
