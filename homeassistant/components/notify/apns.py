@@ -56,7 +56,7 @@ def get_service(hass, config, discovery_info=None):
     return service
 
 
-class ApnsDevice(object):
+class ApnsDevice:
     """
     The APNS Device class.
 

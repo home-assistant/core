@@ -193,7 +193,7 @@ class AutomaticAuthCallbackView(HomeAssistantView):
         return response
 
 
-class AutomaticData(object):
+class AutomaticData:
     """A class representing an Automatic cloud service connection."""
 
     def __init__(self, hass, client, session, devices, async_see):

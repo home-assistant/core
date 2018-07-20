@@ -138,7 +138,7 @@ class NZBGetSensor(Entity):
             self._state = value
 
 
-class NZBGetAPI(object):
+class NZBGetAPI:
     """Simple JSON-RPC wrapper for NZBGet's API."""
 
     def __init__(self, api_url, username=None, password=None):

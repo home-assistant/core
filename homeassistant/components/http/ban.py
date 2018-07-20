@@ -107,7 +107,7 @@ async def process_wrong_login(request):
             'Banning IP address', NOTIFICATION_ID_BAN)
 
 
-class IpBan(object):
+class IpBan:
     """Represents banned IP address."""
 
     def __init__(self, ip_ban: str, banned_at: datetime = None) -> None:

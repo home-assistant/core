@@ -180,7 +180,7 @@ class BOMCurrentSensor(Entity):
         self.bom_data.update()
 
 
-class BOMCurrentData(object):
+class BOMCurrentData:
     """Get data from BOM."""
 
     def __init__(self, hass, station_id):

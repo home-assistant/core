@@ -88,7 +88,7 @@ class Ted5000Sensor(Entity):
         self._gateway.update()
 
 
-class Ted5000Gateway(object):
+class Ted5000Gateway:
     """The class for handling the data retrieval."""
 
     def __init__(self, url):

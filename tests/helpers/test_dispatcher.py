@@ -8,7 +8,7 @@ from homeassistant.helpers.dispatcher import (
 from tests.common import get_test_home_assistant
 
 
-class TestHelpersDispatcher(object):
+class TestHelpersDispatcher:
     """Tests for discovery helper methods."""
 
     def setup_method(self, method):

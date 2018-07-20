@@ -98,7 +98,7 @@ class Geizwatch(Entity):
         self._state = self.data.prices[0]
 
 
-class GeizParser(object):
+class GeizParser:
     """Pull data from the geizhals website."""
 
     def __init__(self, product_id, domain, regex):

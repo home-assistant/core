@@ -280,7 +280,7 @@ class TodoistProjectDevice(CalendarEventDevice):
         return attributes
 
 
-class TodoistProjectData(object):
+class TodoistProjectData:
     """
     Class used by the Task Device service object to hold all Todoist Tasks.
 

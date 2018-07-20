@@ -45,7 +45,7 @@ def _api_data(funct):
     return _wrapper
 
 
-class HassIO(object):
+class HassIO:
     """Small API wrapper for Hass.io."""
 
     def __init__(self, loop, websession, ip):

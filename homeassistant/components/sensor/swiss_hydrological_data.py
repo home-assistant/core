@@ -145,7 +145,7 @@ class SwissHydrologicalDataSensor(Entity):
                 self._state = self.data.measurings['03']['current']
 
 
-class HydrologicalData(object):
+class HydrologicalData:
     """The Class for handling the data retrieval."""
 
     def __init__(self, station):

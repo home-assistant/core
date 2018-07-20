@@ -53,7 +53,7 @@ def setup(hass, config):
     return len(feeds) > 0
 
 
-class FeedManager(object):
+class FeedManager:
     """Abstraction over Feedparser module."""
 
     def __init__(self, url, scan_interval, max_entries, hass, storage):
@@ -170,7 +170,7 @@ class FeedManager(object):
         self._firstrun = False
 
 
-class StoredData(object):
+class StoredData:
     """Abstraction over pickle data storage."""
 
     def __init__(self, data_file):

@@ -236,7 +236,7 @@ class OrderedSet(MutableSet):
         return set(self) == set(other)
 
 
-class Throttle(object):
+class Throttle:
     """A class for throttling the execution of tasks.
 
     This method decorator adds a cooldown to a method to prevent it from being

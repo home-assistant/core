@@ -129,7 +129,7 @@ class CupsSensor(Entity):
 
 
 # pylint: disable=no-name-in-module
-class CupsData(object):
+class CupsData:
     """Get the latest data from CUPS and update the state."""
 
     def __init__(self, host, port):

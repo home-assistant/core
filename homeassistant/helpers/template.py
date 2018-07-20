@@ -82,7 +82,7 @@ def extract_entities(template, variables=None):
     return MATCH_ALL
 
 
-class Template(object):
+class Template:
     """Class to hold a template and manage caching and rendering."""
 
     def __init__(self, template, hass=None):
@@ -198,7 +198,7 @@ class Template(object):
                 self.hass == other.hass)
 
 
-class AllStates(object):
+class AllStates:
     """Class to expose all HA states as attributes."""
 
     def __init__(self, hass):
@@ -226,7 +226,7 @@ class AllStates(object):
         return STATE_UNKNOWN if state is None else state.state
 
 
-class DomainStates(object):
+class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
     def __init__(self, hass, domain):
@@ -286,7 +286,7 @@ def _wrap_state(state):
     return None if state is None else TemplateState(state)
 
 
-class TemplateMethods(object):
+class TemplateMethods:
     """Class to expose helpers to templates."""
 
     def __init__(self, hass):
