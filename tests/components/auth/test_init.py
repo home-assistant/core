@@ -71,7 +71,7 @@ def test_credential_store_expiration():
 
 
 async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
-    """Test the current user command."""
+    """Test the current user command with homeassistant creds."""
     assert await async_setup_component(hass, 'auth', {
         'http': {
             'api_password': 'bla'
@@ -80,7 +80,7 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
 
     user = hass_access_token.refresh_token.user
     credential = Credentials(auth_provider_type='homeassistant',
-                             auth_provider_id='hass-test-id',
+                             auth_provider_id=None,
                              data={}, id='test-id')
     user.credentials.append(credential)
     assert len(user.credentials) == 1
@@ -97,15 +97,40 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     assert result['success'], result
 
     user_dict = result['result']
+
     assert user_dict['name'] == user.name
     assert user_dict['id'] == user.id
     assert user_dict['is_owner'] == user.is_owner
-    assert len(user_dict['credentials']) == 1
+    assert user_dict['allow_change_password']
 
-    hass_cred = user_dict['credentials'][0]
-    assert hass_cred['auth_provider_type'] == 'homeassistant'
-    assert hass_cred['id'] == 'test-id'
-    assert 'data' not in hass_cred
+
+async def test_ws_current_user_cant_change_pw(hass, hass_ws_client,
+                                              hass_access_token):
+    """Test the current user can't change pw without homeassistant creds."""
+    assert await async_setup_component(hass, 'auth', {
+        'http': {
+            'api_password': 'bla'
+        }
+    })
+
+    user = hass_access_token.refresh_token.user
+    credential = Credentials(auth_provider_type='not-homeassistant',
+                             auth_provider_id=None,
+                             data={}, id='test-id')
+    user.credentials.append(credential)
+    assert len(user.credentials) == 1
+
+    with patch('homeassistant.auth.AuthManager.active', return_value=True):
+        client = await hass_ws_client(hass, hass_access_token)
+
+    await client.send_json({
+        'id': 5,
+        'type': auth.WS_TYPE_CURRENT_USER,
+    })
+
+    result = await client.receive_json()
+    assert result['success'], result
+    assert not result['result']['allow_change_password']
 
 
 async def test_cors_on_token(hass, aiohttp_client):
