@@ -202,12 +202,12 @@ class BroadlinkRM(MediaPlayerDevice):
         await self.send(self._config.get(CONF_PREVIOUS_TRACK))
 
     async def async_select_source(self, source):
-        """Selectes a specific source."""
+        """Select a specific source."""
         await self.send(self._config.get(CONF_SOURCES)[source])
         self._source = source
 
     async def async_play_media(self, media_type, media_id, **kwargs):
-        """Switches to a specific channel."""
+        """Switch to a specific channel."""
         if media_type != MEDIA_TYPE_CHANNEL:
             _LOGGER.error('Unsupported media type %s', media_type)
             return
