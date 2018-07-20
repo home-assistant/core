@@ -10,7 +10,7 @@ from tests.common import get_test_instance_port
 from homeassistant import core, const, setup
 import homeassistant.components as core_components
 from homeassistant.components import (
-    fan, http, light, script, emulated_hue, media_player)
+    fan, http, light, script, emulated_hue, media_player, cover)
 from homeassistant.components.emulated_hue import Config
 from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView, HueOneLightStateView,
@@ -90,6 +90,15 @@ def hass_hue(loop, hass):
             ]
         }))
 
+    loop.run_until_complete(
+        setup.async_setup_component(hass, cover.DOMAIN, {
+            'cover': [
+                {
+                    'platform': 'demo',
+                }
+            ]
+        }))
+
     # Kitchen light is explicitly excluded from being exposed
     kitchen_light_entity = hass.states.get('light.kitchen_lights')
     attrs = dict(kitchen_light_entity.attributes)
@@ -113,6 +122,14 @@ def hass_hue(loop, hass):
     hass.states.async_set(
         script_entity.entity_id, script_entity.state, attributes=attrs
     )
+
+    # Expose cover
+    cover_entity = hass.states.get('cover.living_room_window')
+    attrs = dict(cover_entity.attributes)
+    attrs[emulated_hue.ATTR_EMULATED_HUE_HIDDEN] = False
+    hass.states.async_set(
+        cover_entity.entity_id, cover_entity.state,
+        attributes=attrs)
 
     return hass
 
@@ -316,6 +333,35 @@ def test_put_light_state_media_player(hass_hue, hue_client):
 
 
 @asyncio.coroutine
+
+def test_put_light_state_cover(hass_hue, hue_client):
+    """Test setting cover level."""
+
+    # close the cover first
+    yield from hass_hue.services.async_call(
+        cover.DOMAIN, const.SERVICE_SET_COVER_POSITION,
+        {const.ATTR_ENTITY_ID: 'cover.living_room_window',
+        cover.ATTR_POSITION: 66.0},
+        blocking=True)
+
+    # Emulated hue converts 0-100% to 0-255.
+    level = 89
+    brightness = round(level * 255 / 100)
+
+    cover_level_result = yield from perform_put_light_state(
+        hass_hue, hue_client,
+        'cover.living_room_window', True, brightness)
+
+    cover_level_result_json = yield from cover_level_result.json()
+
+    assert cover_level_result.status == 200
+    assert len(cover_level_result_json) == 2
+
+    living_room_window_cover = hass_hue.states.get('cover.living_room_window')
+    assert living_room_window_cover.state == 'open'
+    assert living_room_window_cover.attributes[cover.ATTR_CURRENT_POSITION] == level
+
+
 def test_put_light_state_fan(hass_hue, hue_client):
     """Test turning on fan and setting speed."""
     # Turn the fan off first
