@@ -1,5 +1,5 @@
 """
-Support for Chinese wifi thermostats (Floureon, Beok, Beca Energy)
+Support for Chinese wifi thermostats (Floureon, Beok, Beca Energy).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.broadlink/
@@ -153,6 +153,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
              CONF_WEEKEND:
              json.loads(schedule_we.replace("'", '"'))})
 
+    # Register schedule service
     hass.services.register(DOMAIN,
                            DEFAULT_NAME + '_set_schedule',
                            handle_set_schedule,
@@ -165,6 +166,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         wifi_thermostat.set_advanced_config(
             json.loads(advanced_conf.replace("'", '"')))
 
+
+    # Register advanced configuration service
     hass.services.register(DOMAIN,
                            DEFAULT_NAME + '_set_advanced_conf',
                            handle_set_advanced_conf,
@@ -252,15 +255,15 @@ class BroadlinkThermostat(ClimateDevice):
         self.schedule_update_ha_state()
 
     def set_advance_config(self, config_json):
-        """Set the thermostat advanced config"""
+        """Set the thermostat advanced config."""
         self._device.set_advanced_config(json.loads(config_json))
         self.schedule_update_ha_state()
 
     def set_schedule(self, schedule_json):
-        """Set the thermostat schedule"""
+        """Set the thermostat schedule."""
         self._device.set_schedule(json.loads(schedule_json))
         self.schedule_update_ha_state()
 
     def update(self):
-        """Update component data"""
+        """Update component data."""
         self._device.read_status()
