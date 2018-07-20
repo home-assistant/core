@@ -67,6 +67,18 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     assert len(hass.loop.run_in_executor.mock_calls) == 1
 
 
+@patch('asyncio.iscoroutine', return_value=True)
+def test_async_create_task_schedule_coroutine(mock_iscoro):
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock()
+    job = MagicMock()
+
+    ha.HomeAssistant.async_create_task(hass, job)
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
+
+
 def test_async_run_job_calls_callback():
     """Test that the callback annotation is respected."""
     hass = MagicMock()

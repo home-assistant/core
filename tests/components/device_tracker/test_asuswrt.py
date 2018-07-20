@@ -168,8 +168,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         scanner.last_results = WAKE_DEVICES
         self.assertEqual(list(WAKE_DEVICES), scanner.scan_devices())
 
-    def test_password_or_pub_key_required(self): \
-            # pylint: disable=invalid-name
+    def test_password_or_pub_key_required(self):
         """Test creating an AsusWRT scanner without a pass or pubkey."""
         with assert_setup_component(0, DOMAIN):
             assert setup_component(
@@ -183,8 +182,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     @mock.patch(
         'homeassistant.components.device_tracker.asuswrt.AsusWrtDeviceScanner',
         return_value=mock.MagicMock())
-    def test_get_scanner_with_password_no_pubkey(self, asuswrt_mock): \
-            # pylint: disable=invalid-name
+    def test_get_scanner_with_password_no_pubkey(self, asuswrt_mock):
         """Test creating an AsusWRT scanner with a password and no pubkey."""
         conf_dict = {
             DOMAIN: {
@@ -213,8 +211,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     @mock.patch(
         'homeassistant.components.device_tracker.asuswrt.AsusWrtDeviceScanner',
         return_value=mock.MagicMock())
-    def test_get_scanner_with_pubkey_no_password(self, asuswrt_mock): \
-            # pylint: disable=invalid-name
+    def test_get_scanner_with_pubkey_no_password(self, asuswrt_mock):
         """Test creating an AsusWRT scanner with a pubkey and no password."""
         conf_dict = {
             device_tracker.DOMAIN: {
@@ -292,8 +289,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
                       password='fake_pass', port=22)
         )
 
-    def test_ssh_login_without_password_or_pubkey(self): \
-            # pylint: disable=invalid-name
+    def test_ssh_login_without_password_or_pubkey(self):
         """Test that login is not called without password or pub_key."""
         ssh = mock.MagicMock()
         ssh_mock = mock.patch('pexpect.pxssh.pxssh', return_value=ssh)
@@ -363,8 +359,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
             mock.call(b'#')
         )
 
-    def test_telnet_login_without_password(self): \
-            # pylint: disable=invalid-name
+    def test_telnet_login_without_password(self):
         """Test that login is not called without password or pub_key."""
         telnet = mock.MagicMock()
         telnet_mock = mock.patch('telnetlib.Telnet', return_value=telnet)

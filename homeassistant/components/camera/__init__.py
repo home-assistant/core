@@ -66,8 +66,8 @@ CAMERA_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
 
 WS_TYPE_CAMERA_THUMBNAIL = 'camera_thumbnail'
 SCHEMA_WS_CAMERA_THUMBNAIL = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
-    'type': WS_TYPE_CAMERA_THUMBNAIL,
-    'entity_id': cv.entity_id
+    vol.Required('type'): WS_TYPE_CAMERA_THUMBNAIL,
+    vol.Required('entity_id'): cv.entity_id
 })
 
 

@@ -155,7 +155,11 @@ class MyStromLight(Light):
             self._state = self._bulb.get_status()
 
             colors = self._bulb.get_color()['color']
-            color_h, color_s, color_v = colors.split(';')
+            try:
+                color_h, color_s, color_v = colors.split(';')
+            except ValueError:
+                color_s, color_v = colors.split(';')
+                color_h = 0
 
             self._color_h = int(color_h)
             self._color_s = int(color_s)
