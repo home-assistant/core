@@ -119,6 +119,7 @@ async def async_aiohttp_proxy_stream(hass, request, stream, content_type,
         # Something went wrong fetching data, closed connection
         pass
 
+    return response
 
 @callback
 def _async_register_clientsession_shutdown(hass, clientsession):
