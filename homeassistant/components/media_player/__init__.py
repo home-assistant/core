@@ -6,17 +6,17 @@ https://home-assistant.io/components/media_player/
 """
 import asyncio
 import base64
+import collections
 from datetime import timedelta
 import functools as ft
-import collections
 import hashlib
 import logging
 from random import SystemRandom
+from urllib.parse import urlparse
 
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, CACHE_CONTROL
 import async_timeout
-from urllib.parse import urlparse
 import voluptuous as vol
 
 from homeassistant.core import callback
