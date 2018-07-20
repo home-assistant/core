@@ -14,7 +14,9 @@ from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA, DOMAIN, PLATFORM_SCHEMA, SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VACUUM_SERVICE_SCHEMA, VacuumDevice)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VACUUM_SERVICE_SCHEMA, VacuumDevice,
+    STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE, STATE_RETURNING,
+    STATE_ERROR)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
@@ -81,6 +83,20 @@ SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                  SUPPORT_STOP | SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | \
                  SUPPORT_SEND_COMMAND | SUPPORT_LOCATE | \
                  SUPPORT_STATUS | SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT
+
+STATE_CODE_TO_STATE = {
+    5: STATE_CLEANING,
+    11: STATE_CLEANING,
+    16: STATE_CLEANING,
+    17: STATE_CLEANING,
+    8: STATE_DOCKED,
+    10: STATE_PAUSED,
+    3: STATE_IDLE,
+    6: STATE_RETURNING,
+    15: STATE_RETURNING,
+    9: STATE_ERROR,
+    12: STATE_ERROR,
+}
 
 
 @asyncio.coroutine
@@ -160,7 +176,10 @@ class MiroboVacuum(VacuumDevice):
     def status(self):
         """Return the status of the vacuum cleaner."""
         if self.vacuum_state is not None:
-            return self.vacuum_state.state
+            try:
+                return STATE_CODE_TO_STATE[int(self.vacuum_state.state_code)]
+            except KeyError:
+                return None
 
     @property
     def battery_level(self):

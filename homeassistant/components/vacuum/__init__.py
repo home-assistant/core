@@ -14,7 +14,7 @@ import voluptuous as vol
 from homeassistant.components import group
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, SERVICE_TOGGLE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON)
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_PAUSED, STATE_IDLE)
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -74,6 +74,11 @@ SERVICE_TO_METHOD = {
     SERVICE_SEND_COMMAND: {'method': 'async_send_command',
                            'schema': VACUUM_SEND_COMMAND_SERVICE_SCHEMA},
 }
+
+STATE_CLEANING = 'cleaning'
+STATE_DOCKED = 'docked'
+STATE_RETURNING = 'returning'
+STATE_ERROR = 'error'
 
 DEFAULT_NAME = 'Vacuum cleaner robot'
 
