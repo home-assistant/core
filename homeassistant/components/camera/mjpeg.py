@@ -135,7 +135,7 @@ class MjpegCamera(Camera):
         websession = async_get_clientsession(self.hass)
         stream_coro = websession.get(self._mjpeg_url, auth=self._auth)
 
-        yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
+        return yield from async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
     @property
     def name(self):
