@@ -191,8 +191,7 @@ class ProxyCamera(Camera):
         stream_coro = websession.get(url, headers=self._headers)
 
         if not self._stream_opts:
-            await async_aiohttp_proxy_web(self.hass, request, stream_coro)
-            return aiohttp.web.HTTPBadRequest()
+            return await async_aiohttp_proxy_web(self.hass, request, stream_coro)
 
         response = aiohttp.web.StreamResponse()
         response.content_type = ('multipart/x-mixed-replace; '
