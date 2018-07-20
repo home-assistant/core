@@ -95,7 +95,7 @@ class VizioDevice(MediaPlayerDevice):
         if is_on is None:
             self._state = STATE_UNKNOWN
             return
-        elif is_on is False:
+        if is_on is False:
             self._state = STATE_OFF
         else:
             self._state = STATE_ON

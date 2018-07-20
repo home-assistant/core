@@ -111,11 +111,10 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
 
         if data[KEY_STATUS] == STATUS_ONLINE:
             return True
-        elif data[KEY_STATUS] == STATUS_OFFLINE:
+        if data[KEY_STATUS] == STATUS_OFFLINE:
             return False
-        else:
-            _LOGGER.warning('"%s" reported in unknown state "%s"', self.name,
-                            data[KEY_STATUS])
+        _LOGGER.warning('"%s" reported in unknown state "%s"', self.name,
+                        data[KEY_STATUS])
 
     def _handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""

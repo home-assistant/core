@@ -117,9 +117,9 @@ class JSONEncoder(json.JSONEncoder):
         """
         if isinstance(o, datetime):
             return o.isoformat()
-        elif isinstance(o, set):
+        if isinstance(o, set):
             return list(o)
-        elif hasattr(o, 'as_dict'):
+        if hasattr(o, 'as_dict'):
             return o.as_dict()
 
         return json.JSONEncoder.default(self, o)
@@ -133,7 +133,7 @@ def validate_api(api):
         if req.status_code == 200:
             return APIStatus.OK
 
-        elif req.status_code == 401:
+        if req.status_code == 401:
             return APIStatus.INVALID_PASSWORD
 
         return APIStatus.UNKNOWN

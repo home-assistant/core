@@ -262,13 +262,13 @@ class BrSensor(Entity):
                         self._entity_picture = img
                         return True
                 return False
-            else:
-                try:
-                    self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
-                    return True
-                except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
-                    return False
+
+            try:
+                self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                return True
+            except IndexError:
+                _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                return False
 
         if self.type == SYMBOL or self.type.startswith(CONDITION):
             # update weather symbol & status text

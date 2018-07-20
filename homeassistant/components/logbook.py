@@ -380,16 +380,16 @@ def _entry_message_from_state(domain, state):
             return 'is away'
         return 'is at {}'.format(state.state)
 
-    elif domain == 'sun':
+    if domain == 'sun':
         if state.state == sun.STATE_ABOVE_HORIZON:
             return 'has risen'
         return 'has set'
 
-    elif state.state == STATE_ON:
+    if state.state == STATE_ON:
         # Future: combine groups and its entity entries ?
         return "turned on"
 
-    elif state.state == STATE_OFF:
+    if state.state == STATE_OFF:
         return "turned off"
 
     return "changed to {}".format(state.state)

@@ -122,8 +122,7 @@ def setup(hass, config) -> bool:
         _LOGGER.error("No Rachio devices found in account %s",
                       person.username)
         return False
-    else:
-        _LOGGER.info("%d Rachio device(s) found", len(person.controllers))
+    _LOGGER.info("%d Rachio device(s) found", len(person.controllers))
 
     # Enable component
     hass.data[DOMAIN] = person
