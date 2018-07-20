@@ -26,6 +26,9 @@ Adafruit-SHT31==1.0.2
 # homeassistant.components.sensor.dht
 # Adafruit_Python_DHT==1.3.2
 
+# homeassistant.components.climate.broadlink
+BroadlinkWifiThermostat==1.0.1
+
 # homeassistant.components.doorbird
 DoorBirdPy==0.1.3
 
@@ -192,9 +195,9 @@ botocore==1.7.34
 # homeassistant.components.media_player.braviatv
 braviarc-homeassistant==0.3.7.dev0
 
+# homeassistant.components.climate.broadlink
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
-# homeassistant.components.climate.broadlink
 broadlink==0.9.0
 
 # homeassistant.components.device_tracker.bluetooth_tracker
@@ -1465,6 +1468,3 @@ zigpy-xbee==0.1.1
 
 # homeassistant.components.zha
 zigpy==0.1.0
-
-# homeassistant.components.climate.broadlink
-BroadlinkWifiThermostat==1.0.1
