@@ -26,7 +26,8 @@ from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import validate_password
 from homeassistant.components.http.const import KEY_AUTHENTICATED
-from homeassistant.components.http.ban import process_wrong_login
+from homeassistant.components.http.ban import process_wrong_login, \
+    process_success_login
 
 DOMAIN = 'websocket_api'
 
@@ -360,6 +361,7 @@ class ActiveConnection:
                 return wsock
 
             self.debug("Auth OK")
+            await process_success_login(request)
             await self.wsock.send_json(auth_ok_message())
 
             # ---------- AUTH PHASE OVER ----------
