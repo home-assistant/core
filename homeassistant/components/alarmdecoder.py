@@ -159,7 +159,7 @@ def setup(hass, config):
             SIGNAL_ZONE_RESTORE, zone)
 
     def handle_rel_message(sender, message):
-        """Handle Relay message from AlarmDecoder."""
+        """Handle relay message from AlarmDecoder."""
         hass.helpers.dispatcher.dispatcher_send(
             SIGNAL_REL_MESSAGE, message)
 

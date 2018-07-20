@@ -133,7 +133,7 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
             self.schedule_update_ha_state()
 
     def _rel_message_callback(self, message):
-        """Update Relay state."""
+        """Update relay state."""
         if (self._relay_addr == message.address and
                 self._relay_chan == message.channel):
             self._state = message.value
