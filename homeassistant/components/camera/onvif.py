@@ -25,9 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['onvif-py3==0.1.3',
                 'suds-py3==1.3.3.0',
-                'http://github.com/tgaugry/suds-passworddigest-py3'
-                '/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip'
-                '#suds-passworddigest-py3==0.1.2a']
+                'suds-passworddigest-homeassistant==0.1.2a0.dev0']
 DEPENDENCIES = ['ffmpeg']
 DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000

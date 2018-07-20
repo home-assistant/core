@@ -57,7 +57,7 @@ class SafeLineLoader(yaml.SafeLoader):
         last_line = self.line  # type: int
         node = super(SafeLineLoader,
                      self).compose_node(parent, index)  # type: yaml.nodes.Node
-        node.__line__ = last_line + 1
+        node.__line__ = last_line + 1  # type: ignore
         return node
 
 
@@ -69,7 +69,7 @@ def load_yaml(fname: str) -> Union[List, Dict]:
             # We convert that to an empty dict
             return yaml.load(conf_file, Loader=SafeLineLoader) or OrderedDict()
     except yaml.YAMLError as exc:
-        _LOGGER.error(exc)
+        _LOGGER.error(str(exc))
         raise HomeAssistantError(exc)
     except UnicodeDecodeError as exc:
         _LOGGER.error("Unable to read file %s: %s", fname, exc)
@@ -232,6 +232,8 @@ def _load_secret_yaml(secret_path: str) -> Dict:
     _LOGGER.debug('Loading %s', secret_path)
     try:
         secrets = load_yaml(secret_path)
+        if not isinstance(secrets, dict):
+            raise HomeAssistantError('Secrets is not a dictionary')
         if 'logger' in secrets:
             logger = str(secrets['logger']).lower()
             if logger == 'debug':

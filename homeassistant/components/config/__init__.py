@@ -49,6 +49,10 @@ async def async_setup(hass, config):
 
     tasks = [setup_panel(panel_name) for panel_name in SECTIONS]
 
+    if hass.auth.active:
+        tasks.append(setup_panel('auth'))
+        tasks.append(setup_panel('auth_provider_homeassistant'))
+
     for panel_name in ON_DEMAND:
         if panel_name in hass.config.components:
             tasks.append(setup_panel(panel_name))
