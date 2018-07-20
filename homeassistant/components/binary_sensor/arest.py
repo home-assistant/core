@@ -89,7 +89,7 @@ class ArestBinarySensor(BinarySensorDevice):
         self.arest.update()
 
 
-class ArestData(object):
+class ArestData:
     """Class for handling the data retrieval for pins."""
 
     def __init__(self, resource, pin):

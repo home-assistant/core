@@ -99,7 +99,7 @@ class AuroraSensor(BinarySensorDevice):
         self.aurora_data.update()
 
 
-class AuroraData(object):
+class AuroraData:
     """Get aurora forecast."""
 
     def __init__(self, latitude, longitude, threshold):

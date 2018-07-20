@@ -92,7 +92,7 @@ SERVICE_TO_STATE = {
 }
 
 
-class AsyncTrackStates(object):
+class AsyncTrackStates:
     """
     Record the time when the with-block is entered.
 

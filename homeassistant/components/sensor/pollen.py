@@ -263,7 +263,7 @@ class PollencomSensor(Entity):
             self._state = average
 
 
-class PollenComData(object):
+class PollenComData:
     """Define a data object to retrieve info from Pollen.com."""
 
     def __init__(self, client, sensor_types):

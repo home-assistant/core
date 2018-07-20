@@ -148,7 +148,7 @@ class SpeedtestSensor(Entity):
         self._state = state.state
 
 
-class SpeedtestData(object):
+class SpeedtestData:
     """Get the latest data from speedtest.net."""
 
     def __init__(self, hass, config):

@@ -131,7 +131,7 @@ class SnmpSensor(Entity):
         self._state = value
 
 
-class SnmpData(object):
+class SnmpData:
     """Get the latest data and update the states."""
 
     def __init__(self, host, port, community, baseoid, version, accept_errors,

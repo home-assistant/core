@@ -163,7 +163,7 @@ class DwdWeatherWarningsSensor(Entity):
         self._api.update()
 
 
-class DwdWeatherWarningsAPI(object):
+class DwdWeatherWarningsAPI:
     """Get the latest data and update the states."""
 
     def __init__(self, region_name):

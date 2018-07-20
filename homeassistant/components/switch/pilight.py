@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
-class _ReceiveHandle(object):
+class _ReceiveHandle:
     def __init__(self, config, echo):
         """Initialize the handle."""
         self.config_items = config.items()

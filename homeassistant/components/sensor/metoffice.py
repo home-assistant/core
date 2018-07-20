@@ -174,7 +174,7 @@ class MetOfficeCurrentSensor(Entity):
         self.data.update()
 
 
-class MetOfficeCurrentData(object):
+class MetOfficeCurrentData:
     """Get data from Datapoint."""
 
     def __init__(self, hass, datapoint, site):

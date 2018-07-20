@@ -21,7 +21,7 @@ from .const import KEY_AUTHENTICATED, KEY_REAL_IP
 _LOGGER = logging.getLogger(__name__)
 
 
-class HomeAssistantView(object):
+class HomeAssistantView:
     """Base view for all views."""
 
     url = None

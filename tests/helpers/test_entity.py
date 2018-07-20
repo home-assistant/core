@@ -71,7 +71,7 @@ def test_async_update_support(hass):
     assert len(async_update) == 1
 
 
-class TestHelpersEntity(object):
+class TestHelpersEntity:
     """Test homeassistant.helpers.entity module."""
 
     def setup_method(self, method):

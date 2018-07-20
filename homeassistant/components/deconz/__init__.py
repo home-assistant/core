@@ -178,7 +178,7 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-class DeconzEvent(object):
+class DeconzEvent:
     """When you want signals instead of entities.
 
     Stateless sensors such as remotes are expected to generate an event

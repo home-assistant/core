@@ -113,7 +113,7 @@ class SytadinSensor(Entity):
             self._state = self.data.congestion
 
 
-class SytadinData(object):
+class SytadinData:
     """The class for handling the data retrieval."""
 
     def __init__(self, resource):

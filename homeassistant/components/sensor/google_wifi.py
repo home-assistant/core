@@ -138,7 +138,7 @@ class GoogleWifiSensor(Entity):
             self._state = STATE_UNKNOWN
 
 
-class GoogleWifiAPI(object):
+class GoogleWifiAPI:
     """Get the latest data and update the states."""
 
     def __init__(self, host, conditions):

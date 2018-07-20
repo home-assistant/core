@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @attr.s(slots=True, frozen=True)
-class ChromecastInfo(object):
+class ChromecastInfo:
     """Class to hold all data about a chromecast for creating connections.
 
     This also has the same attributes as the mDNS fields by zeroconf.
@@ -258,7 +258,7 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         hass.async_add_job(_discover_chromecast, hass, info)
 
 
-class CastStatusListener(object):
+class CastStatusListener:
     """Helper class to handle pychromecast status callbacks.
 
     Necessary because a CastDevice entity can create a new socket client

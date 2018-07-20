@@ -62,7 +62,7 @@ def _build_device(device_dict):
         device_dict['l3connectivities'][0]['addr'])
 
 
-class FreeboxDeviceScanner(object):
+class FreeboxDeviceScanner:
     """This class scans for devices connected to the Freebox."""
 
     def __init__(self, hass, config, async_see):

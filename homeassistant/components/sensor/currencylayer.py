@@ -104,7 +104,7 @@ class CurrencylayerSensor(Entity):
                 value['{}{}'.format(self._base, self._quote)], 4)
 
 
-class CurrencylayerData(object):
+class CurrencylayerData:
     """Get data from Currencylayer.org."""
 
     def __init__(self, resource, parameters):
