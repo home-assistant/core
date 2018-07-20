@@ -19,7 +19,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED,
     CONF_PLATFORM, CONF_NAME, CONF_CODE, CONF_DELAY_TIME, CONF_PENDING_TIME,
     CONF_TRIGGER_TIME, CONF_DISARM_AFTER_TRIGGER)
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.core import callback

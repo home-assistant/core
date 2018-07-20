@@ -184,7 +184,8 @@ class HassAuthProvider(AuthProvider):
     async def async_user_meta_for_credentials(self, credentials):
         """Get extra info for this credential."""
         return {
-            'name': credentials.data['username']
+            'name': credentials.data['username'],
+            'is_active': True,
         }
 
     async def async_will_remove_credentials(self, credentials):

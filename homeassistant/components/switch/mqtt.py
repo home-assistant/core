@@ -18,7 +18,7 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON, CONF_ICON, STATE_ON)
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import async_get_last_state
 

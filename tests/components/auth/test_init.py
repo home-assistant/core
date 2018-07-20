@@ -40,11 +40,31 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
         'code': code
     })
 
-    # User is not active
-    assert resp.status == 403
-    data = await resp.json()
-    assert data['error'] == 'access_denied'
-    assert data['error_description'] == 'User is not active'
+    assert resp.status == 200
+    tokens = await resp.json()
+
+    assert hass.auth.async_get_access_token(tokens['access_token']) is not None
+
+    # Use refresh token to get more tokens.
+    resp = await client.post('/auth/token', data={
+            'client_id': CLIENT_ID,
+            'grant_type': 'refresh_token',
+            'refresh_token': tokens['refresh_token']
+        })
+
+    assert resp.status == 200
+    tokens = await resp.json()
+    assert 'refresh_token' not in tokens
+    assert hass.auth.async_get_access_token(tokens['access_token']) is not None
+
+    # Test using access token to hit API.
+    resp = await client.get('/api/')
+    assert resp.status == 401
+
+    resp = await client.get('/api/', headers={
+        'authorization': 'Bearer {}'.format(tokens['access_token'])
+    })
+    assert resp.status == 200
 
 
 def test_credential_store_expiration():
@@ -93,3 +113,20 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     assert user_dict['name'] == user.name
     assert user_dict['id'] == user.id
     assert user_dict['is_owner'] == user.is_owner
+
+
+async def test_cors_on_token(hass, aiohttp_client):
+    """Test logging in with new user and refreshing tokens."""
+    client = await async_setup_auth(hass, aiohttp_client)
+
+    resp = await client.options('/auth/token', headers={
+        'origin': 'http://example.com',
+        'Access-Control-Request-Method': 'POST',
+    })
+    assert resp.headers['Access-Control-Allow-Origin'] == 'http://example.com'
+    assert resp.headers['Access-Control-Allow-Methods'] == 'POST'
+
+    resp = await client.post('/auth/token', headers={
+        'origin': 'http://example.com'
+    })
+    assert resp.headers['Access-Control-Allow-Origin'] == 'http://example.com'

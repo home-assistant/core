@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_ACCESS_TOKEN,
     STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
-import homeassistant.util as util
+from homeassistant import util
 
 REQUIREMENTS = ['pylgnetcast-homeassistant==0.2.0.dev0']
 

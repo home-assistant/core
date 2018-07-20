@@ -415,7 +415,7 @@ hole==0.3.0
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180717.0
+home-assistant-frontend==20180719.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -452,7 +452,7 @@ influxdb==5.0.0
 insteonlocal==0.53
 
 # homeassistant.components.insteon_plm
-insteonplm==0.11.3
+insteonplm==0.11.7
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
@@ -737,7 +737,7 @@ pyasn1-modules==0.1.5
 pyasn1==0.3.7
 
 # homeassistant.components.netatmo
-pyatmo==1.0.0
+pyatmo==1.1.1
 
 # homeassistant.components.apple_tv
 pyatv==0.3.10
@@ -753,7 +753,7 @@ pyblackbird==0.5
 # pybluez==0.22
 
 # homeassistant.components.neato
-pybotvac==0.0.7
+pybotvac==0.0.8
 
 # homeassistant.components.cloudflare
 pycfdns==0.0.1
@@ -926,7 +926,7 @@ pymusiccast==0.1.6
 pymyq==0.0.11
 
 # homeassistant.components.mysensors
-pymysensors==0.14.0
+pymysensors==0.16.0
 
 # homeassistant.components.lock.nello
 pynello==1.5.1
@@ -1241,7 +1241,7 @@ shodan==1.8.1
 simplepush==1.1.4
 
 # homeassistant.components.alarm_control_panel.simplisafe
-simplisafe-python==1.0.5
+simplisafe-python==2.0.2
 
 # homeassistant.components.skybell
 skybellpy==0.1.2
