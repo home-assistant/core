@@ -149,11 +149,13 @@ class OrderedEnum(enum.Enum):
 class OrderedSet(MutableSet[T]):
     """Ordered set taken from http://code.activestate.com/recipes/576694/."""
 
-    def __init__(self) -> None:
+    def __init__(self, iterable: Iterable[T] = None) -> None:
         """Initialize the set."""
         self.end = end = []  # type: List[Any]
         end += [None, end, end]  # sentinel node for doubly linked list
         self.map = {}  # type: Dict[T, List] # key --> [key, prev, next]
+        if iterable is not None:
+            self |= iterable  # type: ignore
 
     def __len__(self) -> int:
         """Return the length of the set."""
