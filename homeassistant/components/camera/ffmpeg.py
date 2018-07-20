@@ -73,7 +73,7 @@ class FFmpegCamera(Camera):
             return await async_aiohttp_proxy_stream(
                 self.hass, request, stream,
                 'multipart/x-mixed-replace;boundary=ffserver')
-        finaly:
+        finally:
             await stream.close()
 
     @property
