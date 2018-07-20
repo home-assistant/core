@@ -115,7 +115,7 @@ async def async_aiohttp_proxy_stream(hass, request, stream, content_type,
                 break
             await response.write(data)
 
-    except (asyncio.CancelledError, asyncio.TimeoutError, aiohttp.ClientError):
+    except (asyncio.TimeoutError, aiohttp.ClientError):
         # Something went wrong fetching data, closed connection
         pass
 
