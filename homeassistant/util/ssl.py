@@ -14,13 +14,6 @@ def client_context() -> ssl.SSLContext:
 
 
 def server_context() -> ssl.SSLContext:
-    """Return an SSL context for being a server."""
-    context = _get_context()
-    context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
-    return context
-
-
-def _get_context() -> ssl.SSLContext:
     """Return an SSL context following the Mozilla recommendations.
 
     TLS configuration follows the best-practice guidelines specified here:
