@@ -4,8 +4,8 @@ import uuid
 
 import pytest
 
-from homeassistant import auth
-from homeassistant.auth_providers import insecure_example
+from homeassistant.auth import auth_store, models as auth_models, AuthManager
+from homeassistant.auth.providers import insecure_example
 
 from tests.common import mock_coro
 
@@ -13,7 +13,7 @@ from tests.common import mock_coro
 @pytest.fixture
 def store(hass):
     """Mock store."""
-    return auth.AuthStore(hass)
+    return auth_store.AuthStore(hass)
 
 
 @pytest.fixture
@@ -23,6 +23,7 @@ def provider(hass, store):
         'type': 'insecure_example',
         'users': [
             {
+                'name': 'Test Name',
                 'username': 'user-test',
                 'password': 'password-test',
             },
@@ -34,7 +35,15 @@ def provider(hass, store):
     })
 
 
-async def test_create_new_credential(provider):
+@pytest.fixture
+def manager(hass, store, provider):
+    """Mock manager."""
+    return AuthManager(hass, store, {
+        (provider.type, provider.id): provider
+    })
+
+
+async def test_create_new_credential(manager, provider):
     """Test that we create a new credential."""
     credentials = await provider.async_get_or_create_credentials({
         'username': 'user-test',
@@ -42,10 +51,14 @@ async def test_create_new_credential(provider):
     })
     assert credentials.is_new is True
 
+    user = await manager.async_get_or_create_user(credentials)
+    assert user.name == 'Test Name'
+    assert user.is_active
+
 
 async def test_match_existing_credentials(store, provider):
     """See if we match existing users."""
-    existing = auth.Credentials(
+    existing = auth_models.Credentials(
         id=uuid.uuid4(),
         auth_provider_type='insecure_example',
         auth_provider_id=None,
@@ -54,7 +67,7 @@ async def test_match_existing_credentials(store, provider):
         },
         is_new=False,
     )
-    store.credentials_for_provider = Mock(return_value=mock_coro([existing]))
+    provider.async_credentials = Mock(return_value=mock_coro([existing]))
     credentials = await provider.async_get_or_create_credentials({
         'username': 'user-test',
         'password': 'password-test',

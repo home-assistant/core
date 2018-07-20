@@ -137,7 +137,8 @@ class IntentHandler:
         if self._slot_schema is None:
             self._slot_schema = vol.Schema({
                 key: SLOT_SCHEMA.extend({'value': validator})
-                for key, validator in self.slot_schema.items()})
+                for key, validator in self.slot_schema.items()},
+                                           extra=vol.ALLOW_EXTRA)
 
         return self._slot_schema(slots)
 

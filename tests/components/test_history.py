@@ -428,8 +428,7 @@ class TestComponentHistory(unittest.TestCase):
                     history.CONF_ENTITIES: ['media_player.test']}}})
         self.check_significant_states(zero, four, states, config)
 
-    def check_significant_states(self, zero, four, states, config): \
-            # pylint: disable=no-self-use
+    def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
         filters = history.Filters()
         exclude = config[history.DOMAIN].get(history.CONF_EXCLUDE)

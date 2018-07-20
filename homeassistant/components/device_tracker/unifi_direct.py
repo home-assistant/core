@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME,
     CONF_PORT)
 
-REQUIREMENTS = ['pexpect==4.0.1']
+REQUIREMENTS = ['pexpect==4.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 

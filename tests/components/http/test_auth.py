@@ -1,13 +1,12 @@
 """The tests for the Home Assistant HTTP component."""
 # pylint: disable=protected-access
 from ipaddress import ip_network
-from unittest.mock import patch, Mock
+from unittest.mock import patch
 
 import pytest
 from aiohttp import BasicAuth, web
 from aiohttp.web_exceptions import HTTPUnauthorized
 
-from homeassistant.auth import AccessToken, RefreshToken
 from homeassistant.components.http.auth import setup_auth
 from homeassistant.components.http.const import KEY_AUTHENTICATED
 from homeassistant.components.http.real_ip import setup_real_ip
@@ -15,8 +14,6 @@ from homeassistant.const import HTTP_HEADER_HA_AUTH
 from homeassistant.setup import async_setup_component
 from . import mock_real_ip
 
-
-ACCESS_TOKEN = 'tk.1234'
 
 API_PASSWORD = 'test1234'
 
@@ -39,33 +36,21 @@ async def mock_handler(request):
     return web.Response(status=200)
 
 
-def mock_async_get_access_token(token):
-    """Return if token is valid."""
-    if token == ACCESS_TOKEN:
-        return Mock(spec=AccessToken,
-                    token=ACCESS_TOKEN,
-                    refresh_token=Mock(spec=RefreshToken))
-    else:
-        return None
-
-
 @pytest.fixture
-def app():
+def app(hass):
     """Fixture to setup a web.Application."""
     app = web.Application()
-    mock_auth = Mock(async_get_access_token=mock_async_get_access_token)
-    app['hass'] = Mock(auth=mock_auth)
+    app['hass'] = hass
     app.router.add_get('/', mock_handler)
     setup_real_ip(app, False, [])
     return app
 
 
 @pytest.fixture
-def app2():
+def app2(hass):
     """Fixture to setup a web.Application without real_ip middleware."""
     app = web.Application()
-    mock_auth = Mock(async_get_access_token=mock_async_get_access_token)
-    app['hass'] = Mock(auth=mock_auth)
+    app['hass'] = hass
     app.router.add_get('/', mock_handler)
     return app
 
@@ -171,33 +156,35 @@ async def test_access_with_trusted_ip(app2, aiohttp_client):
 
 
 async def test_auth_active_access_with_access_token_in_header(
-        app, aiohttp_client):
+        app, aiohttp_client, hass_access_token):
     """Test access with access token in header."""
+    token = hass_access_token.token
     setup_auth(app, [], True, api_password=None)
     client = await aiohttp_client(app)
 
     req = await client.get(
-        '/', headers={'Authorization': 'Bearer {}'.format(ACCESS_TOKEN)})
+        '/', headers={'Authorization': 'Bearer {}'.format(token)})
     assert req.status == 200
 
     req = await client.get(
-        '/', headers={'AUTHORIZATION': 'Bearer {}'.format(ACCESS_TOKEN)})
+        '/', headers={'AUTHORIZATION': 'Bearer {}'.format(token)})
     assert req.status == 200
 
     req = await client.get(
-        '/', headers={'authorization': 'Bearer {}'.format(ACCESS_TOKEN)})
+        '/', headers={'authorization': 'Bearer {}'.format(token)})
     assert req.status == 200
 
     req = await client.get(
-        '/', headers={'Authorization': ACCESS_TOKEN})
+        '/', headers={'Authorization': token})
     assert req.status == 401
 
     req = await client.get(
-        '/', headers={'Authorization': 'BEARER {}'.format(ACCESS_TOKEN)})
+        '/', headers={'Authorization': 'BEARER {}'.format(token)})
     assert req.status == 401
 
+    hass_access_token.refresh_token.user.is_active = False
     req = await client.get(
-        '/', headers={'Authorization': 'Bearer wrong-pass'})
+        '/', headers={'Authorization': 'Bearer {}'.format(token)})
     assert req.status == 401
 
 
