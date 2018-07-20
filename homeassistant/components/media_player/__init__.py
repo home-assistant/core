@@ -16,6 +16,7 @@ from random import SystemRandom
 from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, CACHE_CONTROL
 import async_timeout
+from urllib.parse import urlparse
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -955,6 +956,9 @@ async def _async_fetch_image(hass, url):
     """
     cache_images = ENTITY_IMAGE_CACHE[CACHE_IMAGES]
     cache_maxsize = ENTITY_IMAGE_CACHE[CACHE_MAXSIZE]
+
+    if urlparse(url).hostname is None:
+        url = hass.config.api.base_url + url
 
     if url not in cache_images:
         cache_images[url] = {CACHE_LOCK: asyncio.Lock(loop=hass.loop)}
