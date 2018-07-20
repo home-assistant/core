@@ -132,7 +132,7 @@ async def process_success_login(request):
         request.app[KEY_FAILED_LOGIN_ATTEMPTS].pop(remote_addr)
 
 
-class IpBan(object):
+class IpBan:
     """Represents banned IP address."""
 
     def __init__(self, ip_ban: str, banned_at: datetime = None) -> None:

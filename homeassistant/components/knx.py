@@ -129,7 +129,7 @@ def _get_devices(hass, discovery_type):
                 hass.data[DATA_KNX].xknx.devices)))
 
 
-class KNXModule(object):
+class KNXModule:
     """Representation of KNX Object."""
 
     def __init__(self, hass, config):
@@ -284,7 +284,7 @@ class KNXAutomation():
         device.actions.append(self.action)
 
 
-class KNXExposeTime(object):
+class KNXExposeTime:
     """Object to Expose Time/Date object to KNX bus."""
 
     def __init__(self, xknx, expose_type, address):
@@ -308,7 +308,7 @@ class KNXExposeTime(object):
         self.xknx.devices.add(self.device)
 
 
-class KNXExposeSensor(object):
+class KNXExposeSensor:
     """Object to Expose HASS entity to KNX bus."""
 
     def __init__(self, hass, xknx, expose_type, entity_id, address):

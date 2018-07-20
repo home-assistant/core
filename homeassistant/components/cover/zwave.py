@@ -11,7 +11,7 @@ from homeassistant.components.cover import (
     DOMAIN, SUPPORT_OPEN, SUPPORT_CLOSE, ATTR_POSITION)
 from homeassistant.components.zwave import ZWaveDeviceEntity
 from homeassistant.components import zwave
-from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
+from homeassistant.components.zwave import async_setup_platform  # noqa pylint: disable=unused-import
 from homeassistant.components.zwave import workaround
 from homeassistant.components.cover import CoverDevice
 

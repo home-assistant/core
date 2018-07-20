@@ -95,7 +95,7 @@ class CommandSensor(Entity):
             self._state = value
 
 
-class CommandSensorData(object):
+class CommandSensorData:
     """The class for handling the data retrieval."""
 
     def __init__(self, hass, command, command_timeout):

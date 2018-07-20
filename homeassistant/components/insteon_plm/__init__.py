@@ -316,7 +316,7 @@ def async_setup(hass, config):
 State = collections.namedtuple('Product', 'stateType platform')
 
 
-class IPDB(object):
+class IPDB:
     """Embodies the INSTEON Product Database static data and access methods."""
 
     def __init__(self):

@@ -50,7 +50,7 @@ def setup(hass, config):
     return True
 
 
-class OctoPrintAPI(object):
+class OctoPrintAPI:
     """Simple JSON wrapper for OctoPrint's API."""
 
     def __init__(self, api_url, key, bed, number_of_tools):

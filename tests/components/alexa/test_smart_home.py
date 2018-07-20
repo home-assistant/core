@@ -1225,7 +1225,7 @@ def reported_properties(hass, endpoint):
     return _ReportedProperties(msg['context']['properties'])
 
 
-class _ReportedProperties(object):
+class _ReportedProperties:
     def __init__(self, properties):
         self.properties = properties
 

@@ -102,7 +102,7 @@ class SpeedtestSensor(Entity):
         return ICON
 
 
-class SpeedtestData(object):
+class SpeedtestData:
     """Get the latest data from fast.com."""
 
     def __init__(self, hass, config):

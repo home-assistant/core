@@ -62,7 +62,7 @@ def is_valid_unit(unit: str, unit_type: str) -> bool:
     return unit in units
 
 
-class UnitSystem(object):
+class UnitSystem:
     """A container for units of measure."""
 
     def __init__(self: object, name: str, temperature: str, length: str,

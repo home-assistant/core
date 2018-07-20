@@ -129,7 +129,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
-class SynoApi(object):
+class SynoApi:
     """Class to interface with Synology DSM API."""
 
     def __init__(self, host, port, username, password, temp_unit, use_ssl):

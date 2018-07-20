@@ -73,7 +73,7 @@ def setup(hass, config):
     return True
 
 
-class SleepIQData(object):
+class SleepIQData:
     """Get the latest data from SleepIQ."""
 
     def __init__(self, client):

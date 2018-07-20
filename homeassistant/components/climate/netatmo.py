@@ -140,7 +140,7 @@ class NetatmoThermostat(ClimateDevice):
         self._away = self._data.setpoint_mode == 'away'
 
 
-class ThermostatData(object):
+class ThermostatData:
     """Get the latest data from Netatmo."""
 
     def __init__(self, auth, device=None):
