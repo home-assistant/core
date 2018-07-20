@@ -85,17 +85,17 @@ SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                  SUPPORT_STATUS | SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT
 
 STATE_CODE_TO_STATE = {
+    3: STATE_IDLE,
     5: STATE_CLEANING,
+    6: STATE_RETURNING,
+    8: STATE_DOCKED,
+    9: STATE_ERROR,
+    10: STATE_PAUSED,
     11: STATE_CLEANING,
+    12: STATE_ERROR,
+    15: STATE_RETURNING,
     16: STATE_CLEANING,
     17: STATE_CLEANING,
-    8: STATE_DOCKED,
-    10: STATE_PAUSED,
-    3: STATE_IDLE,
-    6: STATE_RETURNING,
-    15: STATE_RETURNING,
-    9: STATE_ERROR,
-    12: STATE_ERROR,
 }
 
 
@@ -179,6 +179,9 @@ class MiroboVacuum(VacuumDevice):
             try:
                 return STATE_CODE_TO_STATE[int(self.vacuum_state.state_code)]
             except KeyError:
+                _LOGGER.debug("STATE not supported: %s, state_id: %s",
+                              self.vacuum_state.state,
+                              self.vacuum_state.state_code)
                 return None
 
     @property
