@@ -69,10 +69,12 @@ class FFmpegCamera(Camera):
         yield from stream.open_camera(
             self._input, extra_cmd=self._extra_arguments)
 
-        return await async_aiohttp_proxy_stream(
-            self.hass, request, stream,
-            'multipart/x-mixed-replace;boundary=ffserver')
-        yield from stream.close()
+        try:
+            return await async_aiohttp_proxy_stream(
+                self.hass, request, stream,
+                'multipart/x-mixed-replace;boundary=ffserver')
+        finaly:
+            await stream.close()
 
     @property
     def name(self):
