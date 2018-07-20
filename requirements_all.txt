@@ -32,6 +32,18 @@ Adafruit-SHT31==1.0.2
 # homeassistant.components.bbb_gpio
 # Adafruit_BBIO==1.0.0
 
+<<<<<<< HEAD
+=======
+# homeassistant.components.sensor.dht
+# Adafruit_Python_DHT==1.3.2
+
+# homeassistant.components.climate.broadlink
+BroadlinkWifiThermostat==1.0.1
+
+# homeassistant.components.doorbird
+DoorBirdPy==0.1.3
+
+>>>>>>> update requirements using script
 # homeassistant.components.homekit
 HAP-python==2.4.1
 
@@ -217,9 +229,9 @@ botocore==1.7.34
 # homeassistant.components.media_player.braviatv
 braviarc-homeassistant==0.3.7.dev0
 
+# homeassistant.components.climate.broadlink
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
-# homeassistant.components.climate.broadlink
 broadlink==0.9.0
 
 # homeassistant.components.cover.brunt
