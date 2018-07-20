@@ -154,7 +154,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
              json.loads(schedule_we.replace("'", '"'))})
 
     hass.services.register(DOMAIN,
-                           'set_schedule',
+                           DEFAULT_NAME + '_set_schedule',
                            handle_set_schedule,
                            schema=SET_SCHEDULE_SCHEMA)
 
@@ -166,7 +166,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             json.loads(advanced_conf.replace("'", '"')))
 
     hass.services.register(DOMAIN,
-                           'set_advanced_conf',
+                           DEFAULT_NAME + '_set_advanced_conf',
                            handle_set_advanced_conf,
                            schema=SET_ADVANCED_CONF_SCHEMA)
 
