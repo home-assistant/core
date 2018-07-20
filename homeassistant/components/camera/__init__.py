@@ -105,10 +105,7 @@ def turn_on(hass, entity_id=None):
 @bind_hass
 async def async_turn_on(hass, entity_id=None):
     """Turn on camera, and set operation mode."""
-    data = {}
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data)
 
 
