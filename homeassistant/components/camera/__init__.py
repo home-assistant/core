@@ -301,27 +301,21 @@ class Camera(Entity):
 
         last_image = None
 
-        try:
-            while True:
-                img_bytes = await self.async_camera_image()
-                if not img_bytes:
-                    break
+        while True:
+            img_bytes = await self.async_camera_image()
+            if not img_bytes:
+                break
 
-                if img_bytes and img_bytes != last_image:
+            if img_bytes and img_bytes != last_image:
+                await write_to_mjpeg_stream(img_bytes)
+
+                # Chrome seems to always ignore first picture,
+                # print it twice.
+                if last_image is None:
                     await write_to_mjpeg_stream(img_bytes)
+                last_image = img_bytes
 
-                    # Chrome seems to always ignore first picture,
-                    # print it twice.
-                    if last_image is None:
-                        await write_to_mjpeg_stream(img_bytes)
-
-                    last_image = img_bytes
-
-                await asyncio.sleep(interval)
-
-        except asyncio.CancelledError:
-            _LOGGER.debug("Stream closed by frontend.")
-            pass
+            await asyncio.sleep(interval)
 
         return response
 
