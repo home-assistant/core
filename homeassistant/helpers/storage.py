@@ -80,11 +80,10 @@ class Store:
             data = self._data
         else:
             data = await self.hass.async_add_executor_job(
-                json.load_json, self.path, None)
+                json.load_json, self.path)
 
-            if data is None:
+            if data == {}:
                 return None
-
         if data['version'] == self.version:
             stored = data['data']
         else:
