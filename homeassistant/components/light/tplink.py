@@ -200,6 +200,6 @@ class TPLinkSmartBulb(Light):
             self._min_mireds = kelvin_to_mired(
                 self.smartbulb.valid_temperature_range[1])
             self._max_mireds = kelvin_to_mired(
-                    self.smartbulb.valid_temperature_range[0])
+                self.smartbulb.valid_temperature_range[0])
         if self.smartbulb.is_color:
             self._supported_features += SUPPORT_COLOR
