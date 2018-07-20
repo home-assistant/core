@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devs)
 
 
-class SHTClient(object):
+class SHTClient:
     """Get the latest data from the SHT sensor."""
 
     def __init__(self, adafruit_sht):

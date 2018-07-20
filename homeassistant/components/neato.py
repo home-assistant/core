@@ -118,7 +118,7 @@ def setup(hass, config):
     return True
 
 
-class NeatoHub(object):
+class NeatoHub:
     """A My Neato hub wrapper class."""
 
     def __init__(self, hass, domain_config, neato):

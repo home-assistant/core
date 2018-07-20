@@ -30,7 +30,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
     return True
 
 
-class TrackRDeviceScanner(object):
+class TrackRDeviceScanner:
     """A class representing a TrackR device."""
 
     def __init__(self, hass, config: dict, see) -> None:

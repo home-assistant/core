@@ -118,7 +118,7 @@ class StartcaSensor(Entity):
             self._state = round(self.startcadata.data[self.type], 2)
 
 
-class StartcaData(object):
+class StartcaData:
     """Get data from Start.ca API."""
 
     def __init__(self, loop, websession, api_key, bandwidth_cap):

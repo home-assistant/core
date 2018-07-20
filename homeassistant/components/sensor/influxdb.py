@@ -155,7 +155,7 @@ class InfluxSensor(Entity):
         self._state = value
 
 
-class InfluxSensorData(object):
+class InfluxSensorData:
     """Class for handling the data retrieval."""
 
     def __init__(self, influx, group, field, measurement, where):

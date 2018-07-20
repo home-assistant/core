@@ -59,7 +59,7 @@ def setup(hass, config):
     return True
 
 
-class ToonDataStore(object):
+class ToonDataStore:
     """An object to store the Toon data."""
 
     def __init__(self, username, password, gas=DEFAULT_GAS,

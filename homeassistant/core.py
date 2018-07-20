@@ -116,7 +116,7 @@ class CoreState(enum.Enum):
         return self.value  # type: ignore
 
 
-class HomeAssistant(object):
+class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
     def __init__(self, loop=None):
@@ -347,7 +347,7 @@ class EventOrigin(enum.Enum):
         return self.value
 
 
-class Event(object):
+class Event:
     """Representation of an event within the bus."""
 
     __slots__ = ['event_type', 'data', 'origin', 'time_fired']
@@ -392,7 +392,7 @@ class Event(object):
                 self.time_fired == other.time_fired)
 
 
-class EventBus(object):
+class EventBus:
     """Allow the firing of and listening for events."""
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -547,7 +547,7 @@ class EventBus(object):
             _LOGGER.warning("Unable to remove unknown listener %s", listener)
 
 
-class State(object):
+class State:
     """Object to represent a state within the state machine.
 
     entity_id: the entity that is represented.
@@ -654,7 +654,7 @@ class State(object):
             dt_util.as_local(self.last_changed).isoformat())
 
 
-class StateMachine(object):
+class StateMachine:
     """Helper class that tracks the state of different entities."""
 
     def __init__(self, bus, loop):
@@ -787,7 +787,7 @@ class StateMachine(object):
         })
 
 
-class Service(object):
+class Service:
     """Representation of a callable service."""
 
     __slots__ = ['func', 'schema', 'is_callback', 'is_coroutinefunction']
@@ -800,7 +800,7 @@ class Service(object):
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
 
 
-class ServiceCall(object):
+class ServiceCall:
     """Representation of a call to a service."""
 
     __slots__ = ['domain', 'service', 'data', 'call_id']
@@ -821,7 +821,7 @@ class ServiceCall(object):
         return "<ServiceCall {}.{}>".format(self.domain, self.service)
 
 
-class ServiceRegistry(object):
+class ServiceRegistry:
     """Offer the services over the eventbus."""
 
     def __init__(self, hass):
@@ -1055,7 +1055,7 @@ class ServiceRegistry(object):
             _LOGGER.exception('Error executing service %s', service_call)
 
 
-class Config(object):
+class Config:
     """Configuration settings for Home Assistant."""
 
     def __init__(self):

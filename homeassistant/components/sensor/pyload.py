@@ -124,7 +124,7 @@ class PyLoadSensor(Entity):
             self._state = value
 
 
-class PyLoadAPI(object):
+class PyLoadAPI:
     """Simple wrapper for pyLoad's API."""
 
     def __init__(self, api_url, username=None, password=None):

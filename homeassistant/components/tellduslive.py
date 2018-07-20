@@ -206,7 +206,7 @@ def setup(hass, config, session=None):
     return True
 
 
-class TelldusLiveClient(object):
+class TelldusLiveClient:
     """Get the latest data and update the states."""
 
     def __init__(self, hass, config, session):
