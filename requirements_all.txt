@@ -219,6 +219,7 @@ braviarc-homeassistant==0.3.7.dev0
 
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
+# homeassistant.components.climate.broadlink
 broadlink==0.9.0
 
 # homeassistant.components.cover.brunt
@@ -1690,3 +1691,4 @@ zm-py==0.1.0
 
 # homeassistant.components.climate.broadlink
 broadlink==0.9.0
+BroadlinkWifiThermostat==1.0.1

@@ -11,18 +11,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    DOMAIN, STATE_AUTO, ClimateDevice,
+    DOMAIN, ClimateDevice,
     SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA, STATE_MANUAL, STATE_IDLE)
+    SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA,
+    STATE_MANUAL, STATE_IDLE, STATE_AUTO)
 from homeassistant.const import (
     TEMP_CELSIUS, ATTR_TEMPERATURE,
     CONF_NAME, CONF_HOST, CONF_MAC)
 import homeassistant.helpers.config_validation as cv
-from socket import timeout
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['broadlink==0.9.0']
+REQUIREMENTS = ['broadlink==0.9.0', 'BroadlinkWifiThermostat==1.0.1']
 
 DEFAULT_NAME = 'broadlink'
 POWER_ON = 1
@@ -129,15 +129,19 @@ SET_ADVANCED_CONF_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the broadlink thermostat platform."""
-
-    wifi_thermostat = WifiThermostat(config[CONF_MAC],
-                                     config[CONF_HOST],
-                                     config[CONF_NAME],
-                                     config[CONF_ADVANCED_CONFIG],
-                                     config[CONF_SCHEDULE_WEEKDAY],
-                                     config[CONF_SCHEDULE_WEEKDAY],
-                                     config[CONF_MIN_TEMP],
-                                     config[CONF_MAX_TEMP])
+    import BroadlinkWifiThermostat
+    wifi_thermostat = BroadlinkWifiThermostat.\
+        Thermostat(config[CONF_MAC],
+                   config[CONF_HOST],
+                   config[CONF_NAME],
+                   config[CONF_ADVANCED_CONFIG],
+                   config[CONF_SCHEDULE_WEEKDAY],
+                   config[CONF_SCHEDULE_WEEKDAY],
+                   config[CONF_MIN_TEMP],
+                   config[CONF_MAX_TEMP],
+                   STATE_IDLE,
+                   STATE_MANUAL,
+                   STATE_AUTO)
 
     add_devices([BroadlinkThermostat(wifi_thermostat)], True)
 
@@ -170,131 +174,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                            schema=SET_ADVANCED_CONF_SCHEMA)
 
     _LOGGER.debug("Wifi Thermostat: Component successfully added !")
-
-
-class WifiThermostat:
-    def __init__(self, mac, ip, name, advanced_config,
-                 schedule_wd, schedule_we, min_temp, max_temp):
-        self.host = ip
-        self.port = 80
-        self.mac = bytes.fromhex(''.join(reversed(mac.split(':'))))
-        self.current_temp = None
-        self.current_operation = None
-        self.power = None
-        self.target_temperature = None
-        self.name = name
-        self.loop_mode = json.loads(advanced_config)["loop_mode"]
-        self.operation_list = [STATE_AUTO, STATE_IDLE, STATE_MANUAL]
-        self.min_temp = min_temp
-        self.max_temp = max_temp
-        self.state = 0
-        self.freeze = 0
-        self.advanced_config = json.loads(advanced_config)
-        self.schedule = {CONF_WEEKDAY: json.loads(schedule_wd),
-                         CONF_WEEKEND: json.loads(schedule_we)}
-        self.set_advanced_config(self.advanced_config)
-        self.set_schedule(self.schedule)
-
-    def set_advanced_config(self, advanced_config):
-        """Set the thermostat advanced config"""
-        try:
-            device = self.connect()
-            if device.auth():
-                device.set_advanced(advanced_config["loop_mode"],
-                                    advanced_config["sen"],
-                                    advanced_config["osv"],
-                                    advanced_config["dif"],
-                                    advanced_config["svh"],
-                                    advanced_config["svl"],
-                                    advanced_config["adj"],
-                                    advanced_config["fre"],
-                                    advanced_config["pon"])
-        except timeout:
-            _LOGGER.error("set_advanced_config timeout")
-
-    def set_schedule(self, schedule):
-        """Set the thermostat schedule"""
-        try:
-            device = self.connect()
-            if device.auth():
-                device.set_schedule(schedule[CONF_WEEKDAY],
-                                    schedule[CONF_WEEKEND])
-        except timeout:
-            _LOGGER.error("set_schedule timeout")
-
-    def power_on_off(self, power):
-        """power on/off thermostat"""
-        try:
-            device = self.connect()
-            if device.auth():
-                if str(power) == STATE_IDLE:
-                    device.set_power(POWER_OFF)
-                else:
-                    device.set_power(POWER_ON)
-        except timeout:
-            _LOGGER.error("power_on_off timeout")
-
-    def set_temperature(self, temperature):
-        """Set the thermostat target temperature"""
-        try:
-            device = self.connect()
-            if device.auth():
-                device.set_temp(float(temperature))
-        except timeout:
-            _LOGGER.error("set_temperature timeout")
-
-    def set_operation_mode(self, mode):
-        """Set the thermostat operation mode: [on, off, auto]"""
-        try:
-            device = self.connect()
-            if device.auth():
-                if mode == STATE_AUTO:
-                    device.set_power(POWER_ON)
-                    device.set_mode(AUTO, self.loop_mode)
-                elif mode == STATE_MANUAL:
-                    device.set_power(POWER_ON)
-                    device.set_mode(MANUAL, self.loop_mode)
-                elif mode == STATE_IDLE:
-                    device.set_mode(MANUAL, self.loop_mode)
-                    if self.freeze == 1:
-                        device.set_temp(float(12))
-                    else:
-                        device.set_temp(float(0))
-                    device.set_power(POWER_OFF)
-        except timeout:
-            _LOGGER.error("set_operation_mode timeout")
-
-    def read_status(self):
-        """Read thermostat data"""
-        _LOGGER.debug("read_status")
-        try:
-            device = self.connect()
-            if device.auth():
-                data = device.get_full_status()
-                self.current_temp = data['room_temp']
-                self.target_temperature = data['thermostat_temp']
-                self.current_operation = STATE_IDLE \
-                    if \
-                    data["power"] == 0 \
-                    else \
-                    (STATE_AUTO
-                     if
-                     data["auto_mode"] == 1
-                     else
-                     STATE_MANUAL)
-                self.state = STATE_MANUAL if data["active"] == 0 \
-                    else STATE_IDLE
-                self.freeze = data['fre']
-        except timeout:
-            _LOGGER.error("read_status timeout")
-
-    def connect(self):
-        """Open a connexion"""
-        import broadlink
-        return broadlink.gendevice(0x4EAD,
-                                   (self.host,
-                                    self.port),
-                                   self.mac)
 
 
 class BroadlinkThermostat(ClimateDevice):
@@ -352,7 +231,7 @@ class BroadlinkThermostat(ClimateDevice):
     @property
     def operation_list(self):
         """List of available operation modes."""
-        return self._device.operation_list
+        return [STATE_AUTO, STATE_IDLE, STATE_MANUAL]
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
