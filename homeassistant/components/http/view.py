@@ -12,6 +12,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized, HTTPInternalServerError
 
 import homeassistant.remote as rem
+from homeassistant.components.http.ban import process_success_login
 from homeassistant.core import is_callback
 from homeassistant.const import CONTENT_TYPE_JSON
 
@@ -91,8 +92,11 @@ def request_handler_factory(view, handler):
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
-        if view.requires_auth and not authenticated:
-            raise HTTPUnauthorized()
+        if view.requires_auth:
+            if authenticated:
+                await process_success_login(request)
+            else:
+                raise HTTPUnauthorized()
 
         _LOGGER.info('Serving %s to %s (auth: %s)',
                      request.path, request.get(KEY_REAL_IP), authenticated)
