@@ -6,8 +6,7 @@ https://home-assistant.io/components/fan.tuya/
 """
 
 from homeassistant.components.fan import (
-    ENTITY_ID_FORMAT, FanEntity, SUPPORT_DIRECTION, SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED)
+    ENTITY_ID_FORMAT, FanEntity, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED)
 from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
 from homeassistant.const import STATE_OFF
 
@@ -36,6 +35,12 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
         """Init Tuya fan device."""
         super().__init__(tuya)
         self.entity_id = ENTITY_ID_FORMAT.format(tuya.object_id())
+        self.speeds = [STATE_OFF]
+
+    async def async_added_to_hass(self):
+        """Create fan list when add to hass."""
+        await super().async_added_to_hass()
+        self.speeds.extend(self.tuya.speed_list())
 
     def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
@@ -83,16 +88,12 @@ class TuyaFanDevice(TuyaDevice, FanEntity):
     @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
-        speed_list = [STATE_OFF]
-        speed_list.extend(self.tuya.speed_list())
-        return speed_list
+        return self.speeds
 
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
         supports = SUPPORT_SET_SPEED
-        if self.is_on and self.tuya.support_oscillate():
+        if self.tuya.support_oscillate():
             supports = supports | SUPPORT_OSCILLATE
-        if self.is_on:
-            supports = supports | SUPPORT_DIRECTION
         return supports
