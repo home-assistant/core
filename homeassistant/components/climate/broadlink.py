@@ -144,8 +144,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     @asyncio.coroutine
     def handle_set_schedule(service):
         """Handle data for the set_schedule service call."""
-        schedule_wd = service.data.get(CONF_SCHEDULE_WEEKDAY)
-        schedule_we = service.data.get(CONF_SCHEDULE_WEEKEND)
+        schedule_wd = service.data.get(CONF_WEEKDAY)
+        schedule_we = service.data.get(CONF_WEEKEND)
         wifi_thermostat.set_schedule(
             {CONF_WEEKDAY:
              json.loads(schedule_wd.replace("'", '"')),
@@ -258,7 +258,7 @@ class WifiThermostat:
                     device.set_mode(MANUAL, self.loop_mode)
                     if self.freeze == 1:
                         device.set_temp(float(12))
-                    else :
+                    else:
                         device.set_temp(float(0))
                     device.set_power(POWER_OFF)
         except timeout:
