@@ -166,7 +166,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         wifi_thermostat.set_advanced_config(
             json.loads(advanced_conf.replace("'", '"')))
 
-
     # Register advanced configuration service
     hass.services.register(DOMAIN,
                            DEFAULT_NAME + '_set_advanced_conf',
