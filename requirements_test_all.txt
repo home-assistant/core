@@ -225,3 +225,4 @@ yahoo-finance==1.4.0
 
 # homeassistant.components.climate.broadlink
 broadlink==0.9.0
+BroadlinkWifiThermostat==1.0.1
