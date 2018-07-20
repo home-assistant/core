@@ -231,7 +231,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-class DeviceTracker(object):
+class DeviceTracker:
     """Representation of a device tracker."""
 
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
@@ -577,7 +577,7 @@ class Device(Entity):
                         state.attributes[ATTR_LONGITUDE])
 
 
-class DeviceScanner(object):
+class DeviceScanner:
     """Device scanner object."""
 
     hass = None  # type: HomeAssistantType

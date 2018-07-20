@@ -258,7 +258,7 @@ class SensorFilter(Entity):
         return state_attr
 
 
-class FilterState(object):
+class FilterState:
     """State abstraction for filter usage."""
 
     def __init__(self, state):
@@ -283,7 +283,7 @@ class FilterState(object):
         return "{} : {}".format(self.timestamp, self.state)
 
 
-class Filter(object):
+class Filter:
     """Filter skeleton.
 
     Args:

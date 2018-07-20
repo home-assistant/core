@@ -462,7 +462,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 
 @attr.s(slots=True, frozen=True)
-class Subscription(object):
+class Subscription:
     """Class to hold data about an active subscription."""
 
     topic = attr.ib(type=str)
@@ -472,7 +472,7 @@ class Subscription(object):
 
 
 @attr.s(slots=True, frozen=True)
-class Message(object):
+class Message:
     """MQTT Message."""
 
     topic = attr.ib(type=str)
@@ -481,7 +481,7 @@ class Message(object):
     retain = attr.ib(type=bool, default=False)
 
 
-class MQTT(object):
+class MQTT:
     """Home Assistant MQTT client."""
 
     def __init__(self, hass: HomeAssistantType, broker: str, port: int,

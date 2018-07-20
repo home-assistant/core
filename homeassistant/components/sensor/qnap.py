@@ -164,7 +164,7 @@ def round_nicely(number):
     return round(number)
 
 
-class QNAPStatsAPI(object):
+class QNAPStatsAPI:
     """Class to interface with the API."""
 
     def __init__(self, config):

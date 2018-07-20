@@ -140,7 +140,7 @@ class DHTSensor(Entity):
                 self._state = round(humidity + humidity_offset, 1)
 
 
-class DHTClient(object):
+class DHTClient:
     """Get the latest data from the DHT sensor."""
 
     def __init__(self, adafruit_dht, sensor, pin):

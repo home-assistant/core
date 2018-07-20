@@ -143,7 +143,7 @@ class FritzBoxCallSensor(Entity):
             self.phonebook.update_phonebook()
 
 
-class FritzBoxCallMonitor(object):
+class FritzBoxCallMonitor:
     """Event listener to monitor calls on the Fritz!Box."""
 
     def __init__(self, host, port, sensor):
@@ -225,7 +225,7 @@ class FritzBoxCallMonitor(object):
         self._sensor.schedule_update_ha_state()
 
 
-class FritzBoxPhonebook(object):
+class FritzBoxPhonebook:
     """This connects to a FritzBox router and downloads its phone book."""
 
     def __init__(self, host, port, username, password,

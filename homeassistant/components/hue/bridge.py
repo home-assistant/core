@@ -19,7 +19,7 @@ SCENE_SCHEMA = vol.Schema({
 })
 
 
-class HueBridge(object):
+class HueBridge:
     """Manages a single Hue bridge."""
 
     def __init__(self, hass, config_entry, allow_unreachable, allow_groups):

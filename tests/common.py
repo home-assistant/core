@@ -355,7 +355,7 @@ def ensure_auth_manager_loaded(auth_mgr):
         store._users = OrderedDict()
 
 
-class MockModule(object):
+class MockModule:
     """Representation of a fake module."""
 
     # pylint: disable=invalid-name
@@ -391,7 +391,7 @@ class MockModule(object):
             self.async_unload_entry = async_unload_entry
 
 
-class MockPlatform(object):
+class MockPlatform:
     """Provide a fake platform."""
 
     # pylint: disable=invalid-name

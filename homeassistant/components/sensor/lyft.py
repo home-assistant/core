@@ -183,7 +183,7 @@ class LyftSensor(Entity):
                      estimate.get('estimated_cost_cents_max', 0)) / 2) / 100)
 
 
-class LyftEstimate(object):
+class LyftEstimate:
     """The class for handling the time and price estimate."""
 
     def __init__(self, session, start_latitude, start_longitude,

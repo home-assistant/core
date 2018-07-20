@@ -58,7 +58,7 @@ class MEQueryException(Exception):
     pass
 
 
-class MediaExtractor(object):
+class MediaExtractor:
     """Class which encapsulates all extraction logic."""
 
     def __init__(self, hass, component_config, call_data):

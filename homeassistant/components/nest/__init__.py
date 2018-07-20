@@ -183,7 +183,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-class NestDevice(object):
+class NestDevice:
     """Structure Nest functions for hass."""
 
     def __init__(self, hass, conf, nest):

@@ -108,7 +108,7 @@ class HddTempSensor(Entity):
             self._state = None
 
 
-class HddTempData(object):
+class HddTempData:
     """Get the latest data from HDDTemp and update the states."""
 
     def __init__(self, host, port):
