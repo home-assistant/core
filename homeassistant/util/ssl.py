@@ -4,7 +4,7 @@ import ssl
 import certifi
 
 
-def client_context():
+def client_context() -> ssl.SSLContext:
     """Return an SSL context for making requests."""
     context = _get_context()
     context.verify_mode = ssl.CERT_REQUIRED
@@ -13,14 +13,14 @@ def client_context():
     return context
 
 
-def server_context():
+def server_context() -> ssl.SSLContext:
     """Return an SSL context for being a server."""
     context = _get_context()
     context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
     return context
 
 
-def _get_context():
+def _get_context() -> ssl.SSLContext:
     """Return an SSL context following the Mozilla recommendations.
 
     TLS configuration follows the best-practice guidelines specified here:
