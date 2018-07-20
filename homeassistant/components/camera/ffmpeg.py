@@ -69,7 +69,7 @@ class FFmpegCamera(Camera):
         yield from stream.open_camera(
             self._input, extra_cmd=self._extra_arguments)
 
-        yield from async_aiohttp_proxy_stream(
+        return await async_aiohttp_proxy_stream(
             self.hass, request, stream,
             'multipart/x-mixed-replace;boundary=ffserver')
         yield from stream.close()
