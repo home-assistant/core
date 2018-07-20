@@ -274,3 +274,6 @@ wakeonlan==1.1.6
 
 # homeassistant.components.cloud
 warrant==0.6.1
+
+# homeassistant.components.climate.broadlink
+broadlink==0.9.0

@@ -1687,3 +1687,6 @@ zigpy==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.1.0
+
+# homeassistant.components.climate.broadlink
+broadlink==0.9.0
