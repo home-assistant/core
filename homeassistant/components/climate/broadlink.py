@@ -11,13 +11,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    DOMAIN, ClimateDevice,
-    SUPPORT_OPERATION_MODE,
-    SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA,
-    STATE_MANUAL, STATE_IDLE, STATE_AUTO)
+    DOMAIN, PLATFORM_SCHEMA, STATE_AUTO, STATE_IDLE, STATE_MANUAL,
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.const import (
-    TEMP_CELSIUS, ATTR_TEMPERATURE,
-    CONF_NAME, CONF_HOST, CONF_MAC)
+    ATTR_TEMPERATURE, CONF_HOST, CONF_MAC, CONF_NAME, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
