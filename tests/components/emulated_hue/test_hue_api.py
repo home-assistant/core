@@ -359,6 +359,7 @@ def test_put_light_state_cover(hass_hue, hue_client):
     assert living_room_window_cover.attributes[
         cover.ATTR_CURRENT_POSITION] == level
 
+
 @asyncio.coroutine
 def test_put_light_state_fan(hass_hue, hue_client):
     """Test turning on fan and setting speed."""
