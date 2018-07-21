@@ -1,5 +1,5 @@
 """
-Support for the Tuya devices.
+Support for the Tuya scene.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.tuya/
