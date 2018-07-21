@@ -27,11 +27,16 @@ DEFAULT_NAME = 'Command Sensor'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
+CONF_COMMAND_TIMEOUT = 'command_timeout'
+DEFAULT_TIMEOUT = 15
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(
+        CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 
@@ -41,9 +46,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     command = config.get(CONF_COMMAND)
     unit = config.get(CONF_UNIT_OF_MEASUREMENT)
     value_template = config.get(CONF_VALUE_TEMPLATE)
+    command_timeout = config.get(CONF_COMMAND_TIMEOUT)
     if value_template is not None:
         value_template.hass = hass
-    data = CommandSensorData(hass, command)
+    data = CommandSensorData(hass, command, command_timeout)
 
     add_devices([CommandSensor(hass, data, name, unit, value_template)], True)
 
@@ -89,14 +95,15 @@ class CommandSensor(Entity):
             self._state = value
 
 
-class CommandSensorData(object):
+class CommandSensorData:
     """The class for handling the data retrieval."""
 
-    def __init__(self, hass, command):
+    def __init__(self, hass, command, command_timeout):
         """Initialize the data object."""
         self.value = None
         self.hass = hass
         self.command = command
+        self.timeout = command_timeout
 
     def update(self):
         """Get the latest data with a shell command."""
@@ -135,7 +142,7 @@ class CommandSensorData(object):
         try:
             _LOGGER.info("Running command: %s", command)
             return_value = subprocess.check_output(
-                command, shell=shell, timeout=15)
+                command, shell=shell, timeout=self.timeout)
             self.value = return_value.strip().decode('utf-8')
         except subprocess.CalledProcessError:
             _LOGGER.error("Command failed: %s", command)

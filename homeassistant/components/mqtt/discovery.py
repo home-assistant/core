@@ -8,7 +8,7 @@ import json
 import logging
 import re
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.components.mqtt import CONF_STATE_TOPIC

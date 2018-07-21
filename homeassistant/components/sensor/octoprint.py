@@ -107,7 +107,7 @@ class OctoPrintSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         sensor_unit = self.unit_of_measurement
-        if sensor_unit == TEMP_CELSIUS or sensor_unit == "%":
+        if sensor_unit in (TEMP_CELSIUS, "%"):
             # API sometimes returns null and not 0
             if self._state is None:
                 self._state = 0

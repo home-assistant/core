@@ -201,7 +201,7 @@ async def async_setup(hass, config):
     return True
 
 
-class RainMachine(object):
+class RainMachine:
     """Define a generic RainMachine object."""
 
     def __init__(self, client):

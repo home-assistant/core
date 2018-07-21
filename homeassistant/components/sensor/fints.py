@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(accounts, True)
 
 
-class FinTsClient(object):
+class FinTsClient:
     """Wrapper around the FinTS3PinTanClient.
 
     Use this class as Context Manager to get the FinTS3Client object.

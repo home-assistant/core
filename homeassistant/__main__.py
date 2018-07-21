@@ -8,7 +8,7 @@ import subprocess
 import sys
 import threading
 
-from typing import Optional, List, Dict, Any  # noqa #pylint: disable=unused-import
+from typing import List, Dict, Any  # noqa pylint: disable=unused-import
 
 
 from homeassistant import monkey_patch
@@ -282,9 +282,9 @@ def setup_and_run_hass(config_dir: str,
 
         def open_browser(event):
             """Open the webinterface in a browser."""
-            if hass.config.api is not None:
+            if hass.config.api is not None:  # type: ignore
                 import webbrowser
-                webbrowser.open(hass.config.api.base_url)
+                webbrowser.open(hass.config.api.base_url)  # type: ignore
 
         run_callback_threadsafe(
             hass.loop,

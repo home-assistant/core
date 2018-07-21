@@ -8,7 +8,7 @@ import logging
 from homeassistant.components.sensor import DOMAIN
 from homeassistant.components import zwave
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
+from homeassistant.components.zwave import async_setup_platform  # noqa pylint: disable=unused-import
 
 _LOGGER = logging.getLogger(__name__)
 

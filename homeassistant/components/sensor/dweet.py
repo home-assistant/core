@@ -99,7 +99,7 @@ class DweetSensor(Entity):
                 values, STATE_UNKNOWN)
 
 
-class DweetData(object):
+class DweetData:
     """The class for handling the data retrieval."""
 
     def __init__(self, device):

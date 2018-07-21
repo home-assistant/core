@@ -6,7 +6,7 @@ import re
 from homeassistant.core import split_entity_id
 
 
-class EntityValues(object):
+class EntityValues:
     """Class to store entity id based values."""
 
     def __init__(self, exact=None, domain=None, glob=None):

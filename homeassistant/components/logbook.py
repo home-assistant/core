@@ -140,7 +140,7 @@ class LogbookView(HomeAssistantView):
         return await hass.async_add_job(json_events)
 
 
-class Entry(object):
+class Entry:
     """A human readable version of the log."""
 
     def __init__(self, when=None, name=None, message=None, domain=None,

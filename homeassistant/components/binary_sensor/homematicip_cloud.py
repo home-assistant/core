@@ -21,8 +21,6 @@ ATTR_EVENT_DELAY = 'event_delay'
 ATTR_MOTION_DETECTED = 'motion_detected'
 ATTR_ILLUMINATION = 'illumination'
 
-HMIP_OPEN = 'open'
-
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
@@ -61,11 +59,13 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if the shutter contact is on/open."""
+        from homematicip.base.enums import WindowState
+
         if self._device.sabotage:
             return True
         if self._device.windowState is None:
             return None
-        return self._device.windowState.lower() == HMIP_OPEN
+        return self._device.windowState == WindowState.OPEN
 
 
 class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):

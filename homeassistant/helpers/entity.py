@@ -56,7 +56,7 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
         entity_id_format.format(slugify(name)), current_ids)
 
 
-class Entity(object):
+class Entity:
     """An abstract class for Home Assistant entities."""
 
     # SAFE TO OVERWRITE

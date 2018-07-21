@@ -109,6 +109,12 @@ class EntityRegistry:
         """Get entity. Create if it doesn't exist."""
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
         if entity_id:
+            entry = self.entities[entity_id]
+            if entry.config_entry_id == config_entry_id:
+                return entry
+
+            self._async_update_entity(
+                entity_id, config_entry_id=config_entry_id)
             return self.entities[entity_id]
 
         entity_id = self.async_generate_entity_id(
@@ -129,12 +135,22 @@ class EntityRegistry:
     @callback
     def async_update_entity(self, entity_id, *, name=_UNDEF):
         """Update properties of an entity."""
+        return self._async_update_entity(entity_id, name=name)
+
+    @callback
+    def _async_update_entity(self, entity_id, *, name=_UNDEF,
+                             config_entry_id=_UNDEF):
+        """Private facing update properties method."""
         old = self.entities[entity_id]
 
         changes = {}
 
         if name is not _UNDEF and name != old.name:
             changes['name'] = name
+
+        if (config_entry_id is not _UNDEF and
+                config_entry_id != old.config_entry_id):
+            changes['config_entry_id'] = config_entry_id
 
         if not changes:
             return old

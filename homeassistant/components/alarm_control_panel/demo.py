@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
 import datetime
-import homeassistant.components.alarm_control_panel.manual as manual
+from homeassistant.components.alarm_control_panel import manual
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_CUSTOM_BYPASS,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,

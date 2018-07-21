@@ -123,7 +123,7 @@ class MVGLiveSensor(Entity):
             self._icon = ICONS[self.data.departures.get('product', '-')]
 
 
-class MVGLiveData(object):
+class MVGLiveData:
     """Pull data from the mvg-live.de web page."""
 
     def __init__(self, station, destinations, directions,

@@ -86,8 +86,8 @@ class IOSSensor(Entity):
         battery_level = device_battery[ios.ATTR_BATTERY_LEVEL]
         charging = True
         icon_state = DEFAULT_ICON_STATE
-        if (battery_state == ios.ATTR_BATTERY_STATE_FULL or
-                battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED):
+        if battery_state in (ios.ATTR_BATTERY_STATE_FULL,
+                             ios.ATTR_BATTERY_STATE_UNPLUGGED):
             charging = False
             icon_state = "{}-off".format(DEFAULT_ICON_STATE)
         elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:

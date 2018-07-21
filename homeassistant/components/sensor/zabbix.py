@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.zabbix as zabbix
+from homeassistant.components import zabbix
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME

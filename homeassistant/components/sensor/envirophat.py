@@ -138,7 +138,7 @@ class EnvirophatSensor(Entity):
             self._state = self.data.voltage_3
 
 
-class EnvirophatData(object):
+class EnvirophatData:
     """Get the latest data and update."""
 
     def __init__(self, envirophat, use_leds):

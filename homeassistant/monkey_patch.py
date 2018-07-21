@@ -34,7 +34,7 @@ def patch_weakref_tasks():
             """No-op add."""
             return
 
-    asyncio.tasks.Task._all_tasks = IgnoreCalls()
+    asyncio.tasks.Task._all_tasks = IgnoreCalls()  # type: ignore
     try:
         del asyncio.tasks.Task.__del__
     except:  # noqa: E722
@@ -63,7 +63,7 @@ def disable_c_asyncio():
             if fullname == self.PATH_TRIGGER:
                 # We lint in Py35, exception is introduced in Py36
                 # pylint: disable=undefined-variable
-                raise ModuleNotFoundError()  # noqa
+                raise ModuleNotFoundError()  # type: ignore # noqa
             return None
 
     sys.path_hooks.append(AsyncioImportFinder)

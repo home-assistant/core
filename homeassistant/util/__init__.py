@@ -13,7 +13,8 @@ from functools import wraps
 from types import MappingProxyType
 from unicodedata import normalize
 
-from typing import Any, Optional, TypeVar, Callable, KeysView, Union, Iterable
+from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
+                    Iterable, List, Mapping)
 
 from .dt import as_local, utcnow
 
@@ -150,9 +151,9 @@ class OrderedSet(MutableSet):
 
     def __init__(self, iterable=None):
         """Initialize the set."""
-        self.end = end = []
-        end += [None, end, end]         # sentinel node for doubly linked list
-        self.map = {}                   # key --> [key, prev, next]
+        self.end = end = []  # type: List[Any]
+        end += [None, end, end]  # sentinel node for doubly linked list
+        self.map = {}  # type: Mapping[List, Any] # key --> [key, prev, next]
         if iterable is not None:
             self |= iterable
 
@@ -235,7 +236,7 @@ class OrderedSet(MutableSet):
         return set(self) == set(other)
 
 
-class Throttle(object):
+class Throttle:
     """A class for throttling the execution of tasks.
 
     This method decorator adds a cooldown to a method to prevent it from being

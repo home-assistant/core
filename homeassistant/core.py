@@ -18,7 +18,8 @@ from time import monotonic
 
 from types import MappingProxyType
 from typing import (  # NOQA
-    Optional, Any, Callable, List, TypeVar, Dict, Coroutine)
+    Optional, Any, Callable, List, TypeVar, Dict, Coroutine, Set,
+    TYPE_CHECKING)
 
 from async_timeout import timeout
 import voluptuous as vol
@@ -37,10 +38,15 @@ from homeassistant.exceptions import (
 from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe,
     fire_coroutine_threadsafe)
-import homeassistant.util as util
+from homeassistant import util
 import homeassistant.util.dt as dt_util
-import homeassistant.util.location as location
+from homeassistant.util import location
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
+
+# Typing imports that create a circular dependency
+# pylint: disable=using-constant-test,unused-import
+if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntries # noqa
 
 T = TypeVar('T')
 
@@ -93,7 +99,8 @@ def async_loop_exception_handler(loop, context):
         kwargs['exc_info'] = (type(exception), exception,
                               exception.__traceback__)
 
-    _LOGGER.error("Error doing job: %s", context['message'], **kwargs)
+    _LOGGER.error(  # type: ignore
+        "Error doing job: %s", context['message'], **kwargs)
 
 
 class CoreState(enum.Enum):
@@ -109,7 +116,7 @@ class CoreState(enum.Enum):
         return self.value  # type: ignore
 
 
-class HomeAssistant(object):
+class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
     def __init__(self, loop=None):
@@ -126,7 +133,7 @@ class HomeAssistant(object):
         self.executor = ThreadPoolExecutor(**executor_opts)
         self.loop.set_default_executor(self.executor)
         self.loop.set_exception_handler(async_loop_exception_handler)
-        self._pending_tasks = []
+        self._pending_tasks = []  # type: list
         self._track_task = True
         self.bus = EventBus(self)
         self.services = ServiceRegistry(self)
@@ -135,10 +142,10 @@ class HomeAssistant(object):
         self.components = loader.Components(self)
         self.helpers = loader.Helpers(self)
         # This is a dictionary that any component can store any data on.
-        self.data = {}
+        self.data = {}  # type: dict
         self.state = CoreState.not_running
         self.exit_code = 0  # type: int
-        self.config_entries = None
+        self.config_entries = None  # type: Optional[ConfigEntries]
 
     @property
     def is_running(self) -> bool:
@@ -217,7 +224,7 @@ class HomeAssistant(object):
         task = None
 
         if asyncio.iscoroutine(target):
-            task = self.loop.create_task(target)
+            task = self.loop.create_task(target)  # type: ignore
         elif is_callback(target):
             self.loop.call_soon(target, *args)
         elif asyncio.iscoroutinefunction(target):
@@ -252,7 +259,7 @@ class HomeAssistant(object):
             target: Callable[..., Any],
             *args: Any) -> asyncio.Future:
         """Add an executor job from within the event loop."""
-        task = self.loop.run_in_executor(
+        task = self.loop.run_in_executor(  # type: ignore
             None, target, *args)  # type: asyncio.Future
 
         # If a task is scheduled
@@ -340,7 +347,7 @@ class EventOrigin(enum.Enum):
         return self.value
 
 
-class Event(object):
+class Event:
     """Representation of an event within the bus."""
 
     __slots__ = ['event_type', 'data', 'origin', 'time_fired']
@@ -385,7 +392,7 @@ class Event(object):
                 self.time_fired == other.time_fired)
 
 
-class EventBus(object):
+class EventBus:
     """Allow the firing of and listening for events."""
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -540,7 +547,7 @@ class EventBus(object):
             _LOGGER.warning("Unable to remove unknown listener %s", listener)
 
 
-class State(object):
+class State:
     """Object to represent a state within the state machine.
 
     entity_id: the entity that is represented.
@@ -647,12 +654,12 @@ class State(object):
             dt_util.as_local(self.last_changed).isoformat())
 
 
-class StateMachine(object):
+class StateMachine:
     """Helper class that tracks the state of different entities."""
 
     def __init__(self, bus, loop):
         """Initialize state machine."""
-        self._states = {}
+        self._states = {}  # type: Dict[str, State]
         self._bus = bus
         self._loop = loop
 
@@ -780,7 +787,7 @@ class StateMachine(object):
         })
 
 
-class Service(object):
+class Service:
     """Representation of a callable service."""
 
     __slots__ = ['func', 'schema', 'is_callback', 'is_coroutinefunction']
@@ -793,7 +800,7 @@ class Service(object):
         self.is_coroutinefunction = asyncio.iscoroutinefunction(func)
 
 
-class ServiceCall(object):
+class ServiceCall:
     """Representation of a call to a service."""
 
     __slots__ = ['domain', 'service', 'data', 'call_id']
@@ -814,12 +821,12 @@ class ServiceCall(object):
         return "<ServiceCall {}.{}>".format(self.domain, self.service)
 
 
-class ServiceRegistry(object):
+class ServiceRegistry:
     """Offer the services over the eventbus."""
 
     def __init__(self, hass):
         """Initialize a service registry."""
-        self._services = {}
+        self._services = {}  # type: Dict[str, Dict[str, Service]]
         self._hass = hass
         self._async_unsub_call_event = None
 
@@ -971,7 +978,7 @@ class ServiceRegistry(object):
         }
 
         if blocking:
-            fut = asyncio.Future(loop=self._hass.loop)
+            fut = asyncio.Future(loop=self._hass.loop)  # type: asyncio.Future
 
             @callback
             def service_executed(event):
@@ -1048,7 +1055,7 @@ class ServiceRegistry(object):
             _LOGGER.exception('Error executing service %s', service_call)
 
 
-class Config(object):
+class Config:
     """Configuration settings for Home Assistant."""
 
     def __init__(self):
@@ -1064,18 +1071,18 @@ class Config(object):
         self.skip_pip = False  # type: bool
 
         # List of loaded components
-        self.components = set()
+        self.components = set()  # type: set
 
         # Remote.API object pointing at local API
         self.api = None
 
         # Directory that holds the configuration
-        self.config_dir = None
+        self.config_dir = None  # type: Optional[str]
 
         # List of allowed external dirs to access
-        self.whitelist_external_dirs = set()
+        self.whitelist_external_dirs = set()  # type: Set[str]
 
-    def distance(self, lat: float, lon: float) -> float:
+    def distance(self, lat: float, lon: float) -> Optional[float]:
         """Calculate distance from Home Assistant.
 
         Async friendly.

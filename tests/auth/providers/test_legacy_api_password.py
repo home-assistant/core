@@ -30,11 +30,15 @@ def manager(hass, store, provider):
     })
 
 
-async def test_create_new_credential(provider):
+async def test_create_new_credential(manager, provider):
     """Test that we create a new credential."""
     credentials = await provider.async_get_or_create_credentials({})
     assert credentials.data["username"] is legacy_api_password.LEGACY_USER
     assert credentials.is_new is True
+
+    user = await manager.async_get_or_create_user(credentials)
+    assert user.name == legacy_api_password.LEGACY_USER
+    assert user.is_active
 
 
 async def test_only_one_credentials(manager, provider):

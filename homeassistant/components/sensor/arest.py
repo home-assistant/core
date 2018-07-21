@@ -158,7 +158,7 @@ class ArestSensor(Entity):
         return self.arest.available
 
 
-class ArestData(object):
+class ArestData:
     """The Class for handling the data retrieval for variables."""
 
     def __init__(self, resource, pin=None):

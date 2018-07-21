@@ -113,6 +113,7 @@ from homeassistant import data_entry_flow
 from homeassistant.core import callback
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView, FlowManagerResourceView)
+from homeassistant.components import websocket_api
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.util import dt as dt_util
@@ -122,6 +123,12 @@ from . import indieauth
 
 DOMAIN = 'auth'
 DEPENDENCIES = ['http']
+
+WS_TYPE_CURRENT_USER = 'auth/current_user'
+SCHEMA_WS_CURRENT_USER = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_CURRENT_USER,
+})
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -135,6 +142,11 @@ async def async_setup(hass, config):
         LoginFlowResourceView(hass.auth.login_flow, store_credentials))
     hass.http.register_view(GrantTokenView(retrieve_credentials))
     hass.http.register_view(LinkUserView(retrieve_credentials))
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_CURRENT_USER, websocket_current_user,
+        SCHEMA_WS_CURRENT_USER
+    )
 
     return True
 
@@ -229,6 +241,7 @@ class GrantTokenView(HomeAssistantView):
     url = '/auth/token'
     name = 'api:auth:token'
     requires_auth = False
+    cors_allowed = True
 
     def __init__(self, retrieve_credentials):
         """Initialize the grant token view."""
@@ -243,6 +256,7 @@ class GrantTokenView(HomeAssistantView):
         if client_id is None or not indieauth.verify_client_id(client_id):
             return self.json({
                 'error': 'invalid_request',
+                'error_description': 'Invalid client id',
             }, status_code=400)
 
         grant_type = data.get('grant_type')
@@ -272,9 +286,17 @@ class GrantTokenView(HomeAssistantView):
         if credentials is None:
             return self.json({
                 'error': 'invalid_request',
+                'error_description': 'Invalid code',
             }, status_code=400)
 
         user = await hass.auth.async_get_or_create_user(credentials)
+
+        if not user.is_active:
+            return self.json({
+                'error': 'access_denied',
+                'error_description': 'User is not active',
+            }, status_code=403)
+
         refresh_token = await hass.auth.async_create_refresh_token(user,
                                                                    client_id)
         access_token = hass.auth.async_create_access_token(refresh_token)
@@ -374,3 +396,20 @@ def _create_cred_store():
         return None
 
     return store_credentials, retrieve_credentials
+
+
+@callback
+def websocket_current_user(hass, connection, msg):
+    """Return the current user."""
+    user = connection.request.get('hass_user')
+
+    if user is None:
+        connection.to_write.put_nowait(websocket_api.error_message(
+            msg['id'], 'no_user', 'Not authenticated as a user'))
+        return
+
+    connection.to_write.put_nowait(websocket_api.result_message(msg['id'], {
+        'id': user.id,
+        'name': user.name,
+        'is_owner': user.is_owner,
+    }))

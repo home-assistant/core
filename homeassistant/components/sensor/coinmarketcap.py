@@ -140,7 +140,7 @@ class CoinMarketCapSensor(Entity):
         self._ticker = self.data.ticker.get('data')
 
 
-class CoinMarketCapData(object):
+class CoinMarketCapData:
     """Get the latest data and update the states."""
 
     def __init__(self, currency_id, display_currency):

@@ -24,7 +24,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
+from homeassistant import util
 from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml import dump
@@ -231,7 +231,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-class DeviceTracker(object):
+class DeviceTracker:
     """Representation of a device tracker."""
 
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
@@ -577,7 +577,7 @@ class Device(Entity):
                         state.attributes[ATTR_LONGITUDE])
 
 
-class DeviceScanner(object):
+class DeviceScanner:
     """Device scanner object."""
 
     hass = None  # type: HomeAssistantType
