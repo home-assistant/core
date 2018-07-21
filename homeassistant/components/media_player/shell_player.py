@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components.media_player import (
     SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
     MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC)
-from homeassistant.const import ( CONF_COMMAND, CONF_NAME, STATE_ON)
+from homeassistant.const import (CONF_COMMAND, CONF_NAME, STATE_ON)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 
@@ -27,7 +27,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                                discovery_info=None):
     """Set up the Shell Player platform."""
 
     if discovery_info is not None:
@@ -37,6 +38,7 @@ async def async_setup_platform(hass, config, async_add_devices, discovery_info=N
     name = config.get(CONF_NAME)
 
     async_add_devices([ShellPlayer(shell_command, name)])
+
 
 class ShellPlayer(MediaPlayerDevice):
     """Representation of a Shell player."""
@@ -81,7 +83,9 @@ class ShellPlayer(MediaPlayerDevice):
 
         if self._args_compiled:
             try:
-                rendered_args = self._args_compiled.async_render({'media_id':media_id})
+                rendered_args = self._args_compiled.async_render(
+                    {'media_id': media_id}
+                    )
             except TemplateError as ex:
                 _LOGGER.exception("Error rendering command template: %s", ex)
                 return
@@ -109,4 +113,3 @@ class ShellPlayer(MediaPlayerDevice):
                     loop=self.hass.loop,
                     stdin=None
                     )
-
