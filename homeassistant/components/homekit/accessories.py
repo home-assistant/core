@@ -17,11 +17,12 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, CHAR_BATTERY_LEVEL,
-    CHAR_CHARGING_STATE, CHAR_STATUS_LOW_BATTERY, DEBOUNCE_TIMEOUT,
-    MANUFACTURER, SERV_BATTERY_SERVICE)
+    BRIDGE_MODEL, CHAR_BATTERY_LEVEL, CHAR_CHARGING_STATE,
+    CHAR_STATUS_LOW_BATTERY, DEBOUNCE_TIMEOUT, MANUFACTURER,
+    SERV_BATTERY_SERVICE)
 from .util import (
-    convert_to_float, show_setup_message, dismiss_setup_message)
+    convert_to_float, generate_serial_number, show_setup_message,
+    dismiss_setup_message)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -141,12 +142,12 @@ class HomeAccessory(Accessory):
 class HomeBridge(Bridge):
     """Adapter class for Bridge."""
 
-    def __init__(self, hass, driver, name=BRIDGE_NAME):
+    def __init__(self, hass, driver, name):
         """Initialize a Bridge object."""
         super().__init__(driver, name)
         self.set_info_service(
             firmware_revision=__version__, manufacturer=MANUFACTURER,
-            model=BRIDGE_MODEL, serial_number=BRIDGE_SERIAL_NUMBER)
+            model=BRIDGE_MODEL, serial_number=generate_serial_number(name))
         self.hass = hass
 
     def setup_message(self):

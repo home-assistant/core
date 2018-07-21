@@ -10,9 +10,10 @@ import pytest
 from homeassistant.components.homekit.accessories import (
     debounce, HomeAccessory, HomeBridge, HomeDriver)
 from homeassistant.components.homekit.const import (
-    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, CHAR_FIRMWARE_REVISION,
-    CHAR_MANUFACTURER, CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER,
-    MANUFACTURER, SERV_ACCESSORY_INFO)
+    BRIDGE_MODEL, BRIDGE_NAME, CHAR_FIRMWARE_REVISION, CHAR_MANUFACTURER,
+    CHAR_MODEL, CHAR_NAME, CHAR_SERIAL_NUMBER, MANUFACTURER,
+    SERV_ACCESSORY_INFO)
+from homeassistant.components.homekit.util import generate_serial_number
 from homeassistant.const import (
     __version__, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL, ATTR_NOW,
     EVENT_TIME_CHANGED)
@@ -146,7 +147,7 @@ async def test_battery_service(hass, hk_driver):
 
 def test_home_bridge(hk_driver):
     """Test HomeBridge class."""
-    bridge = HomeBridge('hass', hk_driver)
+    bridge = HomeBridge('hass', hk_driver, BRIDGE_NAME)
     assert bridge.hass == 'hass'
     assert bridge.display_name == BRIDGE_NAME
     assert bridge.category == 2  # Category.BRIDGE
@@ -158,7 +159,7 @@ def test_home_bridge(hk_driver):
     assert serv.get_characteristic(CHAR_MANUFACTURER).value == MANUFACTURER
     assert serv.get_characteristic(CHAR_MODEL).value == BRIDGE_MODEL
     assert serv.get_characteristic(CHAR_SERIAL_NUMBER).value == \
-        BRIDGE_SERIAL_NUMBER
+        generate_serial_number(BRIDGE_NAME)
 
     bridge = HomeBridge('hass', hk_driver, 'test_name')
     assert bridge.display_name == 'test_name'

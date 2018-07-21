@@ -120,6 +120,11 @@ def dismiss_setup_message(hass):
     hass.components.persistent_notification.dismiss(HOMEKIT_NOTIFY_ID)
 
 
+def generate_serial_number(name):
+    """Return serial number for bridge name."""
+    return 'homekit.' + name.lower().replace(' ', '.')
+
+
 def convert_to_float(state):
     """Return float of state, catch errors."""
     try:
