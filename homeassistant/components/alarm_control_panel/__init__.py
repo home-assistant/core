@@ -121,7 +121,7 @@ def alarm_arm_custom_bypass(hass, code=None, entity_id=None):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for sensors."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
 
     yield from component.async_setup(config)
@@ -154,6 +154,17 @@ def async_setup(hass, config):
     return True
 
 
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
+# pylint: disable=no-self-use
 class AlarmControlPanel(Entity):
     """An abstract class for alarm control devices."""
 

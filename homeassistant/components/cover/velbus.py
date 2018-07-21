@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.velbus/
 """
 import logging
-import asyncio
 import time
 
 import voluptuous as vol
@@ -70,15 +69,14 @@ class VelbusCover(CoverDevice):
         self._open_channel = open_channel
         self._close_channel = close_channel
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Add listener for Velbus messages on bus."""
         def _init_velbus():
             """Initialize Velbus on startup."""
             self._velbus.subscribe(self._on_message)
             self.get_status()
 
-        yield from self.hass.async_add_job(_init_velbus)
+        await self.hass.async_add_job(_init_velbus)
 
     def _on_message(self, message):
         import velbus

@@ -5,8 +5,10 @@ import hmac
 import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant import auth, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.core import callback
+
+from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
 
 
 USER_SCHEMA = vol.Schema({
@@ -16,7 +18,7 @@ USER_SCHEMA = vol.Schema({
 })
 
 
-CONFIG_SCHEMA = auth.AUTH_PROVIDER_SCHEMA.extend({
+CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
     vol.Required('users'): [USER_SCHEMA]
 }, extra=vol.PREVENT_EXTRA)
 
@@ -25,8 +27,8 @@ class InvalidAuthError(HomeAssistantError):
     """Raised when submitting invalid authentication."""
 
 
-@auth.AUTH_PROVIDERS.register('insecure_example')
-class ExampleAuthProvider(auth.AuthProvider):
+@AUTH_PROVIDERS.register('insecure_example')
+class ExampleAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
     async def async_credential_flow(self):
@@ -73,14 +75,16 @@ class ExampleAuthProvider(auth.AuthProvider):
         Will be used to populate info when creating a new user.
         """
         username = credentials.data['username']
+        info = {
+            'is_active': True,
+        }
 
         for user in self.config['users']:
             if user['username'] == username:
-                return {
-                    'name': user.get('name')
-                }
+                info['name'] = user.get('name')
+                break
 
-        return {}
+        return info
 
 
 class LoginFlow(data_entry_flow.FlowHandler):

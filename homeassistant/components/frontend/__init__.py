@@ -26,10 +26,10 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 from homeassistant.util.yaml import load_yaml
 
-REQUIREMENTS = ['home-assistant-frontend==20180708.0']
+REQUIREMENTS = ['home-assistant-frontend==20180720.0']
 
 DOMAIN = 'frontend'
-DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
+DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log', 'onboarding']
 
 CONF_THEMES = 'themes'
 CONF_EXTRA_HTML_URL = 'extra_html_url'
@@ -50,7 +50,7 @@ MANIFEST_JSON = {
     'lang': 'en-US',
     'name': 'Home Assistant',
     'short_name': 'Assistant',
-    'start_url': '/states',
+    'start_url': '/?homescreen=1',
     'theme_color': DEFAULT_THEME_COLOR
 }
 
@@ -200,15 +200,6 @@ def add_manifest_json_key(key, val):
 
 async def async_setup(hass, config):
     """Set up the serving of the frontend."""
-    if hass.auth.active:
-        client = await hass.auth.async_get_or_create_client(
-            'Home Assistant Frontend',
-            redirect_uris=['/'],
-            no_secret=True,
-        )
-    else:
-        client = None
-
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET_PANELS, websocket_get_panels, SCHEMA_GET_PANELS)
     hass.components.websocket_api.async_register_command(
@@ -255,7 +246,7 @@ async def async_setup(hass, config):
     if os.path.isdir(local):
         hass.http.register_static_path("/local", local, not is_dev)
 
-    index_view = IndexView(repo_path, js_version, client)
+    index_view = IndexView(repo_path, js_version, hass.auth.active)
     hass.http.register_view(index_view)
 
     @callback
@@ -266,7 +257,7 @@ async def async_setup(hass, config):
     await asyncio.wait(
         [async_register_built_in_panel(hass, panel) for panel in (
             'dev-event', 'dev-info', 'dev-service', 'dev-state',
-            'dev-template', 'dev-mqtt', 'kiosk', 'lovelace')],
+            'dev-template', 'dev-mqtt', 'kiosk', 'lovelace', 'profile')],
         loop=hass.loop)
 
     hass.data[DATA_FINALIZE_PANEL] = async_finalize_panel
@@ -350,11 +341,11 @@ class IndexView(HomeAssistantView):
     requires_auth = False
     extra_urls = ['/states', '/states/{extra}']
 
-    def __init__(self, repo_path, js_option, client):
+    def __init__(self, repo_path, js_option, auth_active):
         """Initialize the frontend view."""
         self.repo_path = repo_path
         self.js_option = js_option
-        self.client = client
+        self.auth_active = auth_active
         self._template_cache = {}
 
     def get_template(self, latest):
@@ -386,10 +377,22 @@ class IndexView(HomeAssistantView):
         latest = self.repo_path is not None or \
             _is_latest(self.js_option, request)
 
+        if not hass.components.onboarding.async_is_onboarded():
+            if latest:
+                location = '/frontend_latest/onboarding.html'
+            else:
+                location = '/frontend_es5/onboarding.html'
+
+            return web.Response(status=302, headers={
+                'location': location
+            })
+
         no_auth = '1'
         if hass.config.api.api_password and not request[KEY_AUTHENTICATED]:
             # do not try to auto connect on load
             no_auth = '0'
+
+        use_oauth = '1' if self.auth_active else '0'
 
         template = await hass.async_add_job(self.get_template, latest)
 
@@ -399,10 +402,8 @@ class IndexView(HomeAssistantView):
             no_auth=no_auth,
             theme_color=MANIFEST_JSON['theme_color'],
             extra_urls=hass.data[extra_key],
+            use_oauth=use_oauth
         )
-
-        if self.client is not None:
-            template_params['client_id'] = self.client.id
 
         return web.Response(text=template.render(**template_params),
                             content_type='text/html')
@@ -489,7 +490,7 @@ def websocket_get_translations(hass, connection, msg):
     Async friendly.
     """
     async def send_translations():
-        """Send a camera still."""
+        """Send a translation."""
         resources = await async_get_translations(hass, msg['language'])
         connection.send_message_outside(websocket_api.result_message(
             msg['id'], {

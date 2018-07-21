@@ -187,8 +187,7 @@ class HomeAssistantHTTP(object):
                    support_legacy=hass.auth.support_legacy,
                    api_password=api_password)
 
-        if cors_origins:
-            setup_cors(app, cors_origins)
+        setup_cors(app, cors_origins)
 
         app['hass'] = hass
 
@@ -226,7 +225,7 @@ class HomeAssistantHTTP(object):
                 '{0} missing required attribute "name"'.format(class_name)
             )
 
-        view.register(self.app.router)
+        view.register(self.app, self.app.router)
 
     def register_redirect(self, url, redirect_to):
         """Register a redirect with the server.
