@@ -342,7 +342,7 @@ def test_put_light_state_cover(hass_hue, hue_client):
             cover.ATTR_POSITION: 66.0}, blocking=True)
 
     # Emulated hue converts 0-100% to 0-255.
-    level = 89
+    level = 0
     brightness = round(level * 255 / 100)
 
     cover_level_result = yield from perform_put_light_state(
@@ -353,9 +353,9 @@ def test_put_light_state_cover(hass_hue, hue_client):
 
     assert cover_level_result.status == 200
     assert len(cover_level_result_json) == 2
-
+    yield from hass_hue.async_block_till_done()
     living_room_window_cover = hass_hue.states.get('cover.living_room_window')
-    assert living_room_window_cover.state == 'open'
+    assert living_room_window_cover.state == 'closed'
     assert living_room_window_cover.attributes[
         cover.ATTR_CURRENT_POSITION] == level
 
