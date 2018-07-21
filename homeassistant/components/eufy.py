@@ -49,7 +49,6 @@ EUFY_DISPATCH = {
 
 def setup(hass, config):
     """Set up Eufy devices."""
-    # pylint: disable=import-error
     import lakeside
 
     if CONF_USERNAME in config[DOMAIN] and CONF_PASSWORD in config[DOMAIN]:

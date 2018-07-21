@@ -36,7 +36,6 @@ class EufyLight(Light):
 
     def __init__(self, device):
         """Initialize the light."""
-        # pylint: disable=import-error
         import lakeside
 
         self._temp = None

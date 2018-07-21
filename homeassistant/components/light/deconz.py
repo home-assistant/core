@@ -174,7 +174,7 @@ class DeconzLight(Light):
         data = {'on': False}
 
         if ATTR_TRANSITION in kwargs:
-            data = {'bri': 0}
+            data['bri'] = 0
             data['transitiontime'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_FLASH in kwargs:

@@ -26,7 +26,7 @@ SLOW_SETUP_WARNING = 10
 def setup_component(hass: core.HomeAssistant, domain: str,
                     config: Optional[Dict] = None) -> bool:
     """Set up a component and all its dependencies."""
-    return run_coroutine_threadsafe(
+    return run_coroutine_threadsafe(  # type: ignore
         async_setup_component(hass, domain, config), loop=hass.loop).result()
 
 
@@ -42,7 +42,7 @@ async def async_setup_component(hass: core.HomeAssistant, domain: str,
     setup_tasks = hass.data.get(DATA_SETUP)
 
     if setup_tasks is not None and domain in setup_tasks:
-        return await setup_tasks[domain]
+        return await setup_tasks[domain]  # type: ignore
 
     if config is None:
         config = {}
@@ -50,10 +50,10 @@ async def async_setup_component(hass: core.HomeAssistant, domain: str,
     if setup_tasks is None:
         setup_tasks = hass.data[DATA_SETUP] = {}
 
-    task = setup_tasks[domain] = hass.async_add_job(
+    task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config))
 
-    return await task
+    return await task  # type: ignore
 
 
 async def _async_process_dependencies(hass, config, name, dependencies):
@@ -142,7 +142,7 @@ async def _async_setup_component(hass: core.HomeAssistant,
             result = await component.async_setup(  # type: ignore
                 hass, processed_config)
         else:
-            result = await hass.async_add_job(
+            result = await hass.async_add_executor_job(
                 component.setup, hass, processed_config)  # type: ignore
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
