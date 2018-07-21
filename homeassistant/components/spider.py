@@ -45,7 +45,8 @@ def setup(hass, config):
             'thermostats': api.get_thermostats()
         }
 
-        load_platform(hass, 'climate', DOMAIN)
+        for component in SPIDER_COMPONENTS:
+            load_platform(hass, component, DOMAIN)
 
         _LOGGER.debug("Connection with Itho Daalderop API succeeded")
         return True
