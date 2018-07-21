@@ -173,7 +173,7 @@ class MiroboVacuum(VacuumDevice):
         return self._name
 
     @property
-    def status(self):
+    def state(self):
         """Return the status of the vacuum cleaner."""
         if self.vacuum_state is not None:
             try:
