@@ -138,16 +138,16 @@ class EbusdData(object):
             sock.sendall(command.encode())
             command_result = sock.recv(256).decode('utf-8').rstrip()
             if 'not found' in command_result:
-                _LOGGER.warning('Element not found: %s', name)
-                raise RuntimeError('Element not found')
+                _LOGGER.warning("Element not found: %s", name)
+                raise RuntimeError("Element not found")
             else:
                 self.value[name] = command_result
         except socket.timeout:
             _LOGGER.error("socket timeout error")
-            raise RuntimeError('socket timeout')
+            raise RuntimeError("socket timeout")
         except socket.error:
-            _LOGGER.error()
-            raise RuntimeError('Command failed')
+            _LOGGER.error("socket error: %s", socket.error)
+            raise RuntimeError("Command failed")
         finally:
             sock.close()
 
