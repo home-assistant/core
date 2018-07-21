@@ -136,8 +136,7 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         """Update relay state."""
         if (self._relay_addr == message.address and
                 self._relay_chan == message.channel):
-            _LOGGER.debug("Relay " + str(message.address) + "-" +
-                          str(message.channel) + " value:" +
-                          str(message.value))
+            _LOGGER.debug("Relay %d:%d value:%d", message.address,
+                          message.channel, message.value)
             self._state = message.value
             self.schedule_update_ha_state()

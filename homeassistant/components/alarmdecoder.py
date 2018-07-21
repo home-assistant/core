@@ -75,8 +75,10 @@ ZONE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ZONE_TYPE,
                  default=DEFAULT_ZONE_TYPE): vol.Any(DEVICE_CLASSES_SCHEMA),
     vol.Optional(CONF_ZONE_RFID): cv.string,
-    vol.Optional(CONF_RELAY_ADDR): cv.byte,
-    vol.Optional(CONF_RELAY_CHAN): cv.byte})
+    vol.Inclusive(CONF_RELAY_ADDR, 'relaylocation',
+                  'Relay address and channel must exist together'): cv.byte,
+    vol.Inclusive(CONF_RELAY_CHAN, 'relaylocation',
+                  'Relay address and channel must exist together'): cv.byte})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
