@@ -28,6 +28,9 @@
    - delay: '30'
    - service: ais_ai_service.prepare_remote_menu
    - delay: '5'
+   - service: ais_shell_command.init_local_sdcard
+   - delay: '5'
+   - service: ais_local_audio_service.refresh_files
    - service: ais_ai_service.welcome_home
 
 

@@ -59,6 +59,10 @@ def async_setup(hass, config):
     def led(service):
         yield from _led(hass, service)
 
+    @asyncio.coroutine
+    def init_local_sdcard(service):
+        yield from _init_local_sdcard(hass, service)
+
     # register services
     hass.services.async_register(
         DOMAIN, 'change_host_name', change_host_name)
@@ -81,6 +85,8 @@ def async_setup(hass, config):
         DOMAIN, 'show_network_devices_info', show_network_devices_info)
     hass.services.async_register(
         DOMAIN, 'led', led)
+    hass.services.async_register(
+        DOMAIN, 'init_local_sdcard', init_local_sdcard)
     return True
 
 
@@ -124,6 +130,14 @@ def _led(hass, call):
     subprocess.Popen(
         "su -c ' ." + script + " " + str(brightness) + "'",
         shell=True, stdout=None, stderr=None)
+
+
+@asyncio.coroutine
+def _init_local_sdcard(hass, call):
+    script = str(os.path.dirname(__file__))
+    script += '/scripts/init_local_sdcard.sh'
+    import subprocess
+    subprocess.Popen(script, shell=True, stdout=None, stderr=None)
 
 
 @asyncio.coroutine

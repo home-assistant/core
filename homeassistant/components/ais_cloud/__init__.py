@@ -991,6 +991,12 @@ class AisColudData:
                 'set_options', {
                     "entity_id": "input_select.tts_player",
                     "options": players_lv}))
+        hass.async_add_job(
+            hass.services.async_call(
+                'input_select',
+                'set_options', {
+                    "entity_id": "input_select.file_player",
+                    "options": players_lv}))
         # rebuild the groups
         import homeassistant.components.ais_ai_service as ais_ai
         ais_ai.get_groups(hass)
@@ -1161,6 +1167,7 @@ class AisColudData:
             import requests
             from readability import Document
             response = requests.get(check_url(_url))
+            response.encoding = 'utf-8'
             doc = Document(response.text)
             GLOBAL_RSS_NEWS_TEXT += doc.summary()
 

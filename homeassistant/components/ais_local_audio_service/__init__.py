@@ -15,9 +15,8 @@ aisCloud = ais_cloud.AisCloudWS()
 
 DOMAIN = 'ais_local_audio_service'
 G_LOCAL_FILES_ROOT = '/sdcard/dom'
+G_CURRENT_PATH = ''
 _LOGGER = logging.getLogger(__name__)
-G_FOLDERS = []
-G_FILES = []
 
 
 @asyncio.coroutine
@@ -33,8 +32,14 @@ def async_setup(hass, config):
         _LOGGER.info("browse_path")
         data.browse_path(call)
 
+    def refresh_files(call):
+        _LOGGER.info("refresh_files")
+        data.refresh_files(call)
+
     hass.services.async_register(
         DOMAIN, 'browse_path', browse_path)
+    hass.services.async_register(
+        DOMAIN, 'refresh_files', refresh_files)
 
     return True
 
@@ -47,30 +52,43 @@ class LocalData:
         self.hass = hass
         self.folders = []
         self.files = []
-        self.path = ""
         self.config = config
 
+    def refresh_files(self, call):
+        global G_CURRENT_PATH
+        G_CURRENT_PATH = os.path.abspath(G_LOCAL_FILES_ROOT)
+        dirs = os.listdir(G_CURRENT_PATH)
+        self.folders = [ais_global.G_EMPTY_OPTION]
+        for d in dirs:
+            self.folders.append(G_CURRENT_PATH.replace(G_LOCAL_FILES_ROOT, "") + '/' + d)
+        """Load the folders and files synchronously."""
+        self.hass.services.call(
+            'input_select',
+            'set_options', {
+                "entity_id": "input_select.folder_name",
+                "options": sorted(self.folders)})
 
     def browse_path(self, call):
         """Load subfolders for the selected folder."""
+        global G_CURRENT_PATH
         if "path" not in call.data:
             _LOGGER.error("No path")
             return []
         else:
             if call.data["path"] == "..":
-                k = self.path.rfind("/" + os.path.basename(self.path))
-                self.path = self.path[:k]
+                k = G_CURRENT_PATH.rfind("/" + os.path.basename(G_CURRENT_PATH))
+                G_CURRENT_PATH = G_CURRENT_PATH[:k]
             else:
-                self.path = G_LOCAL_FILES_ROOT + call.data["path"]
+                G_CURRENT_PATH = G_LOCAL_FILES_ROOT + call.data["path"]
 
-        if os.path.isdir(self.path):
+        if os.path.isdir(G_CURRENT_PATH):
             # browse dir
             self.folders = [ais_global.G_EMPTY_OPTION]
-            if self.path != G_LOCAL_FILES_ROOT:
+            if G_CURRENT_PATH != G_LOCAL_FILES_ROOT:
                 self.folders.append('..')
-            dirs = os.listdir(self.path)
+            dirs = os.listdir(G_CURRENT_PATH)
             for dir in dirs:
-                self.folders.append(self.path.replace(G_LOCAL_FILES_ROOT, "") + "/" + dir)
+                self.folders.append(G_CURRENT_PATH.replace(G_LOCAL_FILES_ROOT, "") + "/" + dir)
             self.hass.services.call(
                 'input_select',
                 'set_options', {
@@ -78,28 +96,23 @@ class LocalData:
                     "options": sorted(self.folders)})
         else:
             # file was selected
-            if self.path.endswith('.txt'):
+            if G_CURRENT_PATH.endswith('.txt'):
                 self.hass.services.call(
                     'ais_ai_service',
                     'say_it', {
-                        "text": "Czytam zawartość pliku"
+                        "text": "Czytam: "
                     })
-                with open(self.path) as file:
+                with open(G_CURRENT_PATH) as file:
                     self.hass.services.call(
                         'ais_ai_service',
                         'say_it', {
                             "text": file.read()
                         })
-            elif self.path.endswith('.mp3'):
-                self.hass.services.call(
-                    'ais_ai_service',
-                    'say_it', {
-                        "text": "Włączam"
-                    })
-                _url = self.path
-                # TODO search the image in the folder
+            elif G_CURRENT_PATH.endswith('.mp3'):
+                _url = G_CURRENT_PATH
+                # TODO search the image cover in the folder
                 # "IMAGE_URL": "file://sdcard/dom/.dom/dom.jpeg",
-                _audio_info = {"NAME": os.path.basename(self.path),
+                _audio_info = {"NAME": os.path.basename(G_CURRENT_PATH),
                                "MEDIA_SOURCE": ais_global.G_AN_LOCAL}
                 _audio_info = json.dumps(_audio_info)
 
@@ -124,7 +137,7 @@ class LocalData:
                                 "media_content_id": _audio_info
                             })
             else:
-                _LOGGER.info("Tego typu plików jeszcze nie obsługuję." + str(self.path))
+                _LOGGER.info("Tego typu plików jeszcze nie obsługuję." + str(G_CURRENT_PATH))
                 self.hass.services.call(
                     'ais_ai_service',
                     'say_it', {
@@ -137,17 +150,21 @@ class LocalData:
         """Load all the folders and files."""
 
         def load():
-            self.path = os.path.abspath(G_LOCAL_FILES_ROOT)
-            dirs = os.listdir(self.path)
-            self.folders = [ais_global.G_EMPTY_OPTION]
-            for d in dirs:
-                self.folders.append(self.path.replace(G_LOCAL_FILES_ROOT, "") + '/' + d)
+            global G_CURRENT_PATH
+            G_CURRENT_PATH = os.path.abspath(G_LOCAL_FILES_ROOT)
+            try:
+                dirs = os.listdir(G_CURRENT_PATH)
+                self.folders = [ais_global.G_EMPTY_OPTION]
+                for d in dirs:
+                    self.folders.append(G_CURRENT_PATH.replace(G_LOCAL_FILES_ROOT, "") + '/' + d)
 
-            """Load the folders and files synchronously."""
-            self.hass.services.call(
-                'input_select',
-                'set_options', {
-                    "entity_id": "input_select.folder_name",
-                    "options": sorted(self.folders)})
+                """Load the folders and files synchronously."""
+                self.hass.services.call(
+                    'input_select',
+                    'set_options', {
+                        "entity_id": "input_select.folder_name",
+                        "options": sorted(self.folders)})
+            except Exception as e:
+                _LOGGER.error("Load all the folders and files, problem: " + str(e))
 
         yield from self.hass.async_add_job(load)

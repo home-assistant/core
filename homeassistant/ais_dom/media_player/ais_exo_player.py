@@ -5,6 +5,7 @@ Support to interact with a ExoPlayer on Android via HTTO and MQTT.
 import asyncio
 import logging
 import json
+import os
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 import homeassistant.ais_dom.ais_global as ais_global
@@ -296,6 +297,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
             entity_id = "input_select.ais_youtube_track_name"
         elif self._media_source == ais_global.G_AN_AUDIOBOOK:
             entity_id = "input_select.book_chapter"
+        elif self._media_source == ais_global.G_AN_LOCAL:
+            entity_id = "input_select.folder_name"
 
         self.hass.services.call(
             'input_select',
@@ -311,6 +314,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     "entity_id": entity_id})
         self.hass.block_till_done()
         name = self.hass.states.get(entity_id).state
+        if self._media_source == ais_global.G_AN_LOCAL:
+            name = os.path.basename(name)
         name = 'Włączam kolejny: ' + name
         self.hass.services.call(
             'ais_ai_service',
@@ -328,6 +333,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
             entity_id = "input_select.ais_youtube_track_name"
         elif self._media_source == ais_global.G_AN_AUDIOBOOK:
             entity_id = "input_select.book_chapter"
+        elif self._media_source == ais_global.G_AN_LOCAL:
+            entity_id = "input_select.folder_name"
         self.hass.services.call(
             'input_select',
             'select_previous', {
@@ -341,6 +348,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
                     "entity_id": entity_id})
         self.hass.block_till_done()
         name = self.hass.states.get(entity_id).state
+        if self._media_source == ais_global.G_AN_LOCAL:
+            name = os.path.basename(name)
         name = 'Włączam poprzedni: ' + name
         self.hass.services.call(
             'ais_ai_service',
@@ -352,7 +361,10 @@ class ExoPlayerDevice(MediaPlayerDevice):
         if media_type == 'ais_info':
             # set image and name
             j_info = json.loads(media_content_id)
-            self._stream_image = j_info["IMAGE_URL"]
+            if "IMAGE_URL" not in j_info:
+                self._stream_image = "https://localhost:8123/static/icons/tile-win-310x150.png"
+            else:
+                self._stream_image = j_info["IMAGE_URL"]
             self._media_title = j_info["NAME"]
             self._media_source = j_info["MEDIA_SOURCE"]
             self._currentplaylist = j_info["MEDIA_SOURCE"]

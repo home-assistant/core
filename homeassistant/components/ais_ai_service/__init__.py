@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import ais_cloud
 import homeassistant.components.mqtt as mqtt
+from homeassistant.components import ais_local_audio_service
 import homeassistant.ais_dom.ais_global as ais_global
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -487,14 +488,14 @@ def set_next_position(hass):
     state = hass.states.get(CURR_ENTITIE)
     if CURR_ENTITIE.startswith('input_select.'):
         arr = state.attributes.get('options')
-        # the - option is olways first
-        if len(arr) < 2:
+        # the "-" option is always first
+        if (len(arr) < 2) or (CURR_ENTITIE == "input_select.folder_name" and len(arr) < 3):
             _say_it(hass, "brak pozycji", None)
         else:
-            CURR_ENTITIE_POSITION = get_next(
-                arr,
-                CURR_ENTITIE_POSITION)
+            CURR_ENTITIE_POSITION = get_next(arr, CURR_ENTITIE_POSITION)
             if CURR_ENTITIE == "input_select.folder_name":
+                if CURR_ENTITIE_POSITION == "..":
+                    CURR_ENTITIE_POSITION = get_next(arr, CURR_ENTITIE_POSITION)
                 _say_it(hass, os.path.basename(CURR_ENTITIE_POSITION), None)
             else:
                 _say_it(hass, CURR_ENTITIE_POSITION, None)
@@ -515,13 +516,13 @@ def set_prev_position(hass):
     state = hass.states.get(CURR_ENTITIE)
     if CURR_ENTITIE.startswith('input_select.'):
         arr = state.attributes.get('options')
-        if len(arr) < 2:
+        if (len(arr) < 2) or (CURR_ENTITIE == "input_select.folder_name" and len(arr) < 3):
             _say_it(hass, "brak pozycji", None)
         else:
-            CURR_ENTITIE_POSITION = get_prev(
-                arr,
-                CURR_ENTITIE_POSITION)
+            CURR_ENTITIE_POSITION = get_prev(arr, CURR_ENTITIE_POSITION)
             if CURR_ENTITIE == "input_select.folder_name":
+                if CURR_ENTITIE_POSITION == "..":
+                    CURR_ENTITIE_POSITION = get_prev(arr, CURR_ENTITIE_POSITION)
                 _say_it(hass, os.path.basename(CURR_ENTITIE_POSITION), None)
             else:
                 _say_it(hass, CURR_ENTITIE_POSITION, None)
@@ -789,12 +790,25 @@ def go_up_in_menu(hass):
     # on back on remote
     # check if the entity in the group is selected
     if CURR_ENTITIE is not None:
+        # check if we are browsing files
+        if CURR_ENTITIE == "input_select.folder_name":
+            if ais_local_audio_service.G_CURRENT_PATH != ais_local_audio_service.G_LOCAL_FILES_ROOT:
+                # go up in folders
+                l_curr_path = ais_local_audio_service.G_CURRENT_PATH
+                hass.services.call('ais_local_audio_service', 'browse_path', {"path": '..'})
+                _beep_it(hass, 28)
+                k = l_curr_path.rfind("/" + os.path.basename(l_curr_path))
+                if l_curr_path[:k] == ais_local_audio_service.G_LOCAL_FILES_ROOT:
+                    _say_it(hass, "Główny folder", None)
+                else:
+                    _say_it(hass, os.path.basename(l_curr_path[:k]), None)
+                return
         # go up in the group menu
         set_curr_group(hass, None)
         say_curr_group(hass)
         return
     # no entity is selected, check if the group is selected
-    if CURR_GROUP is not None:
+    elif CURR_GROUP is not None:
         # go up in the group view menu
         set_curr_group_view()
         say_curr_group_view(hass)
@@ -1406,6 +1420,7 @@ def _process_code(hass, data, callback):
         pass
     elif code == 4:
         # Back arrow, go up in menu/groups -> KEYCODE_BACK
+        # or go up in local folder structure
         go_up_in_menu(hass)
     elif code == 82:
         # Menu -> KEYCODE_MENU
