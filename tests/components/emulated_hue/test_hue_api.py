@@ -333,14 +333,13 @@ def test_put_light_state_media_player(hass_hue, hue_client):
 
 
 @asyncio.coroutine
-
 def test_put_light_state_cover(hass_hue, hue_client):
     """Test setting cover level."""
     # close the cover first
     yield from hass_hue.services.async_call(
         cover.DOMAIN, const.SERVICE_SET_COVER_POSITION,
         {const.ATTR_ENTITY_ID: 'cover.living_room_window',
-        cover.ATTR_POSITION: 66.0}, blocking=True)
+            cover.ATTR_POSITION: 66.0}, blocking=True)
 
     # Emulated hue converts 0-100% to 0-255.
     level = 89
@@ -358,9 +357,9 @@ def test_put_light_state_cover(hass_hue, hue_client):
     living_room_window_cover = hass_hue.states.get('cover.living_room_window')
     assert living_room_window_cover.state == 'open'
     assert living_room_window_cover.attributes[
-    cover.ATTR_CURRENT_POSITION] == level
+        cover.ATTR_CURRENT_POSITION] == level
 
-
+@asyncio.coroutine
 def test_put_light_state_fan(hass_hue, hue_client):
     """Test turning on fan and setting speed."""
     # Turn the fan off first
