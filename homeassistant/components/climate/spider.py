@@ -10,18 +10,30 @@ import logging
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE, STATE_COOL, STATE_HEAT, STATE_IDLE,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, ClimateDevice)
-from homeassistant.components.spider import DOMAIN
+from homeassistant.components.spider import DOMAIN as SPIDER_DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 
 DEPENDENCIES = ['spider']
+
+OPERATION_LIST = [
+    STATE_HEAT,
+    STATE_COOL,
+]
+
+HA_STATE_TO_SPIDER = {
+    STATE_COOL: 'Cool',
+    STATE_HEAT: 'Heat',
+}
+
+SPIDER_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_SPIDER.items()}
 
 _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Spider thermostat."""
-    thermostats = hass.data[DOMAIN]['thermostats']
-    api = hass.data[DOMAIN]['controller']
+    thermostats = hass.data[SPIDER_DOMAIN]['thermostats']
+    api = hass.data[SPIDER_DOMAIN]['controller']
     for thermostat in thermostats:
         add_devices(
             [SpiderThermostat(api, thermostat['id'], thermostat['name'])],
@@ -44,17 +56,13 @@ class SpiderThermostat(ClimateDevice):
         self._min_temp = None
         self._max_temp = None
         self._operation = STATE_IDLE
-        self._operation_list = [
-            STATE_HEAT,
-            STATE_COOL,
-        ]
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
         supports = SUPPORT_TARGET_TEMPERATURE
 
-        if self._master is True:
+        if self._master:
             supports = supports | SUPPORT_OPERATION_MODE
 
         return supports
@@ -97,7 +105,7 @@ class SpiderThermostat(ClimateDevice):
     @property
     def operation_list(self):
         """Return the list of available operation modes."""
-        return self._operation_list
+        return OPERATION_LIST
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -109,7 +117,8 @@ class SpiderThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode."""
-        self.client.set_operation_mode(self._thermostat, operation_mode)
+        self.client.set_operation_mode(self._thermostat,
+                                       HA_STATE_TO_SPIDER.get(operation_mode))
 
     def update(self):
         """Get the latest data."""
@@ -135,9 +144,4 @@ class SpiderThermostat(ClimateDevice):
                 self._max_temp = float(prop['max'])
             if prop['id'] == 'OperationMode':
                 self._master = True
-                if prop['status'] == 'Heat':
-                    self._operation = STATE_HEAT
-                elif prop['status'] == 'Cool':
-                    self._operation = STATE_COOL
-                else:
-                    self._operation = STATE_IDLE
+                self._operation = SPIDER_STATE_TO_HA[prop['status']]

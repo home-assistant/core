@@ -10,6 +10,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.helpers.discovery import load_platform
 
 REQUIREMENTS = ['itho_daalderop_api==1.0.4']
 
@@ -43,6 +44,9 @@ def setup(hass, config):
             'controller': api,
             'thermostats': api.get_thermostats()
         }
+
+        load_platform(hass, 'climate', DOMAIN)
+
         _LOGGER.debug("Connection with Itho Daalderop API succeeded")
         return True
     except UnauthorizedException:
