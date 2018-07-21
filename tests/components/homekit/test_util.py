@@ -7,8 +7,8 @@ from homeassistant.components.homekit.const import (
     FEATURE_PLAY_PAUSE, TYPE_OUTLET)
 from homeassistant.components.homekit.util import (
     convert_to_float, density_to_air_quality, dismiss_setup_message,
-    generate_serial_number, show_setup_message, temperature_to_homekit,
-    temperature_to_states, validate_media_player_features)
+    show_setup_message, temperature_to_homekit, temperature_to_states,
+    validate_media_player_features)
 from homeassistant.components.homekit.util import validate_entity_config \
     as vec
 from homeassistant.components.persistent_notification import (
@@ -73,14 +73,6 @@ def test_validate_media_player_features():
 
     entity_state = State('media_player.demo', 'on')
     assert validate_media_player_features(entity_state, config) is False
-
-
-def test_generate_serial_number():
-    """Test generate_serial_number method."""
-    assert generate_serial_number('Home Assistant') == \
-        'homekit.home.assistant'
-    assert generate_serial_number('My Name-HomeKit') == \
-        'homekit.my.name-homekit'
 
 
 def test_convert_to_float():

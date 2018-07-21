@@ -28,6 +28,7 @@ SERVICE_HOMEKIT_START = 'start'
 # #### String Constants ####
 BRIDGE_MODEL = 'Bridge'
 BRIDGE_NAME = 'Home Assistant Bridge'
+BRIDGE_SERIAL_NUMBER = 'homekit.bridge'
 MANUFACTURER = 'Home Assistant'
 
 # #### Switch Types ####
