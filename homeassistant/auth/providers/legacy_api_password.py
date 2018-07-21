@@ -9,15 +9,18 @@ import hmac
 import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant import auth, data_entry_flow
+from homeassistant import data_entry_flow
 from homeassistant.core import callback
+
+from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
+
 
 USER_SCHEMA = vol.Schema({
     vol.Required('username'): str,
 })
 
 
-CONFIG_SCHEMA = auth.AUTH_PROVIDER_SCHEMA.extend({
+CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)
 
 LEGACY_USER = 'homeassistant'
@@ -27,8 +30,8 @@ class InvalidAuthError(HomeAssistantError):
     """Raised when submitting invalid authentication."""
 
 
-@auth.AUTH_PROVIDERS.register('legacy_api_password')
-class LegacyApiPasswordAuthProvider(auth.AuthProvider):
+@AUTH_PROVIDERS.register('legacy_api_password')
+class LegacyApiPasswordAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
     DEFAULT_TITLE = 'Legacy API Password'
@@ -67,7 +70,10 @@ class LegacyApiPasswordAuthProvider(auth.AuthProvider):
 
         Will be used to populate info when creating a new user.
         """
-        return {'name': LEGACY_USER}
+        return {
+            'name': LEGACY_USER,
+            'is_active': True,
+        }
 
 
 class LoginFlow(data_entry_flow.FlowHandler):

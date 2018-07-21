@@ -5,24 +5,22 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.tile/
 """
 import logging
+from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, DeviceScanner)
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_USERNAME, CONF_MONITORED_VARIABLES, CONF_PASSWORD)
-from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.util import slugify
 from homeassistant.util.json import load_json, save_json
 
 _LOGGER = logging.getLogger(__name__)
-
-REQUIREMENTS = ['pytile==1.1.0']
+REQUIREMENTS = ['pytile==2.0.2']
 
 CLIENT_UUID_CONFIG_FILE = '.tile.conf'
-DEFAULT_ICON = 'mdi:bluetooth'
 DEVICE_TYPES = ['PHONE', 'TILE']
 
 ATTR_ALTITUDE = 'altitude'
@@ -34,89 +32,111 @@ ATTR_VOIP_STATE = 'voip_state'
 
 CONF_SHOW_INACTIVE = 'show_inactive'
 
+DEFAULT_ICON = 'mdi:bluetooth'
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=2)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_SHOW_INACTIVE, default=False): cv.boolean,
-    vol.Optional(CONF_MONITORED_VARIABLES):
+    vol.Optional(CONF_MONITORED_VARIABLES, default=DEVICE_TYPES):
         vol.All(cv.ensure_list, [vol.In(DEVICE_TYPES)]),
 })
 
 
-def setup_scanner(hass, config: dict, see, discovery_info=None):
+async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     """Validate the configuration and return a Tile scanner."""
-    TileDeviceScanner(hass, config, see)
-    return True
+    from pytile import Client
+
+    websession = aiohttp_client.async_get_clientsession(hass)
+
+    config_data = await hass.async_add_job(
+        load_json, hass.config.path(CLIENT_UUID_CONFIG_FILE))
+    if config_data:
+        client = Client(
+            config[CONF_USERNAME],
+            config[CONF_PASSWORD],
+            websession,
+            client_uuid=config_data['client_uuid'])
+    else:
+        client = Client(
+            config[CONF_USERNAME], config[CONF_PASSWORD], websession)
+
+        config_data = {'client_uuid': client.client_uuid}
+        config_saved = await hass.async_add_job(
+            save_json, hass.config.path(CLIENT_UUID_CONFIG_FILE), config_data)
+        if not config_saved:
+            _LOGGER.error('Failed to save the client UUID')
+
+    scanner = TileScanner(
+        client, hass, async_see, config[CONF_MONITORED_VARIABLES],
+        config[CONF_SHOW_INACTIVE])
+    return await scanner.async_init()
 
 
-class TileDeviceScanner(DeviceScanner):
-    """Define a device scanner for Tiles."""
+class TileScanner(object):
+    """Define an object to retrieve Tile data."""
 
-    def __init__(self, hass, config, see):
+    def __init__(self, client, hass, async_see, types, show_inactive):
         """Initialize."""
-        from pytile import Client
+        self._async_see = async_see
+        self._client = client
+        self._hass = hass
+        self._show_inactive = show_inactive
+        self._types = types
 
-        _LOGGER.debug('Received configuration data: %s', config)
+    async def async_init(self):
+        """Further initialize connection to the Tile servers."""
+        from pytile.errors import TileError
 
-        # Load the client UUID (if it exists):
-        config_data = load_json(hass.config.path(CLIENT_UUID_CONFIG_FILE))
-        if config_data:
-            _LOGGER.debug('Using existing client UUID')
-            self._client = Client(
-                config[CONF_USERNAME],
-                config[CONF_PASSWORD],
-                config_data['client_uuid'])
-        else:
-            _LOGGER.debug('Generating new client UUID')
-            self._client = Client(
-                config[CONF_USERNAME],
-                config[CONF_PASSWORD])
+        try:
+            await self._client.async_init()
+        except TileError as err:
+            _LOGGER.error('Unable to set up Tile scanner: %s', err)
+            return False
 
-            if not save_json(
-                    hass.config.path(CLIENT_UUID_CONFIG_FILE),
-                    {'client_uuid': self._client.client_uuid}):
-                _LOGGER.error("Failed to save configuration file")
+        await self._async_update()
 
-        _LOGGER.debug('Client UUID: %s', self._client.client_uuid)
-        _LOGGER.debug('User UUID: %s', self._client.user_uuid)
+        async_track_time_interval(
+            self._hass, self._async_update, DEFAULT_SCAN_INTERVAL)
 
-        self._show_inactive = config.get(CONF_SHOW_INACTIVE)
-        self._types = config.get(CONF_MONITORED_VARIABLES)
+        return True
 
-        self.devices = {}
-        self.see = see
+    async def _async_update(self, now=None):
+        """Update info from Tile."""
+        from pytile.errors import SessionExpiredError, TileError
 
-        track_utc_time_change(
-            hass, self._update_info, second=range(0, 60, 30))
+        _LOGGER.debug('Updating Tile data')
 
-        self._update_info()
+        try:
+            await self._client.asayn_init()
+            tiles = await self._client.tiles.all(
+                whitelist=self._types, show_inactive=self._show_inactive)
+        except SessionExpiredError:
+            _LOGGER.info('Session expired; trying again shortly')
+            return
+        except TileError as err:
+            _LOGGER.error('There was an error while updating: %s', err)
+            return
 
-    def _update_info(self, now=None) -> None:
-        """Update the device info."""
-        self.devices = self._client.get_tiles(
-            type_whitelist=self._types, show_inactive=self._show_inactive)
-
-        if not self.devices:
+        if not tiles:
             _LOGGER.warning('No Tiles found')
             return
 
-        for dev in self.devices:
-            dev_id = 'tile_{0}'.format(slugify(dev['name']))
-            lat = dev['tileState']['latitude']
-            lon = dev['tileState']['longitude']
-
-            attrs = {
-                ATTR_ALTITUDE: dev['tileState']['altitude'],
-                ATTR_CONNECTION_STATE: dev['tileState']['connection_state'],
-                ATTR_IS_DEAD: dev['is_dead'],
-                ATTR_IS_LOST: dev['tileState']['is_lost'],
-                ATTR_RING_STATE: dev['tileState']['ring_state'],
-                ATTR_VOIP_STATE: dev['tileState']['voip_state'],
-            }
-
-            self.see(
-                dev_id=dev_id,
-                gps=(lat, lon),
-                attributes=attrs,
-                icon=DEFAULT_ICON
-            )
+        for tile in tiles:
+            await self._async_see(
+                dev_id='tile_{0}'.format(slugify(tile['name'])),
+                gps=(
+                    tile['tileState']['latitude'],
+                    tile['tileState']['longitude']
+                ),
+                attributes={
+                    ATTR_ALTITUDE: tile['tileState']['altitude'],
+                    ATTR_CONNECTION_STATE:
+                        tile['tileState']['connection_state'],
+                    ATTR_IS_DEAD: tile['is_dead'],
+                    ATTR_IS_LOST: tile['tileState']['is_lost'],
+                    ATTR_RING_STATE: tile['tileState']['ring_state'],
+                    ATTR_VOIP_STATE: tile['tileState']['voip_state'],
+                },
+                icon=DEFAULT_ICON)

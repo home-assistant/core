@@ -56,6 +56,7 @@ TEST_REQUIREMENTS = (
     'hbmqtt',
     'holidays',
     'ais-dom-frontend',
+    'homematicip',
     'influxdb',
     'libpurecoollink',
     'libsoundtouch',

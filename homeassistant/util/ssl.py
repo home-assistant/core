@@ -6,21 +6,14 @@ import certifi
 
 def client_context():
     """Return an SSL context for making requests."""
-    context = _get_context()
-    context.verify_mode = ssl.CERT_REQUIRED
-    context.check_hostname = True
-    context.load_verify_locations(cafile=certifi.where(), capath=None)
+    context = ssl.create_default_context(
+        purpose=ssl.Purpose.SERVER_AUTH,
+        cafile=certifi.where()
+    )
     return context
 
 
 def server_context():
-    """Return an SSL context for being a server."""
-    context = _get_context()
-    context.options |= ssl.OP_CIPHER_SERVER_PREFERENCE
-    return context
-
-
-def _get_context():
     """Return an SSL context following the Mozilla recommendations.
 
     TLS configuration follows the best-practice guidelines specified here:
@@ -31,7 +24,8 @@ def _get_context():
 
     context.options |= (
         ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 |
-        ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
+        ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1 |
+        ssl.OP_CIPHER_SERVER_PREFERENCE
     )
     if hasattr(ssl, 'OP_NO_COMPRESSION'):
         context.options |= ssl.OP_NO_COMPRESSION
