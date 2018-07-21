@@ -50,6 +50,7 @@ TAHOMA_TYPES = {
     'io:WindowOpenerVeluxIOComponent': 'cover',
     'io:LightIOSystemSensor': 'sensor',
     'rts:GarageDoor4TRTSComponent': 'switch',
+    'io:OnOffLightIOComponent': 'switch',
     'rtds:RTDSSmokeSensor': 'smoke',
 }
 
