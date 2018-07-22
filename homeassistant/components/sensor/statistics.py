@@ -23,20 +23,20 @@ from homeassistant.components.recorder.util import session_scope, execute
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_AVERAGE_CHANGE = 'average_change'
-ATTR_CHANGE = 'change'
-ATTR_CHANGE_RATE = 'change_rate'
+ATTR_SAMPLING_SIZE = 'sampling_size'
 ATTR_COUNT = 'count'
-ATTR_MAX_VALUE = 'max_value'
-ATTR_MIN_VALUE = 'min_value'
 ATTR_MEAN = 'mean'
 ATTR_MEDIAN = 'median'
-ATTR_VARIANCE = 'variance'
 ATTR_STANDARD_DEVIATION = 'standard_deviation'
-ATTR_SAMPLING_SIZE = 'sampling_size'
+ATTR_VARIANCE = 'variance'
 ATTR_TOTAL = 'total'
-ATTR_MAX_AGE = 'max_age'
+ATTR_MAX_VALUE = 'max_value'
+ATTR_MIN_VALUE = 'min_value'
 ATTR_MIN_AGE = 'min_age'
+ATTR_MAX_AGE = 'max_age'
+ATTR_CHANGE = 'change'
+ATTR_AVERAGE_CHANGE = 'average_change'
+ATTR_CHANGE_RATE = 'change_rate'
 
 CONF_SAMPLING_SIZE = 'sampling_size'
 CONF_MAX_AGE = 'max_age'
