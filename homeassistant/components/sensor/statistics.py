@@ -25,6 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_AVERAGE_CHANGE = 'average_change'
 ATTR_CHANGE = 'change'
+ATTR_CHANGE_RATE = 'change_rate'
 ATTR_COUNT = 'count'
 ATTR_MAX_VALUE = 'max_value'
 ATTR_MIN_VALUE = 'min_value'
@@ -36,7 +37,6 @@ ATTR_SAMPLING_SIZE = 'sampling_size'
 ATTR_TOTAL = 'total'
 ATTR_MAX_AGE = 'max_age'
 ATTR_MIN_AGE = 'min_age'
-ATTR_DERIVATIVE = 'derivative'
 
 CONF_SAMPLING_SIZE = 'sampling_size'
 CONF_MAX_AGE = 'max_age'
@@ -92,7 +92,7 @@ class StatisticsSensor(Entity):
         self.min = self.max = self.total = self.count = 0
         self.average_change = self.change = 0
         self.max_age = self.min_age = 0
-        self.derivative = 0
+        self.change_rate = 0
 
         if 'recorder' in self._hass.config.components:
             # only use the database if it's configured
@@ -115,9 +115,8 @@ class StatisticsSensor(Entity):
         try:
             self.states.append(float(new_state.state))
             self.ages.append(new_state.last_updated)
-            self.count = self.count + 1
         except ValueError:
-            self.count = self.count + 1
+            pass
 
     @property
     def name(self):
@@ -157,7 +156,7 @@ class StatisticsSensor(Entity):
                 ATTR_AVERAGE_CHANGE: self.average_change,
                 ATTR_MAX_AGE: self.max_age,
                 ATTR_MIN_AGE: self.min_age,
-                ATTR_DERIVATIVE: self.derivative,
+                ATTR_CHANGE_RATE: self.change_rate,
             }
 
     @property
@@ -179,6 +178,8 @@ class StatisticsSensor(Entity):
         if self._max_age is not None:
             self._purge_old()
 
+        self.count = len(self.states)
+
         if not self.is_binary:
             try:  # require only one data point
                 self.mean = round(statistics.mean(self.states), 2)
@@ -194,28 +195,28 @@ class StatisticsSensor(Entity):
                 _LOGGER.debug(err)
                 self.stdev = self.variance = STATE_UNKNOWN
 
-            if self.states:
-                self.count = len(self.states)
+            if len(self.states) > 0:
                 self.total = round(sum(self.states), 2)
                 self.min = min(self.states)
                 self.max = max(self.states)
-                self.change = self.states[-1] - self.states[0]
-                self.average_change = self.change
                 self.max_age = max(self.ages)
                 self.min_age = min(self.ages)
+                self.change = self.states[-1] - self.states[0]
+                self.average_change = self.change
+                self.change_rate = 0
 
                 if len(self.states) > 1:
                     self.average_change /= len(self.states) - 1
 
                     time_diff = (self.ages[-1] - self.ages[0]).total_seconds()
                     if time_diff > 0:
-                        self.derivative = self.average_change / time_diff
-                    else:
-                        self.derivative = 0
+                        self.change_rate = self.average_change / time_diff
+
             else:
-                self.min = self.max = self.total = STATE_UNKNOWN
-                self.average_change = self.change = STATE_UNKNOWN
-                self.derivative = STATE_UNKNOWN
+                self.total = self.min = self.max = STATE_UNKNOWN
+                self.max_age = self.min_age = dt_util.utcnow()
+                self.change = self.average_change = STATE_UNKNOWN
+                self.change_rate = STATE_UNKNOWN
 
     @asyncio.coroutine
     def _initialize_from_database(self):
