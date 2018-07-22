@@ -143,11 +143,6 @@ class TuyaDevice(Entity):
         return self.tuya.name()
 
     @property
-    def entity_picture(self):
-        """Return the entity picture to use in the frontend, if any."""
-        return self.tuya.iconurl()
-
-    @property
     def available(self):
         """Return if the device is available."""
         return self.tuya.available()
