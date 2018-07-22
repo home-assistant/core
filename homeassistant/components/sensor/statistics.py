@@ -36,6 +36,7 @@ ATTR_SAMPLING_SIZE = 'sampling_size'
 ATTR_TOTAL = 'total'
 ATTR_MAX_AGE = 'max_age'
 ATTR_MIN_AGE = 'min_age'
+ATTR_DERIVATIVE = 'derivative'
 
 CONF_SAMPLING_SIZE = 'sampling_size'
 CONF_MAX_AGE = 'max_age'
@@ -91,6 +92,7 @@ class StatisticsSensor(Entity):
         self.min = self.max = self.total = self.count = 0
         self.average_change = self.change = 0
         self.max_age = self.min_age = 0
+        self.derivative = 0
 
         if 'recorder' in self._hass.config.components:
             # only use the database if it's configured
@@ -141,7 +143,7 @@ class StatisticsSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         if not self.is_binary:
-            state = {
+            return {
                 ATTR_MEAN: self.mean,
                 ATTR_COUNT: self.count,
                 ATTR_MAX_VALUE: self.max,
@@ -155,8 +157,8 @@ class StatisticsSensor(Entity):
                 ATTR_AVERAGE_CHANGE: self.average_change,
                 ATTR_MAX_AGE: self.max_age,
                 ATTR_MIN_AGE: self.min_age,
+                ATTR_DERIVATIVE: self.derivative,
             }
-            return state
 
     @property
     def icon(self):
@@ -199,13 +201,21 @@ class StatisticsSensor(Entity):
                 self.max = max(self.states)
                 self.change = self.states[-1] - self.states[0]
                 self.average_change = self.change
-                if len(self.states) > 1:
-                    self.average_change /= len(self.states) - 1
                 self.max_age = max(self.ages)
                 self.min_age = min(self.ages)
+
+                if len(self.states) > 1:
+                    self.average_change /= len(self.states) - 1
+
+                    time_diff = (self.ages[-1] - self.ages[0]).total_seconds()
+                    if time_diff > 0:
+                        self.derivative = self.average_change / time_diff
+                    else:
+                        self.derivative = 0
             else:
                 self.min = self.max = self.total = STATE_UNKNOWN
                 self.average_change = self.change = STATE_UNKNOWN
+                self.derivative = STATE_UNKNOWN
 
     @asyncio.coroutine
     def _initialize_from_database(self):
