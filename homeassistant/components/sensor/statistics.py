@@ -85,8 +85,7 @@ class StatisticsSensor(Entity):
         self._max_age = max_age
         self._unit_of_measurement = None
         self.states = deque(maxlen=self._sampling_size)
-        if self._max_age is not None:
-            self.ages = deque(maxlen=self._sampling_size)
+        self.ages = deque(maxlen=self._sampling_size)
 
         self.median = self.mean = self.variance = self.stdev = 0
         self.min = self.max = self.total = self.count = 0
@@ -113,8 +112,7 @@ class StatisticsSensor(Entity):
     def _add_state_to_queue(self, new_state):
         try:
             self.states.append(float(new_state.state))
-            if self._max_age is not None:
-                self.ages.append(new_state.last_updated)
+            self.ages.append(new_state.last_updated)
             self.count = self.count + 1
         except ValueError:
             self.count = self.count + 1
@@ -155,13 +153,9 @@ class StatisticsSensor(Entity):
                 ATTR_VARIANCE: self.variance,
                 ATTR_CHANGE: self.change,
                 ATTR_AVERAGE_CHANGE: self.average_change,
+                ATTR_MAX_AGE: self.max_age,
+                ATTR_MIN_AGE: self.min_age,
             }
-            # Only return min/max age if we have an age span
-            if self._max_age:
-                state.update({
-                    ATTR_MAX_AGE: self.max_age,
-                    ATTR_MIN_AGE: self.min_age,
-                })
             return state
 
     @property
@@ -207,9 +201,8 @@ class StatisticsSensor(Entity):
                 self.average_change = self.change
                 if len(self.states) > 1:
                     self.average_change /= len(self.states) - 1
-                if self._max_age is not None:
-                    self.max_age = max(self.ages)
-                    self.min_age = min(self.ages)
+                self.max_age = max(self.ages)
+                self.min_age = min(self.ages)
             else:
                 self.min = self.max = self.total = STATE_UNKNOWN
                 self.average_change = self.change = STATE_UNKNOWN
