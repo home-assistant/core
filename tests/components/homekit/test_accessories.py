@@ -146,7 +146,7 @@ async def test_battery_service(hass, hk_driver):
 
 def test_home_bridge(hk_driver):
     """Test HomeBridge class."""
-    bridge = HomeBridge('hass', hk_driver)
+    bridge = HomeBridge('hass', hk_driver, BRIDGE_NAME)
     assert bridge.hass == 'hass'
     assert bridge.display_name == BRIDGE_NAME
     assert bridge.category == 2  # Category.BRIDGE
