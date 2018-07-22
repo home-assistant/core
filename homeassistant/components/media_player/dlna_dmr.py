@@ -468,7 +468,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
     async def async_media_next_track(self):
         """Send next track command."""
-        if self._device.can_next:
+        if not self._device.can_next:
             _LOGGER.debug('Cannot do Next')
             return
 
