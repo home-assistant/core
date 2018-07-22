@@ -129,7 +129,7 @@ async def async_start_notify_view(hass, server_host, server_port, requester):
         ssl_certificate=None,
         ssl_peer_certificate=None,
         ssl_key=None,
-        cors_origins=None,
+        cors_origins=[],
         use_x_forwarded_for=False,
         trusted_proxies=[],
         trusted_networks=[],
@@ -220,7 +220,7 @@ class UpnpNotifyView(HomeAssistantView):
         self._registered_services = {}
         self._backlog = {}
 
-    def register(self, router):
+    def register(self, app, router):
         """Register the view with a router."""
         handler = request_handler_factory(self, self.async_notify)
         router.add_route('notify', UpnpNotifyView.url, handler)
