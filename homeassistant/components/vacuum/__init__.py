@@ -19,7 +19,7 @@ from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,14 +83,13 @@ STATE_ERROR = 'error'
 
 DEFAULT_NAME = 'Vacuum cleaner robot'
 
-SUPPORT_TURN_ON = 1
-SUPPORT_TURN_OFF = 2
-SUPPORT_PAUSE = 4
-SUPPORT_STOP = 8
+SUPPORT_START = 1
+SUPPORT_STOP = 2
+SUPPORT_PAUSE = 8
 SUPPORT_RETURN_HOME = 16
 SUPPORT_FAN_SPEED = 32
 SUPPORT_BATTERY = 64
-SUPPORT_STATUS = 128
+SUPPORT_STATE = 128
 SUPPORT_SEND_COMMAND = 256
 SUPPORT_LOCATE = 512
 SUPPORT_CLEAN_SPOT = 1024
@@ -186,7 +185,7 @@ def async_setup(hass, config):
     return True
 
 
-class VacuumDevice(ToggleEntity):
+class VacuumDevice(Entity):
     """Representation of a vacuum cleaner robot."""
 
     @property
@@ -207,9 +206,8 @@ class VacuumDevice(ToggleEntity):
     @property
     def battery_icon(self):
         """Return the battery icon for the vacuum cleaner."""
-        charging = False
         if self.state is not None:
-            charging = STATE_DOCKED in self.state
+            charging = bool(self.state == STATE_DOCKED)
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging)
 
