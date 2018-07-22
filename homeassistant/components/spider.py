@@ -46,7 +46,7 @@ def setup(hass, config):
         }
 
         for component in SPIDER_COMPONENTS:
-            load_platform(hass, component, DOMAIN)
+            load_platform(hass, component, DOMAIN, {})
 
         _LOGGER.debug("Connection with Itho Daalderop API succeeded")
         return True

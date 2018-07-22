@@ -32,25 +32,24 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Spider thermostat."""
-    thermostats = hass.data[SPIDER_DOMAIN]['thermostats']
-    api = hass.data[SPIDER_DOMAIN]['controller']
-    for thermostat in thermostats:
-        add_devices(
-            [SpiderThermostat(api, thermostat['id'], thermostat['name'])],
-            True
-        )
+    if discovery_info is None:
+        return
+
+    devices = [SpiderThermostat(hass.data[SPIDER_DOMAIN]['controller'], device)
+               for device in hass.data[SPIDER_DOMAIN]['thermostats']]
+    add_devices(devices, True)
 
 
 class SpiderThermostat(ClimateDevice):
     """Representation of a thermostat."""
 
-    def __init__(self, client, thermostat_id, name):
+    def __init__(self, client, thermostat):
         """Initialize the thermostat."""
         self.client = client
-        self._id = thermostat_id
-        self._name = name
+        self._id = thermostat['id']
+        self._name = thermostat['name']
         self._master = False
-        self._thermostat = None
+        self._thermostat = thermostat
         self._current_temperature = None
         self._target_temperature = None
         self._min_temp = None
