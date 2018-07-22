@@ -126,7 +126,7 @@ class HomeAssistant:
         else:
             self.loop = loop or asyncio.get_event_loop()
 
-        executor_opts = {'max_workers': None}
+        executor_opts = {'max_workers': None}  # type: Dict[str, Any]
         if sys.version_info[:2] >= (3, 6):
             executor_opts['thread_name_prefix'] = 'SyncWorker'
 
