@@ -1,5 +1,7 @@
 """
-Support for playing media by shell command
+Support for playing media by shell command.
+
+See documentation TODO
 """
 import asyncio
 import logging
@@ -28,9 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(hass, config, async_add_devices,
-                                discovery_info=None):
+                               discovery_info=None):
     """Set up the Shell Player platform."""
-
     if discovery_info is not None:
         return
 
@@ -47,10 +48,12 @@ class ShellPlayer(MediaPlayerDevice):
         """Initialize the Shell player."""
         self._name = name
         self._cmd = cmd
+        self._prog = None
+        self._args = None
+        self._args_compiled = None
 
     async def async_added_to_hass(self):
         """Prepare arguments."""
-
         if ' ' not in self._cmd:
             self._prog = self._cmd
             self._args = None
@@ -76,7 +79,6 @@ class ShellPlayer(MediaPlayerDevice):
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Support changing a channel."""
-
         if media_type != MEDIA_TYPE_MUSIC:
             _LOGGER.error('Unsupported media type')
             return
@@ -97,10 +99,10 @@ class ShellPlayer(MediaPlayerDevice):
 
             # pylint: disable=no-member
             await asyncio.subprocess.create_subprocess_shell(
-                    self._cmd,
-                    loop=self.hass.loop,
-                    stdin=None
-                    )
+                self._cmd,
+                loop=self.hass.loop,
+                stdin=None
+                )
         else:
             # Template used. Break into list and use create_subprocess_exec
             # (which uses shell=False) for security
@@ -109,7 +111,7 @@ class ShellPlayer(MediaPlayerDevice):
             _LOGGER.info("Executing template: %s", rendered_args)
             # pylint: disable=no-member
             await asyncio.subprocess.create_subprocess_exec(
-                    *shlexed_cmd,
-                    loop=self.hass.loop,
-                    stdin=None
-                    )
+                *shlexed_cmd,
+                loop=self.hass.loop,
+                stdin=None
+                )
