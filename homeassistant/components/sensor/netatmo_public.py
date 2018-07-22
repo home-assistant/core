@@ -1,5 +1,5 @@
 """
-Support for the Sensors using public Netatmo data.
+Support for Sensors using public Netatmo data.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.netatmo_public/.
@@ -118,6 +118,26 @@ class NetatmoPublicData(object):
         self.lon_sw = lon_sw
         self.calculation = calculation
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def update(self):
+        """Request an update from the Netatmo API."""
+        import pyatmo
+        raindata = pyatmo.PublicData(self.auth,
+                                     LAT_NE=self.lat_ne,
+                                     LON_NE=self.lon_ne,
+                                     LAT_SW=self.lat_sw,
+                                     LON_SW=self.lon_sw)
+
+        if raindata.CountStationInArea() == 0:
+            _LOGGER.warning('No Rain Station available in this area.')
+        else:
+            raindata_live = raindata.getLive()
+
+            if self.calculation == 'avg':
+                self.data = self.calculate_average(raindata_live)
+            else:
+                self.data = self.calculate_max(raindata_live)
+
     def calculate_average(self, raindata):
         """Get the average value in the area."""
         total = 0
@@ -138,23 +158,3 @@ class NetatmoPublicData(object):
         key_max = max(raindata.keys(), key=(lambda k: raindata[k]))
 
         return raindata[key_max]
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
-        """Request an update from the Netatmo API."""
-        import pyatmo
-        raindata = pyatmo.PublicData(self.auth,
-                                     LAT_NE=self.lat_ne,
-                                     LON_NE=self.lon_ne,
-                                     LAT_SW=self.lat_sw,
-                                     LON_SW=self.lon_sw)
-
-        if raindata.CountStationInArea() == 0:
-            _LOGGER.warning('No Rain Station available in this area.')
-        else:
-            raindata_live = raindata.getLive()
-
-            if self.calculation == 'avg':
-                self.data = self.calculate_average(raindata_live)
-            else:
-                self.data = self.calculate_max(raindata_live)
