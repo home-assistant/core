@@ -21,9 +21,10 @@ from homeassistant.helpers.entityfilter import FILTER_SCHEMA
 from homeassistant.util import get_local_ip
 from homeassistant.util.decorator import Registry
 from .const import (
-    CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST, CONF_FILTER,
-    DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO2, DEVICE_CLASS_PM25,
-    DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START, TYPE_OUTLET, TYPE_SWITCH)
+    BRIDGE_NAME, CONF_AUTO_START, CONF_ENTITY_CONFIG, CONF_FEATURE_LIST,
+    CONF_FILTER, DEFAULT_AUTO_START, DEFAULT_PORT, DEVICE_CLASS_CO2,
+    DEVICE_CLASS_PM25, DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START,
+    TYPE_OUTLET, TYPE_SWITCH)
 from .util import (
     show_setup_message, validate_entity_config, validate_media_player_features)
 
@@ -43,6 +44,8 @@ SWITCH_TYPES = {TYPE_OUTLET: 'Outlet',
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All({
+        vol.Optional(CONF_NAME, default=BRIDGE_NAME):
+            vol.All(cv.string, vol.Length(min=3, max=25)),
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_IP_ADDRESS):
             vol.All(ipaddress.ip_address, cv.string),
@@ -58,13 +61,15 @@ async def async_setup(hass, config):
     _LOGGER.debug('Begin setup HomeKit')
 
     conf = config[DOMAIN]
+    name = conf[CONF_NAME]
     port = conf[CONF_PORT]
     ip_address = conf.get(CONF_IP_ADDRESS)
     auto_start = conf[CONF_AUTO_START]
     entity_filter = conf[CONF_FILTER]
     entity_config = conf[CONF_ENTITY_CONFIG]
 
-    homekit = HomeKit(hass, port, ip_address, entity_filter, entity_config)
+    homekit = HomeKit(hass, name, port, ip_address, entity_filter,
+                      entity_config)
     await hass.async_add_job(homekit.setup)
 
     if auto_start:
@@ -176,9 +181,11 @@ def generate_aid(entity_id):
 class HomeKit():
     """Class to handle all actions between HomeKit and Home Assistant."""
 
-    def __init__(self, hass, port, ip_address, entity_filter, entity_config):
+    def __init__(self, hass, name, port, ip_address, entity_filter,
+                 entity_config):
         """Initialize a HomeKit object."""
         self.hass = hass
+        self._name = name
         self._port = port
         self._ip_address = ip_address
         self._filter = entity_filter
@@ -199,7 +206,7 @@ class HomeKit():
         path = self.hass.config.path(HOMEKIT_FILE)
         self.driver = HomeDriver(self.hass, address=ip_addr,
                                  port=self._port, persist_file=path)
-        self.bridge = HomeBridge(self.hass, self.driver)
+        self.bridge = HomeBridge(self.hass, self.driver, self._name)
 
     def add_bridge_accessory(self, state):
         """Try adding accessory to bridge if configured beforehand."""
