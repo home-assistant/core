@@ -47,20 +47,30 @@ class TahomaCover(TahomaDevice, CoverDevice):
         self._icon = None
         # Can be 0 and bigger
         self._lock_timer = 0
-        # Can be 'comfortLevel1'
+        # Can be 'comfortLevel1', 'comfortLevel2', 'comfortLevel3',
+        # 'comfortLevel4', 'environmentProtection', 'humanProtection',
+        # 'userLevel1', 'userLevel2'
         self._lock_level = None
-        # Can be 'wind'
+        # Can be 'LSC', 'SAAC', 'SFC', 'UPS', 'externalGateway', 'localUser',
+        # 'myself', 'rain', 'security', 'temperature', 'timer', 'user', 'wind'
         self._lock_originator = None
 
     def update(self):
         """Update method."""
         self.controller.get_states([self.tahoma_device])
 
+        # For vertical covers
         if 'core:ClosureState' in self.tahoma_device.active_states:
             self._closure = \
                 self.tahoma_device.active_states['core:ClosureState']
+        # For horizontal covers
+        elif 'core:DeploymentState' in self.tahoma_device.active_states:
+            self._closure = \
+                self.tahoma_device.active_states['core:DeploymentState']
         else:
             self._closure = None
+
+        # For all, if available
         if 'core:PriorityLockTimerState' in self.tahoma_device.active_states:
             self._lock_timer = \
                 self.tahoma_device.active_states['core:PriorityLockTimerState']
@@ -71,6 +81,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
                 self.tahoma_device.active_states['io:PriorityLockLevelState']
         else:
             self._lock_level = None
+
         if 'io:PriorityLockOriginatorState' in \
                 self.tahoma_device.active_states:
             self._lock_originator = \
@@ -91,9 +102,8 @@ class TahomaCover(TahomaDevice, CoverDevice):
         # Define current position.
         #   _position: 0 is closed, 100 is fully open.
         #   'core:ClosureState': 100 is closed, 0 is fully open.
-        if 'core:ClosureState' in self.tahoma_device.active_states:
-            self._position = 100 - \
-                self.tahoma_device.active_states['core:ClosureState']
+        if self._closure is not None:
+            self._position = 100 - self._closure
             if self._position <= 5:
                 self._position = 0
             if self._position >= 95:
@@ -150,6 +160,7 @@ class TahomaCover(TahomaDevice, CoverDevice):
         if 'core:OpenClosedState' in self.tahoma_device.active_states:
             attr[ATTR_OPEN_CLOSE] = self.tahoma_device.active_states[
                 'core:OpenClosedState']
+        # Can be 'available', 'unavailable'
         if 'core:StatusState' in self.tahoma_device.active_states:
             attr[ATTR_STATUS] = self.tahoma_device.active_states[
                 'core:StatusState']
@@ -168,19 +179,11 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
-            # The commands open and close seem to be reversed.
-            self.apply_action('close')
-        else:
-            self.apply_action('open')
+        self.apply_action('open')
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
-            # The commands open and close seem to be reversed.
-            self.apply_action('open')
-        else:
-            self.apply_action('close')
+        self.apply_action('close')
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
