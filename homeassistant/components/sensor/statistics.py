@@ -88,11 +88,12 @@ class StatisticsSensor(Entity):
         self.states = deque(maxlen=self._sampling_size)
         self.ages = deque(maxlen=self._sampling_size)
 
-        self.median = self.mean = self.variance = self.stdev = 0
-        self.min = self.max = self.total = self.count = 0
-        self.average_change = self.change = 0
-        self.max_age = self.min_age = 0
-        self.change_rate = 0
+        self.count = 0
+        self.mean = self.median = self.stdev = self.variance = STATE_UNKNOWN
+        self.total = self.min = self.max = STATE_UNKNOWN
+        self.min_age = self.max_age = dt_util.utcnow()
+        self.change = self.average_change = STATE_UNKNOWN
+        self.change_rate = STATE_UNKNOWN
 
         if 'recorder' in self._hass.config.components:
             # only use the database if it's configured
@@ -143,19 +144,19 @@ class StatisticsSensor(Entity):
         """Return the state attributes of the sensor."""
         if not self.is_binary:
             return {
-                ATTR_MEAN: self.mean,
-                ATTR_COUNT: self.count,
-                ATTR_MAX_VALUE: self.max,
-                ATTR_MEDIAN: self.median,
-                ATTR_MIN_VALUE: self.min,
                 ATTR_SAMPLING_SIZE: self._sampling_size,
+                ATTR_COUNT: self.count,
+                ATTR_MEAN: self.mean,
+                ATTR_MEDIAN: self.median,
                 ATTR_STANDARD_DEVIATION: self.stdev,
-                ATTR_TOTAL: self.total,
                 ATTR_VARIANCE: self.variance,
+                ATTR_TOTAL: self.total,
+                ATTR_MIN_VALUE: self.min,
+                ATTR_MAX_VALUE: self.max,
+                ATTR_MIN_AGE: self.min_age,
+                ATTR_MAX_AGE: self.max_age,
                 ATTR_CHANGE: self.change,
                 ATTR_AVERAGE_CHANGE: self.average_change,
-                ATTR_MAX_AGE: self.max_age,
-                ATTR_MIN_AGE: self.min_age,
                 ATTR_CHANGE_RATE: self.change_rate,
             }
 
@@ -199,8 +200,8 @@ class StatisticsSensor(Entity):
                 self.total = round(sum(self.states), 2)
                 self.min = min(self.states)
                 self.max = max(self.states)
-                self.max_age = max(self.ages)
                 self.min_age = min(self.ages)
+                self.max_age = max(self.ages)
                 self.change = self.states[-1] - self.states[0]
                 self.average_change = self.change
                 self.change_rate = 0
