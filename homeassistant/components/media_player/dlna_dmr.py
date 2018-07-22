@@ -7,17 +7,17 @@ https://home-assistant.io/components/media_player.dlna_dmr/
 """
 
 import asyncio
+import functools
 import logging
 import socket
 import urllib.parse
 from datetime import datetime
 
 import aiohttp
-import async_timeout
+import aiohttp.web
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.http import HomeAssistantHTTP
 from homeassistant.components.http.view import (
     request_handler_factory, HomeAssistantView)
 from homeassistant.components.media_player import (
@@ -36,13 +36,13 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 
-DOMAIN = 'dlna_dmr'
+DLNA_DMR_DATA = 'dlna_dmr'
 
 REQUIREMENTS = [
-    'async-upnp-client==0.12.0',
+    'async-upnp-client==0.12.1',
 ]
 
-DEPENDENCIES = ['http']
+DEPENDENCIES = []
 
 DEFAULT_NAME = 'DLNA Digital Media Renderer'
 DEFAULT_LISTEN_PORT = 8301
@@ -56,12 +56,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_LISTEN_PORT, default=DEFAULT_LISTEN_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
-
-SUPPORT_DLNA_DMR = \
-    SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_SET | \
-    SUPPORT_PLAY | SUPPORT_STOP | SUPPORT_PAUSE | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | \
-    SUPPORT_PLAY_MEDIA
 
 HOME_ASSISTANT_UPNP_CLASS_MAPPING = {
     'music': 'object.item.audioItem',
@@ -87,7 +81,26 @@ UPNP_DEVICE_MEDIA_RENDERER = [
 
 _LOGGER = logging.getLogger(__name__)
 
-SETUP_LOCK = asyncio.Lock()
+ASYNC_LOCK = asyncio.Lock()
+
+
+def catch_request_errors():
+    """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
+
+    def call_wrapper(func):
+        """Call wrapper for decorator."""
+
+        @functools.wraps(func)
+        def wrapper(self, *args, **kwargs):
+            """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
+            try:
+                return func(self, *args, **kwargs)
+            except (asyncio.TimeoutError, aiohttp.ClientError):
+                _LOGGER.error("Error during call %s", func.__name__)
+
+        return wrapper
+
+    return call_wrapper
 
 
 def determine_listen_ip(target_url, config):
@@ -116,39 +129,51 @@ def determine_listen_ip(target_url, config):
 
 async def async_start_notify_view(hass, server_host, server_port, requester):
     """Register notify view."""
-    hass_data = hass.data[DOMAIN]
+    hass_data = hass.data[DLNA_DMR_DATA]
     if 'notify_view' in hass_data:
         return hass_data['notify_view']
 
-    # fire up a HTTP server
-    server = HomeAssistantHTTP(
-        hass,
-        server_host=server_host,
-        server_port=server_port,
-        api_password=None,
-        ssl_certificate=None,
-        ssl_peer_certificate=None,
-        ssl_key=None,
-        cors_origins=[],
-        use_x_forwarded_for=False,
-        trusted_proxies=[],
-        trusted_networks=[],
-        login_threshold=0,
-        is_ban_enabled=False
-    )
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STOP, server.stop)
-    hass_data['notify_server'] = server
+    app = aiohttp.web.Application()
+    app['hass'] = hass
+    handler = None
+    server = None
+    hass_data['notify_server'] = app
 
-    base_url = 'http://%s:%s/' % (server_host, server_port)
+    base_url = 'http://{}:{}/'.format(server_host, server_port)
     view = UpnpNotifyView(base_url)
-    server.register_view(view)
     hass_data['notify_view'] = view
+    view.register(app, app.router)
 
     from async_upnp_client import UpnpEventHandler
     view.event_handler = UpnpEventHandler(view.callback_url, requester)
 
-    await server.start()
+    async def async_stop_server(event):
+        """Stop server."""
+        _LOGGER.debug('Stopping NOTIFY server')
+        if server:
+            server.close()
+            await server.wait_closed()
+        await app.shutdown()
+        if handler:
+            await handler.shutdown(10)
+        await app.cleanup()
+
+    async def async_start_server():
+        """Start server."""
+        _LOGGER.debug('Starting NOTIFY server')
+        nonlocal handler
+        nonlocal server
+        handler = app.make_handler(loop=hass.loop)
+        try:
+            server = await hass.loop.create_server(
+                handler, server_host, server_port)
+        except OSError as error:
+            _LOGGER.error("Failed to create HTTP server at port %d: %s",
+                          server_port, error)
+
+    await async_start_server()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_server)
+
     _LOGGER.info('UPNP/DLNA notify server listening on: %s', base_url)
     return view
 
@@ -168,19 +193,22 @@ async def async_setup_platform(hass: HomeAssistant,
         return
 
     if config.get(CONF_URL) is not None:
-        url = config.get(CONF_URL)
+        url = config[CONF_URL]
         name = config.get(CONF_NAME)
     elif discovery_info is not None:
         url = discovery_info['ssdp_description']
         name = discovery_info['name']
 
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
+    if DLNA_DMR_DATA not in hass.data:
+        hass.data[DLNA_DMR_DATA] = {}
 
-    requester = build_requester(hass)
+    # build requester
+    from async_upnp_client.aiohttp import AiohttpSessionRequester
+    session = async_get_clientsession(hass)
+    requester = AiohttpSessionRequester(session, True)
 
     # ensure view has been started
-    with (await SETUP_LOCK):
+    with (await ASYNC_LOCK):
         # discovered components don't get default values in config
         config[CONF_LISTEN_PORT] = config.get(CONF_LISTEN_PORT,
                                               DEFAULT_LISTEN_PORT)
@@ -200,17 +228,17 @@ async def async_setup_platform(hass: HomeAssistant,
         raise PlatformNotReady()
 
     dlna_device = DmrDevice(upnp_device, notify_view.event_handler)
-    device = DlnaDmrDevice(hass, dlna_device, name)
+    device = DlnaDmrDevice(dlna_device, name)
 
     _LOGGER.debug("Adding device: %s", device)
-    async_add_devices([device])
+    async_add_devices([device], True)
 
 
 class UpnpNotifyView(HomeAssistantView):
     """Callback view for UPnP NOTIFY messages."""
 
     url = '/api/dlna_dmr.notify'
-    name = 'api:dlna_dmr:notify'
+    name = 'dlna_dmr:api:notify'
     requires_auth = False
 
     def __init__(self, base_url):
@@ -238,65 +266,23 @@ class UpnpNotifyView(HomeAssistantView):
         return urllib.parse.urljoin(self.base_url, self.url)
 
 
-def build_requester(hass):
-    """Build a derived instance of UpnpRequester, specific for hass."""
-    from async_upnp_client import UpnpRequester
-
-    class HassUpnpRequester(UpnpRequester):
-        """async_upnp_client.UpnpRequester for home-assistant."""
-
-        def __init__(self, hass_):
-            """Initializer."""
-            self.hass = hass_
-
-        async def async_do_http_request(self,
-                                        method,
-                                        url,
-                                        headers=None,
-                                        body=None,
-                                        body_type='text'):
-            """Do a HTTP request."""
-            # work around an unknown hass or aiohttp error
-            await asyncio.sleep(0.01)
-
-            session = async_get_clientsession(self.hass)
-            with async_timeout.timeout(5, loop=self.hass.loop):
-                response = await session.request(method,
-                                                 url,
-                                                 headers=headers,
-                                                 data=body)
-                if body_type == 'text':
-                    response_body = await response.text()
-                elif body_type == 'raw':
-                    response_body = await response.read()
-                elif body_type == 'ignore':
-                    response_body = None
-
-            return response.status, response.headers, response_body
-
-    return HassUpnpRequester(hass)
-
-
 class DlnaDmrDevice(MediaPlayerDevice):
     """Representation of a DLNA DMR device."""
 
-    def __init__(self, hass: HomeAssistant, dmr_device, name=None):
+    def __init__(self, dmr_device, name=None):
         """Initializer."""
-        self.hass = hass
+        self._device = dmr_device
         self._name = name
 
-        self._device = dmr_device
-        self._device.on_event = self._on_event
-
         self._available = False
-        self._on_stop_unsubscriber = None
         self._subscription_renew_time = None
 
     async def async_added_to_hass(self):
         """Callback when added."""
-        bus = self.hass.bus
+        self._device.on_event = self._on_event
 
         # register unsubscribe on stop
+        bus = self.hass.bus
         bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                               self._async_on_hass_stop)
 
@@ -312,7 +298,8 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
     async def _async_on_hass_stop(self, event):
         """Event handler on HASS stop."""
-        await self._device.async_unsubscribe_services()
+        with (await ASYNC_LOCK):
+            await self._device.async_unsubscribe_services()
 
     async def async_update(self):
         """Retrieve the latest data."""
@@ -324,7 +311,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         except (asyncio.TimeoutError, aiohttp.ClientError):
             self._available = False
             _LOGGER.debug("Device unavailable")
-            raise
+            return
 
         # do we need to (re-)subscribe?
         now = datetime.now()
@@ -338,7 +325,6 @@ class DlnaDmrDevice(MediaPlayerDevice):
             except (asyncio.TimeoutError, aiohttp.ClientError):
                 self._available = False
                 _LOGGER.debug("Could not (re)subscribe")
-                raise
 
     def _on_event(self, service, state_variables):
         """State variable(s) changed, let home-assistant know."""
@@ -373,59 +359,50 @@ class DlnaDmrDevice(MediaPlayerDevice):
         """Volume level of the media player (0..1)."""
         return self._device.volume_level
 
+    @catch_request_errors()
     async def async_set_volume_level(self, volume):
         """Set volume level, range 0..1."""
-        try:
-            await self._device.async_set_volume_level(volume)
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during RC/SetVolume call")
+        await self._device.async_set_volume_level(volume)
 
     @property
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._device.is_volume_muted
 
+    @catch_request_errors()
     async def async_mute_volume(self, mute):
         """Mute the volume."""
         desired_mute = bool(mute)
-        try:
-            await self._device.async_mute_volume(desired_mute)
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during RC/SetMute call")
+        await self._device.async_mute_volume(desired_mute)
 
+    @catch_request_errors()
     async def async_media_pause(self):
         """Send pause command."""
         if not self._device.can_pause:
             _LOGGER.debug('Cannot do Pause')
             return
 
-        try:
-            await self._device.async_pause()
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during AVT/Pause call")
+        await self._device.async_pause()
 
+    @catch_request_errors()
     async def async_media_play(self):
         """Send play command."""
         if not self._device.can_play:
             _LOGGER.debug('Cannot do Play')
             return
 
-        try:
-            await self._device.async_play()
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during AVT/Play call")
+        await self._device.async_play()
 
+    @catch_request_errors()
     async def async_media_stop(self):
         """Send stop command."""
         if not self._device.can_stop:
             _LOGGER.debug('Cannot do Stop')
             return
 
-        try:
-            await self._device.async_stop()
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during AVT/Stop call")
+        await self._device.async_stop()
 
+    @catch_request_errors()
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         title = "Home Assistant"
@@ -437,15 +414,11 @@ class DlnaDmrDevice(MediaPlayerDevice):
             await self.async_media_stop()
 
         # queue media
-        try:
-            await self._device.async_set_transport_uri(media_id,
-                                                       title,
-                                                       mime_type,
-                                                       upnp_class)
-            await self._device.async_wait_for_can_play()
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during SetAVTransportURI or wait call")
-            return
+        await self._device.async_set_transport_uri(media_id,
+                                                   title,
+                                                   mime_type,
+                                                   upnp_class)
+        await self._device.async_wait_for_can_play()
 
         # if already playing, no need to call Play
         from async_upnp_client import dlna
@@ -455,27 +428,23 @@ class DlnaDmrDevice(MediaPlayerDevice):
         # play it
         await self.async_media_play()
 
+    @catch_request_errors()
     async def async_media_previous_track(self):
         """Send previous track command."""
         if not self._device.can_previous:
             _LOGGER.debug('Cannot do Previous')
             return
 
-        try:
-            await self._device.async_previous()
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during Previous call")
+        await self._device.async_previous()
 
+    @catch_request_errors()
     async def async_media_next_track(self):
         """Send next track command."""
         if not self._device.can_next:
             _LOGGER.debug('Cannot do Next')
             return
 
-        try:
-            await self._device.async_next()
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            _LOGGER.error("Error during Next call")
+        await self._device.async_next()
 
     @property
     def media_title(self):
@@ -531,12 +500,4 @@ class DlnaDmrDevice(MediaPlayerDevice):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return "{}.{}".format(__name__, self.udn)
-
-    def __str__(self) -> str:
-        """To string."""
-        return "<DlnaDmrDevice('{}')>".format(self.udn)
-
-    def __repr__(self) -> str:
-        """Repr."""
-        return "<DlnaDmrDevice('{}')>".format(self.udn)
+        return self.udn
