@@ -182,14 +182,14 @@ class StatisticsSensor(Entity):
                 self.mean = round(statistics.mean(self.states), 2)
                 self.median = round(statistics.median(self.states), 2)
             except statistics.StatisticsError as err:
-                _LOGGER.error(err)
+                _LOGGER.debug(err)
                 self.mean = self.median = STATE_UNKNOWN
 
             try:  # require at least two data points
                 self.stdev = round(statistics.stdev(self.states), 2)
                 self.variance = round(statistics.variance(self.states), 2)
             except statistics.StatisticsError as err:
-                _LOGGER.error(err)
+                _LOGGER.debug(err)
                 self.stdev = self.variance = STATE_UNKNOWN
 
             if self.states:
