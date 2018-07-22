@@ -9,23 +9,24 @@ import logging
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
-    SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, VacuumDevice)
+    SUPPORT_SEND_COMMAND, SUPPORT_STATE, SUPPORT_STOP, SUPPORT_START,
+    STATE_CLEANING, STATE_DOCKED, STATE_PAUSED,
+    STATE_IDLE, STATE_RETURNING, STATE_ERROR, VacuumDevice)
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_MINIMAL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF
+SUPPORT_MINIMAL_SERVICES = SUPPORT_START | SUPPORT_STOP
 
-SUPPORT_BASIC_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-                         SUPPORT_STATUS | SUPPORT_BATTERY
+SUPPORT_BASIC_SERVICES = SUPPORT_START | SUPPORT_STOP | \
+                         SUPPORT_STATE | SUPPORT_BATTERY
 
-SUPPORT_MOST_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP | \
-                        SUPPORT_RETURN_HOME | SUPPORT_STATUS | SUPPORT_BATTERY
+SUPPORT_MOST_SERVICES = SUPPORT_START | SUPPORT_STOP | \
+                        SUPPORT_RETURN_HOME | SUPPORT_STATE | SUPPORT_BATTERY
 
-SUPPORT_ALL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
-                       SUPPORT_STOP | SUPPORT_RETURN_HOME | \
+SUPPORT_ALL_SERVICES = SUPPORT_START | SUPPORT_STOP | SUPPORT_PAUSE | \
+                       SUPPORT_RETURN_HOME | \
                        SUPPORT_FAN_SPEED | SUPPORT_SEND_COMMAND | \
-                       SUPPORT_LOCATE | SUPPORT_STATUS | SUPPORT_BATTERY | \
+                       SUPPORT_LOCATE | SUPPORT_STATE | SUPPORT_BATTERY | \
                        SUPPORT_CLEAN_SPOT
 
 FAN_SPEEDS = ['min', 'medium', 'high', 'max']
@@ -54,8 +55,7 @@ class DemoVacuum(VacuumDevice):
         """Initialize the vacuum."""
         self._name = name
         self._supported_features = supported_features
-        self._state = False
-        self._status = 'Charging'
+        self._state = STATE_DOCKED
         self._fan_speed = FAN_SPEEDS[1]
         self._cleaned_area = 0
         self._battery_level = 100
@@ -70,18 +70,14 @@ class DemoVacuum(VacuumDevice):
         """No polling needed for a demo vacuum."""
         return False
 
-    @property
-    def is_on(self):
-        """Return true if vacuum is on."""
-        return self._state
 
     @property
-    def status(self):
+    def state(self):
         """Return the status of the vacuum."""
-        if self.supported_features & SUPPORT_STATUS == 0:
+        if self.supported_features & SUPPORT_STATE == 0:
             return
 
-        return self._status
+        return self._state
 
     @property
     def fan_speed(self):
@@ -115,33 +111,12 @@ class DemoVacuum(VacuumDevice):
         """Flag supported features."""
         return self._supported_features
 
-    def turn_on(self, **kwargs):
-        """Turn the vacuum on."""
-        if self.supported_features & SUPPORT_TURN_ON == 0:
-            return
-
-        self._state = True
-        self._cleaned_area += 5.32
-        self._battery_level -= 2
-        self._status = 'Cleaning'
-        self.schedule_update_ha_state()
-
-    def turn_off(self, **kwargs):
-        """Turn the vacuum off."""
-        if self.supported_features & SUPPORT_TURN_OFF == 0:
-            return
-
-        self._state = False
-        self._status = 'Charging'
-        self.schedule_update_ha_state()
-
     def stop(self, **kwargs):
         """Stop the vacuum."""
         if self.supported_features & SUPPORT_STOP == 0:
             return
 
-        self._state = False
-        self._status = 'Stopping the current task'
+        self._state = STATE_IDLE
         self.schedule_update_ha_state()
 
     def clean_spot(self, **kwargs):
@@ -149,10 +124,9 @@ class DemoVacuum(VacuumDevice):
         if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
             return
 
-        self._state = True
         self._cleaned_area += 1.32
         self._battery_level -= 1
-        self._status = "Cleaning spot"
+        self._state = STATE_CLEANING
         self.schedule_update_ha_state()
 
     def locate(self, **kwargs):
@@ -160,7 +134,6 @@ class DemoVacuum(VacuumDevice):
         if self.supported_features & SUPPORT_LOCATE == 0:
             return
 
-        self._status = "Hi, I'm over here!"
         self.schedule_update_ha_state()
 
     def start_pause(self, **kwargs):
@@ -168,13 +141,12 @@ class DemoVacuum(VacuumDevice):
         if self.supported_features & SUPPORT_PAUSE == 0:
             return
 
-        self._state = not self._state
-        if self._state:
-            self._status = 'Resuming the current task'
+        if self._state == STATE_PAUSED:
+            self._state = STATE_CLEANING
             self._cleaned_area += 1.32
             self._battery_level -= 1
         else:
-            self._status = 'Pausing the current task'
+            self._state = STATE_PAUSED
         self.schedule_update_ha_state()
 
     def set_fan_speed(self, fan_speed, **kwargs):
@@ -191,8 +163,7 @@ class DemoVacuum(VacuumDevice):
         if self.supported_features & SUPPORT_RETURN_HOME == 0:
             return
 
-        self._state = False
-        self._status = 'Returning home...'
+        self._state = STATE_RETURNING
         self._battery_level += 5
         self.schedule_update_ha_state()
 
@@ -201,6 +172,4 @@ class DemoVacuum(VacuumDevice):
         if self.supported_features & SUPPORT_SEND_COMMAND == 0:
             return
 
-        self._status = 'Executing {}({})'.format(command, params)
-        self._state = True
         self.schedule_update_ha_state()
