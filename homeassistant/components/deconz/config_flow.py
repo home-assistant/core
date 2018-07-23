@@ -57,7 +57,7 @@ class DeconzFlowHandler(data_entry_flow.FlowHandler):
         if len(self.bridges) == 1:
             self.deconz_config = self.bridges[0]
             return await self.async_step_link()
-        elif len(self.bridges) > 1:
+        if len(self.bridges) > 1:
             hosts = []
             for bridge in self.bridges:
                 hosts.append(bridge[CONF_HOST])

@@ -109,7 +109,7 @@ async def async_validate_auth_header(request, api_password=None):
         request['hass_user'] = access_token.refresh_token.user
         return True
 
-    elif auth_type == 'Basic' and api_password is not None:
+    if auth_type == 'Basic' and api_password is not None:
         decoded = base64.b64decode(auth_val).decode('utf-8')
         try:
             username, password = decoded.split(':', 1)
@@ -123,5 +123,4 @@ async def async_validate_auth_header(request, api_password=None):
         return hmac.compare_digest(api_password.encode('utf-8'),
                                    password.encode('utf-8'))
 
-    else:
-        return False
+    return False

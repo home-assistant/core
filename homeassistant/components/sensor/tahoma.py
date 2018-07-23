@@ -46,11 +46,11 @@ class TahomaSensor(TahomaDevice, Entity):
         """Return the unit of measurement of this entity, if any."""
         if self.tahoma_device.type == 'Temperature Sensor':
             return None
-        elif self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
+        if self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
             return None
-        elif self.tahoma_device.type == 'io:LightIOSystemSensor':
+        if self.tahoma_device.type == 'io:LightIOSystemSensor':
             return 'lx'
-        elif self.tahoma_device.type == 'Humidity Sensor':
+        if self.tahoma_device.type == 'Humidity Sensor':
             return '%'
 
     def update(self):

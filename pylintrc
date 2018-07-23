@@ -4,7 +4,6 @@
 # duplicate-code - unavoidable
 # cyclic-import - doesn't test if both import on load
 # abstract-class-little-used - prevents from setting right foundation
-# abstract-class-not-used - is flaky, should not show up but does
 # unused-argument - generic callbacks and setup methods create a lot of warnings
 # global-statement - used for the on-demand requirement installation
 # redefined-variable-type - this is Python, we're duck typing!
@@ -14,7 +13,6 @@
 # inconsistent-return-statements - doesn't handle raise
 disable=
   abstract-class-little-used,
-  abstract-class-not-used,
   abstract-method,
   cyclic-import,
   duplicate-code,

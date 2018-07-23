@@ -216,11 +216,10 @@ def _env_var_yaml(loader: SafeLineLoader,
     # Check for a default value
     if len(args) > 1:
         return os.getenv(args[0], ' '.join(args[1:]))
-    elif args[0] in os.environ:
+    if args[0] in os.environ:
         return os.environ[args[0]]
-    else:
-        _LOGGER.error("Environment variable %s not defined.", node.value)
-        raise HomeAssistantError(node.value)
+    _LOGGER.error("Environment variable %s not defined.", node.value)
+    raise HomeAssistantError(node.value)
 
 
 def _load_secret_yaml(secret_path: str) -> Dict:

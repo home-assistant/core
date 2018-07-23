@@ -572,8 +572,7 @@ def _recursive_merge(conf, package):
         else:
             if conf.get(key) is not None:
                 return key
-            else:
-                conf[key] = pack_conf
+            conf[key] = pack_conf
     return error
 
 

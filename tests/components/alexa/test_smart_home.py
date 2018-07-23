@@ -124,7 +124,7 @@ def discovery_test(device, hass, expected_endpoints=1):
 
     if expected_endpoints == 1:
         return endpoints[0]
-    elif expected_endpoints > 1:
+    if expected_endpoints > 1:
         return endpoints
     return None
 

@@ -38,10 +38,8 @@ def is_serial_port(value):
         ports = ('COM{}'.format(idx + 1) for idx in range(256))
         if value in ports:
             return value
-        else:
-            raise vol.Invalid('{} is not a serial port'.format(value))
-    else:
-        return cv.isdevice(value)
+        raise vol.Invalid('{} is not a serial port'.format(value))
+    return cv.isdevice(value)
 
 
 def is_socket_address(value):

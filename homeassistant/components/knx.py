@@ -172,7 +172,7 @@ class KNXModule:
         """Return the connection_config."""
         if CONF_KNX_TUNNELING in self.config[DOMAIN]:
             return self.connection_config_tunneling()
-        elif CONF_KNX_ROUTING in self.config[DOMAIN]:
+        if CONF_KNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
         return self.connection_config_auto()
 

@@ -264,7 +264,7 @@ class GrantTokenView(HomeAssistantView):
         if grant_type == 'authorization_code':
             return await self._async_handle_auth_code(hass, client_id, data)
 
-        elif grant_type == 'refresh_token':
+        if grant_type == 'refresh_token':
             return await self._async_handle_refresh_token(
                 hass, client_id, data)
 
