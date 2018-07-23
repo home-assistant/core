@@ -94,7 +94,7 @@ aioftp==0.10.1
 aiohttp_cors==0.7.0
 
 # homeassistant.components.hue
-aiohue==1.5.0
+aiohue==1.6.0
 
 # homeassistant.components.sensor.imap
 aioimaplib==0.7.13
