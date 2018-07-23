@@ -444,6 +444,9 @@ iglo==1.2.7
 # homeassistant.components.ihc
 ihcsdk==2.2.0
 
+# homeassistant.components.camera.environment_canada
+imageio==2.3.0
+
 # homeassistant.components.influxdb
 # homeassistant.components.sensor.influxdb
 influxdb==5.0.0
@@ -1181,6 +1184,9 @@ raincloudy==0.0.5
 
 # homeassistant.components.rainmachine
 regenmaschine==1.0.2
+
+# homeassistant.components.camera.environment_canada
+requests-futures==0.9.7
 
 # homeassistant.components.python_script
 restrictedpython==4.0b4
