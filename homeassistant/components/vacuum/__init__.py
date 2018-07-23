@@ -37,6 +37,7 @@ ATTR_CLEANED_AREA = 'cleaned_area'
 ATTR_FAN_SPEED = 'fan_speed'
 ATTR_FAN_SPEED_LIST = 'fan_speed_list'
 ATTR_PARAMS = 'params'
+ATTR_STATUS = 'status'
 
 SERVICE_CLEAN_SPOT = 'clean_spot'
 SERVICE_LOCATE = 'locate'
@@ -83,17 +84,47 @@ STATE_ERROR = 'error'
 
 DEFAULT_NAME = 'Vacuum cleaner robot'
 
-SUPPORT_START = 1
-SUPPORT_STOP = 2
-SUPPORT_PAUSE = 8
+SUPPORT_TURN_ON = 1
+SUPPORT_TURN_OFF = 2
+SUPPORT_PAUSE = 4
+SUPPORT_STOP = 8
 SUPPORT_RETURN_HOME = 16
 SUPPORT_FAN_SPEED = 32
 SUPPORT_BATTERY = 64
-SUPPORT_STATE = 128
+SUPPORT_STATUS = 128
 SUPPORT_SEND_COMMAND = 256
 SUPPORT_LOCATE = 512
 SUPPORT_CLEAN_SPOT = 1024
 SUPPORT_MAP = 2048
+SUPPORT_STATE = 4096
+
+
+@bind_hass
+def is_on(hass, entity_id=None):
+    """Return if the vacuum is on based on the statemachine."""
+    entity_id = entity_id or ENTITY_ID_ALL_VACUUMS
+    return hass.states.is_state(entity_id, STATE_ON)
+
+
+@bind_hass
+def turn_on(hass, entity_id=None):
+    """Turn all or specified vacuum on."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
+
+
+@bind_hass
+def turn_off(hass, entity_id=None):
+    """Turn all or specified vacuum off."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
+
+
+@bind_hass
+def toggle(hass, entity_id=None):
+    """Toggle all or specified vacuum."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
 @bind_hass
@@ -192,10 +223,15 @@ class VacuumDevice(Entity):
     def supported_features(self):
         """Flag vacuum cleaner features that are supported."""
         raise NotImplementedError()
-
+    
     @property
     def state(self):
         """Return the state of the vacuum cleaner."""
+        return None
+
+    @property
+    def status(self):
+        """Return the status of the vacuum cleaner."""
         return None
 
     @property
@@ -206,8 +242,15 @@ class VacuumDevice(Entity):
     @property
     def battery_icon(self):
         """Return the battery icon for the vacuum cleaner."""
-        if self.state is not None:
-            charging = bool(self.state == STATE_DOCKED)
+        charging = False
+        
+        if self.supported_features & SUPPORT_STATE != 0:
+            if self.state is not None:
+                charging = bool(self.state == STATE_DOCKED)
+        else:
+            if self.status is not None:
+                charging = 'charg' in self.status.lower()
+        
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging)
 
@@ -225,6 +268,9 @@ class VacuumDevice(Entity):
     def state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
+
+        if self.status is not None:
+            data[ATTR_STATUS] = self.status
 
         if self.battery_level is not None:
             data[ATTR_BATTERY_LEVEL] = self.battery_level
