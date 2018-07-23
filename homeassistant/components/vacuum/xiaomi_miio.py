@@ -178,7 +178,7 @@ class MiroboVacuum(VacuumDevice):
             try:
                 return STATE_CODE_TO_STATE[int(self.vacuum_state.state_code)]
             except KeyError:
-                _LOGGER.error("STATE not supported: %s, state_code: %s, please report",
+                _LOGGER.error("STATE not supported: %s, state_code: %s",
                               self.vacuum_state.state,
                               self.vacuum_state.state_code)
                 return None
