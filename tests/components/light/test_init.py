@@ -376,7 +376,8 @@ class TestLight(unittest.TestCase):
                     {light.DOMAIN: {CONF_PLATFORM: 'test'}}
                 ))
 
-        dev, _, _ = platform.DEVICES
+        dev = next(filter(lambda x: x.entity_id == 'light.ceiling_2',
+                          platform.DEVICES))
         light.turn_on(self.hass, dev.entity_id)
         self.hass.block_till_done()
         _, data = dev.last_call('turn_on')
