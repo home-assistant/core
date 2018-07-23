@@ -4,8 +4,10 @@ Support for Tahoma cover - shutters etc.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.tahoma/
 """
+from datetime import timedelta
 import logging
 
+from homeassistant.util.dt import utcnow
 from homeassistant.components.cover import CoverDevice, ATTR_POSITION
 from homeassistant.components.tahoma import (
     DOMAIN as TAHOMA_DOMAIN, TahomaDevice)
@@ -19,9 +21,11 @@ ATTR_MEM_POS = 'memorized_position'
 ATTR_RSSI_LEVEL = 'rssi_level'
 ATTR_OPEN_CLOSE = 'open_close'
 ATTR_STATUS = 'status'
-ATTR_LOCK_TIMER = 'priority_lock_timer'
-ATTR_LOCK_LEVEL = 'priority_lock_level'
-ATTR_LOCK_ORIG = 'priority_lock_originator'
+ATTR_LOCK_START_TS = 'lock_start_ts'
+ATTR_LOCK_END_TS = 'lock_end_ts'
+ATTR_LOCK_TIMER = 'lock_timer'
+ATTR_LOCK_LEVEL = 'lock_level'
+ATTR_LOCK_ORIG = 'lock_originator'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -44,9 +48,12 @@ class TahomaCover(TahomaDevice, CoverDevice):
         # 100 equals open
         self._position = 100
         self._closed = False
+        self._rssi_level = None
         self._icon = None
         # Can be 0 and bigger
         self._lock_timer = 0
+        self._lock_start_ts = None
+        self._lock_end_ts = None
         # Can be 'comfortLevel1', 'comfortLevel2', 'comfortLevel3',
         # 'comfortLevel4', 'environmentProtection', 'humanProtection',
         # 'userLevel1', 'userLevel2'
@@ -72,10 +79,28 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
         # For all, if available
         if 'core:PriorityLockTimerState' in self.tahoma_device.active_states:
+            old_lock_timer = self._lock_timer
             self._lock_timer = \
                 self.tahoma_device.active_states['core:PriorityLockTimerState']
+            # Derive timestamps from _lock_timer, only if not already set or
+            # something has changed
+            if self._lock_timer > 0:
+                _LOGGER.debug("Update %s, lock_timer: %d", self._name,
+                              self._lock_timer)
+                if self._lock_start_ts is None:
+                    self._lock_start_ts = utcnow()
+                if self._lock_end_ts is None or \
+                        old_lock_timer != self._lock_timer:
+                    self._lock_end_ts = utcnow() +\
+                        timedelta(seconds=self._lock_timer)
+            else:
+                self._lock_start_ts = None
+                self._lock_end_ts = None
         else:
-            self._lock_timer = None
+            self._lock_timer = 0
+            self._lock_start_ts = None
+            self._lock_end_ts = None
+
         if 'io:PriorityLockLevelState' in self.tahoma_device.active_states:
             self._lock_level = \
                 self.tahoma_device.active_states['io:PriorityLockLevelState']
@@ -89,6 +114,12 @@ class TahomaCover(TahomaDevice, CoverDevice):
                     'io:PriorityLockOriginatorState']
         else:
             self._lock_originator = None
+
+        if 'core:RSSILevelState' in self.tahoma_device.active_states:
+            self._rssi_level = self.tahoma_device.active_states[
+                'core:RSSILevelState']
+        else:
+            self._rssi_level = None
 
         # Define which icon to use
         if self._lock_timer > 0:
@@ -154,9 +185,8 @@ class TahomaCover(TahomaDevice, CoverDevice):
         if 'core:Memorized1PositionState' in self.tahoma_device.active_states:
             attr[ATTR_MEM_POS] = self.tahoma_device.active_states[
                 'core:Memorized1PositionState']
-        if 'core:RSSILevelState' in self.tahoma_device.active_states:
-            attr[ATTR_RSSI_LEVEL] = self.tahoma_device.active_states[
-                'core:RSSILevelState']
+        if self._rssi_level is not None:
+            attr[ATTR_RSSI_LEVEL] = self._rssi_level
         if 'core:OpenClosedState' in self.tahoma_device.active_states:
             attr[ATTR_OPEN_CLOSE] = self.tahoma_device.active_states[
                 'core:OpenClosedState']
@@ -164,8 +194,12 @@ class TahomaCover(TahomaDevice, CoverDevice):
         if 'core:StatusState' in self.tahoma_device.active_states:
             attr[ATTR_STATUS] = self.tahoma_device.active_states[
                 'core:StatusState']
-        if self._lock_timer is not None:
+        if self._lock_timer > 0:
             attr[ATTR_LOCK_TIMER] = self._lock_timer
+        if self._lock_start_ts is not None:
+            attr[ATTR_LOCK_START_TS] = self._lock_start_ts.isoformat()
+        if self._lock_end_ts is not None:
+            attr[ATTR_LOCK_END_TS] = self._lock_end_ts.isoformat()
         if self._lock_level is not None:
             attr[ATTR_LOCK_LEVEL] = self._lock_level
         if self._lock_originator is not None:
