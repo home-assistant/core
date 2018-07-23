@@ -120,6 +120,7 @@ async def async_aiohttp_proxy_stream(hass, request, stream, content_type,
 
     return response
 
+
 @callback
 def _async_register_clientsession_shutdown(hass, clientsession):
     """Register ClientSession close on Home Assistant shutdown.
