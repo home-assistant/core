@@ -191,8 +191,8 @@ class ProxyCamera(Camera):
         stream_coro = websession.get(url, headers=self._headers)
 
         if not self._stream_opts:
-            await async_aiohttp_proxy_web(self.hass, request, stream_coro)
-            return
+            return await async_aiohttp_proxy_web(
+                self.hass, request, stream_coro)
 
         response = aiohttp.web.StreamResponse()
         response.content_type = ('multipart/x-mixed-replace; '
@@ -229,15 +229,10 @@ class ProxyCamera(Camera):
                         _resize_image, image, self._stream_opts)
                     await write(image)
                     data = data[jpg_end + 2:]
-        except asyncio.CancelledError:
-            _LOGGER.debug("Stream closed by frontend.")
-            req.close()
-            response = None
-            raise
-
         finally:
-            if response is not None:
-                await response.write_eof()
+            req.close()
+
+        return response
 
     @property
     def name(self):
