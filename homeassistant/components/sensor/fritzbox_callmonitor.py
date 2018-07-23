@@ -187,7 +187,6 @@ class FritzBoxCallMonitor:
                 line = response.split("\n", 1)[0]
                 self._parse(line)
                 time.sleep(1)
-        return
 
     def _parse(self, line):
         """Parse the call information and set the sensor states."""
