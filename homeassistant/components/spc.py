@@ -56,14 +56,14 @@ def async_setup(hass, config):
     # add sensor devices for each zone (typically motion/fire/door sensors)
     zones = yield from api.get_zones()
     if zones:
-        hass.async_add_job(discovery.async_load_platform(
+        hass.async_create_task(discovery.async_load_platform(
             hass, 'binary_sensor', DOMAIN,
             {ATTR_DISCOVER_DEVICES: zones}, config))
 
     # create a separate alarm panel for each area
     areas = yield from api.get_areas()
     if areas:
-        hass.async_add_job(discovery.async_load_platform(
+        hass.async_create_task(discovery.async_load_platform(
             hass, 'alarm_control_panel', DOMAIN,
             {ATTR_DISCOVER_AREAS: areas}, config))
 

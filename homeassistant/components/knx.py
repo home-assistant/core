@@ -107,7 +107,7 @@ async def async_setup(hass, config):
             ('scene', 'Scene'),
             ('notify', 'Notification')):
         found_devices = _get_devices(hass, discovery_type)
-        hass.async_add_job(
+        hass.async_create_task(
             discovery.async_load_platform(hass, component, DOMAIN, {
                 ATTR_DISCOVER_DEVICES: found_devices
             }, config))
