@@ -117,7 +117,7 @@ class HomematicipHAP:
                      self.config_entry.data.get(HMIPC_HAPID))
 
         for component in COMPONENTS:
-            self.hass.async_add_job(
+            self.hass.async_create_task(
                 self.hass.config_entries.async_forward_entry_setup(
                     self.config_entry, component)
             )

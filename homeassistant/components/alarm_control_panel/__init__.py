@@ -187,7 +187,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_disarm, code)
+        return self.hass.async_add_executor_job(self.alarm_disarm, code)
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
@@ -198,7 +198,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_arm_home, code)
+        return self.hass.async_add_executor_job(self.alarm_arm_home, code)
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
@@ -209,7 +209,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_arm_away, code)
+        return self.hass.async_add_executor_job(self.alarm_arm_away, code)
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
@@ -220,7 +220,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_arm_night, code)
+        return self.hass.async_add_executor_job(self.alarm_arm_night, code)
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
@@ -231,7 +231,7 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_trigger, code)
+        return self.hass.async_add_executor_job(self.alarm_trigger, code)
 
     def alarm_arm_custom_bypass(self, code=None):
         """Send arm custom bypass command."""
@@ -242,7 +242,8 @@ class AlarmControlPanel(Entity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(self.alarm_arm_custom_bypass, code)
+        return self.hass.async_add_executor_job(
+            self.alarm_arm_custom_bypass, code)
 
     @property
     def state_attributes(self):

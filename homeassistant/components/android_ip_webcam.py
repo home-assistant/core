@@ -214,11 +214,11 @@ def async_setup(hass, config):
                 CONF_PASSWORD: password
             })
 
-        hass.async_add_job(discovery.async_load_platform(
+        hass.async_create_task(discovery.async_load_platform(
             hass, 'camera', 'mjpeg', mjpeg_camera, config))
 
         if sensors:
-            hass.async_add_job(discovery.async_load_platform(
+            hass.async_create_task(discovery.async_load_platform(
                 hass, 'sensor', DOMAIN, {
                     CONF_NAME: name,
                     CONF_HOST: host,
@@ -226,7 +226,7 @@ def async_setup(hass, config):
                 }, config))
 
         if switches:
-            hass.async_add_job(discovery.async_load_platform(
+            hass.async_create_task(discovery.async_load_platform(
                 hass, 'switch', DOMAIN, {
                     CONF_NAME: name,
                     CONF_HOST: host,
@@ -234,7 +234,7 @@ def async_setup(hass, config):
                 }, config))
 
         if motion:
-            hass.async_add_job(discovery.async_load_platform(
+            hass.async_create_task(discovery.async_load_platform(
                 hass, 'binary_sensor', DOMAIN, {
                     CONF_HOST: host,
                     CONF_NAME: name,

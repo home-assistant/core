@@ -127,7 +127,7 @@ async def async_setup_entry(hass, entry):
         return False
 
     for component in 'climate', 'camera', 'sensor', 'binary_sensor':
-        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             entry, component))
 
     def set_mode(service):

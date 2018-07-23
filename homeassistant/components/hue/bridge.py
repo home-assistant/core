@@ -78,7 +78,7 @@ class HueBridge:
                              host)
             return False
 
-        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             self.config_entry, 'light'))
 
         hass.services.async_register(
