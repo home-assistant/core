@@ -9,7 +9,7 @@ import logging
 
 from aiohttp import web
 import voluptuous as vol
-
+from typing import Optional
 from homeassistant.auth.util import generate_secret
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
@@ -241,7 +241,7 @@ class RachioIro:
         # Only enabled zones
         return [z for z in self._zones if z[KEY_ENABLED]]
 
-    def get_zone(self, zone_id) -> dict or None:
+    def get_zone(self, zone_id) -> Optional[dict]:
         """Return the zone with the given ID."""
         for zone in self.list_zones(include_disabled=True):
             if zone[KEY_ID] == zone_id:
