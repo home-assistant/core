@@ -496,14 +496,13 @@ class MockToggleDevice(entity.ToggleEntity):
         """Return the last call."""
         if not self.calls:
             return None
-        elif method is None:
+        if method is None:
             return self.calls[-1]
-        else:
-            try:
-                return next(call for call in reversed(self.calls)
-                            if call[0] == method)
-            except StopIteration:
-                return None
+        try:
+            return next(call for call in reversed(self.calls)
+                        if call[0] == method)
+        except StopIteration:
+            return None
 
 
 class MockConfigEntry(config_entries.ConfigEntry):

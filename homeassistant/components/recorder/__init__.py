@@ -284,7 +284,7 @@ class Recorder(threading.Thread):
                 self._close_connection()
                 self.queue.task_done()
                 return
-            elif isinstance(event, PurgeTask):
+            if isinstance(event, PurgeTask):
                 purge.purge_old_data(self, event.keep_days, event.repack)
                 self.queue.task_done()
                 continue

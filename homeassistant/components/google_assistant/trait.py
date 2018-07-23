@@ -106,9 +106,9 @@ class BrightnessTrait(_Trait):
         """Test if state is supported."""
         if domain == light.DOMAIN:
             return features & light.SUPPORT_BRIGHTNESS
-        elif domain == cover.DOMAIN:
+        if domain == cover.DOMAIN:
             return features & cover.SUPPORT_SET_POSITION
-        elif domain == media_player.DOMAIN:
+        if domain == media_player.DOMAIN:
             return features & media_player.SUPPORT_VOLUME_SET
 
         return False

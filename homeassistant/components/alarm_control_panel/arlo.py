@@ -122,10 +122,10 @@ class ArloBaseStation(AlarmControlPanel):
         """Convert Arlo mode to Home Assistant state."""
         if mode == ARMED:
             return STATE_ALARM_ARMED_AWAY
-        elif mode == DISARMED:
+        if mode == DISARMED:
             return STATE_ALARM_DISARMED
-        elif mode == self._home_mode_name:
+        if mode == self._home_mode_name:
             return STATE_ALARM_ARMED_HOME
-        elif mode == self._away_mode_name:
+        if mode == self._away_mode_name:
             return STATE_ALARM_ARMED_AWAY
         return mode

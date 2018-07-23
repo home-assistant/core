@@ -93,7 +93,7 @@ class MpcHcDevice(MediaPlayerDevice):
             return STATE_OFF
         if state == 'playing':
             return STATE_PLAYING
-        elif state == 'paused':
+        if state == 'paused':
             return STATE_PAUSED
 
         return STATE_IDLE

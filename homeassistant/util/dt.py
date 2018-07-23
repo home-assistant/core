@@ -65,7 +65,7 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
     """
     if dattim.tzinfo == UTC:
         return dattim
-    elif dattim.tzinfo is None:
+    if dattim.tzinfo is None:
         dattim = DEFAULT_TIME_ZONE.localize(dattim)  # type: ignore
 
     return dattim.astimezone(UTC)
@@ -86,7 +86,7 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
     """Convert a UTC datetime object to local time zone."""
     if dattim.tzinfo == DEFAULT_TIME_ZONE:
         return dattim
-    elif dattim.tzinfo is None:
+    if dattim.tzinfo is None:
         dattim = UTC.localize(dattim)
 
     return dattim.astimezone(DEFAULT_TIME_ZONE)

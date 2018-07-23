@@ -140,7 +140,7 @@ def async_check_config(hass):
 
     if not result:
         return "Hass.io config check API error"
-    elif result['result'] == "error":
+    if result['result'] == "error":
         return result['message']
     return None
 

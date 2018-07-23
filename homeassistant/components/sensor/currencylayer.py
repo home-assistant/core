@@ -54,8 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(CurrencylayerSensor(rest, base, variable))
     if 'error' in response.json():
         return False
-    else:
-        add_devices(sensors, True)
+    add_devices(sensors, True)
 
 
 class CurrencylayerSensor(Entity):

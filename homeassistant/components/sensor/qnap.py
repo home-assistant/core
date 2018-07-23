@@ -241,7 +241,7 @@ class QNAPCPUSensor(QNAPSensor):
         """Return the state of the sensor."""
         if self.var_id == 'cpu_temp':
             return self._api.data['system_stats']['cpu']['temp_c']
-        elif self.var_id == 'cpu_usage':
+        if self.var_id == 'cpu_usage':
             return self._api.data['system_stats']['cpu']['usage_percent']
 
 
