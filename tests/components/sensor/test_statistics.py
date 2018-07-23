@@ -175,7 +175,8 @@ class TestStatisticsSensor(unittest.TestCase):
     def test_change_rate(self):
         """Test min_age/max_age and change_rate."""
         mock_data = {
-            'return_time': datetime(2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC),
+            'return_time': datetime(2017, 8, 2, 12, 23, 42,
+                                    tzinfo=dt_util.UTC),
         }
 
         def mock_now():
@@ -200,8 +201,11 @@ class TestStatisticsSensor(unittest.TestCase):
 
             state = self.hass.states.get('sensor.test_mean')
 
-        self.assertEqual(datetime(2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC), state.attributes.get('min_age'))
-        self.assertEqual(datetime(2017, 8, 2, 12, 23 + self.count - 1, 42, tzinfo=dt_util.UTC), state.attributes.get('max_age'))
+        self.assertEqual(datetime(2017, 8, 2, 12, 23, 42, tzinfo=dt_util.UTC),
+                         state.attributes.get('min_age'))
+        self.assertEqual(datetime(2017, 8, 2, 12, 23 + self.count - 1, 42,
+                                  tzinfo=dt_util.UTC),
+                         state.attributes.get('max_age'))
         self.assertEqual(self.change_rate, state.attributes.get('change_rate'))
 
     def test_initialize_from_database(self):
