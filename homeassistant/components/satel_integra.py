@@ -98,10 +98,10 @@ def async_setup(hass, config):
                   conf,
                   conf.get(CONF_ARM_HOME_MODE))
 
-    task_control_panel = hass.async_add_job(
+    task_control_panel = hass.async_create_task(
         async_load_platform(hass, 'alarm_control_panel', DOMAIN, conf, config))
 
-    task_zones = hass.async_add_job(
+    task_zones = hass.async_create_task(
         async_load_platform(hass, 'binary_sensor', DOMAIN,
                             {CONF_ZONES: zones}, config))
 

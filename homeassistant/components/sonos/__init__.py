@@ -14,7 +14,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Sonos from a config entry."""
-    hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'media_player'))
     return True
 
@@ -23,7 +23,7 @@ async def _async_has_devices(hass):
     """Return if there are devices that can be discovered."""
     import soco
 
-    return await hass.async_add_job(soco.discover)
+    return await hass.async_add_executor_job(soco.discover)
 
 
 config_entry_flow.register_discovery_flow(DOMAIN, 'Sonos', _async_has_devices)
