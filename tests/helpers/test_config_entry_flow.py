@@ -114,3 +114,24 @@ async def test_user_init_trumps_discovery(hass, flow_conf):
 
     # Discovery flow has been aborted
     assert len(hass.config_entries.flow.async_progress()) == 0
+
+
+async def test_import_no_confirmation(hass, flow_conf):
+    """Test import requires no confirmation to setup."""
+    flow = config_entries.HANDLERS['test']()
+    flow.hass = hass
+    flow_conf['discovered'] = True
+
+    result = await flow.async_step_import(None)
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+
+
+async def test_import_single_instance(hass, flow_conf):
+    """Test import doesn't create second instance."""
+    flow = config_entries.HANDLERS['test']()
+    flow.hass = hass
+    flow_conf['discovered'] = True
+    MockConfigEntry(domain='test').add_to_hass(hass)
+
+    result = await flow.async_step_import(None)
+    assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
