@@ -1,6 +1,5 @@
 """Test MySensors base component."""
 import asyncio
-import sys
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -38,14 +37,13 @@ def mock_isdevice():
 @pytest.fixture
 def mock_mysensors():
     """Mock mysensors library."""
-    sys.modules['mysensors'] = MagicMock()
-    sys.modules['mysensors.mysensors'] = MagicMock()
-    import mysensors.mysensors as mysensors
-    mysensors.AsyncMQTTGateway = MockMQTTGateway
-    mysensors.AsyncSerialGateway = MockGateway
-    mysensors.AsyncTCPGateway = MockGateway
-
-    return mysensors
+    with patch('mysensors.mysensors.AsyncMQTTGateway',
+               side_effect=MockMQTTGateway), \
+        patch('mysensors.mysensors.AsyncSerialGateway',
+              side_effect=MockGateway), \
+            patch('mysensors.mysensors.AsyncTCPGateway',
+                  side_effect=MockGateway):
+        yield
 
 
 @pytest.fixture

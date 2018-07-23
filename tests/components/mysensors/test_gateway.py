@@ -1,15 +1,13 @@
 """Test MySensors gateway."""
 import asyncio
 import logging
-import sys
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import call, patch
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import mysensors as mysensors_comp
 from homeassistant.setup import async_setup_component
-
 from tests.common import async_fire_mqtt_message, mock_coro_func
 from tests.components.mysensors import (
     DEVICE, MockChild, MockGateway, MockMessage, MockMQTTGateway, MockNode,
@@ -39,14 +37,13 @@ def mock_isdevice():
 @pytest.fixture
 def mock_mysensors():
     """Mock mysensors library."""
-    sys.modules['mysensors'] = MagicMock()
-    sys.modules['mysensors.mysensors'] = MagicMock()
-    import mysensors.mysensors as mysensors
-    mysensors.AsyncMQTTGateway = MockMQTTGateway
-    mysensors.AsyncSerialGateway = MockGateway
-    mysensors.AsyncTCPGateway = MockGateway
-
-    return mysensors
+    with patch('mysensors.mysensors.AsyncMQTTGateway',
+               side_effect=MockMQTTGateway), \
+        patch('mysensors.mysensors.AsyncSerialGateway',
+              side_effect=MockGateway), \
+            patch('mysensors.mysensors.AsyncTCPGateway',
+                  side_effect=MockGateway):
+        yield
 
 
 @pytest.fixture
