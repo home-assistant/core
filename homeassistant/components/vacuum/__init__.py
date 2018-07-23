@@ -14,7 +14,8 @@ import voluptuous as vol
 from homeassistant.components import group
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, SERVICE_TOGGLE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_PAUSED, STATE_IDLE)
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_ON, STATE_OFF,
+    STATE_PAUSED, STATE_IDLE)
 from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -227,6 +228,11 @@ class VacuumDevice(Entity):
     @property
     def state(self):
         """Return the state of the vacuum cleaner."""
+        if self.supported_features & SUPPORT_STATE == 0:
+            if self.is_on:
+                return STATE_ON
+            else:
+                return STATE_OFF
         return None
 
     @property
