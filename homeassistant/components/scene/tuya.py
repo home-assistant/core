@@ -38,8 +38,3 @@ class TuyaScene(TuyaDevice, Scene):
     def activate(self):
         """Activate the scene."""
         self.tuya.activate()
-
-    @property
-    def should_poll(self):
-        """Scene has no data."""
-        return False
