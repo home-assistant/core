@@ -59,7 +59,8 @@ def mock_gw_ready(loop):
 async def test_no_mqtt_config(hass, mock_mysensors):
     """Test setup of mysensors with mqtt device but without mqtt config."""
     config = {'mysensors': {
-        'gateways': [{'device': 'mqtt'}], 'version': '2.0',
+        'gateways': [{'device': 'mqtt'}],
+        'version': '2.0',
         'persistence': False}}
 
     with patch('homeassistant.components.mysensors.gateway'
@@ -73,7 +74,9 @@ async def test_no_mqtt_config(hass, mock_mysensors):
 async def test_bad_device(hass, mock_mysensors):
     """Test setup of mysensors with bad device referens."""
     config = {'mysensors': {
-        'gateways': [{'device': ''}], 'version': '2.0', 'persistence': False}}
+        'gateways': [{'device': ''}],
+        'version': '2.0',
+        'persistence': False}}
 
     with patch('homeassistant.components.mysensors.gateway.cv.isdevice',
                side_effect=vol.Invalid('Bad device')):
@@ -87,7 +90,8 @@ async def test_win_device(hass, mock_mysensors, mock_gw_ready):
     """Test setup of mysensors with windows serial device."""
     config = {'mysensors': {
         'gateways': [{'device': 'COM4'}],
-        'version': '2.0', 'persistence': False}}
+        'version': '2.0',
+        'persistence': False}}
 
     with patch('homeassistant.components.mysensors.gateway.sys.platform',
                return_value='win32'):
@@ -103,7 +107,8 @@ async def test_bad_win_device(hass, mock_mysensors):
     """Test setup of mysensors with bad windows serial device."""
     config = {'mysensors': {
         'gateways': [{'device': 'bad'}],
-        'version': '2.0', 'persistence': False}}
+        'version': '2.0',
+        'persistence': False}}
 
     with patch('homeassistant.components.mysensors.gateway.sys.platform',
                return_value='win32'):
@@ -119,7 +124,8 @@ async def test_persistence_file_not_all(hass, mock_mysensors):
         'gateways': [
             {'device': '/dev/ttyACM0', 'persistence_file': 'test0.json'},
             {'device': '/dev/ttyACM1'}],
-        'version': '2.0', 'persistence': True}}
+        'version': '2.0',
+        'persistence': True}}
     res = await async_setup_component(hass, 'mysensors', config)
     assert not res
 
@@ -130,7 +136,8 @@ async def test_persistence_file_unique(hass, mock_mysensors):
         'gateways': [
             {'device': '/dev/ttyACM0', 'persistence_file': 'test0.json'},
             {'device': '/dev/ttyACM1', 'persistence_file': 'test0.json'}],
-        'version': '2.0', 'persistence': True}}
+        'version': '2.0',
+        'persistence': True}}
     res = await async_setup_component(hass, 'mysensors', config)
     assert not res
 
@@ -140,7 +147,8 @@ async def test_bad_persistence_file(hass, mock_mysensors):
     config = {'mysensors': {
         'gateways': [
             {'device': '/dev/ttyACM0', 'persistence_file': 'test.bad'}],
-        'version': '2.0', 'persistence': True}}
+        'version': '2.0',
+        'persistence': True}}
     res = await async_setup_component(hass, 'mysensors', config)
     assert not res
 
@@ -150,7 +158,8 @@ async def test_old_debug_option(
     """Test persistence bad file."""
     config = {'mysensors': {
         'gateways': [{'device': DEVICE}], 'version': '2.0',
-        'persistence': False, 'debug': True}}
+        'persistence': False,
+        'debug': True}}
     res = await async_setup_component(hass, 'mysensors', config)
     assert res
     await hass.async_block_till_done()

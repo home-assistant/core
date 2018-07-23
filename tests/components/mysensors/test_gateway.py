@@ -73,7 +73,8 @@ async def test_setup(gateway):
 async def test_domain_name_device(hass, mock_mysensors, mock_gw_ready):
     """Test setup of mysensors with domain name device."""
     config = {'mysensors': {
-        'gateways': [{'device': 'domain.com'}], 'version': '2.0',
+        'gateways': [{'device': 'domain.com'}],
+        'version': '2.0',
         'persistence': False}}
 
     with patch('homeassistant.components.mysensors.cv.isdevice',
@@ -90,7 +91,8 @@ async def test_domain_name_device(hass, mock_mysensors, mock_gw_ready):
 async def test_mqtt_device(hass, caplog, mock_mysensors, mqtt_mock):
     """Test setup of mysensors with mqtt device."""
     config = {'mysensors': {
-        'gateways': [{'device': 'mqtt'}], 'version': '2.0',
+        'gateways': [{'device': 'mqtt'}],
+        'version': '2.0',
         'persistence': False}}
 
     res = await async_setup_component(hass, 'mysensors', config)
@@ -134,7 +136,8 @@ async def test_persistence(
     """Test MySensors gateway persistence."""
     config = {'mysensors': {
         'gateways': [{'device': DEVICE, 'persistence_file': 'test.json'}],
-        'version': '2.0', 'persistence': True}}
+        'version': '2.0',
+        'persistence': True}}
     res = await async_setup_component(hass, 'mysensors', config)
     assert res
     gateway = get_gateway(hass)
