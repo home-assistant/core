@@ -13,8 +13,10 @@ import voluptuous as vol
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA, DOMAIN, PLATFORM_SCHEMA, SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VACUUM_SERVICE_SCHEMA, VacuumDevice)
+    SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STOP,
+    SUPPORT_STATE, VACUUM_SERVICE_SCHEMA, VacuumDevice,
+    STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE, STATE_RETURNING,
+    STATE_ERROR)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
@@ -77,11 +79,25 @@ SERVICE_TO_METHOD = {
         'schema': SERVICE_SCHEMA_REMOTE_CONTROL},
 }
 
-SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
+SUPPORT_XIAOMI = SUPPORT_STATE | SUPPORT_PAUSE | \
                  SUPPORT_STOP | SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | \
                  SUPPORT_SEND_COMMAND | SUPPORT_LOCATE | \
-                 SUPPORT_STATUS | SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT
+                 SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT
 
+
+STATE_CODE_TO_STATE = {
+    3: STATE_IDLE,
+    5: STATE_CLEANING,
+    6: STATE_RETURNING,
+    8: STATE_DOCKED,
+    9: STATE_ERROR,
+    10: STATE_PAUSED,
+    11: STATE_CLEANING,
+    12: STATE_ERROR,
+    15: STATE_RETURNING,
+    16: STATE_CLEANING,
+    17: STATE_CLEANING,
+}
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
@@ -144,7 +160,6 @@ class MiroboVacuum(VacuumDevice):
         self._vacuum = vacuum
 
         self.vacuum_state = None
-        self._is_on = False
         self._available = False
 
         self.consumable_state = None
@@ -157,10 +172,16 @@ class MiroboVacuum(VacuumDevice):
         return self._name
 
     @property
-    def status(self):
+    def state(self):
         """Return the status of the vacuum cleaner."""
         if self.vacuum_state is not None:
-            return self.vacuum_state.state
+            try:
+                return STATE_CODE_TO_STATE[int(self.vacuum_state.state_code)]
+            except KeyError:
+                _LOGGER.error("STATE not supported: %s, state_code: %s, please report",
+                              self.vacuum_state.state,
+                              self.vacuum_state.state_code)
+                return None
 
     @property
     def battery_level(self):
@@ -218,11 +239,6 @@ class MiroboVacuum(VacuumDevice):
         return attrs
 
     @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._is_on
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._available
@@ -244,25 +260,16 @@ class MiroboVacuum(VacuumDevice):
             return False
 
     @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    def async_start(self, **kwargs):
         """Turn the vacuum on."""
-        is_on = yield from self._try_command(
+        self._try_command(
             "Unable to start the vacuum: %s", self._vacuum.start)
-        self._is_on = is_on
-
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
-        """Turn the vacuum off and return to home."""
-        yield from self.async_stop()
-        yield from self.async_return_to_base()
 
     @asyncio.coroutine
     def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
-        stopped = yield from self._try_command(
+        self._try_command(
             "Unable to stop: %s", self._vacuum.stop)
-        if stopped:
-            self._is_on = False
 
     @asyncio.coroutine
     def async_set_fan_speed(self, fan_speed, **kwargs):
@@ -284,19 +291,17 @@ class MiroboVacuum(VacuumDevice):
     @asyncio.coroutine
     def async_start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
-        if self.vacuum_state and self.is_on:
+        if self.vacuum_state and self.state == STATE_CLEANING:
             yield from self._try_command(
                 "Unable to set start/pause: %s", self._vacuum.pause)
         else:
-            yield from self.async_turn_on()
+            yield from self.async_start()
 
     @asyncio.coroutine
     def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        return_home = yield from self._try_command(
+        self._try_command(
             "Unable to return home: %s", self._vacuum.home)
-        if return_home:
-            self._is_on = False
 
     @asyncio.coroutine
     def async_clean_spot(self, **kwargs):
@@ -365,7 +370,6 @@ class MiroboVacuum(VacuumDevice):
             self.clean_history = self._vacuum.clean_history()
             self.dnd_state = self._vacuum.dnd_status()
 
-            self._is_on = state.is_on
             self._available = True
         except OSError as exc:
             _LOGGER.error("Got OSError while fetching the state: %s", exc)
