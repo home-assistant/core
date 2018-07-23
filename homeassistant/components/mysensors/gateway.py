@@ -196,7 +196,7 @@ async def _gw_start(hass, gateway):
     if gateway.device == 'mqtt':
         # Gatways connected via mqtt doesn't send gateway ready message.
         return
-    gateway_ready = asyncio.Future(loop=hass.loop)
+    gateway_ready = asyncio.Future()
     gateway_ready_key = MYSENSORS_GATEWAY_READY.format(id(gateway))
     hass.data[gateway_ready_key] = gateway_ready
 
