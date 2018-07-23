@@ -66,7 +66,7 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
             active = self._home.get_security_zones_activation()
             if active == (True, True):
                 return STATE_ALARM_ARMED_AWAY
-            elif active == (False, True):
+            if active == (False, True):
                 return STATE_ALARM_ARMED_HOME
 
         return STATE_ALARM_DISARMED

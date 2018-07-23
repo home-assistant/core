@@ -107,7 +107,7 @@ class TomatoDeviceScanner(DeviceScanner):
                             json.loads(value.replace("'", '"'))
                 return True
 
-            elif response.status_code == 401:
+            if response.status_code == 401:
                 # Authentication error
                 _LOGGER.exception((
                     "Failed to authenticate, "

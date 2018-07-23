@@ -112,8 +112,7 @@ class OctoPrintSensor(Entity):
             if self._state is None:
                 self._state = 0
             return round(self._state, 2)
-        else:
-            return self._state
+        return self._state
 
     @property
     def unit_of_measurement(self):

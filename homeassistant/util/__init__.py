@@ -56,7 +56,7 @@ def repr_helper(inp: Any) -> str:
         return ", ".join(
             repr_helper(key)+"="+repr_helper(item) for key, item
             in inp.items())
-    elif isinstance(inp, datetime):
+    if isinstance(inp, datetime):
         return as_local(inp).isoformat()
 
     return str(inp)
