@@ -14,9 +14,7 @@ from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA, DOMAIN, PLATFORM_SCHEMA, SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP,
-    SUPPORT_START, VACUUM_SERVICE_SCHEMA, VacuumDevice,
-    STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE, STATE_RETURNING,
-    STATE_ERROR)
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, VACUUM_SERVICE_SCHEMA, VacuumDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
@@ -79,24 +77,10 @@ SERVICE_TO_METHOD = {
         'schema': SERVICE_SCHEMA_REMOTE_CONTROL},
 }
 
-SUPPORT_XIAOMI = SUPPORT_START | SUPPORT_PAUSE | \
+SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                  SUPPORT_STOP | SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | \
                  SUPPORT_SEND_COMMAND | SUPPORT_LOCATE | \
                  SUPPORT_STATUS | SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT
-
-STATE_CODE_TO_STATE = {
-    3: STATE_IDLE,
-    5: STATE_CLEANING,
-    6: STATE_RETURNING,
-    8: STATE_DOCKED,
-    9: STATE_ERROR,
-    10: STATE_PAUSED,
-    11: STATE_CLEANING,
-    12: STATE_ERROR,
-    15: STATE_RETURNING,
-    16: STATE_CLEANING,
-    17: STATE_CLEANING,
-}
 
 
 @asyncio.coroutine
@@ -173,16 +157,10 @@ class MiroboVacuum(VacuumDevice):
         return self._name
 
     @property
-    def state(self):
+    def status(self):
         """Return the status of the vacuum cleaner."""
         if self.vacuum_state is not None:
-            try:
-                return STATE_CODE_TO_STATE[int(self.vacuum_state.state_code)]
-            except KeyError:
-                _LOGGER.debug("STATE not supported: %s, state_code: %s",
-                              self.vacuum_state.state,
-                              self.vacuum_state.state_code)
-                return None
+            return self.vacuum_state.state
 
     @property
     def battery_level(self):
