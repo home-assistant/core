@@ -88,7 +88,7 @@ async def async_setup(hass, config):
                 service = device.find_first_service(IP_SERVICE)
             if _service['serviceType'] == CIC_SERVICE:
                 unit = config.get(CONF_UNITS)
-                hass.async_add_job(discovery.async_load_platform(
+                hass.async_create_task(discovery.async_load_platform(
                     hass, 'sensor', DOMAIN, {'unit': unit}, config))
     except UpnpSoapError as error:
         _LOGGER.error(error)

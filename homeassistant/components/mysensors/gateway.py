@@ -178,7 +178,7 @@ async def _discover_persistent_devices(hass, gateway):
 @callback
 def _discover_mysensors_platform(hass, platform, new_devices):
     """Discover a MySensors platform."""
-    task = hass.async_add_job(discovery.async_load_platform(
+    task = hass.async_create_task(discovery.async_load_platform(
         hass, platform, DOMAIN,
         {ATTR_DEVICES: new_devices, CONF_NAME: DOMAIN}))
     return task

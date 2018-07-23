@@ -91,7 +91,7 @@ async def test_setup_entry_successful(hass):
     """Test setup entry is successful."""
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
-    with patch.object(hass, 'async_add_job') as mock_add_job, \
+    with patch.object(hass, 'async_create_task') as mock_add_job, \
         patch.object(hass, 'config_entries') as mock_config_entries, \
         patch('pydeconz.DeconzSession.async_load_parameters',
               return_value=mock_coro(True)):

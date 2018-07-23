@@ -218,10 +218,10 @@ def _setup_atv(hass, atv_config):
         ATTR_POWER: power
     }
 
-    hass.async_add_job(discovery.async_load_platform(
+    hass.async_create_task(discovery.async_load_platform(
         hass, 'media_player', DOMAIN, atv_config))
 
-    hass.async_add_job(discovery.async_load_platform(
+    hass.async_create_task(discovery.async_load_platform(
         hass, 'remote', DOMAIN, atv_config))
 
 
