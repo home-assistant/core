@@ -130,3 +130,68 @@ async def test_cors_on_token(hass, aiohttp_client):
         'origin': 'http://example.com'
     })
     assert resp.headers['Access-Control-Allow-Origin'] == 'http://example.com'
+
+
+async def test_refresh_token_system_generated(hass, aiohttp_client):
+    """Test that we can get access tokens for system generated user."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    user = await hass.auth.async_create_system_user('Test System')
+    refresh_token = await hass.auth.async_create_refresh_token(user, None)
+
+    resp = await client.post('/auth/token', data={
+        'client_id': 'https://this-is-not-allowed-for-system-users.com/',
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token.token,
+    })
+
+    assert resp.status == 400
+    result = await resp.json()
+    assert result['error'] == 'invalid_request'
+
+    resp = await client.post('/auth/token', data={
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token.token,
+    })
+
+    assert resp.status == 200
+    tokens = await resp.json()
+    assert hass.auth.async_get_access_token(tokens['access_token']) is not None
+
+
+async def test_refresh_token_different_client_id(hass, aiohttp_client):
+    """Test that we verify client ID."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    user = await hass.auth.async_create_user('Test User')
+    refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
+
+    # No client ID
+    resp = await client.post('/auth/token', data={
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token.token,
+    })
+
+    assert resp.status == 400
+    result = await resp.json()
+    assert result['error'] == 'invalid_request'
+
+    # Different client ID
+    resp = await client.post('/auth/token', data={
+        'client_id': 'http://example-different.com',
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token.token,
+    })
+
+    assert resp.status == 400
+    result = await resp.json()
+    assert result['error'] == 'invalid_request'
+
+    # Correct
+    resp = await client.post('/auth/token', data={
+        'client_id': CLIENT_ID,
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token.token,
+    })
+
+    assert resp.status == 200
+    tokens = await resp.json()
+    assert hass.auth.async_get_access_token(tokens['access_token']) is not None
