@@ -14,9 +14,7 @@ from homeassistant.components.mqtt import MqttAvailability
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,
     SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND,
-    SUPPORT_STATE, SUPPORT_STOP, SUPPORT_START, STATE_CLEANING,
-    STATE_DOCKED, STATE_PAUSED,
-    STATE_IDLE, STATE_RETURNING, STATE_ERROR,
+    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     VacuumDevice)
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import callback
@@ -28,13 +26,14 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['mqtt']
 
 SERVICE_TO_STRING = {
-    SUPPORT_START: 'turn_on',
+    SUPPORT_TURN_ON: 'turn_on',
+    SUPPORT_TURN_OFF: 'turn_off',
     SUPPORT_PAUSE: 'pause',
     SUPPORT_STOP: 'stop',
     SUPPORT_RETURN_HOME: 'return_home',
     SUPPORT_FAN_SPEED: 'fan_speed',
     SUPPORT_BATTERY: 'battery',
-    SUPPORT_STATE: 'state',
+    SUPPORT_STATUS: 'status',
     SUPPORT_SEND_COMMAND: 'send_command',
     SUPPORT_LOCATE: 'locate',
     SUPPORT_CLEAN_SPOT: 'clean_spot',
@@ -60,8 +59,8 @@ def strings_to_services(strings):
     return services
 
 
-DEFAULT_SERVICES = SUPPORT_START | SUPPORT_STOP |\
-                   SUPPORT_RETURN_HOME | SUPPORT_STATE | SUPPORT_BATTERY |\
+DEFAULT_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_STOP |\
+                   SUPPORT_RETURN_HOME | SUPPORT_STATUS | SUPPORT_BATTERY |\
                    SUPPORT_CLEAN_SPOT
 ALL_SERVICES = DEFAULT_SERVICES | SUPPORT_PAUSE | SUPPORT_LOCATE |\
                SUPPORT_FAN_SPEED | SUPPORT_SEND_COMMAND
@@ -261,7 +260,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         self._cleaning = False
         self._charging = False
         self._docked = False
-        self._state = 'Unknown'
+        self._status = 'Unknown'
         self._battery_level = 0
         self._fan_speed = 'unknown'
 
@@ -307,11 +306,14 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
                     self._docked = cv.boolean(docked)
 
             if self._docked:
-                self._state = STATE_DOCKED
+                if self._charging:
+                    self._status = "Docked & Charging"
+                else:
+                    self._status = "Docked"
             elif self._cleaning:
-                self._state = STATE_CLEANING
+                self._status = "Cleaning"
             else:
-                self._state = STATE_IDLE
+                self._status = "Stopped"
 
             if topic == self._fan_speed_topic and self._fan_speed_template:
                 fan_speed = self._fan_speed_template\
@@ -343,12 +345,17 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         return False
 
     @property
-    def state(self):
+    def is_on(self):
+        """Return true if vacuum is on."""
+        return self._cleaning
+
+    @property
+    def status(self):
         """Return a status string for the vacuum."""
-        if self.supported_features & SUPPORT_STATE == 0:
+        if self.supported_features & SUPPORT_STATUS == 0:
             return
 
-        return self._state
+        return self._status
 
     @property
     def fan_speed(self):
@@ -388,6 +395,28 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         return self._supported_features
 
     @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
+        """Turn the vacuum on."""
+        if self.supported_features & SUPPORT_TURN_ON == 0:
+            return
+
+        mqtt.async_publish(self.hass, self._command_topic,
+                           self._payload_turn_on, self._qos, self._retain)
+        self._status = 'Cleaning'
+        self.async_schedule_update_ha_state()
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
+        """Turn the vacuum off."""
+        if self.supported_features & SUPPORT_TURN_OFF == 0:
+            return
+
+        mqtt.async_publish(self.hass, self._command_topic,
+                           self._payload_turn_off, self._qos, self._retain)
+        self._status = 'Turning Off'
+        self.async_schedule_update_ha_state()
+
+    @asyncio.coroutine
     def async_stop(self, **kwargs):
         """Stop the vacuum."""
         if self.supported_features & SUPPORT_STOP == 0:
@@ -395,7 +424,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
         mqtt.async_publish(self.hass, self._command_topic, self._payload_stop,
                            self._qos, self._retain)
-        self._state = STATE_IDLE
+        self._status = 'Stopping the current task'
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -406,7 +435,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payload_clean_spot, self._qos, self._retain)
-        self._state = STATE_CLEANING
+        self._status = "Cleaning spot"
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -417,6 +446,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payload_locate, self._qos, self._retain)
+        self._status = "Hi, I'm over here!"
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -427,10 +457,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
 
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payload_start_pause, self._qos, self._retain)
-        if self._state == STATE_CLEANING:
-            self._state = STATE_PAUSED
-        else:
-            self._state = STATE_CLEANING
+        self._status = 'Pausing/Resuming cleaning...'
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -442,7 +469,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         mqtt.async_publish(self.hass, self._command_topic,
                            self._payload_return_to_base, self._qos,
                            self._retain)
-        self._state = STATE_RETURNING
+        self._status = 'Returning home...'
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -456,6 +483,7 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         mqtt.async_publish(
             self.hass, self._set_fan_speed_topic, fan_speed, self._qos,
             self._retain)
+        self._status = "Setting fan to {}...".format(fan_speed)
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
@@ -467,4 +495,5 @@ class MqttVacuum(MqttAvailability, VacuumDevice):
         mqtt.async_publish(
             self.hass, self._send_command_topic, command, self._qos,
             self._retain)
+        self._status = "Sending command {}...".format(command)
         self.async_schedule_update_ha_state()

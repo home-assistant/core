@@ -10,9 +10,8 @@ import logging
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY, SUPPORT_FAN_SPEED, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
-    SUPPORT_STATE, SUPPORT_STOP, SUPPORT_START,
-    STATE_CLEANING, STATE_DOCKED, STATE_PAUSED,
-    STATE_IDLE, STATE_RETURNING, STATE_ERROR, VacuumDevice)
+    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    VacuumDevice)
 from homeassistant.helpers.icon import icon_for_battery_level
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,8 +24,8 @@ DEPENDENCIES = ['dyson']
 
 DYSON_360_EYE_DEVICES = "dyson_360_eye_devices"
 
-SUPPORT_DYSON = SUPPORT_START | SUPPORT_PAUSE | \
-                SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | SUPPORT_STATE | \
+SUPPORT_DYSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
+                SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | SUPPORT_STATUS | \
                 SUPPORT_BATTERY | SUPPORT_STOP
 
 
@@ -81,20 +80,21 @@ class Dyson360EyeDevice(VacuumDevice):
         return self._device.name
 
     @property
-    def state(self):
+    def status(self):
         """Return the status of the vacuum cleaner."""
         from libpurecoollink.const import Dyson360EyeMode
         dyson_labels = {
-            Dyson360EyeMode.INACTIVE_CHARGING: STATE_DOCKED,
-            Dyson360EyeMode.INACTIVE_CHARGED: STATE_DOCKED,
-            Dyson360EyeMode.FULL_CLEAN_PAUSED: STATE_PAUSED,
-            Dyson360EyeMode.FULL_CLEAN_RUNNING: STATE_CLEANING,
-            Dyson360EyeMode.FULL_CLEAN_ABORTED: STATE_RETURNING,
-            Dyson360EyeMode.FULL_CLEAN_INITIATED: STATE_CLEANING,
-            Dyson360EyeMode.FAULT_USER_RECOVERABLE: STATE_ERROR,
-            Dyson360EyeMode.FAULT_REPLACE_ON_DOCK: STATE_ERROR,
-            Dyson360EyeMode.FULL_CLEAN_FINISHED: STATE_RETURNING,
-            Dyson360EyeMode.FULL_CLEAN_NEEDS_CHARGE: STATE_RETURNING
+            Dyson360EyeMode.INACTIVE_CHARGING: "Stopped - Charging",
+            Dyson360EyeMode.INACTIVE_CHARGED: "Stopped - Charged",
+            Dyson360EyeMode.FULL_CLEAN_PAUSED: "Paused",
+            Dyson360EyeMode.FULL_CLEAN_RUNNING: "Cleaning",
+            Dyson360EyeMode.FULL_CLEAN_ABORTED: "Returning home",
+            Dyson360EyeMode.FULL_CLEAN_INITIATED: "Start cleaning",
+            Dyson360EyeMode.FAULT_USER_RECOVERABLE: "Error - device blocked",
+            Dyson360EyeMode.FAULT_REPLACE_ON_DOCK:
+                "Error - Replace device on dock",
+            Dyson360EyeMode.FULL_CLEAN_FINISHED: "Finished",
+            Dyson360EyeMode.FULL_CLEAN_NEEDS_CHARGE: "Need charging"
         }
         return dyson_labels.get(
             self._device.state.state, self._device.state.state)
@@ -127,6 +127,17 @@ class Dyson360EyeDevice(VacuumDevice):
         }
 
     @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        from libpurecoollink.const import Dyson360EyeMode
+
+        return self._device.state.state in [
+            Dyson360EyeMode.FULL_CLEAN_INITIATED,
+            Dyson360EyeMode.FULL_CLEAN_ABORTED,
+            Dyson360EyeMode.FULL_CLEAN_RUNNING
+        ]
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return True
@@ -145,6 +156,21 @@ class Dyson360EyeDevice(VacuumDevice):
             Dyson360EyeMode.INACTIVE_CHARGING]
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging)
+
+    def turn_on(self, **kwargs):
+        """Turn the vacuum on."""
+        from libpurecoollink.const import Dyson360EyeMode
+
+        _LOGGER.debug("Turn on device %s", self.name)
+        if self._device.state.state in [Dyson360EyeMode.FULL_CLEAN_PAUSED]:
+            self._device.resume()
+        else:
+            self._device.start()
+
+    def turn_off(self, **kwargs):
+        """Turn the vacuum off and return to home."""
+        _LOGGER.debug("Turn off device %s", self.name)
+        self._device.pause()
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
