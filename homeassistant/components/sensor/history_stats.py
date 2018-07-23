@@ -294,7 +294,7 @@ class HistoryStatsHelper:
         minutes, seconds = divmod(seconds, 60)
         if days > 0:
             return '%dd %dh %dm' % (days, hours, minutes)
-        elif hours > 0:
+        if hours > 0:
             return '%dh %dm' % (hours, minutes)
         return '%dm' % minutes
 

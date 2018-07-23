@@ -51,17 +51,17 @@ class MoonSensor(Entity):
         """Return the state of the device."""
         if self._state == 0:
             return 'new_moon'
-        elif self._state < 7:
+        if self._state < 7:
             return 'waxing_crescent'
-        elif self._state == 7:
+        if self._state == 7:
             return 'first_quarter'
-        elif self._state < 14:
+        if self._state < 14:
             return 'waxing_gibbous'
-        elif self._state == 14:
+        if self._state == 14:
             return 'full_moon'
-        elif self._state < 21:
+        if self._state < 21:
             return 'waning_gibbous'
-        elif self._state == 21:
+        if self._state == 21:
             return 'last_quarter'
         return 'waning_crescent'
 

@@ -217,7 +217,7 @@ class ChannelsPlayer(MediaPlayerDevice):
         """Image url of current playing media."""
         if self.now_playing_image_url:
             return self.now_playing_image_url
-        elif self.channel_image_url:
+        if self.channel_image_url:
             return self.channel_image_url
 
         return 'https://getchannels.com/assets/img/icon-1024.png'

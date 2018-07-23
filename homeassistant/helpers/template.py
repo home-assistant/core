@@ -51,7 +51,7 @@ def render_complex(value, variables=None):
     if isinstance(value, list):
         return [render_complex(item, variables)
                 for item in value]
-    elif isinstance(value, dict):
+    if isinstance(value, dict):
         return {key: render_complex(item, variables)
                 for key, item in value.items()}
     return value.async_render(variables)
@@ -318,7 +318,7 @@ class TemplateMethods:
             if point_state is None:
                 _LOGGER.warning("Closest:Unable to find state %s", args[0])
                 return None
-            elif not loc_helper.has_location(point_state):
+            if not loc_helper.has_location(point_state):
                 _LOGGER.warning(
                     "Closest:State does not contain valid location: %s",
                     point_state)
@@ -420,7 +420,7 @@ class TemplateMethods:
         """Return state or entity_id if given."""
         if isinstance(entity_id_or_state, State):
             return entity_id_or_state
-        elif isinstance(entity_id_or_state, str):
+        if isinstance(entity_id_or_state, str):
             return self._hass.states.get(entity_id_or_state)
         return None
 

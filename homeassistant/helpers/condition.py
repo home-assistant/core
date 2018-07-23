@@ -257,13 +257,13 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
         return False
 
-    elif before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
+    if before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
         return False
 
     if after == SUN_EVENT_SUNRISE and utcnow < sunrise + after_offset:
         return False
 
-    elif after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
+    if after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
         return False
 
     return True
