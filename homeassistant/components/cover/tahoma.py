@@ -213,11 +213,17 @@ class TahomaCover(TahomaDevice, CoverDevice):
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self.apply_action('open')
+        if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
+            self.apply_action('close')
+        else:
+            self.apply_action('open')
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self.apply_action('close')
+        if self.tahoma_device.type == 'io:HorizontalAwningIOComponent':
+            self.apply_action('open')
+        else:
+            self.apply_action('close')
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
