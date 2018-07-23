@@ -631,7 +631,7 @@ async def test_entity_registry_updates_entity_id(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get('test_domain.world') is None
-    state = hass.states.get('test_domain.planet')
+    assert hass.states.get('test_domain.planet') is not None
 
 
 async def test_entity_registry_updates_invalid_entity_id(hass):
@@ -674,5 +674,5 @@ async def test_entity_registry_updates_invalid_entity_id(hass):
     await hass.async_block_till_done()
 
     assert hass.states.get('test_domain.world') is not None
-    state = hass.states.get('invalid_entity_id') is None
-    state = hass.states.get('diff_domain.world') is None
+    assert hass.states.get('invalid_entity_id') is None
+    assert hass.states.get('diff_domain.world') is None
