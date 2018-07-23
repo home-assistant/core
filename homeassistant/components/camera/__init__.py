@@ -301,32 +301,23 @@ class Camera(Entity):
 
         last_image = None
 
-        try:
-            while True:
-                img_bytes = await self.async_camera_image()
-                if not img_bytes:
-                    break
+        while True:
+            img_bytes = await self.async_camera_image()
+            if not img_bytes:
+                break
 
-                if img_bytes and img_bytes != last_image:
+            if img_bytes and img_bytes != last_image:
+                await write_to_mjpeg_stream(img_bytes)
+
+                # Chrome seems to always ignore first picture,
+                # print it twice.
+                if last_image is None:
                     await write_to_mjpeg_stream(img_bytes)
+                last_image = img_bytes
 
-                    # Chrome seems to always ignore first picture,
-                    # print it twice.
-                    if last_image is None:
-                        await write_to_mjpeg_stream(img_bytes)
+            await asyncio.sleep(interval)
 
-                    last_image = img_bytes
-
-                await asyncio.sleep(interval)
-
-        except asyncio.CancelledError:
-            _LOGGER.debug("Stream closed by frontend.")
-            response = None
-            raise
-
-        finally:
-            if response is not None:
-                await response.write_eof()
+        return response
 
     async def handle_async_mjpeg_stream(self, request):
         """Serve an HTTP MJPEG stream from the camera.
@@ -409,10 +400,9 @@ class CameraView(HomeAssistantView):
                          request.query.get('token') in camera.access_tokens)
 
         if not authenticated:
-            return web.Response(status=401)
+            raise web.HTTPUnauthorized()
 
-        response = await self.handle(request, camera)
-        return response
+        return await self.handle(request, camera)
 
     async def handle(self, request, camera):
         """Handle the camera request."""
@@ -435,7 +425,7 @@ class CameraImageView(CameraView):
                 return web.Response(body=image,
                                     content_type=camera.content_type)
 
-        return web.Response(status=500)
+        raise web.HTTPInternalServerError()
 
 
 class CameraMjpegStream(CameraView):
@@ -448,8 +438,7 @@ class CameraMjpegStream(CameraView):
         """Serve camera stream, possibly with interval."""
         interval = request.query.get('interval')
         if interval is None:
-            await camera.handle_async_mjpeg_stream(request)
-            return
+            return await camera.handle_async_mjpeg_stream(request)
 
         try:
             # Compose camera stream from stills
@@ -457,10 +446,9 @@ class CameraMjpegStream(CameraView):
             if interval < MIN_STREAM_INTERVAL:
                 raise ValueError("Stream interval must be be > {}"
                                  .format(MIN_STREAM_INTERVAL))
-            await camera.handle_async_still_stream(request, interval)
-            return
+            return await camera.handle_async_still_stream(request, interval)
         except ValueError:
-            return web.Response(status=400)
+            raise web.HTTPBadRequest()
 
 
 @callback
