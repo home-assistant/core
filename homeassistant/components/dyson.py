@@ -47,7 +47,7 @@ def setup(hass, config):
     if DYSON_DEVICES not in hass.data:
         hass.data[DYSON_DEVICES] = []
 
-    from libpurecoollink.dyson import DysonAccount
+    from .lib.libpurecoollink.dyson import DysonAccount
     dyson_account = DysonAccount(config[DOMAIN].get(CONF_USERNAME),
                                  config[DOMAIN].get(CONF_PASSWORD),
                                  config[DOMAIN].get(CONF_LANGUAGE))

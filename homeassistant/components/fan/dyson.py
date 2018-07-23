@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import (
-    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity)
+    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity, SUPPORT_AUTO)
 from homeassistant.const import CONF_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -32,17 +32,22 @@ DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dyson fan components."""
-    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+    from ..lib.libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+    from ..lib.libpurecoollink.dyson_pure_cool import DysonPureCool
 
     _LOGGER.debug("Creating new Dyson fans")
     if DYSON_FAN_DEVICES not in hass.data:
         hass.data[DYSON_FAN_DEVICES] = []
 
     # Get Dyson Devices from parent component
-    for device in [d for d in hass.data[DYSON_DEVICES] if
-                   isinstance(d, DysonPureCoolLink)]:
-        dyson_entity = DysonPureCoolLinkDevice(hass, device)
-        hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
+    for device in hass.data[DYSON_DEVICES]:
+
+        if isinstance(device, DysonPureCool):
+            dyson_entity = DysonPureCoolDevice(hass, device)
+            hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
+        elif isinstance(device, DysonPureCoolLink):
+            dyson_entity = DysonPureCoolLinkDevice(hass, device)
+            hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
     add_devices(hass.data[DYSON_FAN_DEVICES])
 
@@ -100,7 +105,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         """Return the display name of this fan."""
         return self._device.name
 
-    def set_speed(self: ToggleEntity, speed: str) -> None:
+    def set_speed(self, speed: str) -> None:
         """Set the speed of the fan. Never called ??."""
         from libpurecoollink.const import FanSpeed, FanMode
 
@@ -233,3 +238,129 @@ class DysonPureCoolLinkDevice(FanEntity):
     def supported_features(self: ToggleEntity) -> int:
         """Flag supported features."""
         return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
+
+
+class DysonPureCoolDevice(FanEntity):
+    """Representation of a Dyson fan."""
+
+    def __init__(self, hass, device):
+        """Initialize the fan."""
+        _LOGGER.debug("Creating device %s", device.name)
+        self.hass = hass
+        self._device = device
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        self.hass.async_add_job(
+            self._device.add_message_listener, self.on_message)
+
+    def on_message(self, message):
+        """Call when new messages received from the fan."""
+        from ..lib.libpurecoollink.dyson_pure_state_v2 import DysonPureCoolV2State
+
+        if isinstance(message, DysonPureCoolV2State):
+            _LOGGER.debug("Message received for fan device %s: %s", self.name,
+                          message)
+            self.schedule_update_ha_state()
+
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    @property
+    def name(self):
+        """Return the display name of this fan."""
+        return self._device.name
+
+    def set_speed(self, speed: str) -> None:
+        """Set the speed of the fan. Never called ??."""
+        from ..lib.libpurecoollink.const import FanSpeed
+
+        _LOGGER.debug("Set fan speed to: %s", speed)
+
+        self._device.set_fan_speed(FanSpeed('{0:04d}'.format(int(speed))))
+
+    def turn_on(self, speed: str = None) -> None:
+        """Turn on the fan."""
+        from ..lib.libpurecoollink.const import FanSpeed
+
+        _LOGGER.debug("Turn on fan %s", self.name)
+
+        if speed is not None:
+            self._device.set_fan_speed(FanSpeed('{0:04d}'.format(int(speed))))
+        else:
+            self._device.turn_on()
+
+    def turn_off(self, *args, **kwargs) -> None:
+        """Turn off the fan."""
+
+        _LOGGER.debug("Turn off fan %s", self.name)
+        self._device.turn_off()
+
+    def oscillate(self, oscillating: bool) -> None:
+        """Turn on/off oscillating."""
+
+        _LOGGER.debug("Turn oscillation %s for device %s", oscillating,
+                      self.name)
+
+        if oscillating:
+            self._device.enable_oscillation()
+        else:
+            self._device.disable_oscillation()
+
+    @property
+    def oscillating(self):
+        """Return the oscillation state."""
+        return self._device.state and self._device.state.oscillation == "OION"
+
+    @property
+    def is_on(self):
+        """Return true if the entity is on."""
+        if self._device.state:
+            return self._device.state.fan_power == "ON"
+        return False
+
+    @property
+    def speed(self):
+        """Return the current speed."""
+        from ..lib.libpurecoollink.const import FanSpeed
+
+        if self._device.state:
+            if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
+                return self._device.state.speed
+            return int(self._device.state.speed)
+        return None
+
+    @property
+    def is_auto_on(self):
+        """Return true if auto mode is on."""
+        if self._device.state:
+            return self._device.state.auto_mode == "ON"
+        return False
+
+    @property
+    def speed_list(self: ToggleEntity) -> list:
+        """Get the list of available speeds."""
+        from ..lib.libpurecoollink.const import FanSpeed
+
+        supported_speeds = [
+            int(FanSpeed.FAN_SPEED_1.value),
+            int(FanSpeed.FAN_SPEED_2.value),
+            int(FanSpeed.FAN_SPEED_3.value),
+            int(FanSpeed.FAN_SPEED_4.value),
+            int(FanSpeed.FAN_SPEED_5.value),
+            int(FanSpeed.FAN_SPEED_6.value),
+            int(FanSpeed.FAN_SPEED_7.value),
+            int(FanSpeed.FAN_SPEED_8.value),
+            int(FanSpeed.FAN_SPEED_9.value),
+            int(FanSpeed.FAN_SPEED_10.value),
+        ]
+
+        return supported_speeds
+
+    @property
+    def supported_features(self: ToggleEntity) -> int:
+        """Flag supported features."""
+        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED | SUPPORT_AUTO

@@ -35,11 +35,15 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 # Bitfield of features supported by the fan entity
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
+
 SUPPORT_DIRECTION = 4
+
+SUPPORT_AUTO = 8
 
 SERVICE_SET_SPEED = 'set_speed'
 SERVICE_OSCILLATE = 'oscillate'
 SERVICE_SET_DIRECTION = 'set_direction'
+SERVICE_SET_AUTO_MODE = 'set_auto_mode'
 
 SPEED_OFF = 'off'
 SPEED_LOW = 'low'
@@ -53,12 +57,14 @@ ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
 ATTR_OSCILLATING = 'oscillating'
 ATTR_DIRECTION = 'direction'
+ATTR_AUTO_MODE = 'auto_mode'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
     'oscillating': ATTR_OSCILLATING,
     'direction': ATTR_DIRECTION,
+    'auto_mode': ATTR_AUTO_MODE
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
@@ -89,6 +95,13 @@ FAN_SET_DIRECTION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DIRECTION): cv.string
 })  # type: dict
 
+FAN_SET_AUTO_MODE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_AUTO_MODE): cv.boolean
+})
+# type: dict
+
+
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {
         'method': 'async_turn_on',
@@ -113,6 +126,10 @@ SERVICE_TO_METHOD = {
     SERVICE_SET_DIRECTION: {
         'method': 'async_set_direction',
         'schema': FAN_SET_DIRECTION_SCHEMA,
+    },
+    SERVICE_SET_AUTO_MODE: {
+        'method': 'async_set_auto_mode',
+        'schema': FAN_SET_AUTO_MODE_SCHEMA,
     },
 }
 
@@ -194,6 +211,20 @@ def set_direction(hass, entity_id: str = None, direction: str = None) -> None:
     }
 
     hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, data)
+
+
+@bind_hass
+def set_auto_mode(hass, entity_id: str = None,
+                  auto_mode_on: bool = True) -> None:
+    """Set oscillation on all or specified fan."""
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_OSCILLATING, auto_mode_on),
+        ] if value is not None
+    }
+
+    hass.services.call(DOMAIN, SERVICE_OSCILLATE, data)
 
 
 @asyncio.coroutine
@@ -286,6 +317,18 @@ class FanEntity(ToggleEntity):
         """
         return self.hass.async_add_job(self.oscillate, oscillating)
 
+    # pylint: disable=arguments-differ
+    def set_auto_mode(self: ToggleEntity, auto: bool = None, **kwargs) -> None:
+        """"Switch auto mode."""
+        raise NotImplementedError()
+
+    def async_set_auto_mode(self: ToggleEntity, auto_mode: bool):
+        """Switch auto mode.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.set_auto_mode, auto_mode)
+
     @property
     def is_on(self):
         """Return true if the entity is on."""
@@ -304,6 +347,10 @@ class FanEntity(ToggleEntity):
     @property
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
+        return None
+
+    @property
+    def is_auto_on(self):
         return None
 
     @property

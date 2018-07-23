@@ -20,6 +20,15 @@ SENSOR_UNITS = {
     'humidity': '%',
 }
 
+SENSOR_UNITS_V2 = {
+    'temperature': 'C°',
+    'particulate_matter': 'μg/m3',
+    'volatile_organinc_compounds': 'level',
+    'nitrogen_dioxide': 'level',
+    'filter_state': '%',
+
+}
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -29,11 +38,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = []
     unit = hass.config.units.temperature_unit
     # Get Dyson Devices from parent component
-    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
-    from libpurecoollink.dyson_pure_cool import DysonPureCool
+    from ..lib.libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+    from ..lib.libpurecoollink.dyson_pure_cool import DysonPureCool
     for device in hass.data[DYSON_DEVICES]:
         if isinstance(device, DysonPureCool):
-            print(device)
+            devices.append(DysonTemperatureSensor(hass, device, unit))
+            devices.append(DysonHumiditySensor(hass, device))
+            devices.append(DysonParticulateMatter25Sensor(hass, device))
+            devices.append(DysonParticulateMatter10Sensor(hass, device))
+            devices.append(DysonVolatileOrganicCompoundsSensor(hass, device))
+            devices.append(DysonNitrogenDioxideSensor(hass, device))
+            devices.append(DysonCarbonFilterStateSensor(hass, device))
+            devices.append(DysonHepaFilterStateSensor(hass, device))
         elif isinstance(device, DysonPureCoolLink):
             devices.append(DysonFilterLifeSensor(hass, device))
             devices.append(DysonDustSensor(hass, device))
@@ -190,3 +206,129 @@ class DysonAirQualitySensor(DysonSensor):
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return SENSOR_UNITS['air_quality']
+
+
+class DysonParticulateMatter25Sensor(DysonSensor):
+    """Representation of Dyson pm25 sensor."""
+
+    def __init__(self, hass, device):
+        """Create a new Dyson pm25 sensor."""
+        DysonSensor.__init__(self, hass, device)
+        self._name = "{} particulate matter 2.5 μg/m3".format(self._device.name)
+
+    @property
+    def state(self):
+        """Return pm25 level."""
+        if self._device.state:
+            return int(self._device.environmental_state.particulate_matter_25)
+        return None
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS_V2['particulate_matter']
+
+
+class DysonParticulateMatter10Sensor(DysonSensor):
+    """Representation of Dyson pm10 sensor."""
+
+    def __init__(self, hass, device):
+        """Create a new Dyson pm10 sensor."""
+        DysonSensor.__init__(self, hass, device)
+        self._name = "{} particulate matter 10 μg/m3".format(self._device.name)
+
+    @property
+    def state(self):
+        """Return pm10 level."""
+        if self._device.state:
+            return int(self._device.environmental_state.particulate_matter_10)
+        return None
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS_V2['particulate_matter']
+
+
+class DysonNitrogenDioxideSensor(DysonSensor):
+    """Representation of Dyson no2 sensor."""
+
+    def __init__(self, hass, device):
+        """Create a new Dyson no2 sensor."""
+        DysonSensor.__init__(self, hass, device)
+        self._name = "{} nitrogen dioxide".format(self._device.name)
+
+    @property
+    def state(self):
+        """Return no2 level."""
+        if self._device.state:
+            return int(self._device.environmental_state.nitrogen_dioxide)
+        return None
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS_V2['nitrogen_dioxide']
+
+
+class DysonVolatileOrganicCompoundsSensor(DysonSensor):
+    """Representation of Dyson VOC sensor."""
+
+    def __init__(self, hass, device):
+        """Create a new Dyson voc sensor."""
+        DysonSensor.__init__(self, hass, device)
+        self._name = "{} volatile orgainc compounds".format(self._device.name)
+
+    @property
+    def state(self):
+        """Return voc level."""
+        if self._device.state:
+            return int(self._device.environmental_state.volatile_organic_compounds)
+        return None
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS_V2['volatile_organinc_compounds']
+
+
+class DysonCarbonFilterStateSensor(DysonSensor):
+    """Representation of Dyson carbon filter state sensor (in %)."""
+
+    def __init__(self, hass, device):
+        """Create a new Dyson carbon filter state sensor."""
+        DysonSensor.__init__(self, hass, device)
+        self._name = "{} carbon filter state".format(self._device.name)
+
+    @property
+    def state(self):
+        """Return carbon filter state in %."""
+        if self._device.state:
+            return int(self._device.state.carbon_filter_state)
+        return None
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS_V2['filter_state']
+
+
+class DysonHepaFilterStateSensor(DysonSensor):
+    """Representation of Dyson carbon filter state sensor (in %)."""
+
+    def __init__(self, hass, device):
+        """Create a new Dyson carbon filter state sensor."""
+        DysonSensor.__init__(self, hass, device)
+        self._name = "{} hepa filter state".format(self._device.name)
+
+    @property
+    def state(self):
+        """Return hepa filter state in %."""
+        if self._device.state:
+            return int(self._device.state.hepa_filter_state)
+        return None
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return SENSOR_UNITS_V2['filter_state']
