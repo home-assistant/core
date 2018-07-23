@@ -365,8 +365,10 @@ class TestComponentsGroup(unittest.TestCase):
                     'icon': 'mdi:work',
                     'view': True,
                 }}}):
-            group.reload(self.hass)
-            self.hass.block_till_done()
+            with patch('homeassistant.config.find_config_file',
+                       return_value=''):
+                group.reload(self.hass)
+                self.hass.block_till_done()
 
         assert sorted(self.hass.states.entity_ids()) == \
             ['group.all_tests', 'group.hello']

@@ -71,14 +71,14 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
     return dattim.astimezone(UTC)
 
 
-def as_timestamp(dt_value):
+def as_timestamp(dt_value: dt.datetime) -> float:
     """Convert a date/time into a unix time (seconds since 1970)."""
     if hasattr(dt_value, "timestamp"):
-        parsed_dt = dt_value
+        parsed_dt = dt_value  # type: Optional[dt.datetime]
     else:
         parsed_dt = parse_datetime(str(dt_value))
-        if not parsed_dt:
-            raise ValueError("not a valid date/time.")
+    if parsed_dt is None:
+        raise ValueError("not a valid date/time.")
     return parsed_dt.timestamp()
 
 
@@ -150,7 +150,7 @@ def parse_date(dt_str: str) -> Optional[dt.date]:
         return None
 
 
-def parse_time(time_str):
+def parse_time(time_str: str) -> Optional[dt.time]:
     """Parse a time string (00:20:00) into Time object.
 
     Return None if invalid.
