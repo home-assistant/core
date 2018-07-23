@@ -4,9 +4,9 @@ Core components of Home Assistant.
 Home Assistant is a Home Automation framework for observing the state
 of entities and react to changes.
 """
-# pylint: disable=unused-import
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+import datetime
 import enum
 import logging
 import os
@@ -17,9 +17,10 @@ import threading
 from time import monotonic
 
 from types import MappingProxyType
+# pylint: disable=unused-import
 from typing import (  # NOQA
     Optional, Any, Callable, List, TypeVar, Dict, Coroutine, Set,
-    TYPE_CHECKING)
+    TYPE_CHECKING, Awaitable, Iterator)
 
 from async_timeout import timeout
 import voluptuous as vol
@@ -44,11 +45,13 @@ from homeassistant.util import location
 from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 
 # Typing imports that create a circular dependency
-# pylint: disable=using-constant-test,unused-import
+# pylint: disable=using-constant-test
 if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntries # noqa
+    from homeassistant.config_entries import ConfigEntries  # noqa
 
 T = TypeVar('T')
+CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)
+CALLBACK_TYPE = Callable[[], None]
 
 DOMAIN = 'homeassistant'
 
@@ -79,7 +82,7 @@ def valid_state(state: str) -> bool:
     return len(state) < 256
 
 
-def callback(func: Callable[..., T]) -> Callable[..., T]:
+def callback(func: CALLABLE_T) -> CALLABLE_T:
     """Annotation to mark method as safe to call from within the event loop."""
     setattr(func, '_hass_callback', True)
     return func
@@ -91,7 +94,7 @@ def is_callback(func: Callable[..., Any]) -> bool:
 
 
 @callback
-def async_loop_exception_handler(loop, context):
+def async_loop_exception_handler(_: Any, context: Dict) -> None:
     """Handle all exception inside the core loop."""
     kwargs = {}
     exception = context.get('exception')
@@ -119,7 +122,9 @@ class CoreState(enum.Enum):
 class HomeAssistant:
     """Root object of the Home Assistant home automation."""
 
-    def __init__(self, loop=None):
+    def __init__(
+            self,
+            loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
         """Initialize new Home Assistant object."""
         if sys.platform == 'win32':
             self.loop = loop or asyncio.ProactorEventLoop()
@@ -170,7 +175,7 @@ class HomeAssistant:
             self.loop.close()
         return self.exit_code
 
-    async def async_start(self):
+    async def async_start(self) -> None:
         """Finalize startup from inside the event loop.
 
         This method is a coroutine.
@@ -178,8 +183,7 @@ class HomeAssistant:
         _LOGGER.info("Starting Home Assistant")
         self.state = CoreState.starting
 
-        # pylint: disable=protected-access
-        self.loop._thread_ident = threading.get_ident()
+        setattr(self.loop, '_thread_ident', threading.get_ident())
         self.bus.async_fire(EVENT_HOMEASSISTANT_START)
 
         try:
@@ -230,7 +234,8 @@ class HomeAssistant:
         elif asyncio.iscoroutinefunction(target):
             task = self.loop.create_task(target(*args))
         else:
-            task = self.loop.run_in_executor(None, target, *args)
+            task = self.loop.run_in_executor(  # type: ignore
+                None, target, *args)
 
         # If a task is scheduled
         if self._track_task and task is not None:
@@ -256,11 +261,11 @@ class HomeAssistant:
     @callback
     def async_add_executor_job(
             self,
-            target: Callable[..., Any],
-            *args: Any) -> asyncio.Future:
+            target: Callable[..., T],
+            *args: Any) -> Awaitable[T]:
         """Add an executor job from within the event loop."""
-        task = self.loop.run_in_executor(  # type: ignore
-            None, target, *args)  # type: asyncio.Future
+        task = self.loop.run_in_executor(
+            None, target, *args)
 
         # If a task is scheduled
         if self._track_task:
@@ -269,12 +274,12 @@ class HomeAssistant:
         return task
 
     @callback
-    def async_track_tasks(self):
+    def async_track_tasks(self) -> None:
         """Track tasks so you can wait for all tasks to be done."""
         self._track_task = True
 
     @callback
-    def async_stop_track_tasks(self):
+    def async_stop_track_tasks(self) -> None:
         """Stop track tasks so you can't wait for all tasks to be done."""
         self._track_task = False
 
@@ -297,7 +302,7 @@ class HomeAssistant:
         run_coroutine_threadsafe(
             self.async_block_till_done(), loop=self.loop).result()
 
-    async def async_block_till_done(self):
+    async def async_block_till_done(self) -> None:
         """Block till all pending work is done."""
         # To flush out any call_soon_threadsafe
         await asyncio.sleep(0, loop=self.loop)
@@ -342,9 +347,9 @@ class EventOrigin(enum.Enum):
     local = 'LOCAL'
     remote = 'REMOTE'
 
-    def __str__(self):
+    def __str__(self) -> str:
         """Return the event."""
-        return self.value
+        return self.value  # type: ignore
 
 
 class Event:
@@ -352,15 +357,16 @@ class Event:
 
     __slots__ = ['event_type', 'data', 'origin', 'time_fired']
 
-    def __init__(self, event_type, data=None, origin=EventOrigin.local,
-                 time_fired=None):
+    def __init__(self, event_type: str, data: Optional[Dict] = None,
+                 origin: EventOrigin = EventOrigin.local,
+                 time_fired: Optional[int] = None) -> None:
         """Initialize a new event."""
         self.event_type = event_type
         self.data = data or {}
         self.origin = origin
         self.time_fired = time_fired or dt_util.utcnow()
 
-    def as_dict(self):
+    def as_dict(self) -> Dict:
         """Create a dict representation of this Event.
 
         Async friendly.
@@ -372,7 +378,7 @@ class Event:
             'time_fired': self.time_fired,
         }
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the representation."""
         # pylint: disable=maybe-no-member
         if self.data:
@@ -383,9 +389,9 @@ class Event:
         return "<Event {}[{}]>".format(self.event_type,
                                        str(self.origin)[0])
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
-        return (self.__class__ == other.__class__ and
+        return (self.__class__ == other.__class__ and  # type: ignore
                 self.event_type == other.event_type and
                 self.data == other.data and
                 self.origin == other.origin and
@@ -401,7 +407,7 @@ class EventBus:
         self._hass = hass
 
     @callback
-    def async_listeners(self):
+    def async_listeners(self) -> Dict[str, int]:
         """Return dictionary with events and the number of listeners.
 
         This method must be run in the event loop.
@@ -410,20 +416,21 @@ class EventBus:
                 for key in self._listeners}
 
     @property
-    def listeners(self):
+    def listeners(self) -> Dict[str, int]:
         """Return dictionary with events and the number of listeners."""
-        return run_callback_threadsafe(
+        return run_callback_threadsafe(  # type: ignore
             self._hass.loop, self.async_listeners
         ).result()
 
-    def fire(self, event_type: str, event_data=None, origin=EventOrigin.local):
+    def fire(self, event_type: str, event_data: Optional[Dict] = None,
+             origin: EventOrigin = EventOrigin.local) -> None:
         """Fire an event."""
         self._hass.loop.call_soon_threadsafe(
             self.async_fire, event_type, event_data, origin)
 
     @callback
-    def async_fire(self, event_type: str, event_data=None,
-                   origin=EventOrigin.local):
+    def async_fire(self, event_type: str, event_data: Optional[Dict] = None,
+                   origin: EventOrigin = EventOrigin.local) -> None:
         """Fire an event.
 
         This method must be run in the event loop.
@@ -447,7 +454,8 @@ class EventBus:
         for func in listeners:
             self._hass.async_add_job(func, event)
 
-    def listen(self, event_type, listener):
+    def listen(
+            self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -456,7 +464,7 @@ class EventBus:
         async_remove_listener = run_callback_threadsafe(
             self._hass.loop, self.async_listen, event_type, listener).result()
 
-        def remove_listener():
+        def remove_listener() -> None:
             """Remove the listener."""
             run_callback_threadsafe(
                 self._hass.loop, async_remove_listener).result()
@@ -464,7 +472,8 @@ class EventBus:
         return remove_listener
 
     @callback
-    def async_listen(self, event_type, listener):
+    def async_listen(
+            self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
         """Listen for all events or events of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -477,13 +486,14 @@ class EventBus:
         else:
             self._listeners[event_type] = [listener]
 
-        def remove_listener():
+        def remove_listener() -> None:
             """Remove the listener."""
             self._async_remove_listener(event_type, listener)
 
         return remove_listener
 
-    def listen_once(self, event_type, listener):
+    def listen_once(
+            self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -495,7 +505,7 @@ class EventBus:
             self._hass.loop, self.async_listen_once, event_type, listener,
         ).result()
 
-        def remove_listener():
+        def remove_listener() -> None:
             """Remove the listener."""
             run_callback_threadsafe(
                 self._hass.loop, async_remove_listener).result()
@@ -503,7 +513,8 @@ class EventBus:
         return remove_listener
 
     @callback
-    def async_listen_once(self, event_type, listener):
+    def async_listen_once(
+            self, event_type: str, listener: Callable) -> CALLBACK_TYPE:
         """Listen once for event of a specific type.
 
         To listen to all events specify the constant ``MATCH_ALL``
@@ -514,8 +525,8 @@ class EventBus:
         This method must be run in the event loop.
         """
         @callback
-        def onetime_listener(event):
-            """Remove listener from eventbus and then fire listener."""
+        def onetime_listener(event: Event) -> None:
+            """Remove listener from event bus and then fire listener."""
             if hasattr(onetime_listener, 'run'):
                 return
             # Set variable so that we will never run twice.
@@ -530,7 +541,8 @@ class EventBus:
         return self.async_listen(event_type, onetime_listener)
 
     @callback
-    def _async_remove_listener(self, event_type, listener):
+    def _async_remove_listener(
+            self, event_type: str, listener: Callable) -> None:
         """Remove a listener of a specific event_type.
 
         This method must be run in the event loop.
@@ -560,8 +572,10 @@ class State:
     __slots__ = ['entity_id', 'state', 'attributes',
                  'last_changed', 'last_updated']
 
-    def __init__(self, entity_id, state, attributes=None, last_changed=None,
-                 last_updated=None):
+    def __init__(self, entity_id: str, state: Any,
+                 attributes: Optional[Dict] = None,
+                 last_changed: Optional[datetime.datetime] = None,
+                 last_updated: Optional[datetime.datetime] = None) -> None:
         """Initialize a new state."""
         state = str(state)
 
@@ -582,23 +596,23 @@ class State:
         self.last_changed = last_changed or self.last_updated
 
     @property
-    def domain(self):
+    def domain(self) -> str:
         """Domain of this state."""
         return split_entity_id(self.entity_id)[0]
 
     @property
-    def object_id(self):
+    def object_id(self) -> str:
         """Object id of this state."""
         return split_entity_id(self.entity_id)[1]
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Name of this state."""
         return (
             self.attributes.get(ATTR_FRIENDLY_NAME) or
             self.object_id.replace('_', ' '))
 
-    def as_dict(self):
+    def as_dict(self) -> Dict:
         """Return a dict representation of the State.
 
         Async friendly.
@@ -613,7 +627,7 @@ class State:
                 'last_updated': self.last_updated}
 
     @classmethod
-    def from_dict(cls, json_dict):
+    def from_dict(cls, json_dict: Dict) -> Any:
         """Initialize a state from a dict.
 
         Async friendly.
@@ -637,14 +651,14 @@ class State:
         return cls(json_dict['entity_id'], json_dict['state'],
                    json_dict.get('attributes'), last_changed, last_updated)
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         """Return the comparison of the state."""
-        return (self.__class__ == other.__class__ and
+        return (self.__class__ == other.__class__ and  # type: ignore
                 self.entity_id == other.entity_id and
                 self.state == other.state and
                 self.attributes == other.attributes)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the representation of the states."""
         attr = "; {}".format(util.repr_helper(self.attributes)) \
                if self.attributes else ""
@@ -657,21 +671,23 @@ class State:
 class StateMachine:
     """Helper class that tracks the state of different entities."""
 
-    def __init__(self, bus, loop):
+    def __init__(self, bus: EventBus,
+                 loop: asyncio.events.AbstractEventLoop) -> None:
         """Initialize state machine."""
         self._states = {}  # type: Dict[str, State]
         self._bus = bus
         self._loop = loop
 
-    def entity_ids(self, domain_filter=None):
+    def entity_ids(self, domain_filter: Optional[str] = None)-> List[str]:
         """List of entity ids that are being tracked."""
         future = run_callback_threadsafe(
             self._loop, self.async_entity_ids, domain_filter
         )
-        return future.result()
+        return future.result()  # type: ignore
 
     @callback
-    def async_entity_ids(self, domain_filter=None):
+    def async_entity_ids(
+            self, domain_filter: Optional[str] = None) -> List[str]:
         """List of entity ids that are being tracked.
 
         This method must be run in the event loop.
@@ -684,26 +700,27 @@ class StateMachine:
         return [state.entity_id for state in self._states.values()
                 if state.domain == domain_filter]
 
-    def all(self):
+    def all(self)-> List[State]:
         """Create a list of all states."""
-        return run_callback_threadsafe(self._loop, self.async_all).result()
+        return run_callback_threadsafe(  # type: ignore
+            self._loop, self.async_all).result()
 
     @callback
-    def async_all(self):
+    def async_all(self)-> List[State]:
         """Create a list of all states.
 
         This method must be run in the event loop.
         """
         return list(self._states.values())
 
-    def get(self, entity_id):
+    def get(self, entity_id: str) -> Optional[State]:
         """Retrieve state of entity_id or None if not found.
 
         Async friendly.
         """
         return self._states.get(entity_id.lower())
 
-    def is_state(self, entity_id, state):
+    def is_state(self, entity_id: str, state: State) -> bool:
         """Test if entity exists and is specified state.
 
         Async friendly.
@@ -711,16 +728,16 @@ class StateMachine:
         state_obj = self.get(entity_id)
         return state_obj is not None and state_obj.state == state
 
-    def remove(self, entity_id):
+    def remove(self, entity_id: str) -> bool:
         """Remove the state of an entity.
 
         Returns boolean to indicate if an entity was removed.
         """
-        return run_callback_threadsafe(
+        return run_callback_threadsafe(  # type: ignore
             self._loop, self.async_remove, entity_id).result()
 
     @callback
-    def async_remove(self, entity_id):
+    def async_remove(self, entity_id: str) -> bool:
         """Remove the state of an entity.
 
         Returns boolean to indicate if an entity was removed.
@@ -740,7 +757,9 @@ class StateMachine:
         })
         return True
 
-    def set(self, entity_id, new_state, attributes=None, force_update=False):
+    def set(self, entity_id: str, new_state: Any,
+            attributes: Optional[Dict] = None,
+            force_update: bool = False) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state.
@@ -754,8 +773,9 @@ class StateMachine:
         ).result()
 
     @callback
-    def async_set(self, entity_id, new_state, attributes=None,
-                  force_update=False):
+    def async_set(self, entity_id: str, new_state: Any,
+                  attributes: Optional[Dict] = None,
+                  force_update: bool = False) -> None:
         """Set the state of an entity, add entity if it does not exist.
 
         Attributes is an optional dict to specify attributes of this state.
@@ -769,15 +789,19 @@ class StateMachine:
         new_state = str(new_state)
         attributes = attributes or {}
         old_state = self._states.get(entity_id)
-        is_existing = old_state is not None
-        same_state = (is_existing and old_state.state == new_state and
-                      not force_update)
-        same_attr = is_existing and old_state.attributes == attributes
+        if old_state is None:
+            same_state = False
+            same_attr = False
+            last_changed = None
+        else:
+            same_state = (old_state.state == new_state and
+                          not force_update)
+            same_attr = old_state.attributes == attributes
+            last_changed = old_state.last_changed if same_state else None
 
         if same_state and same_attr:
             return
 
-        last_changed = old_state.last_changed if same_state else None
         state = State(entity_id, new_state, attributes, last_changed)
         self._states[entity_id] = state
         self._bus.async_fire(EVENT_STATE_CHANGED, {
@@ -792,7 +816,7 @@ class Service:
 
     __slots__ = ['func', 'schema', 'is_callback', 'is_coroutinefunction']
 
-    def __init__(self, func, schema):
+    def __init__(self, func: Callable, schema: Optional[vol.Schema]) -> None:
         """Initialize a service."""
         self.func = func
         self.schema = schema
@@ -805,14 +829,15 @@ class ServiceCall:
 
     __slots__ = ['domain', 'service', 'data', 'call_id']
 
-    def __init__(self, domain, service, data=None, call_id=None):
+    def __init__(self, domain: str, service: str, data: Optional[Dict] = None,
+                 call_id: Optional[str] = None) -> None:
         """Initialize a service call."""
         self.domain = domain.lower()
         self.service = service.lower()
         self.data = MappingProxyType(data or {})
         self.call_id = call_id
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the representation of the service."""
         if self.data:
             return "<ServiceCall {}.{}: {}>".format(
@@ -824,13 +849,13 @@ class ServiceCall:
 class ServiceRegistry:
     """Offer the services over the eventbus."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a service registry."""
         self._services = {}  # type: Dict[str, Dict[str, Service]]
         self._hass = hass
-        self._async_unsub_call_event = None
+        self._async_unsub_call_event = None  # type: Optional[CALLBACK_TYPE]
 
-        def _gen_unique_id():
+        def _gen_unique_id() -> Iterator[str]:
             cur_id = 1
             while True:
                 yield '{}-{}'.format(id(self), cur_id)
@@ -840,14 +865,14 @@ class ServiceRegistry:
         self._generate_unique_id = lambda: next(gen)
 
     @property
-    def services(self):
+    def services(self) -> Dict[str, Dict[str, Service]]:
         """Return dictionary with per domain a list of available services."""
-        return run_callback_threadsafe(
+        return run_callback_threadsafe(  # type: ignore
             self._hass.loop, self.async_services,
         ).result()
 
     @callback
-    def async_services(self):
+    def async_services(self) -> Dict[str, Dict[str, Service]]:
         """Return dictionary with per domain a list of available services.
 
         This method must be run in the event loop.
@@ -855,14 +880,15 @@ class ServiceRegistry:
         return {domain: self._services[domain].copy()
                 for domain in self._services}
 
-    def has_service(self, domain, service):
+    def has_service(self, domain: str, service: str) -> bool:
         """Test if specified service exists.
 
         Async friendly.
         """
         return service.lower() in self._services.get(domain.lower(), [])
 
-    def register(self, domain, service, service_func, schema=None):
+    def register(self, domain: str, service: str, service_func: Callable,
+                 schema: Optional[vol.Schema] = None) -> None:
         """
         Register a service.
 
@@ -874,7 +900,8 @@ class ServiceRegistry:
         ).result()
 
     @callback
-    def async_register(self, domain, service, service_func, schema=None):
+    def async_register(self, domain: str, service: str, service_func: Callable,
+                       schema: Optional[vol.Schema] = None) -> None:
         """
         Register a service.
 
@@ -900,13 +927,13 @@ class ServiceRegistry:
             {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
 
-    def remove(self, domain, service):
+    def remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler."""
         run_callback_threadsafe(
             self._hass.loop, self.async_remove, domain, service).result()
 
     @callback
-    def async_remove(self, domain, service):
+    def async_remove(self, domain: str, service: str) -> None:
         """Remove a registered service from service handler.
 
         This method must be run in the event loop.
@@ -926,7 +953,9 @@ class ServiceRegistry:
             {ATTR_DOMAIN: domain, ATTR_SERVICE: service}
         )
 
-    def call(self, domain, service, service_data=None, blocking=False):
+    def call(self, domain: str, service: str,
+             service_data: Optional[Dict] = None,
+             blocking: bool = False) -> Optional[bool]:
         """
         Call a service.
 
@@ -943,13 +972,14 @@ class ServiceRegistry:
         Because the service is sent as an event you are not allowed to use
         the keys ATTR_DOMAIN and ATTR_SERVICE in your service_data.
         """
-        return run_coroutine_threadsafe(
+        return run_coroutine_threadsafe(  # type: ignore
             self.async_call(domain, service, service_data, blocking),
             self._hass.loop
         ).result()
 
-    async def async_call(self, domain, service, service_data=None,
-                         blocking=False):
+    async def async_call(self, domain: str, service: str,
+                         service_data: Optional[Dict] = None,
+                         blocking: bool = False) -> Optional[bool]:
         """
         Call a service.
 
@@ -981,7 +1011,7 @@ class ServiceRegistry:
             fut = asyncio.Future(loop=self._hass.loop)  # type: asyncio.Future
 
             @callback
-            def service_executed(event):
+            def service_executed(event: Event) -> None:
                 """Handle an executed service."""
                 if event.data[ATTR_SERVICE_CALL_ID] == call_id:
                     fut.set_result(True)
@@ -989,20 +1019,22 @@ class ServiceRegistry:
             unsub = self._hass.bus.async_listen(
                 EVENT_SERVICE_EXECUTED, service_executed)
 
-        self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data)
+            self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data)
 
-        if blocking:
             done, _ = await asyncio.wait(
                 [fut], loop=self._hass.loop, timeout=SERVICE_CALL_LIMIT)
             success = bool(done)
             unsub()
             return success
 
-    async def _event_to_service_call(self, event):
+        self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data)
+        return None
+
+    async def _event_to_service_call(self, event: Event) -> None:
         """Handle the SERVICE_CALLED events from the EventBus."""
         service_data = event.data.get(ATTR_SERVICE_DATA) or {}
-        domain = event.data.get(ATTR_DOMAIN).lower()
-        service = event.data.get(ATTR_SERVICE).lower()
+        domain = event.data.get(ATTR_DOMAIN).lower()  # type: ignore
+        service = event.data.get(ATTR_SERVICE).lower()  # type: ignore
         call_id = event.data.get(ATTR_SERVICE_CALL_ID)
 
         if not self.has_service(domain, service):
@@ -1013,7 +1045,7 @@ class ServiceRegistry:
 
         service_handler = self._services[domain][service]
 
-        def fire_service_executed():
+        def fire_service_executed() -> None:
             """Fire service executed event."""
             if not call_id:
                 return
@@ -1045,12 +1077,12 @@ class ServiceRegistry:
                 await service_handler.func(service_call)
                 fire_service_executed()
             else:
-                def execute_service():
+                def execute_service() -> None:
                     """Execute a service and fires a SERVICE_EXECUTED event."""
                     service_handler.func(service_call)
                     fire_service_executed()
 
-                await self._hass.async_add_job(execute_service)
+                await self._hass.async_add_executor_job(execute_service)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error executing service %s', service_call)
 
@@ -1058,13 +1090,13 @@ class ServiceRegistry:
 class Config:
     """Configuration settings for Home Assistant."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a new config object."""
         self.latitude = None  # type: Optional[float]
         self.longitude = None  # type: Optional[float]
         self.elevation = None  # type: Optional[int]
         self.location_name = None  # type: Optional[str]
-        self.time_zone = None  # type: Optional[str]
+        self.time_zone = None  # type: Optional[datetime.tzinfo]
         self.units = METRIC_SYSTEM  # type: UnitSystem
 
         # If True, pip install is skipped for requirements on startup
@@ -1090,7 +1122,7 @@ class Config:
         return self.units.length(
             location.distance(self.latitude, self.longitude, lat, lon), 'm')
 
-    def path(self, *path):
+    def path(self, *path: str) -> str:
         """Generate path to the file within the configuration directory.
 
         Async friendly.
@@ -1122,12 +1154,14 @@ class Config:
 
         return False
 
-    def as_dict(self):
+    def as_dict(self) -> Dict:
         """Create a dictionary representation of this dict.
 
         Async friendly.
         """
-        time_zone = self.time_zone or dt_util.UTC
+        time_zone = dt_util.UTC.zone
+        if self.time_zone and getattr(self.time_zone, 'zone'):
+            time_zone = getattr(self.time_zone, 'zone')
 
         return {
             'latitude': self.latitude,
@@ -1135,7 +1169,7 @@ class Config:
             'elevation': self.elevation,
             'unit_system': self.units.as_dict(),
             'location_name': self.location_name,
-            'time_zone': time_zone.zone,
+            'time_zone': time_zone,
             'components': self.components,
             'config_dir': self.config_dir,
             'whitelist_external_dirs': self.whitelist_external_dirs,
@@ -1143,12 +1177,12 @@ class Config:
         }
 
 
-def _async_create_timer(hass):
+def _async_create_timer(hass: HomeAssistant) -> None:
     """Create a timer that will start on HOMEASSISTANT_START."""
     handle = None
 
     @callback
-    def fire_time_event(nxt):
+    def fire_time_event(nxt: float) -> None:
         """Fire next time event."""
         nonlocal handle
 
@@ -1165,7 +1199,7 @@ def _async_create_timer(hass):
         handle = hass.loop.call_later(slp_seconds, fire_time_event, nxt)
 
     @callback
-    def stop_timer(event):
+    def stop_timer(_: Event) -> None:
         """Stop the timer."""
         if handle is not None:
             handle.cancel()
