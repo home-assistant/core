@@ -19,10 +19,10 @@ import weakref
 
 import attr
 
-from ..core import callback, split_entity_id
-from ..loader import bind_hass
-from ..util import ensure_unique_string, slugify
-from ..util.yaml import load_yaml, save_yaml
+from homeassistant.core import callback, split_entity_id, valid_entity_id
+from homeassistant.loader import bind_hass
+from homeassistant.util import ensure_unique_string, slugify
+from homeassistant.util.yaml import load_yaml, save_yaml
 
 PATH_REGISTRY = 'entity_registry.yaml'
 DATA_REGISTRY = 'entity_registry'
@@ -133,13 +133,18 @@ class EntityRegistry:
         return entity
 
     @callback
-    def async_update_entity(self, entity_id, *, name=_UNDEF):
+    def async_update_entity(self, entity_id, *, name=_UNDEF,
+                            new_entity_id=_UNDEF):
         """Update properties of an entity."""
-        return self._async_update_entity(entity_id, name=name)
+        return self._async_update_entity(
+            entity_id,
+            name=name,
+            new_entity_id=new_entity_id
+        )
 
     @callback
     def _async_update_entity(self, entity_id, *, name=_UNDEF,
-                             config_entry_id=_UNDEF):
+                             config_entry_id=_UNDEF, new_entity_id=_UNDEF):
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
@@ -151,6 +156,20 @@ class EntityRegistry:
         if (config_entry_id is not _UNDEF and
                 config_entry_id != old.config_entry_id):
             changes['config_entry_id'] = config_entry_id
+
+        if new_entity_id is not _UNDEF and new_entity_id != old.entity_id:
+            if self.async_is_registered(new_entity_id):
+                raise ValueError('Entity is already registered')
+
+            if not valid_entity_id(new_entity_id):
+                raise ValueError('Invalid entity ID')
+
+            if (split_entity_id(new_entity_id)[0] !=
+                    split_entity_id(entity_id)[0]):
+                raise ValueError('New entity ID should be same domain')
+
+            self.entities.pop(entity_id)
+            entity_id = changes['entity_id'] = new_entity_id
 
         if not changes:
             return old

@@ -335,7 +335,17 @@ class Entity:
     def async_registry_updated(self, old, new):
         """Called when the entity registry has been updated."""
         self.registry_name = new.name
-        self.async_schedule_update_ha_state()
+
+        if new.entity_id == self.entity_id:
+            self.async_schedule_update_ha_state()
+            return
+
+        async def readd():
+            """Remove and add entity again."""
+            await self.async_remove()
+            await self.platform.async_add_entities([self])
+
+        self.hass.async_create_task(readd())
 
     def __eq__(self, other):
         """Return the comparison."""
