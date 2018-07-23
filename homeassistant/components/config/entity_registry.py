@@ -83,12 +83,18 @@ def websocket_update_entity(hass, connection, msg):
         if 'new_entity_id' in msg:
             changes['new_entity_id'] = msg['new_entity_id']
 
-        if changes:
-            entry = registry.async_update_entity(msg['entity_id'], **changes)
-
-        connection.send_message_outside(websocket_api.result_message(
-            msg['id'], _entry_dict(entry)
-        ))
+        try:
+            if changes:
+                entry = registry.async_update_entity(
+                    msg['entity_id'], **changes)
+        except ValueError as err:
+            connection.send_message_outside(websocket_api.error_message(
+                msg['id'], 'invalid_info', str(err)
+            ))
+        else:
+            connection.send_message_outside(websocket_api.result_message(
+                msg['id'], _entry_dict(entry)
+            ))
 
     hass.async_create_task(update_entity())
 

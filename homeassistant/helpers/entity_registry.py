@@ -63,8 +63,13 @@ class RegistryEntry:
         """Listen for when entry is updated.
 
         Listener: Callback function(old_entry, new_entry)
+
+        Returns function to unlisten.
         """
-        self.update_listeners.append(weakref.ref(listener))
+        weak_listener = weakref.ref(listener)
+        self.update_listeners.append(weak_listener)
+
+        return lambda: self.update_listeners.remove(weak_listener)
 
 
 class EntityRegistry:
