@@ -14,7 +14,7 @@ async def async_setup(hass, config):
 
 async def async_setup_entry(hass, entry):
     """Set up Cast from a config entry."""
-    hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'media_player'))
     return True
 
@@ -23,7 +23,7 @@ async def _async_has_devices(hass):
     """Return if there are devices that can be discovered."""
     from pychromecast.discovery import discover_chromecasts
 
-    return await hass.async_add_job(discover_chromecasts)
+    return await hass.async_add_executor_job(discover_chromecasts)
 
 
 config_entry_flow.register_discovery_flow(

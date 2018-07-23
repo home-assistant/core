@@ -134,7 +134,7 @@ def async_setup_sabnzbd(hass, sab_api, config, name):
 
     if config.get(CONF_SENSORS):
         hass.data[DATA_SABNZBD] = sab_api_data
-        hass.async_add_job(
+        hass.async_create_task(
             discovery.async_load_platform(hass, 'sensor', DOMAIN, {}, config))
 
     async def async_service_handler(service):
