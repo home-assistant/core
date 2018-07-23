@@ -105,7 +105,10 @@ def turn_on(hass, entity_id=None):
 @bind_hass
 async def async_turn_on(hass, entity_id=None):
     """Turn on camera, and set operation mode."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    data = {}
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
     await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data)
 
 
@@ -396,45 +399,37 @@ class Camera(Entity):
         """Turn off camera."""
         raise NotImplementedError()
 
-    async def async_turn_off(self):
-        """Turn off camera.
-
-        This method must be run in the event loop.
-        """
-        await self.hass.async_add_executor_job(self.turn_off)
+    @callback
+    def async_turn_off(self):
+        """Turn off camera."""
+        return self.hass.async_add_job(self.turn_off)
 
     def turn_on(self):
-        """Turn on camera."""
+        """Turn off camera."""
         raise NotImplementedError()
 
-    async def async_turn_on(self):
-        """Turn on camera.
-
-        This method must be run in the event loop.
-        """
-        await self.hass.async_add_executor_job(self.turn_on)
+    @callback
+    def async_turn_on(self):
+        """Turn off camera."""
+        return self.hass.async_add_job(self.turn_on)
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
         raise NotImplementedError()
 
-    async def async_enable_motion_detection(self):
-        """Call the job and enable motion detection.
-
-        This method must be run in the event loop.
-        """
-        await self.hass.async_add_executor_job(self.enable_motion_detection)
+    @callback
+    def async_enable_motion_detection(self):
+        """Call the job and enable motion detection."""
+        return self.hass.async_add_job(self.enable_motion_detection)
 
     def disable_motion_detection(self):
         """Disable motion detection in camera."""
         raise NotImplementedError()
 
-    async def async_disable_motion_detection(self):
-        """Call the job and disable motion detection.
-
-        This method must be run in the event loop.
-        """
-        await self.hass.async_add_executor_job(self.disable_motion_detection)
+    @callback
+    def async_disable_motion_detection(self):
+        """Call the job and disable motion detection."""
+        return self.hass.async_add_job(self.disable_motion_detection)
 
     @property
     def state_attributes(self):
@@ -476,8 +471,7 @@ class CameraView(HomeAssistantView):
         camera = self.component.get_entity(entity_id)
 
         if camera is None:
-            status = 404 if request[KEY_AUTHENTICATED] else 401
-            return web.Response(status=status)
+            raise web.HTTPNotFound()
 
         authenticated = (request[KEY_AUTHENTICATED] or
                          request.query.get('token') in camera.access_tokens)
@@ -487,7 +481,7 @@ class CameraView(HomeAssistantView):
 
         if not camera.is_on:
             _LOGGER.debug('Camera is off.')
-            return web.Response(status=503)
+            raise web.HTTPServiceUnavailable()
 
         return await self.handle(request, camera)
 
