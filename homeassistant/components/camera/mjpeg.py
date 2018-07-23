@@ -123,12 +123,11 @@ class MjpegCamera(Camera):
         with closing(req) as response:
             return extract_image_from_mjpeg(response.iter_content(102400))
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         # aiohttp don't support DigestAuth -> Fallback
         if self._authentication == HTTP_DIGEST_AUTHENTICATION:
-            yield from super().handle_async_mjpeg_stream(request)
+            await super().handle_async_mjpeg_stream(request)
             return
 
         # connect to stream
