@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import (
-    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity, SUPPORT_AUTO)
+    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.const import CONF_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -105,7 +105,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         """Return the display name of this fan."""
         return self._device.name
 
-    def set_speed(self, speed: str) -> None:
+    def set_speed(self: ToggleEntity, speed: str) -> None:
         """Set the speed of the fan. Never called ??."""
         from libpurecoollink.const import FanSpeed, FanMode
 
@@ -274,14 +274,6 @@ class DysonPureCoolDevice(FanEntity):
         """Return the display name of this fan."""
         return self._device.name
 
-    def set_speed(self, speed: str) -> None:
-        """Set the speed of the fan. Never called ??."""
-        from ..lib.libpurecoollink.const import FanSpeed
-
-        _LOGGER.debug("Set fan speed to: %s", speed)
-
-        self._device.set_fan_speed(FanSpeed('{0:04d}'.format(int(speed))))
-
     def turn_on(self, speed: str = None) -> None:
         """Turn on the fan."""
         from ..lib.libpurecoollink.const import FanSpeed
@@ -289,7 +281,11 @@ class DysonPureCoolDevice(FanEntity):
         _LOGGER.debug("Turn on fan %s", self.name)
 
         if speed is not None:
-            self._device.set_fan_speed(FanSpeed('{0:04d}'.format(int(speed))))
+            if speed == FanSpeed.FAN_SPEED_AUTO.value:
+                self._device.enable_auto_mode()
+            else:
+                fan_speed = FanSpeed('{0:04d}'.format(int(speed)))
+                self._device.set_fan_speed(fan_speed)
         else:
             self._device.turn_on()
 
@@ -333,12 +329,6 @@ class DysonPureCoolDevice(FanEntity):
             return int(self._device.state.speed)
         return None
 
-    @property
-    def is_auto_on(self):
-        """Return true if auto mode is on."""
-        if self._device.state:
-            return self._device.state.auto_mode == "ON"
-        return False
 
     @property
     def speed_list(self: ToggleEntity) -> list:
@@ -346,6 +336,7 @@ class DysonPureCoolDevice(FanEntity):
         from ..lib.libpurecoollink.const import FanSpeed
 
         supported_speeds = [
+            FanSpeed.FAN_SPEED_AUTO.value,
             int(FanSpeed.FAN_SPEED_1.value),
             int(FanSpeed.FAN_SPEED_2.value),
             int(FanSpeed.FAN_SPEED_3.value),
@@ -363,4 +354,4 @@ class DysonPureCoolDevice(FanEntity):
     @property
     def supported_features(self: ToggleEntity) -> int:
         """Flag supported features."""
-        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED | SUPPORT_AUTO
+        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
