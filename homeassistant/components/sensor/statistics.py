@@ -30,8 +30,8 @@ ATTR_MEDIAN = 'median'
 ATTR_STANDARD_DEVIATION = 'standard_deviation'
 ATTR_VARIANCE = 'variance'
 ATTR_TOTAL = 'total'
-ATTR_MAX_VALUE = 'max_value'
 ATTR_MIN_VALUE = 'min_value'
+ATTR_MAX_VALUE = 'max_value'
 ATTR_MIN_AGE = 'min_age'
 ATTR_MAX_AGE = 'max_age'
 ATTR_CHANGE = 'change'
@@ -92,8 +92,7 @@ class StatisticsSensor(Entity):
         self.mean = self.median = self.stdev = self.variance = STATE_UNKNOWN
         self.total = self.min = self.max = STATE_UNKNOWN
         self.min_age = self.max_age = dt_util.utcnow()
-        self.change = self.average_change = STATE_UNKNOWN
-        self.change_rate = STATE_UNKNOWN
+        self.change = self.average_change = self.change_rate = STATE_UNKNOWN
 
         if 'recorder' in self._hass.config.components:
             # only use the database if it's configured
@@ -200,8 +199,8 @@ class StatisticsSensor(Entity):
                 self.total = round(sum(self.states), 2)
                 self.min = min(self.states)
                 self.max = max(self.states)
-                self.min_age = min(self.ages)
-                self.max_age = max(self.ages)
+                self.min_age = self.ages[0]
+                self.max_age = self.ages[-1]
                 self.change = self.states[-1] - self.states[0]
                 self.average_change = self.change
                 self.change_rate = 0
@@ -209,13 +208,13 @@ class StatisticsSensor(Entity):
                 if len(self.states) > 1:
                     self.average_change /= len(self.states) - 1
 
-                    time_diff = (self.ages[-1] - self.ages[0]).total_seconds()
+                    time_diff = (self.max_age - self.min_age).total_seconds()
                     if time_diff > 0:
                         self.change_rate = self.average_change / time_diff
 
             else:
                 self.total = self.min = self.max = STATE_UNKNOWN
-                self.max_age = self.min_age = dt_util.utcnow()
+                self.min_age = self.max_age = dt_util.utcnow()
                 self.change = self.average_change = STATE_UNKNOWN
                 self.change_rate = STATE_UNKNOWN
 
