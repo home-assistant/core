@@ -73,7 +73,7 @@ class Data:
 
         Raises InvalidAuth if auth invalid.
         """
-        password = self.hash_password(password)
+        hashed = self.hash_password(password)
 
         found = None
 
@@ -84,19 +84,19 @@ class Data:
 
         if found is None:
             # Do one more compare to make timing the same as if user was found.
-            hmac.compare_digest(password, password)
+            hmac.compare_digest(hashed, hashed)
             raise InvalidAuth
 
-        if not hmac.compare_digest(password,
+        if not hmac.compare_digest(hashed,
                                    base64.b64decode(found['password'])):
             raise InvalidAuth
 
-    def hash_password(self, password, for_storage=False):
+    def hash_password(self, password, for_storage=False) -> bytes:
         """Encode a password."""
         hashed = hashlib.pbkdf2_hmac(
             'sha512', password.encode(), self._data['salt'].encode(), 100000)
         if for_storage:
-            hashed = base64.b64encode(hashed).decode()
+            hashed = base64.b64encode(hashed)
         return hashed
 
     def add_auth(self, username, password):
@@ -106,7 +106,7 @@ class Data:
 
         self.users.append({
             'username': username,
-            'password': self.hash_password(password, True),
+            'password': self.hash_password(password, True).decode(),
         })
 
     @callback
@@ -130,7 +130,8 @@ class Data:
         """
         for user in self.users:
             if user['username'] == username:
-                user['password'] = self.hash_password(new_password, True)
+                user['password'] = self.hash_password(
+                    new_password, True).decode()
                 break
         else:
             raise InvalidUser
