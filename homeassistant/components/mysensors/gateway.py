@@ -279,17 +279,17 @@ def _validate_child(gateway, node_id, child):
     if not child.values:
         _LOGGER.debug(
             "No child values for node %s child %s", node_id, child.id)
-        return dict(validated)
+        return validated
     if gateway.sensors[node_id].sketch_name is None:
         _LOGGER.debug("Node %s is missing sketch name", node_id)
-        return dict(validated)
+        return validated
     pres = gateway.const.Presentation
     set_req = gateway.const.SetReq
     s_name = next(
         (member.name for member in pres if member.value == child.type), None)
     if s_name not in MYSENSORS_CONST_SCHEMA:
         _LOGGER.warning("Child type %s is not supported", s_name)
-        return dict(validated)
+        return validated
     child_schemas = MYSENSORS_CONST_SCHEMA[s_name]
 
     def msg(name):
@@ -323,4 +323,4 @@ def _validate_child(gateway, node_id, child):
             continue
         dev_id = id(gateway), node_id, child.id, value_type
         validated[platform].append(dev_id)
-    return dict(validated)
+    return validated
