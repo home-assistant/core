@@ -33,7 +33,6 @@ CLASSIFIER = 'facebox'
 DATA_FACEBOX = 'facebox_classifiers'
 FILE_PATH = 'file_path'
 SERVICE_TEACH_FACE = 'facebox_teach_face'
-TIMEOUT = 9
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -87,7 +86,6 @@ def post_image(url, username, password, image):
             url,
             auth=requests.auth.HTTPBasicAuth(username, password),
             json={"base64": encode_image(image)},
-            timeout=TIMEOUT
             )
         if response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
@@ -107,7 +105,6 @@ def teach_file(url, username, password, name, file_path):
                 auth=requests.auth.HTTPBasicAuth(username, password),
                 data={FACEBOX_NAME: name, ATTR_ID: file_path},
                 files={'file': open_file},
-                timeout=TIMEOUT
                 )
         if response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
