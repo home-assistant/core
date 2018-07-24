@@ -1,5 +1,6 @@
 """The tests for the Command line sensor platform."""
 import unittest
+from unittest.mock import patch
 
 from homeassistant.helpers.template import Template
 from homeassistant.components.sensor import command_line
@@ -16,6 +17,10 @@ class TestCommandSensorSensor(unittest.TestCase):
     def tearDown(self):
         """Stop everything that was started."""
         self.hass.stop()
+
+    def update_side_effect(self, data):
+        """Side effect function for mocking CommandSensorData.update()."""
+        self.commandline.data = data
 
     def test_setup(self):
         """Test sensor setup."""
@@ -46,7 +51,7 @@ class TestCommandSensorSensor(unittest.TestCase):
 
         entity = command_line.CommandSensor(
             self.hass, data, 'test', 'in',
-            Template('{{ value | multiply(0.1) }}', self.hass))
+            Template('{{ value | multiply(0.1) }}', self.hass), [])
 
         entity.update()
         self.assertEqual(5, float(entity.state))
@@ -68,3 +73,56 @@ class TestCommandSensorSensor(unittest.TestCase):
         data.update()
 
         self.assertEqual(None, data.value)
+
+    def test_update_with_json_attrs(self):
+        """Test attributes get extracted from a JSON result."""
+        data = command_line.CommandSensorData(
+            self.hass,
+            'echo { \\"key\\": \\"some_json_value\\" }', 15
+        )
+ 
+        self.sensor = command_line.CommandSensor(self.hass, data, 'test',
+                                                 None, None, ['key'])
+        self.sensor.update()
+        self.assertEqual('some_json_value',
+                         self.sensor.device_state_attributes['key'])
+
+    @patch('homeassistant.components.sensor.command_line._LOGGER')
+    def test_update_with_json_attrs_no_data(self, mock_logger):
+        """Test attributes when no JSON result fetched."""
+        data = command_line.CommandSensorData(
+            self.hass,
+            'echo ', 15
+        )
+        self.sensor = command_line.CommandSensor(self.hass, data, 'test',
+                                                 None, None, ['key'])
+        self.sensor.update()
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+
+    @patch('homeassistant.components.sensor.command_line._LOGGER')
+    def test_update_with_json_attrs_not_dict(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        data = command_line.CommandSensorData(
+            self.hass,
+            'echo [1, 2, 3]', 15
+        )
+        self.sensor = command_line.CommandSensor(self.hass, data, 'test',
+                                                 None, None, ['key'])
+        self.sensor.update()
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+
+    @patch('homeassistant.components.sensor.command_line._LOGGER')
+    def test_update_with_json_attrs_bad_JSON(self, mock_logger):
+        """Test attributes get extracted from a JSON result."""
+        data = command_line.CommandSensorData(
+            self.hass,
+            'echo This is text rather than JSON data.', 15
+        )
+        self.sensor = command_line.CommandSensor(self.hass, data, 'test',
+                                                 None, None, ['key'])
+        self.sensor.update()
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+        self.assertTrue(mock_logger.debug.called)
