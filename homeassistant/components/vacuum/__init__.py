@@ -225,11 +225,6 @@ class VacuumDevice(ToggleEntity):
         raise NotImplementedError()
 
     @property
-    def state(self):
-        """Return the state of the vacuum cleaner."""
-        return None
-
-    @property
     def status(self):
         """Return the status of the vacuum cleaner."""
         return None
@@ -243,14 +238,8 @@ class VacuumDevice(ToggleEntity):
     def battery_icon(self):
         """Return the battery icon for the vacuum cleaner."""
         charging = False
-
-        if self.supported_features & SUPPORT_STATE != 0:
-            if self.state is not None:
-                charging = bool(self.state == STATE_DOCKED)
-        else:
-            if self.status is not None:
-                charging = 'charg' in self.status.lower()
-
+        if self.status is not None:
+            charging = 'charg' in self.status.lower()
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging)
 
