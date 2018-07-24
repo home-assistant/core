@@ -17,7 +17,7 @@ from homeassistant.helpers.event import (
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    BRIDGE_MODEL, BRIDGE_NAME, BRIDGE_SERIAL_NUMBER, CHAR_BATTERY_LEVEL,
+    BRIDGE_MODEL, BRIDGE_SERIAL_NUMBER, CHAR_BATTERY_LEVEL,
     CHAR_CHARGING_STATE, CHAR_STATUS_LOW_BATTERY, DEBOUNCE_TIMEOUT,
     MANUFACTURER, SERV_BATTERY_SERVICE)
 from .util import (
@@ -141,7 +141,7 @@ class HomeAccessory(Accessory):
 class HomeBridge(Bridge):
     """Adapter class for Bridge."""
 
-    def __init__(self, hass, driver, name=BRIDGE_NAME):
+    def __init__(self, hass, driver, name):
         """Initialize a Bridge object."""
         super().__init__(driver, name)
         self.set_info_service(
