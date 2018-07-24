@@ -346,8 +346,9 @@ async def async_setup(hass, config):
         update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
-                pars = params.copy()
+                pars = params
                 if not pars:
+                    pars = params.copy()
                     pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
                     preprocess_turn_on_alternatives(pars)
                 await light.async_turn_on(**pars)
