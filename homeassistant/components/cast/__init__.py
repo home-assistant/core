@@ -1,4 +1,5 @@
 """Component to embed Google Cast."""
+from homeassistant import data_entry_flow
 from homeassistant.helpers import config_entry_flow
 
 
@@ -8,7 +9,14 @@ REQUIREMENTS = ['pychromecast==2.1.0']
 
 async def async_setup(hass, config):
     """Set up the Cast component."""
-    hass.data[DOMAIN] = config.get(DOMAIN, {})
+    conf = config.get(DOMAIN)
+
+    hass.data[DOMAIN] = conf or {}
+
+    if conf is not None:
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            DOMAIN, source=data_entry_flow.SOURCE_IMPORT))
+
     return True
 
 

@@ -336,3 +336,15 @@ async def test_lovelace_ui_load_err(hass, hass_ws_client):
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success'] is False
     assert msg['error']['code'] == 'load_error'
+
+
+async def test_auth_load(mock_http_client):
+    """Test auth component loaded by default."""
+    resp = await mock_http_client.get('/auth/providers')
+    assert resp.status == 200
+
+
+async def test_onboarding_load(mock_http_client):
+    """Test onboarding component loaded by default."""
+    resp = await mock_http_client.get('/api/onboarding')
+    assert resp.status == 200

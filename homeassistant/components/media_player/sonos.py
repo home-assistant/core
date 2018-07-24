@@ -865,9 +865,10 @@ class SonosDevice(MediaPlayerDevice):
         """List of available input sources."""
         sources = [fav.title for fav in self._favorites]
 
-        if 'PLAY:5' in self._model or 'CONNECT' in self._model:
+        model = self._model.upper()
+        if 'PLAY:5' in model or 'CONNECT' in model:
             sources += [SOURCE_LINEIN]
-        elif 'PLAYBAR' in self._model:
+        elif 'PLAYBAR' in model:
             sources += [SOURCE_LINEIN, SOURCE_TV]
 
         return sources
