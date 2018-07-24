@@ -1,5 +1,5 @@
 """
-Support for Chinese wifi thermostats (Floureon, Beok, Beca Energy).
+Support for Chinese wifi thermostats (Floureon, Beok, Beca Energy)
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.broadlink/
@@ -11,10 +11,13 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    DOMAIN, PLATFORM_SCHEMA, STATE_AUTO, STATE_IDLE, STATE_MANUAL,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
+    DOMAIN, ClimateDevice,
+    SUPPORT_OPERATION_MODE,
+    SUPPORT_TARGET_TEMPERATURE,
+    PLATFORM_SCHEMA, STATE_HEAT, STATE_OFF, STATE_AUTO)
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_HOST, CONF_MAC, CONF_NAME, TEMP_CELSIUS)
+    TEMP_CELSIUS, ATTR_TEMPERATURE,
+    CONF_NAME, CONF_HOST, CONF_MAC)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -136,9 +139,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    config[CONF_SCHEDULE_WEEKDAY],
                    config[CONF_MIN_TEMP],
                    config[CONF_MAX_TEMP],
-                   STATE_IDLE,
-                   STATE_MANUAL,
-                   STATE_AUTO)
+                   STATE_OFF,
+                   STATE_HEAT,
+                   STATE_AUTO
+                   )
 
     add_devices([BroadlinkThermostat(wifi_thermostat)], True)
 
@@ -153,9 +157,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
              CONF_WEEKEND:
              json.loads(schedule_we.replace("'", '"'))})
 
-    # Register schedule service
     hass.services.register(DOMAIN,
-                           DEFAULT_NAME + '_set_schedule',
+                           'set_schedule',
                            handle_set_schedule,
                            schema=SET_SCHEDULE_SCHEMA)
 
@@ -166,9 +169,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         wifi_thermostat.set_advanced_config(
             json.loads(advanced_conf.replace("'", '"')))
 
-    # Register advanced configuration service
     hass.services.register(DOMAIN,
-                           DEFAULT_NAME + '_set_advanced_conf',
+                           'set_advanced_conf',
                            handle_set_advanced_conf,
                            schema=SET_ADVANCED_CONF_SCHEMA)
 
@@ -183,9 +185,14 @@ class BroadlinkThermostat(ClimateDevice):
         self._device = device
 
     @property
+    def state(self):
+        return self._device.current_operation
+
+    @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
+        return SUPPORT_TARGET_TEMPERATURE \
+               | SUPPORT_OPERATION_MODE
 
     @property
     def should_poll(self):
@@ -230,7 +237,7 @@ class BroadlinkThermostat(ClimateDevice):
     @property
     def operation_list(self):
         """List of available operation modes."""
-        return [STATE_AUTO, STATE_IDLE, STATE_MANUAL]
+        return [STATE_AUTO, STATE_HEAT, STATE_OFF]
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
@@ -243,26 +250,21 @@ class BroadlinkThermostat(ClimateDevice):
         self._device.set_operation_mode(operation_mode)
         self.schedule_update_ha_state()
 
-    def turn_on(self):
-        """Turn heater toggleable device on."""
-        self._device.power_on_off(STATE_MANUAL)
-        self.schedule_update_ha_state()
-
-    def turn_off(self):
-        """Turn heater toggleable device off."""
-        self._device.power_on_off(STATE_IDLE)
-        self.schedule_update_ha_state()
+    @property
+    def is_on(self):
+        """Return true if the device is on."""
+        return False if self._device.current_operation == STATE_OFF else True
 
     def set_advance_config(self, config_json):
-        """Set the thermostat advanced config."""
+        """Set the thermostat advanced config"""
         self._device.set_advanced_config(json.loads(config_json))
         self.schedule_update_ha_state()
 
     def set_schedule(self, schedule_json):
-        """Set the thermostat schedule."""
+        """Set the thermostat schedule"""
         self._device.set_schedule(json.loads(schedule_json))
         self.schedule_update_ha_state()
 
     def update(self):
-        """Update component data."""
+        """Update component data"""
         self._device.read_status()
