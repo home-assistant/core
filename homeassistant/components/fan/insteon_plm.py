@@ -64,7 +64,8 @@ class InsteonPLMFan(InsteonPLMEntity, FanEntity):
         return SUPPORT_SET_SPEED
 
     @asyncio.coroutine
-    def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    def async_turn_on(self, speed: str = None, speed_pct: int = None,
+                      **kwargs) -> None:
         """Turn on the entity."""
         if speed is None:
             speed = SPEED_MEDIUM
@@ -76,7 +77,8 @@ class InsteonPLMFan(InsteonPLMEntity, FanEntity):
         yield from self.async_set_speed(SPEED_OFF)
 
     @asyncio.coroutine
-    def async_set_speed(self, speed: str) -> None:
+    def async_set_speed(self, speed: str = None,
+                        speed_pct: int = None) -> None:
         """Set the speed of the fan."""
         fan_speed = SPEED_TO_HEX[speed]
         if fan_speed == 0x00:

@@ -50,25 +50,44 @@ DIRECTION_FORWARD = 'forward'
 DIRECTION_REVERSE = 'reverse'
 
 ATTR_SPEED = 'speed'
+ATTR_SPEED_PCT = 'speed_pct'
 ATTR_SPEED_LIST = 'speed_list'
 ATTR_OSCILLATING = 'oscillating'
 ATTR_DIRECTION = 'direction'
 
+SPEED_GROUP = "Speed descriptors"
+
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
+    'speed_pct': ATTR_SPEED_PCT,
     'speed_list': ATTR_SPEED_LIST,
     'oscillating': ATTR_OSCILLATING,
     'direction': ATTR_DIRECTION,
 }  # type: dict
 
+
+def _cv_set_speed(config):
+    speed = config.get(ATTR_SPEED)
+    speed_pct = config.get(ATTR_SPEED_PCT)
+    if speed is None and speed_pct is None:
+        raise vol.Invalid("Must specify at least one of {} or {}"
+                          .format(ATTR_SPEED, ATTR_SPEED_PCT))
+    return config
+
+
+# Service call validation schemas
+VALID_SPEED_PCT = vol.All(vol.Coerce(int), vol.Range(min=0, max=100))
+
 FAN_SET_SPEED_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Required(ATTR_SPEED): cv.string
-})  # type: dict
+    vol.Exclusive(ATTR_SPEED, SPEED_GROUP): cv.string,
+    vol.Exclusive(ATTR_SPEED_PCT, SPEED_GROUP): VALID_SPEED_PCT,
+}, _cv_set_speed)  # type: dict
 
 FAN_TURN_ON_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
-    vol.Optional(ATTR_SPEED): cv.string
+    vol.Exclusive(ATTR_SPEED, SPEED_GROUP): cv.string,
+    vol.Exclusive(ATTR_SPEED_PCT, SPEED_GROUP): VALID_SPEED_PCT,
 })  # type: dict
 
 FAN_TURN_OFF_SCHEMA = vol.Schema({
@@ -122,16 +141,20 @@ def is_on(hass, entity_id: str = None) -> bool:
     """Return if the fans are on based on the statemachine."""
     entity_id = entity_id or ENTITY_ID_ALL_FANS
     state = hass.states.get(entity_id)
+    if state.attributes[ATTR_SPEED_PCT] is not None:
+        return state.attributes[ATTR_SPEED_PCT] > 0
     return state.attributes[ATTR_SPEED] not in [SPEED_OFF, STATE_UNKNOWN]
 
 
 @bind_hass
-def turn_on(hass, entity_id: str = None, speed: str = None) -> None:
+def turn_on(hass, entity_id: str = None, speed: str = None,
+            speed_pct: int = None) -> None:
     """Turn all or specified fan on."""
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_SPEED, speed),
+            (ATTR_SPEED_PCT, speed_pct),
         ] if value is not None
     }
 
@@ -171,12 +194,14 @@ def oscillate(hass, entity_id: str = None,
 
 
 @bind_hass
-def set_speed(hass, entity_id: str = None, speed: str = None) -> None:
+def set_speed(hass, entity_id: str = None, speed: str = None,
+              speed_pct: int = None) -> None:
     """Set speed for all or specified fan."""
     data = {
         key: value for key, value in [
             (ATTR_ENTITY_ID, entity_id),
             (ATTR_SPEED, speed),
+            (ATTR_SPEED_PCT, speed_pct),
         ] if value is not None
     }
 
@@ -235,18 +260,21 @@ def async_setup(hass, config: dict):
 class FanEntity(ToggleEntity):
     """Representation of a fan."""
 
-    def set_speed(self: ToggleEntity, speed: str) -> None:
+    def set_speed(self: ToggleEntity, speed: str = None,
+                  speed_pct: int = None) -> None:
         """Set the speed of the fan."""
         raise NotImplementedError()
 
-    def async_set_speed(self: ToggleEntity, speed: str):
+    def async_set_speed(self: ToggleEntity, speed: str = None,
+                        speed_pct: int = None):
         """Set the speed of the fan.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if speed is SPEED_OFF:
+        if speed is SPEED_OFF or speed_pct == 0:
             return self.async_turn_off()
-        return self.hass.async_add_job(self.set_speed, speed)
+        return self.hass.async_add_job(
+            ft.partial(self.set_speed, speed, speed_pct=speed_pct))
 
     def set_direction(self: ToggleEntity, direction: str) -> None:
         """Set the direction of the fan."""
@@ -260,20 +288,22 @@ class FanEntity(ToggleEntity):
         return self.hass.async_add_job(self.set_direction, direction)
 
     # pylint: disable=arguments-differ
-    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
+    def turn_on(self: ToggleEntity, speed: str = None,
+                speed_pct: int = None, **kwargs) -> None:
         """Turn on the fan."""
         raise NotImplementedError()
 
     # pylint: disable=arguments-differ
-    def async_turn_on(self: ToggleEntity, speed: str = None, **kwargs):
+    def async_turn_on(self: ToggleEntity, speed: str = None,
+                      speed_pct: int = None, **kwargs):
         """Turn on the fan.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        if speed is SPEED_OFF:
+        if speed is SPEED_OFF or speed_pct == 0:
             return self.async_turn_off()
         return self.hass.async_add_job(
-            ft.partial(self.turn_on, speed, **kwargs))
+            ft.partial(self.turn_on, speed, speed_pct=speed_pct, **kwargs))
 
     def oscillate(self: ToggleEntity, oscillating: bool) -> None:
         """Oscillate the fan."""
@@ -294,6 +324,11 @@ class FanEntity(ToggleEntity):
     @property
     def speed(self) -> str:
         """Return the current speed."""
+        return None
+
+    @property
+    def speed_pct(self) -> int:
+        """Return to current speed as percent between 0..100."""
         return None
 
     @property

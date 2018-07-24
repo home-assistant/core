@@ -87,7 +87,8 @@ class ComfoConnectFan(FanEntity):
         """List of available fan modes."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, speed_pct: int = None,
+                **kwargs) -> None:
         """Turn on the fan."""
         if speed is None:
             speed = SPEED_LOW
@@ -97,7 +98,7 @@ class ComfoConnectFan(FanEntity):
         """Turn off the fan (to away)."""
         self.set_speed(SPEED_OFF)
 
-    def set_speed(self, speed: str):
+    def set_speed(self, speed: str = None, speed_pct: int = None):
         """Set fan speed."""
         _LOGGER.debug('Changing fan speed to %s.', speed)
 

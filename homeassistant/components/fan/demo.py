@@ -29,6 +29,7 @@ class DemoFan(FanEntity):
         self.hass = hass
         self._supported_features = supported_features
         self._speed = STATE_OFF
+        self._speed_pct = 0
         self.oscillating = None
         self.direction = None
         self._name = name
@@ -54,24 +55,49 @@ class DemoFan(FanEntity):
         return self._speed
 
     @property
+    def speed_pct(self) -> int:
+        """Return the current speed in percent between 0..100."""
+        return self._speed_pct
+
+    @property
     def speed_list(self) -> list:
         """Get the list of available speeds."""
         return [STATE_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
-    def turn_on(self, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, speed_pct: int = None,
+                **kwargs) -> None:
         """Turn on the entity."""
-        if speed is None:
+        if speed is None and speed_pct is None:
             speed = SPEED_MEDIUM
-        self.set_speed(speed)
+        self.set_speed(speed, None)
 
     def turn_off(self, **kwargs) -> None:
         """Turn off the entity."""
         self.oscillate(False)
         self.set_speed(STATE_OFF)
 
-    def set_speed(self, speed: str) -> None:
+    def set_speed(self, speed: str = None, speed_pct: int = None) -> None:
         """Set the speed of the fan."""
+        if speed is not None:
+            if speed == STATE_OFF:
+                speed_pct = 0
+            elif speed == SPEED_LOW:
+                speed_pct = 30
+            elif speed == SPEED_MEDIUM:
+                speed_pct = 60
+            elif speed == SPEED_HIGH:
+                speed_pct = 100
+        elif speed_pct is not None:
+            if speed_pct == 0:
+                speed = STATE_OFF
+            elif speed_pct <= 30:
+                speed = SPEED_LOW
+            elif speed_pct <= 60:
+                speed = SPEED_MEDIUM
+            elif speed <= 100:
+                speed = SPEED_HIGH
         self._speed = speed
+        self._speed_pct = speed_pct
         self.schedule_update_ha_state()
 
     def set_direction(self, direction: str) -> None:

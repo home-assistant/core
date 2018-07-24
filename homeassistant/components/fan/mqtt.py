@@ -250,7 +250,8 @@ class MqttFan(MqttAvailability, FanEntity):
         """Return the oscillation state."""
         return self._oscillation
 
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    async def async_turn_on(self, speed: str = None, speed_pct: int = None,
+                            **kwargs) -> None:
         """Turn on the entity.
 
         This method is a coroutine.
@@ -270,7 +271,8 @@ class MqttFan(MqttAvailability, FanEntity):
             self.hass, self._topic[CONF_COMMAND_TOPIC],
             self._payload[STATE_OFF], self._qos, self._retain)
 
-    async def async_set_speed(self, speed: str) -> None:
+    async def async_set_speed(self, speed: str = None,
+                              speed_pct: int = None) -> None:
         """Set the speed of the fan.
 
         This method is a coroutine.
