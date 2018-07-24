@@ -1,7 +1,9 @@
 """The tests for the Light component."""
 # pylint: disable=protected-access
 import unittest
+import unittest.mock as mock
 import os
+from io import StringIO
 
 from homeassistant.setup import setup_component
 import homeassistant.loader as loader
@@ -305,6 +307,82 @@ class TestLight(unittest.TestCase):
 
         self.assertEqual({
             light.ATTR_HS_COLOR: (71.059, 100),
+            light.ATTR_BRIGHTNESS: 100
+        }, data)
+
+    def test_default_profiles_group(self):
+        """Test default turn-on light profile for all lights."""
+        platform = loader.get_component(self.hass, 'light.test')
+        platform.init()
+
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
+        real_isfile = os.path.isfile
+        real_open = open
+
+        def _mock_isfile(path):
+            if path == user_light_file:
+                return True
+            return real_isfile(path)
+
+        def _mock_open(path):
+            if path == user_light_file:
+                return StringIO(profile_data)
+            return real_open(path)
+
+        profile_data = "id,x,y,brightness\n" +\
+                       "group.all_lights.default,.4,.6,99\n"
+        with mock.patch('os.path.isfile', side_effect=_mock_isfile):
+            with mock.patch('builtins.open', side_effect=_mock_open):
+                self.assertTrue(setup_component(
+                    self.hass, light.DOMAIN,
+                    {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+                ))
+
+        dev, _, _ = platform.DEVICES
+        light.turn_on(self.hass, dev.entity_id)
+        self.hass.block_till_done()
+        _, data = dev.last_call('turn_on')
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (71.059, 100),
+            light.ATTR_BRIGHTNESS: 99
+        }, data)
+
+    def test_default_profiles_light(self):
+        """Test default turn-on light profile for a specific light."""
+        platform = loader.get_component(self.hass, 'light.test')
+        platform.init()
+
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
+        real_isfile = os.path.isfile
+        real_open = open
+
+        def _mock_isfile(path):
+            if path == user_light_file:
+                return True
+            return real_isfile(path)
+
+        def _mock_open(path):
+            if path == user_light_file:
+                return StringIO(profile_data)
+            return real_open(path)
+
+        profile_data = "id,x,y,brightness\n" +\
+                       "group.all_lights.default,.3,.5,200\n" +\
+                       "light.ceiling_2.default,.6,.6,100\n"
+        with mock.patch('os.path.isfile', side_effect=_mock_isfile):
+            with mock.patch('builtins.open', side_effect=_mock_open):
+                self.assertTrue(setup_component(
+                    self.hass, light.DOMAIN,
+                    {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+                ))
+
+        dev = next(filter(lambda x: x.entity_id == 'light.ceiling_2',
+                          platform.DEVICES))
+        light.turn_on(self.hass, dev.entity_id)
+        self.hass.block_till_done()
+        _, data = dev.last_call('turn_on')
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (50.353, 100),
             light.ATTR_BRIGHTNESS: 100
         }, data)
 
