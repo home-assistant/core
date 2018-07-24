@@ -117,7 +117,7 @@ class NOAATidesAndCurrentsSensor(Entity):
                   'units': self._units,
                   'interval': 'hilo',
                   'format': 'json',
-                 }
+                  }
         try:
             self.data = requests.get(API_URL, params=params, timeout=10).json()
             _LOGGER.debug("Data = %s", self.data)
