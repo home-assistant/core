@@ -152,7 +152,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             schema=schema)
 
 
-class MiroboVacuum(VacuumDevice):
+class MiroboVacuum(StateVacuumDevice):
     """Representation of a Xiaomi Vacuum cleaner robot."""
 
     def __init__(self, name, vacuum):
