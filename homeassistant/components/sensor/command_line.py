@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.command_line/
 """
 import logging
+import json
 import subprocess
 import shlex
 
@@ -27,6 +28,7 @@ DEFAULT_NAME = 'Command Sensor'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
+CONF_JSON_ATTRS = 'json_attributes'
 CONF_COMMAND_TIMEOUT = 'command_timeout'
 DEFAULT_TIMEOUT = 15
 
@@ -35,6 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(
         CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
@@ -49,15 +52,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     command_timeout = config.get(CONF_COMMAND_TIMEOUT)
     if value_template is not None:
         value_template.hass = hass
+    json_attrs = config.get(CONF_JSON_ATTRS)
     data = CommandSensorData(hass, command, command_timeout)
 
-    add_devices([CommandSensor(hass, data, name, unit, value_template)], True)
+    add_devices([CommandSensor(hass, data, name, unit, value_template,
+                               json_attrs)], True)
 
 
 class CommandSensor(Entity):
     """Representation of a sensor that is using shell commands."""
 
-    def __init__(self, hass, data, name, unit_of_measurement, value_template):
+    def __init__(self, hass, data, name, unit_of_measurement, value_template,
+                 json_attrs):
         """Initialize the sensor."""
         self._hass = hass
         self.data = data
@@ -65,6 +71,8 @@ class CommandSensor(Entity):
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
+        self._json_attrs = json_attrs
+        self._attributes = None
 
     @property
     def name(self):
@@ -81,10 +89,32 @@ class CommandSensor(Entity):
         """Return the state of the device."""
         return self._state
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return self._attributes
+
     def update(self):
         """Get the latest data and updates the state."""
         self.data.update()
         value = self.data.value
+
+        if self._json_attrs:
+            self._attributes = {}
+            if value:
+                try:
+                    json_dict = json.loads(value)
+                    if isinstance(json_dict, dict):
+                        attrs = {k: json_dict[k] for k in self._json_attrs
+                                 if k in json_dict}
+                        self._attributes = attrs
+                    else:
+                        _LOGGER.warning("JSON result was not a dictionary")
+                except ValueError:
+                    _LOGGER.warning("Command result could not be parsed as JSON")
+                    _LOGGER.debug("Erroneous JSON: %s", value)
+            else:
+                _LOGGER.warning("Empty reply found when expecting JSON data")
 
         if value is None:
             value = STATE_UNKNOWN
