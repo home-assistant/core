@@ -8,8 +8,8 @@ import requests_mock
 from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_NAME, CONF_FRIENDLY_NAME, CONF_PASSWORD,
-    CONF_USERNAME, CONF_IP_ADDRESS, CONF_PORT, 
-    HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_OK, STATE_UNKNOWN)
+    CONF_USERNAME, CONF_IP_ADDRESS, CONF_PORT,
+    HTTP_BAD_REQUEST, HTTP_OK, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.image_processing.facebox as fb
@@ -117,7 +117,6 @@ async def test_setup_platform(hass):
 
 async def test_setup_platform_with_auth(hass):
     """Setup platform with one entity and auth."""
-
     valid_config_auth = VALID_CONFIG.copy()
     valid_config_auth[ip.DOMAIN][CONF_USERNAME] = MOCK_USERNAME
     valid_config_auth[ip.DOMAIN][CONF_PASSWORD] = MOCK_PASSWORD
