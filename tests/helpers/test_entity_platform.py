@@ -5,6 +5,8 @@ import unittest
 from unittest.mock import patch, Mock, MagicMock
 from datetime import timedelta
 
+import pytest
+
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.loader as loader
 from homeassistant.helpers.entity import generate_entity_id
@@ -487,7 +489,7 @@ def test_registry_respect_entity_disabled(hass):
     assert hass.states.async_entity_ids() == []
 
 
-async def test_entity_registry_updates(hass):
+async def test_entity_registry_updates_name(hass):
     """Test that updates on the entity registry update platform entities."""
     registry = mock_registry(hass, {
         'test_domain.world': entity_registry.RegistryEntry(
@@ -602,3 +604,75 @@ def test_not_fails_with_adding_empty_entities_(hass):
     yield from component.async_add_entities([])
 
     assert len(hass.states.async_entity_ids()) == 0
+
+
+async def test_entity_registry_updates_entity_id(hass):
+    """Test that updates on the entity registry update platform entities."""
+    registry = mock_registry(hass, {
+        'test_domain.world': entity_registry.RegistryEntry(
+            entity_id='test_domain.world',
+            unique_id='1234',
+            # Using component.async_add_entities is equal to platform "domain"
+            platform='test_platform',
+            name='Some name'
+        )
+    })
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id='1234')
+    await platform.async_add_entities([entity])
+
+    state = hass.states.get('test_domain.world')
+    assert state is not None
+    assert state.name == 'Some name'
+
+    registry.async_update_entity('test_domain.world',
+                                 new_entity_id='test_domain.planet')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get('test_domain.world') is None
+    assert hass.states.get('test_domain.planet') is not None
+
+
+async def test_entity_registry_updates_invalid_entity_id(hass):
+    """Test that we can't update to an invalid entity id."""
+    registry = mock_registry(hass, {
+        'test_domain.world': entity_registry.RegistryEntry(
+            entity_id='test_domain.world',
+            unique_id='1234',
+            # Using component.async_add_entities is equal to platform "domain"
+            platform='test_platform',
+            name='Some name'
+        ),
+        'test_domain.existing': entity_registry.RegistryEntry(
+            entity_id='test_domain.existing',
+            unique_id='5678',
+            platform='test_platform',
+        ),
+    })
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id='1234')
+    await platform.async_add_entities([entity])
+
+    state = hass.states.get('test_domain.world')
+    assert state is not None
+    assert state.name == 'Some name'
+
+    with pytest.raises(ValueError):
+        registry.async_update_entity('test_domain.world',
+                                     new_entity_id='test_domain.existing')
+
+    with pytest.raises(ValueError):
+        registry.async_update_entity('test_domain.world',
+                                     new_entity_id='invalid_entity_id')
+
+    with pytest.raises(ValueError):
+        registry.async_update_entity('test_domain.world',
+                                     new_entity_id='diff_domain.world')
+
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get('test_domain.world') is not None
+    assert hass.states.get('invalid_entity_id') is None
+    assert hass.states.get('diff_domain.world') is None
