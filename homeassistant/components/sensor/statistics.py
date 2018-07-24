@@ -195,7 +195,7 @@ class StatisticsSensor(Entity):
                 _LOGGER.debug(err)
                 self.stdev = self.variance = STATE_UNKNOWN
 
-            if len(self.states) > 0:
+            if self.states:
                 self.total = round(sum(self.states), 2)
                 self.min = min(self.states)
                 self.max = max(self.states)
