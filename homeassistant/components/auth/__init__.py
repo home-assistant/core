@@ -110,6 +110,8 @@ import aiohttp.web
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components.http.ban import process_wrong_login, \
+    log_invalid_auth
 from homeassistant.core import callback
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView, FlowManagerResourceView)
@@ -183,6 +185,7 @@ class LoginFlowIndexView(FlowManagerIndexView):
         vol.Required('handler'): vol.Any(str, list),
         vol.Required('redirect_uri'): str,
     }))
+    @log_invalid_auth
     async def post(self, request, data):
         """Create a new login flow."""
         if not indieauth.verify_redirect_uri(data['client_id'],
@@ -212,6 +215,7 @@ class LoginFlowResourceView(FlowManagerResourceView):
     @RequestDataValidator(vol.Schema({
         'client_id': str
     }, extra=vol.ALLOW_EXTRA))
+    @log_invalid_auth
     async def post(self, request, flow_id, data):
         """Handle progressing a login flow request."""
         client_id = data.pop('client_id')
@@ -227,6 +231,11 @@ class LoginFlowResourceView(FlowManagerResourceView):
             return self.json_message('User input malformed', 400)
 
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            # @log_invalid_auth does not work here since it returns HTTP 200
+            # need manually log failed login attempts
+            if result['errors'] is not None and \
+                    result['errors'].get('base') == 'invalid_auth':
+                await process_wrong_login(request)
             return self.json(self._prepare_result_json(result))
 
         result.pop('data')
@@ -247,6 +256,7 @@ class GrantTokenView(HomeAssistantView):
         """Initialize the grant token view."""
         self._retrieve_credentials = retrieve_credentials
 
+    @log_invalid_auth
     async def post(self, request):
         """Grant a token."""
         hass = request.app['hass']
