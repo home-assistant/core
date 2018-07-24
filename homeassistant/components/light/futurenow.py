@@ -39,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    import pyfnip
-
+    """Set up the light platform for each FutureNow unit."""
     lights = []
     for channel, device_config in config[CONF_DEVICES].items():
         device = {}
@@ -79,13 +78,14 @@ class FutureNowLight(Light):
         self._state = None
 
         if device['driver'] == CONF_DRIVER_FNIP6X10AD:
-            self._light = pyfnip.FNIP6x2adOutput(device['host'], 
-                                                 device['port'], self._channel)
+            self._light = pyfnip.FNIP6x2adOutput(device['host'],
+                                                 device['port'],
+                                                 self._channel)
         if device['driver'] == CONF_DRIVER_FNIP8X10A:
-            self._light = pyfnip.FNIP8x10aOutput(device['host'], 
-                                                 device['port'], self._channel)
-
-        """Get actual state of light."""
+            self._light = pyfnip.FNIP8x10aOutput(device['host'],
+                                                 device['port'],
+                                                 self._channel)
+        # Get actual state of light.
         self.update()
 
     @property
@@ -116,11 +116,12 @@ class FutureNowLight(Light):
         self._light.turn_on(to_futurenow_level(level))
 
     def turn_off(self, **kwargs):
+        """Turn the light off."""
         self._light.turn_off()
 
     def update(self):
         """Fetch new state data for this light."""
-        """Delay a bit until state change has fully finished."""
+        # Delay a bit until state change has fully finished."
         time.sleep(.500)
 
         state = int(self._light.is_on())
