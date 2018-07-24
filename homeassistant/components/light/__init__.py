@@ -346,7 +346,12 @@ async def async_setup(hass, config):
         update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
-                await light.async_turn_on(**params)
+                pars = params
+                if not pars:
+                    pars = params.copy()
+                    pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
+                    preprocess_turn_on_alternatives(pars)
+                await light.async_turn_on(**pars)
             elif service.service == SERVICE_TURN_OFF:
                 await light.async_turn_off(**params)
             else:
@@ -430,6 +435,17 @@ class Profiles:
     def get(cls, name):
         """Return a named profile."""
         return cls._all.get(name)
+
+    @classmethod
+    def get_default(cls, entity_id):
+        """Return the default turn-on profile for the given light."""
+        name = entity_id + ".default"
+        if name in cls._all:
+            return name
+        name = ENTITY_ID_ALL_LIGHTS + ".default"
+        if name in cls._all:
+            return name
+        return None
 
 
 class Light(ToggleEntity):
