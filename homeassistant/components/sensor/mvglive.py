@@ -155,8 +155,11 @@ class MVGLiveData(object):
         """Update the connection data."""
         try:
             _departures = self.mvg.getlivedata(
-                station=self._station, ubahn=self._include_ubahn,
-                tram=self._include_tram, bus=self._include_bus,
+                station=self._station,
+                timeoffset=self._timeoffset,
+                ubahn=self._include_ubahn,
+                tram=self._include_tram,
+                bus=self._include_bus,
                 sbahn=self._include_sbahn)
         except ValueError:
             self.departures = []
