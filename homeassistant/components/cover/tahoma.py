@@ -16,14 +16,10 @@ DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CLOSURE = 'closure'
 ATTR_MEM_POS = 'memorized_position'
 ATTR_RSSI_LEVEL = 'rssi_level'
-ATTR_OPEN_CLOSE = 'open_close'
-ATTR_STATUS = 'status'
 ATTR_LOCK_START_TS = 'lock_start_ts'
 ATTR_LOCK_END_TS = 'lock_end_ts'
-ATTR_LOCK_TIMER = 'lock_timer'
 ATTR_LOCK_LEVEL = 'lock_level'
 ATTR_LOCK_ORIG = 'lock_originator'
 
@@ -180,22 +176,11 @@ class TahomaCover(TahomaDevice, CoverDevice):
         if super_attr is not None:
             attr.update(super_attr)
 
-        if self._closure is not None:
-            attr[ATTR_CLOSURE] = self._closure
         if 'core:Memorized1PositionState' in self.tahoma_device.active_states:
             attr[ATTR_MEM_POS] = self.tahoma_device.active_states[
                 'core:Memorized1PositionState']
         if self._rssi_level is not None:
             attr[ATTR_RSSI_LEVEL] = self._rssi_level
-        if 'core:OpenClosedState' in self.tahoma_device.active_states:
-            attr[ATTR_OPEN_CLOSE] = self.tahoma_device.active_states[
-                'core:OpenClosedState']
-        # Can be 'available', 'unavailable'
-        if 'core:StatusState' in self.tahoma_device.active_states:
-            attr[ATTR_STATUS] = self.tahoma_device.active_states[
-                'core:StatusState']
-        if self._lock_timer > 0:
-            attr[ATTR_LOCK_TIMER] = self._lock_timer
         if self._lock_start_ts is not None:
             attr[ATTR_LOCK_START_TS] = self._lock_start_ts.isoformat()
         if self._lock_end_ts is not None:
