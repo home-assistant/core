@@ -8,12 +8,11 @@ import requests_mock
 from homeassistant.core import callback
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_NAME, CONF_FRIENDLY_NAME, CONF_PASSWORD,
-    CONF_USERNAME, CONF_IP_ADDRESS, CONF_PORT, STATE_UNKNOWN)
+    CONF_USERNAME, CONF_IP_ADDRESS, CONF_PORT, 
+    HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED, HTTP_OK, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.image_processing.facebox as fb
-
-# pylint: disable=redefined-outer-name
 
 MOCK_IP = '192.168.0.1'
 MOCK_PORT = '8080'
@@ -37,7 +36,7 @@ MOCK_USERNAME = 'mock_username'
 MOCK_PASSWORD = 'mock_password'
 
 # Faces data after parsing.
-PARSED_FACES = [{ATTR_NAME: 'John Lennon',
+PARSED_FACES = [{fb.FACEBOX_NAME: 'John Lennon',
                  fb.ATTR_IMAGE_ID: 'john.jpg',
                  fb.ATTR_CONFIDENCE: 58.12,
                  fb.ATTR_MATCHED: True,
@@ -201,7 +200,7 @@ async def test_teach_service(hass, mock_image, mock_isfile, mock_open_file):
 
     with requests_mock.Mocker() as mock_req:
         url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
-        mock_req.post(url, status_code=200)
+        mock_req.post(url, status_code=HTTP_OK)
         data = {ATTR_ENTITY_ID: VALID_ENTITY_ID,
                 ATTR_NAME: MOCK_NAME,
                 fb.FILE_PATH: MOCK_FILE_PATH}
@@ -212,7 +211,7 @@ async def test_teach_service(hass, mock_image, mock_isfile, mock_open_file):
     # Now test the failed teaching.
     with requests_mock.Mocker() as mock_req:
         url = "http://{}:{}/facebox/teach".format(MOCK_IP, MOCK_PORT)
-        mock_req.post(url, status_code=400, text=MOCK_ERROR)
+        mock_req.post(url, status_code=HTTP_BAD_REQUEST, text=MOCK_ERROR)
         data = {ATTR_ENTITY_ID: VALID_ENTITY_ID,
                 ATTR_NAME: MOCK_NAME,
                 fb.FILE_PATH: MOCK_FILE_PATH}
