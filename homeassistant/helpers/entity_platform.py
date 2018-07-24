@@ -283,7 +283,7 @@ class EntityPlatform:
 
             entity.entity_id = entry.entity_id
             entity.registry_name = entry.name
-            entry.add_update_listener(entity)
+            entity.async_on_remove(entry.add_update_listener(entity))
 
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID

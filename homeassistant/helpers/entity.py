@@ -82,6 +82,9 @@ class Entity:
     # Name in the entity registry
     registry_name = None
 
+    # Hold list for functions to call on remove.
+    _on_remove = None
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -324,8 +327,19 @@ class Entity:
             if self.parallel_updates:
                 self.parallel_updates.release()
 
+    @callback
+    def async_on_remove(self, func):
+        """Add a function to call when entity removed."""
+        if self._on_remove is None:
+            self._on_remove = []
+        self._on_remove.append(func)
+
     async def async_remove(self):
         """Remove entity from Home Assistant."""
+        if self._on_remove is not None:
+            while self._on_remove:
+                self._on_remove.pop()()
+
         if self.platform is not None:
             await self.platform.async_remove_entity(self.entity_id)
         else:
@@ -335,7 +349,17 @@ class Entity:
     def async_registry_updated(self, old, new):
         """Called when the entity registry has been updated."""
         self.registry_name = new.name
-        self.async_schedule_update_ha_state()
+
+        if new.entity_id == self.entity_id:
+            self.async_schedule_update_ha_state()
+            return
+
+        async def readd():
+            """Remove and add entity again."""
+            await self.async_remove()
+            await self.platform.async_add_entities([self])
+
+        self.hass.async_create_task(readd())
 
     def __eq__(self, other):
         """Return the comparison."""
