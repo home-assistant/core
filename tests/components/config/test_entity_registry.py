@@ -54,8 +54,8 @@ async def test_get_entity(hass, client):
     }
 
 
-async def test_update_entity(hass, client):
-    """Test get entry."""
+async def test_update_entity_name(hass, client):
+    """Test updating entity name."""
     mock_registry(hass, {
         'test_domain.world': RegistryEntry(
             entity_id='test_domain.world',
@@ -92,7 +92,7 @@ async def test_update_entity(hass, client):
 
 
 async def test_update_entity_no_changes(hass, client):
-    """Test get entry."""
+    """Test update entity with no changes."""
     mock_registry(hass, {
         'test_domain.world': RegistryEntry(
             entity_id='test_domain.world',
@@ -129,7 +129,7 @@ async def test_update_entity_no_changes(hass, client):
 
 
 async def test_get_nonexisting_entity(client):
-    """Test get entry."""
+    """Test get entry with nonexisting entity."""
     await client.send_json({
         'id': 6,
         'type': 'config/entity_registry/get',
@@ -141,7 +141,7 @@ async def test_get_nonexisting_entity(client):
 
 
 async def test_update_nonexisting_entity(client):
-    """Test get entry."""
+    """Test update a nonexisting entity."""
     await client.send_json({
         'id': 6,
         'type': 'config/entity_registry/update',
@@ -151,3 +151,37 @@ async def test_update_nonexisting_entity(client):
     msg = await client.receive_json()
 
     assert not msg['success']
+
+
+async def test_update_entity_id(hass, client):
+    """Test update entity id."""
+    mock_registry(hass, {
+        'test_domain.world': RegistryEntry(
+            entity_id='test_domain.world',
+            unique_id='1234',
+            # Using component.async_add_entities is equal to platform "domain"
+            platform='test_platform',
+        )
+    })
+    platform = MockEntityPlatform(hass)
+    entity = MockEntity(unique_id='1234')
+    await platform.async_add_entities([entity])
+
+    assert hass.states.get('test_domain.world') is not None
+
+    await client.send_json({
+        'id': 6,
+        'type': 'config/entity_registry/update',
+        'entity_id': 'test_domain.world',
+        'new_entity_id': 'test_domain.planet',
+    })
+
+    msg = await client.receive_json()
+
+    assert msg['result'] == {
+        'entity_id': 'test_domain.planet',
+        'name': None
+    }
+
+    assert hass.states.get('test_domain.world') is None
+    assert hass.states.get('test_domain.planet') is not None
