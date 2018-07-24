@@ -239,8 +239,9 @@ class TahomaCover(TahomaDevice, CoverDevice):
                  'rts:BlindRTSComponent'):
             self.apply_action('my')
         elif self.tahoma_device.type in \
-                ('io:VerticalExteriorAwningIOComponent',
-                 'io:HorizontalAwningIOComponent'):
+                ('io:HorizontalAwningIOComponent',
+                 'io:RollerShutterGenericIOComponent',
+                 'io:VerticalExteriorAwningIOComponent'):
             self.apply_action('stop')
         else:
             self.apply_action('stopIdentify')
