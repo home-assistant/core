@@ -273,14 +273,6 @@ class StateDemoVacuum(StateVacuumDevice):
         """Return device state attributes."""
         return {ATTR_CLEANED_AREA: round(self._cleaned_area, 2)}
 
-    def turn_on(self, **kwargs):
-        """Turn on not supported for StateVacuumDevice."""
-        assert False
-
-    def turn_off(self, **kwargs):
-        """Turn off not supported for StateVacuumDevice."""
-        assert False
-
     def start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task."""
         if self.supported_features & SUPPORT_PAUSE == 0:

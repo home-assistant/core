@@ -89,7 +89,7 @@ class TestVacuumDemo(unittest.TestCase):
         self.assertEqual("medium", state.attributes.get(ATTR_FAN_SPEED))
         self.assertListEqual(FAN_SPEEDS,
                              state.attributes.get(ATTR_FAN_SPEED_LIST))
-    
+
     def test_methods(self):
         """Test if methods call the services as expected."""
         self.hass.states.set(ENTITY_VACUUM_BASIC, STATE_ON)
@@ -193,7 +193,6 @@ class TestVacuumDemo(unittest.TestCase):
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertEqual(STATE_CLEANING, state.state)
 
-
     def test_unsupported_methods(self):
         """Test service calls for unsupported vacuums."""
         self.hass.states.set(ENTITY_VACUUM_NONE, STATE_ON)
@@ -247,7 +246,6 @@ class TestVacuumDemo(unittest.TestCase):
         state = self.hass.states.get(ENTITY_VACUUM_BASIC)
         self.assertNotIn("spot", state.attributes.get(ATTR_STATUS))
         self.assertEqual(STATE_OFF, state.state)
-
 
         # StateVacuumDevice does not support on/off
         vacuum.turn_on(self.hass, entity_id=ENTITY_VACUUM_STATE)
