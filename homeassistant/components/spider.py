@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['itho_daalderop_api==1.0.4']
+REQUIREMENTS = ['spiderpy==1.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,13 +32,14 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up Spider Component."""
-    from itho_daalderop_api import IthoDaalderop_API, UnauthorizedException
+    from spiderpy.spiderapi import SpiderApi
+    from spiderpy.spiderapi import UnauthorizedException
 
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
 
     try:
-        api = IthoDaalderop_API(username, password)
+        api = SpiderApi(username, password)
 
         hass.data[DOMAIN] = {
             'controller': api,
@@ -48,8 +49,8 @@ def setup(hass, config):
         for component in SPIDER_COMPONENTS:
             load_platform(hass, component, DOMAIN, {})
 
-        _LOGGER.debug("Connection with Itho Daalderop API succeeded")
+        _LOGGER.debug("Connection with Spider API succeeded")
         return True
     except UnauthorizedException:
-        _LOGGER.error("Can't connect to the Itho Daalderop API")
+        _LOGGER.error("Can't connect to the Spider API")
         return False

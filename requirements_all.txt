@@ -458,7 +458,7 @@ insteonplm==0.11.7
 iperf3==0.1.10
 
 # homeassistant.components.spider
-itho_daalderop_api==1.0.4
+spyderpy==1.0.7
 
 # homeassistant.components.verisure
 jsonpath==0.75
