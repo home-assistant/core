@@ -99,6 +99,7 @@ STATE_CODE_TO_STATE = {
     17: STATE_CLEANING,
 }
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
@@ -262,13 +263,13 @@ class MiroboVacuum(VacuumDevice):
     @asyncio.coroutine
     def async_start(self, **kwargs):
         """Turn the vacuum on."""
-        self._try_command(
+        yield from self._try_command(
             "Unable to start the vacuum: %s", self._vacuum.start)
 
     @asyncio.coroutine
     def async_stop(self, **kwargs):
         """Stop the vacuum cleaner."""
-        self._try_command(
+        yield from self._try_command(
             "Unable to stop: %s", self._vacuum.stop)
 
     @asyncio.coroutine
@@ -300,7 +301,7 @@ class MiroboVacuum(VacuumDevice):
     @asyncio.coroutine
     def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        self._try_command(
+        yield from self._try_command(
             "Unable to return home: %s", self._vacuum.home)
 
     @asyncio.coroutine
