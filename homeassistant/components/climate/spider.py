@@ -9,7 +9,7 @@ import logging
 
 from homeassistant.components.climate import (
     ATTR_TEMPERATURE, STATE_COOL, STATE_HEAT, STATE_IDLE,
-    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, ClimateDevice)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, ClimateDevice)
 from homeassistant.components.spider import DOMAIN as SPIDER_DOMAIN
 from homeassistant.const import TEMP_CELSIUS
 
@@ -61,7 +61,7 @@ class SpiderThermostat(ClimateDevice):
         return supports
 
     @property
-    def id(self):
+    def unique_id(self):
         """Return the id of the thermostat, if any."""
         return self.thermostat.id
 
@@ -101,7 +101,7 @@ class SpiderThermostat(ClimateDevice):
         return self.thermostat.maximum_temperature
 
     @property
-    def current_operation(self: ClimateDevice) -> str:
+    def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
         return SPIDER_STATE_TO_HA[self.thermostat.operation_mode]
 
@@ -131,7 +131,7 @@ class SpiderThermostat(ClimateDevice):
             thermostats = self.api.get_thermostats(
                 force_refresh=self.master)
             for thermostat in thermostats:
-                if thermostat.id == self.id:
+                if thermostat.id == self.unique_id:
                     self.thermostat = thermostat
                     break
 

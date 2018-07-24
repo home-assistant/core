@@ -8,8 +8,8 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.helpers.discovery import load_platform
 
 REQUIREMENTS = ['spiderpy==1.0.7']
