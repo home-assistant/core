@@ -427,16 +427,17 @@ class StateVacuumDevice(Entity):
 
         return data
 
-    def return_to_base(self, **kwargs):
-        """Set the vacuum cleaner to return to the dock."""
+    def start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task."""
         raise NotImplementedError()
 
-    def async_return_to_base(self, **kwargs):
-        """Set the vacuum cleaner to return to the dock.
+    def async_start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(partial(self.return_to_base, **kwargs))
+        return self.hass.async_add_job(
+            partial(self.start_pause, **kwargs))
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
@@ -448,6 +449,17 @@ class StateVacuumDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(partial(self.stop, **kwargs))
+
+    def return_to_base(self, **kwargs):
+        """Set the vacuum cleaner to return to the dock."""
+        raise NotImplementedError()
+
+    def async_return_to_base(self, **kwargs):
+        """Set the vacuum cleaner to return to the dock.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(partial(self.return_to_base, **kwargs))
 
     def clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
@@ -482,18 +494,6 @@ class StateVacuumDevice(Entity):
         """
         return self.hass.async_add_job(
             partial(self.set_fan_speed, fan_speed, **kwargs))
-
-    def start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task."""
-        raise NotImplementedError()
-
-    def async_start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
-            partial(self.start_pause, **kwargs))
 
     def send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner."""
