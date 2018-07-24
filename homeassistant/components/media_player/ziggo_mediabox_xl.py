@@ -122,13 +122,15 @@ class ZiggoMediaboxXLDevice(MediaPlayerDevice):
 
     def turn_on(self):
         """Turn the media player on."""
-        self.send_keys(['POWER'])
-        self._state = STATE_ON
+        if self._state is STATE_OFF:
+            self.send_keys(['POWER'])
+            self._state = STATE_ON
 
     def turn_off(self):
         """Turn off media player."""
-        self.send_keys(['POWER'])
-        self._state = STATE_OFF
+        if self._state is not STATE_OFF:
+            self.send_keys(['POWER'])
+            self._state = STATE_OFF
 
     def media_play(self):
         """Send play command."""
