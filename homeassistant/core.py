@@ -855,14 +855,11 @@ class ServiceRegistry:
         self._hass = hass
         self._async_unsub_call_event = None  # type: Optional[CALLBACK_TYPE]
 
-        def _gen_unique_id() -> Iterator[str]:
-            cur_id = 1
-            while True:
-                yield '{}-{}'.format(id(self), cur_id)
-                cur_id += 1
-
-        gen = _gen_unique_id()
-        self._generate_unique_id = lambda: next(gen)
+    def _generate_unique_id(self) -> Iterator[str]:
+        cur_id = 1
+        while True:
+            yield '{}-{}'.format(id(self), cur_id)
+            cur_id += 1
 
     @property
     def services(self) -> Dict[str, Dict[str, Service]]:
