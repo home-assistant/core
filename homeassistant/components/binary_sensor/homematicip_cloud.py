@@ -47,10 +47,6 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
     """HomematicIP shutter contact."""
 
-    def __init__(self, home, device):
-        """Initialize the shutter contact."""
-        super().__init__(home, device)
-
     @property
     def device_class(self):
         """Return the class of this sensor."""
@@ -71,10 +67,6 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
 class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
     """MomematicIP motion detector."""
 
-    def __init__(self, home, device):
-        """Initialize the shutter contact."""
-        super().__init__(home, device)
-
     @property
     def device_class(self):
         """Return the class of this sensor."""
@@ -90,10 +82,6 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
 
 class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
     """MomematicIP smoke detector."""
-
-    def __init__(self, home, device):
-        """Initialize the smoke detector."""
-        super().__init__(home, device)
 
     @property
     def device_class(self):
