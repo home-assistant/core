@@ -196,6 +196,9 @@ braviarc-homeassistant==0.3.7.dev0
 # homeassistant.components.switch.broadlink
 broadlink==0.9.0
 
+# homeassistant.components.cover.brunt
+brunt==0.1.2
+
 # homeassistant.components.device_tracker.bluetooth_tracker
 bt_proximity==0.1.2
 
