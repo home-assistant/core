@@ -165,7 +165,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FaceClassifyEntity(ImageProcessingFaceEntity):
     """Perform a face classification."""
 
-    def __init__(self, ip_address, port, username, password, camera_entity, name=None):
+    def __init__(self, ip_address, port, username, password,
+                 camera_entity, name=None):
         """Init with the API key and model id."""
         super().__init__()
         self._url_check = "http://{}:{}/{}/check".format(
