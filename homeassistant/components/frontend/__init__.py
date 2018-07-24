@@ -29,7 +29,8 @@ from homeassistant.util.yaml import load_yaml
 REQUIREMENTS = ['home-assistant-frontend==20180720.0']
 
 DOMAIN = 'frontend'
-DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log', 'onboarding']
+DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
+                'auth', 'onboarding']
 
 CONF_THEMES = 'themes'
 CONF_EXTRA_HTML_URL = 'extra_html_url'
