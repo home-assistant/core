@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyfnip']
+REQUIREMENTS = ['pyfnip==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
