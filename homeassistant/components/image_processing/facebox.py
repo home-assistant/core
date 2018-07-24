@@ -90,8 +90,7 @@ def post_image(url, username, password, image):
         if response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
             return None
-        else:
-            return response
+        return response
     except requests.exceptions.ConnectionError:
         _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
 
@@ -131,7 +130,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if DATA_FACEBOX not in hass.data:
         hass.data[DATA_FACEBOX] = []
 
-    ip = config[CONF_IP_ADDRESS]
+    ip_address = config[CONF_IP_ADDRESS]
     port = config[CONF_PORT]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -139,7 +138,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     entities = []
     for camera in config[CONF_SOURCE]:
         facebox = FaceClassifyEntity(
-            ip, port, username, password, camera[CONF_ENTITY_ID],
+            ip_address, port, username, password, camera[CONF_ENTITY_ID],
             camera.get(CONF_NAME))
         entities.append(facebox)
         hass.data[DATA_FACEBOX].append(facebox)
@@ -166,11 +165,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FaceClassifyEntity(ImageProcessingFaceEntity):
     """Perform a face classification."""
 
-    def __init__(self, ip, port, username, password, camera_entity, name=None):
+    def __init__(self, ip_address, port, username, password, camera_entity, name=None):
         """Init with the API key and model id."""
         super().__init__()
-        self._url_check = "http://{}:{}/{}/check".format(ip, port, CLASSIFIER)
-        self._url_teach = "http://{}:{}/{}/teach".format(ip, port, CLASSIFIER)
+        self._url_check = "http://{}:{}/{}/check".format(
+            ip_address, port, CLASSIFIER)
+        self._url_teach = "http://{}:{}/{}/teach".format(
+            ip_address, port, CLASSIFIER)
         self._username = username
         self._password = password
         self._camera = camera_entity
