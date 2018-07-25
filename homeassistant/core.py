@@ -30,7 +30,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
-    ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
+    ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
@@ -357,7 +357,7 @@ class Context:
         default=None,
     )
 
-    def as_dict(self):
+    def as_dict(self) -> dict:
         """Return a dictionary representation of the context."""
         return {
             'id': self.id,
@@ -450,10 +450,11 @@ class EventBus:
         ).result()
 
     def fire(self, event_type: str, event_data: Optional[Dict] = None,
-             origin: EventOrigin = EventOrigin.local) -> None:
+             origin: EventOrigin = EventOrigin.local,
+             context: Optional[Context] = None) -> None:
         """Fire an event."""
         self._hass.loop.call_soon_threadsafe(
-            self.async_fire, event_type, event_data, origin)
+            self.async_fire, event_type, event_data, origin, context)
 
     @callback
     def async_fire(self, event_type: str, event_data: Optional[Dict] = None,
@@ -692,11 +693,11 @@ class State:
 
     def __repr__(self) -> str:
         """Return the representation of the states."""
-        attr = "; {}".format(util.repr_helper(self.attributes)) \
-               if self.attributes else ""
+        attrs = "; {}".format(util.repr_helper(self.attributes)) \
+            if self.attributes else ""
 
         return "<state {}={}{} @ {}>".format(
-            self.entity_id, self.state, attr,
+            self.entity_id, self.state, attrs,
             dt_util.as_local(self.last_changed).isoformat())
 
 
