@@ -216,7 +216,7 @@ def async_setup(hass, config):
     return True
 
 
-class BaseVacuum(Entity):
+class _BaseVacuum(Entity):
     """Representation of a base vacuum.
 
     Contains common properties and functions for all vacuum devices.
@@ -325,7 +325,7 @@ class BaseVacuum(Entity):
             partial(self.send_command, command, params=params, **kwargs))
 
 
-class VacuumDevice(BaseVacuum, ToggleEntity):
+class VacuumDevice(_BaseVacuum, ToggleEntity):
     """Representation of a vacuum cleaner robot."""
 
     @property
@@ -385,7 +385,7 @@ class VacuumDevice(BaseVacuum, ToggleEntity):
             partial(self.turn_off, **kwargs))
 
 
-class StateVacuumDevice(BaseVacuum):
+class StateVacuumDevice(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
 
     @property
