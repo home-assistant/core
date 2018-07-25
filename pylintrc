@@ -12,6 +12,7 @@
 # abstract-method - with intro of async there are always methods missing
 # inconsistent-return-statements - doesn't handle raise
 # useless-return - https://github.com/PyCQA/pylint/issues/2300
+# not-an-iterable - https://github.com/PyCQA/pylint/issues/2311
 disable=
   abstract-class-little-used,
   abstract-method,
@@ -20,6 +21,7 @@ disable=
   global-statement,
   inconsistent-return-statements,
   locally-disabled,
+  not-an-iterable,
   not-context-manager,
   redefined-variable-type,
   too-few-public-methods,
