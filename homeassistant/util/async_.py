@@ -156,7 +156,6 @@ def fire_coroutine_threadsafe(coro: Coroutine,
         ensure_future(coro, loop=loop)
 
     loop.call_soon_threadsafe(callback)
-    return
 
 
 def run_callback_threadsafe(loop: AbstractEventLoop, callback: Callable,
