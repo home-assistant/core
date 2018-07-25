@@ -80,7 +80,7 @@ class TestCommandSensorSensor(unittest.TestCase):
             self.hass,
             'echo { \\"key\\": \\"some_json_value\\" }', 15
         )
- 
+
         self.sensor = command_line.CommandSensor(self.hass, data, 'test',
                                                  None, None, ['key'])
         self.sensor.update()
