@@ -17,9 +17,11 @@ from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
 
 from .dt import as_local, utcnow
 
+# pylint: disable=invalid-name
 T = TypeVar('T')
 U = TypeVar('U')
 ENUM_T = TypeVar('ENUM_T', bound=enum.Enum)
+# pylint: enable=invalid-name
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')

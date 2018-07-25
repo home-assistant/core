@@ -24,8 +24,8 @@ _SECRET_NAMESPACE = 'homeassistant'
 SECRET_YAML = 'secrets.yaml'
 __SECRET_CACHE = {}  # type: Dict[str, JSON_TYPE]
 
-JSON_TYPE = Union[List, Dict, str]
-DICT_T = TypeVar('DICT_T', bound=Dict)
+JSON_TYPE = Union[List, Dict, str]  # pylint: disable=invalid-name
+DICT_T = TypeVar('DICT_T', bound=Dict)  # pylint: disable=invalid-name
 
 
 class NodeListClass(list):

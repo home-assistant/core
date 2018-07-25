@@ -27,7 +27,7 @@ from homeassistant.util import OrderedSet
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant  # NOQA
 
-CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)
+CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)  # noqa pylint: disable=invalid-name
 
 PREPARED = False
 
