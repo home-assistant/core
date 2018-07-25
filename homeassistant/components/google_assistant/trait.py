@@ -543,10 +543,10 @@ class StartStopTrait(_Trait):
     @staticmethod
     def supported(domain, features):
         """Test if state is supported."""
-        if domain != vacuum.DOMAIN:
-            return False
+        if domain == vacuum.DOMAIN:
+            return features & vacuum.SUPPORT_STATE
 
-        return True
+        return False
 
     def sync_attributes(self):
         """Assume that all vacuum support pause."""
@@ -559,12 +559,12 @@ class StartStopTrait(_Trait):
 
         if domain == vacuum.DOMAIN:
 
-            attrs = self.state.attributes
+            state = self.state.state
 
-            if attrs[vacuum.ATTR_STATUS] == vacuum.STATE_PAUSED:
+            if state == vacuum.STATE_PAUSED:
                 response['isPaused'] = True
                 response['isRunning'] = False
-            elif attrs[vacuum.ATTR_STATUS] == vacuum.STATE_CLEANING:
+            elif state == vacuum.STATE_CLEANING:
                 response['isPaused'] = False
                 response['isRunning'] = True
             else:
@@ -578,21 +578,26 @@ class StartStopTrait(_Trait):
         domain = self.state.domain
         param_start = 'start'
         param_pause = 'pause'
+        start_stop_command = 'action.devices.commands.StartStop'
+        pause_unpause_command = 'action.devices.commands.PauseUnpause'
 
         if domain == vacuum.DOMAIN:
             service_domain = domain
-            if param_start in params:
-                if[param_start]:
-                    if params[param_start]:
-                        service = vacuum.SERVICE_START_PAUSE
-                    else:
-                        service = vacuum.SERVICE_STOP
+            state = self.state.state
 
-            if param_pause in params:
-                if[param_pause]:
+            if command == start_stop_command:
+                if params[param_start]:
                     service = vacuum.SERVICE_START_PAUSE
                 else:
-                    service = vacuum.SERVICE_START_PAUSE
+                    service = vacuum.SERVICE_STOP
+
+            if command == pause_unpause_command:
+                if params[param_pause]:
+                    if state == vacuum.STATE_CLEANING:
+                        service = vacuum.SERVICE_START_PAUSE
+                else:
+                    if state == vacuum.STATE_PAUSED:
+                        service = vacuum.SERVICE_START_PAUSE
 
         await hass.services.async_call(service_domain, service, {
             ATTR_ENTITY_ID: self.state.entity_id
@@ -612,10 +617,10 @@ class DockTrait(_Trait):
     @staticmethod
     def supported(domain, features):
         """Test if state is supported."""
-        if domain != vacuum.DOMAIN:
-            return False
+        if domain == vacuum.DOMAIN:
+            return features & vacuum.SUPPORT_STATE
 
-        return True
+        return False
 
     def sync_attributes(self):
         """No attributes required."""
@@ -627,10 +632,9 @@ class DockTrait(_Trait):
         response = {}
 
         if domain == vacuum.DOMAIN:
-            attrs = self.state.attributes
+            state = self.state.state
 
-            response['isDocked'] = bool(attrs[vacuum.ATTR_STATUS] ==
-                                        vacuum.STATE_DOCKED)
+            response['isDocked'] = bool(state == vacuum.STATE_DOCKED)
 
         return response
 
