@@ -216,12 +216,8 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def force_update_sync_status(
             self, on_updated_cb=None, raise_timeout=False):
         """Update the internal status."""
-        resp = None
-        try:
-            resp = await self.send_bluesound_command(
-                'SyncStatus', raise_timeout, raise_timeout)
-        except Exception:
-            raise
+        resp = await self.send_bluesound_command(
+            'SyncStatus', raise_timeout, raise_timeout)
 
         if not resp:
             return None

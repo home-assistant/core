@@ -162,8 +162,4 @@ class PyLoadAPI:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update cached response."""
-        try:
-            self.status = self.post('speed')
-        except requests.exceptions.ConnectionError:
-            # Failed to update status - exception already logged in self.post
-            raise
+        self.status = self.post('speed')
