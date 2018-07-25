@@ -117,7 +117,7 @@ class TurnTouchRemote:
             except turntouch.TurnTouchException:
                 _LOGGER.warning('Reading device name failed. Retrying...')
             except AttributeError:
-                _LOGGER.warning('Cannot read battery level before connecting'
+                _LOGGER.warning('Cannot read name before connecting'
                                 ' to the device. Retrying...')
             time.sleep(delay)
             delay *= 2

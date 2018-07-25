@@ -160,6 +160,18 @@ class TestTurnTouch(unittest.TestCase):
                 self.device.get_name()
             assert 'name failed' in self._caplog.text
 
+            # Test logging - battery read attempted before connection
+            self.patched_battery.side_effect = AttributeError
+            with self.assertRaises(LoopBreakerException):
+                self.device.get_battery()
+            assert 'battery level before connecting' in self._caplog.text
+
+            # Test logging - battery read attempted before connection
+            self.patched_name.side_effect = AttributeError
+            with self.assertRaises(LoopBreakerException):
+                self.device.get_name()
+            assert 'name before connecting' in self._caplog.text
+
     def test_sensor(self):
         """Test the battery sensor."""
         sensor = TurnTouchBatterySensor(self.device)
