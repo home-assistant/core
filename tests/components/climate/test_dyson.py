@@ -7,7 +7,9 @@ from libpurecoollink.const import (FocusMode, HeatMode, HeatState, HeatTarget,
 from libpurecoollink.dyson_pure_state import DysonPureHotCoolState
 from libpurecoollink.dyson_pure_hotcool_link import DysonPureHotCoolLink
 from homeassistant.components.climate import dyson
+from homeassistant.components import dyson as dyson_parent
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
+from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 
@@ -107,6 +109,19 @@ class DysonTest(unittest.TestCase):
     def tearDown(self):  # pylint: disable=invalid-name
         """Stop everything that was started."""
         self.hass.stop()
+
+    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+                return_value=[_get_device_heat_on(), _get_device_cool()])
+    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    def test_setup_component_with_parent_discovery(self, mocked_login, mocked_devices):
+        """Test setup_component using discovery."""
+        # dyson.setup(self.hass, )
+        setup_component(self.hass, dyson_parent.DOMAIN, {dyson_parent.DOMAIN: {
+            dyson_parent.CONF_USERNAME: "email",
+            dyson_parent.CONF_PASSWORD: "password",
+            dyson_parent.CONF_LANGUAGE: "US",
+        }})
+        self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 2)
 
     def test_setup_component_without_devices(self):
         """Test setup component with no devices."""
