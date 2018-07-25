@@ -51,12 +51,12 @@ class SpiderPowerPlug(SwitchDevice):
     @property
     def current_power_w(self):
         """Return the current power usage in W."""
-        return self.power_plug.current_energy_consumption
+        return round(self.power_plug.current_energy_consumption)
 
     @property
     def today_energy_kwh(self):
         """Return the current power usage in Kwh."""
-        return self.power_plug.today_energy_consumption / 1000
+        return round(self.power_plug.today_energy_consumption / 1000, 2)
 
     @property
     def is_on(self):
@@ -77,7 +77,6 @@ class SpiderPowerPlug(SwitchDevice):
         self.power_plug.turn_off()
 
     def update(self):
-        """Update device state."""
         """Get the latest data."""
         try:
             # Only let the master power plug refresh
