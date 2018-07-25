@@ -90,9 +90,10 @@ class NestCamera(Camera):
     def turn_off(self):
         """Turn off camera."""
         _LOGGER.debug('Turn off camera %s', self._name)
-        # Calling Nest API in is_streaming setter
+        # Calling Nest API in is_streaming setter.
+        # device.is_streaming would not immediately change until the process
+        # finished in Nest Cam.
         self.device.is_streaming = False
-        self.schedule_update_ha_state(True)
 
     def turn_on(self):
         """Turn on camera."""
@@ -101,9 +102,10 @@ class NestCamera(Camera):
             return
 
         _LOGGER.debug('Turn on camera %s', self._name)
-        # Calling Nest API in is_streaming setter
+        # Calling Nest API in is_streaming setter.
+        # device.is_streaming would not immediately change until the process
+        # finished in Nest Cam.
         self.device.is_streaming = True
-        self.schedule_update_ha_state(True)
 
     def update(self):
         """Cache value from Python-nest."""
