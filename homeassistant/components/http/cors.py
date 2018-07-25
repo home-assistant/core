@@ -1,5 +1,5 @@
 """Provide cors support for the HTTP component."""
-
+import logging
 
 from aiohttp.hdrs import ACCEPT, ORIGIN, CONTENT_TYPE
 
@@ -13,6 +13,8 @@ from homeassistant.core import callback
 ALLOWED_CORS_HEADERS = [
     ORIGIN, ACCEPT, HTTP_HEADER_X_REQUESTED_WITH, CONTENT_TYPE,
     HTTP_HEADER_HA_AUTH]
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -50,7 +52,11 @@ def setup_cors(app, origins):
                 route = route.resource
             if route in cors_added:
                 continue
-            cors.add(route)
-            cors_added.add(route)
+            try:
+                cors.add(route)
+                cors_added.add(route)
+            except ValueError as error:
+                _LOGGER.debug('Allow CORS for route %s failed: %s',
+                              route, error)
 
     app.on_startup.append(cors_startup)
