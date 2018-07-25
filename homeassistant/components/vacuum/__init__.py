@@ -246,7 +246,7 @@ class _BaseVacuum(Entity):
         """Start, pause or resume the cleaning task."""
         raise NotImplementedError()
 
-    def async_start_pause(self, **kwargs):
+    async def async_start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task.
 
         This method must be run in the event loop.
@@ -258,7 +258,7 @@ class _BaseVacuum(Entity):
         """Stop the vacuum cleaner."""
         raise NotImplementedError()
 
-    def async_stop(self, **kwargs):
+    async def async_stop(self, **kwargs):
         """Stop the vacuum cleaner.
 
         This method must be run in the event loop.
@@ -269,7 +269,7 @@ class _BaseVacuum(Entity):
         """Set the vacuum cleaner to return to the dock."""
         raise NotImplementedError()
 
-    def async_return_to_base(self, **kwargs):
+    async def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock.
 
         This method must be run in the event loop.
@@ -281,7 +281,7 @@ class _BaseVacuum(Entity):
         """Perform a spot clean-up."""
         raise NotImplementedError()
 
-    def async_clean_spot(self, **kwargs):
+    async def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up.
 
         This method must be run in the event loop.
@@ -293,7 +293,7 @@ class _BaseVacuum(Entity):
         """Locate the vacuum cleaner."""
         raise NotImplementedError()
 
-    def async_locate(self, **kwargs):
+    async def async_locate(self, **kwargs):
         """Locate the vacuum cleaner.
 
         This method must be run in the event loop.
@@ -304,7 +304,7 @@ class _BaseVacuum(Entity):
         """Set fan speed."""
         raise NotImplementedError()
 
-    def async_set_fan_speed(self, fan_speed, **kwargs):
+    async def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed.
 
         This method must be run in the event loop.
@@ -316,7 +316,7 @@ class _BaseVacuum(Entity):
         """Send a command to a vacuum cleaner."""
         raise NotImplementedError()
 
-    def async_send_command(self, command, params=None, **kwargs):
+    async def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner.
 
         This method must be run in the event loop.
@@ -364,7 +364,7 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         """Turn the vacuum on and start cleaning."""
         raise NotImplementedError()
 
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning.
 
         This method must be run in the event loop.
@@ -376,7 +376,7 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         """Turn the vacuum off stopping the cleaning and returning home."""
         raise NotImplementedError()
 
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the vacuum off stopping the cleaning and returning home.
 
         This method must be run in the event loop.
