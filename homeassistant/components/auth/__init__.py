@@ -412,6 +412,7 @@ def websocket_current_user(hass, connection, msg):
         'id': user.id,
         'name': user.name,
         'is_owner': user.is_owner,
-        'allow_change_password': any(c.auth_provider_type == 'homeassistant'
-                                     for c in user.credentials)
+        'credentials': [{'auth_provider_type': c.auth_provider_type,
+                         'auth_provider_id': c.auth_provider_id}
+                        for c in user.credentials]
     }))
