@@ -50,7 +50,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             HeatmiserV3Thermostat(
                 heatmiser, tstat.get(CONF_ID), tstat.get(CONF_NAME), serport)
             ])
-    return
 
 
 class HeatmiserV3Thermostat(ClimateDevice):
