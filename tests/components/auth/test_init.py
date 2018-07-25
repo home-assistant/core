@@ -2,6 +2,7 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.auth.models import Credentials
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 from homeassistant.components import auth
@@ -90,12 +91,20 @@ def test_credential_store_expiration():
 
 
 async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
-    """Test the current user command."""
+    """Test the current user command with homeassistant creds."""
     assert await async_setup_component(hass, 'auth', {
         'http': {
             'api_password': 'bla'
         }
     })
+
+    user = hass_access_token.refresh_token.user
+    credential = Credentials(auth_provider_type='homeassistant',
+                             auth_provider_id=None,
+                             data={}, id='test-id')
+    user.credentials.append(credential)
+    assert len(user.credentials) == 1
+
     with patch('homeassistant.auth.AuthManager.active', return_value=True):
         client = await hass_ws_client(hass, hass_access_token)
 
@@ -107,12 +116,17 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
     result = await client.receive_json()
     assert result['success'], result
 
-    user = hass_access_token.refresh_token.user
     user_dict = result['result']
 
     assert user_dict['name'] == user.name
     assert user_dict['id'] == user.id
     assert user_dict['is_owner'] == user.is_owner
+    assert len(user_dict['credentials']) == 1
+
+    hass_cred = user_dict['credentials'][0]
+    assert hass_cred['auth_provider_type'] == 'homeassistant'
+    assert hass_cred['auth_provider_id'] is None
+    assert 'data' not in hass_cred
 
 
 async def test_cors_on_token(hass, aiohttp_client):
