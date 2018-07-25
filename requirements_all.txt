@@ -1278,6 +1278,9 @@ somecomfort==0.5.2
 # homeassistant.components.sensor.speedtest
 speedtest-cli==2.0.2
 
+# homeassistant.components.spider
+spiderpy==1.0.7
+
 # homeassistant.components.sensor.spotcrime
 spotcrime==1.0.3
 
