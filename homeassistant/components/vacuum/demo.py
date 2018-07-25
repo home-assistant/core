@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DemoVacuum(DEMO_VACUUM_BASIC, SUPPORT_BASIC_SERVICES),
         DemoVacuum(DEMO_VACUUM_MINIMAL, SUPPORT_MINIMAL_SERVICES),
         DemoVacuum(DEMO_VACUUM_NONE, 0),
-        StateDemoVacuum(DEMO_VACUUM_STATE, SUPPORT_STATE_SERVICES),
+        StateDemoVacuum(DEMO_VACUUM_STATE),
     ])
 
 
@@ -217,10 +217,10 @@ class DemoVacuum(VacuumDevice):
 class StateDemoVacuum(StateVacuumDevice):
     """Representation of a demo vacuum supporting states."""
 
-    def __init__(self, name, supported_features):
+    def __init__(self, name):
         """Initialize the vacuum."""
         self._name = name
-        self._supported_features = supported_features
+        self._supported_features = SUPPORT_STATE_SERVICES
         self._state = STATE_DOCKED
         self._fan_speed = FAN_SPEEDS[1]
         self._cleaned_area = 0
@@ -265,7 +265,8 @@ class StateDemoVacuum(StateVacuumDevice):
     @property
     def fan_speed_list(self):
         """Return the list of supported fan speeds."""
-        assert self.supported_features & SUPPORT_FAN_SPEED != 0
+        if self.supported_features & SUPPORT_FAN_SPEED == 0:
+            return
         return FAN_SPEEDS
 
     @property
@@ -302,6 +303,8 @@ class StateDemoVacuum(StateVacuumDevice):
         self._state = STATE_RETURNING
         self.schedule_update_ha_state()
 
+        self.hass.loop.call_later(30, self.__set_state_to_dock)
+
     def clean_spot(self, **kwargs):
         """Perform a spot clean-up."""
         if self.supported_features & SUPPORT_CLEAN_SPOT == 0:
@@ -320,3 +323,7 @@ class StateDemoVacuum(StateVacuumDevice):
         if fan_speed in self.fan_speed_list:
             self._fan_speed = fan_speed
             self.schedule_update_ha_state()
+
+    def __set_state_to_dock(self):
+        self._state = STATE_DOCKED
+        self.schedule_update_ha_state()
