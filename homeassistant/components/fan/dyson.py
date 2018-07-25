@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import (
-    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity)
+    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity, SUPPORT_NIGHT_MODE, SUPPORT_ANGLE)
 from homeassistant.const import CONF_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -32,8 +32,7 @@ DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dyson fan components."""
-    from ..lib.libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
-    from ..lib.libpurecoollink.dyson_pure_cool import DysonPureCool
+    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink, DysonPureCool
 
     _LOGGER.debug("Creating new Dyson fans")
     if DYSON_FAN_DEVICES not in hass.data:
@@ -241,7 +240,7 @@ class DysonPureCoolLinkDevice(FanEntity):
 
 
 class DysonPureCoolDevice(FanEntity):
-    """Representation of a Dyson fan."""
+    """Representation of a Dyson Purecool (TP04/DP04) fan."""
 
     def __init__(self, hass, device):
         """Initialize the fan."""
@@ -257,7 +256,7 @@ class DysonPureCoolDevice(FanEntity):
 
     def on_message(self, message):
         """Call when new messages received from the fan."""
-        from ..lib.libpurecoollink.dyson_pure_state_v2 import DysonPureCoolV2State
+        from libpurecoollink.dyson_pure_state_v2 import DysonPureCoolV2State
 
         if isinstance(message, DysonPureCoolV2State):
             _LOGGER.debug("Message received for fan device %s: %s", self.name,
@@ -276,7 +275,7 @@ class DysonPureCoolDevice(FanEntity):
 
     def turn_on(self, speed: str = None) -> None:
         """Turn on the fan."""
-        from ..lib.libpurecoollink.const import FanSpeed
+        from libpurecoollink.const import FanSpeed
 
         _LOGGER.debug("Turn on fan %s", self.name)
 
@@ -306,6 +305,25 @@ class DysonPureCoolDevice(FanEntity):
         else:
             self._device.disable_oscillation()
 
+    def set_night_mode(self, night_mode: bool) -> None:
+        """Turn on/off oscillating."""
+
+        _LOGGER.debug("Turn night mode %s for device %s", night_mode,
+                      self.name)
+
+        if night_mode:
+            self._device.enable_night_mode()
+        else:
+            self._device.disable_night_mode()
+
+    def set_angle(self, angle_low: int = None, angle_high: int = None) -> None:
+        """Set fan angle."""
+
+        _LOGGER.debug("Set fan oscillation angle from %s to %s for device %s",
+                      angle_low, angle_high, self.name)
+
+        self._device.enable_oscillation(angle_low, angle_high)
+
     @property
     def oscillating(self):
         """Return the oscillation state."""
@@ -321,7 +339,7 @@ class DysonPureCoolDevice(FanEntity):
     @property
     def speed(self):
         """Return the current speed."""
-        from ..lib.libpurecoollink.const import FanSpeed
+        from libpurecoollink.const import FanSpeed
 
         if self._device.state:
             if self._device.state.speed == FanSpeed.FAN_SPEED_AUTO.value:
@@ -329,11 +347,25 @@ class DysonPureCoolDevice(FanEntity):
             return int(self._device.state.speed)
         return None
 
+    @property
+    def night_mode(self):
+        """Return Night mode."""
+        return self._device.state.night_mode == "ON"
+
+    @property
+    def angle_low(self):
+        """Return Night mode."""
+        return self._device.state.oscillation_angle_low
+
+    @property
+    def angle_high(self):
+        """Return Night mode."""
+        return self._device.state.oscillation_angle_high
 
     @property
     def speed_list(self: ToggleEntity) -> list:
         """Get the list of available speeds."""
-        from ..lib.libpurecoollink.const import FanSpeed
+        from libpurecoollink.const import FanSpeed
 
         supported_speeds = [
             FanSpeed.FAN_SPEED_AUTO.value,
@@ -354,4 +386,4 @@ class DysonPureCoolDevice(FanEntity):
     @property
     def supported_features(self: ToggleEntity) -> int:
         """Flag supported features."""
-        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
+        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED | SUPPORT_NIGHT_MODE | SUPPORT_ANGLE
