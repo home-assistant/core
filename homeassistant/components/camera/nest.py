@@ -12,7 +12,6 @@ import requests
 from homeassistant.components import nest
 from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera,
                                              SUPPORT_ON_OFF)
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,8 +97,8 @@ class NestCamera(Camera):
     def turn_on(self):
         """Turn on camera."""
         if not self._online:
-            raise HomeAssistantError('Camera {} is offline.'
-                                     .format(self._name))
+            _LOGGER.error('Camera %s is offline.', self._name)
+            return
 
         _LOGGER.debug('Turn on camera %s', self._name)
         # Calling Nest API in is_streaming setter
