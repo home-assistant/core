@@ -86,10 +86,8 @@ ASYNC_LOCK = asyncio.Lock()
 
 def catch_request_errors():
     """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
-
     def call_wrapper(func):
         """Call wrapper for decorator."""
-
         @functools.wraps(func)
         def wrapper(self, *args, **kwargs):
             """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
