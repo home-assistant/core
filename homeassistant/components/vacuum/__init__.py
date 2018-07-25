@@ -249,9 +249,9 @@ class _BaseVacuum(Entity):
     def async_start_pause(self, **kwargs):
         """Start, pause or resume the cleaning task.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             partial(self.start_pause, **kwargs))
 
     def stop(self, **kwargs):
@@ -261,9 +261,9 @@ class _BaseVacuum(Entity):
     def async_stop(self, **kwargs):
         """Stop the vacuum cleaner.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return self.hass.async_add_executor_job(partial(self.stop, **kwargs))
+        await self.hass.async_add_executor_job(partial(self.stop, **kwargs))
 
     def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
@@ -272,9 +272,9 @@ class _BaseVacuum(Entity):
     def async_return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             partial(self.return_to_base, **kwargs))
 
     def clean_spot(self, **kwargs):
@@ -284,9 +284,9 @@ class _BaseVacuum(Entity):
     def async_clean_spot(self, **kwargs):
         """Perform a spot clean-up.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             partial(self.clean_spot, **kwargs))
 
     def locate(self, **kwargs):
@@ -296,9 +296,9 @@ class _BaseVacuum(Entity):
     def async_locate(self, **kwargs):
         """Locate the vacuum cleaner.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return self.hass.async_add_executor_job(partial(self.locate, **kwargs))
+        await self.hass.async_add_executor_job(partial(self.locate, **kwargs))
 
     def set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
@@ -307,9 +307,9 @@ class _BaseVacuum(Entity):
     def async_set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             partial(self.set_fan_speed, fan_speed, **kwargs))
 
     def send_command(self, command, params=None, **kwargs):
@@ -319,9 +319,9 @@ class _BaseVacuum(Entity):
     def async_send_command(self, command, params=None, **kwargs):
         """Send a command to a vacuum cleaner.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             partial(self.send_command, command, params=params, **kwargs))
 
 
@@ -367,9 +367,9 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
     def async_turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs):
@@ -379,9 +379,9 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
     def async_turn_off(self, **kwargs):
         """Turn the vacuum off stopping the cleaning and returning home.
 
-        This method must be run in the event loop and returns a coroutine.
+        This method must be run in the event loop.
         """
-        return self.hass.async_add_executor_job(
+        await self.hass.async_add_executor_job(
             partial(self.turn_off, **kwargs))
 
 
