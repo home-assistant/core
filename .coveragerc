@@ -346,6 +346,9 @@ omit =
     homeassistant/components/tuya.py
     homeassistant/components/*/tuya.py
 
+    homeassistant/components/spider.py
+    homeassistant/components/*/spider.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
