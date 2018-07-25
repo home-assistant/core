@@ -471,3 +471,18 @@ async def test_api_call_service_context(hass, mock_api_client,
 
     assert len(calls) == 1
     assert calls[0].context.user_id == hass_access_token.refresh_token.user.id
+
+
+async def test_api_set_state_context(hass, mock_api_client, hass_access_token):
+    """Test if the API sets right context if we set state."""
+    await mock_api_client.post(
+        '/api/states/light.kitchen',
+        json={
+            'state': 'on'
+        },
+        headers={
+            'authorization': 'Bearer {}'.format(hass_access_token.token)
+        })
+
+    state = hass.states.get('light.kitchen')
+    assert state.context.user_id == hass_access_token.refresh_token.user.id
