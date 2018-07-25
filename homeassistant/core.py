@@ -693,8 +693,7 @@ class State:
         return (self.__class__ == other.__class__ and  # type: ignore
                 self.entity_id == other.entity_id and
                 self.state == other.state and
-                self.attributes == other.attributes and
-                self.context == other.context)
+                self.attributes == other.attributes)
 
     def __repr__(self) -> str:
         """Return the representation of the states."""
