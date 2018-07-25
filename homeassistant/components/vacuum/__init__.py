@@ -216,8 +216,11 @@ def async_setup(hass, config):
     return True
 
 
-class VacuumDevice(ToggleEntity):
-    """Representation of a vacuum cleaner robot."""
+class BaseVacuum(Entity):
+    """Representation of a base vacuum.
+
+    Contains common properties and functions for all vacuum devices.
+    """
 
     @property
     def supported_features(self):
@@ -225,23 +228,9 @@ class VacuumDevice(ToggleEntity):
         raise NotImplementedError()
 
     @property
-    def status(self):
-        """Return the status of the vacuum cleaner."""
-        return None
-
-    @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
         return None
-
-    @property
-    def battery_icon(self):
-        """Return the battery icon for the vacuum cleaner."""
-        charging = False
-        if self.status is not None:
-            charging = 'charg' in self.status.lower()
-        return icon_for_battery_level(
-            battery_level=self.battery_level, charging=charging)
 
     @property
     def fan_speed(self):
@@ -252,6 +241,106 @@ class VacuumDevice(ToggleEntity):
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
         raise NotImplementedError()
+
+    def start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task."""
+        raise NotImplementedError()
+
+    def async_start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_executor_job(
+            partial(self.start_pause, **kwargs))
+
+    def stop(self, **kwargs):
+        """Stop the vacuum cleaner."""
+        raise NotImplementedError()
+
+    def async_stop(self, **kwargs):
+        """Stop the vacuum cleaner.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_executor_job(partial(self.stop, **kwargs))
+
+    def return_to_base(self, **kwargs):
+        """Set the vacuum cleaner to return to the dock."""
+        raise NotImplementedError()
+
+    def async_return_to_base(self, **kwargs):
+        """Set the vacuum cleaner to return to the dock.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_executor_job(
+            partial(self.return_to_base, **kwargs))
+
+    def clean_spot(self, **kwargs):
+        """Perform a spot clean-up."""
+        raise NotImplementedError()
+
+    def async_clean_spot(self, **kwargs):
+        """Perform a spot clean-up.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_executor_job(
+            partial(self.clean_spot, **kwargs))
+
+    def locate(self, **kwargs):
+        """Locate the vacuum cleaner."""
+        raise NotImplementedError()
+
+    def async_locate(self, **kwargs):
+        """Locate the vacuum cleaner.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_executor_job(partial(self.locate, **kwargs))
+
+    def set_fan_speed(self, fan_speed, **kwargs):
+        """Set fan speed."""
+        raise NotImplementedError()
+
+    def async_set_fan_speed(self, fan_speed, **kwargs):
+        """Set fan speed.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_executor_job(
+            partial(self.set_fan_speed, fan_speed, **kwargs))
+
+    def send_command(self, command, params=None, **kwargs):
+        """Send a command to a vacuum cleaner."""
+        raise NotImplementedError()
+
+    def async_send_command(self, command, params=None, **kwargs):
+        """Send a command to a vacuum cleaner.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_executor_job(
+            partial(self.send_command, command, params=params, **kwargs))
+
+
+class VacuumDevice(BaseVacuum, ToggleEntity):
+    """Representation of a vacuum cleaner robot."""
+
+    @property
+    def status(self):
+        """Return the status of the vacuum cleaner."""
+        return None
+
+    @property
+    def battery_icon(self):
+        """Return the battery icon for the vacuum cleaner."""
+        charging = False
+        if self.status is not None:
+            charging = 'charg' in self.status.lower()
+        return icon_for_battery_level(
+            battery_level=self.battery_level, charging=charging)
 
     @property
     def state_attributes(self):
@@ -280,7 +369,8 @@ class VacuumDevice(ToggleEntity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(partial(self.turn_on, **kwargs))
+        return self.hass.async_add_executor_job(
+            partial(self.turn_on, **kwargs))
 
     def turn_off(self, **kwargs):
         """Turn the vacuum off stopping the cleaning and returning home."""
@@ -291,96 +381,12 @@ class VacuumDevice(ToggleEntity):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self.hass.async_add_job(partial(self.turn_off, **kwargs))
-
-    def return_to_base(self, **kwargs):
-        """Set the vacuum cleaner to return to the dock."""
-        raise NotImplementedError()
-
-    def async_return_to_base(self, **kwargs):
-        """Set the vacuum cleaner to return to the dock.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(partial(self.return_to_base, **kwargs))
-
-    def stop(self, **kwargs):
-        """Stop the vacuum cleaner."""
-        raise NotImplementedError()
-
-    def async_stop(self, **kwargs):
-        """Stop the vacuum cleaner.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(partial(self.stop, **kwargs))
-
-    def clean_spot(self, **kwargs):
-        """Perform a spot clean-up."""
-        raise NotImplementedError()
-
-    def async_clean_spot(self, **kwargs):
-        """Perform a spot clean-up.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(partial(self.clean_spot, **kwargs))
-
-    def locate(self, **kwargs):
-        """Locate the vacuum cleaner."""
-        raise NotImplementedError()
-
-    def async_locate(self, **kwargs):
-        """Locate the vacuum cleaner.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(partial(self.locate, **kwargs))
-
-    def set_fan_speed(self, fan_speed, **kwargs):
-        """Set fan speed."""
-        raise NotImplementedError()
-
-    def async_set_fan_speed(self, fan_speed, **kwargs):
-        """Set fan speed.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
-            partial(self.set_fan_speed, fan_speed, **kwargs))
-
-    def start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task."""
-        raise NotImplementedError()
-
-    def async_start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
-            partial(self.start_pause, **kwargs))
-
-    def send_command(self, command, params=None, **kwargs):
-        """Send a command to a vacuum cleaner."""
-        raise NotImplementedError()
-
-    def async_send_command(self, command, params=None, **kwargs):
-        """Send a command to a vacuum cleaner.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
-            partial(self.send_command, command, params=params, **kwargs))
+        return self.hass.async_add_executor_job(
+            partial(self.turn_off, **kwargs))
 
 
-class StateVacuumDevice(Entity):
+class StateVacuumDevice(BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
-
-    @property
-    def supported_features(self):
-        """Flag vacuum cleaner features that are supported."""
-        raise NotImplementedError()
 
     @property
     def state(self):
@@ -388,29 +394,12 @@ class StateVacuumDevice(Entity):
         return None
 
     @property
-    def battery_level(self):
-        """Return the battery level of the vacuum cleaner."""
-        return None
-
-    @property
     def battery_icon(self):
         """Return the battery icon for the vacuum cleaner."""
-        charging = False
-        if self.state is not None:
-            charging = bool(self.state == STATE_DOCKED)
+        charging = bool(self.state == STATE_DOCKED)
 
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=charging)
-
-    @property
-    def fan_speed(self):
-        """Return the fan speed of the vacuum cleaner."""
-        return None
-
-    @property
-    def fan_speed_list(self):
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-        raise NotImplementedError()
 
     @property
     def state_attributes(self):
@@ -426,83 +415,3 @@ class StateVacuumDevice(Entity):
             data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
 
         return data
-
-    def start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task."""
-        raise NotImplementedError()
-
-    def async_start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
-            partial(self.start_pause, **kwargs))
-
-    def stop(self, **kwargs):
-        """Stop the vacuum cleaner."""
-        raise NotImplementedError()
-
-    def async_stop(self, **kwargs):
-        """Stop the vacuum cleaner.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(partial(self.stop, **kwargs))
-
-    def return_to_base(self, **kwargs):
-        """Set the vacuum cleaner to return to the dock."""
-        raise NotImplementedError()
-
-    def async_return_to_base(self, **kwargs):
-        """Set the vacuum cleaner to return to the dock.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(partial(self.return_to_base, **kwargs))
-
-    def clean_spot(self, **kwargs):
-        """Perform a spot clean-up."""
-        raise NotImplementedError()
-
-    def async_clean_spot(self, **kwargs):
-        """Perform a spot clean-up.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(partial(self.clean_spot, **kwargs))
-
-    def locate(self, **kwargs):
-        """Locate the vacuum cleaner."""
-        raise NotImplementedError()
-
-    def async_locate(self, **kwargs):
-        """Locate the vacuum cleaner.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(partial(self.locate, **kwargs))
-
-    def set_fan_speed(self, fan_speed, **kwargs):
-        """Set fan speed."""
-        raise NotImplementedError()
-
-    def async_set_fan_speed(self, fan_speed, **kwargs):
-        """Set fan speed.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
-            partial(self.set_fan_speed, fan_speed, **kwargs))
-
-    def send_command(self, command, params=None, **kwargs):
-        """Send a command to a vacuum cleaner."""
-        raise NotImplementedError()
-
-    def async_send_command(self, command, params=None, **kwargs):
-        """Send a command to a vacuum cleaner.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.async_add_job(
-            partial(self.send_command, command, params=params, **kwargs))
