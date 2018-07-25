@@ -347,14 +347,13 @@ class HomeAssistant:
 class Context:
     """The context that triggered something."""
 
-    id = attr.ib(
-        type=str,
-        default=attr.Factory(lambda: uuid.uuid4().hex),
-        init=False,
-    )
     user_id = attr.ib(
         type=str,
         default=None,
+    )
+    id = attr.ib(
+        type=str,
+        default=attr.Factory(lambda: uuid.uuid4().hex),
     )
 
     def as_dict(self) -> dict:
@@ -681,15 +680,21 @@ class State:
         if isinstance(last_updated, str):
             last_updated = dt_util.parse_datetime(last_updated)
 
+        context = json_dict.get('context')
+        if context:
+            context = Context(**context)
+
         return cls(json_dict['entity_id'], json_dict['state'],
-                   json_dict.get('attributes'), last_changed, last_updated)
+                   json_dict.get('attributes'), last_changed, last_updated,
+                   context)
 
     def __eq__(self, other: Any) -> bool:
         """Return the comparison of the state."""
         return (self.__class__ == other.__class__ and  # type: ignore
                 self.entity_id == other.entity_id and
                 self.state == other.state and
-                self.attributes == other.attributes)
+                self.attributes == other.attributes and
+                self.context == other.context)
 
     def __repr__(self) -> str:
         """Return the representation of the states."""
