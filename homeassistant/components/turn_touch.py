@@ -22,6 +22,7 @@ CONF_DEBOUNCE = 'debounce'
 
 DOMAIN = 'turn_touch'
 DATA_KEY = 'DATA_{component}'.format(component=DOMAIN)
+DEFAULT_NAME = 'Turn Touch Remote'
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_MAC): cv.string,
@@ -92,10 +93,16 @@ class TurnTouchRemote:
                     self._handler_func(action.name)
 
         self._handler = Handler(self._button_press)
+        self.name = DEFAULT_NAME
+        self._connect_lock = threading.Lock()
+        self._io_lock = threading.Lock()
+        threading.Thread(target=self._setup).start()
+
+    def _setup(self):
+        """Open the connection to the remote and start listening for events."""
         self._connect()
-        self.name = self.get_name()
-        self._battery = None  # may not be needed; save time & get it later.
-        threading.Thread(target=self._listen).start()
+        self.get_name()
+        self._listen()
 
     def get_name(self):
         """Read the device name."""
@@ -104,10 +111,14 @@ class TurnTouchRemote:
         delay = RETRY_DELAY
         while True:
             try:
-                self.name = self._device.name
+                with self._io_lock:
+                    self.name = self._device.name
                 return self.name
             except turntouch.TurnTouchException:
                 _LOGGER.warning('Reading device name failed. Retrying...')
+            except AttributeError:
+                _LOGGER.warning('Cannot read battery level before connecting'
+                                ' to the device. Retrying...')
             time.sleep(delay)
             delay *= 2
             self._connect()
@@ -119,10 +130,13 @@ class TurnTouchRemote:
         delay = RETRY_DELAY
         while True:
             try:
-                self._battery = self._device.battery
-                return self._battery
+                with self._io_lock:
+                    return self._device.battery
             except turntouch.TurnTouchException:
                 _LOGGER.warning('Reading device battery failed. Retrying...')
+            except AttributeError:
+                _LOGGER.warning('Cannot read battery level before connecting'
+                                ' to the device. Retrying...')
             time.sleep(delay)
             delay *= 2
             self._connect()
@@ -132,17 +146,26 @@ class TurnTouchRemote:
         # pylint: disable=import-error
         import turntouch
         delay = RETRY_DELAY
-        while True:
-            if self._device:
-                self._device.disconnect()
-            try:
-                self._device = turntouch.TurnTouch(
-                    self.address, self._handler, self._debounce)
-                return True
-            except turntouch.TurnTouchException:
-                _LOGGER.warning('Connecting failed. Retrying...')
-            time.sleep(delay)
-            delay *= 2
+        got_lock = self._connect_lock.acquire(blocking=False)
+        try:
+            if not got_lock:
+                # Another thread is already doing this. Let it finish & return.
+                while not self._connect_lock.acquire():
+                    pass
+                return
+            while True:
+                if self._device:
+                    self._device.disconnect()
+                try:
+                    self._device = turntouch.TurnTouch(
+                        self.address, self._handler, self._debounce)
+                    return True
+                except turntouch.TurnTouchException:
+                    _LOGGER.warning('Connecting failed. Retrying...')
+                time.sleep(delay)
+                delay *= 2
+        finally:
+            self._connect_lock.release()
 
     def _listen(self):
         """Listener for Turn Touch events.
