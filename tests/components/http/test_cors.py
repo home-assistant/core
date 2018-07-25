@@ -14,6 +14,7 @@ import pytest
 from homeassistant.const import HTTP_HEADER_HA_AUTH
 from homeassistant.setup import async_setup_component
 from homeassistant.components.http.cors import setup_cors
+from homeassistant.components.http.view import HomeAssistantView
 
 
 TRUSTED_ORIGIN = 'https://home-assistant.io'
@@ -96,3 +97,34 @@ async def test_cors_preflight_allowed(client):
     assert req.headers[ACCESS_CONTROL_ALLOW_ORIGIN] == TRUSTED_ORIGIN
     assert req.headers[ACCESS_CONTROL_ALLOW_HEADERS] == \
         HTTP_HEADER_HA_AUTH.upper()
+
+
+async def test_cors_middleware_with_cors_allowed_view(hass):
+    """Test that we can configure cors and have a cors_allowed view."""
+    class MyView(HomeAssistantView):
+        """Test view that allows CORS."""
+
+        requires_auth = False
+        cors_allowed = True
+
+        def __init__(self, url, name):
+            """Initialize test view."""
+            self.url = url
+            self.name = name
+
+        async def get(self, request):
+            """Test response."""
+            return "test"
+
+    assert await async_setup_component(hass, 'http', {
+        'http': {
+            'cors_allowed_origins': ['http://home-assistant.io']
+        }
+    })
+
+    hass.http.register_view(MyView('/api/test', 'api:test'))
+    hass.http.register_view(MyView('/api/test', 'api:test2'))
+    hass.http.register_view(MyView('/api/test2', 'api:test'))
+
+    hass.http.app._on_startup.freeze()
+    await hass.http.app.startup()
