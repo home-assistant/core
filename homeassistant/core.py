@@ -191,7 +191,7 @@ class HomeAssistant:
         try:
             # Only block for EVENT_HOMEASSISTANT_START listener
             self.async_stop_track_tasks()
-            with timeout(TIMEOUT_EVENT_START, loop=self.loop):
+            with timeout(TIMEOUT_EVENT_START):
                 await self.async_block_till_done()
         except asyncio.TimeoutError:
             _LOGGER.warning(
@@ -201,7 +201,7 @@ class HomeAssistant:
                 ', '.join(self.config.components))
 
         # Allow automations to set up the start triggers before changing state
-        await asyncio.sleep(0, loop=self.loop)
+        await asyncio.sleep(0)
         self.state = CoreState.running
         _async_create_timer(self)
 
@@ -307,16 +307,16 @@ class HomeAssistant:
     async def async_block_till_done(self) -> None:
         """Block till all pending work is done."""
         # To flush out any call_soon_threadsafe
-        await asyncio.sleep(0, loop=self.loop)
+        await asyncio.sleep(0)
 
         while self._pending_tasks:
             pending = [task for task in self._pending_tasks
                        if not task.done()]
             self._pending_tasks.clear()
             if pending:
-                await asyncio.wait(pending, loop=self.loop)
+                await asyncio.wait(pending)
             else:
-                await asyncio.sleep(0, loop=self.loop)
+                await asyncio.sleep(0)
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
@@ -1050,7 +1050,7 @@ class ServiceRegistry:
                 EVENT_CALL_SERVICE, event_data, EventOrigin.local, context)
             return None
 
-        fut = asyncio.Future(loop=self._hass.loop)  # type: asyncio.Future
+        fut = asyncio.Future()  # type: asyncio.Future
 
         @callback
         def service_executed(event: Event) -> None:
@@ -1064,8 +1064,7 @@ class ServiceRegistry:
         self._hass.bus.async_fire(EVENT_CALL_SERVICE, event_data,
                                   EventOrigin.local, context)
 
-        done, _ = await asyncio.wait(
-            [fut], loop=self._hass.loop, timeout=SERVICE_CALL_LIMIT)
+        done, _ = await asyncio.wait([fut], timeout=SERVICE_CALL_LIMIT)
         success = bool(done)
         unsub()
         return success
