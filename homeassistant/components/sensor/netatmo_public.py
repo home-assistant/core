@@ -134,27 +134,27 @@ class NetatmoPublicData(object):
             raindata_live = raindata.getLive()
 
             if self.calculation == 'avg':
-                self.data = self.calculate_average(raindata_live)
+                self.data = calculate_average(raindata_live)
             else:
-                self.data = self.calculate_max(raindata_live)
+                self.data = calculate_max(raindata_live)
 
-    def calculate_average(self, raindata):
-        """Get the average value in the area."""
-        total = 0
-        counter = 0
-        for measure in raindata.items():
-            counter += 1
-            total += measure
 
-        if counter <= 0:
-            _LOGGER.error('Shouldn\'t have ever gotten this far')
+def calculate_average(raindata):
+    """Get the average value in the area."""
+    total = 0
+    counter = 0
+    for measure in raindata.items():
+        counter += 1
+        total += measure
 
-        _LOGGER.debug('Average: %d' % (total))
+    if counter <= 0:
+        _LOGGER.error('Shouldn\'t have ever gotten this far')
 
-        return total / counter
+    return total / counter
 
-    def calculate_max(self, raindata):
-        """Get the highest value in the area."""
-        key_max = max(raindata.keys(), key=(lambda k: raindata[k]))
 
-        return raindata[key_max]
+def calculate_max(raindata):
+    """Get the highest value in the area."""
+    key_max = max(raindata.keys(), key=(lambda k: raindata[k]))
+
+    return raindata[key_max]
