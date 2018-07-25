@@ -995,7 +995,7 @@ class ServiceRegistry:
 
         This method is a coroutine.
         """
-        call_id = self._generate_unique_id()
+        call_id = next(self._generate_unique_id())
 
         event_data = {
             ATTR_DOMAIN: domain.lower(),
