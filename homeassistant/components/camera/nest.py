@@ -10,7 +10,9 @@ from datetime import timedelta
 import requests
 
 from homeassistant.components import nest
-from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera,
+                                             SUPPORT_ON_OFF)
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,7 +78,34 @@ class NestCamera(Camera):
         """Return the brand of the camera."""
         return NEST_BRAND
 
-    # This doesn't seem to be getting called regularly, for some reason
+    @property
+    def supported_features(self):
+        """Nest Cam support turn on and off."""
+        return SUPPORT_ON_OFF
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._online and self._is_streaming
+
+    def turn_off(self):
+        """Turn off camera."""
+        _LOGGER.debug('Turn off camera %s', self._name)
+        # Calling Nest API in is_streaming setter
+        self.device.is_streaming = False
+        self.schedule_update_ha_state(True)
+
+    def turn_on(self):
+        """Turn on camera."""
+        if not self._online:
+            raise HomeAssistantError('Camera {} is offline.'
+                                     .format(self._name))
+
+        _LOGGER.debug('Turn on camera %s', self._name)
+        # Calling Nest API in is_streaming setter
+        self.device.is_streaming = True
+        self.schedule_update_ha_state(True)
+
     def update(self):
         """Cache value from Python-nest."""
         self._location = self.device.where
