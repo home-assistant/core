@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.futurenow/
 
 import logging
 import time
+
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -27,13 +28,13 @@ CONF_DRIVER_TYPES = [CONF_DRIVER_FNIP6X10AD, CONF_DRIVER_FNIP8X10A]
 
 DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Optional('dimmable'): int,
+    vol.Optional('dimmable', default=False): cv.boolean,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DRIVER): vol.In(CONF_DRIVER_TYPES),
     vol.Required(CONF_HOST): cv.string,
-    vol.Required(CONF_PORT): cv.string,
+    vol.Required(CONF_PORT): cv.port,
     vol.Required(CONF_DEVICES): {cv.string: DEVICE_SCHEMA},
 })
 
@@ -44,14 +45,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for channel, device_config in config[CONF_DEVICES].items():
         device = {}
         device['name'] = device_config[CONF_NAME]
-        device['dimmable'] = True if 'dimmable' in device_config else False
+        device['dimmable'] = True if device_config['dimmable'] is True else False
         device['channel'] = channel
         device['driver'] = config[CONF_DRIVER]
         device['host'] = config[CONF_HOST]
         device['port'] = config[CONF_PORT]
         lights.append(FutureNowLight(device))
 
-    add_devices(lights)
+    add_devices(lights, True)
 
 
 def to_futurenow_level(level):
@@ -76,6 +77,7 @@ class FutureNowLight(Light):
         self._channel = device['channel']
         self._brightness = None
         self._state = None
+        self._skip_update = False
 
         if device['driver'] == CONF_DRIVER_FNIP6X10AD:
             self._light = pyfnip.FNIP6x2adOutput(device['host'],
@@ -85,8 +87,6 @@ class FutureNowLight(Light):
             self._light = pyfnip.FNIP8x10aOutput(device['host'],
                                                  device['port'],
                                                  self._channel)
-        # Get actual state of light.
-        self.update()
 
     @property
     def name(self):
@@ -106,7 +106,7 @@ class FutureNowLight(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._dimmable is True:
+        if self._dimmable:
             return SUPPORT_BRIGHTNESS
         return 0
 
@@ -114,18 +114,25 @@ class FutureNowLight(Light):
         """Turn the light on."""
         level = kwargs.get(ATTR_BRIGHTNESS, 255) if self._dimmable else 255
         self._light.turn_on(to_futurenow_level(level))
+        self._brightness = level
+        self._state = True
+        self._skip_update = True
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self._light.turn_off()
+        self._brightness = 0
+        self._state = False
+        self._skip_update = True
 
     def update(self):
         """Fetch new state data for this light."""
-        # Delay a bit until state change has fully finished."
-        time.sleep(.500)
+        if self._skip_update:
+            self._skip_update = False
+            return
 
         state = int(self._light.is_on())
-        if state > 0:
+        if state:
             self._state = True
             self._brightness = to_hass_level(state)
         else:
