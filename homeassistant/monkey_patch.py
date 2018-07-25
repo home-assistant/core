@@ -57,7 +57,6 @@ def disable_c_asyncio() -> None:
         def __init__(self, path_entry: str) -> None:
             if path_entry != self.PATH_TRIGGER:
                 raise ImportError()
-            return
 
         def find_module(self, fullname: str, path: Any = None) -> None:
             """Find a module."""
@@ -65,7 +64,6 @@ def disable_c_asyncio() -> None:
                 # We lint in Py35, exception is introduced in Py36
                 # pylint: disable=undefined-variable
                 raise ModuleNotFoundError()  # type: ignore # noqa
-            return None
 
     sys.path_hooks.append(AsyncioImportFinder)
     sys.path.insert(0, AsyncioImportFinder.PATH_TRIGGER)
