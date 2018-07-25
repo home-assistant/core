@@ -36,10 +36,14 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 SUPPORT_SET_SPEED = 1
 SUPPORT_OSCILLATE = 2
 SUPPORT_DIRECTION = 4
+SUPPORT_NIGHT_MODE = 8
+SUPPORT_ANGLE = 16
 
 SERVICE_SET_SPEED = 'set_speed'
 SERVICE_OSCILLATE = 'oscillate'
 SERVICE_SET_DIRECTION = 'set_direction'
+SERVICE_SET_NIGHT_MODE = 'set_night_mode'
+SERVICE_SET_ANGLE = 'set_angle'
 
 SPEED_OFF = 'off'
 SPEED_LOW = 'low'
@@ -53,12 +57,18 @@ ATTR_SPEED = 'speed'
 ATTR_SPEED_LIST = 'speed_list'
 ATTR_OSCILLATING = 'oscillating'
 ATTR_DIRECTION = 'direction'
+ATTR_NIGHT_MODE = 'night_mode'
+ATTR_ANGLE_LOW = 'angle_low'
+ATTR_ANGLE_HIGH = 'angle_high'
 
 PROP_TO_ATTR = {
     'speed': ATTR_SPEED,
     'speed_list': ATTR_SPEED_LIST,
     'oscillating': ATTR_OSCILLATING,
     'direction': ATTR_DIRECTION,
+    'night_mode': ATTR_NIGHT_MODE,
+    'angle_low': ATTR_ANGLE_LOW,
+    'angle_high': ATTR_ANGLE_HIGH,
 }  # type: dict
 
 FAN_SET_SPEED_SCHEMA = vol.Schema({
@@ -89,6 +99,17 @@ FAN_SET_DIRECTION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DIRECTION): cv.string
 })  # type: dict
 
+FAN_SET_NIGHT_MODE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_NIGHT_MODE): cv.boolean
+})  # type: dict
+
+FAN_SET_ANGLE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_ANGLE_LOW): cv.positive_int,
+    vol.Optional(ATTR_ANGLE_HIGH): cv.positive_int
+})  # type: dict
+
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {
         'method': 'async_turn_on',
@@ -114,6 +135,14 @@ SERVICE_TO_METHOD = {
         'method': 'async_set_direction',
         'schema': FAN_SET_DIRECTION_SCHEMA,
     },
+    SERVICE_SET_NIGHT_MODE: {
+        'method': 'async_set_night_mode',
+        'schema': FAN_SET_NIGHT_MODE_SCHEMA,
+    },
+    SERVICE_SET_ANGLE: {
+        'method': 'async_set_angle',
+        'schema': FAN_SET_ANGLE_SCHEMA,
+    },
 }
 
 
@@ -130,9 +159,9 @@ def turn_on(hass, entity_id: str = None, speed: str = None) -> None:
     """Turn all or specified fan on."""
     data = {
         key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_SPEED, speed),
-        ] if value is not None
+        (ATTR_ENTITY_ID, entity_id),
+        (ATTR_SPEED, speed),
+    ] if value is not None
     }
 
     hass.services.call(DOMAIN, SERVICE_TURN_ON, data)
@@ -162,9 +191,9 @@ def oscillate(hass, entity_id: str = None,
     """Set oscillation on all or specified fan."""
     data = {
         key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_OSCILLATING, should_oscillate),
-        ] if value is not None
+        (ATTR_ENTITY_ID, entity_id),
+        (ATTR_OSCILLATING, should_oscillate),
+    ] if value is not None
     }
 
     hass.services.call(DOMAIN, SERVICE_OSCILLATE, data)
@@ -175,9 +204,9 @@ def set_speed(hass, entity_id: str = None, speed: str = None) -> None:
     """Set speed for all or specified fan."""
     data = {
         key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_SPEED, speed),
-        ] if value is not None
+        (ATTR_ENTITY_ID, entity_id),
+        (ATTR_SPEED, speed),
+    ] if value is not None
     }
 
     hass.services.call(DOMAIN, SERVICE_SET_SPEED, data)
@@ -188,12 +217,42 @@ def set_direction(hass, entity_id: str = None, direction: str = None) -> None:
     """Set direction for all or specified fan."""
     data = {
         key: value for key, value in [
-            (ATTR_ENTITY_ID, entity_id),
-            (ATTR_DIRECTION, direction),
-        ] if value is not None
+        (ATTR_ENTITY_ID, entity_id),
+        (ATTR_DIRECTION, direction),
+    ] if value is not None
     }
 
     hass.services.call(DOMAIN, SERVICE_SET_DIRECTION, data)
+
+
+@bind_hass
+def set_night_mode(hass, entity_id: str = None,
+                   night_mode: bool = True) -> None:
+    """Set night mode"""
+    data = {
+        key: value for key, value in [
+        (ATTR_ENTITY_ID, entity_id),
+        (ATTR_NIGHT_MODE, night_mode),
+    ] if value is not None
+    }
+
+    hass.services.call(DOMAIN, SERVICE_SET_NIGHT_MODE, data)
+
+
+@bind_hass
+def set_angle(hass, entity_id: str = None,
+              angle_low: int = None,
+              angle_high: int = None) -> None:
+    """Set oscillation angle"""
+    data = {
+        key: value for key, value in [
+            (ATTR_ENTITY_ID, entity_id),
+            (ATTR_ANGLE_LOW, angle_low),
+            (ATTR_ANGLE_HIGH, angle_high),
+        ] if value is not None
+    }
+
+    hass.services.call(DOMAIN, SERVICE_SET_ANGLE, data)
 
 
 @asyncio.coroutine
@@ -286,6 +345,28 @@ class FanEntity(ToggleEntity):
         """
         return self.hass.async_add_job(self.oscillate, oscillating)
 
+    def set_night_mode(self: ToggleEntity, night_mode: bool) -> None:
+        """Oscillate the fan."""
+        pass
+
+    def async_set_night_mode(self: ToggleEntity, night_mode: bool):
+        """Oscillate the fan.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.set_night_mode, night_mode)
+
+    def set_angle(self: ToggleEntity, angle_low: int = None, angle_high: int = None) -> None:
+        """set the oscillation angle of the the fan."""
+        pass
+
+    def async_set_angle(self: ToggleEntity, angle_low: int = None, angle_high: int = None):
+        """set the oscillation angle of the the fan.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.set_angle, angle_low, angle_high)
+
     @property
     def is_on(self):
         """Return true if the entity is on."""
@@ -304,6 +385,21 @@ class FanEntity(ToggleEntity):
     @property
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
+        return None
+
+    @property
+    def night_mode(self):
+        """Return night mode status"""
+        return None
+
+    @property
+    def angle_low(self):
+        """Return angle low status"""
+        return None
+
+    @property
+    def angle_high(self):
+        """Return angle low status"""
         return None
 
     @property
