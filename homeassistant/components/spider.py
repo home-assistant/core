@@ -19,7 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'spider'
 
 SPIDER_COMPONENTS = [
-    'climate'
+    'climate',
+    'switch'
 ]
 
 CONFIG_SCHEMA = vol.Schema({
@@ -43,7 +44,8 @@ def setup(hass, config):
 
         hass.data[DOMAIN] = {
             'controller': api,
-            'thermostats': api.get_thermostats()
+            'thermostats': api.get_thermostats(),
+            'power_plugs': api.get_power_plugs()
         }
 
         for component in SPIDER_COMPONENTS:
