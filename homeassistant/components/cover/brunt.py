@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_USERNAME)
+    ATTR_ATTRIBUTION, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.components.cover import (
     ATTR_POSITION, CoverDevice,
     PLATFORM_SCHEMA, SUPPORT_CLOSE,
@@ -22,16 +22,13 @@ REQUIREMENTS = ['brunt==0.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTRIBUTION = 'Based on an unofficial Brunt SDK.'
-
 COVER_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 DEVICE_CLASS = 'window'
 
-STATE_PARTIALLY_OPEN = 'partially open'
 ATTR_REQUEST_POSITION = 'request_position'
-DEFAULT_NAME = 'brunt blind engine'
 NOTIFICATION_ID = 'brunt_notification'
 NOTIFICATION_TITLE = 'Brunt Cover Setup'
+ATTRIBUTION = 'Based on an unofficial Brunt SDK.'
 
 CLOSED_POSITION = 0
 OPEN_POSITION = 100
@@ -101,7 +98,7 @@ class BruntDevice(CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self._state.get('currentPosition', None)
+        pos = self._state.get('currentPosition')
         return int(pos) if pos else None
 
     @property
@@ -113,33 +110,34 @@ class BruntDevice(CoverDevice):
         to Brunt, at times there is a diff of 1 to current
         None is unknown, 0 is closed, 100 is fully open.
         """
-        pos = self._state.get('requestPosition', None)
+        pos = self._state.get('requestPosition')
         return int(pos) if pos else None
 
     @property
     def move_state(self):
         """
-        Return current position of cover.
+        Return current moving state of cover.
 
         None is unknown, 0 when stopped, 1 when opening, 2 when closing
         """
-        mov = self._state.get('moveState', None)
+        mov = self._state.get('moveState')
         return int(mov) if mov else None
 
     @property
     def is_opening(self):
         """Return if the cover is opening or not."""
-        return True if self.move_state == 1 else False
+        return self.move_state == 1
 
     @property
     def is_closing(self):
         """Return if the cover is closing or not."""
-        return True if self.move_state == 2 else False
+        return self.move_state == 2
 
     @property
     def device_state_attributes(self):
         """Return the detailed device state attributes."""
         return {
+            ATTR_ATTRIBUTION: ATTRIBUTION,
             ATTR_REQUEST_POSITION: self.request_cover_position
         }
 
