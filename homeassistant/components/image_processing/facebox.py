@@ -79,13 +79,16 @@ def parse_faces(api_faces):
     return known_faces
 
 
-def post_image(url, username, password, image):
+def post_image(url, image, username, password):
     """Post an image to the classifier."""
+    kwargs = {}
+    if username:
+        kwargs['auth'] = requests.auth.HTTPBasicAuth(username, password)
     try:
         response = requests.post(
             url,
-            auth=requests.auth.HTTPBasicAuth(username, password),
             json={"base64": encode_image(image)},
+            **kwargs
             )
         if response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
@@ -95,15 +98,18 @@ def post_image(url, username, password, image):
         _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
 
 
-def teach_file(url, username, password, name, file_path):
+def teach_file(url, name, file_path, username, password):
     """Teach the classifier a name associated with a file."""
+    kwargs = {}
+    if username:
+        kwargs['auth'] = requests.auth.HTTPBasicAuth(username, password)
     try:
         with open(file_path, 'rb') as open_file:
             response = requests.post(
                 url,
-                auth=requests.auth.HTTPBasicAuth(username, password),
                 data={FACEBOX_NAME: name, ATTR_ID: file_path},
                 files={'file': open_file},
+                **kwargs
                 )
         if response.status_code == HTTP_UNAUTHORIZED:
             _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
@@ -186,7 +192,7 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
     def process_image(self, image):
         """Process an image."""
         response = post_image(
-            self._url_check, self._username, self._password, image)
+            self._url_check, image, self._username, self._password)
         if response:
             response_json = response.json()
             if response_json['success']:
@@ -206,7 +212,7 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
                 or not valid_file_path(file_path)):
             return
         teach_file(
-            self._url_teach, self._username, self._password, name, file_path)
+            self._url_teach, name, file_path, self._username, self._password)
 
     @property
     def camera_entity(self):
