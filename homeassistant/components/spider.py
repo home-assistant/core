@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_USERNAME, CONF_SCAN_INTERVAL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
@@ -27,6 +28,7 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=120): cv.positive_int,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -44,6 +46,7 @@ def setup(hass, config):
 
         hass.data[DOMAIN] = {
             'controller': api,
+
             'thermostats': api.get_thermostats(),
             'power_plugs': api.get_power_plugs()
         }
