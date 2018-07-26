@@ -78,14 +78,22 @@ class TestCommandSensorSensor(unittest.TestCase):
         """Test attributes get extracted from a JSON result."""
         data = command_line.CommandSensorData(
             self.hass,
-            'echo { \\"key\\": \\"some_json_value\\" }', 15
+            ('echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
+             \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'),
+            15
         )
 
         self.sensor = command_line.CommandSensor(self.hass, data, 'test',
-                                                 None, None, ['key'])
+                                                 None, None, ['key',
+                                                              'another_key',
+                                                              'key_three'])
         self.sensor.update()
         self.assertEqual('some_json_value',
                          self.sensor.device_state_attributes['key'])
+        self.assertEqual('another_json_value',
+                         self.sensor.device_state_attributes['another_key'])
+        self.assertEqual('value_three',
+                         self.sensor.device_state_attributes['key_three'])
 
     @patch('homeassistant.components.sensor.command_line._LOGGER')
     def test_update_with_json_attrs_no_data(self, mock_logger):
