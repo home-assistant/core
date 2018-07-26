@@ -307,7 +307,7 @@ class PollenComData:
                     _LOGGER.error('Unable to get allergy history: %s', err)
                     self.data[TYPE_ALLERGY_HISTORIC] = {}
 
-            if all(s in self._sensor_types
+            if any(s in self._sensor_types
                    for s in [TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
                              TYPE_ALLERGY_YESTERDAY]):
                 try:
