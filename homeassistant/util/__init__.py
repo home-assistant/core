@@ -17,9 +17,11 @@ from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
 
 from .dt import as_local, utcnow
 
+# pylint: disable=invalid-name
 T = TypeVar('T')
 U = TypeVar('U')
 ENUM_T = TypeVar('ENUM_T', bound=enum.Enum)
+# pylint: enable=invalid-name
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
@@ -120,6 +122,9 @@ def get_random_string(length: int = 10) -> str:
 
 class OrderedEnum(enum.Enum):
     """Taken from Python 3.4.0 docs."""
+
+    # https://github.com/PyCQA/pylint/issues/2306
+    # pylint: disable=comparison-with-callable
 
     def __ge__(self: ENUM_T, other: ENUM_T) -> bool:
         """Return the greater than element."""

@@ -439,6 +439,7 @@ class Profiles:
     @classmethod
     def get_default(cls, entity_id):
         """Return the default turn-on profile for the given light."""
+        # pylint: disable=unsupported-membership-test
         name = entity_id + ".default"
         if name in cls._all:
             return name

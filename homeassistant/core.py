@@ -49,9 +49,11 @@ from homeassistant.util.unit_system import UnitSystem, METRIC_SYSTEM  # NOQA
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntries  # noqa
 
+# pylint: disable=invalid-name
 T = TypeVar('T')
 CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)
 CALLBACK_TYPE = Callable[[], None]
+# pylint: enable=invalid-name
 
 DOMAIN = 'homeassistant'
 
