@@ -143,6 +143,7 @@ class TurnTouchRemote:
         # pylint: disable=import-error
         import turntouch
         delay = RETRY_DELAY
+        # pylint: disable=assignment-from-no-return
         got_lock = self._connect_lock.acquire(blocking=False)
         try:
             if not got_lock:
