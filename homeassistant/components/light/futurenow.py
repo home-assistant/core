@@ -131,10 +131,4 @@ class FutureNowLight(Light):
             return
 
         state = int(self._light.is_on())
-        if state:
-            self._state = True
-            self._brightness = to_hass_level(state)
-        else:
-            if self._dimmable:
-                self._brightness = 0
-            self._state = False
+        self._state = bool(state)
