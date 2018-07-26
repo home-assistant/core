@@ -7,8 +7,8 @@ https://home-assistant.io/components/switch.spider/
 
 import logging
 
-from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.spider import DOMAIN as SPIDER_DOMAIN
+from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['spider']
 
@@ -20,11 +20,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is None:
         return
 
-    devices = [SpiderPowerPlug(
-        hass.data[SPIDER_DOMAIN]['controller'],
-        device,
-        k == 0
-    ) for k, device in enumerate(hass.data[SPIDER_DOMAIN]['power_plugs'])]
+    devices = [SpiderPowerPlug(hass.data[SPIDER_DOMAIN]['controller'], device)
+               for device in hass.data[SPIDER_DOMAIN]['power_plugs']]
 
     add_devices(devices, True)
 
@@ -32,11 +29,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class SpiderPowerPlug(SwitchDevice):
     """Representation of a Spider Power Plug."""
 
-    def __init__(self, api, power_plug, master):
+    def __init__(self, api, power_plug):
         """Initialize the Vera device."""
         self.api = api
         self.power_plug = power_plug
-        self.master = master
 
     @property
     def unique_id(self):
@@ -78,15 +74,4 @@ class SpiderPowerPlug(SwitchDevice):
 
     def update(self):
         """Get the latest data."""
-        try:
-            # Only let the master power plug refresh
-            # and let the others use the cache
-            power_plugs = self.api.get_power_plugs(
-                force_refresh=self.master)
-            for power_plug in power_plugs:
-                if power_plug.id == self.unique_id:
-                    self.power_plug = power_plug
-
-        except StopIteration:
-            _LOGGER.error("No data from the Spider API")
-            return
+        self.power_plug = self.api.get_power_plug(self.unique_id)
