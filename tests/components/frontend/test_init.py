@@ -71,7 +71,7 @@ def test_frontend_and_static(mock_http_client):
 
     # Test we can retrieve frontend.js
     frontendjs = re.search(
-        r'(?P<app>\/frontend_es5\/app-[A-Za-z0-9]{32}.js)', text)
+        r'(?P<app>\/frontend_es5\/app-[A-Za-z0-9]{8}.js)', text)
 
     assert frontendjs is not None
     resp = yield from mock_http_client.get(frontendjs.groups(0)[0])
@@ -226,7 +226,7 @@ def test_extra_urls(mock_http_client_with_urls):
     resp = yield from mock_http_client_with_urls.get('/states?latest')
     assert resp.status == 200
     text = yield from resp.text()
-    assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
+    assert text.find("href='https://domain.com/my_extra_url.html'") >= 0
 
 
 @asyncio.coroutine
@@ -235,7 +235,7 @@ def test_extra_urls_es5(mock_http_client_with_urls):
     resp = yield from mock_http_client_with_urls.get('/states?es5')
     assert resp.status == 200
     text = yield from resp.text()
-    assert text.find('href="https://domain.com/my_extra_url_es5.html"') >= 0
+    assert text.find("href='https://domain.com/my_extra_url_es5.html'") >= 0
 
 
 async def test_get_panels(hass, hass_ws_client):
