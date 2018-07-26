@@ -112,7 +112,7 @@ class CommandSensor(Entity):
                     else:
                         _LOGGER.warning("JSON result was not a dictionary")
                 except ValueError:
-                    _LOGGER.warning("Command result could not be parsed as" +
+                    _LOGGER.warning("Command result could not be parsed as"
                                     "JSON")
                     _LOGGER.debug("Erroneous JSON: %s", value)
             else:
