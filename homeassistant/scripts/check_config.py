@@ -163,13 +163,13 @@ def check(config_dir, secrets=False):
         'secret_cache': None,
     }
 
-    # pylint: disable=unused-variable
+    # pylint: disable=possibly-unused-variable
     def mock_load(filename):
         """Mock hass.util.load_yaml to save config file names."""
         res['yaml_files'][filename] = True
         return MOCKS['load'][1](filename)
 
-    # pylint: disable=unused-variable
+    # pylint: disable=possibly-unused-variable
     def mock_secrets(ldr, node):
         """Mock _get_secrets."""
         try:

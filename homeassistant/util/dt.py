@@ -98,7 +98,7 @@ def utc_from_timestamp(timestamp: float) -> dt.datetime:
 
 
 def start_of_local_day(dt_or_d:
-                       Union[dt.date, dt.datetime]=None) -> dt.datetime:
+                       Union[dt.date, dt.datetime] = None) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         date = now().date()  # type: dt.date
