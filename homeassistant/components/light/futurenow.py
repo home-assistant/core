@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for channel, device_config in config[CONF_DEVICES].items():
         device = {}
         device['name'] = device_config[CONF_NAME]
-        device['dimmable'] = True if device_config['dimmable'] else False
+        device['dimmable'] = device_config['dimmable']
         device['channel'] = channel
         device['driver'] = config[CONF_DRIVER]
         device['host'] = config[CONF_HOST]
