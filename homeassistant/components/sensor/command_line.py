@@ -4,6 +4,7 @@ Allows to configure custom shell commands to turn a value for a sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.command_line/
 """
+import collections
 import logging
 import json
 import subprocess
@@ -104,7 +105,7 @@ class CommandSensor(Entity):
             if value:
                 try:
                     json_dict = json.loads(value)
-                    if isinstance(json_dict, dict):
+                    if isinstance(json_dict, collections.Mapping):
                         attrs = {k: json_dict[k] for k in self._json_attrs
                                  if k in json_dict}
                         self._attributes = attrs
