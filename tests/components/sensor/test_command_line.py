@@ -134,3 +134,26 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.assertEqual({}, self.sensor.device_state_attributes)
         self.assertTrue(mock_logger.warning.called)
         self.assertTrue(mock_logger.debug.called)
+
+    def test_update_with_missing_json_attrs(self):
+        """Test attributes get extracted from a JSON result."""
+        data = command_line.CommandSensorData(
+            self.hass,
+            ('echo { \\"key\\": \\"some_json_value\\", \\"another_key\\":\
+             \\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'),
+            15
+        )
+
+        self.sensor = command_line.CommandSensor(self.hass, data, 'test',
+                                                 None, None, ['key',
+                                                              'another_key',
+                                                              'key_three',
+                                                              'special_key'])
+        self.sensor.update()
+        self.assertEqual('some_json_value',
+                         self.sensor.device_state_attributes['key'])
+        self.assertEqual('another_json_value',
+                         self.sensor.device_state_attributes['another_key'])
+        self.assertEqual('value_three',
+                         self.sensor.device_state_attributes['key_three'])
+        self.assertFalse('special_key' in self.sensor.device_state_attributes)
