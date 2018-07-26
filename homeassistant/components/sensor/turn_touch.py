@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.turn_touch/
 """
 
 import logging
+import threading
 
 from homeassistant.const import DEVICE_CLASS_BATTERY
 from homeassistant.components.turn_touch import DATA_KEY
@@ -14,6 +15,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['turn_touch']
+
 
 SENSOR_NAME = '{remote_name} Battery'
 
@@ -39,6 +41,14 @@ class TurnTouchBatterySensor(Entity):
         _LOGGER.debug('Initializing turn touch battery sensor.')
         self.turn_touch = turntouch_device
         self._battery_level = None
+
+    def _refresh_battery(self):
+        """Get the battery level and save it.
+
+        This involves retrying  with exponential backoff, so it should not
+        be called from the Home Assistant thread pool.
+        """
+        self._battery_level = self.turn_touch.get_battery()
 
     @property
     def name(self):
@@ -66,5 +76,9 @@ class TurnTouchBatterySensor(Entity):
         return self.turn_touch.address
 
     def update(self):
-        """Get the latest data and updates the states."""
-        self._battery_level = self.turn_touch.get_battery()
+        """Get the latest data and updates the states.
+
+        Since this can be time-consuming, do it in a separate thread to
+        avoid blocking Home Assistant.
+        """
+        threading.Thread(target=self._refresh_battery).start()

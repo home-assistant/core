@@ -174,7 +174,7 @@ class TestTurnTouch(unittest.TestCase):
 
     def test_sensor(self):
         """Test the battery sensor."""
-        sensor = TurnTouchBatterySensor(self.device)
         self.patched_battery.return_value = 42
-        sensor.update()
+        sensor = TurnTouchBatterySensor(self.device)
+        sensor._refresh_battery()  # pylint: disable=protected-access
         assert sensor.state == 42

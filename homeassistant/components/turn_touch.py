@@ -14,7 +14,7 @@ from homeassistant.const import CONF_DEVICES, CONF_MAC
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['turntouch==0.4.2']
+REQUIREMENTS = ['turntouch==0.4.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -95,7 +95,6 @@ class TurnTouchRemote:
         self._handler = Handler(self._button_press)
         self.name = DEFAULT_NAME
         self._connect_lock = threading.Lock()
-        self._io_lock = threading.Lock()
         threading.Thread(target=self._setup).start()
 
     def _setup(self):
@@ -111,8 +110,7 @@ class TurnTouchRemote:
         delay = RETRY_DELAY
         while True:
             try:
-                with self._io_lock:
-                    self.name = self._device.name
+                self.name = self._device.name
                 return self.name
             except turntouch.TurnTouchException:
                 _LOGGER.warning('Reading device name failed. Retrying...')
@@ -130,8 +128,7 @@ class TurnTouchRemote:
         delay = RETRY_DELAY
         while True:
             try:
-                with self._io_lock:
-                    return self._device.battery
+                return self._device.battery
             except turntouch.TurnTouchException:
                 _LOGGER.warning('Reading device battery failed. Retrying...')
             except AttributeError:

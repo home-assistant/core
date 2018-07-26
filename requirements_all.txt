@@ -1354,7 +1354,7 @@ tplink==0.2.1
 transmissionrpc==0.11
 
 # homeassistant.components.turn_touch
-turntouch==0.4.2
+turntouch==0.4.3
 
 # homeassistant.components.tuya
 tuyapy==0.1.2
