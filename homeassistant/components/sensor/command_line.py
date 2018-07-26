@@ -29,7 +29,7 @@ DEFAULT_NAME = 'Command Sensor'
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-CONF_JSON_ATTRS = 'json_attributes'
+CONF_JSON_ATTRIBUTES = 'json_attributes'
 CONF_COMMAND_TIMEOUT = 'command_timeout'
 DEFAULT_TIMEOUT = 15
 
@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
+    vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
     vol.Optional(
         CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
@@ -53,18 +53,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     command_timeout = config.get(CONF_COMMAND_TIMEOUT)
     if value_template is not None:
         value_template.hass = hass
-    json_attrs = config.get(CONF_JSON_ATTRS)
+    json_attributes = config.get(CONF_JSON_ATTRIBUTES)
     data = CommandSensorData(hass, command, command_timeout)
 
     add_devices([CommandSensor(hass, data, name, unit, value_template,
-                               json_attrs)], True)
+                               json_attributes)], True)
 
 
 class CommandSensor(Entity):
     """Representation of a sensor that is using shell commands."""
 
     def __init__(self, hass, data, name, unit_of_measurement, value_template,
-                 json_attrs):
+                 json_attributes):
         """Initialize the sensor."""
         self._hass = hass
         self.data = data
@@ -72,7 +72,7 @@ class CommandSensor(Entity):
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
-        self._json_attrs = json_attrs
+        self._json_attributes = json_attributes
         self._attributes = None
 
     @property
@@ -100,15 +100,15 @@ class CommandSensor(Entity):
         self.data.update()
         value = self.data.value
 
-        if self._json_attrs:
+        if self._json_attributes:
             self._attributes = {}
             if value:
                 try:
                     json_dict = json.loads(value)
                     if isinstance(json_dict, collections.Mapping):
-                        attrs = {k: json_dict[k] for k in self._json_attrs
-                                 if k in json_dict}
-                        self._attributes = attrs
+                        self._attributes = {k: json_dict[k] for k in
+                                            self._json_attributes
+                                            if k in json_dict}
                     else:
                         _LOGGER.warning("JSON result was not a dictionary")
                 except ValueError:
