@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_NAME, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor.wunderground import (
-    LANG_CODES, SENSOR_TYPES, WUndergroundData
+    SENSOR_TYPES, WUndergroundData
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -29,9 +29,6 @@ ATTR_FORECAST_WIND_BEARING = 'wind_bearing'
 ATTRIBUTION = 'Data provided by Weather Underground'
 
 CONF_PWS_ID = 'pws_id'
-CONF_LANG = 'lang'
-
-DEFAULT_LANG = 'EN'
 
 DEFAULT_NAME = 'Weather Underground'
 
@@ -124,7 +121,6 @@ CONDITION_CLASSES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_PWS_ID): cv.string,
-    vol.Optional(CONF_LANG, default=DEFAULT_LANG): vol.All(vol.In(LANG_CODES)),
     vol.Inclusive(CONF_LATITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
@@ -143,7 +139,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 
     rest = WUndergroundData(
         hass, config.get(CONF_API_KEY), pws_id,
-        config.get(CONF_LANG), latitude, longitude)
+        'EN', latitude, longitude)
 
     rest.request_feature("conditions")
     rest.request_feature("forecast")
