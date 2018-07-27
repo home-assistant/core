@@ -214,7 +214,7 @@ class SynoNasUtilSensor(SynoNasSensor):
 
             if self.var_id in network_sensors:
                 return round(attr / 1024.0, 1)
-            elif self.var_id in memory_sensors:
+            if self.var_id in memory_sensors:
                 return round(attr / 1024.0 / 1024.0, 1)
         else:
             return getattr(self._api.utilisation, self.var_id)

@@ -99,7 +99,7 @@ class NetatmoThermostat(ClimateDevice):
         state = self._data.thermostatdata.relay_cmd
         if state == 0:
             return STATE_IDLE
-        elif state == 100:
+        if state == 100:
             return STATE_HEAT
 
     @property

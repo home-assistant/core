@@ -199,8 +199,10 @@ class TestScriptComponent(unittest.TestCase):
                             }
                         }]
                     }}}):
-            script.reload(self.hass)
-            self.hass.block_till_done()
+            with patch('homeassistant.config.find_config_file',
+                       return_value=''):
+                script.reload(self.hass)
+                self.hass.block_till_done()
 
         assert self.hass.states.get(ENTITY_ID) is None
         assert not self.hass.services.has_service(script.DOMAIN, 'test')

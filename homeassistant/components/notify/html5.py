@@ -280,7 +280,7 @@ class HTML5PushCallbackView(HomeAssistantView):
             return self.json_message('Authorization header must '
                                      'start with Bearer',
                                      status_code=HTTP_UNAUTHORIZED)
-        elif len(parts) != 2:
+        if len(parts) != 2:
             return self.json_message('Authorization header must '
                                      'be Bearer token',
                                      status_code=HTTP_UNAUTHORIZED)

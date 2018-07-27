@@ -107,7 +107,7 @@ async def async_setup(hass, config):
             ('scene', 'Scene'),
             ('notify', 'Notification')):
         found_devices = _get_devices(hass, discovery_type)
-        hass.async_add_job(
+        hass.async_create_task(
             discovery.async_load_platform(hass, component, DOMAIN, {
                 ATTR_DISCOVER_DEVICES: found_devices
             }, config))
@@ -172,7 +172,7 @@ class KNXModule:
         """Return the connection_config."""
         if CONF_KNX_TUNNELING in self.config[DOMAIN]:
             return self.connection_config_tunneling()
-        elif CONF_KNX_ROUTING in self.config[DOMAIN]:
+        if CONF_KNX_ROUTING in self.config[DOMAIN]:
             return self.connection_config_routing()
         return self.connection_config_auto()
 

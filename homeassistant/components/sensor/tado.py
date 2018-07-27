@@ -122,9 +122,9 @@ class TadoSensor(Entity):
         """Return the unit of measurement."""
         if self.zone_variable == "temperature":
             return self.hass.config.units.temperature_unit
-        elif self.zone_variable == "humidity":
+        if self.zone_variable == "humidity":
             return '%'
-        elif self.zone_variable == "heating":
+        if self.zone_variable == "heating":
             return '%'
 
     @property
@@ -132,7 +132,7 @@ class TadoSensor(Entity):
         """Icon for the sensor."""
         if self.zone_variable == "temperature":
             return 'mdi:thermometer'
-        elif self.zone_variable == "humidity":
+        if self.zone_variable == "humidity":
             return 'mdi:water-percent'
 
     def update(self):

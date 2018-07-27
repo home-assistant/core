@@ -315,7 +315,7 @@ class _AlexaLockController(_AlexaInterface):
 
         if self.entity.state == STATE_LOCKED:
             return 'LOCKED'
-        elif self.entity.state == STATE_UNLOCKED:
+        if self.entity.state == STATE_UNLOCKED:
             return 'UNLOCKED'
         return 'JAMMED'
 

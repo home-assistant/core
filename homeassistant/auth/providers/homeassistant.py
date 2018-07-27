@@ -3,6 +3,7 @@ import base64
 from collections import OrderedDict
 import hashlib
 import hmac
+from typing import Dict  # noqa: F401 pylint: disable=unused-import
 
 import voluptuous as vol
 
@@ -68,12 +69,12 @@ class Data:
         """Return users."""
         return self._data['users']
 
-    def validate_login(self, username, password):
+    def validate_login(self, username: str, password: str) -> None:
         """Validate a username and password.
 
         Raises InvalidAuth if auth invalid.
         """
-        password = self.hash_password(password)
+        hashed = self.hash_password(password)
 
         found = None
 
@@ -84,33 +85,33 @@ class Data:
 
         if found is None:
             # Do one more compare to make timing the same as if user was found.
-            hmac.compare_digest(password, password)
+            hmac.compare_digest(hashed, hashed)
             raise InvalidAuth
 
-        if not hmac.compare_digest(password,
+        if not hmac.compare_digest(hashed,
                                    base64.b64decode(found['password'])):
             raise InvalidAuth
 
-    def hash_password(self, password, for_storage=False):
+    def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
         hashed = hashlib.pbkdf2_hmac(
             'sha512', password.encode(), self._data['salt'].encode(), 100000)
         if for_storage:
-            hashed = base64.b64encode(hashed).decode()
+            hashed = base64.b64encode(hashed)
         return hashed
 
-    def add_auth(self, username, password):
+    def add_auth(self, username: str, password: str) -> None:
         """Add a new authenticated user/pass."""
         if any(user['username'] == username for user in self.users):
             raise InvalidUser
 
         self.users.append({
             'username': username,
-            'password': self.hash_password(password, True),
+            'password': self.hash_password(password, True).decode(),
         })
 
     @callback
-    def async_remove_auth(self, username):
+    def async_remove_auth(self, username: str) -> None:
         """Remove authentication."""
         index = None
         for i, user in enumerate(self.users):
@@ -123,14 +124,15 @@ class Data:
 
         self.users.pop(index)
 
-    def change_password(self, username, new_password):
+    def change_password(self, username: str, new_password: str) -> None:
         """Update the password.
 
         Raises InvalidUser if user cannot be found.
         """
         for user in self.users:
             if user['username'] == username:
-                user['password'] = self.hash_password(new_password, True)
+                user['password'] = self.hash_password(
+                    new_password, True).decode()
                 break
         else:
             raise InvalidUser
@@ -160,7 +162,7 @@ class HassAuthProvider(AuthProvider):
         """Return a flow to login."""
         return LoginFlow(self)
 
-    async def async_validate_login(self, username, password):
+    async def async_validate_login(self, username: str, password: str):
         """Helper to validate a username and password."""
         if self.data is None:
             await self.async_initialize()
@@ -225,7 +227,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
                     data=user_input
                 )
 
-        schema = OrderedDict()
+        schema = OrderedDict()  # type: Dict[str, type]
         schema['username'] = str
         schema['password'] = str
 

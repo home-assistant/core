@@ -96,11 +96,11 @@ class TelldusLiveSensor(TelldusLiveEntity):
         """Return the state of the sensor."""
         if not self.available:
             return None
-        elif self._type == SENSOR_TYPE_TEMPERATURE:
+        if self._type == SENSOR_TYPE_TEMPERATURE:
             return self._value_as_temperature
-        elif self._type == SENSOR_TYPE_HUMIDITY:
+        if self._type == SENSOR_TYPE_HUMIDITY:
             return self._value_as_humidity
-        elif self._type == SENSOR_TYPE_LUMINANCE:
+        if self._type == SENSOR_TYPE_LUMINANCE:
             return self._value_as_luminance
         return self._value
 

@@ -87,7 +87,7 @@ class TuyaClimateDevice(TuyaDevice, ClimateDevice):
         unit = self.tuya.temperature_unit()
         if unit == 'CELSIUS':
             return TEMP_CELSIUS
-        elif unit == 'FAHRENHEIT':
+        if unit == 'FAHRENHEIT':
             return TEMP_FAHRENHEIT
         return TEMP_CELSIUS
 
