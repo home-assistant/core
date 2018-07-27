@@ -20,7 +20,7 @@ from homeassistant.components.feedreader import StoredData, FeedManager
 from homeassistant.components.geo_location import DOMAIN, GeoLocationEvent, \
     ENTITY_ID_FORMAT
 from homeassistant.const import CONF_URL, CONF_RADIUS, CONF_NAME, \
-    CONF_SCAN_INTERVAL, CONF_ICON
+    CONF_SCAN_INTERVAL, CONF_ICON, ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_time_interval
@@ -37,6 +37,8 @@ ATTR_DISTANCE = 'distance'
 ATTR_ID = 'id'
 ATTR_MANAGER = "manager"
 ATTR_TITLE = 'title'
+BUILT_IN_ATTRIBUTES = [ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_TITLE, ATTR_ID,
+                       ATTR_DISTANCE, ATTR_GEOMETRY, ATTR_CATEGORY]
 
 CONF_CATEGORIES = 'categories'
 CONF_ATTRIBUTES = 'attributes'
@@ -97,8 +99,14 @@ def setup_platform(hass, config, add_devices, disc_info=None):
     name = config.get(CONF_NAME)
     scan_interval = config.get(CONF_SCAN_INTERVAL)
     categories = config.get(CONF_CATEGORIES)
-    # TODO: check that custom attribute don't override built-in ones
     attributes_definition = config.get(CONF_ATTRIBUTES)
+    # Ensure that custom attribute don't override built-in ones.
+    for definition in attributes_definition:
+        if definition[CONF_ATTRIBUTES_NAME] in BUILT_IN_ATTRIBUTES:
+            _LOGGER.warning("'%s' is a built-in attribute name and cannot be "
+                            "used in a custom attribute",
+                            definition[CONF_ATTRIBUTES_NAME])
+            attributes_definition.remove(definition)
     filters_definition = config.get(CONF_FILTERS)
     icon = config.get(CONF_ICON)
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s, "
@@ -129,9 +137,6 @@ class GeoRssFeedManager(FeedManager):
         self._radius_in_km = radius_in_km
         self._categories = categories
         self._attributes_definition = attributes_definition
-        self._attributes_names = []
-        for definition in attributes_definition:
-            self._attributes_names.append(definition[CONF_ATTRIBUTES_NAME])
         self._filters_definition = filters_definition
         self._icon = icon
         entity_id = generate_entity_id('{}', name, hass=hass)
@@ -297,7 +302,8 @@ class GeoRssFeedManager(FeedManager):
         else:
             latitude, longitude = None, None
         custom_attributes = {}
-        for name in self._attributes_names:
+        for definition in self._attributes_definition:
+            name = definition[CONF_ATTRIBUTES_NAME]
             custom_attributes[name] = entry[name]
         return entry.get(ATTR_DISTANCE), latitude, longitude, \
             entry.get(ATTR_ID), entry.get(ATTR_TITLE), \

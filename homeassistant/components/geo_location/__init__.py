@@ -10,6 +10,7 @@ https://home-assistant.io/components/geo_location/
 import logging
 from datetime import timedelta
 
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
@@ -92,4 +93,4 @@ class GeoLocationEvent(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {'latitude': self._latitude, 'longitude': self._longitude}
+        return {ATTR_LATITUDE: self._latitude, ATTR_LONGITUDE: self._longitude}
