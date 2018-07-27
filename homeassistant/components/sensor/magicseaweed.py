@@ -174,7 +174,7 @@ class MagicSeaweedSensor(Entity):
             self._attrs.update(forecast.attrs)
 
 
-class MagicSeaweedData(object):
+class MagicSeaweedData:
     """Get the latest data from MagicSeaweed."""
 
     def __init__(self, api_key, spot_id, units):
