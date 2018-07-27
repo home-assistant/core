@@ -54,7 +54,8 @@ def test_config_valid_verify_ssl(hass, mock_scanner, mock_ctrl):
     assert mock_scanner.call_count == 1
     assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
                                                DEFAULT_DETECTION_TIME,
-                                               None)
+                                               None,
+                                               False)
 
 
 def test_config_minimal(hass, mock_scanner, mock_ctrl):
@@ -76,7 +77,8 @@ def test_config_minimal(hass, mock_scanner, mock_ctrl):
     assert mock_scanner.call_count == 1
     assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
                                                DEFAULT_DETECTION_TIME,
-                                               None)
+                                               None,
+                                               False)
 
 
 def test_config_full(hass, mock_scanner, mock_ctrl):
@@ -91,6 +93,7 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
             'port': 123,
             'site_id': 'abcdef01',
             'detection_time': 300,
+            'extra_attributes': True
         })
     }
     result = unifi.get_scanner(hass, config)
@@ -103,7 +106,8 @@ def test_config_full(hass, mock_scanner, mock_ctrl):
     assert mock_scanner.call_count == 1
     assert mock_scanner.call_args == mock.call(mock_ctrl.return_value,
                                                DEFAULT_DETECTION_TIME,
-                                               None)
+                                               None,
+                                               True)
 
 
 def test_config_error():
@@ -157,7 +161,7 @@ def test_scanner_update():
          'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None)
+    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False)
     assert ctrl.get_clients.call_count == 1
     assert ctrl.get_clients.call_args == mock.call()
 
@@ -167,7 +171,7 @@ def test_scanner_update_error():
     ctrl = mock.MagicMock()
     ctrl.get_clients.side_effect = APIError(
         '/', 500, 'foo', {}, None)
-    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None)
+    unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False)
 
 
 def test_scan_devices():
@@ -180,7 +184,7 @@ def test_scan_devices():
          'last_seen': dt_util.as_timestamp(dt_util.utcnow())},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None)
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False)
     assert set(scanner.scan_devices()) == set(['123', '234'])
 
 
@@ -200,7 +204,8 @@ def test_scan_devices_filtered():
 
     ssid_filter = ['foonet', 'barnet']
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, ssid_filter)
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, ssid_filter,
+        False)
     assert set(scanner.scan_devices()) == set(['123', '234', '890'])
 
 
@@ -221,7 +226,7 @@ def test_get_device_name():
          'last_seen': '1504786810'},
     ]
     ctrl.get_clients.return_value = fake_clients
-    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None)
+    scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, None, False)
     assert scanner.get_device_name('123') == 'foobar'
     assert scanner.get_device_name('234') == 'Nice Name'
     assert scanner.get_device_name('456') is None
