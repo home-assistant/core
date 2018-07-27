@@ -37,6 +37,8 @@ PACKAGES_DEV=(
   cmake
   git
   swig
+  # homeassistant.components.sensor.fritzbox_callmonitor
+  libxml2-dev libxslt-dev zlib1g-dev
 )
 
 # Install packages
