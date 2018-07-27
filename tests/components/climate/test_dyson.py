@@ -23,7 +23,7 @@ class MockDysonState(DysonPureHotCoolState):
 
 def _get_device_with_no_state():
     """Return a device with no state."""
-    device = mock.Mock()
+    device = mock.Mock(spec=DysonPureHotCoolLink)
     device.name = "Device_name"
     device.state = None
     device.environmental_state = None
@@ -32,7 +32,7 @@ def _get_device_with_no_state():
 
 def _get_device_off():
     """Return a device with state off."""
-    device = mock.Mock()
+    device = mock.Mock(spec=DysonPureHotCoolLink)
     device.name = "Device_name"
     device.state = mock.Mock()
     device.environmental_state = mock.Mock()
@@ -41,7 +41,7 @@ def _get_device_off():
 
 def _get_device_focus():
     """Return a device with fan state of focus mode."""
-    device = mock.Mock()
+    device = mock.Mock(spec=DysonPureHotCoolLink)
     device.name = "Device_name"
     device.state.focus_mode = FocusMode.FOCUS_ON.value
     return device
@@ -49,7 +49,7 @@ def _get_device_focus():
 
 def _get_device_diffuse():
     """Return a device with fan state of diffuse mode."""
-    device = mock.Mock()
+    device = mock.Mock(spec=DysonPureHotCoolLink)
     device.name = "Device_name"
     device.state.focus_mode = FocusMode.FOCUS_OFF.value
     return device
@@ -57,7 +57,7 @@ def _get_device_diffuse():
 
 def _get_device_cool():
     """Return a device with state of cooling."""
-    device = mock.Mock()
+    device = mock.Mock(spec=DysonPureHotCoolLink)
     device.name = "Device_name"
     device.state.tilt = TiltState.TILT_FALSE.value
     device.state.focus_mode = FocusMode.FOCUS_OFF.value
@@ -71,7 +71,7 @@ def _get_device_cool():
 
 def _get_device_heat_off():
     """Return a device with state of heat reached target."""
-    device = mock.Mock()
+    device = mock.Mock(spec=DysonPureHotCoolLink)
     device.name = "Device_name"
     device.state = mock.Mock()
     device.state.tilt = TiltState.TILT_FALSE.value
@@ -116,7 +116,6 @@ class DysonTest(unittest.TestCase):
     def test_setup_component_with_parent_discovery(self, mocked_login,
                                                    mocked_devices):
         """Test setup_component using discovery."""
-        # dyson.setup(self.hass, )
         setup_component(self.hass, dyson_parent.DOMAIN, {
             dyson_parent.DOMAIN: {
                 dyson_parent.CONF_USERNAME: "email",
@@ -125,6 +124,9 @@ class DysonTest(unittest.TestCase):
                 }
             })
         self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 2)
+        self.hass.block_till_done()
+        for m in mocked_devices.return_value:
+            assert m.add_message_listener.called
 
     def test_setup_component_without_devices(self):
         """Test setup component with no devices."""
