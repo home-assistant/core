@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 def setup_auth(app, trusted_networks, use_auth,
                support_legacy=False, api_password=None):
     """Create auth middleware for the app."""
+    old_auth_warning = set()
+
     @middleware
     async def auth_middleware(request, handler):
         """Authenticate as middleware."""
@@ -27,8 +29,10 @@ def setup_auth(app, trusted_networks, use_auth,
 
         if use_auth and (HTTP_HEADER_HA_AUTH in request.headers or
                          DATA_API_PASSWORD in request.query):
-            _LOGGER.warning('Please change to use bearer token access %s',
-                            request.path)
+            if request.path not in old_auth_warning:
+                _LOGGER.warning('Please change to use bearer token access %s',
+                                request.path)
+                old_auth_warning.add(request.path)
 
         legacy_auth = (not use_auth or support_legacy) and api_password
         if (hdrs.AUTHORIZATION in request.headers and
