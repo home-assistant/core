@@ -232,7 +232,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             # Wait for the API to know about the task, otherwise adding
             # a reminder will fail
             task = None
-            for i in range(0, 50):
+            for _i in range(0, 50):
                 api.sync()
                 task = api.items.get(result['items'][0]['id'])
 
