@@ -57,7 +57,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
 
         if isinstance(message, DysonPureHotCoolState):
             from libpurecoollink.const import HeatMode
-            _LOGGER.debug("Message received for fan device %s : %s", self.name,
+            _LOGGER.debug("Message received for climate device %s : %s", self.name,
                           message)
             self.schedule_update_ha_state()
             if (self._device.state.heat_mode == HeatMode.HEAT_ON.value
@@ -160,6 +160,7 @@ class DysonPureHotCoolLinkDevice(ClimateDevice):
             self.schedule_update_ha_state()
 
     def _set_temperature_on_device(self):
+        """Send set temperature request to device."""
         from libpurecoollink.const import HeatTarget
         self._device.set_configuration(
             heat_target=HeatTarget.celsius(self._pending_target_temp))
