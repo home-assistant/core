@@ -84,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_CONDITIONS]:
         sensors.append(MagicSeaweedSensor(forecast_data, variable, name,
                                           units))
-        if 'forecast' in variable and hours is not None:
+        if 'forecast' not in variable and hours is not None:
             for hour in hours:
                 sensors.append(MagicSeaweedSensor(
                     forecast_data, variable, name, units, hour))
