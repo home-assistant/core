@@ -4,28 +4,35 @@ Support for Spider Smart devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/spider/
 """
+from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['spiderpy==1.0.7']
+REQUIREMENTS = ['spiderpy==1.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'spider'
 
 SPIDER_COMPONENTS = [
-    'climate'
+    'climate',
+    'switch'
 ]
+
+SCAN_INTERVAL = timedelta(seconds=120)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+            cv.time_period,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -37,13 +44,15 @@ def setup(hass, config):
 
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
+    refresh_rate = config[DOMAIN][CONF_SCAN_INTERVAL]
 
     try:
-        api = SpiderApi(username, password)
+        api = SpiderApi(username, password, refresh_rate.total_seconds())
 
         hass.data[DOMAIN] = {
             'controller': api,
-            'thermostats': api.get_thermostats()
+            'thermostats': api.get_thermostats(),
+            'power_plugs': api.get_power_plugs()
         }
 
         for component in SPIDER_COMPONENTS:
