@@ -29,7 +29,7 @@ COPY requirements_all.txt requirements_all.txt
 # See PR #8103 for more info.
 RUN pip3 install --no-cache-dir -r requirements_all.txt && \
     pip3 install --no-cache-dir mysqlclient psycopg2 uvloop cchardet cython && \
-    pip3 install `grep fritzconnection== requirements_all.txt  | sed -e 's/# //'`
+    pip3 install --no-cache-dir `grep fritzconnection== requirements_all.txt  | sed -e 's/# //'`
 
 # Copy source
 COPY . .
