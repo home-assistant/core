@@ -205,7 +205,7 @@ def test_scan_devices_filtered():
     ssid_filter = ['foonet', 'barnet']
     ctrl.get_clients.return_value = fake_clients
     scanner = unifi.UnifiScanner(ctrl, DEFAULT_DETECTION_TIME, ssid_filter,
-        False)
+                                 False)
     assert set(scanner.scan_devices()) == set(['123', '234', '890'])
 
 

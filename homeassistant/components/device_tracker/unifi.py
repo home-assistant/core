@@ -131,9 +131,9 @@ class UnifiScanner(DeviceScanner):
 
     def get_extra_attributes(self, device):
         """Return the extra attributes of the device."""
-        if (self._extra_attributes):
-            client = self._clients.get(device, {})
-            _LOGGER.debug("Device mac %s attributes %s", device, client)
-            return client
-        else:
-            return dict()
+        if not self._extra_attributes:
+            return {}
+
+        client = self._clients.get(device, {})
+        _LOGGER.debug("Device mac %s attributes %s", device, client)
+        return client
