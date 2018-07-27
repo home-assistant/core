@@ -133,7 +133,6 @@ class TestCommandSensorSensor(unittest.TestCase):
         self.sensor.update()
         self.assertEqual({}, self.sensor.device_state_attributes)
         self.assertTrue(mock_logger.warning.called)
-        self.assertTrue(mock_logger.debug.called)
 
     def test_update_with_missing_json_attrs(self):
         """Test attributes get extracted from a JSON result."""
