@@ -183,7 +183,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     def handle_new_task(call):
         """Call when a user creates a new Todoist Task from HASS."""
         project_name = call.data[PROJECT_NAME]
-        project_id = project_id_lookup[project_name]
+        if project_name in project_id_lookup:
+            project_id = project_id_lookup[project_name]
+        else:
+            _LOGGER.error(
+                "Project does not exist: %s",
+                call.data[PROJECT_NAME]
+            )
+            return False
 
         # Create the task
         item = api.items.add(call.data[CONTENT], project_id)
@@ -214,9 +221,33 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             date_format = '%Y-%m-%dT%H:%M'
             due_date = datetime.strftime(due_date, date_format)
             item.update(due_date_utc=due_date)
-        # Commit changes
-        api.commit()
+
+        # Commit task
+        result = api.commit()
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
+
+        # Add default reminder to the task if user has default reminders set
+        user = api.user.get()
+        if user['is_premium']:
+            # Wait for the API to know about the task, otherwise adding
+            # a reminder will fail
+            task = None
+            for i in range(0, 50):
+                api.sync()
+                task = api.items.get(result['items'][0]['id'])
+
+                if task is not None:
+                    break
+
+            if task is not None:
+                if not task['item']['all_day']:
+                    api.reminders.add(
+                        item_id=task['item']['id'],
+                        minute_offset=user['auto_reminder']
+                    )
+                    api.commit()
+            else:
+                _LOGGER.error("Something went wrong while creating reminder")
 
     hass.services.register(DOMAIN, SERVICE_NEW_TASK, handle_new_task,
                            schema=NEW_TASK_SERVICE_SCHEMA)
