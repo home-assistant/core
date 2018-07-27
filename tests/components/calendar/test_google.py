@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 import logging
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 import pytest
 
@@ -11,7 +11,7 @@ import homeassistant.components.calendar.google as calendar
 import homeassistant.util.dt as dt_util
 from homeassistant.const import CONF_PLATFORM, STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, MockDependency
 
 TEST_PLATFORM = {calendar_base.DOMAIN: {CONF_PLATFORM: 'test'}}
 
@@ -27,6 +27,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
     def setUp(self):
         """Setup things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.http = Mock()
 
         # Set our timezone to CST/Regina so we can check calculations
         # This keeps UTC-6 all year round
@@ -99,7 +100,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'start_time': '{} 00:00:00'.format(event['start']['date']),
             'end_time': '{} 00:00:00'.format(event['end']['date']),
             'location': event['location'],
-            'description': event['description']
+            'description': event['description'],
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -160,7 +161,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 (one_hour_from_now + dt_util.dt.timedelta(minutes=60))
                 .strftime(DATE_STR_FORMAT),
             'location': '',
-            'description': ''
+            'description': '',
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -222,7 +223,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 (middle_of_event + dt_util.dt.timedelta(minutes=60))
                 .strftime(DATE_STR_FORMAT),
             'location': '',
-            'description': ''
+            'description': '',
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -285,7 +286,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
                 (middle_of_event + dt_util.dt.timedelta(minutes=60))
                 .strftime(DATE_STR_FORMAT),
             'location': '',
-            'description': ''
+            'description': '',
         })
 
     @pytest.mark.skip
@@ -352,7 +353,7 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'start_time': '{} 06:00:00'.format(event['start']['date']),
             'end_time': '{} 06:00:00'.format(event['end']['date']),
             'location': event['location'],
-            'description': event['description']
+            'description': event['description'],
         })
 
     @patch('homeassistant.components.calendar.google.GoogleCalendarData')
@@ -419,5 +420,18 @@ class TestComponentsGoogleCalendar(unittest.TestCase):
             'start_time': '{} 00:00:00'.format(event['start']['date']),
             'end_time': '{} 00:00:00'.format(event['end']['date']),
             'location': event['location'],
-            'description': event['description']
+            'description': event['description'],
         })
+
+    @MockDependency("httplib2")
+    def test_update_false(self, mock_httplib2):
+        """Test that the update returns False upon Error."""
+        mock_service = Mock()
+        mock_service.get = Mock(
+            side_effect=mock_httplib2.ServerNotFoundError("unit test"))
+
+        cal = calendar.GoogleCalendarEventDevice(self.hass, mock_service, None,
+                                                 {'name': "test"})
+        result = cal.data.update()
+
+        self.assertFalse(result)

@@ -95,7 +95,7 @@ def toggle(hass, entity_id=None):
 
 async def async_setup(hass, config):
     """Track states and offer events for switches."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES)
     await component.async_setup(config)
 
@@ -132,10 +132,19 @@ async def async_setup(hass, config):
     return True
 
 
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
 class SwitchDevice(ToggleEntity):
     """Representation of a switch."""
 
-    # pylint: disable=no-self-use
     @property
     def current_power_w(self):
         """Return the current power usage in W."""

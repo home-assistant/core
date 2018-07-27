@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylutron-caseta==0.3.0']
+REQUIREMENTS = ['pylutron-caseta==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 

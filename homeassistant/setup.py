@@ -10,7 +10,7 @@ from homeassistant import requirements, core, loader, config as conf_util
 from homeassistant.config import async_notify_setup_error
 from homeassistant.const import EVENT_COMPONENT_LOADED, PLATFORM_FORMAT
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ SLOW_SETUP_WARNING = 10
 def setup_component(hass: core.HomeAssistant, domain: str,
                     config: Optional[Dict] = None) -> bool:
     """Set up a component and all its dependencies."""
-    return run_coroutine_threadsafe(
+    return run_coroutine_threadsafe(  # type: ignore
         async_setup_component(hass, domain, config), loop=hass.loop).result()
 
 
@@ -42,7 +42,7 @@ async def async_setup_component(hass: core.HomeAssistant, domain: str,
     setup_tasks = hass.data.get(DATA_SETUP)
 
     if setup_tasks is not None and domain in setup_tasks:
-        return await setup_tasks[domain]
+        return await setup_tasks[domain]  # type: ignore
 
     if config is None:
         config = {}
@@ -50,10 +50,10 @@ async def async_setup_component(hass: core.HomeAssistant, domain: str,
     if setup_tasks is None:
         setup_tasks = hass.data[DATA_SETUP] = {}
 
-    task = setup_tasks[domain] = hass.async_add_job(
+    task = setup_tasks[domain] = hass.async_create_task(
         _async_setup_component(hass, domain, config))
 
-    return await task
+    return await task  # type: ignore
 
 
 async def _async_process_dependencies(hass, config, name, dependencies):
@@ -98,14 +98,14 @@ async def _async_setup_component(hass: core.HomeAssistant,
         _LOGGER.error("Setup failed for %s: %s", domain, msg)
         async_notify_setup_error(hass, domain, link)
 
-    component = loader.get_component(domain)
+    component = loader.get_component(hass, domain)
 
     if not component:
         log_error("Component not found.", False)
         return False
 
     # Validate no circular dependencies
-    components = loader.load_order_component(domain)
+    components = loader.load_order_component(hass, domain)
 
     # OrderedSet is empty if component or dependencies could not be resolved
     if not components:
@@ -139,10 +139,11 @@ async def _async_setup_component(hass: core.HomeAssistant,
 
     try:
         if hasattr(component, 'async_setup'):
-            result = await component.async_setup(hass, processed_config)
+            result = await component.async_setup(  # type: ignore
+                hass, processed_config)
         else:
-            result = await hass.async_add_job(
-                component.setup, hass, processed_config)
+            result = await hass.async_add_executor_job(
+                component.setup, hass, processed_config)  # type: ignore
     except Exception:  # pylint: disable=broad-except
         _LOGGER.exception("Error during setup of component %s", domain)
         async_notify_setup_error(hass, domain, True)
@@ -159,20 +160,21 @@ async def _async_setup_component(hass: core.HomeAssistant,
     elif result is not True:
         log_error("Component did not return boolean if setup was successful. "
                   "Disabling component.")
-        loader.set_component(domain, None)
+        loader.set_component(hass, domain, None)
         return False
 
     for entry in hass.config_entries.async_entries(domain):
         await entry.async_setup(hass, component=component)
 
-    hass.config.components.add(component.DOMAIN)
+    hass.config.components.add(component.DOMAIN)  # type: ignore
 
     # Cleanup
     if domain in hass.data[DATA_SETUP]:
         hass.data[DATA_SETUP].pop(domain)
 
     hass.bus.async_fire(
-        EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: component.DOMAIN}
+        EVENT_COMPONENT_LOADED,
+        {ATTR_COMPONENT: component.DOMAIN}  # type: ignore
     )
 
     return True
@@ -193,7 +195,7 @@ async def async_prepare_setup_platform(hass: core.HomeAssistant, config,
                       platform_path, msg)
         async_notify_setup_error(hass, platform_path)
 
-    platform = loader.get_platform(domain, platform_name)
+    platform = loader.get_platform(hass, domain, platform_name)
 
     # Not found
     if platform is None:

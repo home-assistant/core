@@ -217,4 +217,4 @@ class BayesianBinarySensor(BinarySensorDevice):
     @asyncio.coroutine
     def async_update(self):
         """Get the latest data and update the states."""
-        self._deviation = bool(self.probability > self._probability_threshold)
+        self._deviation = bool(self.probability >= self._probability_threshold)

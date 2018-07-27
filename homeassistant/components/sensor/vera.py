@@ -25,8 +25,8 @@ SCAN_INTERVAL = timedelta(seconds=5)
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Vera controller devices."""
     add_devices(
-        VeraSensor(device, hass.data[VERA_CONTROLLER])
-        for device in hass.data[VERA_DEVICES]['sensor'])
+        [VeraSensor(device, hass.data[VERA_CONTROLLER])
+         for device in hass.data[VERA_DEVICES]['sensor']], True)
 
 
 class VeraSensor(VeraDevice, Entity):
@@ -52,7 +52,7 @@ class VeraSensor(VeraDevice, Entity):
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             return self._temperature_units
         elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
-            return 'lux'
+            return 'lx'
         elif self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
             return 'level'
         elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:

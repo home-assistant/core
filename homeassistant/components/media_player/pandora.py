@@ -22,7 +22,7 @@ from homeassistant.const import (STATE_OFF, STATE_PAUSED, STATE_PLAYING,
                                  STATE_IDLE)
 from homeassistant import util
 
-REQUIREMENTS = ['pexpect==4.0.1']
+REQUIREMENTS = ['pexpect==4.6.0']
 _LOGGER = logging.getLogger(__name__)
 
 # SUPPORT_VOLUME_SET is close to available but we need volume up/down
@@ -43,7 +43,6 @@ CURRENT_SONG_PATTERN = re.compile(r'"(.*?)"\s+by\s+"(.*?)"\son\s+"(.*?)"',
 STATION_PATTERN = re.compile(r'Station\s"(.+?)"', re.MULTILINE)
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Pandora media player platform."""
     if not _pianobar_exists():

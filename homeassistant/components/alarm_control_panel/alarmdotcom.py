@@ -6,6 +6,7 @@ https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
 """
 import asyncio
 import logging
+import re
 
 import voluptuous as vol
 
@@ -17,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyalarmdotcom==0.3.0']
+REQUIREMENTS = ['pyalarmdotcom==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,8 +80,12 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """Return one or more characters if code is defined."""
-        return None if self._code is None else '.+'
+        """Return one or more digits/characters."""
+        if self._code is None:
+            return None
+        elif isinstance(self._code, str) and re.search('^\\d+$', self._code):
+            return 'Number'
+        return 'Any'
 
     @property
     def state(self):
@@ -92,6 +97,13 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         elif self._alarm.state.lower() == 'armed away':
             return STATE_ALARM_ARMED_AWAY
         return STATE_UNKNOWN
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            'sensor_status': self._alarm.sensor_status
+        }
 
     @asyncio.coroutine
     def async_alarm_disarm(self, code=None):

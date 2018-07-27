@@ -36,7 +36,7 @@ NO_TIMEOUT = {
 }
 
 NO_AUTH = {
-    re.compile(r'^app-(es5|latest)/(index|hassio-app).html$'),
+    re.compile(r'^app/.*$'),
     re.compile(r'^addons/[^/]*/logo$')
 }
 

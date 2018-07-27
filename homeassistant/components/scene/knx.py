@@ -4,8 +4,6 @@ Support for KNX scenes.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.knx/
 """
-import asyncio
-
 import voluptuous as vol
 
 from homeassistant.components.knx import ATTR_DISCOVER_DEVICES, DATA_KNX
@@ -28,9 +26,8 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the scenes for KNX platform."""
     if discovery_info is not None:
         async_add_devices_discovery(hass, discovery_info, async_add_devices)
@@ -73,7 +70,6 @@ class KNXScene(Scene):
         """Return the name of the scene."""
         return self.scene.name
 
-    @asyncio.coroutine
-    def async_activate(self):
+    async def async_activate(self):
         """Activate the scene."""
-        yield from self.scene.run()
+        await self.scene.run()

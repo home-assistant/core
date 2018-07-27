@@ -23,7 +23,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-mpd2==0.5.5']
+REQUIREMENTS = ['python-mpd2==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MPD platform."""
     host = config.get(CONF_HOST)

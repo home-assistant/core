@@ -117,6 +117,11 @@ class UpCloudServerEntity(Entity):
         self.data = None
 
     @property
+    def unique_id(self) -> str:
+        """Return unique ID for the entity."""
+        return self.uuid
+
+    @property
     def name(self):
         """Return the name of the component."""
         try:

@@ -7,7 +7,9 @@ https://home-assistant.io/components/sensor.tellduslive/
 import logging
 
 from homeassistant.components.tellduslive import TelldusLiveEntity
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,18 +27,20 @@ SENSOR_TYPE_DEW_POINT = 'dewp'
 SENSOR_TYPE_BAROMETRIC_PRESSURE = 'barpress'
 
 SENSOR_TYPES = {
-    SENSOR_TYPE_TEMPERATURE: ['Temperature', TEMP_CELSIUS, 'mdi:thermometer'],
-    SENSOR_TYPE_HUMIDITY: ['Humidity', '%', 'mdi:water'],
-    SENSOR_TYPE_RAINRATE: ['Rain rate', 'mm/h', 'mdi:water'],
-    SENSOR_TYPE_RAINTOTAL: ['Rain total', 'mm', 'mdi:water'],
-    SENSOR_TYPE_WINDDIRECTION: ['Wind direction', '', ''],
-    SENSOR_TYPE_WINDAVERAGE: ['Wind average', 'm/s', ''],
-    SENSOR_TYPE_WINDGUST: ['Wind gust', 'm/s', ''],
-    SENSOR_TYPE_UV: ['UV', 'UV', ''],
-    SENSOR_TYPE_WATT: ['Power', 'W', ''],
-    SENSOR_TYPE_LUMINANCE: ['Luminance', 'lx', ''],
-    SENSOR_TYPE_DEW_POINT: ['Dew Point', TEMP_CELSIUS, 'mdi:thermometer'],
-    SENSOR_TYPE_BAROMETRIC_PRESSURE: ['Barometric Pressure', 'kPa', ''],
+    SENSOR_TYPE_TEMPERATURE: ['Temperature', TEMP_CELSIUS, None,
+                              DEVICE_CLASS_TEMPERATURE],
+    SENSOR_TYPE_HUMIDITY: ['Humidity', '%', None, DEVICE_CLASS_HUMIDITY],
+    SENSOR_TYPE_RAINRATE: ['Rain rate', 'mm/h', 'mdi:water', None],
+    SENSOR_TYPE_RAINTOTAL: ['Rain total', 'mm', 'mdi:water', None],
+    SENSOR_TYPE_WINDDIRECTION: ['Wind direction', '', '', None],
+    SENSOR_TYPE_WINDAVERAGE: ['Wind average', 'm/s', '', None],
+    SENSOR_TYPE_WINDGUST: ['Wind gust', 'm/s', '', None],
+    SENSOR_TYPE_UV: ['UV', 'UV', '', None],
+    SENSOR_TYPE_WATT: ['Power', 'W', '', None],
+    SENSOR_TYPE_LUMINANCE: ['Luminance', 'lx', None, DEVICE_CLASS_ILLUMINANCE],
+    SENSOR_TYPE_DEW_POINT:
+        ['Dew Point', TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    SENSOR_TYPE_BAROMETRIC_PRESSURE: ['Barometric Pressure', 'kPa', '', None],
 }
 
 
@@ -116,4 +120,10 @@ class TelldusLiveSensor(TelldusLiveEntity):
     def icon(self):
         """Return the icon."""
         return SENSOR_TYPES[self._type][2] \
+            if self._type in SENSOR_TYPES else None
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return SENSOR_TYPES[self._type][3] \
             if self._type in SENSOR_TYPES else None

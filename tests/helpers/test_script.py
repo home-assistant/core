@@ -218,6 +218,32 @@ class TestScriptHelper(unittest.TestCase):
         assert not script_obj.is_running
         assert len(events) == 2
 
+    def test_delay_invalid_template(self):
+        """Test the delay as a template that fails."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'delay': '{{ invalid_delay }}'},
+            {'delay': {'seconds': 5}},
+            {'event': event}]))
+
+        with mock.patch.object(script, '_LOGGER') as mock_logger:
+            script_obj.run()
+            self.hass.block_till_done()
+            assert mock_logger.error.called
+
+        assert not script_obj.is_running
+        assert len(events) == 1
+
     def test_cancel_while_delay(self):
         """Test the cancelling while the delay is present."""
         event = 'test_event'

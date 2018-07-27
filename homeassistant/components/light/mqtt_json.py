@@ -4,7 +4,6 @@ Support for MQTT JSON lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt_json/
 """
-import asyncio
 import logging
 import json
 import voluptuous as vol
@@ -13,19 +12,22 @@ from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_RGB_COLOR, ATTR_TRANSITION, ATTR_WHITE_VALUE, ATTR_XY_COLOR,
+    ATTR_TRANSITION, ATTR_WHITE_VALUE, ATTR_HS_COLOR,
     FLASH_LONG, FLASH_SHORT, Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_RGB_COLOR,
-    SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, SUPPORT_XY_COLOR)
+    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR,
+    SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
 from homeassistant.components.light.mqtt import CONF_BRIGHTNESS_SCALE
 from homeassistant.const import (
-    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT,
+    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, STATE_ON,
     CONF_NAME, CONF_OPTIMISTIC, CONF_RGB, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
     MqttAvailability)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.restore_state import async_get_last_state
+import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,12 +45,14 @@ DEFAULT_OPTIMISTIC = False
 DEFAULT_RGB = False
 DEFAULT_WHITE_VALUE = False
 DEFAULT_XY = False
+DEFAULT_HS = False
 DEFAULT_BRIGHTNESS_SCALE = 255
 
 CONF_EFFECT_LIST = 'effect_list'
 
 CONF_FLASH_TIME_LONG = 'flash_time_long'
 CONF_FLASH_TIME_SHORT = 'flash_time_short'
+CONF_HS = 'hs'
 
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -71,12 +75,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_WHITE_VALUE, default=DEFAULT_WHITE_VALUE): cv.boolean,
     vol.Optional(CONF_XY, default=DEFAULT_XY): cv.boolean,
+    vol.Optional(CONF_HS, default=DEFAULT_HS): cv.boolean,
     vol.Required(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_devices, discovery_info=None):
     """Set up a MQTT JSON Light."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -98,6 +103,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_RGB),
         config.get(CONF_WHITE_VALUE),
         config.get(CONF_XY),
+        config.get(CONF_HS),
         {
             key: config.get(key) for key in (
                 CONF_FLASH_TIME_SHORT,
@@ -115,7 +121,7 @@ class MqttJson(MqttAvailability, Light):
     """Representation of a MQTT JSON light."""
 
     def __init__(self, name, effect_list, topic, qos, retain, optimistic,
-                 brightness, color_temp, effect, rgb, white_value, xy,
+                 brightness, color_temp, effect, rgb, white_value, xy, hs,
                  flash_times, availability_topic, payload_available,
                  payload_not_available, brightness_scale):
         """Initialize MQTT JSON light."""
@@ -128,6 +134,9 @@ class MqttJson(MqttAvailability, Light):
         self._retain = retain
         self._optimistic = optimistic or topic[CONF_STATE_TOPIC] is None
         self._state = False
+        self._rgb = rgb
+        self._xy = xy
+        self._hs_support = hs
         if brightness:
             self._brightness = 255
         else:
@@ -143,36 +152,33 @@ class MqttJson(MqttAvailability, Light):
         else:
             self._effect = None
 
-        if rgb:
-            self._rgb = [0, 0, 0]
+        if hs or rgb or xy:
+            self._hs = [0, 0]
         else:
-            self._rgb = None
+            self._hs = None
 
         if white_value:
             self._white_value = 255
         else:
             self._white_value = None
 
-        if xy:
-            self._xy = [1, 1]
-        else:
-            self._xy = None
-
         self._flash_times = flash_times
         self._brightness_scale = brightness_scale
 
         self._supported_features = (SUPPORT_TRANSITION | SUPPORT_FLASH)
-        self._supported_features |= (rgb and SUPPORT_RGB_COLOR)
+        self._supported_features |= (rgb and SUPPORT_COLOR)
         self._supported_features |= (brightness and SUPPORT_BRIGHTNESS)
         self._supported_features |= (color_temp and SUPPORT_COLOR_TEMP)
         self._supported_features |= (effect and SUPPORT_EFFECT)
         self._supported_features |= (white_value and SUPPORT_WHITE_VALUE)
-        self._supported_features |= (xy and SUPPORT_XY_COLOR)
+        self._supported_features |= (xy and SUPPORT_COLOR)
+        self._supported_features |= (hs and SUPPORT_COLOR)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        yield from super().async_added_to_hass()
+        await super().async_added_to_hass()
+
+        last_state = await async_get_last_state(self.hass, self.entity_id)
 
         @callback
         def state_received(topic, payload, qos):
@@ -184,17 +190,37 @@ class MqttJson(MqttAvailability, Light):
             elif values['state'] == 'OFF':
                 self._state = False
 
-            if self._rgb is not None:
+            if self._hs is not None:
                 try:
                     red = int(values['color']['r'])
                     green = int(values['color']['g'])
                     blue = int(values['color']['b'])
 
-                    self._rgb = [red, green, blue]
+                    self._hs = color_util.color_RGB_to_hs(red, green, blue)
                 except KeyError:
                     pass
                 except ValueError:
                     _LOGGER.warning("Invalid RGB color value received")
+
+                try:
+                    x_color = float(values['color']['x'])
+                    y_color = float(values['color']['y'])
+
+                    self._hs = color_util.color_xy_to_hs(x_color, y_color)
+                except KeyError:
+                    pass
+                except ValueError:
+                    _LOGGER.warning("Invalid XY color value received")
+
+                try:
+                    hue = float(values['color']['h'])
+                    saturation = float(values['color']['s'])
+
+                    self._hs = (hue, saturation)
+                except KeyError:
+                    pass
+                except ValueError:
+                    _LOGGER.warning("Invalid HS color value received")
 
             if self._brightness is not None:
                 try:
@@ -230,23 +256,25 @@ class MqttJson(MqttAvailability, Light):
                 except ValueError:
                     _LOGGER.warning("Invalid white value received")
 
-            if self._xy is not None:
-                try:
-                    x_color = float(values['color']['x'])
-                    y_color = float(values['color']['y'])
-
-                    self._xy = [x_color, y_color]
-                except KeyError:
-                    pass
-                except ValueError:
-                    _LOGGER.warning("Invalid XY color value received")
-
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_STATE_TOPIC] is not None:
-            yield from mqtt.async_subscribe(
+            await mqtt.async_subscribe(
                 self.hass, self._topic[CONF_STATE_TOPIC], state_received,
                 self._qos)
+
+        if self._optimistic and last_state:
+            self._state = last_state.state == STATE_ON
+            if last_state.attributes.get(ATTR_BRIGHTNESS):
+                self._brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
+            if last_state.attributes.get(ATTR_HS_COLOR):
+                self._hs = last_state.attributes.get(ATTR_HS_COLOR)
+            if last_state.attributes.get(ATTR_COLOR_TEMP):
+                self._color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
+            if last_state.attributes.get(ATTR_EFFECT):
+                self._effect = last_state.attributes.get(ATTR_EFFECT)
+            if last_state.attributes.get(ATTR_WHITE_VALUE):
+                self._white_value = last_state.attributes.get(ATTR_WHITE_VALUE)
 
     @property
     def brightness(self):
@@ -269,19 +297,14 @@ class MqttJson(MqttAvailability, Light):
         return self._effect_list
 
     @property
-    def rgb_color(self):
-        """Return the RGB color value."""
-        return self._rgb
+    def hs_color(self):
+        """Return the hs color value."""
+        return self._hs
 
     @property
     def white_value(self):
         """Return the white property."""
         return self._white_value
-
-    @property
-    def xy_color(self):
-        """Return the XY color value."""
-        return self._xy
 
     @property
     def should_poll(self):
@@ -308,8 +331,7 @@ class MqttJson(MqttAvailability, Light):
         """Flag supported features."""
         return self._supported_features
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the device on.
 
         This method is a coroutine.
@@ -318,15 +340,34 @@ class MqttJson(MqttAvailability, Light):
 
         message = {'state': 'ON'}
 
-        if ATTR_RGB_COLOR in kwargs:
-            message['color'] = {
-                'r': kwargs[ATTR_RGB_COLOR][0],
-                'g': kwargs[ATTR_RGB_COLOR][1],
-                'b': kwargs[ATTR_RGB_COLOR][2]
-            }
+        if ATTR_HS_COLOR in kwargs and (self._hs_support
+                                        or self._rgb or self._xy):
+            hs_color = kwargs[ATTR_HS_COLOR]
+            message['color'] = {}
+            if self._rgb:
+                # If there's a brightness topic set, we don't want to scale the
+                # RGB values given using the brightness.
+                if self._brightness is not None:
+                    brightness = 255
+                else:
+                    brightness = kwargs.get(
+                        ATTR_BRIGHTNESS,
+                        self._brightness if self._brightness else 255)
+                rgb = color_util.color_hsv_to_RGB(
+                    hs_color[0], hs_color[1], brightness / 255 * 100)
+                message['color']['r'] = rgb[0]
+                message['color']['g'] = rgb[1]
+                message['color']['b'] = rgb[2]
+            if self._xy:
+                xy_color = color_util.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
+                message['color']['x'] = xy_color[0]
+                message['color']['y'] = xy_color[1]
+            if self._hs_support:
+                message['color']['h'] = hs_color[0]
+                message['color']['s'] = hs_color[1]
 
             if self._optimistic:
-                self._rgb = kwargs[ATTR_RGB_COLOR]
+                self._hs = kwargs[ATTR_HS_COLOR]
                 should_update = True
 
         if ATTR_FLASH in kwargs:
@@ -370,16 +411,6 @@ class MqttJson(MqttAvailability, Light):
                 self._white_value = kwargs[ATTR_WHITE_VALUE]
                 should_update = True
 
-        if ATTR_XY_COLOR in kwargs:
-            message['color'] = {
-                'x': kwargs[ATTR_XY_COLOR][0],
-                'y': kwargs[ATTR_XY_COLOR][1]
-            }
-
-            if self._optimistic:
-                self._xy = kwargs[ATTR_XY_COLOR]
-                should_update = True
-
         mqtt.async_publish(
             self.hass, self._topic[CONF_COMMAND_TOPIC], json.dumps(message),
             self._qos, self._retain)
@@ -392,8 +423,7 @@ class MqttJson(MqttAvailability, Light):
         if should_update:
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off.
 
         This method is a coroutine.

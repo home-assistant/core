@@ -154,6 +154,37 @@ class TestBayesianBinarySensor(unittest.TestCase):
 
         assert state.state == 'off'
 
+    def test_threshold(self):
+        """Test sensor on probabilty threshold limits."""
+        config = {
+            'binary_sensor': {
+                'name':
+                'Test_Binary',
+                'platform':
+                'bayesian',
+                'observations': [{
+                    'platform': 'state',
+                    'entity_id': 'sensor.test_monitored',
+                    'to_state': 'on',
+                    'prob_given_true': 1.0,
+                }],
+                'prior':
+                0.5,
+                'probability_threshold':
+                1.0,
+            }
+        }
+
+        assert setup_component(self.hass, 'binary_sensor', config)
+
+        self.hass.states.set('sensor.test_monitored', 'on')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('binary_sensor.test_binary')
+        self.assertAlmostEqual(1.0, state.attributes.get('probability'))
+
+        assert state.state == 'on'
+
     def test_multiple_observations(self):
         """Test sensor with multiple observations of same entity."""
         config = {

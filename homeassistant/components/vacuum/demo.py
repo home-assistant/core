@@ -7,7 +7,7 @@ https://home-assistant.io/components/demo/
 import logging
 
 from homeassistant.components.vacuum import (
-    ATTR_CLEANED_AREA, DEFAULT_ICON, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
+    ATTR_CLEANED_AREA, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
     SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, VacuumDevice)
@@ -50,7 +50,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class DemoVacuum(VacuumDevice):
     """Representation of a demo vacuum."""
 
-    # pylint: disable=no-self-use
     def __init__(self, name, supported_features):
         """Initialize the vacuum."""
         self._name = name
@@ -65,11 +64,6 @@ class DemoVacuum(VacuumDevice):
     def name(self):
         """Return the name of the vacuum."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon for the vacuum."""
-        return DEFAULT_ICON
 
     @property
     def should_poll(self):

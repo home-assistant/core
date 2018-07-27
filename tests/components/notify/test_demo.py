@@ -33,7 +33,7 @@ class TestNotifyDemo(unittest.TestCase):
         self.hass.bus.listen(demo.EVENT_NOTIFY, record_event)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """"Stop down everything that was started."""
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def _setup_notify(self):

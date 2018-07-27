@@ -8,7 +8,9 @@ SERVERS = {
         'cognito_client_id': '60i2uvhvbiref2mftj7rgcrt9u',
         'user_pool_id': 'us-east-1_87ll5WOP8',
         'region': 'us-east-1',
-        'relayer': 'wss://cloud.hass.io:8000/websocket'
+        'relayer': 'wss://cloud.hass.io:8000/websocket',
+        'google_actions_sync_url': ('https://24ab3v80xd.execute-api.us-east-1.'
+                                    'amazonaws.com/prod/smart_home_sync'),
     }
 }
 

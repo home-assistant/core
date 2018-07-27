@@ -16,7 +16,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_template)
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as date_util
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,11 +97,16 @@ class Script():
 
                 delay = action[CONF_DELAY]
 
-                if isinstance(delay, template.Template):
-                    delay = vol.All(
-                        cv.time_period,
-                        cv.positive_timedelta)(
-                            delay.async_render(variables))
+                try:
+                    if isinstance(delay, template.Template):
+                        delay = vol.All(
+                            cv.time_period,
+                            cv.positive_timedelta)(
+                                delay.async_render(variables))
+                except (TemplateError, vol.Invalid) as ex:
+                    _LOGGER.error("Error rendering '%s' delay template: %s",
+                                  self.name, ex)
+                    break
 
                 unsub = async_track_point_in_utc_time(
                     self.hass, async_script_delay,

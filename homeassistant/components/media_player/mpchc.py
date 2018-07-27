@@ -35,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MPC-HC platform."""
     name = config.get(CONF_NAME)
@@ -155,8 +154,8 @@ class MpcHcDevice(MediaPlayerDevice):
 
     def media_next_track(self):
         """Send next track command."""
-        self._send_command(921)
+        self._send_command(920)
 
     def media_previous_track(self):
         """Send previous track command."""
-        self._send_command(920)
+        self._send_command(919)

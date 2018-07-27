@@ -11,7 +11,7 @@ import homeassistant.components.device_tracker.owntracks as owntracks
 from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM, STATE_NOT_HOME
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 USER = 'greg'
 DEVICE = 'phone'

@@ -9,9 +9,9 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (ATTR_ENTITY_ID, CONF_ICON, CONF_NAME)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
@@ -94,9 +94,8 @@ def async_reset(hass, entity_id):
         DOMAIN, SERVICE_RESET, {ATTR_ENTITY_ID: entity_id}))
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
-    """Set up a counter."""
+async def async_setup(hass, config):
+    """Set up the counters."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     entities = []
@@ -115,8 +114,7 @@ def async_setup(hass, config):
     if not entities:
         return False
 
-    @asyncio.coroutine
-    def async_handler_service(service):
+    async def async_handler_service(service):
         """Handle a call to the counter services."""
         target_counters = component.async_extract_from_service(service)
 
@@ -129,7 +127,7 @@ def async_setup(hass, config):
 
         tasks = [getattr(counter, attr)() for counter in target_counters]
         if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
+            await asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_INCREMENT, async_handler_service)
@@ -138,7 +136,7 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, SERVICE_RESET, async_handler_service)
 
-    yield from component.async_add_entities(entities)
+    await component.async_add_entities(entities)
     return True
 
 
@@ -181,30 +179,26 @@ class Counter(Entity):
             ATTR_STEP: self._step,
         }
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity about to be added to Home Assistant."""
         # If not None, we got an initial value.
         if self._state is not None:
             return
 
-        state = yield from async_get_last_state(self.hass, self.entity_id)
+        state = await async_get_last_state(self.hass, self.entity_id)
         self._state = state and state.state == state
 
-    @asyncio.coroutine
-    def async_decrement(self):
+    async def async_decrement(self):
         """Decrement the counter."""
         self._state -= self._step
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_increment(self):
+    async def async_increment(self):
         """Increment a counter."""
         self._state += self._step
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_reset(self):
+    async def async_reset(self):
         """Reset a counter."""
         self._state = self._initial
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()

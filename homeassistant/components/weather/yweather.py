@@ -10,7 +10,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 
@@ -20,10 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_CONDITION = 'yahoo_condition'
 
-ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 
-ATTR_FORECAST_TEMP_LOW = 'templow'
 
 CONF_WOEID = 'woeid'
 
@@ -32,6 +31,7 @@ DEFAULT_NAME = 'Yweather'
 SCAN_INTERVAL = timedelta(minutes=10)
 
 CONDITION_CLASSES = {
+    'clear-night': [31],
     'cloudy': [26, 27, 28, 29, 30],
     'fog': [19, 20, 21, 22, 23],
     'hail': [17, 18, 35],

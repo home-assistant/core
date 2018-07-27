@@ -14,7 +14,7 @@ import pytest
 import homeassistant.core as ha
 from homeassistant.exceptions import (InvalidEntityFormatError,
                                       InvalidStateError)
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
@@ -65,6 +65,18 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.loop.run_in_executor.mock_calls) == 1
+
+
+@patch('asyncio.iscoroutine', return_value=True)
+def test_async_create_task_schedule_coroutine(mock_iscoro):
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock()
+    job = MagicMock()
+
+    ha.HomeAssistant.async_create_task(hass, job)
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
 
 
 def test_async_run_job_calls_callback():
@@ -375,7 +387,7 @@ class TestEventBus(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
     def test_thread_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test thread event listener."""
         thread_calls = []
 
         def thread_listener(event):
@@ -387,7 +399,7 @@ class TestEventBus(unittest.TestCase):
         assert len(thread_calls) == 1
 
     def test_callback_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test callback event listener."""
         callback_calls = []
 
         @ha.callback
@@ -400,7 +412,7 @@ class TestEventBus(unittest.TestCase):
         assert len(callback_calls) == 1
 
     def test_coroutine_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test coroutine event listener."""
         coroutine_calls = []
 
         @asyncio.coroutine
@@ -809,7 +821,8 @@ class TestConfig(unittest.TestCase):
 
             valid = [
                 test_file,
-                tmp_dir
+                tmp_dir,
+                os.path.join(tmp_dir, 'notfound321')
             ]
             for path in valid:
                 assert self.config.is_allowed_path(path)

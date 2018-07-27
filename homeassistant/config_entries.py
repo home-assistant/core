@@ -27,7 +27,7 @@ At a minimum, each config flow will have to define a version number and the
 'init' step.
 
     @config_entries.HANDLERS.register(DOMAIN)
-    class ExampleConfigFlow(config_entries.ConfigFlowHandler):
+    class ExampleConfigFlow(config_entries.FlowHandler):
 
         VERSION = 1
 
@@ -112,38 +112,49 @@ the flow from the config panel.
 """
 
 import logging
-import os
 import uuid
 
-from .core import callback
-from .exceptions import HomeAssistantError
-from .setup import async_setup_component, async_process_deps_reqs
-from .util.json import load_json, save_json
-from .util.decorator import Registry
+from homeassistant import data_entry_flow
+from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component, async_process_deps_reqs
+from homeassistant.util.decorator import Registry
 
 
 _LOGGER = logging.getLogger(__name__)
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
-    'config_entry_example'
+    'cast',
+    'deconz',
+    'homematicip_cloud',
+    'hue',
+    'nest',
+    'sonos',
+    'zone',
 ]
 
-SOURCE_USER = 'user'
-SOURCE_DISCOVERY = 'discovery'
 
+STORAGE_KEY = 'core.config_entries'
+STORAGE_VERSION = 1
+
+# Deprecated since 0.73
 PATH_CONFIG = '.config_entries.json'
 
 SAVE_DELAY = 1
-
-RESULT_TYPE_FORM = 'form'
-RESULT_TYPE_CREATE_ENTRY = 'create_entry'
-RESULT_TYPE_ABORT = 'abort'
 
 ENTRY_STATE_LOADED = 'loaded'
 ENTRY_STATE_SETUP_ERROR = 'setup_error'
 ENTRY_STATE_NOT_LOADED = 'not_loaded'
 ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
+
+DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
+DISCOVERY_SOURCES = (
+    data_entry_flow.SOURCE_DISCOVERY,
+    data_entry_flow.SOURCE_IMPORT,
+)
+
+EVENT_FLOW_DISCOVERED = 'config_entry_discovered'
 
 
 class ConfigEntry:
@@ -186,24 +197,29 @@ class ConfigEntry:
 
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_config_entry did not return boolean',
-                              self.domain)
+                              component.DOMAIN)
                 result = False
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error setting up entry %s for %s',
-                              self.title, self.domain)
+                              self.title, component.DOMAIN)
             result = False
+
+        # Only store setup result as state if it was not forwarded.
+        if self.domain != component.DOMAIN:
+            return
 
         if result:
             self.state = ENTRY_STATE_LOADED
         else:
             self.state = ENTRY_STATE_SETUP_ERROR
 
-    async def async_unload(self, hass):
+    async def async_unload(self, hass, *, component=None):
         """Unload an entry.
 
         Returns if unload is possible and was successful.
         """
-        component = getattr(hass.components, self.domain)
+        if component is None:
+            component = getattr(hass.components, self.domain)
 
         supports_unload = hasattr(component, 'async_unload_entry')
 
@@ -215,13 +231,13 @@ class ConfigEntry:
 
             if not isinstance(result, bool):
                 _LOGGER.error('%s.async_unload_entry did not return boolean',
-                              self.domain)
+                              component.DOMAIN)
                 result = False
 
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error unloading entry %s for %s',
-                              self.title, self.domain)
+                              self.title, component.DOMAIN)
             self.state = ENTRY_STATE_FAILED_UNLOAD
             return False
 
@@ -245,18 +261,6 @@ class UnknownEntry(ConfigError):
     """Unknown entry specified."""
 
 
-class UnknownHandler(ConfigError):
-    """Unknown handler specified."""
-
-
-class UnknownFlow(ConfigError):
-    """Uknown flow specified."""
-
-
-class UnknownStep(ConfigError):
-    """Unknown step specified."""
-
-
 class ConfigEntries:
     """Manage the configuration entries.
 
@@ -266,10 +270,11 @@ class ConfigEntries:
     def __init__(self, hass, hass_config):
         """Initialize the entry manager."""
         self.hass = hass
-        self.flow = FlowManager(hass, hass_config, self._async_add_entry)
+        self.flow = data_entry_flow.FlowManager(
+            hass, self._async_create_flow, self._async_finish_flow)
         self._hass_config = hass_config
         self._entries = None
-        self._sched_save = None
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
     def async_domains(self):
@@ -303,7 +308,7 @@ class ConfigEntries:
             raise UnknownEntry
 
         entry = self._entries.pop(found)
-        self._async_schedule_save()
+        await self._async_schedule_save()
 
         unloaded = await entry.async_unload(self.hass)
 
@@ -312,19 +317,69 @@ class ConfigEntries:
         }
 
     async def async_load(self):
-        """Load the config."""
-        path = self.hass.config.path(PATH_CONFIG)
-        if not os.path.isfile(path):
+        """Handle loading the config."""
+        # Migrating for config entries stored before 0.73
+        config = await self.hass.helpers.storage.async_migrator(
+            self.hass.config.path(PATH_CONFIG), self._store,
+            old_conf_migrate_func=_old_conf_migrator
+        )
+
+        if config is None:
             self._entries = []
             return
 
-        entries = await self.hass.async_add_job(load_json, path)
-        self._entries = [ConfigEntry(**entry) for entry in entries]
+        self._entries = [ConfigEntry(**entry) for entry in config['entries']]
 
-    async def _async_add_entry(self, entry):
-        """Add an entry."""
+    async def async_forward_entry_setup(self, entry, component):
+        """Forward the setup of an entry to a different component.
+
+        By default an entry is setup with the component it belongs to. If that
+        component also has related platforms, the component will have to
+        forward the entry to be setup by that component.
+
+        You don't want to await this coroutine if it is called as part of the
+        setup of a component, because it can cause a deadlock.
+        """
+        # Setup Component if not set up yet
+        if component not in self.hass.config.components:
+            result = await async_setup_component(
+                self.hass, component, self._hass_config)
+
+            if not result:
+                return False
+
+        await entry.async_setup(
+            self.hass, component=getattr(self.hass.components, component))
+
+    async def async_forward_entry_unload(self, entry, component):
+        """Forward the unloading of an entry to a different component."""
+        # It was never loaded.
+        if component not in self.hass.config.components:
+            return True
+
+        return await entry.async_unload(
+            self.hass, component=getattr(self.hass.components, component))
+
+    async def _async_finish_flow(self, result):
+        """Finish a config flow and add an entry."""
+        # If no discovery config entries in progress, remove notification.
+        if not any(ent['source'] in DISCOVERY_SOURCES for ent
+                   in self.hass.config_entries.flow.async_progress()):
+            self.hass.components.persistent_notification.async_dismiss(
+                DISCOVERY_NOTIFICATION_ID)
+
+        if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            return None
+
+        entry = ConfigEntry(
+            version=result['version'],
+            domain=result['handler'],
+            title=result['title'],
+            data=result['data'],
+            source=result['source'],
+        )
         self._entries.append(entry)
-        self._async_schedule_save()
+        await self._async_schedule_save()
 
         # Setup entry
         if entry.domain in self.hass.config.components:
@@ -335,173 +390,47 @@ class ConfigEntries:
             await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
 
-    @callback
-    def _async_schedule_save(self):
-        """Schedule saving the entity registry."""
-        if self._sched_save is not None:
-            self._sched_save.cancel()
+        # Return Entry if they not from a discovery request
+        if result['source'] not in DISCOVERY_SOURCES:
+            return entry
 
-        self._sched_save = self.hass.loop.call_later(
-            SAVE_DELAY, self.hass.async_add_job, self._async_save
-        )
+        return entry
 
-    async def _async_save(self):
-        """Save the entity registry to a file."""
-        self._sched_save = None
-        data = [entry.as_dict() for entry in self._entries]
+    async def _async_create_flow(self, handler, *, source, data):
+        """Create a flow for specified handler.
 
-        await self.hass.async_add_job(
-            save_json, self.hass.config.path(PATH_CONFIG), data)
-
-
-class FlowManager:
-    """Manage all the config flows that are in progress."""
-
-    def __init__(self, hass, hass_config, async_add_entry):
-        """Initialize the flow manager."""
-        self.hass = hass
-        self._hass_config = hass_config
-        self._progress = {}
-        self._async_add_entry = async_add_entry
-
-    @callback
-    def async_progress(self):
-        """Return the flows in progress."""
-        return [{
-            'flow_id': flow.flow_id,
-            'domain': flow.domain,
-            'source': flow.source,
-        } for flow in self._progress.values()]
-
-    async def async_init(self, domain, *, source=SOURCE_USER, data=None):
-        """Start a configuration flow."""
-        handler = HANDLERS.get(domain)
+        Handler key is the domain of the component that we want to setup.
+        """
+        component = getattr(self.hass.components, handler)
+        handler = HANDLERS.get(handler)
 
         if handler is None:
-            # This will load the component and thus register the handler
-            component = getattr(self.hass.components, domain)
-            handler = HANDLERS.get(domain)
+            raise data_entry_flow.UnknownHandler
 
-            if handler is None:
-                raise self.hass.helpers.UnknownHandler
+        # Make sure requirements and dependencies of component are resolved
+        await async_process_deps_reqs(
+            self.hass, self._hass_config, handler, component)
 
-            # Make sure requirements and dependencies of component are resolved
-            await async_process_deps_reqs(
-                self.hass, self._hass_config, domain, component)
+        # Create notification.
+        if source in DISCOVERY_SOURCES:
+            self.hass.bus.async_fire(EVENT_FLOW_DISCOVERED)
+            self.hass.components.persistent_notification.async_create(
+                title='New devices discovered',
+                message=("We have discovered new devices on your network. "
+                         "[Check it out](/config/integrations)"),
+                notification_id=DISCOVERY_NOTIFICATION_ID
+            )
 
-        flow_id = uuid.uuid4().hex
-        flow = self._progress[flow_id] = handler()
-        flow.hass = self.hass
-        flow.domain = domain
-        flow.flow_id = flow_id
-        flow.source = source
+        return handler()
 
-        if source == SOURCE_USER:
-            step = 'init'
-        else:
-            step = source
-
-        return await self._async_handle_step(flow, step, data)
-
-    async def async_configure(self, flow_id, user_input=None):
-        """Start or continue a configuration flow."""
-        flow = self._progress.get(flow_id)
-
-        if flow is None:
-            raise UnknownFlow
-
-        step_id, data_schema = flow.cur_step
-
-        if data_schema is not None and user_input is not None:
-            user_input = data_schema(user_input)
-
-        return await self._async_handle_step(
-            flow, step_id, user_input)
-
-    @callback
-    def async_abort(self, flow_id):
-        """Abort a flow."""
-        if self._progress.pop(flow_id, None) is None:
-            raise UnknownFlow
-
-    async def _async_handle_step(self, flow, step_id, user_input):
-        """Handle a step of a flow."""
-        method = "async_step_{}".format(step_id)
-
-        if not hasattr(flow, method):
-            self._progress.pop(flow.flow_id)
-            raise UnknownStep("Handler {} doesn't support step {}".format(
-                flow.__class__.__name__, step_id))
-
-        result = await getattr(flow, method)(user_input)
-
-        if result['type'] not in (RESULT_TYPE_FORM, RESULT_TYPE_CREATE_ENTRY,
-                                  RESULT_TYPE_ABORT):
-            raise ValueError(
-                'Handler returned incorrect type: {}'.format(result['type']))
-
-        if result['type'] == RESULT_TYPE_FORM:
-            flow.cur_step = (result.pop('step_id'), result['data_schema'])
-            return result
-
-        # Abort and Success results both finish the flow
-        self._progress.pop(flow.flow_id)
-
-        if result['type'] == RESULT_TYPE_ABORT:
-            return result
-
-        entry = ConfigEntry(
-            version=flow.VERSION,
-            domain=flow.domain,
-            title=result['title'],
-            data=result.pop('data'),
-            source=flow.source
-        )
-        await self._async_add_entry(entry)
-        return result
-
-
-class ConfigFlowHandler:
-    """Handle the configuration flow of a component."""
-
-    # Set by flow manager
-    flow_id = None
-    hass = None
-    source = SOURCE_USER
-    cur_step = None
-
-    # Set by dev
-    # VERSION
-
-    @callback
-    def async_show_form(self, *, title, step_id, description=None,
-                        data_schema=None, errors=None):
-        """Return the definition of a form to gather user input."""
-        return {
-            'type': RESULT_TYPE_FORM,
-            'flow_id': self.flow_id,
-            'title': title,
-            'step_id': step_id,
-            'description': description,
-            'data_schema': data_schema,
-            'errors': errors,
+    async def _async_schedule_save(self):
+        """Save the entity registry to a file."""
+        data = {
+            'entries': [entry.as_dict() for entry in self._entries]
         }
+        await self._store.async_save(data, delay=SAVE_DELAY)
 
-    @callback
-    def async_create_entry(self, *, title, data):
-        """Finish config flow and create a config entry."""
-        return {
-            'type': RESULT_TYPE_CREATE_ENTRY,
-            'flow_id': self.flow_id,
-            'title': title,
-            'data': data,
-        }
 
-    @callback
-    def async_abort(self, *, reason):
-        """Abort the config flow."""
-        return {
-            'type': RESULT_TYPE_ABORT,
-            'flow_id': self.flow_id,
-            'reason': reason
-        }
+async def _old_conf_migrator(old_config):
+    """Migrate the pre-0.73 config format to the latest version."""
+    return {'entries': old_config}

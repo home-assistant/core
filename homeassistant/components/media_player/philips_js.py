@@ -13,20 +13,22 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
     SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_PLAY, MediaPlayerDevice)
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    SUPPORT_PLAY, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    CONF_HOST, CONF_NAME, CONF_API_VERSION, STATE_OFF, STATE_ON, STATE_UNKNOWN)
 from homeassistant.helpers.script import Script
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['ha-philipsjs==0.0.1']
+REQUIREMENTS = ['ha-philipsjs==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)
 
 SUPPORT_PHILIPS_JS = SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
-                     SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE
+                     SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+                     SUPPORT_SELECT_SOURCE
 
 SUPPORT_PHILIPS_JS_TV = SUPPORT_PHILIPS_JS | SUPPORT_NEXT_TRACK | \
                         SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
@@ -36,24 +38,26 @@ CONF_ON_ACTION = 'turn_on_action'
 DEFAULT_DEVICE = 'default'
 DEFAULT_HOST = '127.0.0.1'
 DEFAULT_NAME = 'Philips TV'
+DEFAULT_API_VERSION = '1'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_API_VERSION, default=DEFAULT_API_VERSION): cv.string,
     vol.Optional(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Philips TV platform."""
     import haphilipsjs
 
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
+    api_version = config.get(CONF_API_VERSION)
     turn_on_action = config.get(CONF_ON_ACTION)
 
-    tvapi = haphilipsjs.PhilipsTV(host)
+    tvapi = haphilipsjs.PhilipsTV(host, api_version)
     on_script = Script(hass, turn_on_action) if turn_on_action else None
 
     add_devices([PhilipsTV(tvapi, name, on_script)])
@@ -162,6 +166,10 @@ class PhilipsTV(MediaPlayerDevice):
         if not self._tv.on:
             self._state = STATE_OFF
 
+    def set_volume_level(self, volume):
+        """Set volume level, range 0..1."""
+        self._tv.setVolume(volume)
+
     def media_previous_track(self):
         """Send rewind command."""
         self._tv.sendKey('Previous')
@@ -186,12 +194,10 @@ class PhilipsTV(MediaPlayerDevice):
         self._volume = self._tv.volume
         self._muted = self._tv.muted
         if self._tv.source_id:
-            src = self._tv.sources.get(self._tv.source_id, None)
-            if src:
-                self._source = src.get('name', None)
+            self._source = self._tv.getSourceName(self._tv.source_id)
         if self._tv.sources and not self._source_list:
-            for srcid in sorted(self._tv.sources):
-                srcname = self._tv.sources.get(srcid, dict()).get('name', None)
+            for srcid in self._tv.sources:
+                srcname = self._tv.getSourceName(srcid)
                 self._source_list.append(srcname)
                 self._source_mapping[srcname] = srcid
         if self._tv.on:

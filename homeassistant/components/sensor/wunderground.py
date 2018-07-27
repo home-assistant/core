@@ -14,13 +14,14 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.components.sensor import PLATFORM_SCHEMA, ENTITY_ID_FORMAT
+from homeassistant.components import sensor
+from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE,
     TEMP_FAHRENHEIT, TEMP_CELSIUS, LENGTH_INCHES, LENGTH_KILOMETERS,
     LENGTH_MILES, LENGTH_FEET, ATTR_ATTRIBUTION)
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity, async_generate_entity_id
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -626,25 +627,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.longitude,
     vol.Required(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)]),
+        vol.All(cv.ensure_list, vol.Length(min=1), [vol.In(SENSOR_TYPES)])
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                         async_add_devices, discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_devices, discovery_info=None):
     """Set up the WUnderground sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    pws_id = config.get(CONF_PWS_ID)
 
     rest = WUndergroundData(
-        hass, config.get(CONF_API_KEY), config.get(CONF_PWS_ID),
+        hass, config.get(CONF_API_KEY), pws_id,
         config.get(CONF_LANG), latitude, longitude)
+
+    if pws_id is None:
+        unique_id_base = "@{:06f},{:06f}".format(longitude, latitude)
+    else:
+        # Manually specified weather station, use that for unique_id
+        unique_id_base = pws_id
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(WUndergroundSensor(hass, rest, variable))
+        sensors.append(WUndergroundSensor(hass, rest, variable,
+                                          unique_id_base))
 
-    yield from rest.async_update()
+    await rest.async_update()
     if not rest.data:
         raise PlatformNotReady
 
@@ -654,7 +662,8 @@ def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 class WUndergroundSensor(Entity):
     """Implementing the WUnderground sensor."""
 
-    def __init__(self, hass: HomeAssistantType, rest, condition):
+    def __init__(self, hass: HomeAssistantType, rest, condition,
+                 unique_id_base: str):
         """Initialize the sensor."""
         self.rest = rest
         self._condition = condition
@@ -666,8 +675,10 @@ class WUndergroundSensor(Entity):
         self._entity_picture = None
         self._unit_of_measurement = self._cfg_expand("unit_of_measurement")
         self.rest.request_feature(SENSOR_TYPES[condition].feature)
-        self.entity_id = async_generate_entity_id(
-            ENTITY_ID_FORMAT, "pws_" + condition, hass=hass)
+        # This is only the suggested entity id, it might get changed by
+        # the entity registry later.
+        self.entity_id = sensor.ENTITY_ID_FORMAT.format('pws_' + condition)
+        self._unique_id = "{},{}".format(unique_id_base, condition)
 
     def _cfg_expand(self, what, default=None):
         """Parse and return sensor data."""
@@ -747,6 +758,11 @@ class WUndergroundSensor(Entity):
             self._entity_picture = re.sub(r'^http://', 'https://',
                                           url, flags=re.IGNORECASE)
 
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
 
 class WUndergroundData(object):
     """Get data from WUnderground."""
@@ -777,14 +793,13 @@ class WUndergroundData(object):
 
         return url + '.json'
 
-    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def async_update(self):
+    async def async_update(self):
         """Get the latest data from WUnderground."""
         try:
             with async_timeout.timeout(10, loop=self._hass.loop):
-                response = yield from self._session.get(self._build_url())
-            result = yield from response.json()
+                response = await self._session.get(self._build_url())
+            result = await response.json()
             if "error" in result['response']:
                 raise ValueError(result['response']["error"]["description"])
             self.data = result

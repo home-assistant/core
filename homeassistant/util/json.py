@@ -8,10 +8,16 @@ from homeassistant.exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
-_UNDEFINED = object()
+
+class SerializationError(HomeAssistantError):
+    """Error serializing the data to JSON."""
 
 
-def load_json(filename: str, default: Union[List, Dict] = _UNDEFINED) \
+class WriteError(HomeAssistantError):
+    """Error writing the data."""
+
+
+def load_json(filename: str, default: Union[List, Dict, None] = None) \
         -> Union[List, Dict]:
     """Load JSON data from a file and return as dict or list.
 
@@ -19,7 +25,7 @@ def load_json(filename: str, default: Union[List, Dict] = _UNDEFINED) \
     """
     try:
         with open(filename, encoding='utf-8') as fdesc:
-            return json.loads(fdesc.read())
+            return json.loads(fdesc.read())  # type: ignore
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug('JSON file not found: %s', filename)
@@ -29,7 +35,7 @@ def load_json(filename: str, default: Union[List, Dict] = _UNDEFINED) \
     except OSError as error:
         _LOGGER.exception('JSON file reading failed: %s', filename)
         raise HomeAssistantError(error)
-    return {} if default is _UNDEFINED else default
+    return {} if default is None else default
 
 
 def save_json(filename: str, data: Union[List, Dict]):
@@ -38,16 +44,14 @@ def save_json(filename: str, data: Union[List, Dict]):
     Returns True on success.
     """
     try:
-        data = json.dumps(data, sort_keys=True, indent=4)
+        json_data = json.dumps(data, sort_keys=True, indent=4)
         with open(filename, 'w', encoding='utf-8') as fdesc:
-            fdesc.write(data)
-            return True
+            fdesc.write(json_data)
     except TypeError as error:
         _LOGGER.exception('Failed to serialize to JSON: %s',
                           filename)
-        raise HomeAssistantError(error)
+        raise SerializationError(error)
     except OSError as error:
         _LOGGER.exception('Saving JSON file failed: %s',
                           filename)
-        raise HomeAssistantError(error)
-    return False
+        raise WriteError(error)

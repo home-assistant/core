@@ -21,7 +21,7 @@ CONF_FOLDER_PATHS = 'folder'
 CONF_FILTER = 'filter'
 DEFAULT_FILTER = '*'
 
-SCAN_INTERVAL = timedelta(seconds=1)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FOLDER_PATHS): cv.isdir,
@@ -38,7 +38,7 @@ def get_files_list(folder_path, filter_term):
 
 def get_size(files_list):
     """Return the sum of the size in bytes of files in the list."""
-    size_list = [os.stat(f).st_size for f in files_list]
+    size_list = [os.stat(f).st_size for f in files_list if os.path.isfile(f)]
     return sum(size_list)
 
 

@@ -7,6 +7,8 @@ https://home-assistant.io/components/sensor.abode/
 import logging
 
 from homeassistant.components.abode import AbodeDevice, DOMAIN as ABODE_DOMAIN
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -14,9 +16,9 @@ DEPENDENCIES = ['abode']
 
 # Sensor types: Name, icon
 SENSOR_TYPES = {
-    'temp': ['Temperature', 'thermometer'],
-    'humidity': ['Humidity', 'water-percent'],
-    'lux': ['Lux', 'lightbulb'],
+    'temp': ['Temperature', DEVICE_CLASS_TEMPERATURE],
+    'humidity': ['Humidity', DEVICE_CLASS_HUMIDITY],
+    'lux': ['Lux', DEVICE_CLASS_ILLUMINANCE],
 }
 
 
@@ -46,19 +48,19 @@ class AbodeSensor(AbodeDevice):
         """Initialize a sensor for an Abode device."""
         super().__init__(data, device)
         self._sensor_type = sensor_type
-        self._icon = 'mdi:{}'.format(SENSOR_TYPES[self._sensor_type][1])
         self._name = '{0} {1}'.format(
             self._device.name, SENSOR_TYPES[self._sensor_type][0])
-
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return self._icon
+        self._device_class = SENSOR_TYPES[self._sensor_type][1]
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def device_class(self):
+        """Return the device class."""
+        return self._device_class
 
     @property
     def state(self):

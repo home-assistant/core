@@ -154,29 +154,21 @@ class TestDemoMediaPlayer(unittest.TestCase):
             {'media_player': {'platform': 'demo'}})
         state = self.hass.states.get(entity_id)
         assert 1 == state.attributes.get('media_track')
-        assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
-                     state.attributes.get('supported_features'))
 
         mp.media_next_track(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 2 == state.attributes.get('media_track')
-        assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_features'))
 
         mp.media_next_track(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 3 == state.attributes.get('media_track')
-        assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_features'))
 
         mp.media_previous_track(self.hass, entity_id)
         self.hass.block_till_done()
         state = self.hass.states.get(entity_id)
         assert 2 == state.attributes.get('media_track')
-        assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_features'))
 
         assert setup_component(
             self.hass, mp.DOMAIN,
@@ -184,22 +176,16 @@ class TestDemoMediaPlayer(unittest.TestCase):
         ent_id = 'media_player.lounge_room'
         state = self.hass.states.get(ent_id)
         assert 1 == state.attributes.get('media_episode')
-        assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
-                     state.attributes.get('supported_features'))
 
         mp.media_next_track(self.hass, ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 2 == state.attributes.get('media_episode')
-        assert 0 < (mp.SUPPORT_PREVIOUS_TRACK &
-                    state.attributes.get('supported_features'))
 
         mp.media_previous_track(self.hass, ent_id)
         self.hass.block_till_done()
         state = self.hass.states.get(ent_id)
         assert 1 == state.attributes.get('media_episode')
-        assert 0 == (mp.SUPPORT_PREVIOUS_TRACK &
-                     state.attributes.get('supported_features'))
 
     @patch('homeassistant.components.media_player.demo.DemoYoutubePlayer.'
            'media_seek', autospec=True)

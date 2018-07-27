@@ -33,7 +33,7 @@ def _api_bool(funct):
 
 
 def _api_data(funct):
-    """Return a api data."""
+    """Return data of an api."""
     @asyncio.coroutine
     def _wrapper(*argv, **kwargs):
         """Wrap function."""

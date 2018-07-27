@@ -1,6 +1,5 @@
 """Helper for aiohttp webclient stuff."""
 import asyncio
-import ssl
 import sys
 
 import aiohttp
@@ -8,11 +7,11 @@ from aiohttp.hdrs import USER_AGENT, CONTENT_TYPE
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPGatewayTimeout, HTTPBadGateway
 import async_timeout
-import certifi
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.loader import bind_hass
+from homeassistant.util import ssl as ssl_util
 
 DATA_CONNECTOR = 'aiohttp_connector'
 DATA_CONNECTOR_NOTVERIFY = 'aiohttp_connector_notverify'
@@ -35,14 +34,7 @@ def async_get_clientsession(hass, verify_ssl=True):
         key = DATA_CLIENTSESSION_NOTVERIFY
 
     if key not in hass.data:
-        connector = _async_get_connector(hass, verify_ssl)
-        clientsession = aiohttp.ClientSession(
-            loop=hass.loop,
-            connector=connector,
-            headers={USER_AGENT: SERVER_SOFTWARE}
-        )
-        _async_register_clientsession_shutdown(hass, clientsession)
-        hass.data[key] = clientsession
+        hass.data[key] = async_create_clientsession(hass, verify_ssl)
 
     return hass.data[key]
 
@@ -123,7 +115,7 @@ async def async_aiohttp_proxy_stream(hass, request, stream, content_type,
                 await response.write_eof()
                 break
 
-            response.write(data)
+            await response.write(data)
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
         # Something went wrong fetching data, close connection gracefully
@@ -135,7 +127,6 @@ async def async_aiohttp_proxy_stream(hass, request, stream, content_type,
 
 
 @callback
-# pylint: disable=invalid-name
 def _async_register_clientsession_shutdown(hass, clientsession):
     """Register ClientSession close on Home Assistant shutdown.
 
@@ -156,34 +147,25 @@ def _async_get_connector(hass, verify_ssl=True):
 
     This method must be run in the event loop.
     """
-    is_new = False
+    key = DATA_CONNECTOR if verify_ssl else DATA_CONNECTOR_NOTVERIFY
+
+    if key in hass.data:
+        return hass.data[key]
 
     if verify_ssl:
-        if DATA_CONNECTOR not in hass.data:
-            ssl_context = ssl.SSLContext(ssl.PROTOCOL_SSLv23)
-            ssl_context.load_verify_locations(cafile=certifi.where(),
-                                              capath=None)
-            connector = aiohttp.TCPConnector(loop=hass.loop,
-                                             ssl_context=ssl_context)
-            hass.data[DATA_CONNECTOR] = connector
-            is_new = True
-        else:
-            connector = hass.data[DATA_CONNECTOR]
+        ssl_context = ssl_util.client_context()
     else:
-        if DATA_CONNECTOR_NOTVERIFY not in hass.data:
-            connector = aiohttp.TCPConnector(loop=hass.loop, verify_ssl=False)
-            hass.data[DATA_CONNECTOR_NOTVERIFY] = connector
-            is_new = True
-        else:
-            connector = hass.data[DATA_CONNECTOR_NOTVERIFY]
+        ssl_context = False
 
-    if is_new:
-        @callback
-        def _async_close_connector(event):
-            """Close connector pool."""
-            connector.close()
+    connector = aiohttp.TCPConnector(loop=hass.loop, ssl=ssl_context)
+    hass.data[key] = connector
 
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_CLOSE, _async_close_connector)
+    @callback
+    def _async_close_connector(event):
+        """Close connector pool."""
+        connector.close()
+
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_CLOSE, _async_close_connector)
 
     return connector

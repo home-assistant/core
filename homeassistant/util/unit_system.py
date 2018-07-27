@@ -86,11 +86,11 @@ class UnitSystem(object):
         self.volume_unit = volume
 
     @property
-    def is_metric(self: object) -> bool:
+    def is_metric(self) -> bool:
         """Determine if this is the metric unit system."""
         return self.name == CONF_UNIT_SYSTEM_METRIC
 
-    def temperature(self: object, temperature: float, from_unit: str) -> float:
+    def temperature(self, temperature: float, from_unit: str) -> float:
         """Convert the given temperature to this unit system."""
         if not isinstance(temperature, Number):
             raise TypeError(
@@ -99,7 +99,7 @@ class UnitSystem(object):
         return temperature_util.convert(temperature,
                                         from_unit, self.temperature_unit)
 
-    def length(self: object, length: float, from_unit: str) -> float:
+    def length(self, length: float, from_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))

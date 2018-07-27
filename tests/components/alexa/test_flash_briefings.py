@@ -21,7 +21,7 @@ NPR_NEWS_MP3_URL = "https://pd.npr.org/anon.npr-mp3/npr/news/newscast.mp3"
 
 
 @pytest.fixture
-def alexa_client(loop, hass, test_client):
+def alexa_client(loop, hass, aiohttp_client):
     """Initialize a Home Assistant server for testing this module."""
     @callback
     def mock_service(call):
@@ -49,7 +49,7 @@ def alexa_client(loop, hass, test_client):
             },
         }
     }))
-    return loop.run_until_complete(test_client(hass.http.app))
+    return loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 def _flash_briefing_req(client, briefing_id):

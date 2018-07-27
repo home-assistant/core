@@ -4,6 +4,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
+from homeassistant.const import STATE_UNKNOWN
 from homeassistant.setup import setup_component
 from homeassistant.components.sensor.history_stats import HistoryStatsSensor
 import homeassistant.core as ha
@@ -43,8 +44,8 @@ class TestHistoryStatsSensor(unittest.TestCase):
 
         self.assertTrue(setup_component(self.hass, 'sensor', config))
 
-        state = self.hass.states.get('sensor.test').as_dict()
-        self.assertEqual(state['state'], '0')
+        state = self.hass.states.get('sensor.test')
+        self.assertEqual(state.state, STATE_UNKNOWN)
 
     def test_period_parsing(self):
         """Test the conversion from templates to period."""
@@ -132,7 +133,7 @@ class TestHistoryStatsSensor(unittest.TestCase):
                 sensor4.update()
 
         self.assertEqual(sensor1.state, 0.5)
-        self.assertEqual(sensor2.state, 0)
+        self.assertEqual(sensor2.state, None)
         self.assertEqual(sensor3.state, 2)
         self.assertEqual(sensor4.state, 50)
 

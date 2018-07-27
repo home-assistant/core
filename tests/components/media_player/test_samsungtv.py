@@ -1,11 +1,16 @@
 """Tests for samsungtv Components."""
+import asyncio
 import unittest
+from unittest.mock import call, patch, MagicMock
 from subprocess import CalledProcessError
 
 from asynctest import mock
 
+import pytest
+
 import tests.common
-from homeassistant.components.media_player import SUPPORT_TURN_ON
+from homeassistant.components.media_player import SUPPORT_TURN_ON, \
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_URL
 from homeassistant.components.media_player.samsungtv import setup_platform, \
     CONF_TIMEOUT, SamsungTVDevice, SUPPORT_SAMSUNGTV
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, STATE_ON, \
@@ -29,7 +34,15 @@ DISCOVERY_INFO = {
 }
 
 
-class PackageException(Exception):
+class AccessDenied(Exception):
+    """Dummy Exception."""
+
+
+class ConnectionClosed(Exception):
+    """Dummy Exception."""
+
+
+class UnhandledResponse(Exception):
     """Dummy Exception."""
 
 
@@ -45,9 +58,9 @@ class TestSamsungTv(unittest.TestCase):
         self.hass.block_till_done()
         self.device = SamsungTVDevice(**WORKING_CONFIG)
         self.device._exceptions_class = mock.Mock()
-        self.device._exceptions_class.UnhandledResponse = PackageException
-        self.device._exceptions_class.AccessDenied = PackageException
-        self.device._exceptions_class.ConnectionClosed = PackageException
+        self.device._exceptions_class.UnhandledResponse = UnhandledResponse
+        self.device._exceptions_class.AccessDenied = AccessDenied
+        self.device._exceptions_class.ConnectionClosed = ConnectionClosed
 
     def tearDown(self):
         """Tear down test data."""
@@ -123,22 +136,46 @@ class TestSamsungTv(unittest.TestCase):
     def test_send_key_broken_pipe(self):
         """Testing broken pipe Exception."""
         _remote = mock.Mock()
-        self.device.get_remote = mock.Mock()
         _remote.control = mock.Mock(
-            side_effect=BrokenPipeError("Boom"))
-        self.device.get_remote.return_value = _remote
-        self.device.send_key("HELLO")
+            side_effect=BrokenPipeError('Boom'))
+        self.device.get_remote = mock.Mock(return_value=_remote)
+        self.device.send_key('HELLO')
+        self.assertIsNone(self.device._remote)
+        self.assertEqual(STATE_ON, self.device._state)
+
+    def test_send_key_connection_closed_retry_succeed(self):
+        """Test retry on connection closed."""
+        _remote = mock.Mock()
+        _remote.control = mock.Mock(side_effect=[
+            self.device._exceptions_class.ConnectionClosed('Boom'),
+            mock.DEFAULT])
+        self.device.get_remote = mock.Mock(return_value=_remote)
+        command = 'HELLO'
+        self.device.send_key(command)
+        self.assertEqual(STATE_ON, self.device._state)
+        # verify that _remote.control() get called twice because of retry logic
+        expected = [mock.call(command),
+                    mock.call(command)]
+        self.assertEqual(expected, _remote.control.call_args_list)
+
+    def test_send_key_unhandled_response(self):
+        """Testing unhandled response exception."""
+        _remote = mock.Mock()
+        _remote.control = mock.Mock(
+            side_effect=self.device._exceptions_class.UnhandledResponse('Boom')
+        )
+        self.device.get_remote = mock.Mock(return_value=_remote)
+        self.device.send_key('HELLO')
         self.assertIsNone(self.device._remote)
         self.assertEqual(STATE_ON, self.device._state)
 
     def test_send_key_os_error(self):
         """Testing broken pipe Exception."""
         _remote = mock.Mock()
-        self.device.get_remote = mock.Mock()
         _remote.control = mock.Mock(
-            side_effect=OSError("Boom"))
-        self.device.get_remote.return_value = _remote
-        self.device.send_key("HELLO")
+            side_effect=OSError('Boom'))
+        self.device.get_remote = mock.Mock(return_value=_remote)
+        self.device.send_key('HELLO')
         self.assertIsNone(self.device._remote)
         self.assertEqual(STATE_OFF, self.device._state)
 
@@ -269,3 +306,59 @@ class TestSamsungTv(unittest.TestCase):
         self.device._mac = "fake"
         self.device.turn_on()
         self.device._wol.send_magic_packet.assert_called_once_with("fake")
+
+
+@pytest.fixture
+def samsung_mock():
+    """Mock samsungctl."""
+    with patch.dict('sys.modules', {
+        'samsungctl': MagicMock(),
+    }):
+        yield
+
+
+async def test_play_media(hass, samsung_mock):
+    """Test for play_media."""
+    asyncio_sleep = asyncio.sleep
+    sleeps = []
+
+    async def sleep(duration, loop):
+        sleeps.append(duration)
+        await asyncio_sleep(0, loop=loop)
+
+    with patch('asyncio.sleep', new=sleep):
+        device = SamsungTVDevice(**WORKING_CONFIG)
+        device.hass = hass
+
+        device.send_key = mock.Mock()
+        await device.async_play_media(MEDIA_TYPE_CHANNEL, "576")
+
+        exp = [call("KEY_5"), call("KEY_7"), call("KEY_6")]
+        assert device.send_key.call_args_list == exp
+        assert len(sleeps) == 3
+
+
+async def test_play_media_invalid_type(hass, samsung_mock):
+    """Test for play_media with invalid media type."""
+    url = "https://example.com"
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.send_key = mock.Mock()
+    await device.async_play_media(MEDIA_TYPE_URL, url)
+    assert device.send_key.call_count == 0
+
+
+async def test_play_media_channel_as_string(hass, samsung_mock):
+    """Test for play_media with invalid channel as string."""
+    url = "https://example.com"
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.send_key = mock.Mock()
+    await device.async_play_media(MEDIA_TYPE_CHANNEL, url)
+    assert device.send_key.call_count == 0
+
+
+async def test_play_media_channel_as_non_positive(hass, samsung_mock):
+    """Test for play_media with invalid channel as non positive integer."""
+    device = SamsungTVDevice(**WORKING_CONFIG)
+    device.send_key = mock.Mock()
+    await device.async_play_media(MEDIA_TYPE_CHANNEL, "-4")
+    assert device.send_key.call_count == 0

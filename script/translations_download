@@ -26,10 +26,9 @@ FILE_FORMAT=json
 
 mkdir -p ${LOCAL_DIR}
 
-docker pull lokalise/lokalise-cli
 docker run \
      -v ${LOCAL_DIR}:/opt/dest/locale \
-     lokalise/lokalise-cli lokalise \
+     lokalise/lokalise-cli@sha256:ddf5677f58551261008342df5849731c88bcdc152ab645b133b21819aede8218 lokalise \
      --token ${LOKALISE_TOKEN} \
      export ${PROJECT_ID} \
      --export_empty skip \

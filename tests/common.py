@@ -1,7 +1,9 @@
 """Test the helper method for writing tests."""
 import asyncio
+from collections import OrderedDict
 from datetime import timedelta
 import functools as ft
+import json
 import os
 import sys
 from unittest.mock import patch, MagicMock, Mock
@@ -10,12 +12,14 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from homeassistant import core as ha, loader, config_entries
+from homeassistant import auth, core as ha, data_entry_flow, config_entries
+from homeassistant.auth import (
+    models as auth_models, auth_store, providers as auth_providers)
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
-    intent, entity, restore_state,  entity_registry,
-    entity_platform)
+    intent, entity, restore_state, entity_registry,
+    entity_platform, storage)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -24,12 +28,14 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
 from homeassistant.components import mqtt, recorder
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
+CLIENT_ID = 'https://example.com/app'
+CLIENT_REDIRECT_URI = 'https://example.com/app/callback'
 
 
 def threadsafe_callback_factory(func):
@@ -110,9 +116,10 @@ def get_test_home_assistant():
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant(loop)
-    hass.config_entries = config_entries.ConfigEntries(hass, {})
-    hass.config_entries._entries = []
     hass.config.async_load = Mock()
+    store = auth_store.AuthStore(hass)
+    hass.auth = auth.AuthManager(hass, store, {})
+    ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
@@ -134,8 +141,9 @@ def async_test_home_assistant(loop):
     hass.config.units = METRIC_SYSTEM
     hass.config.skip_pip = True
 
-    if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
-        yield from loop.run_in_executor(None, loader.prepare, hass)
+    hass.config_entries = config_entries.ConfigEntries(hass, {})
+    hass.config_entries._entries = []
+    hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
     hass.state = ha.CoreState.running
 
@@ -303,6 +311,50 @@ def mock_registry(hass, mock_entries=None):
     return registry
 
 
+class MockUser(auth_models.User):
+    """Mock a user in Home Assistant."""
+
+    def __init__(self, id='mock-id', is_owner=False, is_active=True,
+                 name='Mock User', system_generated=False):
+        """Initialize mock user."""
+        super().__init__(
+            id=id, is_owner=is_owner, is_active=is_active, name=name,
+            system_generated=system_generated)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        return self.add_to_auth_manager(hass.auth)
+
+    def add_to_auth_manager(self, auth_mgr):
+        """Test helper to add entry to hass."""
+        ensure_auth_manager_loaded(auth_mgr)
+        auth_mgr._store._users[self.id] = self
+        return self
+
+
+async def register_auth_provider(hass, config):
+    """Helper to register an auth provider."""
+    provider = await auth_providers.auth_provider_from_config(
+        hass, hass.auth._store, config)
+    assert provider is not None, 'Invalid config specified'
+    key = (provider.type, provider.id)
+    providers = hass.auth._providers
+
+    if key in providers:
+        raise ValueError('Provider already registered')
+
+    providers[key] = provider
+    return provider
+
+
+@ha.callback
+def ensure_auth_manager_loaded(auth_mgr):
+    """Ensure an auth manager is considered loaded."""
+    store = auth_mgr._store
+    if store._users is None:
+        store._users = OrderedDict()
+
+
 class MockModule(object):
     """Representation of a fake module."""
 
@@ -344,12 +396,16 @@ class MockPlatform(object):
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
-                 platform_schema=None, async_setup_platform=None):
+                 platform_schema=None, async_setup_platform=None,
+                 async_setup_entry=None, scan_interval=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
+
+        if scan_interval is not None:
+            self.SCAN_INTERVAL = scan_interval
 
         if setup_platform is not None:
             # We run this in executor, wrap it in function
@@ -357,6 +413,9 @@ class MockPlatform(object):
 
         if async_setup_platform is not None:
             self.async_setup_platform = async_setup_platform
+
+        if async_setup_entry is not None:
+            self.async_setup_entry = async_setup_entry
 
         if setup_platform is None and async_setup_platform is None:
             self.async_setup_platform = mock_coro_func()
@@ -370,19 +429,27 @@ class MockEntityPlatform(entity_platform.EntityPlatform):
         logger=None,
         domain='test_domain',
         platform_name='test_platform',
+        platform=None,
         scan_interval=timedelta(seconds=15),
-        parallel_updates=0,
         entity_namespace=None,
         async_entities_added_callback=lambda: None
     ):
         """Initialize a mock entity platform."""
+        if logger is None:
+            logger = logging.getLogger('homeassistant.helpers.entity_platform')
+
+        # Otherwise the constructor will blow up.
+        if (isinstance(platform, Mock) and
+                isinstance(platform.PARALLEL_UPDATES, Mock)):
+            platform.PARALLEL_UPDATES = 0
+
         super().__init__(
             hass=hass,
             logger=logger,
             domain=domain,
             platform_name=platform_name,
+            platform=platform,
             scan_interval=scan_interval,
-            parallel_updates=parallel_updates,
             entity_namespace=entity_namespace,
             async_entities_added_callback=async_entities_added_callback,
         )
@@ -443,7 +510,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
     """Helper for creating config entries that adds some defaults."""
 
     def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
-                 source=config_entries.SOURCE_USER, title='Mock Title',
+                 source=data_entry_flow.SOURCE_USER, title='Mock Title',
                  state=None):
         """Initialize a mock config entry."""
         kwargs = {
@@ -660,3 +727,57 @@ class MockEntity(entity.Entity):
         if attr in self._values:
             return self._values[attr]
         return getattr(super(), attr)
+
+
+@contextmanager
+def mock_storage(data=None):
+    """Mock storage.
+
+    Data is a dict {'key': {'version': version, 'data': data}}
+
+    Written data will be converted to JSON to ensure JSON parsing works.
+    """
+    if data is None:
+        data = {}
+
+    orig_load = storage.Store._async_load
+
+    async def mock_async_load(store):
+        """Mock version of load."""
+        if store._data is None:
+            # No data to load
+            if store.key not in data:
+                return None
+
+            mock_data = data.get(store.key)
+
+            if 'data' not in mock_data or 'version' not in mock_data:
+                _LOGGER.error('Mock data needs "version" and "data"')
+                raise ValueError('Mock data needs "version" and "data"')
+
+            store._data = mock_data
+
+        # Route through original load so that we trigger migration
+        loaded = await orig_load(store)
+        _LOGGER.info('Loading data for %s: %s', store.key, loaded)
+        return loaded
+
+    def mock_write_data(store, path, data_to_write):
+        """Mock version of write data."""
+        # To ensure that the data can be serialized
+        _LOGGER.info('Writing data to %s: %s', store.key, data_to_write)
+        data[store.key] = json.loads(json.dumps(data_to_write))
+
+    with patch('homeassistant.helpers.storage.Store._async_load',
+               side_effect=mock_async_load, autospec=True), \
+        patch('homeassistant.helpers.storage.Store._write_data',
+              side_effect=mock_write_data, autospec=True):
+        yield data
+
+
+async def flush_store(store):
+    """Make sure all delayed writes of a store are written."""
+    if store._data is None:
+        return
+
+    await store._async_handle_write_data()

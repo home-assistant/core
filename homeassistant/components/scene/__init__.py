@@ -5,6 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/scene/
 """
 import asyncio
+import importlib
 import logging
 
 import voluptuous as vol
@@ -16,7 +17,6 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.state import HASS_DOMAIN
-from homeassistant.loader import get_platform
 
 DOMAIN = 'scene'
 STATE = 'scening'
@@ -34,20 +34,24 @@ def _hass_domain_validator(config):
 
 def _platform_validator(config):
     """Validate it is a valid  platform."""
-    p_name = config[CONF_PLATFORM]
-    platform = get_platform(DOMAIN, p_name)
+    try:
+        platform = importlib.import_module(
+            'homeassistant.components.scene.{}'.format(
+                config[CONF_PLATFORM]))
+    except ImportError:
+        raise vol.Invalid('Invalid platform specified') from None
 
     if not hasattr(platform, 'PLATFORM_SCHEMA'):
         return config
 
-    return getattr(platform, 'PLATFORM_SCHEMA')(config)
+    return platform.PLATFORM_SCHEMA(config)
 
 
 PLATFORM_SCHEMA = vol.Schema(
     vol.All(
         _hass_domain_validator,
         vol.Schema({
-            vol.Required(CONF_PLATFORM): cv.platform_validator(DOMAIN)
+            vol.Required(CONF_PLATFORM): str
         }, extra=vol.ALLOW_EXTRA),
         _platform_validator
     ), extra=vol.ALLOW_EXTRA)
@@ -71,7 +75,7 @@ def activate(hass, entity_id=None):
 async def async_setup(hass, config):
     """Set up the scenes."""
     logger = logging.getLogger(__name__)
-    component = EntityComponent(logger, DOMAIN, hass)
+    component = hass.data[DOMAIN] = EntityComponent(logger, DOMAIN, hass)
 
     await component.async_setup(config)
 
@@ -88,6 +92,16 @@ async def async_setup(hass, config):
         schema=SCENE_SERVICE_SCHEMA)
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class Scene(Entity):

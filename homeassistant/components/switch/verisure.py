@@ -72,6 +72,7 @@ class VerisureSmartplug(SwitchDevice):
         self._state = False
         self._change_timestamp = time()
 
+    # pylint: disable=no-self-use
     def update(self):
         """Get the latest date of the smartplug."""
         hub.update_overview()

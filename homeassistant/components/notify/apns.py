@@ -12,8 +12,8 @@ import voluptuous as vol
 from homeassistant.helpers.event import track_state_change
 from homeassistant.config import load_yaml_config_file
 from homeassistant.components.notify import (
-    ATTR_TARGET, ATTR_DATA, BaseNotificationService, DOMAIN)
-from homeassistant.const import CONF_NAME, CONF_PLATFORM
+    ATTR_TARGET, ATTR_DATA, BaseNotificationService, DOMAIN, PLATFORM_SCHEMA)
+from homeassistant.const import CONF_NAME, CONF_PLATFORM, ATTR_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import template as template_helper
 
@@ -27,9 +27,8 @@ DEVICE_TRACKER_DOMAIN = 'device_tracker'
 SERVICE_REGISTER = 'apns_register'
 
 ATTR_PUSH_ID = 'push_id'
-ATTR_NAME = 'name'
 
-PLATFORM_SCHEMA = vol.Schema({
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PLATFORM): 'apns',
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_CERTFILE): cv.isfile,
@@ -66,7 +65,7 @@ class ApnsDevice(object):
     """
 
     def __init__(self, push_id, name, tracking_device_id=None, disabled=False):
-        """Initialize Apns Device."""
+        """Initialize APNS Device."""
         self.device_push_id = push_id
         self.device_name = name
         self.tracking_id = tracking_device_id
@@ -104,7 +103,7 @@ class ApnsDevice(object):
 
     @property
     def disabled(self):
-        """Return the ."""
+        """Return the state of the service."""
         return self.device_disabled
 
     def disable(self):

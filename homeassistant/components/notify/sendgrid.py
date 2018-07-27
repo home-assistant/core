@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_API_KEY, CONF_SENDER, CONF_RECIPIENT, CONTENT_TYPE_TEXT_PLAIN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['sendgrid==5.3.0']
+REQUIREMENTS = ['sendgrid==5.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 

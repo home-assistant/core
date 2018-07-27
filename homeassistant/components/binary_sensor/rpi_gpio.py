@@ -39,7 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
     pull_mode = config.get(CONF_PULL_MODE)
@@ -59,7 +58,6 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
 
     def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
         """Initialize the RPi binary sensor."""
-        # pylint: disable=no-member
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._pull_mode = pull_mode

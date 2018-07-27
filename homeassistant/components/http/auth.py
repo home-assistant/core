@@ -1,5 +1,5 @@
 """Authentication for HTTP component."""
-import asyncio
+
 import base64
 import hmac
 import logging
@@ -17,43 +17,51 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def setup_auth(app, trusted_networks, api_password):
+def setup_auth(app, trusted_networks, use_auth,
+               support_legacy=False, api_password=None):
     """Create auth middleware for the app."""
     @middleware
-    @asyncio.coroutine
-    def auth_middleware(request, handler):
+    async def auth_middleware(request, handler):
         """Authenticate as middleware."""
-        # If no password set, just always set authenticated=True
-        if api_password is None:
-            request[KEY_AUTHENTICATED] = True
-            return (yield from handler(request))
-
-        # Check authentication
         authenticated = False
 
-        if (HTTP_HEADER_HA_AUTH in request.headers and
-                hmac.compare_digest(
-                    api_password, request.headers[HTTP_HEADER_HA_AUTH])):
+        if use_auth and (HTTP_HEADER_HA_AUTH in request.headers or
+                         DATA_API_PASSWORD in request.query):
+            _LOGGER.warning('Please change to use bearer token access %s',
+                            request.path)
+
+        legacy_auth = (not use_auth or support_legacy) and api_password
+        if (hdrs.AUTHORIZATION in request.headers and
+                await async_validate_auth_header(
+                    request, api_password if legacy_auth else None)):
+            # it included both use_auth and api_password Basic auth
+            authenticated = True
+
+        elif (legacy_auth and HTTP_HEADER_HA_AUTH in request.headers and
+              hmac.compare_digest(
+                  api_password.encode('utf-8'),
+                  request.headers[HTTP_HEADER_HA_AUTH].encode('utf-8'))):
             # A valid auth header has been set
             authenticated = True
 
-        elif (DATA_API_PASSWORD in request.query and
-              hmac.compare_digest(api_password,
-                                  request.query[DATA_API_PASSWORD])):
-            authenticated = True
-
-        elif (hdrs.AUTHORIZATION in request.headers and
-              validate_authorization_header(api_password, request)):
+        elif (legacy_auth and DATA_API_PASSWORD in request.query and
+              hmac.compare_digest(
+                  api_password.encode('utf-8'),
+                  request.query[DATA_API_PASSWORD].encode('utf-8'))):
             authenticated = True
 
         elif _is_trusted_ip(request, trusted_networks):
             authenticated = True
 
-        request[KEY_AUTHENTICATED] = authenticated
-        return (yield from handler(request))
+        elif not use_auth and api_password is None:
+            # If neither password nor auth_providers set,
+            #  just always set authenticated=True
+            authenticated = True
 
-    @asyncio.coroutine
-    def auth_startup(app):
+        request[KEY_AUTHENTICATED] = authenticated
+        return await handler(request)
+
+    async def auth_startup(app):
         """Initialize auth middleware when app starts up."""
         app.middlewares.append(auth_middleware)
 
@@ -72,23 +80,48 @@ def _is_trusted_ip(request, trusted_networks):
 def validate_password(request, api_password):
     """Test if password is valid."""
     return hmac.compare_digest(
-        api_password, request.app['hass'].http.api_password)
+        api_password.encode('utf-8'),
+        request.app['hass'].http.api_password.encode('utf-8'))
 
 
-def validate_authorization_header(api_password, request):
-    """Test an authorization header if valid password."""
+async def async_validate_auth_header(request, api_password=None):
+    """
+    Test authorization header against access token.
+
+    Basic auth_type is legacy code, should be removed with api_password.
+    """
     if hdrs.AUTHORIZATION not in request.headers:
         return False
 
-    auth_type, auth = request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
-
-    if auth_type != 'Basic':
+    try:
+        auth_type, auth_val = \
+            request.headers.get(hdrs.AUTHORIZATION).split(' ', 1)
+    except ValueError:
+        # If no space in authorization header
         return False
 
-    decoded = base64.b64decode(auth).decode('utf-8')
-    username, password = decoded.split(':', 1)
+    if auth_type == 'Bearer':
+        hass = request.app['hass']
+        access_token = hass.auth.async_get_access_token(auth_val)
+        if access_token is None:
+            return False
 
-    if username != 'homeassistant':
+        request['hass_user'] = access_token.refresh_token.user
+        return True
+
+    elif auth_type == 'Basic' and api_password is not None:
+        decoded = base64.b64decode(auth_val).decode('utf-8')
+        try:
+            username, password = decoded.split(':', 1)
+        except ValueError:
+            # If no ':' in decoded
+            return False
+
+        if username != 'homeassistant':
+            return False
+
+        return hmac.compare_digest(api_password.encode('utf-8'),
+                                   password.encode('utf-8'))
+
+    else:
         return False
-
-    return hmac.compare_digest(api_password, password)

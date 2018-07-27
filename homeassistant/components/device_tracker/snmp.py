@@ -34,7 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return an SNMP scanner."""
     scanner = SnmpScanner(config[DOMAIN])
@@ -75,8 +74,6 @@ class SnmpScanner(DeviceScanner):
         return [client['mac'] for client in self.last_results
                 if client.get('mac')]
 
-    # Suppressing no-self-use warning
-    # pylint: disable=R0201
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         # We have no names
@@ -107,7 +104,6 @@ class SnmpScanner(DeviceScanner):
         if errindication:
             _LOGGER.error("SNMPLIB error: %s", errindication)
             return
-        # pylint: disable=no-member
         if errstatus:
             _LOGGER.error("SNMP error: %s at %s", errstatus.prettyPrint(),
                           errindex and restable[int(errindex) - 1][0] or '?')

@@ -31,7 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 class APIStatus(enum.Enum):
     """Representation of an API status."""
 
-    # pylint: disable=no-init, invalid-name
     OK = "ok"
     INVALID_PASSWORD = "invalid_password"
     CANNOT_CONNECT = "cannot_connect"
@@ -39,7 +38,7 @@ class APIStatus(enum.Enum):
 
     def __str__(self) -> str:
         """Return the state."""
-        return self.value
+        return self.value  # type: ignore
 
 
 class API(object):
@@ -123,17 +122,7 @@ class JSONEncoder(json.JSONEncoder):
         elif hasattr(o, 'as_dict'):
             return o.as_dict()
 
-        try:
-            return json.JSONEncoder.default(self, o)
-        except TypeError:
-            # If the JSON serializer couldn't serialize it
-            # it might be a generator, convert it to a list
-            try:
-                return [self.default(child_obj)
-                        for child_obj in o]
-            except TypeError:
-                # Ok, we're lost, cause the original error
-                return json.JSONEncoder.default(self, o)
+        return json.JSONEncoder.default(self, o)
 
 
 def validate_api(api):

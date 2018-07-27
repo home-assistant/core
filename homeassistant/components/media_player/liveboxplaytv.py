@@ -22,7 +22,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['liveboxplaytv==2.0.2', 'pyteleloisirs==3.3']
+REQUIREMENTS = ['liveboxplaytv==2.0.2', 'pyteleloisirs==3.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -88,6 +88,8 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         import pyteleloisirs
         try:
             self._state = self.refresh_state()
+            # Update channel list
+            self.refresh_channel_list()
             # Update current channel
             channel = self._client.channel
             if channel is not None:

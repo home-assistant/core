@@ -29,7 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_service(hass, config, discovery_info=None):
     """Get the Pushbullet notification service."""
     from pushbullet import PushBullet

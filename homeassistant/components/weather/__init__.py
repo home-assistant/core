@@ -22,7 +22,10 @@ ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_CONDITION_CLASS = 'condition_class'
 ATTR_FORECAST = 'forecast'
+ATTR_FORECAST_CONDITION = 'condition'
+ATTR_FORECAST_PRECIPITATION = 'precipitation'
 ATTR_FORECAST_TEMP = 'temperature'
+ATTR_FORECAST_TEMP_LOW = 'templow'
 ATTR_FORECAST_TIME = 'datetime'
 ATTR_WEATHER_ATTRIBUTION = 'attribution'
 ATTR_WEATHER_HUMIDITY = 'humidity'
@@ -43,7 +46,6 @@ def async_setup(hass, config):
     return True
 
 
-# pylint: disable=no-member, no-self-use
 class WeatherEntity(Entity):
     """ABC for weather data."""
 
@@ -110,8 +112,11 @@ class WeatherEntity(Entity):
             ATTR_WEATHER_TEMPERATURE: show_temp(
                 self.hass, self.temperature, self.temperature_unit,
                 self.precision),
-            ATTR_WEATHER_HUMIDITY: round(self.humidity)
         }
+
+        humidity = self.humidity
+        if humidity is not None:
+            data[ATTR_WEATHER_HUMIDITY] = round(humidity)
 
         ozone = self.ozone
         if ozone is not None:
@@ -144,6 +149,10 @@ class WeatherEntity(Entity):
                 forecast_entry[ATTR_FORECAST_TEMP] = show_temp(
                     self.hass, forecast_entry[ATTR_FORECAST_TEMP],
                     self.temperature_unit, self.precision)
+                if ATTR_FORECAST_TEMP_LOW in forecast_entry:
+                    forecast_entry[ATTR_FORECAST_TEMP_LOW] = show_temp(
+                        self.hass, forecast_entry[ATTR_FORECAST_TEMP_LOW],
+                        self.temperature_unit, self.precision)
                 forecast.append(forecast_entry)
 
             data[ATTR_FORECAST] = forecast

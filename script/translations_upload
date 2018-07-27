@@ -33,12 +33,12 @@ fi
 
 script/translations_upload_merge.py
 
-docker pull lokalise/lokalise-cli
 docker run \
     -v ${LOCAL_FILE}:/opt/src/${LOCAL_FILE} \
-    lokalise/lokalise-cli lokalise \
+    lokalise/lokalise-cli@sha256:2198814ebddfda56ee041a4b427521757dd57f75415ea9693696a64c550cef21 lokalise \
     --token ${LOKALISE_TOKEN} \
     import ${PROJECT_ID} \
     --file /opt/src/${LOCAL_FILE} \
     --lang_iso ${LANG_ISO} \
+    --convert_placeholders 0 \
     --replace 1

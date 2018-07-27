@@ -75,7 +75,7 @@ async def async_get_last_state(hass, entity_id: str):
     if _LOCK not in hass.data:
         hass.data[_LOCK] = asyncio.Lock(loop=hass.loop)
 
-    with (await hass.data[_LOCK]):
+    async with hass.data[_LOCK]:
         if DATA_RESTORE_CACHE not in hass.data:
             await hass.async_add_job(
                 _load_restore_cache, hass)

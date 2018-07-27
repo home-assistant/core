@@ -19,7 +19,6 @@ from homeassistant.helpers import config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TOPIC = 'topic'
-
 DEFAULT_NAME = 'MQTT Camera'
 
 DEPENDENCIES = ['mqtt']
@@ -33,9 +32,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the MQTT Camera."""
-    topic = config[CONF_TOPIC]
+    if discovery_info is not None:
+        config = PLATFORM_SCHEMA(discovery_info)
 
-    async_add_devices([MqttCamera(config[CONF_NAME], topic)])
+    async_add_devices([MqttCamera(
+        config.get(CONF_NAME),
+        config.get(CONF_TOPIC)
+    )])
 
 
 class MqttCamera(Camera):

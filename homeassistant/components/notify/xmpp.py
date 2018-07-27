@@ -76,8 +76,6 @@ def send_message(sender, password, recipient, use_tls,
             """Initialize the Jabber Bot."""
             super(SendNotificationBot, self).__init__(sender, password)
 
-            logging.basicConfig(level=logging.ERROR)
-
             self.use_tls = use_tls
             self.use_ipv6 = False
             self.add_event_handler('failed_auth', self.check_credentials)

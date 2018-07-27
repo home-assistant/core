@@ -6,9 +6,11 @@ import re
 from typing import Any, Dict, Union, Optional, Tuple  # NOQA
 
 import pytz
+import pytz.exceptions as pytzexceptions
 
 DATE_STR_FORMAT = "%Y-%m-%d"
-UTC = DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
+UTC = pytz.utc
+DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -27,7 +29,7 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
 
     Async friendly.
     """
-    global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
+    global DEFAULT_TIME_ZONE
 
     # NOTE: Remove in the future in favour of typing
     assert isinstance(time_zone, dt.tzinfo)
@@ -42,7 +44,7 @@ def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
     """
     try:
         return pytz.timezone(time_zone_str)
-    except pytz.exceptions.UnknownTimeZoneError:
+    except pytzexceptions.UnknownTimeZoneError:
         return None
 
 
@@ -64,7 +66,7 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
     if dattim.tzinfo == UTC:
         return dattim
     elif dattim.tzinfo is None:
-        dattim = DEFAULT_TIME_ZONE.localize(dattim)
+        dattim = DEFAULT_TIME_ZONE.localize(dattim)  # type: ignore
 
     return dattim.astimezone(UTC)
 
@@ -92,7 +94,7 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
 
 def utc_from_timestamp(timestamp: float) -> dt.datetime:
     """Return a UTC time from a timestamp."""
-    return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
+    return UTC.localize(dt.datetime.utcfromtimestamp(timestamp))
 
 
 def start_of_local_day(dt_or_d:
@@ -102,13 +104,14 @@ def start_of_local_day(dt_or_d:
         date = now().date()  # type: dt.date
     elif isinstance(dt_or_d, dt.datetime):
         date = dt_or_d.date()
-    return DEFAULT_TIME_ZONE.localize(dt.datetime.combine(date, dt.time()))
+    return DEFAULT_TIME_ZONE.localize(dt.datetime.combine(  # type: ignore
+        date, dt.time()))
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
 # https://github.com/django/django/blob/master/LICENSE
-def parse_datetime(dt_str: str) -> dt.datetime:
+def parse_datetime(dt_str: str) -> Optional[dt.datetime]:
     """Parse a string and return a datetime.datetime.
 
     This function supports time zone offsets. When the input contains one,
@@ -134,14 +137,12 @@ def parse_datetime(dt_str: str) -> dt.datetime:
         if tzinfo_str[0] == '-':
             offset = -offset
         tzinfo = dt.timezone(offset)
-    else:
-        tzinfo = None
     kws = {k: int(v) for k, v in kws.items() if v is not None}
     kws['tzinfo'] = tzinfo
     return dt.datetime(**kws)
 
 
-def parse_date(dt_str: str) -> dt.date:
+def parse_date(dt_str: str) -> Optional[dt.date]:
     """Convert a date string to a date object."""
     try:
         return dt.datetime.strptime(dt_str, DATE_STR_FORMAT).date()
@@ -180,11 +181,9 @@ def get_age(date: dt.datetime) -> str:
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:
-            return "1 %s" % unit
-        elif number > 1:
-            return "%d %ss" % (number, unit)
+            return '1 {}'.format(unit)
+        return '{:d} {}s'.format(number, unit)
 
-    # pylint: disable=invalid-sequence-index
     def q_n_r(first: int, second: int) -> Tuple[int, int]:
         """Return quotient and remaining."""
         return first // second, first % second
@@ -211,4 +210,4 @@ def get_age(date: dt.datetime) -> str:
     if minute > 0:
         return formatn(minute, 'minute')
 
-    return formatn(second, 'second') if second > 0 else "0 seconds"
+    return formatn(second, 'second')

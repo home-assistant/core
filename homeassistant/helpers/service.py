@@ -1,7 +1,5 @@
 """Service calling related helpers."""
 import logging
-# pylint: disable=unused-import
-from typing import Optional  # NOQA
 from os import path
 
 import voluptuous as vol
@@ -13,7 +11,7 @@ from homeassistant.helpers import template
 from homeassistant.loader import get_component, bind_hass
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
@@ -92,7 +90,7 @@ def extract_entity_ids(hass, service_call, expand_group=True):
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []
 
-    group = get_component('group')
+    group = hass.components.group
 
     # Entity ID attr can be a list or a string
     service_ent_id = service_call.data[ATTR_ENTITY_ID]
@@ -100,10 +98,10 @@ def extract_entity_ids(hass, service_call, expand_group=True):
     if expand_group:
 
         if isinstance(service_ent_id, str):
-            return group.expand_entity_ids(hass, [service_ent_id])
+            return group.expand_entity_ids([service_ent_id])
 
         return [ent_id for ent_id in
-                group.expand_entity_ids(hass, service_ent_id)]
+                group.expand_entity_ids(service_ent_id)]
 
     else:
 
@@ -128,7 +126,7 @@ async def async_get_all_descriptions(hass):
             import homeassistant.components as components
             component_path = path.dirname(components.__file__)
         else:
-            component_path = path.dirname(get_component(domain).__file__)
+            component_path = path.dirname(get_component(hass, domain).__file__)
         return path.join(component_path, 'services.yaml')
 
     def load_services_files(yaml_files):

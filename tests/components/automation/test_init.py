@@ -207,6 +207,7 @@ class TestAutomation(unittest.TestCase):
         """Test triggers."""
         assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
+                'alias': 'test',
                 'trigger': [
                     {
                         'platform': 'event',
@@ -228,7 +229,9 @@ class TestAutomation(unittest.TestCase):
         self.hass.block_till_done()
         assert len(self.calls) == 0
 
-        self.hass.services.call('automation', 'trigger', blocking=True)
+        self.hass.services.call('automation', 'trigger',
+                                {'entity_id': 'automation.test'},
+                                blocking=True)
         self.hass.block_till_done()
         assert len(self.calls) == 1
 

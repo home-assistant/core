@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.ihc/
 """
-from xml.etree.ElementTree import Element
-
 import voluptuous as vol
 
 from homeassistant.components.ihc import (
@@ -64,7 +62,7 @@ class IhcLight(IHCDevice, Light):
     """
 
     def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
-                 dimmable=False, product: Element = None) -> None:
+                 dimmable=False, product=None) -> None:
         """Initialize the light."""
         super().__init__(ihc_controller, name, ihc_id, info, product)
         self._brightness = 0

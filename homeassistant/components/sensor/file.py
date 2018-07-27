@@ -25,7 +25,7 @@ DEFAULT_NAME = 'File'
 ICON = 'mdi:file'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_FILE_PATH): cv.string,
+    vol.Required(CONF_FILE_PATH): cv.isfile,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
@@ -43,8 +43,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
 
-    async_add_devices(
-        [FileSensor(name, file_path, unit, value_template)], True)
+    if hass.config.is_allowed_path(file_path):
+        async_add_devices(
+            [FileSensor(name, file_path, unit, value_template)], True)
+    else:
+        _LOGGER.error("'%s' is not a whitelisted directory", file_path)
 
 
 class FileSensor(Entity):

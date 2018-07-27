@@ -8,10 +8,11 @@ import logging
 
 
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_RGB_COLOR,
-    SUPPORT_BRIGHTNESS, SUPPORT_RGB_COLOR, Light)
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR, Light)
 from homeassistant.components.skybell import (
     DOMAIN as SKYBELL_DOMAIN, SkybellDevice)
+import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['skybell']
 
@@ -54,8 +55,9 @@ class SkybellLight(SkybellDevice, Light):
 
     def turn_on(self, **kwargs):
         """Turn on the light."""
-        if ATTR_RGB_COLOR in kwargs:
-            self._device.led_rgb = kwargs[ATTR_RGB_COLOR]
+        if ATTR_HS_COLOR in kwargs:
+            rgb = color_util.color_hs_to_RGB(*kwargs[ATTR_HS_COLOR])
+            self._device.led_rgb = rgb
         elif ATTR_BRIGHTNESS in kwargs:
             self._device.led_intensity = _to_skybell_level(
                 kwargs[ATTR_BRIGHTNESS])
@@ -77,11 +79,11 @@ class SkybellLight(SkybellDevice, Light):
         return _to_hass_level(self._device.led_intensity)
 
     @property
-    def rgb_color(self):
+    def hs_color(self):
         """Return the color of the light."""
-        return self._device.led_rgb
+        return color_util.color_RGB_to_hs(*self._device.led_rgb)
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS | SUPPORT_RGB_COLOR
+        return SUPPORT_BRIGHTNESS | SUPPORT_COLOR

@@ -23,7 +23,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['PyXiaomiGateway==0.8.3']
+REQUIREMENTS = ['PyXiaomiGateway==0.9.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,6 +36,7 @@ CONF_DISCOVERY_RETRY = 'discovery_retry'
 CONF_GATEWAYS = 'gateways'
 CONF_INTERFACE = 'interface'
 CONF_KEY = 'key'
+CONF_DISABLE = 'disable'
 
 DOMAIN = 'xiaomi_aqara'
 
@@ -73,6 +74,7 @@ GATEWAY_CONFIG = vol.Schema({
         vol.All(cv.string, vol.Length(min=16, max=16)),
     vol.Optional(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=9898): cv.port,
+    vol.Optional(CONF_DISABLE, default=False): cv.boolean,
 })
 
 
@@ -137,7 +139,8 @@ def setup(hass, config):
     xiaomi.listen()
     _LOGGER.debug("Gateways discovered. Listening for broadcasts")
 
-    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover']:
+    for component in ['binary_sensor', 'sensor', 'switch', 'light', 'cover',
+                      'lock']:
         discovery.load_platform(hass, component, DOMAIN, {}, config)
 
     def stop_xiaomi(event):
@@ -182,19 +185,19 @@ def setup(hass, config):
 
     gateway_only_schema = _add_gateway_to_schema(xiaomi, vol.Schema({}))
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_PLAY_RINGTONE, play_ringtone_service,
         schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_PLAY_RINGTONE))
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_STOP_RINGTONE, stop_ringtone_service,
         schema=gateway_only_schema)
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_ADD_DEVICE, add_device_service,
         schema=gateway_only_schema)
 
-    hass.services.async_register(
+    hass.services.register(
         DOMAIN, SERVICE_REMOVE_DEVICE, remove_device_service,
         schema=_add_gateway_to_schema(xiaomi, SERVICE_SCHEMA_REMOVE_DEVICE))
 
@@ -242,7 +245,7 @@ class XiaomiDevice(Entity):
 
     @property
     def unique_id(self) -> str:
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._unique_id
 
     @property

@@ -210,7 +210,7 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
     def test_invalid_credential(self, mock_get, mock_post):
-        """"Testing invalid credential handling."""
+        """Testing invalid credential handling."""
         config = {
             DOMAIN: xiaomi.PLATFORM_SCHEMA({
                 CONF_PLATFORM: xiaomi.DOMAIN,
@@ -224,7 +224,7 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
     def test_valid_credential(self, mock_get, mock_post):
-        """"Testing valid refresh."""
+        """Testing valid refresh."""
         config = {
             DOMAIN: xiaomi.PLATFORM_SCHEMA({
                 CONF_PLATFORM: xiaomi.DOMAIN,
@@ -244,7 +244,7 @@ class TestXiaomiDeviceScanner(unittest.TestCase):
     @patch('requests.get', side_effect=mocked_requests)
     @patch('requests.post', side_effect=mocked_requests)
     def test_token_timed_out(self, mock_get, mock_post):
-        """"Testing refresh with a timed out token.
+        """Testing refresh with a timed out token.
 
         New token is requested and list is downloaded a second time.
         """

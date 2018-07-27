@@ -4,7 +4,7 @@ import logging
 import functools as ft
 from timeit import default_timer as timer
 
-from typing import Optional, List
+from typing import Optional, List, Iterable
 
 from homeassistant.const import (
     ATTR_ASSUMED_STATE, ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ICON,
@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -42,7 +42,7 @@ def generate_entity_id(entity_id_format: str, name: Optional[str],
 
 @callback
 def async_generate_entity_id(entity_id_format: str, name: Optional[str],
-                             current_ids: Optional[List[str]] = None,
+                             current_ids: Optional[Iterable[str]] = None,
                              hass: Optional[HomeAssistant] = None) -> str:
     """Generate a unique entity ID based on given entity IDs or used IDs."""
     if current_ids is None:
@@ -59,7 +59,6 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
 class Entity(object):
     """An abstract class for Home Assistant entities."""
 
-    # pylint: disable=no-self-use
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inheriting
     # this class. These may be used to customize the behavior of the entity.
@@ -93,7 +92,7 @@ class Entity(object):
 
     @property
     def unique_id(self) -> str:
-        """Return an unique ID."""
+        """Return a unique ID."""
         return None
 
     @property
@@ -170,13 +169,6 @@ class Entity(object):
     def supported_features(self) -> int:
         """Flag supported features."""
         return None
-
-    def update(self):
-        """Retrieve latest state.
-
-        For asyncio use coroutine async_update.
-        """
-        pass
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
@@ -320,10 +312,10 @@ class Entity(object):
             )
 
         try:
+            # pylint: disable=no-member
             if hasattr(self, 'async_update'):
-                # pylint: disable=no-member
                 yield from self.async_update()
-            else:
+            elif hasattr(self, 'update'):
                 yield from self.hass.async_add_job(self.update)
         finally:
             self._update_staged = False
@@ -372,7 +364,6 @@ class Entity(object):
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
-    # pylint: disable=no-self-use
     @property
     def state(self) -> str:
         """Return the state."""

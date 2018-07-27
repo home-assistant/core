@@ -8,12 +8,12 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_API_KEY, CONF_ROOM
+from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_ROOM
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['gitterpy==0.1.6']
+REQUIREMENTS = ['gitterpy==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         username = gitter.auth.get_my_id['name']
     except GitterTokenError:
         _LOGGER.error("Token is not valid")
-        return False
+        return
 
     add_devices([GitterSensor(gitter, room, name, username)], True)
 
@@ -96,7 +96,14 @@ class GitterSensor(Entity):
 
     def update(self):
         """Get the latest data and updates the state."""
-        data = self._data.user.unread_items(self._room)
+        from gitterpy.errors import GitterRoomError
+
+        try:
+            data = self._data.user.unread_items(self._room)
+        except GitterRoomError as error:
+            _LOGGER.error(error)
+            return
+
         if 'error' not in data.keys():
             self._mention = len(data['mention'])
             self._state = len(data['chat'])

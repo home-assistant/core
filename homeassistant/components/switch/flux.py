@@ -21,7 +21,7 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.sun import get_astral_event_date
 from homeassistant.util import slugify
 from homeassistant.util.color import (
-    color_temperature_to_rgb, color_RGB_to_xy,
+    color_temperature_to_rgb, color_RGB_to_xy_brightness,
     color_temperature_kelvin_to_mired)
 from homeassistant.util.dt import now as dt_now
 
@@ -72,7 +72,8 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
             turn_on(hass, light,
                     xy_color=[x_val, y_val],
                     brightness=brightness,
-                    transition=transition)
+                    transition=transition,
+                    white_value=brightness)
 
 
 def set_lights_temp(hass, lights, mired, brightness, transition):
@@ -94,7 +95,6 @@ def set_lights_rgb(hass, lights, rgb, transition):
                     transition=transition)
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Flux switches."""
     name = config.get(CONF_NAME)
@@ -218,7 +218,6 @@ class FluxSwitch(SwitchDevice):
                 else:
                     sunset_time = sunset
 
-                # pylint: disable=no-member
                 night_length = int(stop_time.timestamp() -
                                    sunset_time.timestamp())
                 seconds_from_sunset = int(now.timestamp() -
@@ -234,7 +233,7 @@ class FluxSwitch(SwitchDevice):
             else:
                 temp = self._sunset_colortemp + temp_offset
         rgb = color_temperature_to_rgb(temp)
-        x_val, y_val, b_val = color_RGB_to_xy(*rgb)
+        x_val, y_val, b_val = color_RGB_to_xy_brightness(*rgb)
         brightness = self._brightness if self._brightness else b_val
         if self._disable_brightness_adjust:
             brightness = None

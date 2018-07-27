@@ -43,7 +43,6 @@ DEFAULT_CERT = '/etc/ssl/certs/ca-certificates.crt'
 DEFAULT_CONTINUOUS = True
 DEFAULT_NAME = 'Roomba'
 
-ICON = 'mdi:roomba'
 PLATFORM = 'roomba'
 
 FAN_SPEED_AUTOMATIC = 'Automatic'
@@ -166,11 +165,6 @@ class RoombaVacuum(VacuumDevice):
         return self._name
 
     @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return ICON
-
-    @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
         return self._state_attrs
@@ -290,7 +284,9 @@ class RoombaVacuum(VacuumDevice):
         software_version = state.get('softwareVer')
 
         # Error message in plain english
-        error_msg = self.vacuum.error_message
+        error_msg = 'None'
+        if hasattr(self.vacuum, 'error_message'):
+            error_msg = self.vacuum.error_message
 
         self._battery_level = state.get('batPct')
         self._status = self.vacuum.current_state

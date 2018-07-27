@@ -8,7 +8,7 @@ from ..core import HomeAssistant, callback
 from ..const import (
     ATTR_NOW, EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 from ..util import dt as dt_util
-from ..util.async import run_callback_threadsafe
+from ..util.async_ import run_callback_threadsafe
 
 # PyLint does not like the use of threaded_listener_factory
 # pylint: disable=invalid-name
@@ -133,7 +133,6 @@ def async_track_same_state(hass, period, action, async_check_same_func,
         """Clear all unsub listener."""
         nonlocal async_remove_state_for_cancel, async_remove_state_for_listener
 
-        # pylint: disable=not-callable
         if async_remove_state_for_listener is not None:
             async_remove_state_for_listener()
             async_remove_state_for_listener = None
