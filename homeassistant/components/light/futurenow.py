@@ -132,3 +132,4 @@ class FutureNowLight(Light):
 
         state = int(self._light.is_on())
         self._state = bool(state)
+        self._brightness = to_hass_level(state)
