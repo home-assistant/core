@@ -78,21 +78,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # If connection failed don't setup platform.
     if forecast_data.currently is None or forecast_data.hourly is None:
-        return False
+        return
 
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
-        if 'forecast' in variable:
-            sensors.append(MagicSeaweedSensor(forecast_data, variable, name,
-                                              units))
-
-        else:
-            sensors.append(MagicSeaweedSensor(forecast_data, variable, name,
-                                              units))
-            if hours is not None:
-                for hour in hours:
-                    sensors.append(MagicSeaweedSensor(
-                        forecast_data, variable, name, units, hour))
+        sensors.append(MagicSeaweedSensor(forecast_data, variable, name,
+                                          units))
+        if 'forecast' in variable and hours is not None:
+            for hour in hours:
+                sensors.append(MagicSeaweedSensor(
+                    forecast_data, variable, name, units, hour))
     add_devices(sensors, True)
 
 
@@ -118,7 +113,7 @@ class MagicSeaweedSensor(Entity):
         """Return the name of the sensor."""
         if self.hour is None and 'forecast' in self.type:
             return "{} {}".format(self.client_name, self._name)
-        elif self.hour is None:
+        if self.hour is None:
             return "Current {} {}".format(self.client_name, self._name)
         return "{} {} {}".format(
             self.hour, self.client_name, self._name)
@@ -184,7 +179,7 @@ class MagicSeaweedData(object):
 
     def __init__(self, api_key, spot_id, units):
         """Initialize the data object."""
-        import magicseaweed  # pylint: disable=E1101
+        import magicseaweed
         self._msw = magicseaweed.MSW_Forecast(api_key, spot_id,
                                               None, units)
         self.currently = None
