@@ -4,8 +4,8 @@ Support for the Weather Underground (Wunderground) service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.wunderground/
 """
-from datetime import timedelta
-import asyncio, logging
+import asyncio
+import logging
 
 import voluptuous as vol
 
@@ -244,10 +244,6 @@ class WUndergroundWeather(WeatherEntity):
     @asyncio.coroutine
     def update(self):
         """Get the latest data from WUnderground."""
-        try:
-            yield from self._wu.async_update()
-        except APICallError:
-            _LOGGER.error("Exception when calling WUnderground web API to update data")
-            return
+        yield from self._wu.async_update()
 
         self.data = self._wu.data
