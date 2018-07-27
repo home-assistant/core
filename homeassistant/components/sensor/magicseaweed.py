@@ -184,7 +184,7 @@ class MagicSeaweedData(object):
 
     def __init__(self, api_key, spot_id, units):
         """Initialize the data object."""
-        import magicseaweed # pylint: disable=E1101
+        import magicseaweed  # pylint: disable=E1101
         self._msw = magicseaweed.MSW_Forecast(api_key, spot_id,
                                               None, units)
         self.currently = None
