@@ -2,8 +2,10 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA, SUPPORT_OPEN, SUPPORT_CLOSE
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, STATE_UNKNOWN
+from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA,
+                                            SUPPORT_OPEN, SUPPORT_CLOSE)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
+                                 STATE_OPENING, STATE_CLOSING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['aladdin_connect==0.1']
@@ -49,7 +51,7 @@ class AladdinDevice(CoverDevice):
     def __init__(self, acc, device):
         self._acc = acc
         self._device_id = device['device_id']
-        self._door_number = device['door_number']
+        self._number = device['door_number']
         self._name = device['name']
         self._status = device['status']
 
@@ -85,19 +87,19 @@ class AladdinDevice(CoverDevice):
 
     @property
     def is_closed(self):
-        """Return None if status is unknown, true if cover is closed, else False."""
+        """Return None if status is unknown, true if closed, else False."""
         if self._status == STATE_UNKNOWN:
             return None
         return self._status == STATE_CLOSED
 
     def close_cover(self, **kwargs):
         """Issue close command to cover."""
-        self._acc.close_door(self._device_id, self._door_number)
+        self._acc.close_door(self._device_id, self._number)
 
     def open_cover(self, **kwargs):
         """Issue open command to cover."""
-        self._acc.open_door(self._device_id, self._door_number)
+        self._acc.open_door(self._device_id, self._number)
 
     def update(self):
         """Update status of cover."""
-        self._status = self._acc.get_door_status(self._device_id, self._door_number)
+        self._status = self._acc.get_door_status(self._device_id, self._number)
