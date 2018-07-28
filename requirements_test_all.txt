@@ -58,6 +58,9 @@ ephem==3.7.6.0
 # homeassistant.components.climate.honeywell
 evohomeclient==0.2.5
 
+# homeassistant.components.evohome
+evohomeclient==0.2.7
+
 # homeassistant.components.feedreader
 # homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
