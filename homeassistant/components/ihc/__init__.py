@@ -167,7 +167,10 @@ def get_discovery_info(component_setup, groups):
                     name = '{}_{}'.format(groupname, ihc_id)
                     device = {
                         'ihc_id': ihc_id,
-                        'product': product,
+                        'product': {
+                            'name': product.attrib['name'],
+                            'note': product.attrib['note'],
+                            'position': product.attrib['position']},
                         'product_cfg': product_cfg}
                     discovery_data[name] = device
     return discovery_data
