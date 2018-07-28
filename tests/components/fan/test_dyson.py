@@ -5,7 +5,7 @@ from unittest import mock
 
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import (dyson, ATTR_SPEED, ATTR_SPEED_LIST,
-                                          ATTR_OSCILLATING, ATTR_DIRECTION)
+                                          ATTR_OSCILLATING)
 from tests.common import get_test_home_assistant
 from libpurecoollink.const import FanSpeed, FanMode, NightMode, Oscillation
 from libpurecoollink.dyson_pure_state import DysonPureCoolState
@@ -107,6 +107,7 @@ class DysonTest(unittest.TestCase):
     def test_async_added_to_hass(self):
         """Test async added to hass."""
         loop = asyncio.new_event_loop()
+
         async def run():
             """Test async function."""
             device = _get_device_on()
