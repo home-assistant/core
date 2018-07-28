@@ -1,9 +1,11 @@
 """Test the Dyson fan component."""
+import asyncio
 import unittest
 from unittest import mock
 
 from homeassistant.components.dyson import DYSON_DEVICES
-from homeassistant.components.fan import dyson
+from homeassistant.components.fan import (dyson, ATTR_SPEED, ATTR_SPEED_LIST,
+                                          ATTR_OSCILLATING, ATTR_DIRECTION)
 from tests.common import get_test_home_assistant
 from libpurecoollink.const import FanSpeed, FanMode, NightMode, Oscillation
 from libpurecoollink.dyson_pure_state import DysonPureCoolState
@@ -90,6 +92,28 @@ class DysonTest(unittest.TestCase):
 
         self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
         dyson.setup_platform(self.hass, None, _add_device)
+
+    def test_get_state_attributes(self):
+        """Test async added to hass."""
+        device = _get_device_on()
+        component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+        attributes = component.state_attributes
+        assert dyson.ATTR_IS_NIGHT_MODE in attributes
+        assert dyson.ATTR_IS_AUTO_MODE in attributes
+        assert ATTR_SPEED in attributes
+        assert ATTR_SPEED_LIST in attributes
+        assert ATTR_OSCILLATING in attributes
+
+    def test_async_added_to_hass(self):
+        """Test async added to hass."""
+        loop = asyncio.new_event_loop()
+        async def run():
+            """Test async function."""
+            device = _get_device_on()
+            component = dyson.DysonPureCoolLinkDevice(self.hass, device)
+            await component.async_added_to_hass()
+            assert device.add_message_listener.called
+        loop.run_until_complete(run())
 
     def test_dyson_set_speed(self):
         """Test set fan speed."""
