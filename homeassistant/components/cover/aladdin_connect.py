@@ -1,3 +1,9 @@
+"""
+Platform for the Aladdin Connect cover component.
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/cover.aladdin_connect/
+"""
 import logging
 
 import voluptuous as vol
@@ -5,7 +11,8 @@ import voluptuous as vol
 from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA,
                                             SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
-                                 STATE_OPENING, STATE_CLOSING, STATE_UNKNOWN)
+                                 STATE_OPENING, STATE_CLOSING, STATE_UNKNOWN,
+                                 STATE_OPEN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['aladdin_connect==0.1']
@@ -15,6 +22,16 @@ _LOGGER = logging.getLogger(__name__)
 NOTIFICATION_ID = 'aladdin_notification'
 NOTIFICATION_TITLE = 'Aladdin Connect Cover Setup'
 
+STATES_MAP = {
+    'open': STATE_OPEN,
+    'opening': STATE_OPENING,
+    'closed': STATE_CLOSED,
+    'closing': STATE_CLOSING,
+    'unknown': STATE_UNKNOWN
+}
+
+SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string
@@ -22,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Aladdin Connect component."""
+    """Set up the Aladdin Connect platform."""
     from aladdin_connect import AladdinConnectClient
 
     username = config.get(CONF_USERNAME)
@@ -33,7 +50,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if not acc.login():
             raise ValueError("Username or Password is incorrect")
         add_devices(AladdinDevice(acc, door) for door in acc.get_doors())
-        return True
     except (TypeError, KeyError, NameError, ValueError) as ex:
         _LOGGER.error("%s", ex)
         hass.components.persistent_notification.create(
@@ -42,18 +58,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             ''.format(ex),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
-        return False
 
 
 class AladdinDevice(CoverDevice):
-    """Representation of Aladdin Connect cover"""
+    """Representation of Aladdin Connect cover."""
 
     def __init__(self, acc, device):
+        """Initialize the cover."""
         self._acc = acc
         self._device_id = device['device_id']
         self._number = device['door_number']
         self._name = device['name']
-        self._status = device['status']
+        self._status = STATES_MAP.get(device['status'], STATE_UNKNOWN)
 
     @property
     def device_class(self):
@@ -63,12 +79,7 @@ class AladdinDevice(CoverDevice):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
-
-    @property
-    def should_poll(self):
-        """Poll for state."""
-        return True
+        return SUPPORTED_FEATURES
 
     @property
     def name(self):
@@ -87,7 +98,7 @@ class AladdinDevice(CoverDevice):
 
     @property
     def is_closed(self):
-        """Return None if status is unknown, true if closed, else False."""
+        """Return None if status is unknown, True if closed, else False."""
         if self._status == STATE_UNKNOWN:
             return None
         return self._status == STATE_CLOSED
@@ -102,4 +113,5 @@ class AladdinDevice(CoverDevice):
 
     def update(self):
         """Update status of cover."""
-        self._status = self._acc.get_door_status(self._device_id, self._number)
+        acc_status = self._acc.get_door_status(self._device_id, self._number)
+        self._status = STATES_MAP.get(acc_status, STATE_UNKNOWN)
