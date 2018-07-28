@@ -23,7 +23,7 @@ DEFAULT_SSL = False
 DEFAULT_TIMEOUT = 10
 DOMAIN = 'zoneminder'
 
-SET_RUN_STATE = 'set_run_state'
+SERVICE_SET_RUN_STATE = 'set_run_state'
 
 LOGIN_RETRIES = 2
 
@@ -71,7 +71,7 @@ def setup(hass, config):
     hass.data[DOMAIN] = ZM
 
     hass.services.register(
-        DOMAIN, SET_RUN_STATE, set_active_state,
+        DOMAIN, SERVICE_SET_RUN_STATE, set_active_state,
         schema=SET_RUN_STATE_SCHEMA
     )
 
@@ -142,10 +142,10 @@ def change_state(api_url, post_data):
 def get_active_state():
     """Get the current (string) run state from Zoneminder API."""
     active_state = None
-    for i in get_state('api/states.json')['states']:
+    for state in get_state('api/states.json')['states']:
         # yes, the ZM API uses the *string* "1" for this...
-        if i['State']['IsActive'] == '1':
-            active_state = i['State']['Name']
+        if state['State']['IsActive'] == '1':
+            active_state = state['State']['Name']
     return active_state
 
 
@@ -160,6 +160,6 @@ def set_active_state(call):
     timeout of 120, which should be adequate for most users.
     """
     state_name = call.data.get('name')
-    url = 'api/states/change/%s.json' % state_name
+    url = 'api/states/change/{}.json'.format(state_name)
     _LOGGER.debug('Setting ZoneMinder run state via GET %s', url)
     return _zm_request('GET', url, timeout=120)
