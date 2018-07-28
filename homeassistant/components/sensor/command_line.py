@@ -5,42 +5,41 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.command_line/
 """
 import collections
-import logging
-import json
-import subprocess
-import shlex
-
 from datetime import timedelta
+import json
+import logging
+import shlex
+import subprocess
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.helpers import template
-from homeassistant.exceptions import TemplateError
 from homeassistant.const import (
-    CONF_NAME, CONF_VALUE_TEMPLATE, CONF_UNIT_OF_MEASUREMENT, CONF_COMMAND,
+    CONF_COMMAND, CONF_NAME, CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN)
+from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import template
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_COMMAND_TIMEOUT = 'command_timeout'
+CONF_JSON_ATTRIBUTES = 'json_attributes'
+
 DEFAULT_NAME = 'Command Sensor'
+DEFAULT_TIMEOUT = 15
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-CONF_JSON_ATTRIBUTES = 'json_attributes'
-CONF_COMMAND_TIMEOUT = 'command_timeout'
-DEFAULT_TIMEOUT = 15
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COMMAND): cv.string,
+    vol.Optional(CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT):
+        cv.positive_int,
+    vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-    vol.Optional(CONF_JSON_ATTRIBUTES): cv.ensure_list_csv,
-    vol.Optional(
-        CONF_COMMAND_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
 })
 
 
@@ -56,8 +55,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     json_attributes = config.get(CONF_JSON_ATTRIBUTES)
     data = CommandSensorData(hass, command, command_timeout)
 
-    add_devices([CommandSensor(hass, data, name, unit, value_template,
-                               json_attributes)], True)
+    add_devices([CommandSensor(
+        hass, data, name, unit, value_template, json_attributes)], True)
 
 
 class CommandSensor(Entity):
@@ -68,12 +67,12 @@ class CommandSensor(Entity):
         """Initialize the sensor."""
         self._hass = hass
         self.data = data
+        self._attributes = None
+        self._json_attributes = json_attributes
         self._name = name
         self._state = None
         self._unit_of_measurement = unit_of_measurement
         self._value_template = value_template
-        self._json_attributes = json_attributes
-        self._attributes = None
 
     @property
     def name(self):
@@ -112,8 +111,8 @@ class CommandSensor(Entity):
                     else:
                         _LOGGER.warning("JSON result was not a dictionary")
                 except ValueError:
-                    _LOGGER.warning("Error: Could not parse command output as"
-                                    "JSON: %s", value)
+                    _LOGGER.warning(
+                        "Unable to parse output as JSON: %s", value)
             else:
                 _LOGGER.warning("Empty reply found when expecting JSON data")
 
