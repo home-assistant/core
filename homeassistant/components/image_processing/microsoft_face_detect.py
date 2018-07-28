@@ -103,7 +103,7 @@ class MicrosoftFaceDetectEntity(ImageProcessingFaceEntity):
             _LOGGER.error("Can't process image on microsoft face: %s", err)
             return
 
-        if face_data is None or len(face_data) < 1:
+        if not face_data:
             return
 
         faces = []

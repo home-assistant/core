@@ -11,7 +11,7 @@ from homeassistant.components.fan import (
     ATTR_SPEED, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.helpers.entity import ToggleEntity
-import homeassistant.util as util
+from homeassistant import util
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -94,10 +94,7 @@ class InsteonLocalFanDevice(FanEntity):
     def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
         """Turn device on."""
         if speed is None:
-            if ATTR_SPEED in kwargs:
-                speed = kwargs[ATTR_SPEED]
-            else:
-                speed = SPEED_MEDIUM
+            speed = kwargs.get(ATTR_SPEED, SPEED_MEDIUM)
 
         self.set_speed(speed)
 

@@ -221,8 +221,8 @@ async def async_from_config_file(config_path: str,
 @core.callback
 def async_enable_logging(hass: core.HomeAssistant,
                          verbose: bool = False,
-                         log_rotate_days=None,
-                         log_file=None,
+                         log_rotate_days: Optional[int] = None,
+                         log_file: Optional[str] = None,
                          log_no_color: bool = False) -> None:
     """Set up the logging.
 
@@ -291,9 +291,9 @@ def async_enable_logging(hass: core.HomeAssistant,
 
         async_handler = AsyncHandler(hass.loop, err_handler)
 
-        async def async_stop_async_handler(event):
+        async def async_stop_async_handler(_: Any) -> None:
             """Cleanup async handler."""
-            logging.getLogger('').removeHandler(async_handler)
+            logging.getLogger('').removeHandler(async_handler)  # type: ignore
             await async_handler.async_close(blocking=True)
 
         hass.bus.async_listen_once(

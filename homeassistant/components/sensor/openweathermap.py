@@ -179,7 +179,7 @@ class OpenWeatherMapSensor(Entity):
             self._state = fc_data.get_weathers()[0].get_detailed_status()
 
 
-class WeatherData(object):
+class WeatherData:
     """Get the latest data from OpenWeatherMap."""
 
     def __init__(self, owm, forecast, latitude, longitude):

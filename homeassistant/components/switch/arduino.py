@@ -10,7 +10,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.arduino as arduino
+from homeassistant.components import arduino
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv

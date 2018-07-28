@@ -40,7 +40,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 # Helper classes for declaring sensor configurations
 
-class WUSensorConfig(object):
+class WUSensorConfig:
     """WU Sensor Configuration.
 
     defines basic HA properties of the weather sensor and
@@ -764,7 +764,7 @@ class WUndergroundSensor(Entity):
         return self._unique_id
 
 
-class WUndergroundData(object):
+class WUndergroundData:
     """Get data from WUnderground."""
 
     def __init__(self, hass, api_key, pws_id, lang, latitude, longitude):

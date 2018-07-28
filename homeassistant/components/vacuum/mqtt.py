@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.components.mqtt import MqttAvailability
 from homeassistant.components.vacuum import (
     SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED,

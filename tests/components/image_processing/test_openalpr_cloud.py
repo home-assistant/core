@@ -12,7 +12,7 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture, mock_coro)
 
 
-class TestOpenAlprCloudSetup(object):
+class TestOpenAlprCloudSetup:
     """Test class for image processing."""
 
     def setup_method(self):
@@ -103,7 +103,7 @@ class TestOpenAlprCloudSetup(object):
             setup_component(self.hass, ip.DOMAIN, config)
 
 
-class TestOpenAlprCloud(object):
+class TestOpenAlprCloud:
     """Test class for image processing."""
 
     def setup_method(self):

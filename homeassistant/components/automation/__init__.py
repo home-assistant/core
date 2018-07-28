@@ -297,7 +297,7 @@ class AutomationEntity(ToggleEntity):
             return
 
         # HomeAssistant is starting up
-        elif self.hass.state == CoreState.not_running:
+        if self.hass.state == CoreState.not_running:
             @asyncio.coroutine
             def async_enable_automation(event):
                 """Start automation on startup."""

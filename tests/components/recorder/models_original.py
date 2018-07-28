@@ -157,7 +157,6 @@ def _process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
         return None
-    elif ts.tzinfo is None:
+    if ts.tzinfo is None:
         return dt_util.UTC.localize(ts)
-    else:
-        return dt_util.as_utc(ts)
+    return dt_util.as_utc(ts)

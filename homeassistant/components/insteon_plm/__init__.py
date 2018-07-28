@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.11.3']
+REQUIREMENTS = ['insteonplm==0.11.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,6 +54,11 @@ SRV_HOUSECODE = 'housecode'
 
 HOUSECODES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
+
+BUTTON_PRESSED_STATE_NAME = 'onLevelButton'
+EVENT_BUTTON_ON = 'insteon_plm.button_on'
+EVENT_BUTTON_OFF = 'insteon_plm.button_off'
+EVENT_CONF_BUTTON = 'button'
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
@@ -130,15 +135,20 @@ def async_setup(hass, config):
         """Detect device from transport to be delegated to platform."""
         for state_key in device.states:
             platform_info = ipdb[device.states[state_key]]
-            if platform_info:
+            if platform_info and platform_info.platform:
                 platform = platform_info.platform
-                if platform:
+
+                if platform == 'on_off_events':
+                    device.states[state_key].register_updates(
+                        _fire_button_on_off_event)
+
+                else:
                     _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
                                  device.address,
                                  device.states[state_key].name,
                                  platform)
 
-                    hass.async_add_job(
+                    hass.async_create_task(
                         discovery.async_load_platform(
                             hass, platform, DOMAIN,
                             discovered={'address': device.address.id,
@@ -223,6 +233,23 @@ def async_setup(hass, config):
                                schema=X10_HOUSECODE_SCHEMA)
         _LOGGER.debug("Insteon_plm Services registered")
 
+    def _fire_button_on_off_event(address, group, val):
+        # Firing an event when a button is pressed.
+        device = plm.devices[address.hex]
+        state_name = device.states[group].name
+        button = ("" if state_name == BUTTON_PRESSED_STATE_NAME
+                  else state_name[-1].lower())
+        schema = {CONF_ADDRESS: address.hex}
+        if button != "":
+            schema[EVENT_CONF_BUTTON] = button
+        if val:
+            event = EVENT_BUTTON_ON
+        else:
+            event = EVENT_BUTTON_OFF
+        _LOGGER.debug('Firing event %s with address %s and button %s',
+                      event, address.hex, button)
+        hass.bus.fire(event, schema)
+
     _LOGGER.info("Looking for PLM on %s", port)
     conn = yield from insteonplm.Connection.create(
         device=port,
@@ -289,7 +316,7 @@ def async_setup(hass, config):
 State = collections.namedtuple('Product', 'stateType platform')
 
 
-class IPDB(object):
+class IPDB:
     """Embodies the INSTEON Product Database static data and access methods."""
 
     def __init__(self):
@@ -329,7 +356,7 @@ class IPDB(object):
 
                        State(DimmableSwitch_Fan, 'fan'),
                        State(DimmableSwitch, 'light'),
-                       State(DimmableRemote, 'binary_sensor'),
+                       State(DimmableRemote, 'on_off_events'),
 
                        State(X10DimmableSwitch, 'light'),
                        State(X10OnOffSwitch, 'switch'),

@@ -224,7 +224,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         if self.current_operation != STATE_AUTO and not self.is_away_mode_on:
             if self.current_operation == STATE_COOL:
                 return self.wink.current_max_set_point()
-            elif self.current_operation == STATE_HEAT:
+            if self.current_operation == STATE_HEAT:
                 return self.wink.current_min_set_point()
         return None
 
@@ -311,7 +311,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         """Return whether the fan is on."""
         if self.wink.current_fan_mode() == 'on':
             return STATE_ON
-        elif self.wink.current_fan_mode() == 'auto':
+        if self.wink.current_fan_mode() == 'auto':
             return STATE_AUTO
         # No Fan available so disable slider
         return None
@@ -483,7 +483,7 @@ class WinkAC(WinkDevice, ClimateDevice):
         speed = self.wink.current_fan_speed()
         if speed <= 0.33:
             return SPEED_LOW
-        elif speed <= 0.66:
+        if speed <= 0.66:
             return SPEED_MEDIUM
         return SPEED_HIGH
 

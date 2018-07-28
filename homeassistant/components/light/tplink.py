@@ -140,8 +140,6 @@ class TPLinkSmartBulb(Light):
         """Update the TP-Link Bulb's state."""
         from pyHS100 import SmartDeviceException
         try:
-            self._available = True
-
             if self._supported_features == 0:
                 self.get_features()
 
@@ -182,9 +180,13 @@ class TPLinkSmartBulb(Light):
                     # device returned no daily/monthly history
                     pass
 
+            self._available = True
+
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning("Could not read state for %s: %s", self._name, ex)
-            self._available = False
+            if self._available:
+                _LOGGER.warning(
+                    "Could not read state for %s: %s", self._name, ex)
+                self._available = False
 
     @property
     def supported_features(self):
