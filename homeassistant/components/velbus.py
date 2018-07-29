@@ -57,9 +57,11 @@ async def async_setup(hass, config):
                             channel
                         ))
         hass.async_add_job(async_load_platform(hass, 'switch', DOMAIN,
-                           discovery_info['switch'], config))
+                                               discovery_info['switch'],
+                                               config))
         hass.async_add_job(async_load_platform(hass, 'binary_sensor', DOMAIN,
-                           discovery_info['binary_sensor'], config))
+                                               discovery_info['binary_sensor'],
+                                               config))
 
     controller.scan(callback)
 
