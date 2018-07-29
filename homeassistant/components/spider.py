@@ -14,7 +14,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['spiderpy==1.1.0']
+REQUIREMENTS = ['spiderpy==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
