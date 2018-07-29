@@ -964,7 +964,7 @@ pyotp==2.2.6
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
-pyowm==2.8.0
+pyowm==2.9.0
 
 # homeassistant.components.sensor.pollen
 pypollencom==2.1.0
