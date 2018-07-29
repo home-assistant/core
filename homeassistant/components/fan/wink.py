@@ -11,7 +11,6 @@ from homeassistant.components.fan import (
     SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, STATE_UNKNOWN, SUPPORT_DIRECTION,
     SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.components.wink import DOMAIN, WinkDevice
-from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
