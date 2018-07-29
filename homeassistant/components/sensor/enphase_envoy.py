@@ -4,6 +4,7 @@ Support for Enphase Envoy solar energy monitor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.enphase_envoy/
 """
+
 import logging
 import voluptuous as vol
 from homeassistant.helpers.entity import Entity
@@ -11,6 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 
 
+REQUIREMENTS = ['envoy_reader==0.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_IP_ADDRESS = 'ip'
@@ -59,7 +61,7 @@ class Envoy(Entity):
 
     def __init__(self, ip_address, name, sensor_type):
         """Initialize the sensor."""
-        self._url = "http://{}/production.json".format(ip_address)
+        self._ip_address = ip_address
         self._name = name
         if sensor_type == 'production' or sensor_type == 'consumption':
             self._unit_of_measurement = 'W'
@@ -91,39 +93,27 @@ class Envoy(Entity):
 
     def update(self):
         """Get the energy production data from the Enphase Envoy."""
-        import requests
-        import json
-        try:
-            response = requests.get(self._url, timeout=5)
-        except (requests.exceptions.RequestException, ValueError):
-            _LOGGER.warning(
-                'Could not update status for Enphase Envoy (%s)',
-                self._name)
-            return
+        import envoy_reader
 
-        if response.status_code != 200:
-            _LOGGER.warning(
-                'Invalid status_code from Enphase Envoy: %s (%s)',
-                response.status_code, self._name)
-            return
-
-        response_parsed = json.loads(response.text)
         if self._type == "production":
-            self._state = int(response_parsed["production"][1]["wNow"])
+            self._state = int(envoy_reader.production(self._ip_address))
         elif self._type == "daily_production":
-            self._state = int(response_parsed["production"][1]["whToday"])
+            self._state = int(envoy_reader.daily_production(self._ip_address))
         elif self._type == "7_days_production":
-            self._state = \
-                int(response_parsed["production"][1]["whLastSevenDays"])
+            self._state = int(envoy_reader.seven_days_production(
+                              self._ip_address))
         elif self._type == "lifetime_production":
-            self._state = int(response_parsed["production"][1]["whLifetime"])
+            self._state = int(envoy_reader.lifetime_production(
+                              self._ip_address))
 
         elif self._type == "consumption":
-            self._state = int(response_parsed["consumption"][0]["wNow"])
+            self._state = int(envoy_reader.consumption(self._ip_address))
         elif self._type == "daily_consumption":
-            self._state = int(response_parsed["consumption"][0]["whToday"])
+            self._state = int(envoy_reader.daily_consumption(
+                              self._ip_address))
         elif self._type == "7_days_consumption":
-            self._state = \
-                int(response_parsed["consumption"][0]["whLastSevenDays"])
+            self._state = int(envoy_reader.seven_days_consumption(
+                              self._ip_address))
         elif self._type == "lifetime_consumption":
-            self._state = int(response_parsed["consumption"][0]["whLifetime"])
+            self._state = int(envoy_reader.lifetime_consumption(
+                              self._ip_address))
