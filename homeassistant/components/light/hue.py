@@ -187,6 +187,11 @@ async def async_update_items(hass, bridge, async_add_devices,
 
     for item_id in api:
         if item_id not in current:
+
+            # filter out entertainment groups unless they are used for sth.
+            if api[item_id].type == 'Entertainment':
+                break
+
             current[item_id] = HueLight(
                 api[item_id], request_bridge_update, bridge, is_group)
 
