@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.components import websocket_api as wapi
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.common import mock_coro, async_mock_service
 
 API_PASSWORD = 'test1234'
 
@@ -443,3 +443,94 @@ async def test_auth_with_invalid_token(hass, aiohttp_client):
 
             auth_msg = await ws.receive_json()
             assert auth_msg['type'] == wapi.TYPE_AUTH_INVALID
+
+
+async def test_call_service_context_with_user(hass, aiohttp_client,
+                                              hass_access_token):
+    """Test that the user is set in the service call context."""
+    assert await async_setup_component(hass, 'websocket_api', {
+        'http': {
+            'api_password': API_PASSWORD
+        }
+    })
+
+    calls = async_mock_service(hass, 'domain_test', 'test_service')
+    client = await aiohttp_client(hass.http.app)
+
+    async with client.ws_connect(wapi.URL) as ws:
+        with patch('homeassistant.auth.AuthManager.active') as auth_active:
+            auth_active.return_value = True
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+
+            await ws.send_json({
+                'type': wapi.TYPE_AUTH,
+                'access_token': hass_access_token.token
+            })
+
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_OK
+
+        await ws.send_json({
+            'id': 5,
+            'type': wapi.TYPE_CALL_SERVICE,
+            'domain': 'domain_test',
+            'service': 'test_service',
+            'service_data': {
+                'hello': 'world'
+            }
+        })
+
+        msg = await ws.receive_json()
+        assert msg['success']
+
+        assert len(calls) == 1
+        call = calls[0]
+        assert call.domain == 'domain_test'
+        assert call.service == 'test_service'
+        assert call.data == {'hello': 'world'}
+        assert call.context.user_id == hass_access_token.refresh_token.user.id
+
+
+async def test_call_service_context_no_user(hass, aiohttp_client):
+    """Test that connection without user sets context."""
+    assert await async_setup_component(hass, 'websocket_api', {
+        'http': {
+            'api_password': API_PASSWORD
+        }
+    })
+
+    calls = async_mock_service(hass, 'domain_test', 'test_service')
+    client = await aiohttp_client(hass.http.app)
+
+    async with client.ws_connect(wapi.URL) as ws:
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+
+        await ws.send_json({
+            'type': wapi.TYPE_AUTH,
+            'api_password': API_PASSWORD
+        })
+
+        auth_msg = await ws.receive_json()
+        assert auth_msg['type'] == wapi.TYPE_AUTH_OK
+
+        await ws.send_json({
+            'id': 5,
+            'type': wapi.TYPE_CALL_SERVICE,
+            'domain': 'domain_test',
+            'service': 'test_service',
+            'service_data': {
+                'hello': 'world'
+            }
+        })
+
+        msg = await ws.receive_json()
+        assert msg['success']
+
+        assert len(calls) == 1
+        call = calls[0]
+        assert call.domain == 'domain_test'
+        assert call.service == 'test_service'
+        assert call.data == {'hello': 'world'}
+        assert call.context.user_id is None

@@ -5,12 +5,12 @@ import unittest.mock as mock
 import os
 from io import StringIO
 
-from homeassistant.setup import setup_component
-import homeassistant.loader as loader
+from homeassistant import core, loader
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_SUPPORTED_FEATURES)
-import homeassistant.components.light as light
+from homeassistant.components import light
 from homeassistant.helpers.intent import IntentHandleError
 
 from tests.common import (
@@ -475,3 +475,24 @@ async def test_intent_set_color_and_brightness(hass):
     assert call.data.get(ATTR_ENTITY_ID) == 'light.hello_2'
     assert call.data.get(light.ATTR_RGB_COLOR) == (0, 0, 255)
     assert call.data.get(light.ATTR_BRIGHTNESS_PCT) == 20
+
+
+async def test_light_context(hass):
+    """Test that light context works."""
+    assert await async_setup_component(hass, 'light', {
+        'light': {
+            'platform': 'test'
+        }
+    })
+
+    state = hass.states.get('light.ceiling')
+    assert state is not None
+
+    await hass.services.async_call('light', 'toggle', {
+        'entity_id': state.entity_id,
+    }, True, core.Context(user_id='abcd'))
+
+    state2 = hass.states.get('light.ceiling')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'
