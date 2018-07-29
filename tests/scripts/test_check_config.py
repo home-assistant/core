@@ -160,6 +160,7 @@ class TestCheckConfig(unittest.TestCase):
                 'server_host': '0.0.0.0',
                 'server_port': 8123,
                 'trusted_networks': [],
+                'trusted_proxies': [],
                 'use_x_forwarded_for': False}
             assert res['secret_cache'] == {secrets_path: {'http_pw': 'abc123'}}
             assert res['secrets'] == {'http_pw': 'abc123'}
@@ -167,8 +168,7 @@ class TestCheckConfig(unittest.TestCase):
                 '.../configuration.yaml', '.../secrets.yaml']
 
     @patch('os.path.isfile', return_value=True)
-    def test_package_invalid(self, isfile_patch): \
-            # pylint: disable=no-self-use,invalid-name
+    def test_package_invalid(self, isfile_patch):
         """Test a valid platform setup."""
         files = {
             YAML_CONFIG_FILE: BASE_CONFIG + (
@@ -189,8 +189,7 @@ class TestCheckConfig(unittest.TestCase):
             assert res['secrets'] == {}
             assert len(res['yaml_files']) == 1
 
-    def test_bootstrap_error(self): \
-            # pylint: disable=no-self-use,invalid-name
+    def test_bootstrap_error(self):
         """Test a valid platform setup."""
         files = {
             YAML_CONFIG_FILE: BASE_CONFIG + 'automation: !include no.yaml',

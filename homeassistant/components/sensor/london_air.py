@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(sensors, True)
 
 
-class APIData(object):
+class APIData:
     """Get the latest data for all authorities."""
 
     def __init__(self):

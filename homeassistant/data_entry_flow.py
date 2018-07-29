@@ -1,8 +1,9 @@
 """Classes to help gather user submissions."""
 import logging
 import uuid
-
-from .core import callback
+import voluptuous as vol
+from typing import Dict, Any, Callable, List, Optional  # noqa pylint: disable=unused-import
+from .core import callback, HomeAssistant
 from .exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,15 +36,16 @@ class UnknownStep(FlowError):
 class FlowManager:
     """Manage all the flows that are in progress."""
 
-    def __init__(self, hass, async_create_flow, async_finish_flow):
+    def __init__(self, hass: HomeAssistant, async_create_flow: Callable,
+                 async_finish_flow: Callable) -> None:
         """Initialize the flow manager."""
         self.hass = hass
-        self._progress = {}
+        self._progress = {}  # type: Dict[str, Any]
         self._async_create_flow = async_create_flow
         self._async_finish_flow = async_finish_flow
 
     @callback
-    def async_progress(self):
+    def async_progress(self) -> List[Dict]:
         """Return the flows in progress."""
         return [{
             'flow_id': flow.flow_id,
@@ -51,7 +53,8 @@ class FlowManager:
             'source': flow.source,
         } for flow in self._progress.values()]
 
-    async def async_init(self, handler, *, source=SOURCE_USER, data=None):
+    async def async_init(self, handler: Callable, *, source: str = SOURCE_USER,
+                         data: str = None) -> Any:
         """Start a configuration flow."""
         flow = await self._async_create_flow(handler, source=source, data=data)
         flow.hass = self.hass
@@ -67,7 +70,8 @@ class FlowManager:
 
         return await self._async_handle_step(flow, step, data)
 
-    async def async_configure(self, flow_id, user_input=None):
+    async def async_configure(
+            self, flow_id: str, user_input: str = None) -> Any:
         """Continue a configuration flow."""
         flow = self._progress.get(flow_id)
 
@@ -83,12 +87,13 @@ class FlowManager:
             flow, step_id, user_input)
 
     @callback
-    def async_abort(self, flow_id):
+    def async_abort(self, flow_id: str) -> None:
         """Abort a flow."""
         if self._progress.pop(flow_id, None) is None:
             raise UnknownFlow
 
-    async def _async_handle_step(self, flow, step_id, user_input):
+    async def _async_handle_step(self, flow: Any, step_id: str,
+                                 user_input: Optional[str]) -> Dict:
         """Handle a step of a flow."""
         method = "async_step_{}".format(step_id)
 
@@ -97,7 +102,7 @@ class FlowManager:
             raise UnknownStep("Handler {} doesn't support step {}".format(
                 flow.__class__.__name__, step_id))
 
-        result = await getattr(flow, method)(user_input)
+        result = await getattr(flow, method)(user_input)  # type: Dict
 
         if result['type'] not in (RESULT_TYPE_FORM, RESULT_TYPE_CREATE_ENTRY,
                                   RESULT_TYPE_ABORT):
@@ -133,8 +138,9 @@ class FlowHandler:
     VERSION = 1
 
     @callback
-    def async_show_form(self, *, step_id, data_schema=None, errors=None,
-                        description_placeholders=None):
+    def async_show_form(self, *, step_id: str, data_schema: vol.Schema = None,
+                        errors: Dict = None,
+                        description_placeholders: Dict = None) -> Dict:
         """Return the definition of a form to gather user input."""
         return {
             'type': RESULT_TYPE_FORM,
@@ -147,7 +153,7 @@ class FlowHandler:
         }
 
     @callback
-    def async_create_entry(self, *, title, data):
+    def async_create_entry(self, *, title: str, data: Dict) -> Dict:
         """Finish config flow and create a config entry."""
         return {
             'version': self.VERSION,
@@ -160,7 +166,7 @@ class FlowHandler:
         }
 
     @callback
-    def async_abort(self, *, reason):
+    def async_abort(self, *, reason: str) -> Dict:
         """Abort the config flow."""
         return {
             'type': RESULT_TYPE_ABORT,

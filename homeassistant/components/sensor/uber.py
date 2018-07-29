@@ -175,7 +175,7 @@ class UberSensor(Entity):
                 self._state = 0
 
 
-class UberEstimate(object):
+class UberEstimate:
     """The class for handling the time and price estimate."""
 
     def __init__(self, session, start_latitude, start_longitude,

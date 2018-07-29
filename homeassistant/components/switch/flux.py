@@ -218,7 +218,6 @@ class FluxSwitch(SwitchDevice):
                 else:
                     sunset_time = sunset
 
-                # pylint: disable=no-member
                 night_length = int(stop_time.timestamp() -
                                    sunset_time.timestamp())
                 seconds_from_sunset = int(now.timestamp() -

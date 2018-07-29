@@ -12,7 +12,8 @@ from homeassistant import util
 from homeassistant.util import location
 
 from tests.common import (
-    async_test_home_assistant, INSTANCES, async_mock_mqtt_component, mock_coro)
+    async_test_home_assistant, INSTANCES, async_mock_mqtt_component, mock_coro,
+    mock_storage as mock_storage)
 from tests.test_util.aiohttp import mock_aiohttp_client
 from tests.mock.zwave import MockNetwork, MockOption
 
@@ -20,7 +21,7 @@ if os.environ.get('UVLOOP') == '1':
     import uvloop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
@@ -59,7 +60,14 @@ def verify_cleanup():
 
 
 @pytest.fixture
-def hass(loop):
+def hass_storage():
+    """Fixture to mock storage."""
+    with mock_storage() as stored_data:
+        yield stored_data
+
+
+@pytest.fixture
+def hass(loop, hass_storage):
     """Fixture to provide a test instance of HASS."""
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 

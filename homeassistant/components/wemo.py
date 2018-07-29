@@ -44,7 +44,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=too-many-function-args
 def setup(hass, config):
     """Set up for WeMo devices."""
     import pywemo

@@ -2,8 +2,8 @@
 # pylint: disable=protected-access
 import unittest
 
-from homeassistant.setup import setup_component
-from homeassistant import loader
+from homeassistant.setup import setup_component, async_setup_component
+from homeassistant import core, loader
 from homeassistant.components import switch
 from homeassistant.const import STATE_ON, STATE_OFF, CONF_PLATFORM
 
@@ -91,3 +91,24 @@ class TestSwitch(unittest.TestCase):
                 '{} 2'.format(switch.DOMAIN): {CONF_PLATFORM: 'test2'},
             }
         ))
+
+
+async def test_switch_context(hass):
+    """Test that switch context works."""
+    assert await async_setup_component(hass, 'switch', {
+        'switch': {
+            'platform': 'test'
+        }
+    })
+
+    state = hass.states.get('switch.ac')
+    assert state is not None
+
+    await hass.services.async_call('switch', 'toggle', {
+        'entity_id': state.entity_id,
+    }, True, core.Context(user_id='abcd'))
+
+    state2 = hass.states.get('switch.ac')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

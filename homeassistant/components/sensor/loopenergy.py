@@ -63,7 +63,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     elec_config = config.get(CONF_ELEC)
     gas_config = config.get(CONF_GAS, {})
 
-    # pylint: disable=too-many-function-args
     controller = pyloopenergy.LoopEnergy(
         elec_config.get(CONF_ELEC_SERIAL),
         elec_config.get(CONF_ELEC_SECRET),

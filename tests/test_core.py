@@ -67,6 +67,18 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     assert len(hass.loop.run_in_executor.mock_calls) == 1
 
 
+@patch('asyncio.iscoroutine', return_value=True)
+def test_async_create_task_schedule_coroutine(mock_iscoro):
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock()
+    job = MagicMock()
+
+    ha.HomeAssistant.async_create_task(hass, job)
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
+
+
 def test_async_run_job_calls_callback():
     """Test that the callback annotation is respected."""
     hass = MagicMock()
@@ -265,6 +277,10 @@ class TestEvent(unittest.TestCase):
             'data': data,
             'origin': 'LOCAL',
             'time_fired': now,
+            'context': {
+                'id': event.context.id,
+                'user_id': event.context.user_id,
+            },
         }
         self.assertEqual(expected, event.as_dict())
 
@@ -586,18 +602,16 @@ class TestStateMachine(unittest.TestCase):
         self.assertEqual(1, len(events))
 
 
-class TestServiceCall(unittest.TestCase):
-    """Test ServiceCall class."""
+def test_service_call_repr():
+    """Test ServiceCall repr."""
+    call = ha.ServiceCall('homeassistant', 'start')
+    assert str(call) == \
+        "<ServiceCall homeassistant.start (c:{})>".format(call.context.id)
 
-    def test_repr(self):
-        """Test repr method."""
-        self.assertEqual(
-            "<ServiceCall homeassistant.start>",
-            str(ha.ServiceCall('homeassistant', 'start')))
-
-        self.assertEqual(
-            "<ServiceCall homeassistant.start: fast=yes>",
-            str(ha.ServiceCall('homeassistant', 'start', {"fast": "yes"})))
+    call2 = ha.ServiceCall('homeassistant', 'start', {'fast': 'yes'})
+    assert str(call2) == \
+        "<ServiceCall homeassistant.start (c:{}): fast=yes>".format(
+            call2.context.id)
 
 
 class TestServiceRegistry(unittest.TestCase):

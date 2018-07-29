@@ -56,7 +56,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Glances sensor."""
     name = config.get(CONF_NAME)
@@ -177,7 +176,7 @@ class GlancesSensor(Entity):
                 self._state = round(use / 1024**2, 1)
 
 
-class GlancesData(object):
+class GlancesData:
     """The class for handling the data retrieval."""
 
     def __init__(self, resource):

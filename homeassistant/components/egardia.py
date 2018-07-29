@@ -81,7 +81,7 @@ def setup(hass, config):
         device = hass.data[EGARDIA_DEVICE] = egardiadevice.EgardiaDevice(
             host, port, username, password, '', version)
     except requests.exceptions.RequestException:
-        _LOGGER.error("An error occurred accessing your Egardia device. " +
+        _LOGGER.error("An error occurred accessing your Egardia device. "
                       "Please check config.")
         return False
     except egardiadevice.UnauthorizedError:
@@ -108,7 +108,7 @@ def setup(hass, config):
             hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop_event)
 
         except IOError:
-            _LOGGER.error("Binding error occurred while starting " +
+            _LOGGER.error("Binding error occurred while starting "
                           "EgardiaServer.")
             return False
 

@@ -280,7 +280,7 @@ class HTML5PushCallbackView(HomeAssistantView):
             return self.json_message('Authorization header must '
                                      'start with Bearer',
                                      status_code=HTTP_UNAUTHORIZED)
-        elif len(parts) != 2:
+        if len(parts) != 2:
             return self.json_message('Authorization header must '
                                      'be Bearer token',
                                      status_code=HTTP_UNAUTHORIZED)
@@ -413,7 +413,6 @@ class HTML5NotificationService(BaseNotificationService):
                 json.dumps(payload), gcm_key=gcm_key, ttl='86400'
             )
 
-            # pylint: disable=no-member
             if response.status_code == 410:
                 _LOGGER.info("Notification channel has expired")
                 reg = self.registrations.pop(target)

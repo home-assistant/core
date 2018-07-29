@@ -121,7 +121,7 @@ class GreenwaveLight(Light):
         self._name = bulbs[self._did]['name']
 
 
-class GatewayData(object):
+class GatewayData:
     """Handle Gateway data and limit updates."""
 
     def __init__(self, host, token):

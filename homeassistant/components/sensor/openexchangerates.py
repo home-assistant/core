@@ -93,7 +93,7 @@ class OpenexchangeratesSensor(Entity):
         self._state = round(value[str(self._quote)], 4)
 
 
-class OpenexchangeratesData(object):
+class OpenexchangeratesData:
     """Get data from Openexchangerates.org."""
 
     def __init__(self, resource, parameters, quote):

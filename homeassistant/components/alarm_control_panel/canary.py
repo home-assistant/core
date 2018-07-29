@@ -55,9 +55,9 @@ class CanaryAlarm(AlarmControlPanel):
         mode = location.mode
         if mode.name == LOCATION_MODE_AWAY:
             return STATE_ALARM_ARMED_AWAY
-        elif mode.name == LOCATION_MODE_HOME:
+        if mode.name == LOCATION_MODE_HOME:
             return STATE_ALARM_ARMED_HOME
-        elif mode.name == LOCATION_MODE_NIGHT:
+        if mode.name == LOCATION_MODE_NIGHT:
             return STATE_ALARM_ARMED_NIGHT
         return None
 

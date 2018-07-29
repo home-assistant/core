@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tellstick sensors."""
-    import tellcore.telldus as telldus
+    from tellcore import telldus
     import tellcore.constants as tellcore_constants
 
     sensor_value_descriptions = {

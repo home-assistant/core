@@ -4,7 +4,7 @@ Provide functionality to interact with Cast devices on the network.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.cast/
 """
-# pylint: disable=import-error
+import asyncio
 import logging
 import threading
 from typing import Optional, Tuple
@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @attr.s(slots=True, frozen=True)
-class ChromecastInfo(object):
+class ChromecastInfo:
     """Class to hold all data about a chromecast for creating connections.
 
     This also has the same attributes as the mDNS fields by zeroconf.
@@ -200,9 +200,13 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up Cast from a config entry."""
-    await _async_setup_platform(
-        hass, hass.data[CAST_DOMAIN].get('media_player', {}),
-        async_add_devices, None)
+    config = hass.data[CAST_DOMAIN].get('media_player', {})
+    if not isinstance(config, list):
+        config = [config]
+
+    await asyncio.wait([
+        _async_setup_platform(hass, cfg, async_add_devices, None)
+        for cfg in config])
 
 
 async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -254,7 +258,7 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         hass.async_add_job(_discover_chromecast, hass, info)
 
 
-class CastStatusListener(object):
+class CastStatusListener:
     """Helper class to handle pychromecast status callbacks.
 
     Necessary because a CastDevice entity can create a new socket client
@@ -495,13 +499,13 @@ class CastDevice(MediaPlayerDevice):
         """Return the state of the player."""
         if self.media_status is None:
             return None
-        elif self.media_status.player_is_playing:
+        if self.media_status.player_is_playing:
             return STATE_PLAYING
-        elif self.media_status.player_is_paused:
+        if self.media_status.player_is_paused:
             return STATE_PAUSED
-        elif self.media_status.player_is_idle:
+        if self.media_status.player_is_idle:
             return STATE_IDLE
-        elif self._chromecast is not None and self._chromecast.is_idle:
+        if self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
         return None
 
@@ -530,11 +534,11 @@ class CastDevice(MediaPlayerDevice):
         """Content type of current playing media."""
         if self.media_status is None:
             return None
-        elif self.media_status.media_is_tvshow:
+        if self.media_status.media_is_tvshow:
             return MEDIA_TYPE_TVSHOW
-        elif self.media_status.media_is_movie:
+        if self.media_status.media_is_movie:
             return MEDIA_TYPE_MOVIE
-        elif self.media_status.media_is_musictrack:
+        if self.media_status.media_is_musictrack:
             return MEDIA_TYPE_MUSIC
         return None
 

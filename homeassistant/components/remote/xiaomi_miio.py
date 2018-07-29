@@ -229,17 +229,16 @@ class XiaomiMiioRemote(RemoteDevice):
             return {'hidden': 'true'}
         return
 
-    # pylint: disable=R0201
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        _LOGGER.error("Device does not support turn_on, " +
+        _LOGGER.error("Device does not support turn_on, "
                       "please use 'remote.send_command' to send commands.")
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        _LOGGER.error("Device does not support turn_off, " +
+        _LOGGER.error("Device does not support turn_off, "
                       "please use 'remote.send_command' to send commands.")
 
     def _send_command(self, payload):

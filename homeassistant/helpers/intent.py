@@ -63,7 +63,8 @@ async def async_handle(hass, platform, intent_type, slots=None,
                         intent_type, err)
         raise InvalidSlotInfo(
             'Received invalid slot info for {}'.format(intent_type)) from err
-    except IntentHandleError:
+    # https://github.com/PyCQA/pylint/issues/2284
+    except IntentHandleError:  # pylint: disable=try-except-raise
         raise
     except Exception as err:
         raise IntentUnexpectedError(
@@ -137,7 +138,8 @@ class IntentHandler:
         if self._slot_schema is None:
             self._slot_schema = vol.Schema({
                 key: SLOT_SCHEMA.extend({'value': validator})
-                for key, validator in self.slot_schema.items()})
+                for key, validator in self.slot_schema.items()},
+                                           extra=vol.ALLOW_EXTRA)
 
         return self._slot_schema(slots)
 

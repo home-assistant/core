@@ -51,13 +51,13 @@ class VeraSensor(VeraDevice, Entity):
         import pyvera as veraApi
         if self.vera_device.category == veraApi.CATEGORY_TEMPERATURE_SENSOR:
             return self._temperature_units
-        elif self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
+        if self.vera_device.category == veraApi.CATEGORY_LIGHT_SENSOR:
             return 'lx'
-        elif self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
+        if self.vera_device.category == veraApi.CATEGORY_UV_SENSOR:
             return 'level'
-        elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
+        if self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             return '%'
-        elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
+        if self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             return 'watts'
 
     def update(self):
