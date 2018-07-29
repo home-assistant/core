@@ -302,6 +302,9 @@ enocean==0.40
 # homeassistant.components.sensor.envirophat
 # envirophat==0.0.6
 
+# homeassistant.components.sensor.enphase_envoy
+envoy_reader==0.1
+
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
 
@@ -1451,3 +1454,5 @@ zigpy-xbee==0.1.1
 
 # homeassistant.components.zha
 zigpy==0.1.0
+
+# homeassistant.components.sensor.enphase_envoy
