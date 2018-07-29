@@ -28,12 +28,12 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the Velbus platform."""
     import velbus
     port = config[DOMAIN].get(CONF_PORT)
     controller = velbus.Controller(port)
+
     hass.data[DOMAIN] = controller
 
     def stop_velbus(event):
@@ -44,9 +44,23 @@ def async_setup(hass, config):
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_velbus)
 
     def callback():
-        """Callback when scan is completed."""
-        hass.async_add_job(async_load_platform(hass, 'switch', DOMAIN))
-        hass.async_add_job(async_load_platform(hass, 'binary_sensor', DOMAIN))
+        modules = controller.get_modules()
+        discovery_info = {
+            'switch': [],
+            'binary_sensor': []
+        }
+        for module in modules:
+            for channel in range(1, module.number_of_channels() + 1):
+                for category in discovery_info.keys():
+                    if category in module.get_categories(channel):
+                        discovery_info[category].append((
+                            module.get_module_address(),
+                            channel
+                        ))
+        hass.async_add_job(async_load_platform(hass, 'switch', DOMAIN, 
+                           discovery_info['switch'], config))
+        hass.async_add_job(async_load_platform(hass, 'binary_sensor', DOMAIN, 
+                           discovery_info['binary_sensor'], config))
 
     controller.scan(callback)
 

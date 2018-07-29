@@ -4,7 +4,6 @@ Support for Velbus Binary Sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.velbus/
 """
-
 import asyncio
 import logging
 
@@ -16,16 +15,16 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['velbus']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up Velbus binary sensors."""
-    velbus = hass.data[DOMAIN]
-    modules = velbus.get_modules('sensor')
-    for module in modules:
-        for channel in range(1, module.number_of_channels() + 1):
-            sensor = VelbusBinarySensor(module, channel)
-            async_add_devices([sensor], update_before_add=True)
-    return True
+    if discovery_info == None:
+        return
+    sensors = []
+    for sensor in discovery_info:
+        module = hass.data[DOMAIN].get_module(sensor[0])
+        channel = sensor[1]
+        sensors.append(VelbusBinarySensor(module, channel))
+    async_add_devices(sensors, update_before_add=True)
 
 
 class VelbusBinarySensor(BinarySensorDevice):
@@ -36,29 +35,26 @@ class VelbusBinarySensor(BinarySensorDevice):
         self._module = module
         self._channel = channel
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Add listener for state changes."""
         def _init_velbus():
             """Initialize Velbus on startup."""
             self._module.on_status_update(self._channel, self._on_update)
-        yield from self.hass.async_add_job(_init_velbus)
+        await self.hass.async_add_job(_init_velbus)
 
     def _on_update(self, state):
         self.schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update module status."""
         future = self.hass.loop.create_future()
 
         def callback():
-            """Callback when module is loaded."""
-            future.set_result(None)
+            self.hass.add_job(future.set_result, None)
 
         self._module.load(callback)
 
-        yield from future
+        await future
 
     @property
     def should_poll(self):
