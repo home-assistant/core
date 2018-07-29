@@ -393,6 +393,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
+        """Return the unique id of the device."""
         return self._unique_id
 
     @property
