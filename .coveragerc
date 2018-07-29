@@ -251,6 +251,9 @@ omit =
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
 
+    homeassistant/components/sisyphus.py
+    homeassistant/components/*/sisyphus.py
+
     homeassistant/components/skybell.py
     homeassistant/components/*/skybell.py
 

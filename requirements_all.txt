@@ -1252,6 +1252,9 @@ simplepush==1.1.4
 # homeassistant.components.alarm_control_panel.simplisafe
 simplisafe-python==2.0.2
 
+# homeassistant.components.sisyphus
+sisyphus-control==2.1
+
 # homeassistant.components.skybell
 skybellpy==0.1.2
 
