@@ -111,7 +111,10 @@ class FutureNowLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        level = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness) if self._dimmable else 255
+        if self._dimmable:
+            level = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
+        else:
+            level = 255
         self._light.turn_on(to_futurenow_level(level))
 
     def turn_off(self, **kwargs):
