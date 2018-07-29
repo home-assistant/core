@@ -50,7 +50,7 @@ async def async_setup(hass, config):
         }
         for module in modules:
             for channel in range(1, module.number_of_channels() + 1):
-                for category in discovery_info.keys():
+                for category in discovery_info:
                     if category in module.get_categories(channel):
                         discovery_info[category].append((
                             module.get_module_address(),
