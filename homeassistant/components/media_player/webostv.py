@@ -174,6 +174,7 @@ class LgWebOSDevice(MediaPlayerDevice):
         self._source_list = {}
         self._app_list = {}
         self._channel = None
+        self._channel_list = {}
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update(self):
@@ -222,6 +223,14 @@ class LgWebOSDevice(MediaPlayerDevice):
                           any(source['label'].find(word) != -1
                               for word in conf_sources)):
                         self._source_list[source['label']] = source
+
+
+                for channel in self._client.get_channels():
+                    number = channel['channelNumber']
+                    name = channel['channelName']
+                    if name is not "":
+                        self._channel_list[number] = name
+
         except (OSError, ConnectionClosed, TypeError,
                 asyncio.TimeoutError):
             self._state = STATE_OFF
@@ -258,6 +267,11 @@ class LgWebOSDevice(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         return sorted(self._source_list.keys())
+
+    @property
+    def channel_list(self):
+        """List of available channels."""
+        return sorted(self._channel_list.values())
 
     @property
     def media_content_type(self):
