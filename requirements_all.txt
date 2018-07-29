@@ -596,7 +596,7 @@ nuheat==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.14.5
+numpy==1.15.0
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -1150,7 +1150,7 @@ pyuptimerobot==0.0.5
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.43
+pyvera==0.2.44
 
 # homeassistant.components.switch.vesync
 pyvesync==0.1.1
@@ -1251,6 +1251,9 @@ simplepush==1.1.4
 
 # homeassistant.components.alarm_control_panel.simplisafe
 simplisafe-python==2.0.2
+
+# homeassistant.components.sisyphus
+sisyphus-control==2.1
 
 # homeassistant.components.skybell
 skybellpy==0.1.2
@@ -1457,7 +1460,7 @@ yeelight==0.4.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.07.04
+youtube_dl==2018.07.21
 
 # homeassistant.components.light.zengge
 zengge==0.2

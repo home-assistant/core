@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ihc/
 """
-from xml.etree.ElementTree import Element
-
 import voluptuous as vol
 
 from homeassistant.components.ihc import (
@@ -62,7 +60,7 @@ class IHCSensor(IHCDevice, Entity):
     """Implementation of the IHC sensor."""
 
     def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
-                 unit, product: Element = None) -> None:
+                 unit, product=None) -> None:
         """Initialize the IHC sensor."""
         super().__init__(ihc_controller, name, ihc_id, info, product)
         self._state = None
