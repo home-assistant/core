@@ -14,7 +14,8 @@ from homeassistant.components.notify import (
 from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-pushover==0.5']
+REQUIREMENTS = ['https://github.com/amelchio/python-pushover/archive/'
+                'local-token.zip#python-pushover==0.5']
 _LOGGER = logging.getLogger(__name__)
 
 
