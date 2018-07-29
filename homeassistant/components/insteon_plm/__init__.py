@@ -347,11 +347,14 @@ class IPDB:
         from insteonplm.states.onOff import (OnOffSwitch,
                                              OnOffSwitch_OutletTop,
                                              OnOffSwitch_OutletBottom,
-                                             OpenClosedRelay)
+                                             OpenClosedRelay,
+                                             OnOffKeypadA,
+                                             OnOffKeypad)
 
         from insteonplm.states.dimmable import (DimmableSwitch,
                                                 DimmableSwitch_Fan,
-                                                DimmableRemote)
+                                                DimmableRemote,
+                                                DimmableKeypadA)
 
         from insteonplm.states.sensor import (VariableSensor,
                                               OnOffSensor,
@@ -370,6 +373,8 @@ class IPDB:
                        State(OnOffSwitch_OutletBottom, 'switch'),
                        State(OpenClosedRelay, 'switch'),
                        State(OnOffSwitch, 'switch'),
+                       State(OnOffKeypadA, 'switch'),
+                       State(OnOffKeypad, 'switch'),
 
                        State(LeakSensorDryWet, 'binary_sensor'),
                        State(IoLincSensor, 'binary_sensor'),
@@ -380,6 +385,7 @@ class IPDB:
                        State(DimmableSwitch_Fan, 'fan'),
                        State(DimmableSwitch, 'light'),
                        State(DimmableRemote, 'on_off_events'),
+                       State(DimmableKeypadA, 'light'),
 
                        State(X10DimmableSwitch, 'light'),
                        State(X10OnOffSwitch, 'switch'),
@@ -452,11 +458,17 @@ class InsteonPLMEntity(Entity):
     @callback
     def async_entity_update(self, deviceid, statename, val):
         """Receive notification from transport that new data exists."""
+        _LOGGER.debug('Received update for device %s group %d statename %s',
+                      self.address, self.group,
+                      self._insteon_device_state.name)
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register INSTEON update events."""
+        _LOGGER.debug('Tracking updates for device %s group %d statename %s',
+                      self.address, self.group,
+                      self._insteon_device_state.name)
         self._insteon_device_state.register_updates(
             self.async_entity_update)
         self.hass.data[DOMAIN]['entities'][self.entity_id] = self
