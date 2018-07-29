@@ -131,7 +131,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self.data.get_wind().get('speed')
+        return self.data.get_wind().get('speed') * 3.6
 
     @property
     def wind_bearing(self):
