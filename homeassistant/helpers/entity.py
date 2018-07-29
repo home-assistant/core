@@ -179,7 +179,7 @@ class Entity:
     # produce undesirable effects in the entity's operation.
 
     @asyncio.coroutine
-    def async_update_ha_state(self, force_refresh=False):
+    def async_update_ha_state(self, force_refresh=False, context=None):
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
@@ -279,7 +279,7 @@ class Entity:
             pass
 
         self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update)
+            self.entity_id, state, attr, self.force_update, context)
 
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
