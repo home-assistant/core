@@ -197,7 +197,7 @@ somecomfort==0.5.2
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.9
+sqlalchemy==1.2.10
 
 # homeassistant.components.statsd
 statsd==3.2.1
