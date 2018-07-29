@@ -4,7 +4,6 @@ Support for Velbus switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.velbus/
 """
-import asyncio
 import logging
 
 from homeassistant.components.switch import SwitchDevice
@@ -15,9 +14,10 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['velbus']
 
 
-async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,\
+    discovery_info=None):
     """Set up the Velbus Switch platform."""
-    if discovery_info == None:
+    if discovery_info is None:
         return
     switches = []
     for switch in discovery_info:

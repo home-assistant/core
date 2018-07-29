@@ -4,7 +4,6 @@ Support for Velbus platform.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/velbus/
 """
-import asyncio
 import logging
 import voluptuous as vol
 
@@ -57,9 +56,9 @@ async def async_setup(hass, config):
                             module.get_module_address(),
                             channel
                         ))
-        hass.async_add_job(async_load_platform(hass, 'switch', DOMAIN, 
+        hass.async_add_job(async_load_platform(hass, 'switch', DOMAIN,
                            discovery_info['switch'], config))
-        hass.async_add_job(async_load_platform(hass, 'binary_sensor', DOMAIN, 
+        hass.async_add_job(async_load_platform(hass, 'binary_sensor', DOMAIN,
                            discovery_info['binary_sensor'], config))
 
     controller.scan(callback)
