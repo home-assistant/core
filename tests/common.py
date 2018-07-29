@@ -187,7 +187,7 @@ def async_mock_service(hass, domain, service, schema=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
-    @asyncio.coroutine
+    @ha.callback
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
