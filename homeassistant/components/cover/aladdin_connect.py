@@ -11,8 +11,7 @@ import voluptuous as vol
 from homeassistant.components.cover import (CoverDevice, PLATFORM_SCHEMA,
                                             SUPPORT_OPEN, SUPPORT_CLOSE)
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
-                                 STATE_OPENING, STATE_CLOSING, STATE_UNKNOWN,
-                                 STATE_OPEN)
+                                 STATE_OPENING, STATE_CLOSING, STATE_OPEN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['aladdin_connect==0.1']
@@ -26,8 +25,7 @@ STATES_MAP = {
     'open': STATE_OPEN,
     'opening': STATE_OPENING,
     'closed': STATE_CLOSED,
-    'closing': STATE_CLOSING,
-    'unknown': STATE_UNKNOWN
+    'closing': STATE_CLOSING
 }
 
 SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE
@@ -69,7 +67,7 @@ class AladdinDevice(CoverDevice):
         self._device_id = device['device_id']
         self._number = device['door_number']
         self._name = device['name']
-        self._status = STATES_MAP.get(device['status'], STATE_UNKNOWN)
+        self._status = STATES_MAP.get(device['status'])
 
     @property
     def device_class(self):
@@ -99,7 +97,7 @@ class AladdinDevice(CoverDevice):
     @property
     def is_closed(self):
         """Return None if status is unknown, True if closed, else False."""
-        if self._status == STATE_UNKNOWN:
+        if self._status is None:
             return None
         return self._status == STATE_CLOSED
 
@@ -114,4 +112,4 @@ class AladdinDevice(CoverDevice):
     def update(self):
         """Update status of cover."""
         acc_status = self._acc.get_door_status(self._device_id, self._number)
-        self._status = STATES_MAP.get(acc_status, STATE_UNKNOWN)
+        self._status = STATES_MAP.get(acc_status)
