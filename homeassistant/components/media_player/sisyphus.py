@@ -78,12 +78,12 @@ class SisyphusPlayer(MediaPlayerDevice):
         """Return the current state of the table; sleeping maps to off."""
         if self._table.state in ["homing", "playing"]:
             return STATE_PLAYING
-        elif self._table.state == "paused":
+        if self._table.state == "paused":
             if self._table.is_sleeping:
                 return STATE_OFF
 
             return STATE_PAUSED
-        elif self._table.state == "waiting":
+        if self._table.state == "waiting":
             return STATE_IDLE
 
         return None
