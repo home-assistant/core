@@ -19,7 +19,7 @@ from homeassistant.const import (
 INTERFACES = 2
 DEFAULT_TIMEOUT = 10
 
-REQUIREMENTS = ['beautifulsoup4==4.6.0']
+REQUIREMENTS = ['beautifulsoup4==4.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
