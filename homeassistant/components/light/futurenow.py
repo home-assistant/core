@@ -75,6 +75,7 @@ class FutureNowLight(Light):
         self._dimmable = device['dimmable']
         self._channel = device['channel']
         self._brightness = None
+        self._last_brightness = 255
         self._state = None
         self._skip_update = False
 
@@ -111,7 +112,7 @@ class FutureNowLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        level = kwargs.get(ATTR_BRIGHTNESS, 255) if self._dimmable else 255
+        level = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness) if self._dimmable else 255
         self._light.turn_on(to_futurenow_level(level))
         self._brightness = level
         self._state = True
@@ -123,6 +124,8 @@ class FutureNowLight(Light):
         self._brightness = 0
         self._state = False
         self._skip_update = True
+        if self._brightness:
+            self._last_brightness = self._brightness
 
     def update(self):
         """Fetch new state data for this light."""
