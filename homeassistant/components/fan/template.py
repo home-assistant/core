@@ -196,7 +196,7 @@ class TemplateFan(FanEntity):
         return self._supported_features
 
     @property
-    def speed_list(self: ToggleEntity) -> list:
+    def speed_list(self) -> list:
         """Get the list of available speeds."""
         return self._speed_list
 
