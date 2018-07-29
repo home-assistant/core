@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_PORT
 from homeassistant.helpers.discovery import async_load_platform
 
-REQUIREMENTS = ['python-velbus==2.0.15']
+REQUIREMENTS = ['python-velbus==2.0.16']
 
 _LOGGER = logging.getLogger(__name__)
 
