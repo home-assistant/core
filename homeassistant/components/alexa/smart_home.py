@@ -417,7 +417,8 @@ class _AlexaThermostatController(_AlexaInterface):
     def properties_supported(self):
         properties = []
         supported = self.entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-        if supported & climate.SUPPORT_TARGET_TEMPERATURE:
+        if supported & climate.SUPPORT_TARGET_TEMPERATURE or \
+                self.entity.domain == sous_vide.DOMAIN:
             properties.append({'name': 'targetSetpoint'})
         if supported & climate.SUPPORT_TARGET_TEMPERATURE_LOW:
             properties.append({'name': 'lowerSetpoint'})
@@ -624,9 +625,9 @@ class _SousVideCapabilities(_AlexaEntity):
         return [_DisplayCategory.MICROWAVE]
 
     def interfaces(self):
-        yield _AlexaPowerController(self.entity)
-        yield _AlexaThermostatController(self.entity)
         yield _AlexaTemperatureSensor(self.entity)
+        yield _AlexaThermostatController(self.entity)
+        yield _AlexaPowerController(self.entity)
 
 
 class _Cause:
@@ -1492,7 +1493,7 @@ async def async_api_set_thermostat_mode(hass, config, request, entity):
     mode = request[API_PAYLOAD]['thermostatMode']
     mode = mode if isinstance(mode, str) else mode['value']
 
-    operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST)
+    operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST, [])
     ha_mode = next(
         (k for k, v in API_THERMOSTAT_MODES.items() if v == mode),
         None

@@ -12,16 +12,18 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import climate
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_MEASUREMENT_PRECISION, ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF)
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.helpers.temperature import display_temp
 
 LOGGER = logging.getLogger(__name__)
 DOMAIN = 'sous_vide'
 GROUP_NAME_SOUS_VIDE = 'all sous-vide cookers'
 SCAN_INTERVAL = timedelta(seconds=15)
+
+ATTR_MEASUREMENT_PRECISION = 'measurement_precision'
 
 SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -78,7 +80,7 @@ class SousVideEntity(ToggleEntity):
 
     @property
     def temperature_unit(self):
-        """Return the unit of measurement used by the device."""
+        """Return the unit used by the device for temperatures."""
 
     @property
     def current_temperature(self) -> float:
@@ -100,18 +102,14 @@ class SousVideEntity(ToggleEntity):
     def state_attributes(self):
         """Return the state attributes of the device."""
         return {
-            climate.ATTR_CURRENT_TEMPERATURE: show_temp(
-                self.hass, self.current_temperature, self.unit_of_measurement,
-                self.precision),
-            climate.ATTR_MIN_TEMP: show_temp(
-                self.hass, self.min_temperature, self.unit_of_measurement,
-                self.precision),
-            climate.ATTR_MAX_TEMP: show_temp(
-                self.hass, self.max_temperature, self.unit_of_measurement,
-                self.precision),
-            ATTR_TEMPERATURE: show_temp(
-                self.hass, self.target_temperature, self.unit_of_measurement,
-                self.precision),
+            climate.ATTR_MIN_TEMP: self.convert_to_display_temp(
+                self.min_temperature),
+            climate.ATTR_MAX_TEMP: self.convert_to_display_temp(
+                self.max_temperature),
+            climate.ATTR_CURRENT_TEMPERATURE: self.convert_to_display_temp(
+                self.current_temperature),
+            ATTR_TEMPERATURE: self.convert_to_display_temp(
+                self.target_temperature),
             ATTR_UNIT_OF_MEASUREMENT: self.unit_of_measurement,
             ATTR_MEASUREMENT_PRECISION: self.precision,
             climate.ATTR_OPERATION_MODE:
@@ -121,3 +119,8 @@ class SousVideEntity(ToggleEntity):
     def set_temp(self, temperature=None) -> None:
         """Set the target temperature of the device."""
         raise NotImplementedError()
+
+    def convert_to_display_temp(self, temp) -> float:
+        """Convert a temperature from internal units to display units."""
+        return display_temp(self.hass, temp, self.unit_of_measurement,
+                            self.precision)

@@ -3,9 +3,9 @@ from homeassistant.components import (
     climate, cover, fan, group, input_boolean, light, media_player, scene,
     script, sous_vide, switch)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_MEASUREMENT_PRECISION, ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF,
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
+    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, TEMP_CELSIUS,
+    TEMP_FAHRENHEIT)
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util
 from homeassistant.util import temperature as temp_util
@@ -398,7 +398,7 @@ class TemperatureControlTrait(_Trait):
         max_temp = self.state.attributes.get(climate.ATTR_MAX_TEMP, 10.0)
         unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
         precision = self.state.attributes.get(
-            ATTR_MEASUREMENT_PRECISION, 1.0)
+            sous_vide.ATTR_MEASUREMENT_PRECISION, 1.0)
 
         return {
             'temperatureRange': {
@@ -419,11 +419,11 @@ class TemperatureControlTrait(_Trait):
             climate.ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
             response['temperatureAmbientCelsius'] = \
-                round(temp_util.convert(current_temp, unit, TEMP_CELSIUS), 2)
+                round(temp_util.convert(current_temp, unit, TEMP_CELSIUS), 1)
         target_temp = self.state.attributes.get(ATTR_TEMPERATURE)
         if target_temp is not None:
             response['temperatureSetpointCelsius'] = round(
-                temp_util.convert(target_temp, unit, TEMP_CELSIUS), 2)
+                temp_util.convert(target_temp, unit, TEMP_CELSIUS), 1)
 
         return response
 

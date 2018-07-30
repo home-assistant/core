@@ -6,11 +6,14 @@ https://home-assistant.io/components/sousvide.anova/
 """
 import logging
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sous_vide import SousVideEntity
 from homeassistant.const import (
     CONF_MAC, CONF_NAME, PRECISION_TENTHS, STATE_OFF, STATE_ON, STATE_PROBLEM,
     STATE_UNKNOWN, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.util import temperature as temp_util
+from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 REQUIREMENTS = ['btlewrap==0.0.2']
 
@@ -18,6 +21,13 @@ _LOGGER = logging.getLogger(__name__)
 
 CHANDLE_ANOVA = 0x25  # BTLE characteristic handle for interacting with Anova.
 NOTIFICATION_TIMEOUT = 1.0  # Notification wait timeout in seconds.
+DEFAULT_TARGET_TEMP_IN_C = 0
+DEFAULT_CURRENT_TEMP_IN_C = 0
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_MAC): cv.string,
+    vol.Optional(CONF_NAME, default=None): cv.string,
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -40,8 +50,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AnovaEntity(SousVideEntity):  # pylint: disable=too-many-instance-attributes; # noqa: E501
     """Representation of an Anova sous-vide cooker."""
 
-    _temp = 0
-    _target_temp = 0
+    _temp = DEFAULT_CURRENT_TEMP_IN_C
+    _target_temp = DEFAULT_TARGET_TEMP_IN_C
     _unit = TEMP_CELSIUS
     _state = STATE_UNKNOWN
     _last_notification = None
@@ -65,11 +75,6 @@ class AnovaEntity(SousVideEntity):  # pylint: disable=too-many-instance-attribut
         return self._unit
 
     @property
-    def is_on(self) -> bool:
-        """Return True if the cooker is on."""
-        return self._state == STATE_ON
-
-    @property
     def precision(self):
         """Return the precision of the cooker's temperature measurement."""
         # 1/10 of a degree precision is hardcoded in the Anova.
@@ -89,13 +94,18 @@ class AnovaEntity(SousVideEntity):  # pylint: disable=too-many-instance-attribut
     def min_temperature(self) -> float:
         """Return the minimum target temperature of the cooker."""
         # 0C min temp is hardcoded in the Anova.
-        return round(temp_util.convert(0, TEMP_CELSIUS, self._unit), 2)
+        return 0
 
     @property
     def max_temperature(self) -> float:
         """Return the maximum target temperature of the cooker."""
-        # 100C max temp is hardcoded in the Anova.
-        return round(temp_util.convert(100, TEMP_CELSIUS, self._unit), 2)
+        # 99C max temp is hardcoded in the Anova.
+        return 99
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if the cooker is on."""
+        return self._state == STATE_ON
 
     def turn_on(self, **kwargs) -> None:
         """Turn the cooker on (starts cooking."""
@@ -110,8 +120,9 @@ class AnovaEntity(SousVideEntity):  # pylint: disable=too-many-instance-attribut
     def set_temp(self, temperature=None) -> None:
         """Set the target temperature of the cooker."""
         if temperature is not None:
-            self.send_btle_command('set temp {}'.format(temperature))
-            self._target_temp = temperature
+            self._target_temp = max(
+                min(temperature, self.max_temperature), self.min_temperature)
+            self.send_btle_command('set temp {}'.format(self._target_temp))
 
     def update(self):
         """Fetch state from the device."""
@@ -125,12 +136,12 @@ class AnovaEntity(SousVideEntity):  # pylint: disable=too-many-instance-attribut
         else:
             self._state = STATE_UNKNOWN
 
+        unit = self.send_btle_command('read unit', True) or ''
+        self._unit = TEMP_CELSIUS if unit == 'c' else TEMP_FAHRENHEIT
+
         self._temp = float(self.send_btle_command('read temp', True) or 0)
         self._target_temp = float(
             self.send_btle_command('read set temp', True) or 0)
-
-        unit = self.send_btle_command('read unit', True) or ''
-        self._unit = TEMP_CELSIUS if unit == 'c' else TEMP_FAHRENHEIT
 
     def send_btle_command(self, command, read_response=False):
         """Send a BTLE command."""

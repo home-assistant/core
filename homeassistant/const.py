@@ -300,9 +300,6 @@ ATTR_DEVICE_CLASS = 'device_class'
 # Temperature attribute
 ATTR_TEMPERATURE = 'temperature'
 
-# Precision that a measurement is taken at
-ATTR_MEASUREMENT_PRECISION = 'measurement_precision'
-
 # #### UNITS OF MEASUREMENT ####
 # Temperature units
 TEMP_CELSIUS = '°C'
