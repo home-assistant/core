@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
+from homeassistant.components.switch.deconz import SWITCH_TYPES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
@@ -32,7 +33,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         """Add light from deCONZ."""
         entities = []
         for light in lights:
-            entities.append(DeconzLight(light))
+            if light.type not in SWITCH_TYPES:
+                entities.append(DeconzLight(light))
         async_add_devices(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
