@@ -9,9 +9,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS, PLATFORM_SCHEMA, DeviceScanner)
+    ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-from homeassistant.helpers.entity import Entity
 
 
 _LOGGER = logging.getLogger(__name__)
