@@ -11,7 +11,7 @@ COMMENT_REQUIREMENTS = (
     'RPi.GPIO',
     'raspihats',
     'rpi-rf',
-    'Adafruit_Python_DHT',
+    'Adafruit-DHT',
     'Adafruit_BBIO',
     'fritzconnection',
     'pybluez',
