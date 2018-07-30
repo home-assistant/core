@@ -4,7 +4,6 @@
 # duplicate-code - unavoidable
 # cyclic-import - doesn't test if both import on load
 # abstract-class-little-used - prevents from setting right foundation
-# abstract-class-not-used - is flaky, should not show up but does
 # unused-argument - generic callbacks and setup methods create a lot of warnings
 # global-statement - used for the on-demand requirement installation
 # redefined-variable-type - this is Python, we're duck typing!
@@ -12,15 +11,17 @@
 # too-few-* - same as too-many-*
 # abstract-method - with intro of async there are always methods missing
 # inconsistent-return-statements - doesn't handle raise
+# useless-return - https://github.com/PyCQA/pylint/issues/2300
+# not-an-iterable - https://github.com/PyCQA/pylint/issues/2311
 disable=
   abstract-class-little-used,
-  abstract-class-not-used,
   abstract-method,
   cyclic-import,
   duplicate-code,
   global-statement,
   inconsistent-return-statements,
   locally-disabled,
+  not-an-iterable,
   not-context-manager,
   redefined-variable-type,
   too-few-public-methods,
@@ -32,7 +33,8 @@ disable=
   too-many-public-methods,
   too-many-return-statements,
   too-many-statements,
-  unused-argument
+  unused-argument,
+  useless-return
 
 [REPORTS]
 reports=no

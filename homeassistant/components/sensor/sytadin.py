@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['beautifulsoup4==4.6.0']
+REQUIREMENTS = ['beautifulsoup4==4.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,9 +35,9 @@ OPTION_MEAN_VELOCITY = 'mean_velocity'
 OPTION_CONGESTION = 'congestion'
 
 SENSOR_TYPES = {
-    OPTION_TRAFFIC_JAM: ['Traffic Jam', LENGTH_KILOMETERS],
-    OPTION_MEAN_VELOCITY: ['Mean Velocity', LENGTH_KILOMETERS+'/h'],
     OPTION_CONGESTION: ['Congestion', ''],
+    OPTION_MEAN_VELOCITY: ['Mean Velocity', LENGTH_KILOMETERS+'/h'],
+    OPTION_TRAFFIC_JAM: ['Traffic Jam', LENGTH_KILOMETERS],
 }
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
@@ -113,7 +113,7 @@ class SytadinSensor(Entity):
             self._state = self.data.congestion
 
 
-class SytadinData(object):
+class SytadinData:
     """The class for handling the data retrieval."""
 
     def __init__(self, resource):

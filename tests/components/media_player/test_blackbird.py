@@ -25,7 +25,7 @@ class AttrDict(dict):
         return self[item]
 
 
-class MockBlackbird(object):
+class MockBlackbird:
     """Mock for pyblackbird object."""
 
     def __init__(self):

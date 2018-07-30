@@ -83,11 +83,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if errindication and not accept_errors:
         _LOGGER.error("Please check the details in the configuration file")
         return False
-    else:
-        data = SnmpData(
-            host, port, community, baseoid, version, accept_errors,
-            default_value)
-        add_devices([SnmpSensor(data, name, unit, value_template)], True)
+    data = SnmpData(
+        host, port, community, baseoid, version, accept_errors,
+        default_value)
+    add_devices([SnmpSensor(data, name, unit, value_template)], True)
 
 
 class SnmpSensor(Entity):
@@ -131,7 +130,7 @@ class SnmpSensor(Entity):
         self._state = value
 
 
-class SnmpData(object):
+class SnmpData:
     """Get the latest data and update the states."""
 
     def __init__(self, host, port, community, baseoid, version, accept_errors,

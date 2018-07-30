@@ -65,7 +65,7 @@ def setup(hass, config):
     return True
 
 
-class DigitalOcean(object):
+class DigitalOcean:
     """Handle all communication with the Digital Ocean API."""
 
     def __init__(self, access_token):

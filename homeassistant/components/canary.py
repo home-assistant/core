@@ -65,7 +65,7 @@ def setup(hass, config):
     return True
 
 
-class CanaryData(object):
+class CanaryData:
     """Get the latest data and update the states."""
 
     def __init__(self, username, password, timeout):

@@ -63,7 +63,7 @@ class TapsAffSensor(BinarySensorDevice):
         self.data.update()
 
 
-class TapsAffData(object):
+class TapsAffData:
     """Class for handling the data retrieval for pins."""
 
     def __init__(self, location):

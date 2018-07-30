@@ -437,10 +437,12 @@ class TestAutomation(unittest.TestCase):
                            }
                        }
                     }}):
-            automation.reload(self.hass)
-            self.hass.block_till_done()
-            # De-flake ?!
-            self.hass.block_till_done()
+            with patch('homeassistant.config.find_config_file',
+                       return_value=''):
+                automation.reload(self.hass)
+                self.hass.block_till_done()
+                # De-flake ?!
+                self.hass.block_till_done()
 
         assert self.hass.states.get('automation.hello') is None
         assert self.hass.states.get('automation.bye') is not None
@@ -485,8 +487,10 @@ class TestAutomation(unittest.TestCase):
 
         with patch('homeassistant.config.load_yaml_config_file', autospec=True,
                    return_value={automation.DOMAIN: 'not valid'}):
-            automation.reload(self.hass)
-            self.hass.block_till_done()
+            with patch('homeassistant.config.find_config_file',
+                       return_value=''):
+                automation.reload(self.hass)
+                self.hass.block_till_done()
 
         assert self.hass.states.get('automation.hello') is None
 
@@ -521,8 +525,10 @@ class TestAutomation(unittest.TestCase):
 
         with patch('homeassistant.config.load_yaml_config_file',
                    side_effect=HomeAssistantError('bla')):
-            automation.reload(self.hass)
-            self.hass.block_till_done()
+            with patch('homeassistant.config.find_config_file',
+                       return_value=''):
+                automation.reload(self.hass)
+                self.hass.block_till_done()
 
         assert self.hass.states.get('automation.hello') is not None
 

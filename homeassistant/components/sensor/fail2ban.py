@@ -112,7 +112,7 @@ class BanSensor(Entity):
             self.last_ban = 'None'
 
 
-class BanLogParser(object):
+class BanLogParser:
     """Class to parse fail2ban logs."""
 
     def __init__(self, interval, log_file):

@@ -43,7 +43,7 @@ class VolvoSensor(VolvoEntity):
             if 'mil' in self.unit_of_measurement:
                 return round(val, 2)
             return round(val, 1)
-        elif self._attribute == 'distance_to_empty':
+        if self._attribute == 'distance_to_empty':
             return int(floor(val))
         return int(round(val))
 

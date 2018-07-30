@@ -30,7 +30,7 @@ def mock_camera(hass):
         yield
 
 
-class TestSetupCamera(object):
+class TestSetupCamera:
     """Test class for setup camera."""
 
     def setup_method(self):
@@ -53,7 +53,7 @@ class TestSetupCamera(object):
             setup_component(self.hass, camera.DOMAIN, config)
 
 
-class TestGetImage(object):
+class TestGetImage:
     """Test class for camera."""
 
     def setup_method(self):

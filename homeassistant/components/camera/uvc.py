@@ -171,10 +171,9 @@ class UnifiVideoCamera(Camera):
                 if retry:
                     self._login()
                     return _get_image(retry=False)
-                else:
-                    _LOGGER.error(
-                        "Unable to log into camera, unable to get snapshot")
-                    raise
+                _LOGGER.error(
+                    "Unable to log into camera, unable to get snapshot")
+                raise
 
         return _get_image()
 

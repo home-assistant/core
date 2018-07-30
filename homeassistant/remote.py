@@ -13,7 +13,7 @@ import json
 import logging
 import urllib.parse
 
-from typing import Optional
+from typing import Optional, Dict, Any, List
 
 from aiohttp.hdrs import METH_GET, METH_POST, METH_DELETE, CONTENT_TYPE
 import requests
@@ -41,7 +41,7 @@ class APIStatus(enum.Enum):
         return self.value  # type: ignore
 
 
-class API(object):
+class API:
     """Object to pass around Home Assistant API location and credentials."""
 
     def __init__(self, host: str, api_password: Optional[str] = None,
@@ -62,7 +62,7 @@ class API(object):
         if port is not None:
             self.base_url += ':{}'.format(port)
 
-        self.status = None
+        self.status = None  # type: Optional[APIStatus]
         self._headers = {CONTENT_TYPE: CONTENT_TYPE_JSON}
 
         if api_password is not None:
@@ -75,20 +75,24 @@ class API(object):
 
         return self.status == APIStatus.OK
 
-    def __call__(self, method, path, data=None, timeout=5):
+    def __call__(self, method: str, path: str, data: Dict = None,
+                 timeout: int = 5) -> requests.Response:
         """Make a call to the Home Assistant API."""
-        if data is not None:
-            data = json.dumps(data, cls=JSONEncoder)
+        if data is None:
+            data_str = None
+        else:
+            data_str = json.dumps(data, cls=JSONEncoder)
 
         url = urllib.parse.urljoin(self.base_url, path)
 
         try:
             if method == METH_GET:
                 return requests.get(
-                    url, params=data, timeout=timeout, headers=self._headers)
+                    url, params=data_str, timeout=timeout,
+                    headers=self._headers)
 
             return requests.request(
-                method, url, data=data, timeout=timeout,
+                method, url, data=data_str, timeout=timeout,
                 headers=self._headers)
 
         except requests.exceptions.ConnectionError:
@@ -110,22 +114,22 @@ class JSONEncoder(json.JSONEncoder):
     """JSONEncoder that supports Home Assistant objects."""
 
     # pylint: disable=method-hidden
-    def default(self, o):
+    def default(self, o: Any) -> Any:
         """Convert Home Assistant objects.
 
         Hand other objects to the original method.
         """
         if isinstance(o, datetime):
             return o.isoformat()
-        elif isinstance(o, set):
+        if isinstance(o, set):
             return list(o)
-        elif hasattr(o, 'as_dict'):
+        if hasattr(o, 'as_dict'):
             return o.as_dict()
 
         return json.JSONEncoder.default(self, o)
 
 
-def validate_api(api):
+def validate_api(api: API) -> APIStatus:
     """Make a call to validate API."""
     try:
         req = api(METH_GET, URL_API)
@@ -133,7 +137,7 @@ def validate_api(api):
         if req.status_code == 200:
             return APIStatus.OK
 
-        elif req.status_code == 401:
+        if req.status_code == 401:
             return APIStatus.INVALID_PASSWORD
 
         return APIStatus.UNKNOWN
@@ -142,12 +146,12 @@ def validate_api(api):
         return APIStatus.CANNOT_CONNECT
 
 
-def get_event_listeners(api):
+def get_event_listeners(api: API) -> Dict:
     """List of events that is being listened for."""
     try:
         req = api(METH_GET, URL_API_EVENTS)
 
-        return req.json() if req.status_code == 200 else {}
+        return req.json() if req.status_code == 200 else {}  # type: ignore
 
     except (HomeAssistantError, ValueError):
         # ValueError if req.json() can't parse the json
@@ -156,7 +160,7 @@ def get_event_listeners(api):
         return {}
 
 
-def fire_event(api, event_type, data=None):
+def fire_event(api: API, event_type: str, data: Dict = None) -> None:
     """Fire an event at remote API."""
     try:
         req = api(METH_POST, URL_API_EVENTS_EVENT.format(event_type), data)
@@ -169,7 +173,7 @@ def fire_event(api, event_type, data=None):
         _LOGGER.exception("Error firing event")
 
 
-def get_state(api, entity_id):
+def get_state(api: API, entity_id: str) -> Optional[ha.State]:
     """Query given API for state of entity_id."""
     try:
         req = api(METH_GET, URL_API_STATES_ENTITY.format(entity_id))
@@ -186,7 +190,7 @@ def get_state(api, entity_id):
         return None
 
 
-def get_states(api):
+def get_states(api: API) -> List[ha.State]:
     """Query given API for all states."""
     try:
         req = api(METH_GET,
@@ -202,7 +206,7 @@ def get_states(api):
         return []
 
 
-def remove_state(api, entity_id):
+def remove_state(api: API, entity_id: str) -> bool:
     """Call API to remove state for entity_id.
 
     Return True if entity is gone (removed/never existed).
@@ -222,7 +226,8 @@ def remove_state(api, entity_id):
         return False
 
 
-def set_state(api, entity_id, new_state, attributes=None, force_update=False):
+def set_state(api: API, entity_id: str, new_state: str,
+              attributes: Dict = None, force_update: bool = False) -> bool:
     """Tell API to update state for entity_id.
 
     Return True if success.
@@ -249,14 +254,14 @@ def set_state(api, entity_id, new_state, attributes=None, force_update=False):
         return False
 
 
-def is_state(api, entity_id, state):
+def is_state(api: API, entity_id: str, state: str) -> bool:
     """Query API to see if entity_id is specified state."""
     cur_state = get_state(api, entity_id)
 
-    return cur_state and cur_state.state == state
+    return bool(cur_state and cur_state.state == state)
 
 
-def get_services(api):
+def get_services(api: API) -> Dict:
     """Return a list of dicts.
 
     Each dict has a string "domain" and a list of strings "services".
@@ -264,7 +269,7 @@ def get_services(api):
     try:
         req = api(METH_GET, URL_API_SERVICES)
 
-        return req.json() if req.status_code == 200 else {}
+        return req.json() if req.status_code == 200 else {}  # type: ignore
 
     except (HomeAssistantError, ValueError):
         # ValueError if req.json() can't parse the json
@@ -273,7 +278,9 @@ def get_services(api):
         return {}
 
 
-def call_service(api, domain, service, service_data=None, timeout=5):
+def call_service(api: API, domain: str, service: str,
+                 service_data: Dict = None,
+                 timeout: int = 5) -> None:
     """Call a service at the remote API."""
     try:
         req = api(METH_POST,
@@ -288,7 +295,7 @@ def call_service(api, domain, service, service_data=None, timeout=5):
         _LOGGER.exception("Error calling service")
 
 
-def get_config(api):
+def get_config(api: API) -> Dict:
     """Return configuration."""
     try:
         req = api(METH_GET, URL_API_CONFIG)
@@ -299,7 +306,7 @@ def get_config(api):
         result = req.json()
         if 'components' in result:
             result['components'] = set(result['components'])
-        return result
+        return result  # type: ignore
 
     except (HomeAssistantError, ValueError):
         # ValueError if req.json() can't parse the JSON

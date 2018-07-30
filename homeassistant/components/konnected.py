@@ -114,7 +114,7 @@ async def async_setup(hass, config):
     return True
 
 
-class KonnectedDevice(object):
+class KonnectedDevice:
     """A representation of a single Konnected device."""
 
     def __init__(self, hass, host, port, config):
