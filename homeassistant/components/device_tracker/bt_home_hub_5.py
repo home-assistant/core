@@ -8,7 +8,7 @@ import logging
 import re
 
 import requests
-from html_table_extractor import HTMLParser
+from html_table_parser_python3 import HTMLTableParser
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
