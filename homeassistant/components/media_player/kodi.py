@@ -193,7 +193,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         for device in hass.data[DATA_KODI].values():
             if device.unique_id == unique_id:
                 return
-    
+
     entity = KodiDevice(
         hass,
         name=name,
