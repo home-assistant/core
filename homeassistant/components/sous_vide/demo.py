@@ -7,7 +7,7 @@ https://home-assistant.io/components/demo/
 import logging
 import random
 
-from homeassistant.components.sous_vide import SousVideDevice
+from homeassistant.components.sous_vide import SousVideEntity
 from homeassistant.const import (
     PRECISION_TENTHS, STATE_OFF, STATE_ON, TEMP_CELSIUS)
 from homeassistant.util import temperature as temp_util
@@ -17,10 +17,10 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform setup for the platform."""
-    add_devices([DemoSousVideDevice('Sous_Vide')])
+    add_devices([DemoSousVideEntity('Sous_Vide')])
 
 
-class DemoSousVideDevice(SousVideDevice):  # pylint: disable=too-many-instance-attributes; # noqa: E501
+class DemoSousVideEntity(SousVideEntity):  # pylint: disable=too-many-instance-attributes; # noqa: E501
     """Representation of an demo sous-vide cooker."""
 
     _temp = 20
@@ -88,7 +88,6 @@ class DemoSousVideDevice(SousVideDevice):  # pylint: disable=too-many-instance-a
 
     def update(self):
         """Fetch state from the device."""
-
         # Simulate heating and cooling
         if self._state == STATE_ON:
             self._temp = min(self._temp + random.uniform(0.5, 2.0),

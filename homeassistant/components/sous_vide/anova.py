@@ -1,4 +1,5 @@
-"""Support for Anova sous-vide machines.
+"""
+Support for Anova sous-vide machines.
 
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/sousvide.anova/
@@ -33,13 +34,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     name = config[CONF_NAME]
     mac = config[CONF_MAC]
-    entity = AnovaEntity(name, mac, backend)
-    add_devices([entity])
+    add_devices([AnovaEntity(name, mac, backend)], True)
 
 
-class AnovaEntity(SousVideEntity):
-    """Representation of an Anova Sous-Vide cooker."""
-    # pylint: disable=too-many-instance-attributes
+class AnovaEntity(SousVideEntity):  # pylint: disable=too-many-instance-attributes; # noqa: E501
+    """Representation of an Anova sous-vide cooker."""
+
     _temp = 0
     _target_temp = 0
     _unit = TEMP_CELSIUS
@@ -154,8 +154,8 @@ class AnovaEntity(SousVideEntity):
             return None
         return None
 
-    def handleNotification(self, handle, raw_data):
-        """ Callback to handle BTLE notifications."""
+    def handleNotification(self, handle, raw_data):  # pylint: disable=invalid-name; # noqa: E501
+        """Callback to handle BTLE notifications."""
         if raw_data is None:
             return
 

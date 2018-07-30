@@ -4,8 +4,8 @@ from homeassistant.components import (
     script, sous_vide, switch)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_MEASUREMENT_PRECISION, ATTR_TEMPERATURE,
-    ATTR_UNIT_OF_MEASUREMENT, SERVICE_SET_TEMPERATURE, SERVICE_TURN_OFF,
-    SERVICE_TURN_ON, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+    ATTR_UNIT_OF_MEASUREMENT, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.util import color as color_util
 from homeassistant.util import temperature as temp_util
@@ -397,7 +397,8 @@ class TemperatureControlTrait(_Trait):
         min_temp = self.state.attributes.get(climate.ATTR_MIN_TEMP, 10.0)
         max_temp = self.state.attributes.get(climate.ATTR_MAX_TEMP, 10.0)
         unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
-        precision = self.state.attributes.get(ATTR_MEASUREMENT_PRECISION, 1.0)
+        precision = self.state.attributes.get(
+            ATTR_MEASUREMENT_PRECISION, 1.0)
 
         return {
             'temperatureRange': {
@@ -444,7 +445,7 @@ class TemperatureControlTrait(_Trait):
                                                                      max_temp))
 
             await hass.services.async_call(
-                sous_vide.DOMAIN, SERVICE_SET_TEMPERATURE, {
+                sous_vide.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_TEMPERATURE: temp
                 }, blocking=True)

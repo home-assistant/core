@@ -10,11 +10,10 @@ from datetime import timedelta
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components import climate
 from homeassistant.const import (
-    ATTR_CURRENT_TEMPERATURE, ATTR_ENTITY_ID, ATTR_MAX_TEMP,
-    ATTR_MEASUREMENT_PRECISION, ATTR_MIN_TEMP, ATTR_OPERATION_MODE,
-    ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT, SERVICE_SET_TEMPERATURE,
-    SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_HEAT, STATE_OFF)
+    ATTR_ENTITY_ID, ATTR_MEASUREMENT_PRECISION, ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
@@ -34,8 +33,8 @@ SET_TEMPERATURE_SCHEMA = SERVICE_SCHEMA.extend({
 SERVICE_TO_METHOD = {
     SERVICE_TURN_ON: {'method': 'turn_on'},
     SERVICE_TURN_OFF: {'method': 'turn_off'},
-    SERVICE_SET_TEMPERATURE: {'method': 'set_temp',
-                              'schema': SET_TEMPERATURE_SCHEMA},
+    climate.SERVICE_SET_TEMPERATURE: {'method': 'set_temp',
+                                      'schema': SET_TEMPERATURE_SCHEMA},
 }
 
 
@@ -101,13 +100,13 @@ class SousVideEntity(ToggleEntity):
     def state_attributes(self):
         """Return the state attributes of the device."""
         return {
-            ATTR_CURRENT_TEMPERATURE: show_temp(
+            climate.ATTR_CURRENT_TEMPERATURE: show_temp(
                 self.hass, self.current_temperature, self.unit_of_measurement,
                 self.precision),
-            ATTR_MIN_TEMP: show_temp(
+            climate.ATTR_MIN_TEMP: show_temp(
                 self.hass, self.min_temperature, self.unit_of_measurement,
                 self.precision),
-            ATTR_MAX_TEMP: show_temp(
+            climate.ATTR_MAX_TEMP: show_temp(
                 self.hass, self.max_temperature, self.unit_of_measurement,
                 self.precision),
             ATTR_TEMPERATURE: show_temp(
@@ -115,8 +114,8 @@ class SousVideEntity(ToggleEntity):
                 self.precision),
             ATTR_UNIT_OF_MEASUREMENT: self.unit_of_measurement,
             ATTR_MEASUREMENT_PRECISION: self.precision,
-            ATTR_OPERATION_MODE:
-                STATE_OFF if self.state == STATE_OFF else STATE_HEAT,
+            climate.ATTR_OPERATION_MODE:
+                STATE_OFF if self.state == STATE_OFF else climate.STATE_HEAT,
         }
 
     def set_temp(self, temperature=None) -> None:
