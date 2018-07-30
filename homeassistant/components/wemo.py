@@ -26,8 +26,8 @@ WEMO_MODEL_DISPATCH = {
     'Insight': 'switch',
     'LightSwitch': 'switch',
     'Maker':   'switch',
-    'Sensor':  'binary_sensor',
     'Motion': 'binary_sensor',
+    'Sensor':  'binary_sensor',
     'Socket':  'switch'
 }
 
