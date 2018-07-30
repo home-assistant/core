@@ -35,7 +35,7 @@ from . import migration, purge
 from .const import DATA_INSTANCE
 from .util import session_scope
 
-REQUIREMENTS = ['sqlalchemy==1.2.9']
+REQUIREMENTS = ['sqlalchemy==1.2.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -284,7 +284,7 @@ class Recorder(threading.Thread):
                 self._close_connection()
                 self.queue.task_done()
                 return
-            elif isinstance(event, PurgeTask):
+            if isinstance(event, PurgeTask):
                 purge.purge_old_data(self, event.keep_days, event.repack)
                 self.queue.task_done()
                 continue

@@ -149,7 +149,7 @@ class EightUserSensor(EightSleepUserEntity):
         """Return the unit the value is expressed in."""
         if 'current_sleep' in self._sensor or 'last_sleep' in self._sensor:
             return 'Score'
-        elif 'bed_temp' in self._sensor:
+        if 'bed_temp' in self._sensor:
             if self._units == 'si':
                 return '°C'
             return '°F'

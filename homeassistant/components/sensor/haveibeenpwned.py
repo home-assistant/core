@@ -122,7 +122,7 @@ class HaveIBeenPwnedSensor(Entity):
             self._state = len(self._data.data[self._email])
 
 
-class HaveIBeenPwnedData(object):
+class HaveIBeenPwnedData:
     """Class for handling the data retrieval."""
 
     def __init__(self, emails):

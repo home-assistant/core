@@ -138,7 +138,7 @@ def _register_new_account(hass, account_name, api_key, shared_secret,
     )
 
 
-class RememberTheMilkConfiguration(object):
+class RememberTheMilkConfiguration:
     """Internal configuration data for RememberTheMilk class.
 
     This class stores the authentication token it get from the backend.

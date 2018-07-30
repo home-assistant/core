@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['sqlalchemy==1.2.9']
+REQUIREMENTS = ['sqlalchemy==1.2.10']
 
 CONF_COLUMN_NAME = 'column'
 CONF_QUERIES = 'queries'

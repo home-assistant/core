@@ -102,7 +102,7 @@ class ExchangeRateSensor(Entity):
         self._state = round(self.data.rate['rates'][self._target], 3)
 
 
-class ExchangeData(object):
+class ExchangeData:
     """Get the latest data and update the states."""
 
     def __init__(self, target_currency, api_key):

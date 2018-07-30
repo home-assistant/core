@@ -107,7 +107,8 @@ def test_loading_saving_data(hass, registry):
     # Ensure same order
     assert list(registry.entities) == list(registry2.entities)
     new_entry1 = registry.async_get_or_create('light', 'hue', '1234')
-    new_entry2 = registry.async_get_or_create('light', 'hue', '5678')
+    new_entry2 = registry.async_get_or_create('light', 'hue', '5678',
+                                              config_entry_id='mock-id')
 
     assert orig_entry1 == new_entry1
     assert orig_entry2 == new_entry2
@@ -191,3 +192,13 @@ def test_async_get_entity_id(registry):
     assert registry.async_get_entity_id(
         'light', 'hue', '1234') == 'light.hue_1234'
     assert registry.async_get_entity_id('light', 'hue', '123') is None
+
+
+async def test_updating_config_entry_id(registry):
+    """Test that we update config entry id in registry."""
+    entry = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-1')
+    entry2 = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-2')
+    assert entry.entity_id == entry2.entity_id
+    assert entry2.config_entry_id == 'mock-id-2'

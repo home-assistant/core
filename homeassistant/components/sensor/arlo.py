@@ -56,9 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 SENSOR_TYPES[sensor_type][0], arlo, sensor_type))
         else:
             for camera in arlo.cameras:
-                if sensor_type == 'temperature' or \
-                   sensor_type == 'humidity' or \
-                   sensor_type == 'air_quality':
+                if sensor_type in ('temperature', 'humidity', 'air_quality'):
                     continue
 
                 name = '{0} {1}'.format(
@@ -66,10 +64,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensors.append(ArloSensor(name, camera, sensor_type))
 
             for base_station in arlo.base_stations:
-                if ((sensor_type == 'temperature' or
-                     sensor_type == 'humidity' or
-                     sensor_type == 'air_quality') and
-                        base_station.model_id == 'ABC1000'):
+                if sensor_type in ('temperature', 'humidity', 'air_quality') \
+                        and base_station.model_id == 'ABC1000':
                     name = '{0} {1}'.format(
                         SENSOR_TYPES[sensor_type][0], base_station.name)
                     sensors.append(ArloSensor(name, base_station, sensor_type))
@@ -127,7 +123,7 @@ class ArloSensor(Entity):
         """Return the device class of the sensor."""
         if self._sensor_type == 'temperature':
             return DEVICE_CLASS_TEMPERATURE
-        elif self._sensor_type == 'humidity':
+        if self._sensor_type == 'humidity':
             return DEVICE_CLASS_HUMIDITY
         return None
 

@@ -23,7 +23,7 @@ def _get_image_url(host, port, mode):
     """Set the URL to get the image."""
     if mode == 'mjpeg':
         return 'http://{}:{}/axis-cgi/mjpg/video.cgi'.format(host, port)
-    elif mode == 'single':
+    if mode == 'single':
         return 'http://{}:{}/axis-cgi/jpg/image.cgi'.format(host, port)
 
 

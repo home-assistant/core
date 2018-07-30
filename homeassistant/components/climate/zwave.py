@@ -11,7 +11,7 @@ from homeassistant.components.climate import (
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
-from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
+from homeassistant.components.zwave import async_setup_platform  # noqa pylint: disable=unused-import
 from homeassistant.const import (
     STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT, ATTR_TEMPERATURE)
 
@@ -186,7 +186,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """Return the unit of measurement."""
         if self._unit == 'C':
             return TEMP_CELSIUS
-        elif self._unit == 'F':
+        if self._unit == 'F':
             return TEMP_FAHRENHEIT
         return self._unit
 

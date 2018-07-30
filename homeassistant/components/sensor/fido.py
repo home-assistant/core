@@ -147,7 +147,7 @@ class FidoSensor(Entity):
                 self._state = round(self._state, 2)
 
 
-class FidoData(object):
+class FidoData:
     """Get data from Fido."""
 
     def __init__(self, username, password, httpsession):

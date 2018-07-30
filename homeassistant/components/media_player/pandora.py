@@ -253,9 +253,11 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             _LOGGER.warning("On unexpected station list page")
             self._pianobar.sendcontrol('m')  # press enter
             self._pianobar.sendcontrol('m')  # do it again b/c an 'i' got in
+            # pylint: disable=assignment-from-none
             response = self.update_playing_status()
         elif match_idx == 3:
             _LOGGER.debug("Received new playlist list")
+            # pylint: disable=assignment-from-none
             response = self.update_playing_status()
         else:
             response = self._pianobar.before.decode('utf-8')
@@ -294,8 +296,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         time_remaining = int(cur_minutes) * 60 + int(cur_seconds)
         self._media_duration = int(total_minutes) * 60 + int(total_seconds)
 
-        if (time_remaining != self._time_remaining and
-                time_remaining != self._media_duration):
+        if time_remaining not in (self._time_remaining, self._media_duration):
             self._player_state = STATE_PLAYING
         elif self._player_state == STATE_PLAYING:
             self._player_state = STATE_PAUSED

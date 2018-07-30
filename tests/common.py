@@ -187,7 +187,7 @@ def async_mock_service(hass, domain, service, schema=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
-    @asyncio.coroutine
+    @ha.callback
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
@@ -355,7 +355,7 @@ def ensure_auth_manager_loaded(auth_mgr):
         store._users = OrderedDict()
 
 
-class MockModule(object):
+class MockModule:
     """Representation of a fake module."""
 
     # pylint: disable=invalid-name
@@ -391,7 +391,7 @@ class MockModule(object):
             self.async_unload_entry = async_unload_entry
 
 
-class MockPlatform(object):
+class MockPlatform:
     """Provide a fake platform."""
 
     # pylint: disable=invalid-name
@@ -496,14 +496,13 @@ class MockToggleDevice(entity.ToggleEntity):
         """Return the last call."""
         if not self.calls:
             return None
-        elif method is None:
+        if method is None:
             return self.calls[-1]
-        else:
-            try:
-                return next(call for call in reversed(self.calls)
-                            if call[0] == method)
-            except StopIteration:
-                return None
+        try:
+            return next(call for call in reversed(self.calls)
+                        if call[0] == method)
+        except StopIteration:
+            return None
 
 
 class MockConfigEntry(config_entries.ConfigEntry):

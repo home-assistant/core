@@ -186,19 +186,14 @@ class CityBikesNetwork:
                 networks = yield from async_citybikes_request(
                     hass, NETWORKS_URI, NETWORKS_RESPONSE_SCHEMA)
                 cls.NETWORKS_LIST = networks[ATTR_NETWORKS_LIST]
-            networks_list = cls.NETWORKS_LIST
-            network = networks_list[0]
-            result = network[ATTR_ID]
-            minimum_dist = location.distance(
-                latitude, longitude,
-                network[ATTR_LOCATION][ATTR_LATITUDE],
-                network[ATTR_LOCATION][ATTR_LONGITUDE])
-            for network in networks_list[1:]:
+            result = None
+            minimum_dist = None
+            for network in cls.NETWORKS_LIST:
                 network_latitude = network[ATTR_LOCATION][ATTR_LATITUDE]
                 network_longitude = network[ATTR_LOCATION][ATTR_LONGITUDE]
                 dist = location.distance(
                     latitude, longitude, network_latitude, network_longitude)
-                if dist < minimum_dist:
+                if minimum_dist is None or dist < minimum_dist:
                     minimum_dist = dist
                     result = network[ATTR_ID]
 

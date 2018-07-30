@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 INSTALL_LOCK = threading.Lock()
 
 
-def is_virtual_env():
+def is_virtual_env() -> bool:
     """Return if we run in a virtual environtment."""
     # Check supports venv && virtualenv
     return (getattr(sys, 'base_prefix', sys.prefix) != sys.prefix or

@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.toon/
 """
 import logging
-import datetime as datetime
+import datetime
 
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.toon as toon_main

@@ -99,7 +99,7 @@ class NetatmoThermostat(ClimateDevice):
         state = self._data.thermostatdata.relay_cmd
         if state == 0:
             return STATE_IDLE
-        elif state == 100:
+        if state == 100:
             return STATE_HEAT
 
     @property
@@ -140,7 +140,7 @@ class NetatmoThermostat(ClimateDevice):
         self._away = self._data.setpoint_mode == 'away'
 
 
-class ThermostatData(object):
+class ThermostatData:
     """Get the latest data from Netatmo."""
 
     def __init__(self, auth, device=None):

@@ -133,7 +133,7 @@ class ZamgSensor(Entity):
         self.probe.update()
 
 
-class ZamgData(object):
+class ZamgData:
     """The class for handling the data retrieval."""
 
     API_URL = 'http://www.zamg.ac.at/ogd/'

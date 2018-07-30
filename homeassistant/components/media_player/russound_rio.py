@@ -100,8 +100,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
             if value in (None, "", "------"):
                 return None
             return value
-        else:
-            return None
+        return None
 
     def _zone_callback_handler(self, zone_id, *args):
         if zone_id == self._zone_id:
@@ -134,7 +133,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
         status = self._zone_var('status', "OFF")
         if status == 'ON':
             return STATE_ON
-        elif status == 'OFF':
+        if status == 'OFF':
             return STATE_OFF
 
     @property

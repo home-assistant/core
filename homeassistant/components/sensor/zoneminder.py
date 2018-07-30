@@ -12,7 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
-import homeassistant.components.zoneminder as zoneminder
+from homeassistant.components import zoneminder
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
