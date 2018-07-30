@@ -186,6 +186,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if ip_addr in hass.data[DATA_KODI]:
         return
 
+    # If we got an unique id, check that it does not exist already.
+    # This is necessary as netdisco does not deterministally return the same
+    # advertisement when the service is offered over multiple IP addresses.
+    if unique_id is not None:
+        for device in hass.data[DATA_KODI].values():
+            if device.unique_id == unique_id:
+                return
+    
     entity = KodiDevice(
         hass,
         name=name,
