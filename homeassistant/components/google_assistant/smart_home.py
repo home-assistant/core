@@ -1,33 +1,21 @@
 """Support for Google Assistant Smart Home API."""
+import logging
 from collections.abc import Mapping
 from itertools import product
-import logging
 
-from homeassistant.util.decorator import Registry
-
-from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_NAME, STATE_UNAVAILABLE, ATTR_SUPPORTED_FEATURES)
 from homeassistant.components import (
-    climate,
-    cover,
-    fan,
-    group,
-    input_boolean,
-    light,
-    media_player,
-    scene,
-    script,
-    switch,
-)
+    climate, cover, fan, group, input_boolean, light, media_player, scene,
+    script, sous_vide, switch)
+from homeassistant.const import (
+    ATTR_SUPPORTED_FEATURES, CONF_NAME, STATE_UNAVAILABLE)
+from homeassistant.core import callback
+from homeassistant.util.decorator import Registry
 
 from . import trait
 from .const import (
-    TYPE_LIGHT, TYPE_SCENE, TYPE_SWITCH, TYPE_THERMOSTAT,
-    CONF_ALIASES, CONF_ROOM_HINT,
-    ERR_NOT_SUPPORTED, ERR_PROTOCOL_ERROR, ERR_DEVICE_OFFLINE,
-    ERR_UNKNOWN_ERROR
-)
+    CONF_ALIASES, CONF_ROOM_HINT, ERR_DEVICE_OFFLINE, ERR_NOT_SUPPORTED,
+    ERR_PROTOCOL_ERROR, ERR_UNKNOWN_ERROR, TYPE_LIGHT, TYPE_OVEN, TYPE_SCENE,
+    TYPE_SWITCH, TYPE_THERMOSTAT)
 from .helpers import SmartHomeError
 
 HANDLERS = Registry()
@@ -43,6 +31,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
     media_player.DOMAIN: TYPE_SWITCH,
     scene.DOMAIN: TYPE_SCENE,
     script.DOMAIN: TYPE_SCENE,
+    sous_vide.DOMAIN: TYPE_OVEN,
     switch.DOMAIN: TYPE_SWITCH,
 }
 
@@ -177,7 +166,11 @@ class _GoogleEntity:
 
 async def async_handle_message(hass, config, message):
     """Handle incoming API messages."""
+    _LOGGER.debug("Received Actions on Google Smart Home request: %s",
+                  str(message))
     response = await _process(hass, config, message)
+    _LOGGER.debug("Sending Actions on Google Smart Home response: %s",
+                  str(response))
 
     if 'errorCode' in response['payload']:
         _LOGGER.error('Error handling message %s: %s',

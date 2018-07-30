@@ -17,13 +17,15 @@ CONF_ROOM_HINT = 'room'
 
 DEFAULT_EXPOSE_BY_DEFAULT = True
 DEFAULT_EXPOSED_DOMAINS = [
-    'switch', 'light', 'group', 'media_player', 'fan', 'cover', 'climate'
+    'switch', 'light', 'group', 'media_player', 'fan', 'cover', 'climate',
+    'sous_vide'
 ]
 CLIMATE_MODE_HEATCOOL = 'heatcool'
 CLIMATE_SUPPORTED_MODES = {'heat', 'cool', 'off', 'on', CLIMATE_MODE_HEATCOOL}
 
 PREFIX_TYPES = 'action.devices.types.'
 TYPE_LIGHT = PREFIX_TYPES + 'LIGHT'
+TYPE_OVEN = PREFIX_TYPES + 'OVEN'
 TYPE_SWITCH = PREFIX_TYPES + 'SWITCH'
 TYPE_SCENE = PREFIX_TYPES + 'SCENE'
 TYPE_THERMOSTAT = PREFIX_TYPES + 'THERMOSTAT'

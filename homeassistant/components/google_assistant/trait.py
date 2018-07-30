@@ -1,27 +1,14 @@
 """Implement the Smart Home traits."""
-from homeassistant.core import DOMAIN as HA_DOMAIN
 from homeassistant.components import (
-    climate,
-    cover,
-    group,
-    fan,
-    input_boolean,
-    media_player,
-    light,
-    scene,
-    script,
-    switch,
-)
+    climate, cover, fan, group, input_boolean, light, media_player, scene,
+    script, sous_vide, switch)
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
-    SERVICE_TURN_OFF,
-    SERVICE_TURN_ON,
-    STATE_OFF,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
-from homeassistant.util import color as color_util, temperature as temp_util
+    ATTR_ENTITY_ID, ATTR_MEASUREMENT_PRECISION, ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT, SERVICE_SET_TEMPERATURE, SERVICE_TURN_OFF,
+    SERVICE_TURN_ON, STATE_OFF, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.util import color as color_util
+from homeassistant.util import temperature as temp_util
 
 from .const import ERR_VALUE_OUT_OF_RANGE
 from .helpers import SmartHomeError
@@ -32,6 +19,7 @@ TRAIT_BRIGHTNESS = PREFIX_TRAITS + 'Brightness'
 TRAIT_COLOR_SPECTRUM = PREFIX_TRAITS + 'ColorSpectrum'
 TRAIT_COLOR_TEMP = PREFIX_TRAITS + 'ColorTemperature'
 TRAIT_SCENE = PREFIX_TRAITS + 'Scene'
+TRAIT_TEMPERATURE_CONTROL = PREFIX_TRAITS + 'TemperatureControl'
 TRAIT_TEMPERATURE_SETTING = PREFIX_TRAITS + 'TemperatureSetting'
 
 PREFIX_COMMANDS = 'action.devices.commands.'
@@ -39,6 +27,7 @@ COMMAND_ONOFF = PREFIX_COMMANDS + 'OnOff'
 COMMAND_BRIGHTNESS_ABSOLUTE = PREFIX_COMMANDS + 'BrightnessAbsolute'
 COMMAND_COLOR_ABSOLUTE = PREFIX_COMMANDS + 'ColorAbsolute'
 COMMAND_ACTIVATE_SCENE = PREFIX_COMMANDS + 'ActivateScene'
+COMMAND_SET_TEMPERATURE = PREFIX_COMMANDS + 'SetTemperature'
 COMMAND_THERMOSTAT_TEMPERATURE_SETPOINT = (
     PREFIX_COMMANDS + 'ThermostatTemperatureSetpoint')
 COMMAND_THERMOSTAT_TEMPERATURE_SET_RANGE = (
@@ -189,6 +178,7 @@ class OnOffTrait(_Trait):
             light.DOMAIN,
             cover.DOMAIN,
             media_player.DOMAIN,
+            sous_vide.DOMAIN,
         )
 
     def sync_attributes(self):
@@ -380,6 +370,84 @@ class SceneTrait(_Trait):
         await hass.services.async_call(self.state.domain, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id
         }, blocking=self.state.domain != script.DOMAIN)
+
+
+@register_trait
+class TemperatureControlTrait(_Trait):
+    """Trait to offer temperature control for devices such as ovens and fridges.
+
+    https://developers.google.com/actions/smarthome/traits/temperaturecontrol
+    """
+
+    name = TRAIT_TEMPERATURE_CONTROL
+    commands = [
+        COMMAND_SET_TEMPERATURE
+    ]
+
+    @staticmethod
+    def supported(domain, features):
+        """Test if state is supported."""
+        if domain != sous_vide.DOMAIN:
+            return False
+
+        return True
+
+    def sync_attributes(self):
+        """Return temperature control attributes for a sync request."""
+        min_temp = self.state.attributes.get(climate.ATTR_MIN_TEMP, 10.0)
+        max_temp = self.state.attributes.get(climate.ATTR_MAX_TEMP, 10.0)
+        unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        precision = self.state.attributes.get(ATTR_MEASUREMENT_PRECISION, 1.0)
+
+        return {
+            'temperatureRange': {
+                'minThresholdCelsius': round(temp_util.convert(
+                    min_temp, unit, TEMP_CELSIUS), 1),
+                'maxThresholdCelsius': round(temp_util.convert(
+                    max_temp, unit, TEMP_CELSIUS), 1),
+            },
+            'temperatureStepCelsius': precision,
+            'temperatureUnitForUX': _google_temp_unit(self.state),
+        }
+
+    def query_attributes(self):
+        """Return current temperature and setpoint query attributes."""
+        response = {}
+        unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        current_temp = self.state.attributes.get(
+            climate.ATTR_CURRENT_TEMPERATURE)
+        if current_temp is not None:
+            response['temperatureAmbientCelsius'] = \
+                round(temp_util.convert(current_temp, unit, TEMP_CELSIUS), 2)
+        target_temp = self.state.attributes.get(ATTR_TEMPERATURE)
+        if target_temp is not None:
+            response['temperatureSetpointCelsius'] = round(
+                temp_util.convert(target_temp, unit, TEMP_CELSIUS), 2)
+
+        return response
+
+    async def execute(self, hass, command, params):
+        """Execute a temperature point or mode command."""
+        # All sent in temperatures are always in Celsius
+        unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
+        max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
+
+        if command == COMMAND_SET_TEMPERATURE:
+            temp = round(temp_util.convert(
+                params['temperature'], TEMP_CELSIUS, unit), 2)
+
+            if temp < min_temp or temp > max_temp:
+                raise SmartHomeError(
+                    ERR_VALUE_OUT_OF_RANGE,
+                    "Temperature should be between {} and {}".format(min_temp,
+                                                                     max_temp))
+
+            await hass.services.async_call(
+                sous_vide.DOMAIN, SERVICE_SET_TEMPERATURE, {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    climate.ATTR_TEMPERATURE: temp
+                }, blocking=True)
 
 
 @register_trait

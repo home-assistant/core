@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from homeassistant.components import (
     alert, automation, cover, climate, fan, group, input_boolean, light, lock,
-    media_player, scene, script, switch, http, sensor)
+    media_player, scene, script, switch, http, sensor, sous_vide)
 import homeassistant.core as ha
 import homeassistant.util.color as color_util
 from homeassistant.util.temperature import convert as convert_temperature
@@ -76,7 +76,10 @@ class _DisplayCategory:
     # Indicates light sources or fixtures.
     LIGHT = "LIGHT"
 
-    # An endpoint that cannot be described in on of the other categories.
+    # Indicates an oven or microwave.
+    MICROWAVE = "MICROWAVE"
+
+    # An endpoint that cannot be described in one of the other categories.
     OTHER = "OTHER"
 
     # Describes a combination of devices set to a specific state, when the
@@ -398,9 +401,9 @@ class _AlexaTemperatureSensor(_AlexaInterface):
 
         unit = self.entity.attributes[CONF_UNIT_OF_MEASUREMENT]
         temp = self.entity.state
-        if self.entity.domain == climate.DOMAIN:
-            temp = self.entity.attributes.get(
-                climate.ATTR_CURRENT_TEMPERATURE)
+        if self.entity.domain == climate.DOMAIN or \
+                self.entity.domain == sous_vide.DOMAIN:
+            temp = self.entity.attributes.get(climate.ATTR_CURRENT_TEMPERATURE)
         return {
             'value': float(temp),
             'scale': API_TEMP_UNITS[unit],
@@ -428,7 +431,7 @@ class _AlexaThermostatController(_AlexaInterface):
         return True
 
     def get_property(self, name):
-        if name == 'thermostatMode':
+        if name == 'thermostatMode' and self.entity.domain == climate.DOMAIN:
             ha_mode = self.entity.attributes.get(climate.ATTR_OPERATION_MODE)
             mode = API_THERMOSTAT_MODES.get(ha_mode)
             if mode is None:
@@ -442,9 +445,9 @@ class _AlexaThermostatController(_AlexaInterface):
         temp = None
         if name == 'targetSetpoint':
             temp = self.entity.attributes.get(climate.ATTR_TEMPERATURE)
-        elif name == 'lowerSetpoint':
+        elif name == 'lowerSetpoint' and self.entity.domain == climate.DOMAIN:
             temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_LOW)
-        elif name == 'upperSetpoint':
+        elif name == 'upperSetpoint' and self.entity.domain == climate.DOMAIN:
             temp = self.entity.attributes.get(climate.ATTR_TARGET_TEMP_HIGH)
         else:
             raise _UnsupportedProperty(name)
@@ -613,6 +616,17 @@ class _SensorCapabilities(_AlexaEntity):
                 TEMP_CELSIUS,
         ):
             yield _AlexaTemperatureSensor(self.entity)
+
+
+@ENTITY_ADAPTERS.register(sous_vide.DOMAIN)
+class _SousVideCapabilities(_AlexaEntity):
+    def default_display_categories(self):
+        return [_DisplayCategory.MICROWAVE]
+
+    def interfaces(self):
+        yield _AlexaPowerController(self.entity)
+        yield _AlexaThermostatController(self.entity)
+        yield _AlexaTemperatureSensor(self.entity)
 
 
 class _Cause:
