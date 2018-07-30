@@ -168,7 +168,7 @@ def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
     def async_handle_core_service(call):
         """Service handler for handling core services."""
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            hass.async_add_job(hass.async_stop())
+            hass.async_create_task(hass.async_stop())
             return
 
         try:
@@ -184,7 +184,7 @@ def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             return
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            hass.async_add_job(hass.async_stop(RESTART_EXIT_CODE))
+            hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)

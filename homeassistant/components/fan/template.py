@@ -8,21 +8,17 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.const import (
-    CONF_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, CONF_ENTITY_ID,
-    STATE_ON, STATE_OFF, MATCH_ALL, EVENT_HOMEASSISTANT_START,
-    STATE_UNKNOWN)
-
-from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.fan import (
     SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH, SUPPORT_SET_SPEED, SUPPORT_OSCILLATE,
     FanEntity, ATTR_SPEED, ATTR_OSCILLATING, ENTITY_ID_FORMAT,
     SUPPORT_DIRECTION, DIRECTION_FORWARD, DIRECTION_REVERSE, ATTR_DIRECTION)
-
+from homeassistant.const import (
+    CONF_FRIENDLY_NAME, CONF_VALUE_TEMPLATE, CONF_ENTITY_ID,
+    STATE_ON, STATE_OFF, MATCH_ALL, EVENT_HOMEASSISTANT_START,
+    STATE_UNKNOWN)
+from homeassistant.core import callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.script import Script
 
@@ -65,7 +61,7 @@ FAN_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Required(CONF_FANS): vol.Schema({cv.slug: FAN_SCHEMA}),
 })
 
@@ -196,7 +192,7 @@ class TemplateFan(FanEntity):
         return self._supported_features
 
     @property
-    def speed_list(self: ToggleEntity) -> list:
+    def speed_list(self) -> list:
         """Get the list of available speeds."""
         return self._speed_list
 
