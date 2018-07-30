@@ -39,7 +39,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
     return True
 
 
-class RitAssistDeviceScanner(DeviceScanner):
+class RitAssistDeviceScanner:
     """Define a scanner for the RitAssist platform."""
 
     def __init__(self, hass, config, see, discovery_info):
@@ -134,7 +134,7 @@ class RitAssistDeviceScanner(DeviceScanner):
         return result
 
 
-class RitAssistDevice(Entity):
+class RitAssistDevice:
     """Entity used to store device information."""
 
     def __init__(self, data, license_plate):
