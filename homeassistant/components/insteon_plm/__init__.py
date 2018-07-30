@@ -24,6 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'insteon_plm'
 
+CONF_IP_PORT = 'ip_port'
 CONF_HUB_USERNAME = 'username'
 CONF_HUB_PASSWORD = 'password'
 CONF_OVERRIDE = 'device_override'
@@ -63,6 +64,8 @@ EVENT_BUTTON_ON = 'insteon_plm.button_on'
 EVENT_BUTTON_OFF = 'insteon_plm.button_off'
 EVENT_CONF_BUTTON = 'button'
 
+CONF_PLM_OR_HUB = cv.has_at_least_one_key([CONF_PORT, CONF_HOST])
+
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
         vol.Required(CONF_ADDRESS): cv.string,
@@ -82,20 +85,22 @@ CONF_X10_SCHEMA = vol.All(
         }))
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_PORT): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_HUB_USERNAME): cv.string,
-        vol.Optional(CONF_HUB_PASSWORD): cv.string,
-        vol.Optional(CONF_OVERRIDE): vol.All(
-            cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
-        vol.Optional(CONF_X10_ALL_UNITS_OFF): vol.In(HOUSECODES),
-        vol.Optional(CONF_X10_ALL_LIGHTS_ON): vol.In(HOUSECODES),
-        vol.Optional(CONF_X10_ALL_LIGHTS_OFF): vol.In(HOUSECODES),
-        vol.Optional(CONF_X10): vol.All(
-            cv.ensure_list_csv, [CONF_X10_SCHEMA])
-        })
-}, extra=vol.ALLOW_EXTRA)
+    DOMAIN: vol.All({
+            vol.Exclusive(CONF_PORT,'plm_hub'): cv.string,
+            vol.Exclusive(CONF_HOST, 'plm_hub'): cv.string,
+            vol.Optional(CONF_IP_PORT, default=25105): int,
+            vol.Optional(CONF_HUB_USERNAME): cv.string,
+            vol.Optional(CONF_HUB_PASSWORD): cv.string,
+            vol.Optional(CONF_OVERRIDE): vol.All(
+                cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
+            vol.Optional(CONF_X10_ALL_UNITS_OFF): vol.In(HOUSECODES),
+            vol.Optional(CONF_X10_ALL_LIGHTS_ON): vol.In(HOUSECODES),
+            vol.Optional(CONF_X10_ALL_LIGHTS_OFF): vol.In(HOUSECODES),
+            vol.Optional(CONF_X10): vol.All(
+                cv.ensure_list_csv, [CONF_X10_SCHEMA])
+            }, cv.has_at_least_one_key(CONF_PORT, CONF_HOST))
+    }, extra=vol.ALLOW_EXTRA)
+
 
 ADD_ALL_LINK_SCHEMA = vol.Schema({
     vol.Required(SRV_ALL_LINK_GROUP): vol.Range(min=0, max=255),
@@ -131,6 +136,7 @@ def async_setup(hass, config):
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
     host = conf.get(CONF_HOST)
+    ip_port = conf.get(CONF_IP_PORT)
     username = conf.get(CONF_HUB_USERNAME)
     password = conf.get(CONF_HUB_PASSWORD)
     overrides = conf.get(CONF_OVERRIDE, [])
@@ -261,18 +267,13 @@ def async_setup(hass, config):
 
     _LOGGER.info("Looking for PLM on %s", port)
     if host:
-        try:
-            ip_port = int(port)
-            conn = yield from insteonplm.Connection.create(
-                host=host,
-                port=ip_port,
-                username=username,
-                password=password,
-                loop=hass.loop,
-                workdir=hass.config.config_dir)
-        except ValueError:
-            raise ValueError('If the hub host is defined the port must be '
-                             'the hub IP port number')
+        conn = yield from insteonplm.Connection.create(
+            host=host,
+            port=ip_port,
+            username=username,
+            password=password,
+            loop=hass.loop,
+            workdir=hass.config.config_dir)
     else:
         conn = yield from insteonplm.Connection.create(
             device=port,
