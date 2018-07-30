@@ -133,11 +133,12 @@ class YiCamera(Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
 
-        stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
-        await stream.open_camera(
-            self._last_url, extra_cmd=self._extra_arguments)
+        if self._is_on:
+            stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
+            await stream.open_camera(
+                self._last_url, extra_cmd=self._extra_arguments)
 
-        await async_aiohttp_proxy_stream(
-            self.hass, request, stream,
-            'multipart/x-mixed-replace;boundary=ffserver')
-        await stream.close()
+            await async_aiohttp_proxy_stream(
+                self.hass, request, stream,
+                'multipart/x-mixed-replace;boundary=ffserver')
+            await stream.close()
