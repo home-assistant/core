@@ -829,7 +829,7 @@ pyflexit==0.3
 pyflic-homeassistant==0.4.dev0
 
 # homeassistant.components.light.futurenow
-pyfnip==0.1
+pyfnip==0.2
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.3.7
