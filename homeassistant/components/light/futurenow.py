@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     PLATFORM_SCHEMA)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyfnip==0.1']
+REQUIREMENTS = ['pyfnip==0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,8 +75,8 @@ class FutureNowLight(Light):
         self._dimmable = device['dimmable']
         self._channel = device['channel']
         self._brightness = None
+        self._last_brightness = 255
         self._state = None
-        self._skip_update = False
 
         if device['driver'] == CONF_DRIVER_FNIP6X10AD:
             self._light = pyfnip.FNIP6x2adOutput(device['host'],
@@ -111,25 +111,20 @@ class FutureNowLight(Light):
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
-        level = kwargs.get(ATTR_BRIGHTNESS, 255) if self._dimmable else 255
+        if self._dimmable:
+            level = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
+        else:
+            level = 255
         self._light.turn_on(to_futurenow_level(level))
-        self._brightness = level
-        self._state = True
-        self._skip_update = True
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         self._light.turn_off()
-        self._brightness = 0
-        self._state = False
-        self._skip_update = True
+        if self._brightness:
+            self._last_brightness = self._brightness
 
     def update(self):
         """Fetch new state data for this light."""
-        if self._skip_update:
-            self._skip_update = False
-            return
-
         state = int(self._light.is_on())
         self._state = bool(state)
         self._brightness = to_hass_level(state)
