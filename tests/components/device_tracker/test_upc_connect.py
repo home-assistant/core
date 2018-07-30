@@ -33,7 +33,7 @@ def mock_load_config():
         yield
 
 
-class TestUPCConnect(object):
+class TestUPCConnect:
     """Tests for the Ddwrt device tracker platform."""
 
     def setup_method(self):

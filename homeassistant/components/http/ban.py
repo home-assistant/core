@@ -1,5 +1,4 @@
 """Ban logic for HTTP component."""
-
 from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
@@ -69,6 +68,17 @@ async def ban_middleware(request, handler):
     except HTTPUnauthorized:
         await process_wrong_login(request)
         raise
+
+
+def log_invalid_auth(func):
+    """Decorator to handle invalid auth or failed login attempts."""
+    async def handle_req(view, request, *args, **kwargs):
+        """Try to log failed login attempts if response status >= 400."""
+        resp = await func(view, request, *args, **kwargs)
+        if resp.status >= 400:
+            await process_wrong_login(request)
+        return resp
+    return handle_req
 
 
 async def process_wrong_login(request):

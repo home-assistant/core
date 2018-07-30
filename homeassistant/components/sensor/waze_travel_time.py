@@ -14,7 +14,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
     ATTR_LATITUDE, ATTR_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.location as location
+from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -64,8 +64,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensor = WazeTravelTime(name, origin, destination, region,
                             incl_filter, excl_filter)
 
-    add_devices([sensor], True)
+    add_devices([sensor])
 
+    # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, sensor.update)
 
 

@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN,
@@ -49,6 +49,9 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the MQTT Alarm Control Panel platform."""
+    if discovery_info is not None:
+        config = PLATFORM_SCHEMA(discovery_info)
+
     async_add_devices([MqttAlarm(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
@@ -123,7 +126,7 @@ class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
         """Return one or more digits/characters."""
         if self._code is None:
             return None
-        elif isinstance(self._code, str) and re.search('^\\d+$', self._code):
+        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
             return 'Number'
         return 'Any'
 

@@ -101,7 +101,7 @@ def setup(hass, config):
     return True
 
 
-class HydrawiseHub(object):
+class HydrawiseHub:
     """Representation of a base Hydrawise device."""
 
     def __init__(self, data):

@@ -35,7 +35,7 @@ WEMO_STANDBY = 8
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up discovered WeMo switches."""
-    import pywemo.discovery as discovery
+    from pywemo import discovery
 
     if discovery_info is not None:
         location = discovery_info['ssdp_description']
@@ -166,9 +166,9 @@ class WemoSwitch(SwitchDevice):
             standby_state = int(self.insight_params['state'])
             if standby_state == WEMO_ON:
                 return STATE_ON
-            elif standby_state == WEMO_OFF:
+            if standby_state == WEMO_OFF:
                 return STATE_OFF
-            elif standby_state == WEMO_STANDBY:
+            if standby_state == WEMO_STANDBY:
                 return STATE_STANDBY
             return STATE_UNKNOWN
 

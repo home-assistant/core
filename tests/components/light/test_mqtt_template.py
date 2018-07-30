@@ -228,6 +228,8 @@ class TestLightMQTTTemplate(unittest.TestCase):
                                                '{{ green|d }}-'
                                                '{{ blue|d }}',
                         'command_off_template': 'off',
+                        'effect_list': ['colorloop', 'random'],
+                        'effect_command_topic': 'test_light_rgb/effect/set',
                         'qos': 2
                     }
                 })

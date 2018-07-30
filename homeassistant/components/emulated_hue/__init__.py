@@ -136,7 +136,7 @@ def setup(hass, yaml_config):
     return True
 
 
-class Config(object):
+class Config:
     """Hold configuration variables for the emulated hue bridge."""
 
     def __init__(self, hass, conf):

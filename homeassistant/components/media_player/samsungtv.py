@@ -153,7 +153,7 @@ class SamsungTVDevice(MediaPlayerDevice):
     def send_key(self, key):
         """Send a key to the tv and handles exceptions."""
         if self._power_off_in_progress() \
-                and not (key == 'KEY_POWER' or key == 'KEY_POWEROFF'):
+                and key not in ('KEY_POWER', 'KEY_POWEROFF'):
             _LOGGER.info("TV is powering off, not sending command: %s", key)
             return
         try:

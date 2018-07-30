@@ -55,11 +55,11 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         mode = self.vera_device.get_hvac_mode()
         if mode == 'HeatOn':
             return OPERATION_LIST[0]  # heat
-        elif mode == 'CoolOn':
+        if mode == 'CoolOn':
             return OPERATION_LIST[1]  # cool
-        elif mode == 'AutoChangeOver':
+        if mode == 'AutoChangeOver':
             return OPERATION_LIST[2]  # auto
-        elif mode == 'Off':
+        if mode == 'Off':
             return OPERATION_LIST[3]  # off
         return 'Off'
 
@@ -74,9 +74,9 @@ class VeraThermostat(VeraDevice, ClimateDevice):
         mode = self.vera_device.get_fan_mode()
         if mode == "ContinuousOn":
             return FAN_OPERATION_LIST[0]  # on
-        elif mode == "Auto":
+        if mode == "Auto":
             return FAN_OPERATION_LIST[1]  # auto
-        elif mode == "PeriodicOn":
+        if mode == "PeriodicOn":
             return FAN_OPERATION_LIST[2]  # cycle
         return "Auto"
 

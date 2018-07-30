@@ -749,7 +749,7 @@ class KodiDevice(MediaPlayerDevice):
         if media_type == "CHANNEL":
             return self.server.Player.Open(
                 {"item": {"channelid": int(media_id)}})
-        elif media_type == "PLAYLIST":
+        if media_type == "PLAYLIST":
             return self.server.Player.Open(
                 {"item": {"playlistid": int(media_id)}})
 
@@ -759,7 +759,7 @@ class KodiDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_set_shuffle(self, shuffle):
         """Set shuffle mode, for the first player."""
-        if len(self._players) < 1:
+        if not self._players:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle(
             {"playerid": self._players[0]['playerid'], "shuffle": shuffle})

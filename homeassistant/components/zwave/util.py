@@ -82,7 +82,7 @@ async def check_has_unique_id(entity, ready_callback, timeout_callback, loop):
         if entity.unique_id:
             ready_callback(waited)
             return
-        elif waited >= const.NODE_READY_WAIT_SECS:
+        if waited >= const.NODE_READY_WAIT_SECS:
             # Wait up to NODE_READY_WAIT_SECS seconds for unique_id to appear.
             timeout_callback(waited)
             return

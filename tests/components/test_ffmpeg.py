@@ -38,7 +38,7 @@ class MockFFmpegDev(ffmpeg.FFmpegBase):
         self.called_entities = entity_ids
 
 
-class TestFFmpegSetup(object):
+class TestFFmpegSetup:
     """Test class for ffmpeg."""
 
     def setup_method(self):

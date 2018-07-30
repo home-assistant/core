@@ -88,23 +88,23 @@ def setup_bravia(config, pin, hass, add_devices):
     if pin is None:
         request_configuration(config, hass, add_devices)
         return
-    else:
-        mac = _get_mac_address(host)
-        if mac is not None:
-            mac = mac.decode('utf8')
-        # If we came here and configuring this host, mark as done
-        if host in _CONFIGURING:
-            request_id = _CONFIGURING.pop(host)
-            configurator = hass.components.configurator
-            configurator.request_done(request_id)
-            _LOGGER.info("Discovery configuration done")
 
-        # Save config
-        save_json(
-            hass.config.path(BRAVIA_CONFIG_FILE),
-            {host: {'pin': pin, 'host': host, 'mac': mac}})
+    mac = _get_mac_address(host)
+    if mac is not None:
+        mac = mac.decode('utf8')
+    # If we came here and configuring this host, mark as done
+    if host in _CONFIGURING:
+        request_id = _CONFIGURING.pop(host)
+        configurator = hass.components.configurator
+        configurator.request_done(request_id)
+        _LOGGER.info("Discovery configuration done")
 
-        add_devices([BraviaTVDevice(host, mac, name, pin)])
+    # Save config
+    save_json(
+        hass.config.path(BRAVIA_CONFIG_FILE),
+        {host: {'pin': pin, 'host': host, 'mac': mac}})
+
+    add_devices([BraviaTVDevice(host, mac, name, pin)])
 
 
 def request_configuration(config, hass, add_devices):

@@ -23,7 +23,7 @@ class _BaseFlowManagerView(HomeAssistantView):
             data.pop('data')
             return data
 
-        elif result['type'] != data_entry_flow.RESULT_TYPE_FORM:
+        if result['type'] != data_entry_flow.RESULT_TYPE_FORM:
             return result
 
         import voluptuous_serialize

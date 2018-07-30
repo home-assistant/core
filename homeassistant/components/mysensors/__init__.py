@@ -52,9 +52,8 @@ def is_persistence_file(value):
     """Validate that persistence file path ends in either .pickle or .json."""
     if value.endswith(('.json', '.pickle')):
         return value
-    else:
-        raise vol.Invalid(
-            '{} does not end in either `.json` or `.pickle`'.format(value))
+    raise vol.Invalid(
+        '{} does not end in either `.json` or `.pickle`'.format(value))
 
 
 def deprecated(key):

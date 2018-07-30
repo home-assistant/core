@@ -125,7 +125,7 @@ class SmartPlugSwitch(SwitchDevice):
         self.data.update()
 
 
-class SmartPlugData(object):
+class SmartPlugData:
     """Get the latest data from smart plug."""
 
     def __init__(self, smartplug):

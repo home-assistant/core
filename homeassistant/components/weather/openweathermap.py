@@ -18,7 +18,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.8.0']
+REQUIREMENTS = ['pyowm==2.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -195,7 +195,7 @@ class OpenWeatherMapWeather(WeatherEntity):
         self.forecast_data = self._owm.forecast_data
 
 
-class WeatherData(object):
+class WeatherData:
     """Get the latest data from OpenWeatherMap."""
 
     def __init__(self, owm, latitude, longitude, mode):

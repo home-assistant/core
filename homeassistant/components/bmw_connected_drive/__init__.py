@@ -118,7 +118,7 @@ def setup_account(account_config: dict, hass, name: str) \
     return cd_account
 
 
-class BMWConnectedDriveAccount(object):
+class BMWConnectedDriveAccount:
     """Representation of a BMW vehicle."""
 
     def __init__(self, username: str, password: str, region_str: str,
