@@ -9,7 +9,7 @@ from zlib import adler32
 
 import voluptuous as vol
 
-import homeassistant.components.cover as cover
+from homeassistant.components import cover
 from homeassistant.const import (
     ATTR_DEVICE_CLASS, ATTR_SUPPORTED_FEATURES, ATTR_UNIT_OF_MEASUREMENT,
     CONF_IP_ADDRESS, CONF_NAME, CONF_PORT, CONF_TYPE, DEVICE_CLASS_HUMIDITY,
@@ -173,7 +173,7 @@ def get_accessory(hass, driver, state, aid, config):
 def generate_aid(entity_id):
     """Generate accessory aid with zlib adler32."""
     aid = adler32(entity_id.encode('utf-8'))
-    if aid == 0 or aid == 1:
+    if aid in (0, 1):
         return None
     return aid
 

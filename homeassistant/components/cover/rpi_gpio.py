@@ -14,7 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-import homeassistant.components.rpi_gpio as rpi_gpio
+from homeassistant.components import rpi_gpio
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

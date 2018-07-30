@@ -65,8 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if fstatus is None:
         _LOGGER.error("Failed to establish connection to FRITZ!Box: %s", host)
         return 1
-    else:
-        _LOGGER.info("Successfully connected to FRITZ!Box")
+    _LOGGER.info("Successfully connected to FRITZ!Box")
 
     add_devices([FritzboxMonitorSensor(name, fstatus)], True)
 

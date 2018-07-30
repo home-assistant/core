@@ -19,7 +19,8 @@ import async_timeout
 import voluptuous as vol
 
 from homeassistant.core import callback
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, \
+    SERVICE_TURN_ON
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
@@ -46,6 +47,9 @@ ATTR_FILENAME = 'filename'
 STATE_RECORDING = 'recording'
 STATE_STREAMING = 'streaming'
 STATE_IDLE = 'idle'
+
+# Bitfield of features supported by the camera entity
+SUPPORT_ON_OFF = 1
 
 DEFAULT_CONTENT_TYPE = 'image/jpeg'
 ENTITY_IMAGE_URL = '/api/camera_proxy/{0}?token={1}'
@@ -77,6 +81,35 @@ class Image:
 
     content_type = attr.ib(type=str)
     content = attr.ib(type=bytes)
+
+
+@bind_hass
+def turn_off(hass, entity_id=None):
+    """Turn off camera."""
+    hass.add_job(async_turn_off, hass, entity_id)
+
+
+@bind_hass
+async def async_turn_off(hass, entity_id=None):
+    """Turn off camera."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data)
+
+
+@bind_hass
+def turn_on(hass, entity_id=None):
+    """Turn on camera."""
+    hass.add_job(async_turn_on, hass, entity_id)
+
+
+@bind_hass
+async def async_turn_on(hass, entity_id=None):
+    """Turn on camera, and set operation mode."""
+    data = {}
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data)
 
 
 @bind_hass
@@ -118,6 +151,9 @@ async def async_get_image(hass, entity_id, timeout=10):
 
     if camera is None:
         raise HomeAssistantError('Camera not found')
+
+    if not camera.is_on:
+        raise HomeAssistantError('Camera is off')
 
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
         with async_timeout.timeout(timeout, loop=hass.loop):
@@ -163,6 +199,12 @@ async def async_setup(hass, config):
                 await camera.async_enable_motion_detection()
             elif service.service == SERVICE_DISABLE_MOTION:
                 await camera.async_disable_motion_detection()
+            elif service.service == SERVICE_TURN_OFF and \
+                    camera.supported_features & SUPPORT_ON_OFF:
+                await camera.async_turn_off()
+            elif service.service == SERVICE_TURN_ON and \
+                    camera.supported_features & SUPPORT_ON_OFF:
+                await camera.async_turn_on()
 
             if not camera.should_poll:
                 continue
@@ -200,6 +242,12 @@ async def async_setup(hass, config):
             except OSError as err:
                 _LOGGER.error("Can't write image to file: %s", err)
 
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_OFF, async_handle_camera_service,
+        schema=CAMERA_SERVICE_SCHEMA)
+    hass.services.async_register(
+        DOMAIN, SERVICE_TURN_ON, async_handle_camera_service,
+        schema=CAMERA_SERVICE_SCHEMA)
     hass.services.async_register(
         DOMAIN, SERVICE_ENABLE_MOTION, async_handle_camera_service,
         schema=CAMERA_SERVICE_SCHEMA)
@@ -242,6 +290,11 @@ class Camera(Entity):
     def entity_picture(self):
         """Return a link to the camera feed as entity picture."""
         return ENTITY_IMAGE_URL.format(self.entity_id, self.access_tokens[-1])
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        return 0
 
     @property
     def is_recording(self):
@@ -301,32 +354,23 @@ class Camera(Entity):
 
         last_image = None
 
-        try:
-            while True:
-                img_bytes = await self.async_camera_image()
-                if not img_bytes:
-                    break
+        while True:
+            img_bytes = await self.async_camera_image()
+            if not img_bytes:
+                break
 
-                if img_bytes and img_bytes != last_image:
+            if img_bytes and img_bytes != last_image:
+                await write_to_mjpeg_stream(img_bytes)
+
+                # Chrome seems to always ignore first picture,
+                # print it twice.
+                if last_image is None:
                     await write_to_mjpeg_stream(img_bytes)
+                last_image = img_bytes
 
-                    # Chrome seems to always ignore first picture,
-                    # print it twice.
-                    if last_image is None:
-                        await write_to_mjpeg_stream(img_bytes)
+            await asyncio.sleep(interval)
 
-                    last_image = img_bytes
-
-                await asyncio.sleep(interval)
-
-        except asyncio.CancelledError:
-            _LOGGER.debug("Stream closed by frontend.")
-            response = None
-            raise
-
-        finally:
-            if response is not None:
-                await response.write_eof()
+        return response
 
     async def handle_async_mjpeg_stream(self, request):
         """Serve an HTTP MJPEG stream from the camera.
@@ -342,14 +386,38 @@ class Camera(Entity):
         """Return the camera state."""
         if self.is_recording:
             return STATE_RECORDING
-        elif self.is_streaming:
+        if self.is_streaming:
             return STATE_STREAMING
         return STATE_IDLE
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return True
+
+    def turn_off(self):
+        """Turn off camera."""
+        raise NotImplementedError()
+
+    @callback
+    def async_turn_off(self):
+        """Turn off camera."""
+        return self.hass.async_add_job(self.turn_off)
+
+    def turn_on(self):
+        """Turn off camera."""
+        raise NotImplementedError()
+
+    @callback
+    def async_turn_on(self):
+        """Turn off camera."""
+        return self.hass.async_add_job(self.turn_on)
 
     def enable_motion_detection(self):
         """Enable motion detection in the camera."""
         raise NotImplementedError()
 
+    @callback
     def async_enable_motion_detection(self):
         """Call the job and enable motion detection."""
         return self.hass.async_add_job(self.enable_motion_detection)
@@ -358,6 +426,7 @@ class Camera(Entity):
         """Disable motion detection in camera."""
         raise NotImplementedError()
 
+    @callback
     def async_disable_motion_detection(self):
         """Call the job and disable motion detection."""
         return self.hass.async_add_job(self.disable_motion_detection)
@@ -402,17 +471,19 @@ class CameraView(HomeAssistantView):
         camera = self.component.get_entity(entity_id)
 
         if camera is None:
-            status = 404 if request[KEY_AUTHENTICATED] else 401
-            return web.Response(status=status)
+            raise web.HTTPNotFound()
 
         authenticated = (request[KEY_AUTHENTICATED] or
                          request.query.get('token') in camera.access_tokens)
 
         if not authenticated:
-            return web.Response(status=401)
+            raise web.HTTPUnauthorized()
 
-        response = await self.handle(request, camera)
-        return response
+        if not camera.is_on:
+            _LOGGER.debug('Camera is off.')
+            raise web.HTTPServiceUnavailable()
+
+        return await self.handle(request, camera)
 
     async def handle(self, request, camera):
         """Handle the camera request."""
@@ -435,7 +506,7 @@ class CameraImageView(CameraView):
                 return web.Response(body=image,
                                     content_type=camera.content_type)
 
-        return web.Response(status=500)
+        raise web.HTTPInternalServerError()
 
 
 class CameraMjpegStream(CameraView):
@@ -448,8 +519,7 @@ class CameraMjpegStream(CameraView):
         """Serve camera stream, possibly with interval."""
         interval = request.query.get('interval')
         if interval is None:
-            await camera.handle_async_mjpeg_stream(request)
-            return
+            return await camera.handle_async_mjpeg_stream(request)
 
         try:
             # Compose camera stream from stills
@@ -457,10 +527,9 @@ class CameraMjpegStream(CameraView):
             if interval < MIN_STREAM_INTERVAL:
                 raise ValueError("Stream interval must be be > {}"
                                  .format(MIN_STREAM_INTERVAL))
-            await camera.handle_async_still_stream(request, interval)
-            return
+            return await camera.handle_async_still_stream(request, interval)
         except ValueError:
-            return web.Response(status=400)
+            raise web.HTTPBadRequest()
 
 
 @callback

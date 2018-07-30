@@ -200,21 +200,24 @@ async def test_effect_list(hass):
     }})
 
     hass.states.async_set('light.test1', 'on',
-                          {'effect_list': ['None', 'Random', 'Colorloop']})
+                          {'effect_list': ['None', 'Random', 'Colorloop'],
+                           'supported_features': 4})
     await hass.async_block_till_done()
     state = hass.states.get('light.light_group')
     assert set(state.attributes['effect_list']) == {
         'None', 'Random', 'Colorloop'}
 
     hass.states.async_set('light.test2', 'on',
-                          {'effect_list': ['None', 'Random', 'Rainbow']})
+                          {'effect_list': ['None', 'Random', 'Rainbow'],
+                           'supported_features': 4})
     await hass.async_block_till_done()
     state = hass.states.get('light.light_group')
     assert set(state.attributes['effect_list']) == {
         'None', 'Random', 'Colorloop', 'Rainbow'}
 
     hass.states.async_set('light.test1', 'off',
-                          {'effect_list': ['None', 'Colorloop', 'Seven']})
+                          {'effect_list': ['None', 'Colorloop', 'Seven'],
+                           'supported_features': 4})
     await hass.async_block_till_done()
     state = hass.states.get('light.light_group')
     assert set(state.attributes['effect_list']) == {
@@ -229,27 +232,27 @@ async def test_effect(hass):
     }})
 
     hass.states.async_set('light.test1', 'on',
-                          {'effect': 'None', 'supported_features': 2})
+                          {'effect': 'None', 'supported_features': 6})
     await hass.async_block_till_done()
     state = hass.states.get('light.light_group')
     assert state.attributes['effect'] == 'None'
 
     hass.states.async_set('light.test2', 'on',
-                          {'effect': 'None', 'supported_features': 2})
+                          {'effect': 'None', 'supported_features': 6})
     await hass.async_block_till_done()
     state = hass.states.get('light.light_group')
     assert state.attributes['effect'] == 'None'
 
     hass.states.async_set('light.test3', 'on',
-                          {'effect': 'Random', 'supported_features': 2})
+                          {'effect': 'Random', 'supported_features': 6})
     await hass.async_block_till_done()
     state = hass.states.get('light.light_group')
     assert state.attributes['effect'] == 'None'
 
     hass.states.async_set('light.test1', 'off',
-                          {'effect': 'None', 'supported_features': 2})
+                          {'effect': 'None', 'supported_features': 6})
     hass.states.async_set('light.test2', 'off',
-                          {'effect': 'None', 'supported_features': 2})
+                          {'effect': 'None', 'supported_features': 6})
     await hass.async_block_till_done()
     state = hass.states.get('light.light_group')
     assert state.attributes['effect'] == 'Random'

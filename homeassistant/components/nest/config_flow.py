@@ -65,14 +65,14 @@ class NestFlowHandler(data_entry_flow.FlowHandler):
         if self.hass.config_entries.async_entries(DOMAIN):
             return self.async_abort(reason='already_setup')
 
-        elif not flows:
+        if not flows:
             return self.async_abort(reason='no_flows')
 
-        elif len(flows) == 1:
+        if len(flows) == 1:
             self.flow_impl = list(flows)[0]
             return await self.async_step_link()
 
-        elif user_input is not None:
+        if user_input is not None:
             self.flow_impl = user_input['flow_impl']
             return await self.async_step_link()
 

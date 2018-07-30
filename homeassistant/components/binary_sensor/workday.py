@@ -135,7 +135,7 @@ class IsWorkdaySensor(BinarySensorDevice):
         """Check if given day is in the includes list."""
         if day in self._workdays:
             return True
-        elif 'holiday' in self._workdays and now in self._obj_holidays:
+        if 'holiday' in self._workdays and now in self._obj_holidays:
             return True
 
         return False
@@ -144,7 +144,7 @@ class IsWorkdaySensor(BinarySensorDevice):
         """Check if given day is in the excludes list."""
         if day in self._excludes:
             return True
-        elif 'holiday' in self._excludes and now in self._obj_holidays:
+        if 'holiday' in self._excludes and now in self._obj_holidays:
             return True
 
         return False

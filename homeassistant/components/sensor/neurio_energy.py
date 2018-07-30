@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices([NeurioEnergy(data, DAILY_NAME, DAILY_TYPE, update_daily)])
 
 
-class NeurioData(object):
+class NeurioData:
     """Stores data retrieved from Neurio sensor."""
 
     def __init__(self, api_key, api_secret, sensor_id):

@@ -11,7 +11,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.components.sensor import PLATFORM_SCHEMA

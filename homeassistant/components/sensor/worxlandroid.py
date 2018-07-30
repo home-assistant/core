@@ -152,11 +152,11 @@ class WorxLandroidSensor(Entity):
 
             if state_obj[14] == 1:
                 return 'manual-stop'
-            elif state_obj[5] == 1 and state_obj[13] == 0:
+            if state_obj[5] == 1 and state_obj[13] == 0:
                 return 'charging'
-            elif state_obj[5] == 1 and state_obj[13] == 1:
+            if state_obj[5] == 1 and state_obj[13] == 1:
                 return 'charging-complete'
-            elif state_obj[15] == 1:
+            if state_obj[15] == 1:
                 return 'going-home'
             return 'mowing'
 

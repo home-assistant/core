@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.rpi_pfio as rpi_pfio
+from homeassistant.components import rpi_pfio
 from homeassistant.components.switch import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv

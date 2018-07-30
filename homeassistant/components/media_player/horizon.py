@@ -18,7 +18,7 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF,
                                  STATE_PAUSED, STATE_PLAYING)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util as util
+from homeassistant import util
 
 REQUIREMENTS = ['einder==0.3.1']
 

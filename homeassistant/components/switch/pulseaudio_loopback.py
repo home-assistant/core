@@ -11,7 +11,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.util as util
+from homeassistant import util
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_HOST, CONF_PORT)
 import homeassistant.helpers.config_validation as cv

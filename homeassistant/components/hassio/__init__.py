@@ -27,6 +27,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'hassio'
 DEPENDENCIES = ['http']
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
 
 CONF_FRONTEND_REPO = 'development_repo'
 
@@ -140,7 +142,7 @@ def async_check_config(hass):
 
     if not result:
         return "Hass.io config check API error"
-    elif result['result'] == "error":
+    if result['result'] == "error":
         return result['message']
     return None
 
@@ -167,6 +169,21 @@ def async_setup(hass, config):
         _LOGGER.error("Not connected with Hass.io")
         return False
 
+    store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    data = yield from store.async_load()
+
+    if data is None:
+        data = {}
+
+    if 'hassio_user' in data:
+        user = yield from hass.auth.async_get_user(data['hassio_user'])
+        refresh_token = list(user.refresh_tokens.values())[0]
+    else:
+        user = yield from hass.auth.async_create_system_user('Hass.io')
+        refresh_token = yield from hass.auth.async_create_refresh_token(user)
+        data['hassio_user'] = user.id
+        yield from store.async_save(data)
+
     # This overrides the normal API call that would be forwarded
     development_repo = config.get(DOMAIN, {}).get(CONF_FRONTEND_REPO)
     if development_repo is not None:
@@ -186,8 +203,13 @@ def async_setup(hass, config):
             embed_iframe=True,
         )
 
-    if 'http' in config:
-        yield from hassio.update_hass_api(config['http'])
+    # Temporary. No refresh token tells supervisor to use API password.
+    if hass.auth.active:
+        token = refresh_token.token
+    else:
+        token = None
+
+    yield from hassio.update_hass_api(config.get('http', {}), token)
 
     if 'homeassistant' in config:
         yield from hassio.update_hass_timezone(config['homeassistant'])

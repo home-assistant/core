@@ -158,7 +158,7 @@ class RestSensor(Entity):
         return self._attributes
 
 
-class RestData(object):
+class RestData:
     """Class for handling the data retrieval."""
 
     def __init__(self, method, resource, auth, headers, data, verify_ssl):

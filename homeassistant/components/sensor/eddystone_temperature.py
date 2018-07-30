@@ -120,7 +120,7 @@ class EddystoneTemp(Entity):
         return False
 
 
-class Monitor(object):
+class Monitor:
     """Continuously scan for BLE advertisements."""
 
     def __init__(self, hass, devices, bt_device_id):

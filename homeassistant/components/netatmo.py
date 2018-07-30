@@ -16,7 +16,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyatmo==1.0.0']
+REQUIREMENTS = ['pyatmo==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ def setup(hass, config):
     return True
 
 
-class CameraData(object):
+class CameraData:
     """Get the latest data from Netatmo."""
 
     def __init__(self, auth, home=None):

@@ -176,7 +176,7 @@ class GlancesSensor(Entity):
                 self._state = round(use / 1024**2, 1)
 
 
-class GlancesData(object):
+class GlancesData:
     """The class for handling the data retrieval."""
 
     def __init__(self, resource):

@@ -352,12 +352,12 @@ class DarkSkySensor(Entity):
         # percentages
         if self.type in ['precip_probability', 'cloud_cover', 'humidity']:
             return round(state * 100, 1)
-        elif (self.type in ['dew_point', 'temperature', 'apparent_temperature',
-                            'temperature_min', 'temperature_max',
-                            'apparent_temperature_min',
-                            'apparent_temperature_max',
-                            'precip_accumulation',
-                            'pressure', 'ozone', 'uvIndex']):
+        if self.type in ['dew_point', 'temperature', 'apparent_temperature',
+                         'temperature_min', 'temperature_max',
+                         'apparent_temperature_min',
+                         'apparent_temperature_max',
+                         'precip_accumulation',
+                         'pressure', 'ozone', 'uvIndex']:
             return round(state, 1)
         return state
 
@@ -372,7 +372,7 @@ def convert_to_camel(data):
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-class DarkSkyData(object):
+class DarkSkyData:
     """Get the latest data from Darksky."""
 
     def __init__(self, api_key, latitude, longitude, units, language,

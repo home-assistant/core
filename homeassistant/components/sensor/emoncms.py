@@ -190,7 +190,7 @@ class EmonCmsSensor(Entity):
             self._state = round(float(elem["value"]), DECIMALS)
 
 
-class EmonCmsData(object):
+class EmonCmsData:
     """The class for handling the data retrieval."""
 
     def __init__(self, hass, url, apikey, interval):

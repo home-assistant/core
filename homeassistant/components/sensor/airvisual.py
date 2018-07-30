@@ -248,7 +248,7 @@ class AirVisualSensor(Entity):
             })
 
 
-class AirVisualData(object):
+class AirVisualData:
     """Define an object to hold sensor data."""
 
     def __init__(self, client, **kwargs):

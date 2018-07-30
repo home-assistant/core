@@ -149,7 +149,7 @@ class DarkSkyWeather(WeatherEntity):
         self._ds_daily = self._dark_sky.daily
 
 
-class DarkSkyData(object):
+class DarkSkyData:
     """Get the latest data from Dark Sky."""
 
     def __init__(self, api_key, latitude, longitude, units):

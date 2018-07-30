@@ -12,7 +12,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.components.camera.mjpeg import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera)
 
-import homeassistant.components.zoneminder as zoneminder
+from homeassistant.components import zoneminder
 
 _LOGGER = logging.getLogger(__name__)
 
