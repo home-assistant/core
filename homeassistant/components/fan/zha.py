@@ -89,7 +89,7 @@ class ZhaFan(zha.Entity, FanEntity):
         yield from self.async_set_speed(SPEED_OFF)
 
     @asyncio.coroutine
-    def async_set_speed(self: FanEntity, speed: str) -> None:
+    def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         yield from self._endpoint.fan.write_attributes({
             'fan_mode': SPEED_TO_VALUE[speed]})
