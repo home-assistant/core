@@ -116,9 +116,7 @@ class YiCamera(Camera):
                 latest_dir, videos[-1])
         except (ConnectionRefusedError, StatusCodeError) as err:
             _LOGGER.error('Error while fetching video: %s', err)
-
-            if self._is_on:
-                self._is_on = False
+            self._is_on = False
             return None
 
     async def async_camera_image(self):
@@ -142,12 +140,14 @@ class YiCamera(Camera):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
 
-        if self._is_on:
-            stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
-            await stream.open_camera(
-                self._last_url, extra_cmd=self._extra_arguments)
+        if not self._is_on:
+            return
 
-            await async_aiohttp_proxy_stream(
-                self.hass, request, stream,
-                'multipart/x-mixed-replace;boundary=ffserver')
-            await stream.close()
+        stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
+        await stream.open_camera(
+            self._last_url, extra_cmd=self._extra_arguments)
+
+        await async_aiohttp_proxy_stream(
+            self.hass, request, stream,
+            'multipart/x-mixed-replace;boundary=ffserver')
+        await stream.close()
