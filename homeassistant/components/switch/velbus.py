@@ -72,4 +72,3 @@ class VelbusSwitch(SwitchDevice, VelbusEntity):
 
     def _on_update(self, state):
         self.schedule_update_ha_state()
-
