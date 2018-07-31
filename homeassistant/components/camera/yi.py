@@ -107,10 +107,7 @@ class YiCamera(Camera):
                 return None
 
             await ftp.quit()
-
-            if not self._is_on:
-                self._is_on = True
-
+            self._is_on = True
             return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(
                 self.user, self.passwd, self.host, self.port, self.path,
                 latest_dir, videos[-1])
