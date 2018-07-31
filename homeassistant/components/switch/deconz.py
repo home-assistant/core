@@ -57,19 +57,9 @@ class DeconzSwitch(SwitchDevice):
         self.async_schedule_update_ha_state()
 
     @property
-    def state(self):
-        """Return the state of the switch."""
-        return self._switch.state
-
-    @property
     def is_on(self):
         """Return true if switch is on."""
         return self._switch.state
-
-    @property
-    def is_standby(self):
-        """Return true if switch is in standby."""
-        return self._switch.state is False
 
     @property
     def name(self):
