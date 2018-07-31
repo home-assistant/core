@@ -56,7 +56,8 @@ async def async_setup(hass, config):
                             module.get_module_address(),
                             channel
                         ))
-        load_platform(hass, 'switch', DOMAIN,discovery_info['switch'], config)
+        load_platform(hass, 'switch', DOMAIN,
+                      discovery_info['switch'], config)
         load_platform(hass, 'binary_sensor', DOMAIN,
                       discovery_info['binary_sensor'], config)
 

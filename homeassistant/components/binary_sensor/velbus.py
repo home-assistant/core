@@ -29,7 +29,7 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 class VelbusBinarySensor(BinarySensorDevice, VelbusEntity):
     """Representation of a Velbus Binary Sensor."""
- 
+
     @property
     def unique_id(self):
         serial = 0
