@@ -75,13 +75,6 @@ class VelbusEntity:
         self._channel = channel
         self.hass = hass
 
-    def _init_velbus(self):
-        """Initialize Velbus on startup."""
-        self._module.on_status_update(self._channel, self._on_update)
-
-    def _on_update(self, state):
-        self.schedule_update_ha_state()
-
     def _load_module(self):
         """Update module status."""
         future = self.hass.loop.create_future()

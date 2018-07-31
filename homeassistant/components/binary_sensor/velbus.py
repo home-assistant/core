@@ -32,6 +32,7 @@ class VelbusBinarySensor(BinarySensorDevice, VelbusEntity):
 
     @property
     def unique_id(self):
+        """Get unique ID."""
         serial = 0
         if self._module.serial == 0:
             serial = self._module.get_module_address()
@@ -61,3 +62,10 @@ class VelbusBinarySensor(BinarySensorDevice, VelbusEntity):
     async def async_update(self):
         """Update module status."""
         await self._load_module()
+
+    def _init_velbus(self, callback):
+        """Initialize Velbus on startup."""
+        self._module.on_status_update(self._channel, callback)
+
+    def _on_update(self, state):
+        self.schedule_update_ha_state()

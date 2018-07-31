@@ -32,6 +32,7 @@ class VelbusSwitch(SwitchDevice, VelbusEntity):
 
     @property
     def unique_id(self):
+        """Get unique ID."""
         return "{}-{}".format(self._module.serial, self._channel)
 
     @property
@@ -64,3 +65,11 @@ class VelbusSwitch(SwitchDevice, VelbusEntity):
     async def async_update(self):
         """Update module status."""
         await self._load_module()
+
+    def _init_velbus(self, callback):
+        """Initialize Velbus on startup."""
+        self._module.on_status_update(self._channel, callback)
+
+    def _on_update(self, state):
+        self.schedule_update_ha_state()
+
