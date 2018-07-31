@@ -64,7 +64,7 @@ class RitAssistDeviceScanner:
             devices = self._api.get_devices()
 
             for device in devices:
-                if (not self._include or 
+                if (not self._include or
                         device.license_plate in self._include):
                     self._see(dev_id=device.plate_as_id,
                               gps=(device.latitude, device.longitude),
