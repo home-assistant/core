@@ -83,7 +83,7 @@ class RitAssistDeviceScanner:
                     self._see(dev_id=device.plate_as_id,
                               gps=(device.latitude, device.longitude),
                               attributes=device.state_attributes,
-                              icon='mdi:car')            
+                              icon='mdi:car')
 
         except requests.exceptions.ConnectionError:
             _LOGGER.error('ConnectionError: Could not connect to RitAssist')
