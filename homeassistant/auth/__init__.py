@@ -2,9 +2,10 @@
 import asyncio
 import logging
 from collections import OrderedDict
+from typing import List, Awaitable
 
 from homeassistant import data_entry_flow
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 
 from . import models
 from . import auth_store
@@ -13,7 +14,9 @@ from .providers import auth_provider_from_config
 _LOGGER = logging.getLogger(__name__)
 
 
-async def auth_manager_from_config(hass, provider_configs):
+async def auth_manager_from_config(
+        hass: HomeAssistant,
+        provider_configs: List[dict]) -> Awaitable['AuthManager']:
     """Initialize an auth manager from config."""
     store = auth_store.AuthStore(hass)
     if provider_configs:
