@@ -215,7 +215,7 @@ omit =
     homeassistant/components/opencv.py
     homeassistant/components/*/opencv.py
 
-    homeassistant/components/openuv/*
+    homeassistant/components/openuv.py
     homeassistant/components/*/openuv.py
 
     homeassistant/components/pilight.py
