@@ -28,6 +28,8 @@ CONF_IP_PORT = 'ip_port'
 CONF_HUB_USERNAME = 'username'
 CONF_HUB_PASSWORD = 'password'
 CONF_OVERRIDE = 'device_override'
+CONF_PLM_HUB_MSG = ('Must configure either a PLM port or a Hub host, username '
+                    'and password')
 CONF_ADDRESS = 'address'
 CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
@@ -64,8 +66,6 @@ EVENT_BUTTON_ON = 'insteon_plm.button_on'
 EVENT_BUTTON_OFF = 'insteon_plm.button_off'
 EVENT_CONF_BUTTON = 'button'
 
-CONF_PLM_OR_HUB = cv.has_at_least_one_key([CONF_PORT, CONF_HOST])
-
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
         vol.Required(CONF_ADDRESS): cv.string,
@@ -85,20 +85,32 @@ CONF_X10_SCHEMA = vol.All(
         }))
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.All({
-            vol.Exclusive(CONF_PORT,'plm_hub'): cv.string,
-            vol.Exclusive(CONF_HOST, 'plm_hub'): cv.string,
-            vol.Optional(CONF_IP_PORT, default=25105): int,
-            vol.Optional(CONF_HUB_USERNAME): cv.string,
-            vol.Optional(CONF_HUB_PASSWORD): cv.string,
-            vol.Optional(CONF_OVERRIDE): vol.All(
-                cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
-            vol.Optional(CONF_X10_ALL_UNITS_OFF): vol.In(HOUSECODES),
-            vol.Optional(CONF_X10_ALL_LIGHTS_ON): vol.In(HOUSECODES),
-            vol.Optional(CONF_X10_ALL_LIGHTS_OFF): vol.In(HOUSECODES),
-            vol.Optional(CONF_X10): vol.All(
-                cv.ensure_list_csv, [CONF_X10_SCHEMA])
-            }, cv.has_at_least_one_key(CONF_PORT, CONF_HOST))
+    DOMAIN: vol.All(
+        vol.Schema(
+            {vol.Exclusive(CONF_PORT,'plm_or_hub',
+                           msg=CONF_PLM_HUB_MSG): cv.isdevice,
+             vol.Exclusive(CONF_HOST, 'plm_or_hub',
+                           msg=CONF_PLM_HUB_MSG): cv.string,
+             vol.Optional(CONF_IP_PORT, default=25105): int,
+             vol.Optional(CONF_HUB_USERNAME): cv.string,
+             vol.Optional(CONF_HUB_PASSWORD): cv.string,
+             vol.Optional(CONF_OVERRIDE): vol.All(
+                 cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
+             vol.Optional(CONF_X10_ALL_UNITS_OFF): vol.In(HOUSECODES),
+             vol.Optional(CONF_X10_ALL_LIGHTS_ON): vol.In(HOUSECODES),
+             vol.Optional(CONF_X10_ALL_LIGHTS_OFF): vol.In(HOUSECODES),
+             vol.Optional(CONF_X10): vol.All(cv.ensure_list_csv,
+                                             [CONF_X10_SCHEMA])
+             }, extra=vol.ALLOW_EXTRA, required=True),
+        cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
+        vol.Schema(
+            {vol.Inclusive(CONF_HOST, 'hub',
+                           msg=CONF_PLM_HUB_MSG): cv.string,
+             vol.Inclusive(CONF_HUB_USERNAME, 'hub',
+                           msg=CONF_PLM_HUB_MSG): cv.string,
+             vol.Inclusive(CONF_HUB_PASSWORD, 'hub',
+                           msg=CONF_PLM_HUB_MSG): cv.string,
+             }))
     }, extra=vol.ALLOW_EXTRA)
 
 
