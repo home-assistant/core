@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.velbus/
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.velbus import DOMAIN
+from homeassistant.components.velbus import (DOMAIN, VelbusEntity)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,42 +23,20 @@ async def async_setup_platform(hass, config, async_add_devices,
     for switch in discovery_info:
         module = hass.data[DOMAIN].get_module(switch[0])
         channel = switch[1]
-        switches.append(VelbusSwitch(module, channel))
-    async_add_devices(switches, update_before_add=True)
+        switches.append(VelbusSwitch(module, channel, hass))
+    async_add_devices(switches, update_before_add=False)
 
 
-class VelbusSwitch(SwitchDevice):
+class VelbusSwitch(SwitchDevice, VelbusEntity):
     """Representation of a switch."""
 
-    def __init__(self, module, channel):
-        """Initialize a Velbus switch."""
-        self._module = module
-        self._channel = channel
-
-    async def async_added_to_hass(self):
-        """Add listener for state changes."""
-        def _init_velbus():
-            """Initialize Velbus on startup."""
-            self._module.on_status_update(self._channel, self._on_update)
-        await self.hass.async_add_job(_init_velbus)
-
-    def _on_update(self, state):
-        self.schedule_update_ha_state()
-
-    async def async_update(self):
-        """Update module status."""
-        future = self.hass.loop.create_future()
-
-        def callback():
-            future.set_result(None)
-
-        self._module.load(callback)
-
-        await future
+    @property
+    def unique_id(self):
+        return "{}-{}".format(self._module.serial, self._channel)
 
     @property
     def name(self):
-        """Return the display name of this switch."""
+        """Return the display name of this entity."""
         return self._module.get_name(self._channel)
 
     @property
@@ -78,3 +56,11 @@ class VelbusSwitch(SwitchDevice):
     def turn_off(self, **kwargs):
         """Instruct the switch to turn off."""
         self._module.turn_off(self._channel)
+
+    async def async_added_to_hass(self):
+        """Add listener for state changes."""
+        await self.hass.async_add_job(self._init_velbus)
+
+    async def async_update(self):
+        """Update module status."""
+        await self._load_module()

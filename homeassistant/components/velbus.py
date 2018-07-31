@@ -9,9 +9,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_PORT
-from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.discovery import load_platform
 
-REQUIREMENTS = ['python-velbus==2.0.16']
+REQUIREMENTS = ['python-velbus==2.0.17']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,13 +56,37 @@ async def async_setup(hass, config):
                             module.get_module_address(),
                             channel
                         ))
-        hass.async_add_job(async_load_platform(hass, 'switch', DOMAIN,
-                                               discovery_info['switch'],
-                                               config))
-        hass.async_add_job(async_load_platform(hass, 'binary_sensor', DOMAIN,
-                                               discovery_info['binary_sensor'],
-                                               config))
+        load_platform(hass, 'switch', DOMAIN,discovery_info['switch'], config)
+        load_platform(hass, 'binary_sensor', DOMAIN,
+                      discovery_info['binary_sensor'], config)
 
     controller.scan(callback)
 
     return True
+
+
+class VelbusEntity:
+    """Representation of a Velbus entity."""
+
+    def __init__(self, module, channel, hass):
+        """Initialize a Velbus entity."""
+        self._module = module
+        self._channel = channel
+        self.hass = hass
+
+    def _init_velbus(self):
+        """Initialize Velbus on startup."""
+        self._module.on_status_update(self._channel, self._on_update)
+
+    def _on_update(self, state):
+        self.schedule_update_ha_state()
+
+    def _load_module(self):
+        """Update module status."""
+        future = self.hass.loop.create_future()
+
+        def callback():
+            future.set_result(None)
+
+        self._module.load(callback)
+        return future
