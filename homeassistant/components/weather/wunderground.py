@@ -295,6 +295,12 @@ class WUndergroundWeather(WeatherEntity):
         """Return the forecast array."""
         data = []
         for entry in self.data['forecast']['simpleforecast']['forecastday']:
+            try:
+                condition = [k for k, v in CONDITION_CLASSES.items()
+                            if entry['conditions'] in v][0]
+            except IndexError:
+                condition = STATE_UNKNOWN
+
             data.append({
                 ATTR_FORECAST_TIME:
                     int(entry['date']['epoch']) * 1000,
@@ -309,8 +315,7 @@ class WUndergroundWeather(WeatherEntity):
                 ATTR_FORECAST_WIND_BEARING:
                     entry['avewind']['degrees'],
                 ATTR_FORECAST_CONDITION:
-                    [k for k, v in CONDITION_CLASSES.items()
-                     if entry['conditions'] in v][0]
+                    condition
             })
         return data
 
