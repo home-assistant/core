@@ -1,22 +1,21 @@
 """
 Support for BT Home Hub 5.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.bt_home_hub_5/
 """
 
 import logging
 import re
-
 import requests
-from html_table_parser_python3 import HTMLTableParser
+import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
                                                      DeviceScanner)
 from homeassistant.const import CONF_HOST
 
-REQUIREMENTS = ['html-table-parser-python3==0.1.2']
+REQUIREMENTS = ['html-table-parser-python3==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 _MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}:){5}[0-9A-Fa-f]{1,2})')
@@ -26,8 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def get_scanner(config):
+def get_scanner(hass, config):
     """Return a BT Home Hub 5 scanner if successful."""
     scanner = BTHomeHub5DeviceScanner(config[DOMAIN])
 
@@ -100,6 +98,8 @@ def _get_homehub_data(url):
 
 def _parse_homehub_response(data_str):
     """Parse the BT Home Hub 5 data format."""
+
+    from html_table_parser_python3 import HTMLTableParser
 
     p = HTMLTableParser()
     p.feed(data_str)
