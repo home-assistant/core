@@ -23,6 +23,8 @@ def load_json(filename: str, default: Union[List, Dict, None] = None) \
 
     Defaults to returning empty dict if file is not found.
     """
+    if filename is None:
+        return {}
     try:
         with open(filename, encoding='utf-8') as fdesc:
             return json.loads(fdesc.read())  # type: ignore

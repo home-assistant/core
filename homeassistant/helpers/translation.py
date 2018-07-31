@@ -36,6 +36,9 @@ def component_translation_file(hass, component, language):
         name = component
 
     module = get_component(hass, component)
+    if module is None:
+        _LOGGER.warning('component %s is not loaded', component)
+        return
     component_path = path.dirname(module.__file__)
 
     # If loading translations for the package root, (__init__.py), the
