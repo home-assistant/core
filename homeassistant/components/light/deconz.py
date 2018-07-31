@@ -4,15 +4,14 @@ Support for deCONZ light.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
-from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
-from homeassistant.components.deconz.const import CONF_ALLOW_DECONZ_GROUPS
+from homeassistant.components.deconz.const import (
+    CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DATA_DECONZ,
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, SWITCH_TYPES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
-from homeassistant.components.switch.deconz import SWITCH_TYPES
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util

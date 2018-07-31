@@ -5,14 +5,12 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.deconz/
 """
 from homeassistant.components.deconz.const import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB, SWITCH_TYPES)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
-
-SWITCH_TYPES = ["On/Off plug-in unit", "Smart plug"]
 
 
 async def async_setup_platform(hass, config, async_add_devices,
