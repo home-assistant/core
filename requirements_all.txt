@@ -579,6 +579,9 @@ nad_receiver==0.0.9
 # homeassistant.components.light.nanoleaf_aurora
 nanoleaf==0.4.1
 
+# homeassistant.components.device_tracker.keenetic_ndms2
+ndms2_client==0.0.3
+
 # homeassistant.components.sensor.netdata
 netdata==0.1.2
 
