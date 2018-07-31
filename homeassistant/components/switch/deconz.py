@@ -71,7 +71,7 @@ class DeconzSwitch(SwitchDevice):
     @property
     def is_standby(self):
         """Return true if switch is in standby."""
-        return self._switch.state == False
+        return self._switch.state is False
 
     @property
     def name(self):
