@@ -19,7 +19,7 @@ from homeassistant.components.image_processing import (
     CONF_ENTITY_ID, CONF_NAME, DOMAIN)
 from homeassistant.const import (
     CONF_IP_ADDRESS, CONF_PORT, CONF_PASSWORD, CONF_USERNAME,
-    HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
+    HTTP_BAD_REQUEST, HTTP_OK, HTTP_UNAUTHORIZED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +47,25 @@ SERVICE_TEACH_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
     vol.Required(FILE_PATH): cv.string,
 })
+
+
+def check_box_health(url, username, password):
+    """Check the health of the classifier and return its id if healthy."""
+    kwargs = {}
+    if username:
+        kwargs['auth'] = requests.auth.HTTPBasicAuth(username, password)
+    try:
+        response = requests.get(
+            url,
+            **kwargs
+        )
+        if response.status_code == HTTP_UNAUTHORIZED:
+            _LOGGER.error("AuthenticationError on %s", CLASSIFIER)
+            return None
+        if response.status_code == HTTP_OK:
+            return response.json()['hostname']
+    except requests.exceptions.ConnectionError:
+        _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
 
 
 def encode_image(image):
@@ -177,10 +196,14 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
         super().__init__()
         self._url_check = "http://{}:{}/{}/check".format(
             ip_address, port, CLASSIFIER)
+        self._url_health = "http://{}:{}/healthz".format(
+            ip_address, port)
         self._url_teach = "http://{}:{}/{}/teach".format(
             ip_address, port, CLASSIFIER)
         self._username = username
         self._password = password
+        self._hostname = check_box_health(
+            self._url_health, self._username, self._password)
         self._camera = camera_entity
         if name:
             self._name = name
@@ -230,4 +253,5 @@ class FaceClassifyEntity(ImageProcessingFaceEntity):
         return {
             'matched_faces': self._matched,
             'total_matched_faces': len(self._matched),
+            'hostname': self._hostname
             }
