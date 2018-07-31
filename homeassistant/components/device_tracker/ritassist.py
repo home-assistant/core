@@ -7,14 +7,12 @@ https://home-assistant.io/components/device_tracker.ritassist/
 import logging
 import voluptuous as vol
 
-REQUIREMENTS = ['ritassist==0.3']
-
-from ritassist import (API, Authentication, Device)
+from ritassist import (API, Authentication)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.device_tracker import (
-    ATTR_SOURCE_TYPE, SOURCE_TYPE_GPS, PLATFORM_SCHEMA)
+from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
+REQUIREMENTS = ['ritassist==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +55,7 @@ class RitAssistDeviceScanner:
         self._file = self._hass.config.path(CLIENT_UUID_CONFIG_FILE)
         self._authentication_info = self.load_authentication(self._file)
 
-        self._api = API(self._config.get(CONF_CLIENT_ID), 
+        self._api = API(self._config.get(CONF_CLIENT_ID),
                         self._config.get(CONF_CLIENT_SECRET),
                         self._config.get(CONF_USERNAME),
                         self._config.get(CONF_PASSWORD))
@@ -74,6 +72,7 @@ class RitAssistDeviceScanner:
 
     def _refresh(self) -> None:
         """Refresh device information from the platform."""
+        import requests
 
         try:
             include = self._config.get(CONF_INCLUDE)
@@ -82,9 +81,9 @@ class RitAssistDeviceScanner:
             for device in self._devices:
                 if (not include or device.license_plate in include):
                     self._see(dev_id=device.plate_as_id,
-                            gps=(device.latitude, device.longitude),
-                            attributes=device.state_attributes,
-                            icon='mdi:car')            
+                              gps=(device.latitude, device.longitude),
+                              attributes=device.state_attributes,
+                              icon='mdi:car')            
 
         except requests.exceptions.ConnectionError:
             _LOGGER.error('ConnectionError: Could not connect to RitAssist')
