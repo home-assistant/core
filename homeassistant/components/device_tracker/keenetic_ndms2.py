@@ -70,19 +70,19 @@ class KeeneticNDMS2DeviceScanner(DeviceScanner):
 
         return [device.mac for device in self.last_results]
 
-    def get_device_name(self, mac):
+    def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         filter_name = [device.name for device in self.last_results
-                       if device.mac == mac]
+                       if device.mac == device]
 
         if filter_name:
             return filter_name[0]
         return None
 
-    def get_extra_attributes(self, mac):
+    def get_extra_attributes(self, device):
         """Return the IP of the given device."""
         filter_ip = [result.ip for result in self.last_results
-                     if result.mac == mac]
+                     if result.mac == device]
         if filter_ip:
             return {'ip': filter_ip[0]}
         return {'ip': None}
