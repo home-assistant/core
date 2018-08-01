@@ -83,7 +83,7 @@ class VeraSensor(VeraDevice, Entity):
         elif self.vera_device.category == veraApi.CATEGORY_SCENE_CONTROLLER:
             value = self.vera_device.get_last_scene_id(True)
             time = self.vera_device.get_last_scene_time(True)
-            if time == self.last_changed_time:
+            if time != None and time == self.last_changed_time:
                 self.current_value = None
             else:
                 self.current_value = value
