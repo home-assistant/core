@@ -11,7 +11,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
-REQUIREMENTS = ['ritassist==0.3']
+REQUIREMENTS = ['ritassist==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_scanner(hass, config: dict, see, discovery_info=None):
     """Validate the configuration and return a RitAssist scanner."""
-    RitAssistDeviceScanner(hass, config, see, discovery_info)
+    scanner = RitAssistDeviceScanner(hass, config, see, discovery_info)
+    if not scanner.login(hass):
+        _LOGGER.error('RitAssist authentication failed')
+        return False
     return True
 
 
@@ -40,7 +43,6 @@ class RitAssistDeviceScanner:
 
     def __init__(self, hass, config, see, discovery_info):
         """Initialize RitAssistDeviceScanner."""
-        from homeassistant.helpers.event import track_utc_time_change
         from ritassist import API
 
         self._include = config.get(CONF_INCLUDE)
@@ -51,10 +53,22 @@ class RitAssistDeviceScanner:
                         config.get(CONF_USERNAME),
                         config.get(CONF_PASSWORD))
 
+    def setup(self, hass):
+        """Setup a timer and start gathering devices."""
+        from homeassistant.helpers.event import track_utc_time_change
+
+        self._refresh()
         track_utc_time_change(hass,
                               lambda now: self._refresh(),
                               second=range(0, 60, 30))
-        self._refresh()
+
+    def login(self, hass):
+        """Perform a login on the RitAssist API."""
+        if self._api.login():
+            self.setup(hass)
+            return True
+        else:
+            return False
 
     def _refresh(self) -> None:
         """Refresh device information from the platform."""
