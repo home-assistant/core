@@ -187,3 +187,12 @@ class DeconzLight(Light):
                 del data['on']
 
         await self._light.async_set_state(data)
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = {}
+        attributes['is_deconz_group'] = self._light.type == 'LightGroup'
+        if self._light.type == 'LightGroup':
+            attributes['all_on'] = self._light.all_on
+        return attributes
