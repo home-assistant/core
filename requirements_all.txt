@@ -305,6 +305,9 @@ eliqonline==1.0.14
 # homeassistant.components.enocean
 enocean==0.40
 
+# homeassistant.components.weather.environment_canada
+env_canada==0.0.2
+
 # homeassistant.components.sensor.envirophat
 # envirophat==0.0.6
 
