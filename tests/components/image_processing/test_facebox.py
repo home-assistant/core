@@ -73,7 +73,7 @@ VALID_CONFIG = {
 def mock_healthybox():
     """Mock fb.check_box_health."""
     check_box_health = 'homeassistant.components.image_processing.' \
-    'facebox.check_box_health'
+        'facebox.check_box_health'
     with patch(check_box_health, return_value=MOCK_BOX_ID) as _mock_healthybox:
         yield _mock_healthybox
 
