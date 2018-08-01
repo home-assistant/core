@@ -16,6 +16,7 @@ from homeassistant.components import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -549,8 +550,9 @@ class StartStopTrait(_Trait):
         return False
 
     def sync_attributes(self):
-        """Assume that all vacuum support pause."""
-        return {'pausable': True}
+        """Return if vacuum is pausable."""
+        return {'pausable': (self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+                             & vacuum.SUPPORT_PAUSE) != 0}
 
     def query_attributes(self):
         """Return the running/paused state."""
@@ -587,17 +589,17 @@ class StartStopTrait(_Trait):
 
             if command == start_stop_command:
                 if params[param_start]:
-                    service = vacuum.SERVICE_START_PAUSE
+                    service = vacuum.SERVICE_START
                 else:
                     service = vacuum.SERVICE_STOP
 
             if command == pause_unpause_command:
                 if params[param_pause]:
                     if state == vacuum.STATE_CLEANING:
-                        service = vacuum.SERVICE_START_PAUSE
+                        service = vacuum.SERVICE_PAUSE
                 else:
                     if state == vacuum.STATE_PAUSED:
-                        service = vacuum.SERVICE_START_PAUSE
+                        service = vacuum.SERVICE_START
 
         await hass.services.async_call(service_domain, service, {
             ATTR_ENTITY_ID: self.state.entity_id
