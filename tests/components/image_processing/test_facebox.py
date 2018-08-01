@@ -114,6 +114,7 @@ def test_check_box_health(caplog):
         assert fb.check_box_health(url, None, None) is None
         assert 'AuthenticationError on facebox' in caplog.text
 
+
 def test_encode_image():
     """Test that binary data is encoded correctly."""
     assert fb.encode_image(b'test') == 'dGVzdA=='
