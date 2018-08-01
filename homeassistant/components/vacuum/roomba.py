@@ -6,19 +6,19 @@ https://home-assistant.io/components/vacuum.roomba/
 """
 import asyncio
 import logging
-import voluptuous as vol
 
 import async_timeout
+import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.vacuum import (
-    VacuumDevice, PLATFORM_SCHEMA, SUPPORT_BATTERY, SUPPORT_FAN_SPEED,
-    SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATUS,
-    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON)
+    PLATFORM_SCHEMA, STATE_CLEANING, STATE_DOCKED, STATE_ERROR, STATE_IDLE,
+    STATE_PAUSED, STATE_RETURNING, SUPPORT_BATTERY, SUPPORT_FAN_SPEED,
+    SUPPORT_PAUSE, SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STATE,
+    SUPPORT_STOP, StateVacuumDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
-
 
 REQUIREMENTS = ['roombapy==1.3.1']
 
@@ -61,15 +61,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # Commonly supported features
 SUPPORT_ROOMBA = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
-                 SUPPORT_SEND_COMMAND | SUPPORT_STATUS | SUPPORT_STOP | \
-                 SUPPORT_TURN_OFF | SUPPORT_TURN_ON
+    SUPPORT_SEND_COMMAND | SUPPORT_STATE | SUPPORT_STOP
 
 # Only Roombas with CarpetBost can set their fanspeed
 SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
 
+STATUS_TO_STATE = {
+    'Charging': STATE_DOCKED,
+    'New Mission': STATE_CLEANING,
+    'Running': STATE_CLEANING,
+    'Recharging': STATE_DOCKED,
+    'Stuck': STATE_ERROR,
+    'User Docking': STATE_RETURNING,
+    'Docking': STATE_RETURNING,
+    'Docking - End Mission': STATE_RETURNING,
+    'Cancelled': STATE_RETURNING,
+    'Stopped': STATE_IDLE,
+    'Paused': STATE_PAUSED,
+    'End Mission': STATE_DOCKED,
+}
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+
+async def async_setup_platform(hass, config, async_add_devices, discovery_info=None):  # noqa:E501
     """Set up the iRobot Roomba vacuum cleaner platform."""
     from roomba import Roomba
     if PLATFORM not in hass.data:
@@ -95,7 +108,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     try:
         with async_timeout.timeout(9):
-            yield from hass.async_add_job(roomba.connect)
+            await hass.async_add_job(roomba.connect)
     except asyncio.TimeoutError:
         raise PlatformNotReady
 
@@ -105,7 +118,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     async_add_devices([roomba_vac], update_before_add=True)
 
 
-class RoombaVacuum(VacuumDevice):
+class RoombaVacuum(StateVacuumDevice):
     """Representation of a Roomba Vacuum cleaner robot."""
 
     def __init__(self, name, roomba):
@@ -114,12 +127,16 @@ class RoombaVacuum(VacuumDevice):
         self._battery_level = None
         self._capabilities = {}
         self._fan_speed = None
-        self._is_on = False
         self._name = name
+        self._state = None
         self._state_attrs = {}
-        self._status = None
         self.vacuum = roomba
         self.vacuum_state = None
+
+    @property
+    def state(self):
+        """Return the state of the vacuum cleaner."""
+        return self._state
 
     @property
     def supported_features(self):
@@ -136,23 +153,14 @@ class RoombaVacuum(VacuumDevice):
     @property
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
-        if self._capabilities.get(CAP_CARPET_BOOST):
-            return FAN_SPEEDS
+        if not self._capabilities.get(CAP_CARPET_BOOST):
+            return None
+        return FAN_SPEEDS
 
     @property
     def battery_level(self):
         """Return the battery level of the vacuum cleaner."""
         return self._battery_level
-
-    @property
-    def status(self):
-        """Return the status of the vacuum cleaner."""
-        return self._status
-
-    @property
-    def is_on(self) -> bool:
-        """Return True if entity is on."""
-        return self._is_on
 
     @property
     def available(self) -> bool:
@@ -169,54 +177,36 @@ class RoombaVacuum(VacuumDevice):
         """Return the state attributes of the device."""
         return self._state_attrs
 
-    @asyncio.coroutine
-    def async_turn_on(self, **kwargs):
-        """Turn the vacuum on."""
-        yield from self.hass.async_add_job(self.vacuum.send_command, 'start')
-        self._is_on = True
+    def start(self, **kwargs):
+        """Start a cleaning cycle."""
+        self.send_command('start')
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs):
-        """Turn the vacuum off and return to home."""
-        yield from self.async_stop()
-        yield from self.async_return_to_base()
+    def stop(self, **kwargs):
+        """Stop a cleaning cycle and return to base."""
+        self.send_command('stop')
 
-    @asyncio.coroutine
-    def async_stop(self, **kwargs):
-        """Stop the vacuum cleaner."""
-        yield from self.hass.async_add_job(self.vacuum.send_command, 'stop')
-        self._is_on = False
-
-    @asyncio.coroutine
-    def async_resume(self, **kwargs):
+    def resume(self, **kwargs):
         """Resume the cleaning cycle."""
-        yield from self.hass.async_add_job(self.vacuum.send_command, 'resume')
-        self._is_on = True
+        self.send_command('resume')
 
-    @asyncio.coroutine
-    def async_pause(self, **kwargs):
+    def pause(self, **kwargs):
         """Pause the cleaning cycle."""
-        yield from self.hass.async_add_job(self.vacuum.send_command, 'pause')
-        self._is_on = False
+        self.send_command('pause')
 
-    @asyncio.coroutine
-    def async_start_pause(self, **kwargs):
+    def start_pause(self, **kwargs):
         """Pause the cleaning task or resume it."""
-        if self.vacuum_state and self.is_on:  # vacuum is running
-            yield from self.async_pause()
-        elif self._status == 'Stopped':  # vacuum is stopped
-            yield from self.async_resume()
+        if self.state == STATE_CLEANING:  # vacuum is running
+            self.pause()
+        elif self.state == STATE_PAUSED:  # vacuum is stopped
+            self.resume()
         else:  # vacuum is off
-            yield from self.async_turn_on()
+            self.start()
 
-    @asyncio.coroutine
-    def async_return_to_base(self, **kwargs):
+    def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
-        yield from self.hass.async_add_job(self.vacuum.send_command, 'dock')
-        self._is_on = False
+        self.vacuum.send_command('dock')
 
-    @asyncio.coroutine
-    def async_set_fan_speed(self, fan_speed, **kwargs):
+    def set_fan_speed(self, fan_speed, **kwargs):
         """Set fan speed."""
         if fan_speed.capitalize() in FAN_SPEEDS:
             fan_speed = fan_speed.capitalize()
@@ -239,22 +229,14 @@ class RoombaVacuum(VacuumDevice):
             _LOGGER.error("No such fan speed available: %s", fan_speed)
             return
         # The set_preference method does only accept string values
-        yield from self.hass.async_add_job(
-            self.vacuum.set_preference, 'carpetBoost', str(carpet_boost))
-        yield from self.hass.async_add_job(
-            self.vacuum.set_preference, 'vacHigh', str(high_perf))
+        self.vacuum.set_preference('carpetBoost', str(carpet_boost))
+        self.vacuum.set_preference('vacHigh', str(high_perf))
 
-    @asyncio.coroutine
-    def async_send_command(self, command, params=None, **kwargs):
+    def send_command(self, command, params=None, **kwargs):
         """Send raw command."""
-        _LOGGER.debug("async_send_command %s (%s), %s",
-                      command, params, kwargs)
-        yield from self.hass.async_add_job(
-            self.vacuum.send_command, command, params)
-        return True
+        self.vacuum.send_command(command)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Fetch state from the device."""
         # No data, no update
         if not self.vacuum.master_state:
@@ -265,6 +247,9 @@ class RoombaVacuum(VacuumDevice):
         _LOGGER.debug("Got new state from the vacuum: %s", state)
         self.vacuum_state = state
         self._available = True
+
+        # Roomba software version
+        software_version = state.get('softwareVer')
 
         # Get the capabilities of our unit
         capabilities = state.get('cap', {})
@@ -277,20 +262,24 @@ class RoombaVacuum(VacuumDevice):
             CAP_CARPET_BOOST: cap_carpet_boost == 1,
             CAP_POSITION: cap_pos == 1,
         }
+        self._battery_level = state.get('batPct')
 
         bin_state = state.get('bin', {})
 
-        # Roomba software version
-        software_version = state.get('softwareVer')
+        # Vacuum state
+        try:
+            if self.vacuum.current_state is not None:
+                self._state = STATUS_TO_STATE[self.vacuum.current_state]
+            else:
+                self._state = None
+        except KeyError:
+            _LOGGER.error("Status not supported: %s",
+                          self.vacuum.current_state)
 
         # Error message in plain english
-        error_msg = 'None'
+        # Skip error attr if there is none
         if hasattr(self.vacuum, 'error_message'):
-            error_msg = self.vacuum.error_message
-
-        self._battery_level = state.get('batPct')
-        self._status = self.vacuum.current_state
-        self._is_on = self._status in ['Running']
+            self._state_attrs[ATTR_ERROR] = self.vacuum.error_message
 
         # Set properties that are to appear in the GUI
         self._state_attrs = {
@@ -300,7 +289,7 @@ class RoombaVacuum(VacuumDevice):
 
         # Only add cleaning time and cleaned area attrs when the vacuum is
         # currently on
-        if self._is_on:
+        if self._state == STATE_CLEANING:
             # Get clean mission status
             mission_state = state.get('cleanMissionStatus', {})
             cleaning_time = mission_state.get('mssnM')
@@ -310,10 +299,6 @@ class RoombaVacuum(VacuumDevice):
                 cleaned_area = round(cleaned_area * 0.0929)
             self._state_attrs[ATTR_CLEANING_TIME] = cleaning_time
             self._state_attrs[ATTR_CLEANED_AREA] = cleaned_area
-
-        # Skip error attr if there is none
-        if error_msg and error_msg != 'None':
-            self._state_attrs[ATTR_ERROR] = error_msg
 
         # Not all Roombas expose position data
         # https://github.com/koalazak/dorita980/issues/48
