@@ -22,7 +22,7 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==42']
+REQUIREMENTS = ['pydeconz==43']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -96,7 +96,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_DECONZ_EVENT] = []
     hass.data[DATA_DECONZ_UNSUB] = []
 
-    for component in ['binary_sensor', 'light', 'scene', 'sensor']:
+    for component in ['binary_sensor', 'light', 'scene', 'sensor', 'switch']:
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
 

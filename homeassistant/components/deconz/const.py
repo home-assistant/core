@@ -14,3 +14,5 @@ CONF_ALLOW_DECONZ_GROUPS = 'allow_deconz_groups'
 
 ATTR_DARK = 'dark'
 ATTR_ON = 'on'
+
+SWITCH_TYPES = ["On/Off plug-in unit", "Smart plug"]
