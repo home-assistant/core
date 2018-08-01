@@ -10,7 +10,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.openuv import (
-    DATA_UV, DOMAIN, SENSORS, TOPIC_UPDATE, TYPE_CURRENT_OZONE_VALUE,
+    DATA_UV, DOMAIN, SENSORS, TOPIC_UPDATE, TYPE_CURRENT_OZONE_LEVEL,
     TYPE_CURRENT_UV_INDEX, TYPE_MAX_UV_INDEX, TYPE_SAFE_EXPOSURE_TIME_1,
     TYPE_SAFE_EXPOSURE_TIME_2, TYPE_SAFE_EXPOSURE_TIME_3,
     TYPE_SAFE_EXPOSURE_TIME_4, TYPE_SAFE_EXPOSURE_TIME_5,
@@ -101,7 +101,7 @@ class OpenUvSensor(OpenUvEntity):
     async def async_update(self):
         """Update the state."""
         data = self.openuv.data[DATA_UV]['result']
-        if self._sensor_type == TYPE_CURRENT_OZONE_VALUE:
+        if self._sensor_type == TYPE_CURRENT_OZONE_LEVEL:
             self._state = data['ozone']
         elif self._sensor_type == TYPE_CURRENT_UV_INDEX:
             self._state = data['uv']

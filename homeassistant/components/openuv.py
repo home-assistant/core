@@ -35,7 +35,7 @@ NOTIFICATION_TITLE = 'OpenUV Component Setup'
 
 TOPIC_UPDATE = '{0}_data_update'.format(DOMAIN)
 
-TYPE_CURRENT_OZONE_VALUE = 'current_ozone_value'
+TYPE_CURRENT_OZONE_LEVEL = 'current_ozone_level'
 TYPE_CURRENT_UV_INDEX = 'current_uv_index'
 TYPE_MAX_UV_INDEX = 'max_uv_index'
 TYPE_PROTECTION_WINDOW = 'uv_protection_window'
@@ -56,8 +56,8 @@ BINARY_SENSOR_SCHEMA = vol.Schema({
 })
 
 SENSORS = {
-    TYPE_CURRENT_OZONE_VALUE: (
-        'Current Ozone LEVEL', 'mdi:vector-triangle', 'du'),
+    TYPE_CURRENT_OZONE_LEVEL: (
+        'Current Ozone Level', 'mdi:vector-triangle', 'du'),
     TYPE_CURRENT_UV_INDEX: ('Current UV Index', 'mdi:weather-sunny', 'index'),
     TYPE_MAX_UV_INDEX: ('Max UV Index', 'mdi:weather-sunny', 'index'),
     TYPE_SAFE_EXPOSURE_TIME_1: (
