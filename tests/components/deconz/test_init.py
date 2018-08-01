@@ -99,8 +99,8 @@ async def test_setup_entry_successful(hass):
     assert hass.data[deconz.DOMAIN]
     assert hass.data[deconz.DATA_DECONZ_ID] == {}
     assert len(hass.data[deconz.DATA_DECONZ_UNSUB]) == 1
-    assert len(mock_add_job.mock_calls) == 4
-    assert len(mock_config_entries.async_forward_entry_setup.mock_calls) == 4
+    assert len(mock_add_job.mock_calls) == 5
+    assert len(mock_config_entries.async_forward_entry_setup.mock_calls) == 5
     assert mock_config_entries.async_forward_entry_setup.mock_calls[0][1] == \
         (entry, 'binary_sensor')
     assert mock_config_entries.async_forward_entry_setup.mock_calls[1][1] == \
@@ -109,6 +109,8 @@ async def test_setup_entry_successful(hass):
         (entry, 'scene')
     assert mock_config_entries.async_forward_entry_setup.mock_calls[3][1] == \
         (entry, 'sensor')
+    assert mock_config_entries.async_forward_entry_setup.mock_calls[4][1] == \
+        (entry, 'switch')
 
 
 async def test_unload_entry(hass):
