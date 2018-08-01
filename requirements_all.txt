@@ -1206,6 +1206,9 @@ rflink==0.0.37
 # homeassistant.components.ring
 ring_doorbell==0.2.1
 
+# homeassistant.components.device_tracker.ritassist
+ritassist==0.5
+
 # homeassistant.components.notify.rocketchat
 rocketchat-API==0.6.1
 
