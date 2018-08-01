@@ -238,9 +238,9 @@ class DysonPureCoolLinkDevice(FanEntity):
         return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
 
     @property
-    def state_attributes(self) -> dict:
+    def device_state_attributes(self) -> dict:
         """Return optional state attributes."""
-        attributes = super().state_attributes
-        attributes[ATTR_IS_NIGHT_MODE] = self.is_night_mode
-        attributes[ATTR_IS_AUTO_MODE] = self.is_auto_mode
-        return attributes
+        return {
+            ATTR_IS_NIGHT_MODE : self.is_night_mode,
+            ATTR_IS_AUTO_MODE : self.is_auto_mode
+            }
