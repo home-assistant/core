@@ -5,11 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.ritassist/
 """
 import logging
+
+import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.helpers.event import track_utc_time_change
 
 REQUIREMENTS = ['ritassist==0.5']
 
@@ -30,8 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_scanner(hass, config: dict, see, discovery_info=None):
-    """Validate the configuration and return a RitAssist scanner."""
-    scanner = RitAssistDeviceScanner(hass, config, see, discovery_info)
+    """Set up the DeviceScanner and check if login is valid."""
+    scanner = RitAssistDeviceScanner(config, see)
     if not scanner.login(hass):
         _LOGGER.error('RitAssist authentication failed')
         return False
@@ -41,7 +44,7 @@ def setup_scanner(hass, config: dict, see, discovery_info=None):
 class RitAssistDeviceScanner:
     """Define a scanner for the RitAssist platform."""
 
-    def __init__(self, hass, config, see, discovery_info):
+    def __init__(self, config, see):
         """Initialize RitAssistDeviceScanner."""
         from ritassist import API
 
@@ -55,8 +58,6 @@ class RitAssistDeviceScanner:
 
     def setup(self, hass):
         """Setup a timer and start gathering devices."""
-        from homeassistant.helpers.event import track_utc_time_change
-
         self._refresh()
         track_utc_time_change(hass,
                               lambda now: self._refresh(),
@@ -72,8 +73,6 @@ class RitAssistDeviceScanner:
 
     def _refresh(self) -> None:
         """Refresh device information from the platform."""
-        import requests
-
         try:
             devices = self._api.get_devices()
 
