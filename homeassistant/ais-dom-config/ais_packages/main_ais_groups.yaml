@@ -76,3 +76,9 @@ group:
         - group.ais_host_rename
         - group.system_status
         - group.ais_devices_in_network
+  tv:
+      name: TV
+      view: yes
+      icon: mdi:television-classic
+      entities:
+        - group.ais_answer

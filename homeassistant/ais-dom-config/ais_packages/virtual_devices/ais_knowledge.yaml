@@ -16,4 +16,8 @@ group:
     entities:
       - input_text.ais_knowledge_query
       - sensor.ais_knowledge_answer
+  ais_answer:
+    name: "### CHAT ^‿^"
+    entities:
+      - sensor.ais_knowledge_answer
 
