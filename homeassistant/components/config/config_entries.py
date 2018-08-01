@@ -7,7 +7,7 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView, FlowManagerResourceView)
 
 
-REQUIREMENTS = ['voluptuous-serialize==2']
+REQUIREMENTS = ['voluptuous-serialize==2.0.0']
 
 
 @asyncio.coroutine
