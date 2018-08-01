@@ -68,8 +68,7 @@ class RitAssistDeviceScanner:
         if self._api.login():
             self.setup(hass)
             return True
-        else:
-            return False
+        return False
 
     def _refresh(self) -> None:
         """Refresh device information from the platform."""
