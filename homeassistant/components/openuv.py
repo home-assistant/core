@@ -33,7 +33,7 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=30)
 NOTIFICATION_ID = 'openuv_notification'
 NOTIFICATION_TITLE = 'OpenUV Component Setup'
 
-SENSOR_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
+TOPIC_UPDATE = '{0}_data_update'.format(DOMAIN)
 
 TYPE_CURRENT_OZONE_INDEX = 'current_ozone_index'
 TYPE_CURRENT_UV_INDEX = 'current_uv_index'
@@ -135,7 +135,7 @@ async def async_setup(hass, config):
         """Refresh OpenUV data."""
         _LOGGER.debug('Refreshing OpenUV data')
         await openuv.async_update()
-        async_dispatcher_send(hass, SENSOR_UPDATE_TOPIC)
+        async_dispatcher_send(hass, TOPIC_UPDATE)
 
     async_track_time_interval(hass, refresh_sensors, conf[CONF_SCAN_INTERVAL])
 

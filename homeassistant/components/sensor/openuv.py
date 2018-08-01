@@ -10,7 +10,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.openuv import (
-    DATA_UV, DOMAIN, SENSOR_UPDATE_TOPIC, SENSORS, TYPE_CURRENT_OZONE_INDEX,
+    DATA_UV, DOMAIN, SENSORS, TOPIC_UPDATE, TYPE_CURRENT_OZONE_INDEX,
     TYPE_CURRENT_UV_INDEX, TYPE_MAX_UV_INDEX, TYPE_SAFE_EXPOSURE_TIME_1,
     TYPE_SAFE_EXPOSURE_TIME_2, TYPE_SAFE_EXPOSURE_TIME_3,
     TYPE_SAFE_EXPOSURE_TIME_4, TYPE_SAFE_EXPOSURE_TIME_5,
@@ -21,6 +21,15 @@ DEPENDENCIES = ['openuv']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_MAX_UV_TIME = 'time'
+
+EXPOSURE_TYPE_MAP = {
+    TYPE_SAFE_EXPOSURE_TIME_1: 'st1',
+    TYPE_SAFE_EXPOSURE_TIME_2: 'st2',
+    TYPE_SAFE_EXPOSURE_TIME_3: 'st3',
+    TYPE_SAFE_EXPOSURE_TIME_4: 'st4',
+    TYPE_SAFE_EXPOSURE_TIME_5: 'st5',
+    TYPE_SAFE_EXPOSURE_TIME_6: 'st6'
+}
 
 
 async def async_setup_platform(
@@ -87,8 +96,7 @@ class OpenUvSensor(OpenUvEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, SENSOR_UPDATE_TOPIC, self._update_data)
+        async_dispatcher_connect(self.hass, TOPIC_UPDATE, self._update_data)
 
     async def async_update(self):
         """Update the state."""
@@ -109,5 +117,5 @@ class OpenUvSensor(OpenUvEntity):
                                    TYPE_SAFE_EXPOSURE_TIME_4,
                                    TYPE_SAFE_EXPOSURE_TIME_5,
                                    TYPE_SAFE_EXPOSURE_TIME_6):
-            kind = self._sensor_type[-1]
-            self._state = data['safe_exposure_time']['st{0}'.format(kind)]
+            self._state = data['safe_exposure_time'][EXPOSURE_TYPE_MAP[
+                self._sensor_type]]

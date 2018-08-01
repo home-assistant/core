@@ -11,7 +11,7 @@ from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.openuv import (
-    BINARY_SENSORS, DATA_PROTECTION_WINDOW, DOMAIN, SENSOR_UPDATE_TOPIC,
+    BINARY_SENSORS, DATA_PROTECTION_WINDOW, DOMAIN, TOPIC_UPDATE,
     TYPE_PROTECTION_WINDOW, OpenUvEntity)
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
@@ -84,7 +84,7 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
     async def async_added_to_hass(self):
         """Register callbacks."""
         async_dispatcher_connect(
-            self.hass, SENSOR_UPDATE_TOPIC, self._update_data)
+            self.hass, TOPIC_UPDATE, self._update_data)
 
     async def async_update(self):
         """Update the state."""
