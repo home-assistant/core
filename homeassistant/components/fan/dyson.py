@@ -241,6 +241,6 @@ class DysonPureCoolLinkDevice(FanEntity):
     def device_state_attributes(self) -> dict:
         """Return optional state attributes."""
         return {
-            ATTR_IS_NIGHT_MODE : self.is_night_mode,
-            ATTR_IS_AUTO_MODE : self.is_auto_mode
+            ATTR_IS_NIGHT_MODE: self.is_night_mode,
+            ATTR_IS_AUTO_MODE: self.is_auto_mode
             }

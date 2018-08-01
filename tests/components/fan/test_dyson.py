@@ -1,5 +1,4 @@
 """Test the Dyson fan component."""
-import asyncio
 import unittest
 from unittest import mock
 
@@ -121,7 +120,7 @@ class DysonTest(unittest.TestCase):
     @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
                 return_value=[_get_device_on()])
     @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
-    def test_async_added_to_hass(self,mocked_login, mocked_devices):
+    def test_async_added_to_hass(self, mocked_login, mocked_devices):
         """Test async added to hass."""
         setup_component(self.hass, dyson_parent.DOMAIN, {
             dyson_parent.DOMAIN: {
