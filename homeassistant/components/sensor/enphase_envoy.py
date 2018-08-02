@@ -45,8 +45,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Iterate through the list of sensors
     for condition in monitored_conditions:
-            add_devices([Envoy(ip_address, condition, SENSORS[condition][0],
-                        SENSORS[condition][1])], True)
+        add_devices([Envoy(ip_address, condition, SENSORS[condition][0],
+                           SENSORS[condition][1])], True)
 
 
 class Envoy(Entity):
@@ -90,10 +90,10 @@ class Envoy(Entity):
             self._state = int(envoy_reader.daily_production(self._ip_address))
         elif self._type == "7_days_production":
             self._state = int(envoy_reader.seven_days_production(
-                              self._ip_address))
+                self._ip_address))
         elif self._type == "lifetime_production":
             self._state = int(envoy_reader.lifetime_production(
-                              self._ip_address))
+                self._ip_address))
 
         elif self._type == "consumption":
             self._state = int(envoy_reader.consumption(self._ip_address))
