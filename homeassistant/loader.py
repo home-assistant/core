@@ -71,7 +71,9 @@ def get_component(hass,  # type: HomeAssistant
     Async friendly.
     """
     try:
-        return hass.data[DATA_KEY][comp_or_platform]  # type: ignore
+        comp = hass.data[DATA_KEY][comp_or_platform]
+        if comp is not None:
+            return comp  # type: ignore
     except KeyError:
         pass
 
