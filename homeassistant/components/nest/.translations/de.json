@@ -1,5 +1,15 @@
 {
     "config": {
+        "abort": {
+            "already_setup": "Sie k\u00f6nnen nur ein einziges Nest-Konto konfigurieren.",
+            "no_flows": "Sie m\u00fcssen Nest konfigurieren, bevor Sie sich authentifizieren k\u00f6nnen. [Bitte lesen Sie die Anweisungen] (https://www.home-assistant.io/components/nest/)."
+        },
+        "error": {
+            "internal_error": "Ein interner Fehler ist aufgetreten",
+            "invalid_code": "Ung\u00fcltiger Code",
+            "timeout": "Ein zeit\u00fcberschreitungs Fehler ist aufgetreten",
+            "unknown": "Ein unbekannter Fehler ist aufgetreten"
+        },
         "step": {
             "init": {
                 "data": {
@@ -16,6 +26,6 @@
                 "title": "Nest-Konto verkn\u00fcpfen"
             }
         },
-        "title": ""
+        "title": "Nest"
     }
 }
