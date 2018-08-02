@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Accesspoint ist bereits konfiguriert",
+            "conection_aborted": "Keine Verbindung zum HMIP-Server m\u00f6glich",
+            "unknown": "Ein unbekannter Fehler ist aufgetreten."
+        },
+        "error": {
+            "invalid_pin": "Ung\u00fcltige PIN, bitte versuchen Sie es erneut.",
+            "press_the_button": "Bitte dr\u00fccken Sie die blaue Taste.",
+            "register_failed": "Registrierung fehlgeschlagen, bitte versuchen Sie es erneut.",
+            "timeout_button": "Zeit\u00fcberschreitung beim Dr\u00fccken der blauen Taste. Bitte versuchen Sie es erneut."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "Accesspoint ID (SGTIN)",
+                    "name": "Name (optional, wird als Pr\u00e4fix f\u00fcr alle Ger\u00e4te verwendet)",
+                    "pin": "PIN Code (optional)"
+                }
+            },
+            "link": {
+                "title": "Verkn\u00fcpfe den Accesspoint"
+            }
+        },
+        "title": "HomematicIP Cloud"
+    }
+}
