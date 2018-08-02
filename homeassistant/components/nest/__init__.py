@@ -93,7 +93,7 @@ async def async_nest_update_event_broker(hass, nest):
 async def async_setup(hass, config):
     """Set up Nest components."""
     if DOMAIN not in config:
-        return
+        return True
 
     conf = config[DOMAIN]
 
