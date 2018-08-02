@@ -920,7 +920,7 @@ pylutron==0.1.0
 pymailgunner==1.4
 
 # homeassistant.components.media_player.mediaroom
-pymediaroom==0.6.3
+pymediaroom==0.6.4
 
 # homeassistant.components.media_player.xiaomi_tv
 pymitv==1.4.0
