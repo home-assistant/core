@@ -34,8 +34,7 @@ ICON = 'mdi:flash'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP_ADDRESS): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
-        vol.All(cv.ensure_list, [vol.In(list(SENSORS))])
-        })
+        vol.All(cv.ensure_list, [vol.In(list(SENSORS))])})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
