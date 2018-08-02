@@ -6,8 +6,6 @@ https://home-assistant.io/components/sensor.sense/
 """
 import logging
 from datetime import timedelta
-from requests import ReadTimeout
-from websocket import WebSocketTimeoutException
 
 import voluptuous as vol
 
@@ -69,6 +67,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sense sensor."""
     from sense_energy import Senseable
+    from requests import ReadTimeout
+    from websocket import WebSocketTimeoutException
 
     username = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
