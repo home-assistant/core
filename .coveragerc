@@ -636,6 +636,7 @@ omit =
     homeassistant/components/sensor/eddystone_temperature.py
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/emoncms.py
+    homeassistant/components/sensor/enphase_envoy.py
     homeassistant/components/sensor/envirophat.py
     homeassistant/components/sensor/etherscan.py
     homeassistant/components/sensor/fastdotcom.py
