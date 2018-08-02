@@ -119,7 +119,6 @@ def test_check_box_health(caplog):
         assert "ConnectionError: Is facebox running?" in caplog.text
 
 
-
 def test_encode_image():
     """Test that binary data is encoded correctly."""
     assert fb.encode_image(b'test') == 'dGVzdA=='
