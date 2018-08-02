@@ -28,8 +28,11 @@ CONF_DIRECTIONS = 'directions'
 CONF_LINES = 'lines'
 CONF_PRODUCTS = 'products'
 CONF_TIMEOFFSET = 'timeoffset'
+CONF_MAXJOURNEYS = 'max'
 
-DEFAULT_PRODUCT = ['U-Bahn', 'Tram', 'Bus', 'S']
+DEFAULT_NAME = 'RMV Journey'
+
+DEFAULT_PRODUCT = ['U-Bahn', 'Tram', 'Bus', 'S', 'RB', 'RE', 'EC', 'IC', 'ICE']
 
 ICONS = {
     'U-Bahn': 'mdi:subway',
@@ -57,7 +60,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_PRODUCTS, default=DEFAULT_PRODUCT):
             cv.ensure_list_csv,
         vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
-        vol.Optional(CONF_NAME): cv.string}]
+        vol.Optional(CONF_MAXJOURNEYS, default=5): cv.positive_int,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}]
 })
 
 
@@ -73,6 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 nextdeparture.get(CONF_LINES),
                 nextdeparture.get(CONF_PRODUCTS),
                 nextdeparture.get(CONF_TIMEOFFSET),
+                nextdeparture.get(CONF_MAXJOURNEYS),
                 nextdeparture.get(CONF_NAME)))
     add_devices(sensors, True)
 
@@ -81,21 +86,19 @@ class RMVDepartureSensor(Entity):
     """Implementation of an RMV departure sensor."""
 
     def __init__(self, station, destinations, directions,
-                 lines, products, timeoffset, name):
+                 lines, products, timeoffset, maxjourneys, name):
         """Initialize the sensor."""
         self._station = station
         self._name = name
         self.data = RMVDepartureData(station, destinations, directions,
-                                     lines, products, timeoffset)
+                                     lines, products, timeoffset, maxjourneys)
         self._state = STATE_UNKNOWN
         self._icon = ICONS['-']
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._name:
-            return self._name
-        return self._station
+        return self._name
 
     @property
     def state(self):
@@ -105,11 +108,10 @@ class RMVDepartureSensor(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        # return self.data.departures
         return {
             'next_departures': [val for val in self.data.departures[1:]],
             'direction': self.data.departures[0].get('direction', '-'),
-            'number': self.data.departures[0].get('number', '-'),
+            'line': self.data.departures[0].get('number', '-'),
             'minutes': self.data.departures[0].get('minutes', '-'),
             'product': self.data.departures[0].get('product', '-'),
         }
@@ -131,7 +133,11 @@ class RMVDepartureSensor(Entity):
             self._state = '-'
             self._icon = ICONS['-']
         else:
-            self._name = self.data.station
+            if self._name is DEFAULT_NAME:
+                self._name = self.data.station
+            else:
+                self._name = self._name
+            self._station = self.data.station
             self._state = self.data.departures[0].get('minutes', '-')
             self._icon = ICONS[self.data.departures[0].get('product', '-')]
 
@@ -140,7 +146,7 @@ class RMVDepartureData:
     """Pull data from the opendata.rmv.de web page."""
 
     def __init__(self, stationId, destinations, directions,
-                 lines, products, timeoffset):
+                 lines, products, timeoffset, maxjourneys):
         """Initialize the sensor."""
         import RMVtransport
         self.station = None
@@ -150,6 +156,7 @@ class RMVDepartureData:
         self._lines = lines
         self._products = products
         self._timeoffset = timeoffset
+        self._maxjourneys = maxjourneys
         self.rmv = RMVtransport.RMVtransport()
         self.departures = []
 
@@ -157,7 +164,8 @@ class RMVDepartureData:
         """Update the connection data."""
         try:
             _data = self.rmv.get_departures(stationId=self._stationId,
-                                            products=self._products)
+                                            products=self._products,
+                                            maxJourneys=50)
         except ValueError:
             self.departures = {}
             _LOGGER.warning("Returned data not understood")
@@ -184,4 +192,6 @@ class RMVDepartureData:
                       'product']:
                 _nextdep[k] = journey.get(k, '')
             _deps.append(_nextdep)
+            if len(_deps) > self._maxjourneys:
+                break
         self.departures = _deps
