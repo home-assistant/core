@@ -962,6 +962,9 @@ pynut2==2.1.2
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.4
 
+# homeassistant.components.openuv
+pyopenuv==1.0.1
+
 # homeassistant.components.iota
 pyota==2.0.5
 
