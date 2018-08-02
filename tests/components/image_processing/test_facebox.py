@@ -108,11 +108,16 @@ def test_check_box_health(caplog):
     with requests_mock.Mocker() as mock_req:
         url = "http://{}:{}/healthz".format(MOCK_IP, MOCK_PORT)
         mock_req.get(url, status_code=HTTP_OK, json=MOCK_HEALTH)
-        assert fb.check_box_health(url, None, None) == MOCK_BOX_ID
+        assert fb.check_box_health(url, 'user', 'pass') == MOCK_BOX_ID
 
         mock_req.get(url, status_code=HTTP_UNAUTHORIZED)
         assert fb.check_box_health(url, None, None) is None
-        assert 'AuthenticationError on facebox' in caplog.text
+        assert "AuthenticationError on facebox" in caplog.text
+
+        mock_req.get(url, exc=requests.exceptions.ConnectTimeout)
+        fb.check_box_health(url, None, None)
+        assert "ConnectionError: Is facebox running?" in caplog.text
+
 
 
 def test_encode_image():
