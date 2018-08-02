@@ -5,13 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.enphase_envoy/
 """
 import logging
+
 import voluptuous as vol
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_IP_ADDRESS)
-from homeassistant.const import (CONF_MONITORED_CONDITIONS)
+from homeassistant.const import (CONF_IP_ADDRESS, CONF_MONITORED_CONDITIONS)
 
 
 REQUIREMENTS = ['envoy_reader==0.1']
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
-# Iterate through the list of sensors
+    # Iterate through the list of sensors
     for condition in monitored_conditions:
             add_devices([Envoy(ip_address, condition, SENSORS[condition][0],
                         SENSORS[condition][1])], True)
