@@ -67,8 +67,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sense sensor."""
     from sense_energy import Senseable
-    from requests import ReadTimeout
-    from websocket import WebSocketTimeoutException
 
     username = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
@@ -141,6 +139,8 @@ class Sense(Entity):
 
     def update(self):
         """Get the latest data, update state."""
+        from requests import ReadTimeout
+        from websocket import WebSocketTimeoutException
         try:
             self.update_sensor()
         except (WebSocketTimeoutException, ReadTimeout):
