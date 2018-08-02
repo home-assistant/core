@@ -6,6 +6,8 @@ https://home-assistant.io/components/sensor.sense/
 """
 import logging
 from datetime import timedelta
+from requests import ReadTimeout
+from websocket import WebSocketTimeoutException
 
 import voluptuous as vol
 
@@ -139,7 +141,11 @@ class Sense(Entity):
 
     def update(self):
         """Get the latest data, update state."""
-        self.update_sensor()
+        try:
+            self.update_sensor()
+        except (WebSocketTimeoutException, ReadTimeout):
+            _LOGGER.error("Timeout retrieving data")
+            return
 
         if self._sensor_type == ACTIVE_TYPE:
             if self._is_production:
