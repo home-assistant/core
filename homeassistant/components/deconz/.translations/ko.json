@@ -23,7 +23,7 @@
             "options": {
                 "data": {
                     "allow_clip_sensor": "\uac00\uc0c1 \uc13c\uc11c \uac00\uc838\uc624\uae30 \ud5c8\uc6a9",
-                    "allow_deconz_groups": "deCONZ \ub0b4\uc6a9 \uac00\uc838\uc624\uae30 \ud5c8\uc6a9"
+                    "allow_deconz_groups": "deCONZ \uadf8\ub8f9 \uac00\uc838\uc624\uae30 \ud5c8\uc6a9"
                 },
                 "title": "deCONZ\ub97c \uc704\ud55c \ucd94\uac00 \uad6c\uc131 \uc635\uc158"
             }

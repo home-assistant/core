@@ -58,7 +58,7 @@ def setup(hass, config):
     return True
 
 
-class APCUPSdData(object):
+class APCUPSdData:
     """Stores the data retrieved from APCUPSd.
 
     For each entity to use, acts as the single point responsible for fetching

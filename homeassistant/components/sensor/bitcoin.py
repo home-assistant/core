@@ -121,7 +121,6 @@ class BitcoinSensor(Entity):
         stats = self.data.stats
         ticker = self.data.ticker
 
-        # pylint: disable=no-member
         if self.type == 'exchangerate':
             self._state = ticker[self._currency].p15min
             self._unit_of_measurement = self._currency
@@ -170,7 +169,7 @@ class BitcoinSensor(Entity):
             self._state = '{0:.2f}'.format(stats.market_price_usd)
 
 
-class BitcoinData(object):
+class BitcoinData:
     """Get the latest data and update the states."""
 
     def __init__(self):

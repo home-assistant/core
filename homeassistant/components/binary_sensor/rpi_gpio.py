@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.rpi_gpio as rpi_gpio
+from homeassistant.components import rpi_gpio
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import DEVICE_DEFAULT_NAME
@@ -58,7 +58,6 @@ class RPiGPIOBinarySensor(BinarySensorDevice):
 
     def __init__(self, name, port, pull_mode, bouncetime, invert_logic):
         """Initialize the RPi binary sensor."""
-        # pylint: disable=no-member
         self._name = name or DEVICE_DEFAULT_NAME
         self._port = port
         self._pull_mode = pull_mode

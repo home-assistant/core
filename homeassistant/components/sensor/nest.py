@@ -24,10 +24,14 @@ PROTECT_SENSOR_TYPES = ['co_status',
                         # color_status: "gray", "green", "yellow", "red"
                         'color_status']
 
-STRUCTURE_SENSOR_TYPES = ['eta', 'security_state']
+STRUCTURE_SENSOR_TYPES = ['eta']
+
+# security_state is structure level sensor, but only meaningful when
+# Nest Cam exist
+STRUCTURE_CAMERA_SENSOR_TYPES = ['security_state']
 
 _VALID_SENSOR_TYPES = SENSOR_TYPES + TEMP_SENSOR_TYPES + PROTECT_SENSOR_TYPES \
-                      + STRUCTURE_SENSOR_TYPES
+                      + STRUCTURE_SENSOR_TYPES + STRUCTURE_CAMERA_SENSOR_TYPES
 
 SENSOR_UNITS = {'humidity': '%'}
 
@@ -105,6 +109,14 @@ async def async_setup_entry(hass, entry, async_add_devices):
                             for variable in conditions
                             if variable in PROTECT_SENSOR_TYPES]
 
+        structures_has_camera = {}
+        for structure, device in nest.cameras():
+            structures_has_camera[structure] = True
+        for structure in structures_has_camera:
+            all_sensors += [NestBasicSensor(structure, None, variable)
+                            for variable in conditions
+                            if variable in STRUCTURE_CAMERA_SENSOR_TYPES]
+
         return all_sensors
 
     async_add_devices(await hass.async_add_job(get_sensors), True)
@@ -133,7 +145,8 @@ class NestBasicSensor(NestSensorDevice):
         elif self.variable in PROTECT_SENSOR_TYPES \
                 and self.variable != 'color_status':
             # keep backward compatibility
-            self._state = getattr(self.device, self.variable).capitalize()
+            state = getattr(self.device, self.variable)
+            self._state = state.capitalize() if state is not None else None
         else:
             self._state = getattr(self.device, self.variable)
 

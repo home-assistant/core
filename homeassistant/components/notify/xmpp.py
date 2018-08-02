@@ -110,6 +110,5 @@ def send_message(sender, password, recipient, use_tls,
         def discard_ssl_invalid_cert(event):
             """Do nothing if ssl certificate is invalid."""
             _LOGGER.info('Ignoring invalid ssl certificate as requested.')
-            return
 
     SendNotificationBot()

@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
-class StationPriceData(object):
+class StationPriceData:
     """An object to store and fetch the latest data for a given station."""
 
     def __init__(self, client, station_id: int) -> None:

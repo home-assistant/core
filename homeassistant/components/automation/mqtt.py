@@ -10,7 +10,7 @@ import json
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.const import (CONF_PLATFORM, CONF_PAYLOAD)
 import homeassistant.helpers.config_validation as cv
 

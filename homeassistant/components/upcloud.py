@@ -92,7 +92,7 @@ def setup(hass, config):
     return True
 
 
-class UpCloud(object):
+class UpCloud:
     """Handle all communication with the UpCloud API."""
 
     def __init__(self, manager):

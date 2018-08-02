@@ -4,7 +4,6 @@ Support for Homekit lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.homekit_controller/
 """
-import json
 import logging
 
 from homeassistant.components.homekit_controller import (
@@ -122,13 +121,11 @@ class HomeKitLight(HomeKitEntity, Light):
         characteristics.append({'aid': self._aid,
                                 'iid': self._chars['on'],
                                 'value': True})
-        body = json.dumps({'characteristics': characteristics})
-        self._securecon.put('/characteristics', body)
+        self.put_characteristics(characteristics)
 
     def turn_off(self, **kwargs):
         """Turn the specified light off."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['on'],
                             'value': False}]
-        body = json.dumps({'characteristics': characteristics})
-        self._securecon.put('/characteristics', body)
+        self.put_characteristics(characteristics)

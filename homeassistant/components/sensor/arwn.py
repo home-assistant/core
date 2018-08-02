@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.core import callback
 from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity

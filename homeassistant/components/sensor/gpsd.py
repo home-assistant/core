@@ -86,13 +86,12 @@ class GpsdSensor(Entity):
         """Return the name."""
         return self._name
 
-    # pylint: disable=no-member
     @property
     def state(self):
         """Return the state of GPSD."""
         if self.agps_thread.data_stream.mode == 3:
             return "3D Fix"
-        elif self.agps_thread.data_stream.mode == 2:
+        if self.agps_thread.data_stream.mode == 2:
             return "2D Fix"
         return STATE_UNKNOWN
 

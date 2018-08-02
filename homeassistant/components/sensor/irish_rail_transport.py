@@ -132,7 +132,7 @@ class IrishRailTransportSensor(Entity):
             self._state = None
 
 
-class IrishRailTransportData(object):
+class IrishRailTransportData:
     """The Class for handling the data retrieval."""
 
     def __init__(self, irish_rail, station, direction, destination, stops_at):

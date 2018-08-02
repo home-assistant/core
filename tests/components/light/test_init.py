@@ -1,14 +1,16 @@
 """The tests for the Light component."""
 # pylint: disable=protected-access
 import unittest
+import unittest.mock as mock
 import os
+from io import StringIO
 
-from homeassistant.setup import setup_component
-import homeassistant.loader as loader
+from homeassistant import core, loader
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_SUPPORTED_FEATURES)
-import homeassistant.components.light as light
+from homeassistant.components import light
 from homeassistant.helpers.intent import IntentHandleError
 
 from tests.common import (
@@ -308,6 +310,82 @@ class TestLight(unittest.TestCase):
             light.ATTR_BRIGHTNESS: 100
         }, data)
 
+    def test_default_profiles_group(self):
+        """Test default turn-on light profile for all lights."""
+        platform = loader.get_component(self.hass, 'light.test')
+        platform.init()
+
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
+        real_isfile = os.path.isfile
+        real_open = open
+
+        def _mock_isfile(path):
+            if path == user_light_file:
+                return True
+            return real_isfile(path)
+
+        def _mock_open(path):
+            if path == user_light_file:
+                return StringIO(profile_data)
+            return real_open(path)
+
+        profile_data = "id,x,y,brightness\n" +\
+                       "group.all_lights.default,.4,.6,99\n"
+        with mock.patch('os.path.isfile', side_effect=_mock_isfile):
+            with mock.patch('builtins.open', side_effect=_mock_open):
+                self.assertTrue(setup_component(
+                    self.hass, light.DOMAIN,
+                    {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+                ))
+
+        dev, _, _ = platform.DEVICES
+        light.turn_on(self.hass, dev.entity_id)
+        self.hass.block_till_done()
+        _, data = dev.last_call('turn_on')
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (71.059, 100),
+            light.ATTR_BRIGHTNESS: 99
+        }, data)
+
+    def test_default_profiles_light(self):
+        """Test default turn-on light profile for a specific light."""
+        platform = loader.get_component(self.hass, 'light.test')
+        platform.init()
+
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
+        real_isfile = os.path.isfile
+        real_open = open
+
+        def _mock_isfile(path):
+            if path == user_light_file:
+                return True
+            return real_isfile(path)
+
+        def _mock_open(path):
+            if path == user_light_file:
+                return StringIO(profile_data)
+            return real_open(path)
+
+        profile_data = "id,x,y,brightness\n" +\
+                       "group.all_lights.default,.3,.5,200\n" +\
+                       "light.ceiling_2.default,.6,.6,100\n"
+        with mock.patch('os.path.isfile', side_effect=_mock_isfile):
+            with mock.patch('builtins.open', side_effect=_mock_open):
+                self.assertTrue(setup_component(
+                    self.hass, light.DOMAIN,
+                    {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+                ))
+
+        dev = next(filter(lambda x: x.entity_id == 'light.ceiling_2',
+                          platform.DEVICES))
+        light.turn_on(self.hass, dev.entity_id)
+        self.hass.block_till_done()
+        _, data = dev.last_call('turn_on')
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (50.353, 100),
+            light.ATTR_BRIGHTNESS: 100
+        }, data)
+
 
 async def test_intent_set_color(hass):
     """Test the set color intent."""
@@ -397,3 +475,24 @@ async def test_intent_set_color_and_brightness(hass):
     assert call.data.get(ATTR_ENTITY_ID) == 'light.hello_2'
     assert call.data.get(light.ATTR_RGB_COLOR) == (0, 0, 255)
     assert call.data.get(light.ATTR_BRIGHTNESS_PCT) == 20
+
+
+async def test_light_context(hass):
+    """Test that light context works."""
+    assert await async_setup_component(hass, 'light', {
+        'light': {
+            'platform': 'test'
+        }
+    })
+
+    state = hass.states.get('light.ceiling')
+    assert state is not None
+
+    await hass.services.async_call('light', 'toggle', {
+        'entity_id': state.entity_id,
+    }, True, core.Context(user_id='abcd'))
+
+    state2 = hass.states.get('light.ceiling')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

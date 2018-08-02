@@ -2,8 +2,11 @@
 import unittest
 from unittest import mock
 
+from homeassistant.setup import setup_component
+from homeassistant.components import dyson as dyson_parent
 from homeassistant.components.dyson import DYSON_DEVICES
-from homeassistant.components.fan import dyson
+from homeassistant.components.fan import (dyson, ATTR_SPEED, ATTR_SPEED_LIST,
+                                          ATTR_OSCILLATING)
 from tests.common import get_test_home_assistant
 from libpurecoollink.const import FanSpeed, FanMode, NightMode, Oscillation
 from libpurecoollink.dyson_pure_state import DysonPureCoolState
@@ -90,6 +93,45 @@ class DysonTest(unittest.TestCase):
 
         self.hass.data[dyson.DYSON_DEVICES] = [device_fan, device_non_fan]
         dyson.setup_platform(self.hass, None, _add_device)
+
+    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+                return_value=[_get_device_on()])
+    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    def test_get_state_attributes(self, mocked_login, mocked_devices):
+        """Test async added to hass."""
+        setup_component(self.hass, dyson_parent.DOMAIN, {
+            dyson_parent.DOMAIN: {
+                dyson_parent.CONF_USERNAME: "email",
+                dyson_parent.CONF_PASSWORD: "password",
+                dyson_parent.CONF_LANGUAGE: "US",
+                }
+            })
+        self.hass.block_till_done()
+        state = self.hass.states.get("{}.{}".format(
+            dyson.DOMAIN,
+            mocked_devices.return_value[0].name))
+
+        assert dyson.ATTR_IS_NIGHT_MODE in state.attributes
+        assert dyson.ATTR_IS_AUTO_MODE in state.attributes
+        assert ATTR_SPEED in state.attributes
+        assert ATTR_SPEED_LIST in state.attributes
+        assert ATTR_OSCILLATING in state.attributes
+
+    @mock.patch('libpurecoollink.dyson.DysonAccount.devices',
+                return_value=[_get_device_on()])
+    @mock.patch('libpurecoollink.dyson.DysonAccount.login', return_value=True)
+    def test_async_added_to_hass(self, mocked_login, mocked_devices):
+        """Test async added to hass."""
+        setup_component(self.hass, dyson_parent.DOMAIN, {
+            dyson_parent.DOMAIN: {
+                dyson_parent.CONF_USERNAME: "email",
+                dyson_parent.CONF_PASSWORD: "password",
+                dyson_parent.CONF_LANGUAGE: "US",
+                }
+            })
+        self.hass.block_till_done()
+        self.assertEqual(len(self.hass.data[dyson.DYSON_DEVICES]), 1)
+        assert mocked_devices.return_value[0].add_message_listener.called
 
     def test_dyson_set_speed(self):
         """Test set fan speed."""

@@ -31,8 +31,7 @@ class TestComponentsDeviceTrackerMQTT(unittest.TestCase):
         except FileNotFoundError:
             pass
 
-    def test_ensure_device_tracker_platform_validation(self): \
-            # pylint: disable=invalid-name
+    def test_ensure_device_tracker_platform_validation(self):
         """Test if platform validation was done."""
         @asyncio.coroutine
         def mock_setup_scanner(hass, config, see, discovery_info=None):

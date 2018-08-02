@@ -117,7 +117,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(entities)
 
 
-class HikvisionData(object):
+class HikvisionData:
     """Hikvision device event stream object."""
 
     def __init__(self, hass, url, port, name, username, password):

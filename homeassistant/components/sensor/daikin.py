@@ -85,7 +85,7 @@ class DaikinClimateSensor(Entity):
         if value is None:
             _LOGGER.warning("Invalid value requested for key %s", key)
         else:
-            if value == "-" or value == "--":
+            if value in ("-", "--"):
                 value = None
             elif cast_to_float:
                 try:

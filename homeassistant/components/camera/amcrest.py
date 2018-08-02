@@ -64,7 +64,7 @@ class AmcrestCam(Camera):
             yield from super().handle_async_mjpeg_stream(request)
             return
 
-        elif self._stream_source == STREAM_SOURCE_LIST['mjpeg']:
+        if self._stream_source == STREAM_SOURCE_LIST['mjpeg']:
             # stream an MJPEG image stream directly from the camera
             websession = async_get_clientsession(self.hass)
             streaming_url = self._camera.mjpeg_url(typeno=self._resolution)

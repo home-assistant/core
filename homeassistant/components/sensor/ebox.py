@@ -129,7 +129,7 @@ class EBoxSensor(Entity):
             self._state = round(self.ebox_data.data[self.type], 2)
 
 
-class EBoxData(object):
+class EBoxData:
     """Get data from Ebox."""
 
     def __init__(self, username, password, httpsession):

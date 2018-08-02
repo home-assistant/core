@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
 
-class EmailReader(object):
+class EmailReader:
     """A class to read emails from an IMAP server."""
 
     def __init__(self, user, password, server, port):

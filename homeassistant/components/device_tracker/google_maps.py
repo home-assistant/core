@@ -42,7 +42,7 @@ def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
     return scanner.success_init
 
 
-class GoogleMapsScanner(object):
+class GoogleMapsScanner:
     """Representation of an Google Maps location sharing account."""
 
     def __init__(self, hass, config: ConfigType, see) -> None:

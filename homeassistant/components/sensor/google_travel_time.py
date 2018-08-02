@@ -17,7 +17,7 @@ from homeassistant.const import (
     ATTR_LONGITUDE, CONF_MODE)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.location as location
+from homeassistant.helpers import location
 import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['googlemaps==2.5.1']

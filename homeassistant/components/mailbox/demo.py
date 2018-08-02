@@ -9,7 +9,7 @@ import logging
 import os
 from hashlib import sha1
 
-import homeassistant.util.dt as dt
+from homeassistant.util import dt
 
 from homeassistant.components.mailbox import (Mailbox, CONTENT_TYPE_MPEG,
                                               StreamError)

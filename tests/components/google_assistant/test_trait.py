@@ -414,8 +414,8 @@ async def test_color_temperature_light(hass):
     }))
 
     assert trt.sync_attributes() == {
-        'temperatureMinK': 5000,
-        'temperatureMaxK': 2000,
+        'temperatureMinK': 2000,
+        'temperatureMaxK': 5000,
     }
 
     assert trt.query_attributes() == {

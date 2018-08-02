@@ -6,15 +6,13 @@ https://home-assistant.io/components/light.zwave/
 """
 import logging
 
-# Because we do not compile openzwave on CI
-# pylint: disable=import-error
 from threading import Timer
 from homeassistant.components.light import (
     ATTR_WHITE_VALUE, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR,
     ATTR_TRANSITION, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR,
     SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE, DOMAIN, Light)
 from homeassistant.components import zwave
-from homeassistant.components.zwave import async_setup_platform  # noqa # pylint: disable=unused-import
+from homeassistant.components.zwave import async_setup_platform  # noqa pylint: disable=unused-import
 from homeassistant.const import STATE_OFF, STATE_ON
 import homeassistant.util.color as color_util
 
@@ -326,9 +324,11 @@ class ZwaveColorLight(ZwaveDimmer):
                 else:
                     self._ct = TEMP_COLD_HASS
                     rgbw = '#00000000ff'
-
         elif ATTR_HS_COLOR in kwargs:
             self._hs = kwargs[ATTR_HS_COLOR]
+            if ATTR_WHITE_VALUE not in kwargs:
+                # white LED must be off in order for color to work
+                self._white = 0
 
         if ATTR_WHITE_VALUE in kwargs or ATTR_HS_COLOR in kwargs:
             rgbw = '#'

@@ -162,7 +162,7 @@ class HydroQuebecSensor(Entity):
             self._state = round(self.hydroquebec_data.data[self.type], 2)
 
 
-class HydroquebecData(object):
+class HydroquebecData:
     """Get data from HydroQuebec."""
 
     def __init__(self, username, password, httpsession, contract=None):

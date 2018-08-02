@@ -204,7 +204,7 @@ def merge_hsbk(base, change):
     return [b if c is None else c for b, c in zip(base, change)]
 
 
-class LIFXManager(object):
+class LIFXManager:
     """Representation of all known LIFX entities."""
 
     def __init__(self, hass, async_add_devices):
@@ -446,7 +446,9 @@ class LIFXLight(Light):
     @property
     def color_temp(self):
         """Return the color temperature."""
-        kelvin = self.device.color[3]
+        _, sat, _, kelvin = self.device.color
+        if sat:
+            return None
         return color_util.color_temperature_kelvin_to_mired(kelvin)
 
     @property
@@ -601,7 +603,7 @@ class LIFXColor(LIFXLight):
         hue, sat, _, _ = self.device.color
         hue = hue / 65535 * 360
         sat = sat / 65535 * 100
-        return (hue, sat)
+        return (hue, sat) if sat else None
 
 
 class LIFXStrip(LIFXColor):

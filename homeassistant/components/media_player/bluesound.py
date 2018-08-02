@@ -216,12 +216,8 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def force_update_sync_status(
             self, on_updated_cb=None, raise_timeout=False):
         """Update the internal status."""
-        resp = None
-        try:
-            resp = await self.send_bluesound_command(
-                'SyncStatus', raise_timeout, raise_timeout)
-        except Exception:
-            raise
+        resp = await self.send_bluesound_command(
+            'SyncStatus', raise_timeout, raise_timeout)
 
         if not resp:
             return None
@@ -333,10 +329,10 @@ class BluesoundPlayer(MediaPlayerDevice):
 
             if response.status == 200:
                 result = await response.text()
-                if len(result) < 1:
-                    data = None
-                else:
+                if result:
                     data = xmltodict.parse(result)
+                else:
+                    data = None
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
                 raise BluesoundPlayer._TimeoutException()
@@ -528,9 +524,9 @@ class BluesoundPlayer(MediaPlayerDevice):
             return STATE_GROUPED
 
         status = self._status.get('state', None)
-        if status == 'pause' or status == 'stop':
+        if status in ('pause', 'stop'):
             return STATE_PAUSED
-        elif status == 'stream' or status == 'play':
+        if status in ('stream', 'play'):
             return STATE_PLAYING
         return STATE_IDLE
 
@@ -640,7 +636,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         volume = self.volume_level
         if not volume:
             return None
-        return volume < 0.001 and volume >= 0
+        return 0 <= volume < 0.001
 
     @property
     def name(self):
@@ -847,12 +843,12 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         items = [x for x in self._preset_items if x['title'] == source]
 
-        if len(items) < 1:
+        if not items:
             items = [x for x in self._services_items if x['title'] == source]
-        if len(items) < 1:
+        if not items:
             items = [x for x in self._capture_items if x['title'] == source]
 
-        if len(items) < 1:
+        if not items:
             return
 
         selected_source = items[0]
@@ -974,6 +970,5 @@ class BluesoundPlayer(MediaPlayerDevice):
             if volume > 0:
                 self._lastvol = volume
             return await self.send_bluesound_command('Volume?level=0')
-        else:
-            return await self.send_bluesound_command(
-                'Volume?level=' + str(float(self._lastvol) * 100))
+        return await self.send_bluesound_command(
+            'Volume?level=' + str(float(self._lastvol) * 100))

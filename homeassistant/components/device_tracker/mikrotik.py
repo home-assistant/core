@@ -66,7 +66,6 @@ class MikrotikScanner(DeviceScanner):
 
     def connect_to_device(self):
         """Connect to Mikrotik method."""
-        # pylint: disable=import-error
         import librouteros
         try:
             self.client = librouteros.connect(

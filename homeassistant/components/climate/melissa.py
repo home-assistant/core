@@ -192,9 +192,9 @@ class MelissaClimate(ClimateDevice):
         """Translate Melissa states to hass states."""
         if state == self._api.STATE_ON:
             return STATE_ON
-        elif state == self._api.STATE_OFF:
+        if state == self._api.STATE_OFF:
             return STATE_OFF
-        elif state == self._api.STATE_IDLE:
+        if state == self._api.STATE_IDLE:
             return STATE_IDLE
         return None
 
@@ -202,11 +202,11 @@ class MelissaClimate(ClimateDevice):
         """Translate Melissa modes to hass states."""
         if mode == self._api.MODE_HEAT:
             return STATE_HEAT
-        elif mode == self._api.MODE_COOL:
+        if mode == self._api.MODE_COOL:
             return STATE_COOL
-        elif mode == self._api.MODE_DRY:
+        if mode == self._api.MODE_DRY:
             return STATE_DRY
-        elif mode == self._api.MODE_FAN:
+        if mode == self._api.MODE_FAN:
             return STATE_FAN_ONLY
         _LOGGER.warning(
             "Operation mode %s could not be mapped to hass", mode)
@@ -216,11 +216,11 @@ class MelissaClimate(ClimateDevice):
         """Translate Melissa fan modes to hass modes."""
         if fan == self._api.FAN_AUTO:
             return STATE_AUTO
-        elif fan == self._api.FAN_LOW:
+        if fan == self._api.FAN_LOW:
             return SPEED_LOW
-        elif fan == self._api.FAN_MEDIUM:
+        if fan == self._api.FAN_MEDIUM:
             return SPEED_MEDIUM
-        elif fan == self._api.FAN_HIGH:
+        if fan == self._api.FAN_HIGH:
             return SPEED_HIGH
         _LOGGER.warning("Fan mode %s could not be mapped to hass", fan)
         return None
@@ -229,24 +229,22 @@ class MelissaClimate(ClimateDevice):
         """Translate hass states to melissa modes."""
         if mode == STATE_HEAT:
             return self._api.MODE_HEAT
-        elif mode == STATE_COOL:
+        if mode == STATE_COOL:
             return self._api.MODE_COOL
-        elif mode == STATE_DRY:
+        if mode == STATE_DRY:
             return self._api.MODE_DRY
-        elif mode == STATE_FAN_ONLY:
+        if mode == STATE_FAN_ONLY:
             return self._api.MODE_FAN
-        else:
-            _LOGGER.warning("Melissa have no setting for %s mode", mode)
+        _LOGGER.warning("Melissa have no setting for %s mode", mode)
 
     def hass_fan_to_melissa(self, fan):
         """Translate hass fan modes to melissa modes."""
         if fan == STATE_AUTO:
             return self._api.FAN_AUTO
-        elif fan == SPEED_LOW:
+        if fan == SPEED_LOW:
             return self._api.FAN_LOW
-        elif fan == SPEED_MEDIUM:
+        if fan == SPEED_MEDIUM:
             return self._api.FAN_MEDIUM
-        elif fan == SPEED_HIGH:
+        if fan == SPEED_HIGH:
             return self._api.FAN_HIGH
-        else:
-            _LOGGER.warning("Melissa have no setting for %s fan mode", fan)
+        _LOGGER.warning("Melissa have no setting for %s fan mode", fan)

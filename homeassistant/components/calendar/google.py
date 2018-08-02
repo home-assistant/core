@@ -4,7 +4,6 @@ Support for Google Calendar Search binary sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.google_calendar/
 """
-# pylint: disable=import-error
 import logging
 from datetime import timedelta
 
@@ -56,7 +55,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         return await self.data.async_get_events(hass, start_date, end_date)
 
 
-class GoogleCalendarData(object):
+class GoogleCalendarData:
     """Class to utilize calendar service object to get next event."""
 
     def __init__(self, calendar_service, calendar_id, search,
@@ -89,9 +88,7 @@ class GoogleCalendarData(object):
         params['timeMin'] = start_date.isoformat('T')
         params['timeMax'] = end_date.isoformat('T')
 
-        # pylint: disable=no-member
         events = await hass.async_add_job(service.events)
-        # pylint: enable=no-member
         result = await hass.async_add_job(events.list(**params).execute)
 
         items = result.get('items', [])
@@ -111,7 +108,7 @@ class GoogleCalendarData(object):
         service, params = self._prepare_query()
         params['timeMin'] = dt.now().isoformat('T')
 
-        events = service.events()  # pylint: disable=no-member
+        events = service.events()
         result = events.list(**params).execute()
 
         items = result.get('items', [])

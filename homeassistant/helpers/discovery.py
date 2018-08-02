@@ -145,7 +145,7 @@ async def async_load_platform(hass, component, platform, discovered=None,
     Use `listen_platform` to register a callback for these events.
 
     Warning: Do not await this inside a setup method to avoid a dead lock.
-    Use `hass.async_add_job(async_load_platform(..))` instead.
+    Use `hass.async_create_task(async_load_platform(..))` instead.
 
     This method is a coroutine.
     """

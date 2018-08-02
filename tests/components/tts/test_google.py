@@ -15,7 +15,7 @@ from tests.common import (
 from .test_init import mutagen_mock  # noqa
 
 
-class TestTTSGooglePlatform(object):
+class TestTTSGooglePlatform:
     """Test the Google speech component."""
 
     def setup_method(self):

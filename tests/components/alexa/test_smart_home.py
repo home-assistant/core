@@ -124,7 +124,7 @@ def discovery_test(device, hass, expected_endpoints=1):
 
     if expected_endpoints == 1:
         return endpoints[0]
-    elif expected_endpoints > 1:
+    if expected_endpoints > 1:
         return endpoints
     return None
 
@@ -1225,7 +1225,7 @@ def reported_properties(hass, endpoint):
     return _ReportedProperties(msg['context']['properties'])
 
 
-class _ReportedProperties(object):
+class _ReportedProperties:
     def __init__(self, properties):
         self.properties = properties
 

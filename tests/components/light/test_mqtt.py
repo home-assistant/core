@@ -177,8 +177,7 @@ class TestLightMQTT(unittest.TestCase):
             })
         self.assertIsNone(self.hass.states.get('light.test'))
 
-    def test_no_color_brightness_color_temp_white_xy_if_no_topics(self): \
-            # pylint: disable=invalid-name
+    def test_no_color_brightness_color_temp_white_xy_if_no_topics(self):
         """Test if there is no color and brightness if no topic."""
         with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -209,8 +208,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertIsNone(state.attributes.get('white_value'))
         self.assertIsNone(state.attributes.get('xy_color'))
 
-    def test_controlling_state_via_topic(self): \
-            # pylint: disable=invalid-name
+    def test_controlling_state_via_topic(self):
         """Test the controlling of the state via topic."""
         config = {light.DOMAIN: {
             'platform': 'mqtt',
@@ -410,14 +408,19 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(255,
                          light_state.attributes['white_value'])
 
-    def test_controlling_state_via_topic_with_templates(self): \
-            # pylint: disable=invalid-name
+    def test_controlling_state_via_topic_with_templates(self):
         """Test the setting og the state with a template."""
         config = {light.DOMAIN: {
             'platform': 'mqtt',
             'name': 'test',
             'state_topic': 'test_light_rgb/status',
             'command_topic': 'test_light_rgb/set',
+            'brightness_command_topic': 'test_light_rgb/brightness/set',
+            'rgb_command_topic': 'test_light_rgb/rgb/set',
+            'color_temp_command_topic': 'test_light_rgb/color_temp/set',
+            'effect_command_topic': 'test_light_rgb/effect/set',
+            'white_value_command_topic': 'test_light_rgb/white_value/set',
+            'xy_command_topic': 'test_light_rgb/xy/set',
             'brightness_state_topic': 'test_light_rgb/brightness/status',
             'color_temp_state_topic': 'test_light_rgb/color_temp/status',
             'effect_state_topic': 'test_light_rgb/effect/status',
@@ -466,8 +469,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(75, state.attributes.get('white_value'))
         self.assertEqual((0.14, 0.131), state.attributes.get('xy_color'))
 
-    def test_sending_mqtt_commands_and_optimistic(self): \
-            # pylint: disable=invalid-name
+    def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending of command in optimistic mode."""
         config = {light.DOMAIN: {
             'platform': 'mqtt',
@@ -479,6 +481,7 @@ class TestLightMQTT(unittest.TestCase):
             'effect_command_topic': 'test_light_rgb/effect/set',
             'white_value_command_topic': 'test_light_rgb/white_value/set',
             'xy_command_topic': 'test_light_rgb/xy/set',
+            'effect_list': ['colorloop', 'random'],
             'qos': 2,
             'payload_on': 'on',
             'payload_off': 'off'

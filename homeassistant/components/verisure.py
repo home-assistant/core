@@ -89,7 +89,7 @@ def setup(hass, config):
     return True
 
 
-class VerisureHub(object):
+class VerisureHub:
     """A Verisure hub wrapper class."""
 
     def __init__(self, domain_config, verisure):

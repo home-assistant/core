@@ -206,11 +206,11 @@ class EmbyDevice(MediaPlayerDevice):
         state = self.device.state
         if state == 'Paused':
             return STATE_PAUSED
-        elif state == 'Playing':
+        if state == 'Playing':
             return STATE_PLAYING
-        elif state == 'Idle':
+        if state == 'Idle':
             return STATE_IDLE
-        elif state == 'Off':
+        if state == 'Off':
             return STATE_OFF
 
     @property
@@ -230,15 +230,15 @@ class EmbyDevice(MediaPlayerDevice):
         media_type = self.device.media_type
         if media_type == 'Episode':
             return MEDIA_TYPE_TVSHOW
-        elif media_type == 'Movie':
+        if media_type == 'Movie':
             return MEDIA_TYPE_MOVIE
-        elif media_type == 'Trailer':
+        if media_type == 'Trailer':
             return MEDIA_TYPE_TRAILER
-        elif media_type == 'Music':
+        if media_type == 'Music':
             return MEDIA_TYPE_MUSIC
-        elif media_type == 'Video':
+        if media_type == 'Video':
             return MEDIA_TYPE_GENERIC_VIDEO
-        elif media_type == 'Audio':
+        if media_type == 'Audio':
             return MEDIA_TYPE_MUSIC
         return None
 

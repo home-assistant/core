@@ -21,7 +21,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin, color_hs_to_RGB)
 from homeassistant.helpers.restore_state import async_get_last_state
 
-REQUIREMENTS = ['limitlessled==1.1.0']
+REQUIREMENTS = ['limitlessled==1.1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ MIN_SATURATION = 10
 WHITE = [0, 0]
 
 SUPPORT_LIMITLESSLED_WHITE = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP |
-                              SUPPORT_TRANSITION)
+                              SUPPORT_EFFECT | SUPPORT_TRANSITION)
 SUPPORT_LIMITLESSLED_DIMMER = (SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION)
 SUPPORT_LIMITLESSLED_RGB = (SUPPORT_BRIGHTNESS | SUPPORT_EFFECT |
                             SUPPORT_FLASH | SUPPORT_COLOR |
@@ -136,7 +136,7 @@ def state(new_state):
     """
     def decorator(function):
         """Set up the decorator function."""
-        # pylint: disable=no-member,protected-access
+        # pylint: disable=protected-access
         def wrapper(self, **kwargs):
             """Wrap a group state change."""
             from limitlessled.pipeline import Pipeline
@@ -239,12 +239,17 @@ class LimitlessLEDGroup(Light):
     @property
     def color_temp(self):
         """Return the temperature property."""
+        if self.hs_color is not None:
+            return None
         return self._temperature
 
     @property
     def hs_color(self):
         """Return the color property."""
         if self._effect == EFFECT_NIGHT:
+            return None
+
+        if self._color is None or self._color[1] == 0:
             return None
 
         return self._color

@@ -14,7 +14,7 @@ from tests.common import (
 from .test_init import mutagen_mock  # noqa
 
 
-class TestTTSVoiceRSSPlatform(object):
+class TestTTSVoiceRSSPlatform:
     """Test the voicerss speech component."""
 
     def setup_method(self):
