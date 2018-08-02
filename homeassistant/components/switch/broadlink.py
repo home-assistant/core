@@ -10,6 +10,7 @@ import binascii
 from datetime import timedelta
 import logging
 import socket
+import struct
 
 import voluptuous as vol
 
@@ -118,10 +119,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for packet in packets:
             for retry in range(DEFAULT_RETRY):
                 try:
-                    extra = len(packet) % 4
-                    if extra > 0:
-                        packet = packet + ('=' * (4 - extra))
-                    payload = b64decode(packet)
+                    payload = _decode_packet(packet)
                     yield from hass.async_add_job(
                         broadlink_device.send_data, payload)
                     break
@@ -132,6 +130,49 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     except socket.timeout:
                         if retry == DEFAULT_RETRY-1:
                             _LOGGER.error("Failed to send packet to device")
+
+    def _decode_packet(packet):
+        packet = packet.strip()
+        if packet.startswith('0000'):
+            return _decode_pronto(packet)
+        else:
+            return _decode_base64(packet)
+
+    def _decode_base64(packet):
+        extra = len(packet) % 4
+        if extra > 0:
+            packet = packet + ('=' * (4 - extra))
+        return b64decode(packet)
+
+    def _decode_pronto(pronto):
+        # Shameless stolen from:
+        # https://gist.githubusercontent.com/appden/42d5272bf128125b019c45bc2ed3311f/raw/bdede927b231933df0c1d6d47dcd140d466d9484/pronto2broadlink.py
+        pronto = pronto.replace(' ', '')
+        codes = [int(pronto[i:i+4], 16) for i in range(0, len(pronto), 4)]
+        if codes[0]:
+            raise ValueError('Pronto code should start with 0000')
+        if len(codes) != 4 + 2 * (codes[2] + codes[3]):
+            raise ValueError('Number of pulse widths does not match preamble')
+        frequency = 1 / (codes[1] * 0.241246)
+        pulses = [int(round(code / frequency)) for code in codes[4:]]
+        array = bytearray()
+        for pulse in pulses:
+            pulse = pulse * 269 // 8192  # 32.84ms units
+            if pulse < 256:
+                array += bytearray(struct.pack('>B', pulse))  # 1-byte (BE)
+            else:
+                array += bytearray([0x00])  # next number is 2-bytes
+                array += bytearray(struct.pack('>H', pulse))  # 2-bytes (BE)
+        packet = bytearray([0x26, 0x00])  # 0x26 = IR, 0x00 = no repeats
+        packet += bytearray(struct.pack('<H', len(array)))  # byte count (LE)
+        packet += array
+        packet += bytearray([0x0d, 0x05])  # IR terminator
+        # Add 0s to make ultimate packet size a multiple of 16 for 128-bit
+        # AES encryption.
+        remainder = (len(packet) + 4) % 16  # add 4-byte header (02 00 00 00)
+        if remainder:
+            packet += bytearray(16 - remainder)
+        return packet
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
         """Get slot name."""
