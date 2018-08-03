@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
     )
 
-REQUIREMENTS = ['PyRMVtransport==0.0.4']
+REQUIREMENTS = ['PyRMVtransport==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
