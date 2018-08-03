@@ -52,7 +52,7 @@ ATTRIBUTION = "Data provided by opendata.rmv.de"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NEXT_DEPARTURE): [{
+    vol.Required(CONF_NEXT_DEPARTURE): [{
         vol.Required(CONF_STATION): cv.string,
         vol.Optional(CONF_DESTINATIONS, default=['']): cv.ensure_list_csv,
         vol.Optional(CONF_DIRECTIONS, default=['']): cv.ensure_list_csv,
@@ -65,7 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RMV departure sensor."""
     sensors = []
     for nextdeparture in config.get(CONF_NEXT_DEPARTURE):
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 nextdeparture.get(CONF_TIMEOFFSET),
                 nextdeparture.get(CONF_MAXJOURNEYS),
                 nextdeparture.get(CONF_NAME)))
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class RMVDepartureSensor(Entity):
@@ -101,6 +101,13 @@ class RMVDepartureSensor(Entity):
         return self._name
 
     @property
+    def available(self):
+        """Return True if entity is available."""
+        if self._state is STATE_UNKNOWN:
+            return False
+        return True
+
+    @property
     def state(self):
         """Return the next departure time."""
         return self._state
@@ -108,13 +115,18 @@ class RMVDepartureSensor(Entity):
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return {
-            'next_departures': [val for val in self.data.departures[1:]],
-            'direction': self.data.departures[0].get('direction', '-'),
-            'line': self.data.departures[0].get('number', '-'),
-            'minutes': self.data.departures[0].get('minutes', '-'),
-            'product': self.data.departures[0].get('product', '-'),
-        }
+        result = {}
+        try:
+            result = {
+                'next_departures': [val for val in self.data.departures[1:]],
+                'direction': self.data.departures[0].get('direction', '-'),
+                'line': self.data.departures[0].get('number', '-'),
+                'minutes': self.data.departures[0].get('minutes', '-'),
+                'product': self.data.departures[0].get('product', '-'),
+            }
+        except IndexError:
+            pass
+        return result
 
     @property
     def icon(self):
@@ -170,7 +182,7 @@ class RMVDepartureData:
             self.departures = {}
             _LOGGER.warning("Returned data not understood")
             return
-        self.station = _data['station']
+        self.station = _data.get('station', '-')
         _deps = []
         for journey in _data['journeys']:
             # find the first departure meeting the criteria

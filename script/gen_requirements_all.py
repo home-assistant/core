@@ -98,7 +98,8 @@ TEST_REQUIREMENTS = (
     'yahoo-finance',
     'pythonwhois',
     'wakeonlan',
-    'vultr'
+    'vultr',
+    'PyRMVtransport'
 )
 
 IGNORE_PACKAGES = (
