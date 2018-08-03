@@ -110,7 +110,7 @@ CONFIG_SCHEMA = vol.Schema({
                            msg=CONF_PLM_HUB_MSG): cv.string,
              vol.Inclusive(CONF_HUB_PASSWORD, 'hub',
                            msg=CONF_PLM_HUB_MSG): cv.string,
-             }))
+             }, extra=vol.ALLOW_EXTRA, required=True))
     }, extra=vol.ALLOW_EXTRA)
 
 
