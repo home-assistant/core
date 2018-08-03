@@ -80,10 +80,11 @@ class VeraSensor(VeraDevice, Entity):
             self.current_value = self.vera_device.light
         elif self.vera_device.category == veraApi.CATEGORY_HUMIDITY_SENSOR:
             self.current_value = self.vera_device.humidity
-        elif self.vera_device.category == veraApi.CATEGORY_SCENE_CONTROLLER:
+        elif (self.vera_device.category == veraApi.CATEGORY_SCENE_CONTROLLER or
+              self.vera_device.category == veraApi.CATEGORY_REMOTE):
             value = self.vera_device.get_last_scene_id(True)
             time = self.vera_device.get_last_scene_time(True)
-            if time == self.last_changed_time:
+            if time is not None and time == self.last_changed_time:
                 self.current_value = None
             else:
                 self.current_value = value
