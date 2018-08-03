@@ -66,8 +66,8 @@ HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_SSL_KEY): cv.isfile,
     vol.Optional(CONF_CORS_ORIGINS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
-    vol.Optional(CONF_TRUSTED_PROXIES, default=[]):
+    vol.Inclusive(CONF_USE_X_FORWARDED_FOR, 'proxy'): cv.boolean,
+    vol.Inclusive(CONF_TRUSTED_PROXIES, 'proxy'):
         vol.All(cv.ensure_list, [ip_network]),
     vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
         vol.All(cv.ensure_list, [ip_network]),
@@ -96,8 +96,8 @@ async def async_setup(hass, config):
     ssl_peer_certificate = conf.get(CONF_SSL_PEER_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf[CONF_CORS_ORIGINS]
-    use_x_forwarded_for = conf[CONF_USE_X_FORWARDED_FOR]
-    trusted_proxies = conf[CONF_TRUSTED_PROXIES]
+    use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
+    trusted_proxies = conf.get(CONF_TRUSTED_PROXIES, [])
     trusted_networks = conf[CONF_TRUSTED_NETWORKS]
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]

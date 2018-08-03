@@ -96,3 +96,31 @@ async def test_not_log_password(hass, aiohttp_client, caplog):
     # Ensure we don't log API passwords
     assert '/api/' in logs
     assert 'some-pass' not in logs
+
+
+async def test_proxy_config(hass):
+    """Test use_x_forwarded_for must config together with trusted_proxies."""
+    assert await async_setup_component(hass, 'http', {
+        'http': {
+            http.CONF_USE_X_FORWARDED_FOR: True,
+            http.CONF_TRUSTED_PROXIES: ['127.0.0.1']
+        }
+    }) is True
+
+
+async def test_proxy_config_only_use_xff(hass):
+    """Test use_x_forwarded_for must config together with trusted_proxies."""
+    assert await async_setup_component(hass, 'http', {
+        'http': {
+            http.CONF_USE_X_FORWARDED_FOR: True
+        }
+    }) is not True
+
+
+async def test_proxy_config_only_trust_proxies(hass):
+    """Test use_x_forwarded_for must config together with trusted_proxies."""
+    assert await async_setup_component(hass, 'http', {
+        'http': {
+            http.CONF_TRUSTED_PROXIES: ['127.0.0.1']
+        }
+    }) is not True
