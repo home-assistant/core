@@ -159,15 +159,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config[CONF_PORT]
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-
-    entities = []
-    for camera in config[CONF_SOURCE]:
-        facebox = FaceClassifyEntity(
-            ip_address, port, username, password, camera[CONF_ENTITY_ID],
-            camera.get(CONF_NAME))
-        entities.append(facebox)
-        hass.data[DATA_FACEBOX].append(facebox)
-    add_devices(entities)
+    url_health = "http://{}:{}/healthz".format(ip_address, port)
+    hostname = check_box_health(url_health, username, password)
+    if hostname is not None:
+        entities = []
+        for camera in config[CONF_SOURCE]:
+            facebox = FaceClassifyEntity(
+                ip_address, port, username, password, hostname, 
+                camera[CONF_ENTITY_ID], camera.get(CONF_NAME))
+            entities.append(facebox)
+            hass.data[DATA_FACEBOX].append(facebox)
+        add_devices(entities)
 
     def service_handle(service):
         """Handle for services."""
@@ -190,20 +192,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class FaceClassifyEntity(ImageProcessingFaceEntity):
     """Perform a face classification."""
 
-    def __init__(self, ip_address, port, username, password,
+    def __init__(self, ip_address, port, username, password, hostname,
                  camera_entity, name=None):
         """Init with the API key and model id."""
         super().__init__()
         self._url_check = "http://{}:{}/{}/check".format(
             ip_address, port, CLASSIFIER)
-        self._url_health = "http://{}:{}/healthz".format(
-            ip_address, port)
         self._url_teach = "http://{}:{}/{}/teach".format(
             ip_address, port, CLASSIFIER)
         self._username = username
         self._password = password
-        self._hostname = check_box_health(
-            self._url_health, self._username, self._password)
+        self._hostname = hostname
         self._camera = camera_entity
         if name:
             self._name = name
