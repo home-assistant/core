@@ -6,7 +6,7 @@ https://home-assistant.io/components/cover.rfxtrx/
 """
 import voluptuous as vol
 
-import homeassistant.components.rfxtrx as rfxtrx
+from homeassistant.components import rfxtrx
 from homeassistant.components.cover import CoverDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 from homeassistant.components.rfxtrx import (

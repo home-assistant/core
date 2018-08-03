@@ -259,14 +259,11 @@ class ISYSensorDevice(ISYDevice):
         if len(self._node.uom) == 1:
             if self._node.uom[0] in UOM_FRIENDLY_NAME:
                 friendly_name = UOM_FRIENDLY_NAME.get(self._node.uom[0])
-                if friendly_name == TEMP_CELSIUS or \
-                        friendly_name == TEMP_FAHRENHEIT:
+                if friendly_name in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
                     friendly_name = self.hass.config.units.temperature_unit
                 return friendly_name
-            else:
-                return self._node.uom[0]
-        else:
-            return None
+            return self._node.uom[0]
+        return None
 
     @property
     def state(self) -> str:

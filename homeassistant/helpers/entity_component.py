@@ -17,7 +17,7 @@ from .entity_platform import EntityPlatform
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 
 
-class EntityComponent(object):
+class EntityComponent:
     """The EntityComponent manages platforms that manages entities.
 
     This class has the following responsibilities:

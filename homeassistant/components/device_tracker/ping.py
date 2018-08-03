@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-class Host(object):
+class Host:
     """Host object with ping detection."""
 
     def __init__(self, ip_address, dev_id, hass, config):

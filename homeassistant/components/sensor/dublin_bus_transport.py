@@ -125,7 +125,7 @@ class DublinPublicTransportSensor(Entity):
             pass
 
 
-class PublicTransportData(object):
+class PublicTransportData:
     """The Class for handling the data retrieval."""
 
     def __init__(self, stop, route):

@@ -15,7 +15,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (CONF_DOMAIN, CONF_NAME)
 
-REQUIREMENTS = ['beautifulsoup4==4.6.0']
+REQUIREMENTS = ['beautifulsoup4==4.6.1']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_PRODUCT_ID = 'product_id'
@@ -98,7 +98,7 @@ class Geizwatch(Entity):
         self._state = self.data.prices[0]
 
 
-class GeizParser(object):
+class GeizParser:
     """Pull data from the geizhals website."""
 
     def __init__(self, product_id, domain, regex):

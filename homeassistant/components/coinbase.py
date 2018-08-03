@@ -69,7 +69,7 @@ def setup(hass, config):
     return True
 
 
-class CoinbaseData(object):
+class CoinbaseData:
     """Get the latest data and update the states."""
 
     def __init__(self, api_key, api_secret):

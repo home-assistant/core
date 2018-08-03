@@ -174,7 +174,7 @@ def async_setup(hass, config):
     return True
 
 
-class BaseNotificationService(object):
+class BaseNotificationService:
     """An abstract class for notification services."""
 
     hass = None

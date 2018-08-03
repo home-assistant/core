@@ -169,7 +169,7 @@ class BitcoinSensor(Entity):
             self._state = '{0:.2f}'.format(stats.market_price_usd)
 
 
-class BitcoinData(object):
+class BitcoinData:
     """Get the latest data and update the states."""
 
     def __init__(self):

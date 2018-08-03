@@ -83,7 +83,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 12
             }
         ], 200)
-    elif 'api/command' in url:
+    if 'api/command' in url:
         return MockResponse([
             {
                 "name": "RescanMovie",
@@ -94,7 +94,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 24
             }
         ], 200)
-    elif 'api/movie' in url:
+    if 'api/movie' in url:
         return MockResponse([
             {
                 "title": "Assassin's Creed",
@@ -149,7 +149,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 1
             }
         ], 200)
-    elif 'api/diskspace' in url:
+    if 'api/diskspace' in url:
         return MockResponse([
             {
                 "path": "/data",
@@ -158,7 +158,7 @@ def mocked_requests_get(*args, **kwargs):
                 "totalSpace": 499738734592
             }
         ], 200)
-    elif 'api/system/status' in url:
+    if 'api/system/status' in url:
         return MockResponse({
             "version": "0.2.0.210",
             "buildTime": "2017-01-22T23:12:49Z",
@@ -182,10 +182,9 @@ def mocked_requests_get(*args, **kwargs):
                                "(Stable 4.6.1.3/abb06f1 "
                                "Mon Oct  3 07:57:59 UTC 2016)")
         }, 200)
-    else:
-        return MockResponse({
-            "error": "Unauthorized"
-        }, 401)
+    return MockResponse({
+        "error": "Unauthorized"
+    }, 401)
 
 
 class TestRadarrSetup(unittest.TestCase):

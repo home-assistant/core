@@ -1,6 +1,7 @@
 """Unit system helper class and methods."""
 
 import logging
+from typing import Optional
 from numbers import Number
 
 from homeassistant.const import (
@@ -61,10 +62,10 @@ def is_valid_unit(unit: str, unit_type: str) -> bool:
     return unit in units
 
 
-class UnitSystem(object):
+class UnitSystem:
     """A container for units of measure."""
 
-    def __init__(self: object, name: str, temperature: str, length: str,
+    def __init__(self, name: str, temperature: str, length: str,
                  volume: str, mass: str) -> None:
         """Initialize the unit system object."""
         errors = \
@@ -99,7 +100,7 @@ class UnitSystem(object):
         return temperature_util.convert(temperature,
                                         from_unit, self.temperature_unit)
 
-    def length(self, length: float, from_unit: str) -> float:
+    def length(self, length: Optional[float], from_unit: str) -> float:
         """Convert the given length to this unit system."""
         if not isinstance(length, Number):
             raise TypeError('{} is not a numeric value.'.format(str(length)))

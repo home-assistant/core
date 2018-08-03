@@ -74,7 +74,7 @@ def setup(hass, config):
     return True
 
 
-class Vultr(object):
+class Vultr:
     """Handle all communication with the Vultr API."""
 
     def __init__(self, api_key):

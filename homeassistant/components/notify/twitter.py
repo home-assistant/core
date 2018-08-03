@@ -194,9 +194,9 @@ class TwitterNotificationService(BaseNotificationService):
 
         if media_type.startswith('image/gif'):
             return 'tweet_gif'
-        elif media_type.startswith('video/'):
+        if media_type.startswith('video/'):
             return 'tweet_video'
-        elif media_type.startswith('image/'):
+        if media_type.startswith('image/'):
             return 'tweet_image'
 
         return None

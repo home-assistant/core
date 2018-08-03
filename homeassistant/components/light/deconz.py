@@ -98,6 +98,9 @@ class DeconzLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value."""
+        if self._light.colormode != 'ct':
+            return None
+
         return self._light.ct
 
     @property

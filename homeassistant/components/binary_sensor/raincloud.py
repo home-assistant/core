@@ -67,6 +67,6 @@ class RainCloudBinarySensor(RainCloudEntity, BinarySensorDevice):
         """Return the icon of this device."""
         if self._sensor_type == 'is_watering':
             return 'mdi:water' if self.is_on else 'mdi:water-off'
-        elif self._sensor_type == 'status':
+        if self._sensor_type == 'status':
             return 'mdi:pipe' if self.is_on else 'mdi:pipe-disconnected'
         return ICON_MAP.get(self._sensor_type)

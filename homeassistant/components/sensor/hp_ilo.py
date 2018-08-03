@@ -147,7 +147,7 @@ class HpIloSensor(Entity):
         self._state = ilo_data
 
 
-class HpIloData(object):
+class HpIloData:
     """Gets the latest data from HP ILO."""
 
     def __init__(self, host, port, login, password):

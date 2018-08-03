@@ -27,7 +27,7 @@ CONSUMPTION_NAME = "Usage"
 ACTIVE_TYPE = 'active'
 
 
-class SensorConfig(object):
+class SensorConfig:
     """Data structure holding sensor config."""
 
     def __init__(self, name, sensor_type):

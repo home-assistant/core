@@ -1,5 +1,5 @@
 """Support for Google Assistant Smart Home API."""
-import collections
+from collections.abc import Mapping
 from itertools import product
 import logging
 
@@ -50,7 +50,7 @@ DOMAIN_TO_GOOGLE_TYPES = {
 def deep_update(target, source):
     """Update a nested dictionary with another nested dictionary."""
     for key, value in source.items():
-        if isinstance(value, collections.Mapping):
+        if isinstance(value, Mapping):
             target[key] = deep_update(target.get(key, {}), value)
         else:
             target[key] = value
