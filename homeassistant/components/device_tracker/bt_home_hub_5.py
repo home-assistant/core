@@ -65,7 +65,6 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
 
     def update_info(self):
         """Ensure the information from the BT Home Hub 5 is up to date."""
-        # Return boolean if scanning successful.
         import bthomehub5_devicelist
 
         _LOGGER.info("Scanning")
