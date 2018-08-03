@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.bt_home_hub_5/
 """
 import logging
-import re
 
 import voluptuous as vol
 
@@ -36,9 +35,9 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
     """This class queries a BT Home Hub 5."""
 
     def __init__(self, config):
+        """Initialise the scanner."""
         import bthomehub5_devicelist
 
-        """Initialise the scanner."""
         _LOGGER.info("Initialising BT Home Hub 5")
         self.host = config[CONF_HOST]
         self.last_results = {}
@@ -65,10 +64,8 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
         return self.last_results.get(device)
 
     def update_info(self):
-        """Ensure the information from the BT Home Hub 5 is up to date.
-        Return boolean if scanning successful.
-        """
-
+        """Ensure the information from the BT Home Hub 5 is up to date."""
+        # Return boolean if scanning successful.
         import bthomehub5_devicelist
 
         _LOGGER.info("Scanning")
@@ -77,6 +74,6 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
 
         if not data:
             _LOGGER.warning("Error scanning devices")
-            return False
+            return
 
         self.last_results = data
