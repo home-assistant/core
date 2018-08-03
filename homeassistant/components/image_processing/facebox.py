@@ -161,15 +161,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     url_health = "http://{}:{}/healthz".format(ip_address, port)
     hostname = check_box_health(url_health, username, password)
-    if hostname is not None:
-        entities = []
-        for camera in config[CONF_SOURCE]:
-            facebox = FaceClassifyEntity(
-                ip_address, port, username, password, hostname,
-                camera[CONF_ENTITY_ID], camera.get(CONF_NAME))
-            entities.append(facebox)
-            hass.data[DATA_FACEBOX].append(facebox)
-        add_devices(entities)
+    if hostname is None:
+        return
+        
+    entities = []
+    for camera in config[CONF_SOURCE]:
+        facebox = FaceClassifyEntity(
+            ip_address, port, username, password, hostname,
+            camera[CONF_ENTITY_ID], camera.get(CONF_NAME))
+        entities.append(facebox)
+        hass.data[DATA_FACEBOX].append(facebox)
+    add_devices(entities)
 
     def service_handle(service):
         """Handle for services."""
