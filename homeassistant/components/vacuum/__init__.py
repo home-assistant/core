@@ -45,6 +45,8 @@ SERVICE_RETURN_TO_BASE = 'return_to_base'
 SERVICE_SEND_COMMAND = 'send_command'
 SERVICE_SET_FAN_SPEED = 'set_fan_speed'
 SERVICE_START_PAUSE = 'start_pause'
+SERVICE_START = 'start'
+SERVICE_PAUSE = 'pause'
 SERVICE_STOP = 'stop'
 
 VACUUM_SERVICE_SCHEMA = vol.Schema({
@@ -65,6 +67,8 @@ SERVICE_TO_METHOD = {
     SERVICE_TURN_OFF: {'method': 'async_turn_off'},
     SERVICE_TOGGLE: {'method': 'async_toggle'},
     SERVICE_START_PAUSE: {'method': 'async_start_pause'},
+    SERVICE_START: {'method': 'async_start'},
+    SERVICE_PAUSE: {'method': 'async_pause'},
     SERVICE_RETURN_TO_BASE: {'method': 'async_return_to_base'},
     SERVICE_CLEAN_SPOT: {'method': 'async_clean_spot'},
     SERVICE_LOCATE: {'method': 'async_locate'},
@@ -97,6 +101,7 @@ SUPPORT_LOCATE = 512
 SUPPORT_CLEAN_SPOT = 1024
 SUPPORT_MAP = 2048
 SUPPORT_STATE = 4096
+SUPPORT_START = 8192
 
 
 @bind_hass
@@ -153,6 +158,20 @@ def start_pause(hass, entity_id=None):
     """Tell all or specified vacuum to start or pause the current task."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
     hass.services.call(DOMAIN, SERVICE_START_PAUSE, data)
+
+
+@bind_hass
+def start(hass, entity_id=None):
+    """Tell all or specified vacuum to start or resume the current task."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_START, data)
+
+
+@bind_hass
+def pause(hass, entity_id=None):
+    """Tell all or the specified vacuum to pause the current task."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_PAUSE, data)
 
 
 @bind_hass
@@ -241,18 +260,6 @@ class _BaseVacuum(Entity):
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
         raise NotImplementedError()
-
-    def start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task."""
-        raise NotImplementedError()
-
-    async def async_start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task.
-
-        This method must be run in the event loop.
-        """
-        await self.hass.async_add_executor_job(
-            partial(self.start_pause, **kwargs))
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
@@ -384,6 +391,18 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         await self.hass.async_add_executor_job(
             partial(self.turn_off, **kwargs))
 
+    def start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task."""
+        raise NotImplementedError()
+
+    async def async_start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(
+            partial(self.start_pause, **kwargs))
+
 
 class StateVacuumDevice(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
@@ -415,3 +434,25 @@ class StateVacuumDevice(_BaseVacuum):
             data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
 
         return data
+
+    def start(self):
+        """Start or resume the cleaning task."""
+        raise NotImplementedError()
+
+    async def async_start(self):
+        """Start or resume the cleaning task.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(self.start)
+
+    def pause(self):
+        """Pause the cleaning task."""
+        raise NotImplementedError()
+
+    async def async_pause(self):
+        """Pause the cleaning task.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(self.pause)

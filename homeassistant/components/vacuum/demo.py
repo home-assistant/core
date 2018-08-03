@@ -10,8 +10,8 @@ from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA, SUPPORT_BATTERY, SUPPORT_CLEAN_SPOT,
     SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
     SUPPORT_SEND_COMMAND, SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_STATE, STATE_CLEANING, STATE_DOCKED,
-    STATE_IDLE, STATE_PAUSED, STATE_RETURNING, VacuumDevice,
+    SUPPORT_TURN_ON, SUPPORT_STATE, SUPPORT_START, STATE_CLEANING,
+    STATE_DOCKED, STATE_IDLE, STATE_PAUSED, STATE_RETURNING, VacuumDevice,
     StateVacuumDevice)
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ SUPPORT_ALL_SERVICES = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
 
 SUPPORT_STATE_SERVICES = SUPPORT_STATE | SUPPORT_PAUSE | SUPPORT_STOP | \
                          SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | \
-                         SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT
+                         SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT | SUPPORT_START
 
 FAN_SPEEDS = ['min', 'medium', 'high', 'max']
 DEMO_VACUUM_COMPLETE = '0_Ground_floor'
@@ -274,18 +274,25 @@ class StateDemoVacuum(StateVacuumDevice):
         """Return device state attributes."""
         return {ATTR_CLEANED_AREA: round(self._cleaned_area, 2)}
 
-    def start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task."""
+    def start(self):
+        """Start or resume the cleaning task."""
+        if self.supported_features & SUPPORT_START == 0:
+            return
+
+        if self._state != STATE_CLEANING:
+            self._state = STATE_CLEANING
+            self._cleaned_area += 1.32
+            self._battery_level -= 1
+            self.schedule_update_ha_state()
+
+    def pause(self):
+        """Pause the cleaning task."""
         if self.supported_features & SUPPORT_PAUSE == 0:
             return
 
         if self._state == STATE_CLEANING:
             self._state = STATE_PAUSED
-        else:
-            self._state = STATE_CLEANING
-            self._cleaned_area += 1.32
-            self._battery_level -= 1
-        self.schedule_update_ha_state()
+            self.schedule_update_ha_state()
 
     def stop(self, **kwargs):
         """Stop the cleaning task, do not return to dock."""
