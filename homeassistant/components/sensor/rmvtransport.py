@@ -157,12 +157,12 @@ class RMVDepartureSensor(Entity):
 class RMVDepartureData:
     """Pull data from the opendata.rmv.de web page."""
 
-    def __init__(self, stationId, destinations, directions,
+    def __init__(self, station_id, destinations, directions,
                  lines, products, timeoffset, maxjourneys):
         """Initialize the sensor."""
         import RMVtransport
         self.station = None
-        self._stationId = stationId
+        self._station_id = station_id
         self._destinations = destinations
         self._directions = directions
         self._lines = lines
@@ -175,7 +175,7 @@ class RMVDepartureData:
     def update(self):
         """Update the connection data."""
         try:
-            _data = self.rmv.get_departures(stationId=self._stationId,
+            _data = self.rmv.get_departures(self._station_id,
                                             products=self._products,
                                             maxJourneys=50)
         except ValueError:
