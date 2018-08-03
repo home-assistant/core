@@ -10,7 +10,7 @@ import math
 
 import voluptuous as vol
 
-import homeassistant.components.history as history
+from homeassistant.components import history
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -294,7 +294,7 @@ class HistoryStatsHelper:
         minutes, seconds = divmod(seconds, 60)
         if days > 0:
             return '%dd %dh %dm' % (days, hours, minutes)
-        elif hours > 0:
+        if hours > 0:
             return '%dh %dm' % (hours, minutes)
         return '%dm' % minutes
 

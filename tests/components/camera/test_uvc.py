@@ -45,8 +45,7 @@ class TestUVCSetup(unittest.TestCase):
             """Create a mock camera."""
             if uuid == 'id3':
                 return {'model': 'airCam'}
-            else:
-                return {'model': 'UVC'}
+            return {'model': 'UVC'}
 
         mock_remote.return_value.index.return_value = mock_cameras
         mock_remote.return_value.get_camera.side_effect = mock_get_camera

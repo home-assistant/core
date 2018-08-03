@@ -84,7 +84,7 @@ class HueFlowHandler(data_entry_flow.FlowHandler):
                 reason='all_configured'
             )
 
-        elif len(hosts) == 1:
+        if len(hosts) == 1:
             self.host = hosts[0]
             return await self.async_step_link()
 

@@ -48,10 +48,7 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-        else:
-            brightness = 255
+        brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         self._smartbridge.set_value(self._device_id,
                                     to_lutron_level(brightness))
 

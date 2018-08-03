@@ -15,7 +15,7 @@ SLOW_SETUP_MAX_WAIT = 60
 PLATFORM_NOT_READY_RETRIES = 10
 
 
-class EntityPlatform(object):
+class EntityPlatform:
     """Manage the entities for a single platform."""
 
     def __init__(self, *, hass, logger, domain, platform_name, platform,
@@ -283,7 +283,7 @@ class EntityPlatform(object):
 
             entity.entity_id = entry.entity_id
             entity.registry_name = entry.name
-            entry.add_update_listener(entity)
+            entity.async_on_remove(entry.add_update_listener(entity))
 
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID

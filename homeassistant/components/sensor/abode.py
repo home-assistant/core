@@ -67,9 +67,9 @@ class AbodeSensor(AbodeDevice):
         """Return the state of the sensor."""
         if self._sensor_type == 'temp':
             return self._device.temp
-        elif self._sensor_type == 'humidity':
+        if self._sensor_type == 'humidity':
             return self._device.humidity
-        elif self._sensor_type == 'lux':
+        if self._sensor_type == 'lux':
             return self._device.lux
 
     @property
@@ -77,7 +77,7 @@ class AbodeSensor(AbodeDevice):
         """Return the units of measurement."""
         if self._sensor_type == 'temp':
             return self._device.temp_unit
-        elif self._sensor_type == 'humidity':
+        if self._sensor_type == 'humidity':
             return self._device.humidity_unit
-        elif self._sensor_type == 'lux':
+        if self._sensor_type == 'lux':
             return self._device.lux_unit

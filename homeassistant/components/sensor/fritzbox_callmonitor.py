@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         phonebook = FritzBoxPhonebook(
             host=host, port=port, username=username, password=password,
             phonebook_id=phonebook_id, prefixes=prefixes)
-    except:  # noqa: E722  # pylint: disable=bare-except
+    except:  # noqa: E722 pylint: disable=bare-except
         phonebook = None
         _LOGGER.warning("Phonebook with ID %s not found on Fritz!Box",
                         phonebook_id)
@@ -143,7 +143,7 @@ class FritzBoxCallSensor(Entity):
             self.phonebook.update_phonebook()
 
 
-class FritzBoxCallMonitor(object):
+class FritzBoxCallMonitor:
     """Event listener to monitor calls on the Fritz!Box."""
 
     def __init__(self, host, port, sensor):
@@ -187,7 +187,6 @@ class FritzBoxCallMonitor(object):
                 line = response.split("\n", 1)[0]
                 self._parse(line)
                 time.sleep(1)
-        return
 
     def _parse(self, line):
         """Parse the call information and set the sensor states."""
@@ -225,7 +224,7 @@ class FritzBoxCallMonitor(object):
         self._sensor.schedule_update_ha_state()
 
 
-class FritzBoxPhonebook(object):
+class FritzBoxPhonebook:
     """This connects to a FritzBox router and downloads its phone book."""
 
     def __init__(self, host, port, username, password,

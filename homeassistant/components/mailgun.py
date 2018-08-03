@@ -48,4 +48,3 @@ class MailgunReceiveMessageView(HomeAssistantView):
         hass = request.app['hass']
         data = yield from request.post()
         hass.bus.async_fire(MESSAGE_RECEIVED, dict(data))
-        return

@@ -71,7 +71,7 @@ def test_async_update_support(hass):
     assert len(async_update) == 1
 
 
-class TestHelpersEntity(object):
+class TestHelpersEntity:
     """Test homeassistant.helpers.entity module."""
 
     def setup_method(self, method):
@@ -400,3 +400,15 @@ def test_async_remove_no_platform(hass):
     assert len(hass.states.async_entity_ids()) == 1
     yield from ent.async_remove()
     assert len(hass.states.async_entity_ids()) == 0
+
+
+async def test_async_remove_runs_callbacks(hass):
+    """Test async_remove method when no platform set."""
+    result = []
+
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = 'test.test'
+    ent.async_on_remove(lambda: result.append(1))
+    await ent.async_remove()
+    assert len(result) == 1

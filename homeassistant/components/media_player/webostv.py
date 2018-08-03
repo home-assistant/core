@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-import homeassistant.util as util
+from homeassistant import util
 
 REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2']
 

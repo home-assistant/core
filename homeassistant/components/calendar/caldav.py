@@ -125,7 +125,7 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         return await self.data.async_get_events(hass, start_date, end_date)
 
 
-class WebDavCalendarData(object):
+class WebDavCalendarData:
     """Class to utilize the calendar dav client object to get next event."""
 
     def __init__(self, calendar, include_all_day, search):

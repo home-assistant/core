@@ -124,7 +124,7 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
                 return False
             self._state = True
             return True
-        elif value == '0':
+        if value == '0':
             if self._state:
                 self._state = False
                 return True
@@ -184,7 +184,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 return False
             self._state = True
             return True
-        elif value == NO_MOTION:
+        if value == NO_MOTION:
             if not self._state:
                 return False
             self._state = False
@@ -224,7 +224,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
                 return False
             self._state = True
             return True
-        elif value == 'close':
+        if value == 'close':
             self._open_since = 0
             if self._state:
                 self._state = False
@@ -254,7 +254,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
                 return False
             self._state = True
             return True
-        elif value == 'no_leak':
+        if value == 'no_leak':
             if self._state:
                 self._state = False
                 return True
@@ -290,7 +290,7 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
                 return False
             self._state = True
             return True
-        elif value == '0':
+        if value == '0':
             if self._state:
                 self._state = False
                 return True

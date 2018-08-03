@@ -26,7 +26,7 @@ def mock_async_subprocess():
     return async_popen
 
 
-class TestOpenAlprLocalSetup(object):
+class TestOpenAlprLocalSetup:
     """Test class for image processing."""
 
     def setup_method(self):
@@ -96,7 +96,7 @@ class TestOpenAlprLocalSetup(object):
             setup_component(self.hass, ip.DOMAIN, config)
 
 
-class TestOpenAlprLocal(object):
+class TestOpenAlprLocal:
     """Test class for image processing."""
 
     def setup_method(self):

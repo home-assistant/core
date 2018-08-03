@@ -7,11 +7,10 @@ https://home-assistant.io/components/fan.insteon_local/
 import logging
 from datetime import timedelta
 
+from homeassistant import util
 from homeassistant.components.fan import (
     ATTR_SPEED, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED, FanEntity)
-from homeassistant.helpers.entity import ToggleEntity
-import homeassistant.util as util
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +67,7 @@ class InsteonLocalFanDevice(FanEntity):
         return self._speed
 
     @property
-    def speed_list(self: ToggleEntity) -> list:
+    def speed_list(self) -> list:
         """Get the list of available speeds."""
         return [SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH]
 
@@ -91,21 +90,18 @@ class InsteonLocalFanDevice(FanEntity):
         """Flag supported features."""
         return SUPPORT_INSTEON_LOCAL
 
-    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn device on."""
         if speed is None:
-            if ATTR_SPEED in kwargs:
-                speed = kwargs[ATTR_SPEED]
-            else:
-                speed = SPEED_MEDIUM
+            speed = kwargs.get(ATTR_SPEED, SPEED_MEDIUM)
 
         self.set_speed(speed)
 
-    def turn_off(self: ToggleEntity, **kwargs) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn device off."""
         self.node.off()
 
-    def set_speed(self: ToggleEntity, speed: str) -> None:
+    def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         if self.node.on(speed):
             self._speed = speed

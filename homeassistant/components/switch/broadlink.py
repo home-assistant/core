@@ -348,7 +348,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         self._state = self._parent_device.get_outlet_status(self._slot)
 
 
-class BroadlinkMP1Switch(object):
+class BroadlinkMP1Switch:
     """Representation of a Broadlink switch - To fetch states of all slots."""
 
     def __init__(self, device):
