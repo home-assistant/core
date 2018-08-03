@@ -1402,7 +1402,7 @@ uvcclient==0.10.1
 venstarcolortouch==0.6
 
 # homeassistant.components.config.config_entries
-voluptuous-serialize==1
+voluptuous-serialize==2.0.0
 
 # homeassistant.components.volvooncall
 volvooncall==0.4.0
