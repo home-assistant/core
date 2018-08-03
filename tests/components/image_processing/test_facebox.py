@@ -235,7 +235,7 @@ async def test_process_image_errors(hass, mock_healthybox, mock_image, caplog):
 
 
 async def test_teach_service(
-        hass, mock_healthybox, mock_image, 
+        hass, mock_healthybox, mock_image,
         mock_isfile, mock_open_file, caplog):
     """Test teaching of facebox."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
@@ -294,6 +294,7 @@ async def test_teach_service(
                                        service_data=data)
         await hass.async_block_till_done()
         assert "ConnectionError: Is facebox running?" in caplog.text
+
 
 async def test_setup_platform_with_name(hass, mock_healthybox):
     """Setup platform with one entity and a name."""
