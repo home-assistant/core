@@ -6,16 +6,14 @@ https://home-assistant.io/components/sensor.tado/
 """
 import logging
 
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.components.tado import DATA_TADO
+from homeassistant.const import ATTR_ID, ATTR_NAME, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.tado import (DATA_TADO)
-from homeassistant.const import (ATTR_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_DATA_ID = 'data_id'
 ATTR_DEVICE = 'device'
-ATTR_NAME = 'name'
 ATTR_ZONE = 'zone'
 
 CLIMATE_SENSOR_TYPES = ['temperature', 'humidity', 'power',
@@ -39,14 +37,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if zone['type'] == 'HEATING':
             for variable in CLIMATE_SENSOR_TYPES:
                 sensor_items.append(create_zone_sensor(
-                    tado, zone, zone['name'], zone['id'],
-                    variable))
+                    tado, zone, zone['name'], zone['id'], variable))
         elif zone['type'] == 'HOT_WATER':
             for variable in HOT_WATER_SENSOR_TYPES:
                 sensor_items.append(create_zone_sensor(
-                    tado, zone, zone['name'], zone['id'],
-                    variable
-                ))
+                    tado, zone, zone['name'], zone['id'], variable))
 
     me_data = tado.get_me()
     sensor_items.append(create_device_sensor(
@@ -127,9 +122,9 @@ class TadoSensor(Entity):
         """Return the unit of measurement."""
         if self.zone_variable == "temperature":
             return self.hass.config.units.temperature_unit
-        elif self.zone_variable == "humidity":
+        if self.zone_variable == "humidity":
             return '%'
-        elif self.zone_variable == "heating":
+        if self.zone_variable == "heating":
             return '%'
 
     @property
@@ -137,7 +132,7 @@ class TadoSensor(Entity):
         """Icon for the sensor."""
         if self.zone_variable == "temperature":
             return 'mdi:thermometer'
-        elif self.zone_variable == "humidity":
+        if self.zone_variable == "humidity":
             return 'mdi:water-percent'
 
     def update(self):
@@ -152,7 +147,6 @@ class TadoSensor(Entity):
 
         unit = TEMP_CELSIUS
 
-        # pylint: disable=R0912
         if self.zone_variable == 'temperature':
             if 'sensorDataPoints' in data:
                 sensor_data = data['sensorDataPoints']

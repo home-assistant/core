@@ -23,7 +23,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-mpd2==0.5.5']
+REQUIREMENTS = ['python-mpd2==1.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +46,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MPD platform."""
     host = config.get(CONF_HOST)
@@ -142,11 +141,11 @@ class MpdDevice(MediaPlayerDevice):
         """Return the media state."""
         if self._status is None:
             return STATE_OFF
-        elif self._status['state'] == 'play':
+        if self._status['state'] == 'play':
             return STATE_PLAYING
-        elif self._status['state'] == 'pause':
+        if self._status['state'] == 'pause':
             return STATE_PAUSED
-        elif self._status['state'] == 'stop':
+        if self._status['state'] == 'stop':
             return STATE_OFF
 
         return STATE_OFF
@@ -183,9 +182,9 @@ class MpdDevice(MediaPlayerDevice):
             if file_name is None:
                 return "None"
             return os.path.basename(file_name)
-        elif name is None:
+        if name is None:
             return title
-        elif title is None:
+        if title is None:
             return name
 
         return '{}: {}'.format(name, title)

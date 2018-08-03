@@ -33,6 +33,7 @@ DIGITS = {
 SENSOR_MODELS = [
     'Ubiquiti mFi-THS',
     'Ubiquiti mFi-CS',
+    'Ubiquiti mFi-DS',
     'Outlet',
     'Input Analog',
     'Input Digital',
@@ -48,7 +49,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up mFi sensors."""
     host = config.get(CONF_HOST)
@@ -96,7 +96,7 @@ class MfiSensor(Entity):
             tag = None
         if tag is None:
             return STATE_OFF
-        elif self._port.model == 'Input Digital':
+        if self._port.model == 'Input Digital':
             return STATE_ON if self._port.value > 0 else STATE_OFF
         digits = DIGITS.get(self._port.tag, 0)
         return round(self._port.value, digits)
@@ -111,9 +111,9 @@ class MfiSensor(Entity):
 
         if tag == 'temperature':
             return TEMP_CELSIUS
-        elif tag == 'active_pwr':
+        if tag == 'active_pwr':
             return 'Watts'
-        elif self._port.model == 'Input Digital':
+        if self._port.model == 'Input Digital':
             return 'State'
         return tag
 

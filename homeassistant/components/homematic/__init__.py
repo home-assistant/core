@@ -13,16 +13,18 @@ import socket
 import voluptuous as vol
 
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_STOP, CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM,
-    CONF_HOSTS, CONF_HOST, ATTR_ENTITY_ID, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, ATTR_NAME, CONF_HOST, CONF_HOSTS, CONF_PASSWORD,
+    CONF_PLATFORM, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP, STATE_UNKNOWN)
 from homeassistant.helpers import discovery
-from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.39']
-DOMAIN = 'homematic'
+REQUIREMENTS = ['pyhomematic==0.1.46']
+
 _LOGGER = logging.getLogger(__name__)
+
+DOMAIN = 'homematic'
 
 SCAN_INTERVAL_HUB = timedelta(seconds=300)
 SCAN_INTERVAL_VARIABLES = timedelta(seconds=30)
@@ -33,11 +35,11 @@ DISCOVER_SENSORS = 'homematic.sensor'
 DISCOVER_BINARY_SENSORS = 'homematic.binary_sensor'
 DISCOVER_COVER = 'homematic.cover'
 DISCOVER_CLIMATE = 'homematic.climate'
+DISCOVER_LOCKS = 'homematic.locks'
 
 ATTR_DISCOVER_DEVICES = 'devices'
 ATTR_PARAM = 'param'
 ATTR_CHANNEL = 'channel'
-ATTR_NAME = 'name'
 ATTR_ADDRESS = 'address'
 ATTR_VALUE = 'value'
 ATTR_INTERFACE = 'interface'
@@ -59,7 +61,8 @@ SERVICE_SET_INSTALL_MODE = 'set_install_mode'
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch', 'RFSiren',
-        'IPSwitchPowermeter', 'KeyMatic', 'HMWIOSwitch', 'Rain', 'EcoLogic'],
+        'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic',
+        'IPKeySwitchPowermeter'],
     DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
@@ -68,7 +71,9 @@ HM_DEVICE_TYPES = {
         'WeatherStation', 'ThermostatWall2', 'TemperatureDiffSensor',
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
         'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
-        'IPSmoke', 'RFSiren', 'PresenceIP'],
+        'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
+        'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
+        'IPKeySwitchPowermeter'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
@@ -77,8 +82,10 @@ HM_DEVICE_TYPES = {
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
-        'WiredSensor', 'PresenceIP'],
-    DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt']
+        'WiredSensor', 'PresenceIP', 'IPWeatherSensor', 'IPPassageSensor',
+        'SmartwareMotion'],
+    DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
+    DISCOVER_LOCKS: ['KeyMatic']
 }
 
 HM_IGNORE_DISCOVERY_NODE = [
@@ -86,10 +93,15 @@ HM_IGNORE_DISCOVERY_NODE = [
     'ACTUAL_HUMIDITY'
 ]
 
+HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
+    'ACTUAL_TEMPERATURE': ['IPAreaThermostat', 'IPWeatherSensor'],
+}
+
 HM_ATTRIBUTE_SUPPORT = {
     'LOWBAT': ['battery', {0: 'High', 1: 'Low'}],
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
+    'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
     'BATTERY_STATE': ['battery', {}],
@@ -105,7 +117,7 @@ HM_ATTRIBUTE_SUPPORT = {
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
     'OPERATING_VOLTAGE': ['voltage', {}],
-    'WORKING': ['working', {0: 'No', 1: 'Yes'}],
+    'WORKING': ['working', {0: 'No', 1: 'Yes'}]
 }
 
 HM_PRESS_EVENTS = [
@@ -139,6 +151,7 @@ CONF_PATH = 'path'
 CONF_CALLBACK_IP = 'callback_ip'
 CONF_CALLBACK_PORT = 'callback_port'
 CONF_RESOLVENAMES = 'resolvenames'
+CONF_JSONPORT = 'jsonport'
 CONF_VARIABLES = 'variables'
 CONF_DEVICES = 'devices'
 CONF_PRIMARY = 'primary'
@@ -146,6 +159,7 @@ CONF_PRIMARY = 'primary'
 DEFAULT_LOCAL_IP = '0.0.0.0'
 DEFAULT_LOCAL_PORT = 0
 DEFAULT_RESOLVENAMES = False
+DEFAULT_JSONPORT = 80
 DEFAULT_PORT = 2001
 DEFAULT_PATH = ''
 DEFAULT_USERNAME = 'Admin'
@@ -169,6 +183,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
             vol.Optional(CONF_RESOLVENAMES, default=DEFAULT_RESOLVENAMES):
                 vol.In(CONF_RESOLVENAMES_OPTIONS),
+            vol.Optional(CONF_JSONPORT, default=DEFAULT_JSONPORT): cv.port,
             vol.Optional(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
             vol.Optional(CONF_CALLBACK_IP): cv.string,
@@ -180,7 +195,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PASSWORD, default=DEFAULT_PASSWORD): cv.string,
         }},
         vol.Optional(CONF_LOCAL_IP, default=DEFAULT_LOCAL_IP): cv.string,
-        vol.Optional(CONF_LOCAL_PORT, default=DEFAULT_LOCAL_PORT): cv.port,
+        vol.Optional(CONF_LOCAL_PORT): cv.port,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -290,6 +305,7 @@ def setup(hass, config):
             'port': rconfig.get(CONF_PORT),
             'path': rconfig.get(CONF_PATH),
             'resolvenames': rconfig.get(CONF_RESOLVENAMES),
+            'jsonport': rconfig.get(CONF_JSONPORT),
             'username': rconfig.get(CONF_USERNAME),
             'password': rconfig.get(CONF_PASSWORD),
             'callbackip': rconfig.get(CONF_CALLBACK_IP),
@@ -310,7 +326,7 @@ def setup(hass, config):
     bound_system_callback = partial(_system_callback_handler, hass, config)
     hass.data[DATA_HOMEMATIC] = homematic = HMConnection(
         local=config[DOMAIN].get(CONF_LOCAL_IP),
-        localport=config[DOMAIN].get(CONF_LOCAL_PORT),
+        localport=config[DOMAIN].get(CONF_LOCAL_PORT, DEFAULT_LOCAL_PORT),
         remotes=remotes,
         systemcallback=bound_system_callback,
         interface_id='homeassistant'
@@ -460,7 +476,8 @@ def _system_callback_handler(hass, config, src, *args):
                     ('cover', DISCOVER_COVER),
                     ('binary_sensor', DISCOVER_BINARY_SENSORS),
                     ('sensor', DISCOVER_SENSORS),
-                    ('climate', DISCOVER_CLIMATE)):
+                    ('climate', DISCOVER_CLIMATE),
+                    ('lock', DISCOVER_LOCKS)):
                 # Get all devices of a specific type
                 found_devices = _get_devices(
                     hass, discovery_type, addresses, interface)
@@ -505,7 +522,8 @@ def _get_devices(hass, discovery_type, keys, interface):
 
         # Generate options for 1...n elements with 1...n parameters
         for param, channels in metadata.items():
-            if param in HM_IGNORE_DISCOVERY_NODE:
+            if param in HM_IGNORE_DISCOVERY_NODE and class_name not in \
+             HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS.get(param, []):
                 continue
 
             # Add devices

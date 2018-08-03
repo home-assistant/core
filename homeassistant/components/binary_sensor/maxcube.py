@@ -7,7 +7,7 @@ https://home-assistant.io/components/maxcube/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.maxcube import MAXCUBE_HANDLE
+from homeassistant.components.maxcube import DATA_KEY
 from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
@@ -15,16 +15,17 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Iterate through all MAX! Devices and add window shutters."""
-    cube = hass.data[MAXCUBE_HANDLE].cube
     devices = []
+    for handler in hass.data[DATA_KEY].values():
+        cube = handler.cube
+        for device in cube.devices:
+            name = "{} {}".format(
+                cube.room_by_id(device.room_id).name, device.name)
 
-    for device in cube.devices:
-        name = "{} {}".format(
-            cube.room_by_id(device.room_id).name, device.name)
-
-        # Only add Window Shutters
-        if cube.is_windowshutter(device):
-            devices.append(MaxCubeShutter(hass, name, device.rf_address))
+            # Only add Window Shutters
+            if cube.is_windowshutter(device):
+                devices.append(
+                    MaxCubeShutter(handler, name, device.rf_address))
 
     if devices:
         add_devices(devices)
@@ -33,12 +34,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class MaxCubeShutter(BinarySensorDevice):
     """Representation of a MAX! Cube Binary Sensor device."""
 
-    def __init__(self, hass, name, rf_address):
+    def __init__(self, handler, name, rf_address):
         """Initialize MAX! Cube BinarySensorDevice."""
         self._name = name
         self._sensor_type = 'window'
         self._rf_address = rf_address
-        self._cubehandle = hass.data[MAXCUBE_HANDLE]
+        self._cubehandle = handler
         self._state = STATE_UNKNOWN
 
     @property

@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, CONF_EMAIL, CONF_PASSWORD,
+    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_NAME, CONF_EMAIL, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON,
     __version__)
 from homeassistant.core import callback
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['python-wink==1.7.3', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.9.1', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,6 @@ ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
 ATTR_CLIENT_ID = 'client_id'
 ATTR_CLIENT_SECRET = 'client_secret'
-ATTR_NAME = 'name'
 ATTR_PAIRING_MODE = 'pairing_mode'
 ATTR_KIDDE_RADIO_CODE = 'kidde_radio_code'
 ATTR_HUB_NAME = 'hub_name'
@@ -53,7 +52,8 @@ ATTR_HUB_NAME = 'hub_name'
 WINK_AUTH_CALLBACK_PATH = '/auth/wink/callback'
 WINK_AUTH_START = '/auth/wink'
 WINK_CONFIG_FILE = '.wink.conf'
-USER_AGENT = "Manufacturer/Home-Assistant%s python/3 Wink/3" % __version__
+USER_AGENT = "Manufacturer/Home-Assistant{} python/3 Wink/3".format(
+    __version__)
 
 DEFAULT_CONFIG = {
     'client_id': 'CLIENT_ID_HERE',
@@ -173,10 +173,9 @@ def _request_app_setup(hass, config):
                        ATTR_CLIENT_SECRET: client_secret})
             setup(hass, config)
             return
-        else:
-            error_msg = "Your input was invalid. Please try again."
-            _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
-            configurator.notify_errors(_configurator, error_msg)
+        error_msg = "Your input was invalid. Please try again."
+        _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
+        configurator.notify_errors(_configurator, error_msg)
 
     start_url = "{}{}".format(hass.config.api.base_url,
                               WINK_AUTH_CALLBACK_PATH)
@@ -210,7 +209,6 @@ def _request_oauth_completion(hass, config):
             "Failed to register, please try again.")
         return
 
-    # pylint: disable=unused-argument
     def wink_configuration_callback(callback_data):
         """Call setup again."""
         setup(hass, config)
@@ -453,7 +451,7 @@ def setup(hass, config):
             _man = siren.wink.device_manufacturer()
             if (service.service != SERVICE_SET_AUTO_SHUTOFF and
                     service.service != SERVICE_ENABLE_SIREN and
-                    (_man != 'dome' and _man != 'wink')):
+                    _man not in ('dome', 'wink')):
                 _LOGGER.error("Service only valid for Dome or Wink sirens")
                 return
 
@@ -488,7 +486,7 @@ def setup(hass, config):
     has_dome_or_wink_siren = False
     for siren in pywink.get_sirens():
         _man = siren.device_manufacturer()
-        if _man == "dome" or _man == "wink":
+        if _man in ("dome", "wink"):
             has_dome_or_wink_siren = True
         _id = siren.object_id() + siren.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
@@ -554,7 +552,7 @@ class WinkAuthCallbackView(HomeAssistantView):
         from aiohttp import web
 
         hass = request.app['hass']
-        data = request.GET
+        data = request.query
 
         response_message = """Wink has been successfully authorized!
          You can close this window now! For the best results you should reboot

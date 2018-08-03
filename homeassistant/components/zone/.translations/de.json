@@ -1,0 +1,21 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Name existiert bereits"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "Symbol",
+                    "latitude": "Breitengrad",
+                    "longitude": "L\u00e4ngengrad",
+                    "name": "Name",
+                    "passive": "Passiv",
+                    "radius": "Radius"
+                },
+                "title": "Definieren Sie die Zonenparameter"
+            }
+        },
+        "title": "Zone"
+    }
+}

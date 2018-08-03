@@ -14,7 +14,7 @@ from homeassistant.helpers import config_validation as cv
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['pywemo==0.4.25']
+REQUIREMENTS = ['pywemo==0.4.28']
 
 DOMAIN = 'wemo'
 
@@ -26,6 +26,7 @@ WEMO_MODEL_DISPATCH = {
     'Insight': 'switch',
     'LightSwitch': 'switch',
     'Maker':   'switch',
+    'Motion': 'binary_sensor',
     'Sensor':  'binary_sensor',
     'Socket':  'switch'
 }
@@ -44,7 +45,6 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=unused-argument, too-many-function-args
 def setup(hass, config):
     """Set up for WeMo devices."""
     import pywemo

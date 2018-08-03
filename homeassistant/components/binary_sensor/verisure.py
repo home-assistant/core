@@ -54,6 +54,7 @@ class VerisureDoorWindowSensor(BinarySensorDevice):
             "$.doorWindow.doorWindowDevice[?(@.deviceLabel=='%s')]",
             self._device_label) is not None
 
+    # pylint: disable=no-self-use
     def update(self):
         """Update the state of the sensor."""
         hub.update_overview()

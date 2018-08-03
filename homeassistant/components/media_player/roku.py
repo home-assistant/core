@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
+    MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
     SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
@@ -134,9 +134,9 @@ class RokuDevice(MediaPlayerDevice):
         if (self.current_app.name == "Power Saver" or
                 self.current_app.is_screensaver):
             return STATE_IDLE
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return STATE_HOME
-        elif self.current_app.name is not None:
+        if self.current_app.name is not None:
             return STATE_PLAYING
 
         return STATE_UNKNOWN
@@ -147,26 +147,31 @@ class RokuDevice(MediaPlayerDevice):
         return SUPPORT_ROKU
 
     @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return self.device_info.sernum
+
+    @property
     def media_content_type(self):
         """Content type of current playing media."""
         if self.current_app is None:
             return None
-        elif self.current_app.name == "Power Saver":
+        if self.current_app.name == "Power Saver":
             return None
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return None
-        return MEDIA_TYPE_VIDEO
+        return MEDIA_TYPE_MOVIE
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
         if self.current_app is None:
             return None
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return None
-        elif self.current_app.name == "Power Saver":
+        if self.current_app.name == "Power Saver":
             return None
-        elif self.current_app.id is None:
+        if self.current_app.id is None:
             return None
 
         return 'http://{0}:{1}/query/icon/{2}'.format(

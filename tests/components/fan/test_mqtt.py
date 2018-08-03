@@ -18,7 +18,7 @@ class TestMqttFan(unittest.TestCase):
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """"Stop everything that was started."""
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_default_availability_payload(self):

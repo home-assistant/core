@@ -81,7 +81,7 @@ class TimeDateSensor(Entity):
         """Icon to use in the frontend, if any."""
         if 'date' in self.type and 'time' in self.type:
             return 'mdi:calendar-clock'
-        elif 'date' in self.type:
+        if 'date' in self.type:
             return 'mdi:calendar'
         return 'mdi:clock'
 
@@ -92,7 +92,7 @@ class TimeDateSensor(Entity):
         if self.type == 'date':
             now = dt_util.start_of_local_day(dt_util.as_local(now))
             return now + timedelta(seconds=86400)
-        elif self.type == 'beat':
+        if self.type == 'beat':
             interval = 86.4
         else:
             interval = 60

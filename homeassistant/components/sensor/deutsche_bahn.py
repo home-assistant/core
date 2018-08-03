@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['schiene==0.21']
+REQUIREMENTS = ['schiene==0.22']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ class DeutscheBahnSensor(Entity):
             self._state += " + {}".format(self.data.connections[0]['delay'])
 
 
-class SchieneData(object):
+class SchieneData:
     """Pull data from the bahn.de web page."""
 
     def __init__(self, start, goal, only_direct):

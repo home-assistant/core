@@ -4,12 +4,11 @@ Support for MQTT discovery.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/#discovery
 """
-import asyncio
 import json
 import logging
 import re
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
@@ -21,33 +20,36 @@ TOPIC_MATCHER = re.compile(
     r'(?:(?P<node_id>[a-zA-Z0-9_-]+)/)?(?P<object_id>[a-zA-Z0-9_-]+)/config')
 
 SUPPORTED_COMPONENTS = [
-    'binary_sensor', 'cover', 'fan', 'light', 'sensor', 'switch']
+    'binary_sensor', 'camera', 'cover', 'fan',
+    'light', 'sensor', 'switch', 'lock', 'climate',
+    'alarm_control_panel']
 
 ALLOWED_PLATFORMS = {
     'binary_sensor': ['mqtt'],
+    'camera': ['mqtt'],
     'cover': ['mqtt'],
     'fan': ['mqtt'],
     'light': ['mqtt', 'mqtt_json', 'mqtt_template'],
+    'lock': ['mqtt'],
     'sensor': ['mqtt'],
     'switch': ['mqtt'],
+    'climate': ['mqtt'],
+    'alarm_control_panel': ['mqtt'],
 }
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
 
 
-@asyncio.coroutine
-def async_start(hass, discovery_topic, hass_config):
+async def async_start(hass, discovery_topic, hass_config):
     """Initialize of MQTT Discovery."""
-    # pylint: disable=unused-variable
-    @asyncio.coroutine
-    def async_device_message_received(topic, payload, qos):
+    async def async_device_message_received(topic, payload, qos):
         """Process the received message."""
         match = TOPIC_MATCHER.match(topic)
 
         if not match:
             return
 
-        prefix_topic, component, node_id, object_id = match.groups()
+        _prefix_topic, component, node_id, object_id = match.groups()
 
         try:
             payload = json.loads(payload)
@@ -88,10 +90,10 @@ def async_start(hass, discovery_topic, hass_config):
 
         _LOGGER.info("Found new component: %s %s", component, discovery_id)
 
-        yield from async_load_platform(
+        await async_load_platform(
             hass, component, platform, payload, hass_config)
 
-    yield from mqtt.async_subscribe(
+    await mqtt.async_subscribe(
         hass, discovery_topic + '/#', async_device_message_received, 0)
 
     return True

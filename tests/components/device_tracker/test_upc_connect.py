@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_HOST)
 from homeassistant.components.device_tracker import DOMAIN
 import homeassistant.components.device_tracker.upc_connect as platform
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture,
@@ -33,7 +33,7 @@ def mock_load_config():
         yield
 
 
-class TestUPCConnect(object):
+class TestUPCConnect:
     """Tests for the Ddwrt device tracker platform."""
 
     def setup_method(self):

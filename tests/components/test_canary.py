@@ -8,12 +8,16 @@ from tests.common import (
     get_test_home_assistant)
 
 
-def mock_device(device_id, name, is_online=True):
+def mock_device(device_id, name, is_online=True, device_type_name=None):
     """Mock Canary Device class."""
     device = MagicMock()
     type(device).device_id = PropertyMock(return_value=device_id)
     type(device).name = PropertyMock(return_value=name)
     type(device).is_online = PropertyMock(return_value=is_online)
+    type(device).device_type = PropertyMock(return_value={
+        "id": 1,
+        "name": device_type_name,
+    })
     return device
 
 

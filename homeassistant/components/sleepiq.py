@@ -51,7 +51,6 @@ def setup(hass, config):
     Will automatically load sensor components to support
     devices discovered on the account.
     """
-    # pylint: disable=global-statement
     global DATA
 
     from sleepyq import Sleepyq
@@ -74,7 +73,7 @@ def setup(hass, config):
     return True
 
 
-class SleepIQData(object):
+class SleepIQData:
     """Get the latest data from SleepIQ."""
 
     def __init__(self, client):

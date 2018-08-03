@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
 })
 
 HA_STATE_TO_DAIKIN = {
@@ -145,7 +145,7 @@ class DaikinClimate(ClimateDevice):
         if value is None:
             _LOGGER.error("Invalid value requested for key %s", key)
         else:
-            if value == "-" or value == "--":
+            if value in ("-", "--"):
                 value = None
             elif cast_to_float:
                 try:

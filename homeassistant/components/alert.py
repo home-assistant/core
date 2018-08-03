@@ -34,7 +34,7 @@ DEFAULT_SKIP_FIRST = False
 
 ALERT_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
-    vol.Optional(CONF_DONE_MESSAGE, default=None): cv.string,
+    vol.Optional(CONF_DONE_MESSAGE): cv.string,
     vol.Required(CONF_ENTITY_ID): cv.entity_id,
     vol.Required(CONF_STATE, default=STATE_ON): cv.string,
     vol.Required(CONF_REPEAT): vol.All(cv.ensure_list, [vol.Coerce(float)]),
@@ -68,7 +68,7 @@ def turn_on(hass, entity_id):
 def async_turn_on(hass, entity_id):
     """Async reset the alert."""
     data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_add_job(
+    hass.async_create_task(
         hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
 
 
@@ -81,7 +81,7 @@ def turn_off(hass, entity_id):
 def async_turn_off(hass, entity_id):
     """Async acknowledge the alert."""
     data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_add_job(
+    hass.async_create_task(
         hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
 
 
@@ -94,7 +94,7 @@ def toggle(hass, entity_id):
 def async_toggle(hass, entity_id):
     """Async toggle acknowledgement of alert."""
     data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_add_job(
+    hass.async_create_task(
         hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data))
 
 
@@ -121,7 +121,7 @@ def async_setup(hass, config):
     # Setup alerts
     for entity_id, alert in alerts.items():
         entity = Alert(hass, entity_id,
-                       alert[CONF_NAME], alert[CONF_DONE_MESSAGE],
+                       alert[CONF_NAME], alert.get(CONF_DONE_MESSAGE),
                        alert[CONF_ENTITY_ID], alert[CONF_STATE],
                        alert[CONF_REPEAT], alert[CONF_SKIP_FIRST],
                        alert[CONF_NOTIFIERS], alert[CONF_CAN_ACK])
@@ -217,7 +217,7 @@ class Alert(ToggleEntity):
         else:
             yield from self._schedule_notify()
 
-        self.hass.async_add_job(self.async_update_ha_state)
+        self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def end_alerting(self):
@@ -228,7 +228,7 @@ class Alert(ToggleEntity):
         self._firing = False
         if self._done_message and self._send_done_message:
             yield from self._notify_done_message()
-        self.hass.async_add_job(self.async_update_ha_state)
+        self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
     def _schedule_notify(self):

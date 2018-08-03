@@ -93,33 +93,32 @@ def toggle(hass, entity_id=None):
     hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Track states and offer events for switches."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES)
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_switch_service(service):
+    async def async_handle_switch_service(service):
         """Handle calls to the switch services."""
         target_switches = component.async_extract_from_service(service)
 
         update_tasks = []
         for switch in target_switches:
             if service.service == SERVICE_TURN_ON:
-                yield from switch.async_turn_on()
+                await switch.async_turn_on()
             elif service.service == SERVICE_TOGGLE:
-                yield from switch.async_toggle()
+                await switch.async_toggle()
             else:
-                yield from switch.async_turn_off()
+                await switch.async_turn_off()
 
             if not switch.should_poll:
                 continue
-            update_tasks.append(switch.async_update_ha_state(True))
+            update_tasks.append(
+                switch.async_update_ha_state(True, service.context))
 
         if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
+            await asyncio.wait(update_tasks, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_TURN_OFF, async_handle_switch_service,
@@ -134,10 +133,19 @@ def async_setup(hass, config):
     return True
 
 
+async def async_setup_entry(hass, entry):
+    """Setup a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
+
+
 class SwitchDevice(ToggleEntity):
     """Representation of a switch."""
 
-    # pylint: disable=no-self-use
     @property
     def current_power_w(self):
         """Return the current power usage in W."""

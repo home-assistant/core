@@ -4,7 +4,7 @@ Support for Sesame, by CANDY HOUSE.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/lock.sesame/
 """
-from typing import Callable  # noqa
+from typing import Callable
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +24,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(
         hass, config: ConfigType,
         add_devices: Callable[[list], None], discovery_info=None):

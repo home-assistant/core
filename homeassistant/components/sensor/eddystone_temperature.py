@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_NAME, TEMP_CELSIUS, STATE_UNKNOWN, EVENT_HOMEASSISTANT_STOP,
     EVENT_HOMEASSISTANT_START)
 
-REQUIREMENTS = ['beacontools[scan]==1.2.1']
+REQUIREMENTS = ['beacontools[scan]==1.2.3', 'construct==2.9.41']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Validate configuration, create devices and start monitoring thread."""
     bt_device_id = config.get("bt_device_id")
@@ -121,7 +120,7 @@ class EddystoneTemp(Entity):
         return False
 
 
-class Monitor(object):
+class Monitor:
     """Continuously scan for BLE advertisements."""
 
     def __init__(self, hass, devices, bt_device_id):

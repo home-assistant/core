@@ -19,7 +19,7 @@ from homeassistant.util import Throttle
 from homeassistant.util.dt import now, parse_date
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['fedexdeliverymanager==1.0.5']
+REQUIREMENTS = ['fedexdeliverymanager==1.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Fedex platform."""
     import fedexdeliverymanager

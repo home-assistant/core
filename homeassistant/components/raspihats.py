@@ -34,7 +34,6 @@ I2C_HAT_NAMES = [
 I2C_HATS_MANAGER = 'I2CH_MNG'
 
 
-# pylint: disable=unused-argument
 def setup(hass, config):
     """Set up the raspihats component."""
     hass.data[I2C_HATS_MANAGER] = I2CHatsManager()
@@ -64,7 +63,7 @@ class I2CHatsException(Exception):
     """I2C-HATs exception."""
 
 
-class I2CHatsDIScanner(object):
+class I2CHatsDIScanner:
     """Scan Digital Inputs and fire callbacks."""
 
     _DIGITAL_INPUTS = "di"

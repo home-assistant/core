@@ -21,13 +21,14 @@ from homeassistant.components.camera import (
     PLATFORM_SCHEMA, DEFAULT_CONTENT_TYPE, Camera)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_CONTENT_TYPE = 'content_type'
 CONF_LIMIT_REFETCH_TO_URL_CHANGE = 'limit_refetch_to_url_change'
 CONF_STILL_IMAGE_URL = 'still_image_url'
+CONF_FRAMERATE = 'framerate'
 
 DEFAULT_NAME = 'Generic Camera'
 
@@ -40,11 +41,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_CONTENT_TYPE, default=DEFAULT_CONTENT_TYPE): cv.string,
+    vol.Optional(CONF_FRAMERATE, default=2): cv.positive_int,
 })
 
 
 @asyncio.coroutine
-# pylint: disable=unused-argument
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up a generic IP Camera."""
     async_add_devices([GenericCamera(hass, config)])
@@ -62,6 +63,7 @@ class GenericCamera(Camera):
         self._still_image_url = device_info[CONF_STILL_IMAGE_URL]
         self._still_image_url.hass = hass
         self._limit_refetch = device_info[CONF_LIMIT_REFETCH_TO_URL_CHANGE]
+        self._frame_interval = 1 / device_info[CONF_FRAMERATE]
         self.content_type = device_info[CONF_CONTENT_TYPE]
 
         username = device_info.get(CONF_USERNAME)
@@ -77,6 +79,11 @@ class GenericCamera(Camera):
 
         self._last_url = None
         self._last_image = None
+
+    @property
+    def frame_interval(self):
+        """Return the interval between frames of the mjpeg stream."""
+        return self._frame_interval
 
     def camera_image(self):
         """Return bytes of camera image."""

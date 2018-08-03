@@ -19,13 +19,12 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.3.6']
+REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Xiaomi Vacuum cleaner'
-ICON = 'mdi:roomba'
-PLATFORM = 'xiaomi_miio'
+DATA_KEY = 'vacuum.xiaomi_miio'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -88,8 +87,8 @@ SUPPORT_XIAOMI = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
     from miio import Vacuum
-    if PLATFORM not in hass.data:
-        hass.data[PLATFORM] = {}
+    if DATA_KEY not in hass.data:
+        hass.data[DATA_KEY] = {}
 
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -100,7 +99,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     vacuum = Vacuum(host, token)
 
     mirobo = MiroboVacuum(name, vacuum)
-    hass.data[PLATFORM][host] = mirobo
+    hass.data[DATA_KEY][host] = mirobo
 
     async_add_devices([mirobo], update_before_add=True)
 
@@ -112,10 +111,10 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                   if key != ATTR_ENTITY_ID}
         entity_ids = service.data.get(ATTR_ENTITY_ID)
         if entity_ids:
-            target_vacuums = [vac for vac in hass.data[PLATFORM].values()
+            target_vacuums = [vac for vac in hass.data[DATA_KEY].values()
                               if vac.entity_id in entity_ids]
         else:
-            target_vacuums = hass.data[PLATFORM].values()
+            target_vacuums = hass.data[DATA_KEY].values()
 
         update_tasks = []
         for vacuum in target_vacuums:
@@ -142,7 +141,6 @@ class MiroboVacuum(VacuumDevice):
     def __init__(self, name, vacuum):
         """Initialize the Xiaomi vacuum cleaner robot handler."""
         self._name = name
-        self._icon = ICON
         self._vacuum = vacuum
 
         self.vacuum_state = None
@@ -157,11 +155,6 @@ class MiroboVacuum(VacuumDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return self._icon
 
     @property
     def status(self):

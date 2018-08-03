@@ -86,7 +86,8 @@ def test_save_timer_reset_on_subsequent_save(hass, registry):
 def test_loading_saving_data(hass, registry):
     """Test that we load/save data correctly."""
     orig_entry1 = registry.async_get_or_create('light', 'hue', '1234')
-    orig_entry2 = registry.async_get_or_create('light', 'hue', '5678')
+    orig_entry2 = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id')
 
     assert len(registry.entities) == 2
 
@@ -106,7 +107,8 @@ def test_loading_saving_data(hass, registry):
     # Ensure same order
     assert list(registry.entities) == list(registry2.entities)
     new_entry1 = registry.async_get_or_create('light', 'hue', '1234')
-    new_entry2 = registry.async_get_or_create('light', 'hue', '5678')
+    new_entry2 = registry.async_get_or_create('light', 'hue', '5678',
+                                              config_entry_id='mock-id')
 
     assert orig_entry1 == new_entry1
     assert orig_entry2 == new_entry2
@@ -180,3 +182,23 @@ test.disabled_hass:
     assert entry_disabled_hass.disabled_by == entity_registry.DISABLED_HASS
     assert entry_disabled_user.disabled
     assert entry_disabled_user.disabled_by == entity_registry.DISABLED_USER
+
+
+@asyncio.coroutine
+def test_async_get_entity_id(registry):
+    """Test that entity_id is returned."""
+    entry = registry.async_get_or_create('light', 'hue', '1234')
+    assert entry.entity_id == 'light.hue_1234'
+    assert registry.async_get_entity_id(
+        'light', 'hue', '1234') == 'light.hue_1234'
+    assert registry.async_get_entity_id('light', 'hue', '123') is None
+
+
+async def test_updating_config_entry_id(registry):
+    """Test that we update config entry id in registry."""
+    entry = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-1')
+    entry2 = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-2')
+    assert entry.entity_id == entry2.entity_id
+    assert entry2.config_entry_id == 'mock-id-2'

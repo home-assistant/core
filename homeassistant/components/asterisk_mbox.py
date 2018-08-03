@@ -48,7 +48,7 @@ def setup(hass, config):
     return True
 
 
-class AsteriskData(object):
+class AsteriskData:
     """Store Asterisk mailbox data."""
 
     def __init__(self, hass, host, port, password):

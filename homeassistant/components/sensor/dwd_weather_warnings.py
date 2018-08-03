@@ -47,8 +47,9 @@ MONITORED_CONDITIONS = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_REGION_NAME): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=list(MONITORED_CONDITIONS)):
+    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)]),
 })
 
 
@@ -94,7 +95,6 @@ class DwdWeatherWarningsSensor(Entity):
         """Return the unit the value is expressed in."""
         return self._var_units
 
-    # pylint: disable=no-member
     @property
     def state(self):
         """Return the state of the device."""
@@ -103,7 +103,6 @@ class DwdWeatherWarningsSensor(Entity):
         except TypeError:
             return self._api.data[self._var_id]
 
-    # pylint: disable=no-member
     @property
     def device_state_attributes(self):
         """Return the state attributes of the DWD-Weather-Warnings."""
@@ -164,7 +163,7 @@ class DwdWeatherWarningsSensor(Entity):
         self._api.update()
 
 
-class DwdWeatherWarningsAPI(object):
+class DwdWeatherWarningsAPI:
     """Get the latest data and update the states."""
 
     def __init__(self, region_name):

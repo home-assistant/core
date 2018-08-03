@@ -42,6 +42,9 @@ SENSOR_TYPES = {
     'process_thread': ['Thread', 'Count', 'mdi:memory'],
     'process_sleeping': ['Sleeping', 'Count', 'mdi:memory'],
     'cpu_temp': ['CPU Temp', TEMP_CELSIUS, 'mdi:thermometer'],
+    'docker_active': ['Containers active', '', 'mdi:docker'],
+    'docker_cpu_use': ['Containers CPU used', '%', 'mdi:docker'],
+    'docker_memory_use': ['Containers RAM used', 'MiB', 'mdi:docker'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -53,7 +56,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Glances sensor."""
     name = config.get(CONF_NAME)
@@ -152,12 +154,29 @@ class GlancesSensor(Entity):
                 self._state = value['processcount']['sleeping']
             elif self.type == 'cpu_temp':
                 for sensor in value['sensors']:
-                    if sensor['label'] == 'CPU':
+                    if sensor['label'] in ['CPU', "Package id 0",
+                                           "Physical id 0"]:
                         self._state = sensor['value']
-                self._state = None
+            elif self.type == 'docker_active':
+                count = 0
+                for container in value['docker']['containers']:
+                    if container['Status'] == 'running' or \
+                            'Up' in container['Status']:
+                        count += 1
+                self._state = count
+            elif self.type == 'docker_cpu_use':
+                use = 0.0
+                for container in value['docker']['containers']:
+                    use += container['cpu']['total']
+                self._state = round(use, 1)
+            elif self.type == 'docker_memory_use':
+                use = 0.0
+                for container in value['docker']['containers']:
+                    use += container['memory']['usage']
+                self._state = round(use / 1024**2, 1)
 
 
-class GlancesData(object):
+class GlancesData:
     """The class for handling the data retrieval."""
 
     def __init__(self, resource):

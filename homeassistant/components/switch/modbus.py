@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.modbus/
 import logging
 import voluptuous as vol
 
-import homeassistant.components.modbus as modbus
+from homeassistant.components import modbus
 from homeassistant.const import (
     CONF_NAME, CONF_SLAVE, CONF_COMMAND_ON, CONF_COMMAND_OFF)
 from homeassistant.helpers.entity import ToggleEntity
@@ -37,12 +37,12 @@ REGISTERS_SCHEMA = vol.Schema({
     vol.Required(CONF_COMMAND_ON): cv.positive_int,
     vol.Required(CONF_COMMAND_OFF): cv.positive_int,
     vol.Optional(CONF_VERIFY_STATE, default=True): cv.boolean,
-    vol.Optional(CONF_VERIFY_REGISTER, default=None):
+    vol.Optional(CONF_VERIFY_REGISTER):
         cv.positive_int,
     vol.Optional(CONF_REGISTER_TYPE, default=REGISTER_TYPE_HOLDING):
         vol.In([REGISTER_TYPE_HOLDING, REGISTER_TYPE_INPUT]),
-    vol.Optional(CONF_STATE_ON, default=None): cv.positive_int,
-    vol.Optional(CONF_STATE_OFF, default=None): cv.positive_int,
+    vol.Optional(CONF_STATE_ON): cv.positive_int,
+    vol.Optional(CONF_STATE_OFF): cv.positive_int,
 })
 
 COILS_SCHEMA = vol.Schema({

@@ -6,7 +6,7 @@ https://home-assistant.io/components/scene.litejet/
 """
 import logging
 
-import homeassistant.components.litejet as litejet
+from homeassistant.components import litejet
 from homeassistant.components.scene import Scene
 
 DEPENDENCIES = ['litejet']
@@ -41,11 +41,6 @@ class LiteJetScene(Scene):
     def name(self):
         """Return the name of the scene."""
         return self._name
-
-    @property
-    def should_poll(self):
-        """Return that polling is not necessary."""
-        return False
 
     @property
     def device_state_attributes(self):

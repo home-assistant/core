@@ -9,8 +9,9 @@ from datetime import timedelta
 
 import requests
 
-import homeassistant.components.nest as nest
-from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera)
+from homeassistant.components import nest
+from homeassistant.components.camera import (PLATFORM_SCHEMA, Camera,
+                                             SUPPORT_ON_OFF)
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,14 +24,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up a Nest Cam."""
-    if discovery_info is None:
-        return
+    """Set up a Nest Cam.
 
-    camera_devices = hass.data[nest.DATA_NEST].cameras()
+    No longer in use.
+    """
+
+
+async def async_setup_entry(hass, entry, async_add_devices):
+    """Set up a Nest sensor based on a config entry."""
+    camera_devices = \
+        await hass.async_add_job(hass.data[nest.DATA_NEST].cameras)
     cameras = [NestCamera(structure, device)
                for structure, device in camera_devices]
-    add_devices(cameras, True)
+    async_add_devices(cameras, True)
 
 
 class NestCamera(Camera):
@@ -71,7 +77,36 @@ class NestCamera(Camera):
         """Return the brand of the camera."""
         return NEST_BRAND
 
-    # This doesn't seem to be getting called regularly, for some reason
+    @property
+    def supported_features(self):
+        """Nest Cam support turn on and off."""
+        return SUPPORT_ON_OFF
+
+    @property
+    def is_on(self):
+        """Return true if on."""
+        return self._online and self._is_streaming
+
+    def turn_off(self):
+        """Turn off camera."""
+        _LOGGER.debug('Turn off camera %s', self._name)
+        # Calling Nest API in is_streaming setter.
+        # device.is_streaming would not immediately change until the process
+        # finished in Nest Cam.
+        self.device.is_streaming = False
+
+    def turn_on(self):
+        """Turn on camera."""
+        if not self._online:
+            _LOGGER.error('Camera %s is offline.', self._name)
+            return
+
+        _LOGGER.debug('Turn on camera %s', self._name)
+        # Calling Nest API in is_streaming setter.
+        # device.is_streaming would not immediately change until the process
+        # finished in Nest Cam.
+        self.device.is_streaming = True
+
     def update(self):
         """Cache value from Python-nest."""
         self._location = self.device.where

@@ -4,32 +4,41 @@ Support for deCONZ binary sensor.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.deconz/
 """
-import asyncio
-
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
+from homeassistant.components.deconz.const import (
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
+    """Old way of setting up deCONZ binary sensors."""
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the deCONZ binary sensor."""
-    if discovery_info is None:
-        return
+    @callback
+    def async_add_sensor(sensors):
+        """Add binary sensor from deCONZ."""
+        from pydeconz.sensor import DECONZ_BINARY_SENSOR
+        entities = []
+        allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
+        for sensor in sensors:
+            if sensor.type in DECONZ_BINARY_SENSOR and \
+               not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
+                entities.append(DeconzBinarySensor(sensor))
+        async_add_devices(entities, True)
 
-    from pydeconz.sensor import DECONZ_BINARY_SENSOR
-    sensors = hass.data[DATA_DECONZ].sensors
-    entities = []
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
 
-    for key in sorted(sensors.keys(), key=int):
-        sensor = sensors[key]
-        if sensor and sensor.type in DECONZ_BINARY_SENSOR:
-            entities.append(DeconzBinarySensor(sensor))
-    async_add_devices(entities, True)
+    async_add_sensor(hass.data[DATA_DECONZ].sensors.values())
 
 
 class DeconzBinarySensor(BinarySensorDevice):
@@ -39,8 +48,7 @@ class DeconzBinarySensor(BinarySensorDevice):
         """Set up sensor and add update callback to get data from websocket."""
         self._sensor = sensor
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
@@ -54,7 +62,8 @@ class DeconzBinarySensor(BinarySensorDevice):
         """
         if reason['state'] or \
            'reachable' in reason['attr'] or \
-           'battery' in reason['attr']:
+           'battery' in reason['attr'] or \
+           'on' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property
@@ -96,9 +105,11 @@ class DeconzBinarySensor(BinarySensorDevice):
     def device_state_attributes(self):
         """Return the state attributes of the sensor."""
         from pydeconz.sensor import PRESENCE
-        attr = {
-            ATTR_BATTERY_LEVEL: self._sensor.battery,
-        }
-        if self._sensor.type == PRESENCE:
-            attr['dark'] = self._sensor.dark
+        attr = {}
+        if self._sensor.battery:
+            attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
+        if self._sensor.on is not None:
+            attr[ATTR_ON] = self._sensor.on
+        if self._sensor.type in PRESENCE and self._sensor.dark is not None:
+            attr[ATTR_DARK] = self._sensor.dark
         return attr

@@ -25,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 DEVICES = []
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Openhome platform."""
     from openhomedevice.Device import Device
@@ -156,7 +155,7 @@ class OpenhomeDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._device.Uuid()
 
     @property

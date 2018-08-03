@@ -23,7 +23,8 @@ CONF_DHCP_SOFTWARE = 'dhcp_software'
 DEFAULT_DHCP_SOFTWARE = 'dnsmasq'
 DHCP_SOFTWARES = [
     'dnsmasq',
-    'odhcpd'
+    'odhcpd',
+    'none'
 ]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -40,8 +41,10 @@ def get_scanner(hass, config):
     dhcp_sw = config[DOMAIN][CONF_DHCP_SOFTWARE]
     if dhcp_sw == 'dnsmasq':
         scanner = DnsmasqUbusDeviceScanner(config[DOMAIN])
-    else:
+    elif dhcp_sw == 'odhcpd':
         scanner = OdhcpdUbusDeviceScanner(config[DOMAIN])
+    else:
+        scanner = UbusDeviceScanner(config[DOMAIN])
 
     return scanner if scanner.success_init else None
 
@@ -53,7 +56,7 @@ def _refresh_on_access_denied(func):
         try:
             return func(self, *args, **kwargs)
         except PermissionError:
-            _LOGGER.warning("Invalid session detected." +
+            _LOGGER.warning("Invalid session detected."
                             " Trying to refresh session_id and re-run RPC")
             self.session_id = _get_session_id(
                 self.url, self.username, self.password)
@@ -92,14 +95,17 @@ class UbusDeviceScanner(DeviceScanner):
         return self.last_results
 
     def _generate_mac2name(self):
-        """Must be implemented depending on the software."""
-        raise NotImplementedError
+        """Return empty MAC to name dict. Overridden if DHCP server is set."""
+        self.mac2name = dict()
 
     @_refresh_on_access_denied
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         if self.mac2name is None:
             self._generate_mac2name()
+        if self.mac2name is None:
+            # Generation of mac2name dictionary failed
+            return None
         name = self.mac2name.get(device.upper(), None)
         return name
 
@@ -201,7 +207,7 @@ def _req_json_rpc(url, session_id, rpcmethod, subsystem, method, **params):
     try:
         res = requests.post(url, data=data, timeout=5)
 
-    except requests.exceptions.Timeout:
+    except (requests.exceptions.ConnectionError, requests.exceptions.Timeout):
         return
 
     if res.status_code == 200:

@@ -26,7 +26,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Return a BT Home Hub 5 scanner if successful."""
     scanner = BTHomeHub5DeviceScanner(config[DOMAIN])
@@ -95,8 +94,7 @@ def _get_homehub_data(url):
         return
     if response.status_code == 200:
         return _parse_homehub_response(response.text)
-    else:
-        _LOGGER.error("Invalid response from Home Hub: %s", response)
+    _LOGGER.error("Invalid response from Home Hub: %s", response)
 
 
 def _parse_homehub_response(data_str):

@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     fritz = FritzBox(host, username, password)
     try:
         fritz.login()
-    except Exception:  # pylint: disable=W0703
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.error("Login to Fritz!Box failed")
         return
 
@@ -163,7 +163,7 @@ class FritzDectSwitch(SwitchDevice):
             self.data.is_online = False
 
 
-class FritzDectSwitchData(object):
+class FritzDectSwitchData:
     """Get the latest data from the fritz box."""
 
     def __init__(self, fritz, ain):

@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.components.pilight as pilight
+from homeassistant.components import pilight
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (CONF_NAME, CONF_ID, CONF_SWITCHES, CONF_STATE,
                                  CONF_PROTOCOL, STATE_ON)
@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(devices)
 
 
-class _ReceiveHandle(object):
+class _ReceiveHandle:
     def __init__(self, config, echo):
         """Initialize the handle."""
         self.config_items = config.items()

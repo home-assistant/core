@@ -221,7 +221,7 @@ class TestUtil(unittest.TestCase):
 
     def test_throttle_per_instance(self):
         """Test that the throttle method is done per instance of a class."""
-        class Tester(object):
+        class Tester:
             """A tester class for the throttle."""
 
             @util.Throttle(timedelta(seconds=1))
@@ -234,7 +234,7 @@ class TestUtil(unittest.TestCase):
 
     def test_throttle_on_method(self):
         """Test that throttle works when wrapping a method."""
-        class Tester(object):
+        class Tester:
             """A tester class for the throttle."""
 
             def hello(self):
@@ -249,7 +249,7 @@ class TestUtil(unittest.TestCase):
 
     def test_throttle_on_two_method(self):
         """Test that throttle works when wrapping two methods."""
-        class Tester(object):
+        class Tester:
             """A test class for the throttle."""
 
             @util.Throttle(timedelta(seconds=1))
@@ -280,3 +280,22 @@ class TestUtil(unittest.TestCase):
         mock_random.SystemRandom.return_value = generator
 
         assert util.get_random_string(length=3) == 'ABC'
+
+
+async def test_throttle_async():
+    """Test Throttle decorator with async method."""
+    @util.Throttle(timedelta(seconds=2))
+    async def test_method():
+        """Only first call should return a value."""
+        return True
+
+    assert (await test_method()) is True
+    assert (await test_method()) is None
+
+    @util.Throttle(timedelta(seconds=2), timedelta(seconds=0.1))
+    async def test_method2():
+        """Only first call should return a value."""
+        return True
+
+    assert (await test_method2()) is True
+    assert (await test_method2()) is None

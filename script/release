@@ -21,10 +21,12 @@ fi
 
 CURRENT_BRANCH=`git rev-parse --abbrev-ref HEAD`
 
-if [ "$CURRENT_BRANCH" != "master" ]
+if [ "$CURRENT_BRANCH" != "master" ] && [ "$CURRENT_BRANCH" != "rc" ]
 then
-  echo "You have to be on the master branch to release."
+  echo "You have to be on the master or rc branch to release."
   exit 1
 fi
 
-python3 setup.py sdist bdist_wheel upload
+rm -rf dist
+python3 setup.py sdist bdist_wheel
+python3 -m twine upload dist/* --skip-existing

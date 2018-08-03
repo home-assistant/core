@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 
-REQUIREMENTS = ['aioautomatic==0.6.4']
+REQUIREMENTS = ['aioautomatic==0.6.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,8 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_CLIENT_ID): cv.string,
     vol.Required(CONF_SECRET): cv.string,
     vol.Optional(CONF_CURRENT_LOCATION, default=False): cv.boolean,
-    vol.Optional(CONF_DEVICES, default=None):
-        vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_DEVICES): vol.All(cv.ensure_list, [cv.string]),
 })
 
 
@@ -109,7 +108,7 @@ def async_setup_scanner(hass, config, async_see, discovery_info=None):
             _write_refresh_token_to_file, hass, filename,
             session.refresh_token)
         data = AutomaticData(
-            hass, client, session, config[CONF_DEVICES], async_see)
+            hass, client, session, config.get(CONF_DEVICES), async_see)
 
         # Load the initial vehicle data
         vehicles = yield from session.get_vehicles()
@@ -194,7 +193,7 @@ class AutomaticAuthCallbackView(HomeAssistantView):
         return response
 
 
-class AutomaticData(object):
+class AutomaticData:
     """A class representing an Automatic cloud service connection."""
 
     def __init__(self, hass, client, session, devices, async_see):

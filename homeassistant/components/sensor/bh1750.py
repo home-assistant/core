@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['i2csense==0.0.4',
@@ -130,7 +130,7 @@ class BH1750Sensor(Entity):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'light'
+        return DEVICE_CLASS_ILLUMINANCE
 
     @asyncio.coroutine
     def async_update(self):

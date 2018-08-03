@@ -48,7 +48,4 @@ class TestDarkSky(unittest.TestCase):
         self.assertEqual(mock_get_forecast.call_count, 1)
 
         state = self.hass.states.get('weather.test')
-        self.assertEqual(state.state, 'Clear')
-        self.assertEqual(state.attributes['daily_forecast_summary'],
-                         'No precipitation throughout the week, with '
-                         'temperatures falling to 66°F on Thursday.')
+        self.assertEqual(state.state, 'sunny')

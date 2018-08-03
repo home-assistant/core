@@ -1,16 +1,20 @@
 """The tests for the Light component."""
 # pylint: disable=protected-access
 import unittest
+import unittest.mock as mock
 import os
+from io import StringIO
 
-from homeassistant.setup import setup_component
-import homeassistant.loader as loader
+from homeassistant import core, loader
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
     ATTR_ENTITY_ID, STATE_ON, STATE_OFF, CONF_PLATFORM,
-    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE)
-import homeassistant.components.light as light
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_SUPPORTED_FEATURES)
+from homeassistant.components import light
+from homeassistant.helpers.intent import IntentHandleError
 
-from tests.common import mock_service, get_test_home_assistant
+from tests.common import (
+    async_mock_service, mock_service, get_test_home_assistant)
 
 
 class TestLight(unittest.TestCase):
@@ -116,7 +120,7 @@ class TestLight(unittest.TestCase):
 
     def test_services(self):
         """Test the provided services."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
 
         platform.init()
         self.assertTrue(
@@ -186,23 +190,25 @@ class TestLight(unittest.TestCase):
         self.hass.block_till_done()
 
         _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_TRANSITION: 10,
-             light.ATTR_BRIGHTNESS: 20,
-             light.ATTR_RGB_COLOR: (0, 0, 255)},
-            data)
+        self.assertEqual({
+            light.ATTR_TRANSITION: 10,
+            light.ATTR_BRIGHTNESS: 20,
+            light.ATTR_HS_COLOR: (240, 100),
+        }, data)
 
         _, data = dev2.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_RGB_COLOR: (255, 255, 255),
-             light.ATTR_WHITE_VALUE: 255},
-            data)
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (0, 0),
+            light.ATTR_WHITE_VALUE: 255,
+        }, data)
 
         _, data = dev3.last_call('turn_on')
-        self.assertEqual({light.ATTR_XY_COLOR: (.4, .6)}, data)
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (71.059, 100),
+        }, data)
 
         # One of the light profiles
-        prof_name, prof_x, prof_y, prof_bri = 'relax', 0.5119, 0.4147, 144
+        prof_name, prof_h, prof_s, prof_bri = 'relax', 35.932, 69.412, 144
 
         # Test light profiles
         light.turn_on(self.hass, dev1.entity_id, profile=prof_name)
@@ -214,16 +220,16 @@ class TestLight(unittest.TestCase):
         self.hass.block_till_done()
 
         _, data = dev1.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_BRIGHTNESS: prof_bri,
-             light.ATTR_XY_COLOR: (prof_x, prof_y)},
-            data)
+        self.assertEqual({
+            light.ATTR_BRIGHTNESS: prof_bri,
+            light.ATTR_HS_COLOR: (prof_h, prof_s),
+        }, data)
 
         _, data = dev2.last_call('turn_on')
-        self.assertEqual(
-            {light.ATTR_BRIGHTNESS: 100,
-             light.ATTR_XY_COLOR: (.5119, .4147)},
-            data)
+        self.assertEqual({
+            light.ATTR_BRIGHTNESS: 100,
+            light.ATTR_HS_COLOR: (prof_h, prof_s),
+        }, data)
 
         # Test bad data
         light.turn_on(self.hass)
@@ -263,7 +269,7 @@ class TestLight(unittest.TestCase):
 
     def test_broken_light_profiles(self):
         """Test light profiles."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -278,7 +284,7 @@ class TestLight(unittest.TestCase):
 
     def test_light_profiles(self):
         """Test light profiles."""
-        platform = loader.get_component('light.test')
+        platform = loader.get_component(self.hass, 'light.test')
         platform.init()
 
         user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
@@ -299,6 +305,194 @@ class TestLight(unittest.TestCase):
 
         _, data = dev1.last_call('turn_on')
 
-        self.assertEqual(
-            {light.ATTR_XY_COLOR: (.4, .6), light.ATTR_BRIGHTNESS: 100},
-            data)
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (71.059, 100),
+            light.ATTR_BRIGHTNESS: 100
+        }, data)
+
+    def test_default_profiles_group(self):
+        """Test default turn-on light profile for all lights."""
+        platform = loader.get_component(self.hass, 'light.test')
+        platform.init()
+
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
+        real_isfile = os.path.isfile
+        real_open = open
+
+        def _mock_isfile(path):
+            if path == user_light_file:
+                return True
+            return real_isfile(path)
+
+        def _mock_open(path):
+            if path == user_light_file:
+                return StringIO(profile_data)
+            return real_open(path)
+
+        profile_data = "id,x,y,brightness\n" +\
+                       "group.all_lights.default,.4,.6,99\n"
+        with mock.patch('os.path.isfile', side_effect=_mock_isfile):
+            with mock.patch('builtins.open', side_effect=_mock_open):
+                self.assertTrue(setup_component(
+                    self.hass, light.DOMAIN,
+                    {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+                ))
+
+        dev, _, _ = platform.DEVICES
+        light.turn_on(self.hass, dev.entity_id)
+        self.hass.block_till_done()
+        _, data = dev.last_call('turn_on')
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (71.059, 100),
+            light.ATTR_BRIGHTNESS: 99
+        }, data)
+
+    def test_default_profiles_light(self):
+        """Test default turn-on light profile for a specific light."""
+        platform = loader.get_component(self.hass, 'light.test')
+        platform.init()
+
+        user_light_file = self.hass.config.path(light.LIGHT_PROFILES_FILE)
+        real_isfile = os.path.isfile
+        real_open = open
+
+        def _mock_isfile(path):
+            if path == user_light_file:
+                return True
+            return real_isfile(path)
+
+        def _mock_open(path):
+            if path == user_light_file:
+                return StringIO(profile_data)
+            return real_open(path)
+
+        profile_data = "id,x,y,brightness\n" +\
+                       "group.all_lights.default,.3,.5,200\n" +\
+                       "light.ceiling_2.default,.6,.6,100\n"
+        with mock.patch('os.path.isfile', side_effect=_mock_isfile):
+            with mock.patch('builtins.open', side_effect=_mock_open):
+                self.assertTrue(setup_component(
+                    self.hass, light.DOMAIN,
+                    {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+                ))
+
+        dev = next(filter(lambda x: x.entity_id == 'light.ceiling_2',
+                          platform.DEVICES))
+        light.turn_on(self.hass, dev.entity_id)
+        self.hass.block_till_done()
+        _, data = dev.last_call('turn_on')
+        self.assertEqual({
+            light.ATTR_HS_COLOR: (50.353, 100),
+            light.ATTR_BRIGHTNESS: 100
+        }, data)
+
+
+async def test_intent_set_color(hass):
+    """Test the set color intent."""
+    hass.states.async_set('light.hello_2', 'off', {
+        ATTR_SUPPORTED_FEATURES: light.SUPPORT_COLOR
+    })
+    hass.states.async_set('switch.hello', 'off')
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    hass.helpers.intent.async_register(light.SetIntentHandler())
+
+    result = await hass.helpers.intent.async_handle(
+        'test', light.INTENT_SET, {
+            'name': {
+                'value': 'Hello',
+            },
+            'color': {
+                'value': 'blue'
+            }
+        })
+    await hass.async_block_till_done()
+
+    assert result.speech['plain']['speech'] == \
+        'Changed hello 2 to the color blue'
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == light.DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data.get(ATTR_ENTITY_ID) == 'light.hello_2'
+    assert call.data.get(light.ATTR_RGB_COLOR) == (0, 0, 255)
+
+
+async def test_intent_set_color_tests_feature(hass):
+    """Test the set color intent."""
+    hass.states.async_set('light.hello', 'off')
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    hass.helpers.intent.async_register(light.SetIntentHandler())
+
+    try:
+        await hass.helpers.intent.async_handle(
+            'test', light.INTENT_SET, {
+                'name': {
+                    'value': 'Hello',
+                },
+                'color': {
+                    'value': 'blue'
+                }
+            })
+        assert False, 'handling intent should have raised'
+    except IntentHandleError as err:
+        assert str(err) == 'Entity hello does not support changing colors'
+
+    assert len(calls) == 0
+
+
+async def test_intent_set_color_and_brightness(hass):
+    """Test the set color intent."""
+    hass.states.async_set('light.hello_2', 'off', {
+        ATTR_SUPPORTED_FEATURES: (
+            light.SUPPORT_COLOR | light.SUPPORT_BRIGHTNESS)
+    })
+    hass.states.async_set('switch.hello', 'off')
+    calls = async_mock_service(hass, light.DOMAIN, light.SERVICE_TURN_ON)
+    hass.helpers.intent.async_register(light.SetIntentHandler())
+
+    result = await hass.helpers.intent.async_handle(
+        'test', light.INTENT_SET, {
+            'name': {
+                'value': 'Hello',
+            },
+            'color': {
+                'value': 'blue'
+            },
+            'brightness': {
+                'value': '20'
+            }
+        })
+    await hass.async_block_till_done()
+
+    assert result.speech['plain']['speech'] == \
+        'Changed hello 2 to the color blue and 20% brightness'
+
+    assert len(calls) == 1
+    call = calls[0]
+    assert call.domain == light.DOMAIN
+    assert call.service == SERVICE_TURN_ON
+    assert call.data.get(ATTR_ENTITY_ID) == 'light.hello_2'
+    assert call.data.get(light.ATTR_RGB_COLOR) == (0, 0, 255)
+    assert call.data.get(light.ATTR_BRIGHTNESS_PCT) == 20
+
+
+async def test_light_context(hass):
+    """Test that light context works."""
+    assert await async_setup_component(hass, 'light', {
+        'light': {
+            'platform': 'test'
+        }
+    })
+
+    state = hass.states.get('light.ceiling')
+    assert state is not None
+
+    await hass.services.async_call('light', 'toggle', {
+        'entity_id': state.entity_id,
+    }, True, core.Context(user_id='abcd'))
+
+    state2 = hass.states.get('light.ceiling')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

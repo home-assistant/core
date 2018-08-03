@@ -10,13 +10,12 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_RESOURCES, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_TYPE)
+from homeassistant.const import CONF_RESOURCES, STATE_OFF, STATE_ON, CONF_TYPE
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['psutil==5.4.3']
+REQUIREMENTS = ['psutil==5.4.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,9 +28,9 @@ SENSOR_TYPES = {
     'ipv4_address': ['IPv4 address', '', 'mdi:server-network'],
     'ipv6_address': ['IPv6 address', '', 'mdi:server-network'],
     'last_boot': ['Last boot', '', 'mdi:clock'],
-    'load_15m': ['Load (15m)', '', 'mdi:memory'],
-    'load_1m': ['Load (1m)', '', 'mdi:memory'],
-    'load_5m': ['Load (5m)', '', 'mdi:memory'],
+    'load_15m': ['Load (15m)', ' ', 'mdi:memory'],
+    'load_1m': ['Load (1m)', ' ', 'mdi:memory'],
+    'load_5m': ['Load (5m)', ' ', 'mdi:memory'],
     'memory_free': ['Memory free', 'MiB', 'mdi:memory'],
     'memory_use': ['Memory use', 'MiB', 'mdi:memory'],
     'memory_use_percent': ['Memory use (percent)', '%', 'mdi:memory'],
@@ -42,13 +41,13 @@ SENSOR_TYPES = {
     'process': ['Process', ' ', 'mdi:memory'],
     'processor_use': ['Processor use', '%', 'mdi:memory'],
     'since_last_boot': ['Since last boot', '', 'mdi:clock'],
-    'swap_free': ['Swap free', 'GiB', 'mdi:harddisk'],
-    'swap_use': ['Swap use', 'GiB', 'mdi:harddisk'],
+    'swap_free': ['Swap free', 'MiB', 'mdi:harddisk'],
+    'swap_use': ['Swap use', 'MiB', 'mdi:harddisk'],
     'swap_use_percent': ['Swap use (percent)', '%', 'mdi:harddisk'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_RESOURCES, default=['disk_use']):
+    vol.Optional(CONF_RESOURCES, default={CONF_TYPE: 'disk_use'}):
         vol.All(cv.ensure_list, [vol.Schema({
             vol.Required(CONF_TYPE): vol.In(SENSOR_TYPES),
             vol.Optional(CONF_ARG): cv.string,
@@ -68,7 +67,6 @@ IF_ADDRS = {
 }
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the system monitor sensors."""
     dev = []
@@ -135,9 +133,9 @@ class SystemMonitorSensor(Entity):
         elif self.type == 'swap_use_percent':
             self._state = psutil.swap_memory().percent
         elif self.type == 'swap_use':
-            self._state = round(psutil.swap_memory().used / 1024**3, 1)
+            self._state = round(psutil.swap_memory().used / 1024**2, 1)
         elif self.type == 'swap_free':
-            self._state = round(psutil.swap_memory().free / 1024**3, 1)
+            self._state = round(psutil.swap_memory().free / 1024**2, 1)
         elif self.type == 'processor_use':
             self._state = round(psutil.cpu_percent(interval=None))
         elif self.type == 'process':
@@ -157,19 +155,19 @@ class SystemMonitorSensor(Entity):
                 counter = counters[self.argument][IO_COUNTER[self.type]]
                 self._state = round(counter / 1024**2, 1)
             else:
-                self._state = STATE_UNKNOWN
+                self._state = None
         elif self.type == 'packets_out' or self.type == 'packets_in':
             counters = psutil.net_io_counters(pernic=True)
             if self.argument in counters:
                 self._state = counters[self.argument][IO_COUNTER[self.type]]
             else:
-                self._state = STATE_UNKNOWN
+                self._state = None
         elif self.type == 'ipv4_address' or self.type == 'ipv6_address':
             addresses = psutil.net_if_addrs()
             if self.argument in addresses:
                 self._state = addresses[self.argument][IF_ADDRS[self.type]][1]
             else:
-                self._state = STATE_UNKNOWN
+                self._state = None
         elif self.type == 'last_boot':
             self._state = dt_util.as_local(
                 dt_util.utc_from_timestamp(psutil.boot_time())

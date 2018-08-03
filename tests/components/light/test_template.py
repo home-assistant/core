@@ -36,7 +36,7 @@ class TestTemplateLight:
         self.hass.stop()
 
     def test_template_state_text(self):
-        """"Test the state text of a template."""
+        """Test the state text of a template."""
         with assert_setup_component(1, 'light'):
             assert setup.setup_component(self.hass, 'light', {
                 'light': {
@@ -586,7 +586,7 @@ class TestTemplateLight:
         state = self.hass.states.get('light.test_template_light')
         assert state is not None
 
-        assert state.attributes.get('brightness') == '42'
+        assert state.attributes.get('brightness') == 42
 
     def test_friendly_name(self):
         """Test the accessibility of the friendly_name attribute."""

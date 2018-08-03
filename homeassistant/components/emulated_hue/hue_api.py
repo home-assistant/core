@@ -51,6 +51,29 @@ class HueUsernameView(HomeAssistantView):
         return self.json([{'success': {'username': '12345678901234567890'}}])
 
 
+class HueGroupView(HomeAssistantView):
+    """Group handler to get Logitech Pop working."""
+
+    url = '/api/{username}/groups/0/action'
+    name = 'emulated_hue:groups:state'
+    requires_auth = False
+
+    def __init__(self, config):
+        """Initialize the instance of the view."""
+        self.config = config
+
+    @core.callback
+    def put(self, request, username):
+        """Process a request to make the Logitech Pop working."""
+        return self.json([{
+            'error': {
+                'address': '/groups/0/action/scene',
+                'type': 7,
+                'description': 'invalid value, dummy for parameter, scene'
+            }
+        }])
+
+
 class HueAllLightsStateView(HomeAssistantView):
     """Handle requests for getting and setting info about entities."""
 
@@ -214,11 +237,11 @@ class HueOneLightChangeView(HomeAssistantView):
                     # Convert 0-100 to a fan speed
                     if brightness == 0:
                         data[ATTR_SPEED] = SPEED_OFF
-                    elif brightness <= 33.3 and brightness > 0:
+                    elif 0 < brightness <= 33.3:
                         data[ATTR_SPEED] = SPEED_LOW
-                    elif brightness <= 66.6 and brightness > 33.3:
+                    elif 33.3 < brightness <= 66.6:
                         data[ATTR_SPEED] = SPEED_MEDIUM
-                    elif brightness <= 100 and brightness > 66.6:
+                    elif 66.6 < brightness <= 100:
                         data[ATTR_SPEED] = SPEED_HIGH
 
         if entity.domain in config.off_maps_to_on_domains:

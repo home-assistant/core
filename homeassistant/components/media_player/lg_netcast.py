@@ -18,10 +18,9 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_ACCESS_TOKEN,
     STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
-import homeassistant.util as util
+from homeassistant import util
 
-REQUIREMENTS = ['https://github.com/wokar/pylgnetcast/archive/'
-                'v0.2.0.zip#pylgnetcast==0.2.0']
+REQUIREMENTS = ['pylgnetcast-homeassistant==0.2.0.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,12 +37,11 @@ SUPPORT_LGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN, default=None):
+    vol.Optional(CONF_ACCESS_TOKEN):
         vol.All(cv.string, vol.Length(max=6)),
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the LG TV platform."""
     from pylgnetcast import LgNetCastClient

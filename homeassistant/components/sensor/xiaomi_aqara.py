@@ -3,9 +3,19 @@ import logging
 
 from homeassistant.components.xiaomi_aqara import (PY_XIAOMI_GATEWAY,
                                                    XiaomiDevice)
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import (
+    DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE, DEVICE_CLASS_TEMPERATURE,
+    TEMP_CELSIUS)
 
 _LOGGER = logging.getLogger(__name__)
+
+SENSOR_TYPES = {
+    'temperature': [TEMP_CELSIUS, None, DEVICE_CLASS_TEMPERATURE],
+    'humidity': ['%', None, DEVICE_CLASS_HUMIDITY],
+    'illumination': ['lm', None, DEVICE_CLASS_ILLUMINANCE],
+    'lux': ['lx', None, DEVICE_CLASS_ILLUMINANCE],
+    'pressure': ['hPa', 'mdi:gauge', None]
+}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -18,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                             'temperature', gateway))
                 devices.append(XiaomiSensor(device, 'Humidity',
                                             'humidity', gateway))
-            elif device['model'] == 'weather.v1':
+            elif device['model'] in ['weather', 'weather.v1']:
                 devices.append(XiaomiSensor(device, 'Temperature',
                                             'temperature', gateway))
                 devices.append(XiaomiSensor(device, 'Humidity',
@@ -28,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif device['model'] == 'sensor_motion.aq2':
                 devices.append(XiaomiSensor(device, 'Illumination',
                                             'lux', gateway))
-            elif device['model'] == 'gateway':
+            elif device['model'] in ['gateway', 'gateway.v3', 'acpartner.v3']:
                 devices.append(XiaomiSensor(device, 'Illumination',
                                             'illumination', gateway))
     add_devices(devices)
@@ -43,18 +53,26 @@ class XiaomiSensor(XiaomiDevice):
         XiaomiDevice.__init__(self, device, name, xiaomi_hub)
 
     @property
+    def icon(self):
+        """Return the icon to use in the frontend."""
+        try:
+            return SENSOR_TYPES.get(self._data_key)[1]
+        except TypeError:
+            return None
+
+    @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if self._data_key == 'temperature':
-            return TEMP_CELSIUS
-        elif self._data_key == 'humidity':
-            return '%'
-        elif self._data_key == 'illumination':
-            return 'lm'
-        elif self._data_key == 'lux':
-            return 'lx'
-        elif self._data_key == 'pressure':
-            return 'hPa'
+        try:
+            return SENSOR_TYPES.get(self._data_key)[0]
+        except TypeError:
+            return None
+
+    @property
+    def device_class(self):
+        """Return the device class of this entity."""
+        return SENSOR_TYPES.get(self._data_key)[2] \
+            if self._data_key in SENSOR_TYPES else None
 
     @property
     def state(self):
@@ -73,9 +91,9 @@ class XiaomiSensor(XiaomiDevice):
             value = max(value - 300, 0)
         if self._data_key == 'temperature' and (value < -50 or value > 60):
             return False
-        elif self._data_key == 'humidity' and (value <= 0 or value > 100):
+        if self._data_key == 'humidity' and (value <= 0 or value > 100):
             return False
-        elif self._data_key == 'pressure' and value == 0:
+        if self._data_key == 'pressure' and value == 0:
             return False
         self._state = round(value, 1)
         return True

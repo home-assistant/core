@@ -12,12 +12,12 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
+    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL, ATTR_NAME,
     CONF_VERIFY_SSL, CONF_TIMEOUT, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['qnapstats==0.2.4']
+REQUIREMENTS = ['qnapstats==0.2.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,6 @@ ATTR_MASK = 'Mask'
 ATTR_MAX_SPEED = 'Max Speed'
 ATTR_MEMORY_SIZE = 'Memory Size'
 ATTR_MODEL = 'Model'
-ATTR_NAME = 'Name'
 ATTR_PACKETS_TX = 'Packets (TX)'
 ATTR_PACKETS_RX = 'Packets (RX)'
 ATTR_PACKETS_ERR = 'Packets (Err)'
@@ -97,13 +96,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(_MONITORED_CONDITIONS)]),
-    vol.Optional(CONF_NICS, default=None): cv.ensure_list,
-    vol.Optional(CONF_DRIVES, default=None): cv.ensure_list,
-    vol.Optional(CONF_VOLUMES, default=None): cv.ensure_list,
+    vol.Optional(CONF_NICS): cv.ensure_list,
+    vol.Optional(CONF_DRIVES): cv.ensure_list,
+    vol.Optional(CONF_VOLUMES): cv.ensure_list,
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the QNAP NAS sensor."""
     api = QNAPStatsAPI(config)
@@ -133,33 +131,21 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 api, variable, _MEMORY_MON_COND[variable]))
 
     # Network sensors
-    nics = config[CONF_NICS]
-    if nics is None:
-        nics = api.data["system_stats"]["nics"].keys()
-
-    for nic in nics:
+    for nic in config.get(CONF_NICS, api.data["system_stats"]["nics"]):
         sensors += [QNAPNetworkSensor(api, variable,
                                       _NETWORK_MON_COND[variable], nic)
                     for variable in config[CONF_MONITORED_CONDITIONS]
                     if variable in _NETWORK_MON_COND]
 
     # Drive sensors
-    drives = config[CONF_DRIVES]
-    if drives is None:
-        drives = api.data["smart_drive_health"].keys()
-
-    for drive in drives:
+    for drive in config.get(CONF_DRIVES, api.data["smart_drive_health"]):
         sensors += [QNAPDriveSensor(api, variable,
                                     _DRIVE_MON_COND[variable], drive)
                     for variable in config[CONF_MONITORED_CONDITIONS]
                     if variable in _DRIVE_MON_COND]
 
     # Volume sensors
-    volumes = config[CONF_VOLUMES]
-    if volumes is None:
-        volumes = api.data["volumes"].keys()
-
-    for volume in volumes:
+    for volume in config.get(CONF_VOLUMES, api.data["volumes"]):
         sensors += [QNAPVolumeSensor(api, variable,
                                      _VOLUME_MON_COND[variable], volume)
                     for variable in config[CONF_MONITORED_CONDITIONS]
@@ -178,7 +164,7 @@ def round_nicely(number):
     return round(number)
 
 
-class QNAPStatsAPI(object):
+class QNAPStatsAPI:
     """Class to interface with the API."""
 
     def __init__(self, config):
@@ -206,7 +192,7 @@ class QNAPStatsAPI(object):
             self.data["smart_drive_health"] = self._api.get_smart_disk_health()
             self.data["volumes"] = self._api.get_volumes()
             self.data["bandwidth"] = self._api.get_bandwidth()
-        except:  # noqa: E722  # pylint: disable=bare-except
+        except:  # noqa: E722 pylint: disable=bare-except
             _LOGGER.exception("Failed to fetch QNAP stats from the NAS")
 
 
@@ -255,7 +241,7 @@ class QNAPCPUSensor(QNAPSensor):
         """Return the state of the sensor."""
         if self.var_id == 'cpu_temp':
             return self._api.data['system_stats']['cpu']['temp_c']
-        elif self.var_id == 'cpu_usage':
+        if self.var_id == 'cpu_usage':
             return self._api.data['system_stats']['cpu']['usage_percent']
 
 
@@ -364,7 +350,7 @@ class QNAPDriveSensor(QNAPSensor):
             return data['health']
 
         if self.var_id == 'drive_temp':
-            return int(data['temp_c'])
+            return int(data['temp_c']) if data['temp_c'] is not None else 0
 
     @property
     def name(self):

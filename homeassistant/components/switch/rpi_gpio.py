@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA
-import homeassistant.components.rpi_gpio as rpi_gpio
+from homeassistant.components import rpi_gpio
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
@@ -34,7 +34,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
     invert_logic = config.get(CONF_INVERT_LOGIC)

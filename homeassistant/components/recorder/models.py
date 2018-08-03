@@ -16,7 +16,7 @@ from homeassistant.remote import JSONEncoder
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 4
+SCHEMA_VERSION = 5
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ class States(Base):   # type: ignore
     entity_id = Column(String(255))
     state = Column(String(255))
     attributes = Column(Text)
-    event_id = Column(Integer, ForeignKey('events.event_id'))
+    event_id = Column(Integer, ForeignKey('events.event_id'), index=True)
     last_changed = Column(DateTime(timezone=True), default=datetime.utcnow)
     last_updated = Column(DateTime(timezone=True), default=datetime.utcnow,
                           index=True)
@@ -168,7 +168,7 @@ def _process_timestamp(ts):
     """Process a timestamp into datetime object."""
     if ts is None:
         return None
-    elif ts.tzinfo is None:
+    if ts.tzinfo is None:
         return dt_util.UTC.localize(ts)
 
     return dt_util.as_utc(ts)

@@ -1,5 +1,5 @@
 """Helpers to execute scripts."""
-import asyncio
+
 import logging
 from itertools import islice
 from typing import Optional, Sequence
@@ -16,7 +16,7 @@ from homeassistant.helpers.event import (
     async_track_point_in_utc_time, async_track_template)
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as date_util
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_coroutine_threadsafe, run_callback_threadsafe)
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,8 +68,7 @@ class Script():
         run_coroutine_threadsafe(
             self.async_run(variables), self.hass.loop).result()
 
-    @asyncio.coroutine
-    def async_run(self, variables: Optional[Sequence] = None) -> None:
+    async def async_run(self, variables: Optional[Sequence] = None) -> None:
         """Run script.
 
         This method is a coroutine.
@@ -98,11 +97,16 @@ class Script():
 
                 delay = action[CONF_DELAY]
 
-                if isinstance(delay, template.Template):
-                    delay = vol.All(
-                        cv.time_period,
-                        cv.positive_timedelta)(
-                            delay.async_render(variables))
+                try:
+                    if isinstance(delay, template.Template):
+                        delay = vol.All(
+                            cv.time_period,
+                            cv.positive_timedelta)(
+                                delay.async_render(variables))
+                except (TemplateError, vol.Invalid) as ex:
+                    _LOGGER.error("Error rendering '%s' delay template: %s",
+                                  self.name, ex)
+                    break
 
                 unsub = async_track_point_in_utc_time(
                     self.hass, async_script_delay,
@@ -115,7 +119,7 @@ class Script():
                     self.hass.async_add_job(self._change_listener)
                 return
 
-            elif CONF_WAIT_TEMPLATE in action:
+            if CONF_WAIT_TEMPLATE in action:
                 # Call ourselves in the future to continue work
                 wait_template = action[CONF_WAIT_TEMPLATE]
                 wait_template.hass = self.hass
@@ -143,7 +147,7 @@ class Script():
 
                 return
 
-            elif CONF_CONDITION in action:
+            if CONF_CONDITION in action:
                 if not self._async_check_condition(action, variables):
                     break
 
@@ -151,7 +155,7 @@ class Script():
                 self._async_fire_event(action, variables)
 
             else:
-                yield from self._async_call_service(action, variables)
+                await self._async_call_service(action, variables)
 
         self._cur = -1
         self.last_action = None
@@ -172,15 +176,14 @@ class Script():
         if self._change_listener:
             self.hass.async_add_job(self._change_listener)
 
-    @asyncio.coroutine
-    def _async_call_service(self, action, variables):
+    async def _async_call_service(self, action, variables):
         """Call the service specified in the action.
 
         This method is a coroutine.
         """
         self.last_action = action.get(CONF_ALIAS, 'call service')
         self._log("Executing step %s" % self.last_action)
-        yield from service.async_call_from_config(
+        await service.async_call_from_config(
             self.hass, action, True, variables, validate_config=False)
 
     def _async_fire_event(self, action, variables):

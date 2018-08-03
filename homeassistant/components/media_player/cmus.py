@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pycmus==0.1.0']
+REQUIREMENTS = ['pycmus==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ class CmusDevice(MediaPlayerDevice):
         """Return the media state."""
         if self.status.get('status') == 'playing':
             return STATE_PLAYING
-        elif self.status.get('status') == 'paused':
+        if self.status.get('status') == 'paused':
             return STATE_PAUSED
         return STATE_OFF
 

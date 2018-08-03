@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.8.0']
+REQUIREMENTS = ['pyowm==2.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_FORECAST, default=False): cv.boolean,
-    vol.Optional(CONF_LANGUAGE, default=None): cv.string,
+    vol.Optional(CONF_LANGUAGE): cv.string,
 })
 
 
@@ -179,7 +179,7 @@ class OpenWeatherMapSensor(Entity):
             self._state = fc_data.get_weathers()[0].get_detailed_status()
 
 
-class WeatherData(object):
+class WeatherData:
     """Get the latest data from OpenWeatherMap."""
 
     def __init__(self, owm, forecast, latitude, longitude):

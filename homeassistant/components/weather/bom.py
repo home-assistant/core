@@ -48,7 +48,7 @@ class BOMWeather(WeatherEntity):
     def __init__(self, bom_data, stationname=None):
         """Initialise the platform with a data instance and station name."""
         self.bom_data = bom_data
-        self.stationname = stationname or self.bom_data.data.get('name')
+        self.stationname = stationname or self.bom_data.latest_data.get('name')
 
     def update(self):
         """Update current conditions."""
@@ -62,14 +62,14 @@ class BOMWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the current condition."""
-        return self.bom_data.data.get('weather')
+        return self.bom_data.get_reading('weather')
 
     # Now implement the WeatherEntity interface
 
     @property
     def temperature(self):
         """Return the platform temperature."""
-        return self.bom_data.data.get('air_temp')
+        return self.bom_data.get_reading('air_temp')
 
     @property
     def temperature_unit(self):
@@ -79,17 +79,17 @@ class BOMWeather(WeatherEntity):
     @property
     def pressure(self):
         """Return the mean sea-level pressure."""
-        return self.bom_data.data.get('press_msl')
+        return self.bom_data.get_reading('press_msl')
 
     @property
     def humidity(self):
         """Return the relative humidity."""
-        return self.bom_data.data.get('rel_hum')
+        return self.bom_data.get_reading('rel_hum')
 
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self.bom_data.data.get('wind_spd_kmh')
+        return self.bom_data.get_reading('wind_spd_kmh')
 
     @property
     def wind_bearing(self):
@@ -99,7 +99,7 @@ class BOMWeather(WeatherEntity):
                       'S', 'SSW', 'SW', 'WSW',
                       'W', 'WNW', 'NW', 'NNW']
         wind = {name: idx * 360 / 16 for idx, name in enumerate(directions)}
-        return wind.get(self.bom_data.data.get('wind_dir'))
+        return wind.get(self.bom_data.get_reading('wind_dir'))
 
     @property
     def attribution(self):

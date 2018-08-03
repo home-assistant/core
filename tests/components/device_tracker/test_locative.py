@@ -19,7 +19,7 @@ def _url(data=None):
 
 
 @pytest.fixture
-def locative_client(loop, hass, test_client):
+def locative_client(loop, hass, aiohttp_client):
     """Locative mock client."""
     assert loop.run_until_complete(async_setup_component(
         hass, device_tracker.DOMAIN, {
@@ -29,7 +29,7 @@ def locative_client(loop, hass, test_client):
         }))
 
     with patch('homeassistant.components.device_tracker.update_config'):
-        yield loop.run_until_complete(test_client(hass.http.app))
+        yield loop.run_until_complete(aiohttp_client(hass.http.app))
 
 
 @asyncio.coroutine

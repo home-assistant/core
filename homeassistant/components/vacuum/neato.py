@@ -5,14 +5,15 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/vacuum.neato/
 """
 import logging
-
+from datetime import timedelta
 import requests
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.components.vacuum import (
     VacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
     SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON)
+    SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON,
+    SUPPORT_LOCATE)
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
 
@@ -20,11 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
 
+SCAN_INTERVAL = timedelta(minutes=5)
+
 SUPPORT_NEATO = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
                  SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
-                 SUPPORT_STATUS | SUPPORT_MAP
-
-ICON = 'mdi:roomba'
+                 SUPPORT_STATUS | SUPPORT_MAP | SUPPORT_LOCATE
 
 ATTR_CLEAN_START = 'clean_start'
 ATTR_CLEAN_STOP = 'clean_stop'
@@ -96,10 +97,14 @@ class NeatoConnectedVacuum(VacuumDevice):
         elif self._state['state'] == 4:
             self._status_state = ERRORS.get(self._state['error'])
 
-        if (self.robot.state['action'] == 1 or
-                self.robot.state['action'] == 2 or
-                self.robot.state['action'] == 3 and
-                self.robot.state['state'] == 2):
+        if (self._state['action'] == 1 or
+                self._state['action'] == 2 or
+                self._state['action'] == 3 and
+                self._state['state'] == 2):
+            self._clean_state = STATE_ON
+        elif (self._state['action'] == 11 or
+              self._state['action'] == 12 and
+              self._state['state'] == 2):
             self._clean_state = STATE_ON
         else:
             self._clean_state = STATE_OFF
@@ -130,11 +135,6 @@ class NeatoConnectedVacuum(VacuumDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use for device."""
-        return ICON
 
     @property
     def supported_features(self):
@@ -212,3 +212,7 @@ class NeatoConnectedVacuum(VacuumDevice):
             self.robot.pause_cleaning()
         if self._state['state'] == 3:
             self.robot.resume_cleaning()
+
+    def locate(self, **kwargs):
+        """Locate the robot by making it emit a sound."""
+        self.robot.locate()

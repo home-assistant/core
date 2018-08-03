@@ -19,7 +19,6 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['lutron_caseta']
 
 
-# pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Lutron Caseta lights."""
@@ -49,10 +48,7 @@ class LutronCasetaLight(LutronCasetaDevice, Light):
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        if ATTR_BRIGHTNESS in kwargs:
-            brightness = kwargs[ATTR_BRIGHTNESS]
-        else:
-            brightness = 255
+        brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
         self._smartbridge.set_value(self._device_id,
                                     to_lutron_level(brightness))
 

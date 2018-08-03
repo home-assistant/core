@@ -27,20 +27,21 @@ from homeassistant.components.climate.ecobee import (
     ATTR_FAN_MIN_ON_TIME, SERVICE_SET_FAN_MIN_ON_TIME,
     ATTR_RESUME_ALL, SERVICE_RESUME_PROGRAM)
 from homeassistant.components.cover import (
-    ATTR_POSITION)
+    ATTR_POSITION, ATTR_TILT_POSITION)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_OPTION, ATTR_TEMPERATURE, SERVICE_ALARM_ARM_AWAY,
     SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_DISARM, SERVICE_ALARM_TRIGGER,
     SERVICE_LOCK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_STOP,
     SERVICE_MEDIA_SEEK, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_UNLOCK,
     SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_OPEN_COVER,
-    SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION, STATE_ALARM_ARMED_AWAY,
+    SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED,
     STATE_CLOSED, STATE_HOME, STATE_LOCKED, STATE_NOT_HOME, STATE_OFF,
     STATE_ON, STATE_OPEN, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN,
     STATE_UNLOCKED, SERVICE_SELECT_OPTION)
 from homeassistant.core import State
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +69,8 @@ SERVICE_ATTRIBUTES = {
     SERVICE_SELECT_SOURCE: [ATTR_INPUT_SOURCE],
     SERVICE_SEND_IR_CODE: [ATTR_IR_CODE],
     SERVICE_SELECT_OPTION: [ATTR_OPTION],
-    SERVICE_SET_COVER_POSITION: [ATTR_POSITION]
+    SERVICE_SET_COVER_POSITION: [ATTR_POSITION],
+    SERVICE_SET_COVER_TILT_POSITION: [ATTR_TILT_POSITION]
 }
 
 # Update this dict when new services are added to HA.
@@ -90,7 +92,7 @@ SERVICE_TO_STATE = {
 }
 
 
-class AsyncTrackStates(object):
+class AsyncTrackStates:
     """
     Record the time when the with-block is entered.
 
@@ -130,9 +132,8 @@ def reproduce_state(hass, states, blocking=False):
         async_reproduce_state(hass, states, blocking), hass.loop).result()
 
 
-@asyncio.coroutine
 @bind_hass
-def async_reproduce_state(hass, states, blocking=False):
+async def async_reproduce_state(hass, states, blocking=False):
     """Reproduce given state."""
     if isinstance(states, State):
         states = [states]
@@ -193,16 +194,15 @@ def async_reproduce_state(hass, states, blocking=False):
             hass.services.async_call(service_domain, service, data, blocking)
         )
 
-    @asyncio.coroutine
-    def async_handle_service_calls(coro_list):
+    async def async_handle_service_calls(coro_list):
         """Handle service calls by domain sequence."""
         for coro in coro_list:
-            yield from coro
+            await coro
 
     execute_tasks = [async_handle_service_calls(coro_list)
                      for coro_list in domain_tasks.values()]
     if execute_tasks:
-        yield from asyncio.wait(execute_tasks, loop=hass.loop)
+        await asyncio.wait(execute_tasks, loop=hass.loop)
 
 
 def state_as_number(state):
@@ -214,9 +214,9 @@ def state_as_number(state):
     if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
                        STATE_OPEN, STATE_HOME, STATE_HEAT, STATE_COOL):
         return 1
-    elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
-                         STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME,
-                         STATE_IDLE):
+    if state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
+                       STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME,
+                       STATE_IDLE):
         return 0
 
     return float(state.state)

@@ -1,12 +1,11 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 64
+MINOR_VERSION = 75
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
-REQUIRED_PYTHON_VER = (3, 4, 2)
-REQUIRED_PYTHON_VER_WIN = (3, 5, 2)
+REQUIRED_PYTHON_VER = (3, 5, 3)
 
 # Format for platforms
 PLATFORM_FORMAT = '{}.{}'
@@ -28,8 +27,10 @@ CONF_ADDRESS = 'address'
 CONF_AFTER = 'after'
 CONF_ALIAS = 'alias'
 CONF_API_KEY = 'api_key'
+CONF_API_VERSION = 'api_version'
 CONF_AT = 'at'
 CONF_AUTHENTICATION = 'authentication'
+CONF_AUTH_PROVIDERS = 'auth_providers'
 CONF_BASE = 'base'
 CONF_BEFORE = 'before'
 CONF_BELOW = 'below'
@@ -165,6 +166,12 @@ EVENT_SERVICE_REMOVED = 'service_removed'
 EVENT_LOGBOOK_ENTRY = 'logbook_entry'
 EVENT_THEMES_UPDATED = 'themes_updated'
 
+# #### DEVICE CLASSES ####
+DEVICE_CLASS_BATTERY = 'battery'
+DEVICE_CLASS_HUMIDITY = 'humidity'
+DEVICE_CLASS_ILLUMINANCE = 'illuminance'
+DEVICE_CLASS_TEMPERATURE = 'temperature'
+
 # #### STATES ####
 STATE_ON = 'on'
 STATE_OFF = 'off'
@@ -214,8 +221,8 @@ ATTR_SERVICE_DATA = 'service_data'
 # IDs
 ATTR_ID = 'id'
 
-# Data for a SERVICE_EXECUTED event
-ATTR_SERVICE_CALL_ID = 'service_call_id'
+# Name
+ATTR_NAME = 'name'
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'
@@ -244,6 +251,7 @@ ATTR_DISCOVERED = 'discovered'
 # Location of the device/sensor
 ATTR_LOCATION = 'location'
 
+ATTR_BATTERY_CHARGING = 'battery_charging'
 ATTR_BATTERY_LEVEL = 'battery_level'
 ATTR_WAKEUP = 'wake_up_interval'
 

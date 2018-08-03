@@ -19,7 +19,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-forecastio==1.3.5']
+REQUIREMENTS = ['python-forecastio==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,8 +27,16 @@ CONF_ATTRIBUTION = "Powered by Dark Sky"
 CONF_UNITS = 'units'
 CONF_UPDATE_INTERVAL = 'update_interval'
 CONF_FORECAST = 'forecast'
+CONF_LANGUAGE = 'language'
+
+DEFAULT_LANGUAGE = 'en'
 
 DEFAULT_NAME = 'Dark Sky'
+
+DEPRECATED_SENSOR_TYPES = {'apparent_temperature_max',
+                           'apparent_temperature_min',
+                           'temperature_max',
+                           'temperature_min'}
 
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
@@ -51,7 +59,8 @@ SENSOR_TYPES = {
                     'mdi:weather-pouring',
                     ['currently', 'minutely', 'hourly', 'daily']],
     'precip_intensity': ['Precip Intensity',
-                         'mm', 'in', 'mm', 'mm', 'mm', 'mdi:weather-rainy',
+                         'mm/h', 'in', 'mm/h', 'mm/h', 'mm/h',
+                         'mdi:weather-rainy',
                          ['currently', 'minutely', 'hourly', 'daily']],
     'precip_probability': ['Precip Probability',
                            '%', '%', '%', '%', '%', 'mdi:water-percent',
@@ -86,18 +95,31 @@ SENSOR_TYPES = {
                                  '°C', '°F', '°C', '°C', '°C',
                                  'mdi:thermometer',
                                  ['currently', 'hourly', 'daily']],
+    'apparent_temperature_high': ["Daytime High Apparent Temperature",
+                                  '°C', '°F', '°C', '°C', '°C',
+                                  'mdi:thermometer', ['daily']],
     'apparent_temperature_min': ['Daily Low Apparent Temperature',
                                  '°C', '°F', '°C', '°C', '°C',
                                  'mdi:thermometer',
                                  ['currently', 'hourly', 'daily']],
+    'apparent_temperature_low': ['Overnight Low Apparent Temperature',
+                                 '°C', '°F', '°C', '°C', '°C',
+                                 'mdi:thermometer', ['daily']],
     'temperature_max': ['Daily High Temperature',
                         '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
-                        ['currently', 'hourly', 'daily']],
+                        ['daily']],
+    'temperature_high': ['Daytime High Temperature',
+                         '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
+                         ['daily']],
     'temperature_min': ['Daily Low Temperature',
                         '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
-                        ['currently', 'hourly', 'daily']],
+                        ['daily']],
+    'temperature_low': ['Overnight Low Temperature',
+                        '°C', '°F', '°C', '°C', '°C', 'mdi:thermometer',
+                        ['daily']],
     'precip_intensity_max': ['Daily Max Precip Intensity',
-                             'mm', 'in', 'mm', 'mm', 'mm', 'mdi:thermometer',
+                             'mm/h', 'in', 'mm/h', 'mm/h', 'mm/h',
+                             'mdi:thermometer',
                              ['currently', 'hourly', 'daily']],
     'uv_index': ['UV Index',
                  UNIT_UV_INDEX, UNIT_UV_INDEX, UNIT_UV_INDEX,
@@ -118,6 +140,16 @@ CONDITION_PICTURES = {
     'partly-cloudy-night': '/static/images/darksky/weather-cloudy.svg',
 }
 
+# Language Supported Codes
+LANGUAGE_CODES = [
+    'ar', 'az', 'be', 'bg', 'bs', 'ca',
+    'cs', 'da', 'de', 'el', 'en', 'es',
+    'et', 'fi', 'fr', 'hr', 'hu', 'id',
+    'is', 'it', 'ja', 'ka', 'kw', 'nb',
+    'nl', 'pl', 'pt', 'ro', 'ru', 'sk',
+    'sl', 'sr', 'sv', 'tet', 'tr', 'uk',
+    'x-pig-latin', 'zh', 'zh-tw',
+]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
@@ -125,11 +157,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_UNITS): vol.In(['auto', 'si', 'us', 'ca', 'uk', 'uk2']),
+    vol.Optional(CONF_LANGUAGE,
+                 default=DEFAULT_LANGUAGE): vol.In(LANGUAGE_CODES),
     vol.Inclusive(CONF_LATITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.latitude,
     vol.Inclusive(CONF_LONGITUDE, 'coordinates',
                   'Latitude and longitude must exist together'): cv.longitude,
-    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=120)): (
+    vol.Optional(CONF_UPDATE_INTERVAL, default=timedelta(seconds=300)): (
         vol.All(cv.time_period, cv.positive_timedelta)),
     vol.Optional(CONF_FORECAST):
         vol.All(cv.ensure_list, [vol.Range(min=1, max=7)]),
@@ -140,6 +174,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dark Sky sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
+    language = config.get(CONF_LANGUAGE)
 
     if CONF_UNITS in config:
         units = config[CONF_UNITS]
@@ -153,6 +188,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         latitude=latitude,
         longitude=longitude,
         units=units,
+        language=language,
         interval=config.get(CONF_UPDATE_INTERVAL))
     forecast_data.update()
     forecast_data.update_currently()
@@ -166,6 +202,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     forecast = config.get(CONF_FORECAST)
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
+        if variable in DEPRECATED_SENSOR_TYPES:
+            _LOGGER.warning("Monitored condition %s is deprecated.",
+                            variable)
         sensors.append(DarkSkySensor(forecast_data, variable, name))
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
             for forecast_day in forecast:
@@ -269,9 +308,13 @@ class DarkSkySensor(Entity):
         elif self.forecast_day > 0 or (
                 self.type in ['daily_summary',
                               'temperature_min',
+                              'temperature_low',
                               'temperature_max',
+                              'temperature_high',
                               'apparent_temperature_min',
+                              'apparent_temperature_low',
                               'apparent_temperature_max',
+                              'apparent_temperature_high',
                               'precip_intensity_max',
                               'precip_accumulation']):
             self.forecast_data.update_daily()
@@ -309,12 +352,12 @@ class DarkSkySensor(Entity):
         # percentages
         if self.type in ['precip_probability', 'cloud_cover', 'humidity']:
             return round(state * 100, 1)
-        elif (self.type in ['dew_point', 'temperature', 'apparent_temperature',
-                            'temperature_min', 'temperature_max',
-                            'apparent_temperature_min',
-                            'apparent_temperature_max',
-                            'precip_accumulation',
-                            'pressure', 'ozone', 'uvIndex']):
+        if self.type in ['dew_point', 'temperature', 'apparent_temperature',
+                         'temperature_min', 'temperature_max',
+                         'apparent_temperature_min',
+                         'apparent_temperature_max',
+                         'precip_accumulation',
+                         'pressure', 'ozone', 'uvIndex']:
             return round(state, 1)
         return state
 
@@ -329,15 +372,17 @@ def convert_to_camel(data):
     return components[0] + "".join(x.title() for x in components[1:])
 
 
-class DarkSkyData(object):
+class DarkSkyData:
     """Get the latest data from Darksky."""
 
-    def __init__(self, api_key, latitude, longitude, units, interval):
+    def __init__(self, api_key, latitude, longitude, units, language,
+                 interval):
         """Initialize the data object."""
         self._api_key = api_key
         self.latitude = latitude
         self.longitude = longitude
         self.units = units
+        self.language = language
 
         self.data = None
         self.unit_system = None
@@ -359,7 +404,8 @@ class DarkSkyData(object):
 
         try:
             self.data = forecastio.load_forecast(
-                self._api_key, self.latitude, self.longitude, units=self.units)
+                self._api_key, self.latitude, self.longitude, units=self.units,
+                lang=self.language)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
             _LOGGER.error("Unable to connect to Dark Sky. %s", error)
             self.data = None

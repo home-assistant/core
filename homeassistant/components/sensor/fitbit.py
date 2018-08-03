@@ -15,6 +15,7 @@ from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.const import CONF_UNIT_SYSTEM
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 import homeassistant.helpers.config_validation as cv
@@ -144,7 +145,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_RESOURCES, default=FITBIT_DEFAULT_RESOURCES):
         vol.All(cv.ensure_list, [vol.In(FITBIT_RESOURCES_LIST)]),
     vol.Optional(CONF_CLOCK_FORMAT, default='24H'):
-        vol.In(['12H', '24H'])
+        vol.In(['12H', '24H']),
+    vol.Optional(CONF_UNIT_SYSTEM, default='default'):
+        vol.In(['en_GB', 'en_US', 'metric', 'default'])
 })
 
 
@@ -153,7 +156,6 @@ def request_app_setup(hass, config, add_devices, config_path,
     """Assist user with configuring the Fitbit dev application."""
     configurator = hass.components.configurator
 
-    # pylint: disable=unused-argument
     def fitbit_configuration_callback(callback_data):
         """Handle configuration updates."""
         config_path = hass.config.path(FITBIT_CONFIG_FILE)
@@ -199,7 +201,6 @@ def request_oauth_completion(hass):
 
         return
 
-    # pylint: disable=unused-argument
     def fitbit_configuration_callback(callback_data):
         """Handle configuration updates."""
 
@@ -224,7 +225,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 hass, config, add_devices, config_path, discovery_info=None)
             return False
     else:
-        config_file = save_json(config_path, DEFAULT_CONFIG)
+        save_json(config_path, DEFAULT_CONFIG)
         request_app_setup(
             hass, config, add_devices, config_path, discovery_info=None)
         return False
@@ -248,12 +249,17 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
-        authd_client.system = authd_client.user_profile_get()["user"]["locale"]
-        if authd_client.system != 'en_GB':
-            if hass.config.units.is_metric:
-                authd_client.system = 'metric'
-            else:
-                authd_client.system = 'en_US'
+        unit_system = config.get(CONF_UNIT_SYSTEM)
+        if unit_system == 'default':
+            authd_client.system = authd_client. \
+                    user_profile_get()["user"]["locale"]
+            if authd_client.system != 'en_GB':
+                if hass.config.units.is_metric:
+                    authd_client.system = 'metric'
+                else:
+                    authd_client.system = 'en_US'
+        else:
+            authd_client.system = unit_system
 
         dev = []
         registered_devs = authd_client.get_devices()
@@ -463,7 +469,8 @@ class FitbitSensor(Entity):
                         hours -= 12
                     elif hours == 0:
                         hours = 12
-                    self._state = '{}:{} {}'.format(hours, minutes, setting)
+                    self._state = '{}:{:02d} {}'.format(hours, minutes,
+                                                        setting)
                 else:
                     self._state = raw_state
             else:

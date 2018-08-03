@@ -143,7 +143,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return True
 
 
-class LogitechMediaServer(object):
+class LogitechMediaServer:
     """Representation of a Logitech media server."""
 
     def __init__(self, hass, host, port, username, password):
@@ -230,7 +230,7 @@ class SqueezeBoxDevice(MediaPlayerDevice):
 
     @property
     def unique_id(self):
-        """Return an unique ID."""
+        """Return a unique ID."""
         return self._id
 
     @property
@@ -266,6 +266,8 @@ class SqueezeBoxDevice(MediaPlayerDevice):
         if response is False:
             return
 
+        last_media_position = self.media_position
+
         self._status = {}
 
         try:
@@ -278,7 +280,11 @@ class SqueezeBoxDevice(MediaPlayerDevice):
             pass
 
         self._status.update(response)
-        self._last_update = utcnow()
+
+        if self.media_position != last_media_position:
+            _LOGGER.debug('Media position updated for %s: %s',
+                          self, self.media_position)
+            self._last_update = utcnow()
 
     @property
     def volume_level(self):

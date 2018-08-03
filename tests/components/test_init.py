@@ -1,6 +1,5 @@
 """The tests for Core components."""
 # pylint: disable=protected-access
-import asyncio
 import unittest
 from unittest.mock import patch, Mock
 
@@ -14,7 +13,7 @@ import homeassistant.components as comps
 import homeassistant.helpers.intent as intent
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, mock_service, patch_yaml_files, mock_coro,
@@ -75,30 +74,6 @@ class TestComponentsCore(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(calls))
 
-    @asyncio.coroutine
-    @patch('homeassistant.core.ServiceRegistry.call')
-    def test_turn_on_to_not_block_for_domains_without_service(self, mock_call):
-        """Test if turn_on is blocking domain with no service."""
-        async_mock_service(self.hass, 'light', SERVICE_TURN_ON)
-
-        # We can't test if our service call results in services being called
-        # because by mocking out the call service method, we mock out all
-        # So we mimic how the service registry calls services
-        service_call = ha.ServiceCall('homeassistant', 'turn_on', {
-            'entity_id': ['light.test', 'sensor.bla', 'light.bla']
-        })
-        service = self.hass.services._services['homeassistant']['turn_on']
-        yield from service.func(service_call)
-
-        self.assertEqual(2, mock_call.call_count)
-        self.assertEqual(
-            ('light', 'turn_on', {'entity_id': ['light.bla', 'light.test']},
-             True),
-            mock_call.call_args_list[0][0])
-        self.assertEqual(
-            ('sensor', 'turn_on', {'entity_id': ['sensor.bla']}, False),
-            mock_call.call_args_list[1][0])
-
     @patch('homeassistant.config.os.path.isfile', Mock(return_value=True))
     def test_reload_core_conf(self):
         """Test reload core conf service."""
@@ -130,8 +105,8 @@ class TestComponentsCore(unittest.TestCase):
             comps.reload_core_config(self.hass)
             self.hass.block_till_done()
 
-        assert 10 == self.hass.config.latitude
-        assert 20 == self.hass.config.longitude
+        assert self.hass.config.latitude == 10
+        assert self.hass.config.longitude == 20
 
         ent.schedule_update_ha_state()
         self.hass.block_till_done()
@@ -198,21 +173,20 @@ class TestComponentsCore(unittest.TestCase):
         assert not mock_stop.called
 
 
-@asyncio.coroutine
-def test_turn_on_intent(hass):
+async def test_turn_on_intent(hass):
     """Test HassTurnOn intent."""
-    result = yield from comps.async_setup(hass, {})
+    result = await comps.async_setup(hass, {})
     assert result
 
     hass.states.async_set('light.test_light', 'off')
     calls = async_mock_service(hass, 'light', SERVICE_TURN_ON)
 
-    response = yield from intent.async_handle(
+    response = await intent.async_handle(
         hass, 'test', 'HassTurnOn', {'name': {'value': 'test light'}}
     )
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    assert response.speech['plain']['speech'] == 'Turned on test light'
+    assert response.speech['plain']['speech'] == 'Turned test light on'
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == 'light'
@@ -220,21 +194,20 @@ def test_turn_on_intent(hass):
     assert call.data == {'entity_id': ['light.test_light']}
 
 
-@asyncio.coroutine
-def test_turn_off_intent(hass):
+async def test_turn_off_intent(hass):
     """Test HassTurnOff intent."""
-    result = yield from comps.async_setup(hass, {})
+    result = await comps.async_setup(hass, {})
     assert result
 
     hass.states.async_set('light.test_light', 'on')
     calls = async_mock_service(hass, 'light', SERVICE_TURN_OFF)
 
-    response = yield from intent.async_handle(
+    response = await intent.async_handle(
         hass, 'test', 'HassTurnOff', {'name': {'value': 'test light'}}
     )
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    assert response.speech['plain']['speech'] == 'Turned off test light'
+    assert response.speech['plain']['speech'] == 'Turned test light off'
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == 'light'
@@ -242,19 +215,18 @@ def test_turn_off_intent(hass):
     assert call.data == {'entity_id': ['light.test_light']}
 
 
-@asyncio.coroutine
-def test_toggle_intent(hass):
+async def test_toggle_intent(hass):
     """Test HassToggle intent."""
-    result = yield from comps.async_setup(hass, {})
+    result = await comps.async_setup(hass, {})
     assert result
 
     hass.states.async_set('light.test_light', 'off')
     calls = async_mock_service(hass, 'light', SERVICE_TOGGLE)
 
-    response = yield from intent.async_handle(
+    response = await intent.async_handle(
         hass, 'test', 'HassToggle', {'name': {'value': 'test light'}}
     )
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     assert response.speech['plain']['speech'] == 'Toggled test light'
     assert len(calls) == 1
@@ -264,13 +236,12 @@ def test_toggle_intent(hass):
     assert call.data == {'entity_id': ['light.test_light']}
 
 
-@asyncio.coroutine
-def test_turn_on_multiple_intent(hass):
+async def test_turn_on_multiple_intent(hass):
     """Test HassTurnOn intent with multiple similar entities.
 
     This tests that matching finds the proper entity among similar names.
     """
-    result = yield from comps.async_setup(hass, {})
+    result = await comps.async_setup(hass, {})
     assert result
 
     hass.states.async_set('light.test_light', 'off')
@@ -278,14 +249,40 @@ def test_turn_on_multiple_intent(hass):
     hass.states.async_set('light.test_lighter', 'off')
     calls = async_mock_service(hass, 'light', SERVICE_TURN_ON)
 
-    response = yield from intent.async_handle(
+    response = await intent.async_handle(
         hass, 'test', 'HassTurnOn', {'name': {'value': 'test lights'}}
     )
-    yield from hass.async_block_till_done()
+    await hass.async_block_till_done()
 
-    assert response.speech['plain']['speech'] == 'Turned on test lights'
+    assert response.speech['plain']['speech'] == 'Turned test lights 2 on'
     assert len(calls) == 1
     call = calls[0]
     assert call.domain == 'light'
     assert call.service == 'turn_on'
     assert call.data == {'entity_id': ['light.test_lights_2']}
+
+
+async def test_turn_on_to_not_block_for_domains_without_service(hass):
+    """Test if turn_on is blocking domain with no service."""
+    await comps.async_setup(hass, {})
+    async_mock_service(hass, 'light', SERVICE_TURN_ON)
+    hass.states.async_set('light.Bowl', STATE_ON)
+    hass.states.async_set('light.Ceiling', STATE_OFF)
+
+    # We can't test if our service call results in services being called
+    # because by mocking out the call service method, we mock out all
+    # So we mimic how the service registry calls services
+    service_call = ha.ServiceCall('homeassistant', 'turn_on', {
+        'entity_id': ['light.test', 'sensor.bla', 'light.bla']
+    })
+    service = hass.services._services['homeassistant']['turn_on']
+
+    with patch('homeassistant.core.ServiceRegistry.async_call',
+               side_effect=lambda *args: mock_coro()) as mock_call:
+        await service.func(service_call)
+
+    assert mock_call.call_count == 2
+    assert mock_call.call_args_list[0][0] == (
+        'light', 'turn_on', {'entity_id': ['light.bla', 'light.test']}, True)
+    assert mock_call.call_args_list[1][0] == (
+        'sensor', 'turn_on', {'entity_id': ['sensor.bla']}, False)

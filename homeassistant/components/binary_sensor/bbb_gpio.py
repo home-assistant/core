@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.bbb_gpio as bbb_gpio
+from homeassistant.components import bbb_gpio
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (DEVICE_DEFAULT_NAME, CONF_NAME)

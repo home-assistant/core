@@ -1,6 +1,9 @@
 """Test the helper method for writing tests."""
 import asyncio
+from collections import OrderedDict
+from datetime import timedelta
 import functools as ft
+import json
 import os
 import sys
 from unittest.mock import patch, MagicMock, Mock
@@ -9,14 +12,14 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from aiohttp import web
-
-from homeassistant import core as ha, loader
+from homeassistant import auth, core as ha, data_entry_flow, config_entries
+from homeassistant.auth import (
+    models as auth_models, auth_store, providers as auth_providers)
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
-    intent, entity, restore_state,  entity_registry,
-    entity_platform)
+    intent, entity, restore_state, entity_registry,
+    entity_platform, storage)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -25,15 +28,14 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_PLATFORM_DISCOVERED, ATTR_SERVICE,
     ATTR_DISCOVERED, SERVER_PORT, EVENT_HOMEASSISTANT_CLOSE)
 from homeassistant.components import mqtt, recorder
-from homeassistant.components.http.auth import auth_middleware
-from homeassistant.components.http.const import (
-    KEY_USE_X_FORWARDED_FOR, KEY_BANS_ENABLED, KEY_TRUSTED_NETWORKS)
-from homeassistant.util.async import (
+from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
 _TEST_INSTANCE_PORT = SERVER_PORT
 _LOGGER = logging.getLogger(__name__)
 INSTANCES = []
+CLIENT_ID = 'https://example.com/app'
+CLIENT_REDIRECT_URI = 'https://example.com/app/callback'
 
 
 def threadsafe_callback_factory(func):
@@ -114,6 +116,10 @@ def get_test_home_assistant():
 def async_test_home_assistant(loop):
     """Return a Home Assistant object pointing at test config dir."""
     hass = ha.HomeAssistant(loop)
+    hass.config.async_load = Mock()
+    store = auth_store.AuthStore(hass)
+    hass.auth = auth.AuthManager(hass, store, {})
+    ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
@@ -135,8 +141,9 @@ def async_test_home_assistant(loop):
     hass.config.units = METRIC_SYSTEM
     hass.config.skip_pip = True
 
-    if 'custom_components.test' not in loader.AVAILABLE_COMPONENTS:
-        yield from loop.run_in_executor(None, loader.prepare, hass)
+    hass.config_entries = config_entries.ConfigEntries(hass, {})
+    hass.config_entries._entries = []
+    hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
     hass.state = ha.CoreState.running
 
@@ -180,7 +187,7 @@ def async_mock_service(hass, domain, service, schema=None):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
-    @asyncio.coroutine
+    @ha.callback
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
@@ -262,35 +269,6 @@ def mock_state_change_event(hass, new_state, old_state=None):
     hass.bus.fire(EVENT_STATE_CHANGED, event_data)
 
 
-def mock_http_component(hass, api_password=None):
-    """Mock the HTTP component."""
-    hass.http = MagicMock(api_password=api_password)
-    mock_component(hass, 'http')
-    hass.http.views = {}
-
-    def mock_register_view(view):
-        """Store registered view."""
-        if isinstance(view, type):
-            # Instantiate the view, if needed
-            view = view()
-
-        hass.http.views[view.name] = view
-
-    hass.http.register_view = mock_register_view
-
-
-def mock_http_component_app(hass, api_password=None):
-    """Create an aiohttp.web.Application instance for testing."""
-    if 'http' not in hass.config.components:
-        mock_http_component(hass, api_password)
-    app = web.Application(middlewares=[auth_middleware])
-    app['hass'] = hass
-    app[KEY_USE_X_FORWARDED_FOR] = False
-    app[KEY_BANS_ENABLED] = False
-    app[KEY_TRUSTED_NETWORKS] = []
-    return app
-
-
 @asyncio.coroutine
 def async_mock_mqtt_component(hass, config=None):
     """Mock the MQTT component."""
@@ -329,17 +307,62 @@ def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
     registry.entities = mock_entries or {}
-    hass.data[entity_platform.DATA_REGISTRY] = registry
+    hass.data[entity_registry.DATA_REGISTRY] = registry
     return registry
 
 
-class MockModule(object):
+class MockUser(auth_models.User):
+    """Mock a user in Home Assistant."""
+
+    def __init__(self, id='mock-id', is_owner=False, is_active=True,
+                 name='Mock User', system_generated=False):
+        """Initialize mock user."""
+        super().__init__(
+            id=id, is_owner=is_owner, is_active=is_active, name=name,
+            system_generated=system_generated)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        return self.add_to_auth_manager(hass.auth)
+
+    def add_to_auth_manager(self, auth_mgr):
+        """Test helper to add entry to hass."""
+        ensure_auth_manager_loaded(auth_mgr)
+        auth_mgr._store._users[self.id] = self
+        return self
+
+
+async def register_auth_provider(hass, config):
+    """Helper to register an auth provider."""
+    provider = await auth_providers.auth_provider_from_config(
+        hass, hass.auth._store, config)
+    assert provider is not None, 'Invalid config specified'
+    key = (provider.type, provider.id)
+    providers = hass.auth._providers
+
+    if key in providers:
+        raise ValueError('Provider already registered')
+
+    providers[key] = provider
+    return provider
+
+
+@ha.callback
+def ensure_auth_manager_loaded(auth_mgr):
+    """Ensure an auth manager is considered loaded."""
+    store = auth_mgr._store
+    if store._users is None:
+        store._users = OrderedDict()
+
+
+class MockModule:
     """Representation of a fake module."""
 
     # pylint: disable=invalid-name
     def __init__(self, domain=None, dependencies=None, setup=None,
                  requirements=None, config_schema=None, platform_schema=None,
-                 async_setup=None):
+                 async_setup=None, async_setup_entry=None,
+                 async_unload_entry=None):
         """Initialize the mock module."""
         self.DOMAIN = domain
         self.DEPENDENCIES = dependencies or []
@@ -361,18 +384,28 @@ class MockModule(object):
         if setup is None and async_setup is None:
             self.async_setup = mock_coro_func(True)
 
+        if async_setup_entry is not None:
+            self.async_setup_entry = async_setup_entry
 
-class MockPlatform(object):
+        if async_unload_entry is not None:
+            self.async_unload_entry = async_unload_entry
+
+
+class MockPlatform:
     """Provide a fake platform."""
 
     # pylint: disable=invalid-name
     def __init__(self, setup_platform=None, dependencies=None,
-                 platform_schema=None, async_setup_platform=None):
+                 platform_schema=None, async_setup_platform=None,
+                 async_setup_entry=None, scan_interval=None):
         """Initialize the platform."""
         self.DEPENDENCIES = dependencies or []
 
         if platform_schema is not None:
             self.PLATFORM_SCHEMA = platform_schema
+
+        if scan_interval is not None:
+            self.SCAN_INTERVAL = scan_interval
 
         if setup_platform is not None:
             # We run this in executor, wrap it in function
@@ -381,8 +414,45 @@ class MockPlatform(object):
         if async_setup_platform is not None:
             self.async_setup_platform = async_setup_platform
 
+        if async_setup_entry is not None:
+            self.async_setup_entry = async_setup_entry
+
         if setup_platform is None and async_setup_platform is None:
             self.async_setup_platform = mock_coro_func()
+
+
+class MockEntityPlatform(entity_platform.EntityPlatform):
+    """Mock class with some mock defaults."""
+
+    def __init__(
+        self, hass,
+        logger=None,
+        domain='test_domain',
+        platform_name='test_platform',
+        platform=None,
+        scan_interval=timedelta(seconds=15),
+        entity_namespace=None,
+        async_entities_added_callback=lambda: None
+    ):
+        """Initialize a mock entity platform."""
+        if logger is None:
+            logger = logging.getLogger('homeassistant.helpers.entity_platform')
+
+        # Otherwise the constructor will blow up.
+        if (isinstance(platform, Mock) and
+                isinstance(platform.PARALLEL_UPDATES, Mock)):
+            platform.PARALLEL_UPDATES = 0
+
+        super().__init__(
+            hass=hass,
+            logger=logger,
+            domain=domain,
+            platform_name=platform_name,
+            platform=platform,
+            scan_interval=scan_interval,
+            entity_namespace=entity_namespace,
+            async_entities_added_callback=async_entities_added_callback,
+        )
 
 
 class MockToggleDevice(entity.ToggleEntity):
@@ -426,14 +496,42 @@ class MockToggleDevice(entity.ToggleEntity):
         """Return the last call."""
         if not self.calls:
             return None
-        elif method is None:
+        if method is None:
             return self.calls[-1]
-        else:
-            try:
-                return next(call for call in reversed(self.calls)
-                            if call[0] == method)
-            except StopIteration:
-                return None
+        try:
+            return next(call for call in reversed(self.calls)
+                        if call[0] == method)
+        except StopIteration:
+            return None
+
+
+class MockConfigEntry(config_entries.ConfigEntry):
+    """Helper for creating config entries that adds some defaults."""
+
+    def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
+                 source=data_entry_flow.SOURCE_USER, title='Mock Title',
+                 state=None):
+        """Initialize a mock config entry."""
+        kwargs = {
+            'entry_id': entry_id or 'mock-id',
+            'domain': domain,
+            'data': data or {},
+            'version': version,
+            'title': title
+        }
+        if source is not None:
+            kwargs['source'] = source
+        if state is not None:
+            kwargs['state'] = state
+        super().__init__(**kwargs)
+
+    def add_to_hass(self, hass):
+        """Test helper to add entry to hass."""
+        hass.config_entries._entries.append(self)
+
+    def add_to_manager(self, manager):
+        """Test helper to add entry to entry manager."""
+        manager._entries.append(self)
 
 
 def patch_yaml_files(files_dict, endswith=True):
@@ -628,3 +726,57 @@ class MockEntity(entity.Entity):
         if attr in self._values:
             return self._values[attr]
         return getattr(super(), attr)
+
+
+@contextmanager
+def mock_storage(data=None):
+    """Mock storage.
+
+    Data is a dict {'key': {'version': version, 'data': data}}
+
+    Written data will be converted to JSON to ensure JSON parsing works.
+    """
+    if data is None:
+        data = {}
+
+    orig_load = storage.Store._async_load
+
+    async def mock_async_load(store):
+        """Mock version of load."""
+        if store._data is None:
+            # No data to load
+            if store.key not in data:
+                return None
+
+            mock_data = data.get(store.key)
+
+            if 'data' not in mock_data or 'version' not in mock_data:
+                _LOGGER.error('Mock data needs "version" and "data"')
+                raise ValueError('Mock data needs "version" and "data"')
+
+            store._data = mock_data
+
+        # Route through original load so that we trigger migration
+        loaded = await orig_load(store)
+        _LOGGER.info('Loading data for %s: %s', store.key, loaded)
+        return loaded
+
+    def mock_write_data(store, path, data_to_write):
+        """Mock version of write data."""
+        # To ensure that the data can be serialized
+        _LOGGER.info('Writing data to %s: %s', store.key, data_to_write)
+        data[store.key] = json.loads(json.dumps(data_to_write))
+
+    with patch('homeassistant.helpers.storage.Store._async_load',
+               side_effect=mock_async_load, autospec=True), \
+        patch('homeassistant.helpers.storage.Store._write_data',
+              side_effect=mock_write_data, autospec=True):
+        yield data
+
+
+async def flush_store(store):
+    """Make sure all delayed writes of a store are written."""
+    if store._data is None:
+        return
+
+    await store._async_handle_write_data()

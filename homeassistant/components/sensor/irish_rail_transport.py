@@ -42,9 +42,9 @@ TIME_STR_FORMAT = '%H:%M'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION): cv.string,
-    vol.Optional(CONF_DIRECTION, default=None): cv.string,
-    vol.Optional(CONF_DESTINATION, default=None): cv.string,
-    vol.Optional(CONF_STOPS_AT, default=None): cv.string,
+    vol.Optional(CONF_DIRECTION): cv.string,
+    vol.Optional(CONF_DESTINATION): cv.string,
+    vol.Optional(CONF_STOPS_AT): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
@@ -132,7 +132,7 @@ class IrishRailTransportSensor(Entity):
             self._state = None
 
 
-class IrishRailTransportData(object):
+class IrishRailTransportData:
     """The Class for handling the data retrieval."""
 
     def __init__(self, irish_rail, station, direction, destination, stops_at):

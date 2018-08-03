@@ -25,21 +25,23 @@ DOMAIN = 'alarmdecoder'
 
 DATA_AD = 'alarmdecoder'
 
-CONF_DEVICE          = 'device'
-CONF_DEVICE_BAUD     = 'baudrate'
-CONF_DEVICE_HOST     = 'host'
-CONF_DEVICE_PATH     = 'path'
-CONF_DEVICE_PORT     = 'port'
+CONF_DEVICE = 'device'
+CONF_DEVICE_BAUD = 'baudrate'
+CONF_DEVICE_HOST = 'host'
+CONF_DEVICE_PATH = 'path'
+CONF_DEVICE_PORT = 'port'
 CONF_DEVICE_SSL      = 'ssl'
 CONF_DEVICE_SSL_CA   = 'ssl_ca'
 CONF_DEVICE_SSL_KEY  = 'ssl_key'
 CONF_DEVICE_SSL_CERT = 'ssl_cert'
-CONF_DEVICE_TYPE     = 'type'
-CONF_PANEL_DISPLAY   = 'panel_display'
-CONF_ZONE_NAME       = 'name'
-CONF_ZONE_TYPE       = 'type'
-CONF_ZONE_RFID       = 'rfid'
-CONF_ZONES           = 'zones'
+CONF_DEVICE_TYPE = 'type'
+CONF_PANEL_DISPLAY = 'panel_display'
+CONF_ZONE_NAME = 'name'
+CONF_ZONE_TYPE = 'type'
+CONF_ZONE_RFID = 'rfid'
+CONF_ZONES = 'zones'
+CONF_RELAY_ADDR = 'relayaddr'
+CONF_RELAY_CHAN = 'relaychan'
 
 DEFAULT_DEVICE_TYPE     = 'socket'
 DEFAULT_DEVICE_HOST     = 'localhost'
@@ -63,6 +65,7 @@ SIGNAL_PANEL_DISARM = 'alarmdecoder.panel_disarm'
 SIGNAL_ZONE_FAULT = 'alarmdecoder.zone_fault'
 SIGNAL_ZONE_RESTORE = 'alarmdecoder.zone_restore'
 SIGNAL_RFX_MESSAGE = 'alarmdecoder.rfx_message'
+SIGNAL_REL_MESSAGE = 'alarmdecoder.rel_message'
 
 DEVICE_SOCKET_SCHEMA = vol.Schema({
     vol.Required(CONF_DEVICE_TYPE): 'socket',
@@ -85,7 +88,11 @@ ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONE_NAME): cv.string,
     vol.Optional(CONF_ZONE_TYPE,
                  default=DEFAULT_ZONE_TYPE): vol.Any(DEVICE_CLASSES_SCHEMA),
-    vol.Optional(CONF_ZONE_RFID): cv.string})
+    vol.Optional(CONF_ZONE_RFID): cv.string,
+    vol.Inclusive(CONF_RELAY_ADDR, 'relaylocation',
+                  'Relay address and channel must exist together'): cv.byte,
+    vol.Inclusive(CONF_RELAY_CHAN, 'relaylocation',
+                  'Relay address and channel must exist together'): cv.byte})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -167,6 +174,11 @@ def setup(hass, config):
         hass.helpers.dispatcher.dispatcher_send(
             SIGNAL_ZONE_RESTORE, zone)
 
+    def handle_rel_message(sender, message):
+        """Handle relay message from AlarmDecoder."""
+        hass.helpers.dispatcher.dispatcher_send(
+            SIGNAL_REL_MESSAGE, message)
+
     controller = False
     if device_type == 'socket':
         host = device.get(CONF_DEVICE_HOST)
@@ -209,6 +221,7 @@ def setup(hass, config):
     controller.on_zone_fault += zone_fault_callback
     controller.on_zone_restore += zone_restore_callback
     controller.on_close += handle_closed_connection
+    controller.on_relay_changed += handle_rel_message
 
     hass.data[DATA_AD] = controller
 

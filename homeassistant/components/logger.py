@@ -4,7 +4,6 @@ Component that will help set the level of logging for components.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logger/
 """
-import asyncio
 import logging
 from collections import OrderedDict
 
@@ -16,6 +15,7 @@ DOMAIN = 'logger'
 
 DATA_LOGGER = 'logger'
 
+SERVICE_SET_DEFAULT_LEVEL = 'set_default_level'
 SERVICE_SET_LEVEL = 'set_level'
 
 LOGSEVERITY = {
@@ -32,8 +32,11 @@ LOGSEVERITY = {
 LOGGER_DEFAULT = 'default'
 LOGGER_LOGS = 'logs'
 
+ATTR_LEVEL = 'level'
+
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
 
+SERVICE_SET_DEFAULT_LEVEL_SCHEMA = vol.Schema({ATTR_LEVEL: _VALID_LOG_LEVEL})
 SERVICE_SET_LEVEL_SCHEMA = vol.Schema({cv.string: _VALID_LOG_LEVEL})
 
 CONFIG_SCHEMA = vol.Schema({
@@ -52,7 +55,6 @@ def set_level(hass, logs):
 class HomeAssistantLogFilter(logging.Filter):
     """A log filter."""
 
-    # pylint: disable=no-init
     def __init__(self, logfilter):
         """Initialize the filter."""
         super().__init__()
@@ -73,17 +75,13 @@ class HomeAssistantLogFilter(logging.Filter):
         return record.levelno >= default
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the logger component."""
     logfilter = {}
 
-    # Set default log severity
-    logfilter[LOGGER_DEFAULT] = LOGSEVERITY['DEBUG']
-    if LOGGER_DEFAULT in config.get(DOMAIN):
-        logfilter[LOGGER_DEFAULT] = LOGSEVERITY[
-            config.get(DOMAIN)[LOGGER_DEFAULT]
-        ]
+    def set_default_log_level(level):
+        """Set the default log level for components."""
+        logfilter[LOGGER_DEFAULT] = LOGSEVERITY[level]
 
     def set_log_levels(logpoints):
         """Set the specified log levels."""
@@ -105,6 +103,12 @@ def async_setup(hass, config):
             )
         )
 
+    # Set default log severity
+    if LOGGER_DEFAULT in config.get(DOMAIN):
+        set_default_log_level(config.get(DOMAIN)[LOGGER_DEFAULT])
+    else:
+        set_default_log_level('DEBUG')
+
     logger = logging.getLogger('')
     logger.setLevel(logging.NOTSET)
 
@@ -116,10 +120,16 @@ def async_setup(hass, config):
     if LOGGER_LOGS in config.get(DOMAIN):
         set_log_levels(config.get(DOMAIN)[LOGGER_LOGS])
 
-    @asyncio.coroutine
-    def async_service_handler(service):
+    async def async_service_handler(service):
         """Handle logger services."""
-        set_log_levels(service.data)
+        if service.service == SERVICE_SET_DEFAULT_LEVEL:
+            set_default_log_level(service.data.get(ATTR_LEVEL))
+        else:
+            set_log_levels(service.data)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_DEFAULT_LEVEL, async_service_handler,
+        schema=SERVICE_SET_DEFAULT_LEVEL_SCHEMA)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SET_LEVEL, async_service_handler,

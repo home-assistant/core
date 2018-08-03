@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from homeassistant.setup import setup_component
 import homeassistant.components.notify as notify
 from homeassistant.components.notify import group, demo
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import assert_setup_component, get_test_home_assistant
 
@@ -26,8 +26,7 @@ class TestNotifyGroup(unittest.TestCase):
         def mock_get_service(hass, config, discovery_info=None):
             if config['name'] == 'demo1':
                 return self.service1
-            else:
-                return self.service2
+            return self.service2
 
         with assert_setup_component(2), \
                 patch.object(demo, 'get_service', mock_get_service):
@@ -53,7 +52,7 @@ class TestNotifyGroup(unittest.TestCase):
         assert self.service is not None
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """"Stop everything that was started."""
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_send_message_with_data(self):

@@ -25,11 +25,11 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
 
-REQUIREMENTS = ['pysensibo==1.0.2']
+REQUIREMENTS = ['pysensibo==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-ALL = 'all'
+ALL = ['all']
 TIMEOUT = 10
 
 SERVICE_ASSUME_STATE = 'sensibo_assume_state'
@@ -154,7 +154,8 @@ class SensiboClimate(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_CURRENT_HUMIDITY: self.current_humidity}
+        return {ATTR_CURRENT_HUMIDITY: self.current_humidity,
+                'battery': self.current_battery}
 
     @property
     def temperature_unit(self):
@@ -190,6 +191,11 @@ class SensiboClimate(ClimateDevice):
     def current_humidity(self):
         """Return the current humidity."""
         return self._measurements['humidity']
+
+    @property
+    def current_battery(self):
+        """Return the current battery voltage."""
+        return self._measurements.get('batteryVoltage')
 
     @property
     def current_temperature(self):
@@ -240,13 +246,18 @@ class SensiboClimate(ClimateDevice):
     def min_temp(self):
         """Return the minimum temperature."""
         return self._temperatures_list[0] \
-            if self._temperatures_list else super().min_temp()
+            if self._temperatures_list else super().min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
         return self._temperatures_list[-1] \
-            if self._temperatures_list else super().max_temp()
+            if self._temperatures_list else super().max_temp
+
+    @property
+    def unique_id(self):
+        """Return unique ID based on Sensibo ID."""
+        return self._id
 
     @asyncio.coroutine
     def async_set_temperature(self, **kwargs):

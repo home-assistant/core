@@ -51,6 +51,8 @@ class TestRingSensorSetup(unittest.TestCase):
     @requests_mock.Mocker()
     def test_sensor(self, mock):
         """Test the Ring sensor class and methods."""
+        mock.post('https://oauth.ring.com/oauth/token',
+                  text=load_fixture('ring_oauth.json'))
         mock.post('https://api.ring.com/clients_api/session',
                   text=load_fixture('ring_session.json'))
         mock.get('https://api.ring.com/clients_api/ring_devices',

@@ -4,13 +4,12 @@ Support for MQTT cover devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.mqtt/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.components.cover import (
     CoverDevice, ATTR_TILT_POSITION, SUPPORT_OPEN_TILT,
     SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
@@ -65,9 +64,9 @@ TILT_FEATURES = (SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_STOP_TILT |
                  SUPPORT_SET_TILT_POSITION)
 
 PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_COMMAND_TOPIC, default=None): valid_publish_topic,
-    vol.Optional(CONF_POSITION_TOPIC, default=None): valid_publish_topic,
-    vol.Optional(CONF_SET_POSITION_TEMPLATE, default=None): cv.template,
+    vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
+    vol.Optional(CONF_POSITION_TOPIC): valid_publish_topic,
+    vol.Optional(CONF_SET_POSITION_TEMPLATE): cv.template,
     vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
     vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
@@ -78,8 +77,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_OPEN, default=STATE_OPEN): cv.string,
     vol.Optional(CONF_STATE_CLOSED, default=STATE_CLOSED): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
-    vol.Optional(CONF_TILT_COMMAND_TOPIC, default=None): valid_publish_topic,
-    vol.Optional(CONF_TILT_STATUS_TOPIC, default=None): valid_subscribe_topic,
+    vol.Optional(CONF_TILT_COMMAND_TOPIC): valid_publish_topic,
+    vol.Optional(CONF_TILT_STATUS_TOPIC): valid_subscribe_topic,
     vol.Optional(CONF_TILT_CLOSED_POSITION,
                  default=DEFAULT_TILT_CLOSED_POSITION): int,
     vol.Optional(CONF_TILT_OPEN_POSITION,
@@ -93,8 +92,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info=None):
     """Set up the MQTT Cover."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -174,10 +173,9 @@ class MqttCover(MqttAvailability, CoverDevice):
         self._position_topic = position_topic
         self._set_position_template = set_position_template
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Subscribe MQTT events."""
-        yield from super().async_added_to_hass()
+        await super().async_added_to_hass()
 
         @callback
         def tilt_updated(topic, payload, qos):
@@ -218,7 +216,7 @@ class MqttCover(MqttAvailability, CoverDevice):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            yield from mqtt.async_subscribe(
+            await mqtt.async_subscribe(
                 self.hass, self._state_topic,
                 state_message_received, self._qos)
 
@@ -227,13 +225,18 @@ class MqttCover(MqttAvailability, CoverDevice):
         else:
             self._tilt_optimistic = False
             self._tilt_value = STATE_UNKNOWN
-            yield from mqtt.async_subscribe(
+            await mqtt.async_subscribe(
                 self.hass, self._tilt_status_topic, tilt_updated, self._qos)
 
     @property
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def assumed_state(self):
+        """Return true if we do optimistic updates."""
+        return self._optimistic
 
     @property
     def name(self):
@@ -273,8 +276,7 @@ class MqttCover(MqttAvailability, CoverDevice):
 
         return supported_features
 
-    @asyncio.coroutine
-    def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs):
         """Move the cover up.
 
         This method is a coroutine.
@@ -287,8 +289,7 @@ class MqttCover(MqttAvailability, CoverDevice):
             self._state = False
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs):
         """Move the cover down.
 
         This method is a coroutine.
@@ -301,8 +302,7 @@ class MqttCover(MqttAvailability, CoverDevice):
             self._state = True
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs):
         """Stop the device.
 
         This method is a coroutine.
@@ -311,8 +311,7 @@ class MqttCover(MqttAvailability, CoverDevice):
             self.hass, self._command_topic, self._payload_stop, self._qos,
             self._retain)
 
-    @asyncio.coroutine
-    def async_open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover open."""
         mqtt.async_publish(self.hass, self._tilt_command_topic,
                            self._tilt_open_position, self._qos,
@@ -321,8 +320,7 @@ class MqttCover(MqttAvailability, CoverDevice):
             self._tilt_value = self._tilt_open_position
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
         mqtt.async_publish(self.hass, self._tilt_command_topic,
                            self._tilt_closed_position, self._qos,
@@ -331,8 +329,7 @@ class MqttCover(MqttAvailability, CoverDevice):
             self._tilt_value = self._tilt_closed_position
             self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_set_cover_tilt_position(self, **kwargs):
+    async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         if ATTR_TILT_POSITION not in kwargs:
             return
@@ -345,8 +342,7 @@ class MqttCover(MqttAvailability, CoverDevice):
         mqtt.async_publish(self.hass, self._tilt_command_topic,
                            level, self._qos, self._retain)
 
-    @asyncio.coroutine
-    def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]

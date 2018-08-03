@@ -4,7 +4,6 @@ Support for Dialogflow webhook.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/dialogflow/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -37,8 +36,7 @@ class DialogFlowError(HomeAssistantError):
     """Raised when a DialogFlow error happens."""
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up Dialogflow component."""
     hass.http.register_view(DialogflowIntentsView)
 
@@ -51,16 +49,15 @@ class DialogflowIntentsView(HomeAssistantView):
     url = INTENTS_API_ENDPOINT
     name = 'api:dialogflow'
 
-    @asyncio.coroutine
-    def post(self, request):
+    async def post(self, request):
         """Handle Dialogflow."""
         hass = request.app['hass']
-        message = yield from request.json()
+        message = await request.json()
 
         _LOGGER.debug("Received Dialogflow request: %s", message)
 
         try:
-            response = yield from async_handle_message(hass, message)
+            response = await async_handle_message(hass, message)
             return b'' if response is None else self.json(response)
 
         except DialogFlowError as err:
@@ -93,8 +90,7 @@ def dialogflow_error_response(hass, message, error):
     return dialogflow_response.as_dict()
 
 
-@asyncio.coroutine
-def async_handle_message(hass, message):
+async def async_handle_message(hass, message):
     """Handle a DialogFlow message."""
     req = message.get('result')
     action_incomplete = req['actionIncomplete']
@@ -103,14 +99,15 @@ def async_handle_message(hass, message):
         return None
 
     action = req.get('action', '')
-    parameters = req.get('parameters')
+    parameters = req.get('parameters').copy()
+    parameters["dialogflow_query"] = message
     dialogflow_response = DialogflowResponse(parameters)
 
     if action == "":
         raise DialogFlowError(
             "You have not defined an action in your Dialogflow intent.")
 
-    intent_response = yield from intent.async_handle(
+    intent_response = await intent.async_handle(
         hass, DOMAIN, action,
         {key: {'value': value} for key, value
          in parameters.items()})
@@ -122,7 +119,7 @@ def async_handle_message(hass, message):
     return dialogflow_response.as_dict()
 
 
-class DialogflowResponse(object):
+class DialogflowResponse:
     """Help generating the response for Dialogflow."""
 
     def __init__(self, parameters):
