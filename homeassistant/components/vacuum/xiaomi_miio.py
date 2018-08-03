@@ -14,7 +14,7 @@ from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA, DOMAIN, PLATFORM_SCHEMA, SUPPORT_BATTERY,
     SUPPORT_CLEAN_SPOT, SUPPORT_FAN_SPEED, SUPPORT_LOCATE, SUPPORT_PAUSE,
     SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STOP,
-    SUPPORT_STATE, VACUUM_SERVICE_SCHEMA, StateVacuumDevice,
+    SUPPORT_STATE, SUPPORT_START, VACUUM_SERVICE_SCHEMA, StateVacuumDevice,
     STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE, STATE_RETURNING,
     STATE_ERROR)
 from homeassistant.const import (
@@ -82,7 +82,7 @@ SERVICE_TO_METHOD = {
 SUPPORT_XIAOMI = SUPPORT_STATE | SUPPORT_PAUSE | \
                  SUPPORT_STOP | SUPPORT_RETURN_HOME | SUPPORT_FAN_SPEED | \
                  SUPPORT_SEND_COMMAND | SUPPORT_LOCATE | \
-                 SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT
+                 SUPPORT_BATTERY | SUPPORT_CLEAN_SPOT | SUPPORT_START
 
 
 STATE_CODE_TO_STATE = {
@@ -260,11 +260,16 @@ class MiroboVacuum(StateVacuumDevice):
             _LOGGER.error(mask_error, exc)
             return False
 
-    @asyncio.coroutine
-    def async_start(self, **kwargs):
-        """Turn the vacuum on."""
-        yield from self._try_command(
+    async def async_start(self):
+        """Start or resume the cleaning task."""
+        await self._try_command(
             "Unable to start the vacuum: %s", self._vacuum.start)
+
+    async def async_pause(self):
+        """Pause the cleaning task."""
+        if self.state == STATE_CLEANING:
+            await self._try_command(
+                "Unable to set start/pause: %s", self._vacuum.pause)
 
     @asyncio.coroutine
     def async_stop(self, **kwargs):
@@ -288,15 +293,6 @@ class MiroboVacuum(StateVacuumDevice):
         yield from self._try_command(
             "Unable to set fan speed: %s",
             self._vacuum.set_fan_speed, fan_speed)
-
-    @asyncio.coroutine
-    def async_start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task."""
-        if self.vacuum_state and self.state == STATE_CLEANING:
-            yield from self._try_command(
-                "Unable to set start/pause: %s", self._vacuum.pause)
-        else:
-            yield from self.async_start()
 
     @asyncio.coroutine
     def async_return_to_base(self, **kwargs):
