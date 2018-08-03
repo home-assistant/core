@@ -95,7 +95,7 @@ class LondonTubeSensor(Entity):
         self._description = self._data.data[self.name]['Description']
 
 
-class TubeData(object):
+class TubeData:
     """Get the latest tube data from TFL."""
 
     def __init__(self):

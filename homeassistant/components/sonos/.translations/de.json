@@ -1,14 +1,15 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "Keine Sonos Ger\u00e4te im Netzwerk gefunden."
+            "no_devices_found": "Keine Sonos Ger\u00e4te im Netzwerk gefunden.",
+            "single_instance_allowed": "Nur eine einzige Konfiguration von Sonos ist notwendig."
         },
         "step": {
             "confirm": {
                 "description": "M\u00f6chten Sie Sonos konfigurieren?",
-                "title": ""
+                "title": "Sonos"
             }
         },
-        "title": ""
+        "title": "Sonos"
     }
 }

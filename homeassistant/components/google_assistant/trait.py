@@ -106,9 +106,9 @@ class BrightnessTrait(_Trait):
         """Test if state is supported."""
         if domain == light.DOMAIN:
             return features & light.SUPPORT_BRIGHTNESS
-        elif domain == cover.DOMAIN:
+        if domain == cover.DOMAIN:
             return features & cover.SUPPORT_SET_POSITION
-        elif domain == media_player.DOMAIN:
+        if domain == media_player.DOMAIN:
             return features & media_player.SUPPORT_VOLUME_SET
 
         return False
@@ -304,10 +304,12 @@ class ColorTemperatureTrait(_Trait):
     def sync_attributes(self):
         """Return color temperature attributes for a sync request."""
         attrs = self.state.attributes
+        # Max Kelvin is Min Mireds K = 1000000 / mireds
+        # Min Kevin is Max Mireds K = 1000000 / mireds
         return {
-            'temperatureMinK': color_util.color_temperature_mired_to_kelvin(
-                attrs.get(light.ATTR_MIN_MIREDS)),
             'temperatureMaxK': color_util.color_temperature_mired_to_kelvin(
+                attrs.get(light.ATTR_MIN_MIREDS)),
+            'temperatureMinK': color_util.color_temperature_mired_to_kelvin(
                 attrs.get(light.ATTR_MAX_MIREDS)),
         }
 

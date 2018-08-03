@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA, BinarySensorDevice)
-import homeassistant.components.rpi_pfio as rpi_pfio
+from homeassistant.components import rpi_pfio
 from homeassistant.const import CONF_NAME, DEVICE_DEFAULT_NAME
 import homeassistant.helpers.config_validation as cv
 

@@ -55,7 +55,7 @@ def setup(hass, config):
     return True
 
 
-class PrometheusMetrics(object):
+class PrometheusMetrics:
     """Model all of the metrics which should be exposed to Prometheus."""
 
     def __init__(self, prometheus_client, entity_filter, namespace):

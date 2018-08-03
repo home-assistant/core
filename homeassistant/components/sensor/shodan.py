@@ -96,7 +96,7 @@ class ShodanSensor(Entity):
         self._state = self.data.details['total']
 
 
-class ShodanData(object):
+class ShodanData:
     """Get the latest data and update the states."""
 
     def __init__(self, api, query):

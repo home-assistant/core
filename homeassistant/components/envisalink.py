@@ -167,21 +167,21 @@ def async_setup(hass, config):
 
     # Load sub-components for Envisalink
     if partitions:
-        hass.async_add_job(async_load_platform(
+        hass.async_create_task(async_load_platform(
             hass, 'alarm_control_panel', 'envisalink', {
                 CONF_PARTITIONS: partitions,
                 CONF_CODE: code,
                 CONF_PANIC: panic_type
             }, config
         ))
-        hass.async_add_job(async_load_platform(
+        hass.async_create_task(async_load_platform(
             hass, 'sensor', 'envisalink', {
                 CONF_PARTITIONS: partitions,
                 CONF_CODE: code
             }, config
         ))
     if zones:
-        hass.async_add_job(async_load_platform(
+        hass.async_create_task(async_load_platform(
             hass, 'binary_sensor', 'envisalink', {
                 CONF_ZONES: zones
             }, config

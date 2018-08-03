@@ -65,20 +65,20 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
     """
     if dattim.tzinfo == UTC:
         return dattim
-    elif dattim.tzinfo is None:
+    if dattim.tzinfo is None:
         dattim = DEFAULT_TIME_ZONE.localize(dattim)  # type: ignore
 
     return dattim.astimezone(UTC)
 
 
-def as_timestamp(dt_value):
+def as_timestamp(dt_value: dt.datetime) -> float:
     """Convert a date/time into a unix time (seconds since 1970)."""
     if hasattr(dt_value, "timestamp"):
-        parsed_dt = dt_value
+        parsed_dt = dt_value  # type: Optional[dt.datetime]
     else:
         parsed_dt = parse_datetime(str(dt_value))
-        if not parsed_dt:
-            raise ValueError("not a valid date/time.")
+    if parsed_dt is None:
+        raise ValueError("not a valid date/time.")
     return parsed_dt.timestamp()
 
 
@@ -86,7 +86,7 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
     """Convert a UTC datetime object to local time zone."""
     if dattim.tzinfo == DEFAULT_TIME_ZONE:
         return dattim
-    elif dattim.tzinfo is None:
+    if dattim.tzinfo is None:
         dattim = UTC.localize(dattim)
 
     return dattim.astimezone(DEFAULT_TIME_ZONE)
@@ -98,7 +98,7 @@ def utc_from_timestamp(timestamp: float) -> dt.datetime:
 
 
 def start_of_local_day(dt_or_d:
-                       Union[dt.date, dt.datetime]=None) -> dt.datetime:
+                       Union[dt.date, dt.datetime] = None) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         date = now().date()  # type: dt.date
@@ -150,7 +150,7 @@ def parse_date(dt_str: str) -> Optional[dt.date]:
         return None
 
 
-def parse_time(time_str):
+def parse_time(time_str: str) -> Optional[dt.time]:
     """Parse a time string (00:20:00) into Time object.
 
     Return None if invalid.

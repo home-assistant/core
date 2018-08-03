@@ -10,7 +10,7 @@ import time
 
 import voluptuous as vol
 
-import homeassistant.components.remote as remote
+from homeassistant.components import remote
 from homeassistant.components.remote import (
     ATTR_ACTIVITY, ATTR_DELAY_SECS, ATTR_DEVICE, ATTR_NUM_REPEATS,
     DEFAULT_DELAY_SECS, DOMAIN, PLATFORM_SCHEMA)

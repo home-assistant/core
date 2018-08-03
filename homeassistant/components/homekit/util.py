@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.media_player as media_player
+from homeassistant.components import media_player
 from homeassistant.core import split_entity_id
 from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, TEMP_CELSIUS)
@@ -142,10 +142,10 @@ def density_to_air_quality(density):
     """Map PM2.5 density to HomeKit AirQuality level."""
     if density <= 35:
         return 1
-    elif density <= 75:
+    if density <= 75:
         return 2
-    elif density <= 115:
+    if density <= 115:
         return 3
-    elif density <= 150:
+    if density <= 150:
         return 4
     return 5

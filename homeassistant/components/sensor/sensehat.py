@@ -109,7 +109,7 @@ class SenseHatSensor(Entity):
             self._state = self.data.pressure
 
 
-class SenseHatData(object):
+class SenseHatData:
     """Get the latest data and update."""
 
     def __init__(self, is_hat_attached):

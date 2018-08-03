@@ -80,11 +80,6 @@ class HomematicipAccesspointStatus(HomematicipGenericDevice):
         """Return the unit this state is expressed in."""
         return '%'
 
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the access point."""
-        return {}
-
 
 class HomematicipHeatingThermostat(HomematicipGenericDevice):
     """MomematicIP heating thermostat representation."""
@@ -98,6 +93,8 @@ class HomematicipHeatingThermostat(HomematicipGenericDevice):
         """Return the icon."""
         from homematicip.base.enums import ValveState
 
+        if super().icon:
+            return super().icon
         if self._device.valveState != ValveState.ADAPTION_DONE:
             return 'mdi:alert'
         return 'mdi:radiator'

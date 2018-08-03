@@ -100,7 +100,7 @@ def identify_event_type(event):
     """
     if EVENT_KEY_COMMAND in event:
         return EVENT_KEY_COMMAND
-    elif EVENT_KEY_SENSOR in event:
+    if EVENT_KEY_SENSOR in event:
         return EVENT_KEY_SENSOR
     return 'unknown'
 

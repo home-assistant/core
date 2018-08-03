@@ -147,7 +147,7 @@ class NestThermostat(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         if self._mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
             return self._mode
-        elif self._mode == NEST_MODE_HEAT_COOL:
+        if self._mode == NEST_MODE_HEAT_COOL:
             return STATE_AUTO
         return STATE_UNKNOWN
 

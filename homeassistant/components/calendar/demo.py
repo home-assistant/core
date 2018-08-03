@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ])
 
 
-class DemoGoogleCalendarData(object):
+class DemoGoogleCalendarData:
     """Representation of a Demo Calendar element."""
 
     event = {}

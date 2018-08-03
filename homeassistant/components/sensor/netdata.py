@@ -134,7 +134,7 @@ class NetdataSensor(Entity):
             resource_data['dimensions'][self._element]['value'], 2)
 
 
-class NetdataData(object):
+class NetdataData:
     """The class for handling the data retrieval."""
 
     def __init__(self, api):

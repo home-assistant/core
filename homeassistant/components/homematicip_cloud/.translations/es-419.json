@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Accesspoint ya est\u00e1 configurado",
+            "conection_aborted": "No se pudo conectar al servidor HMIP",
+            "unknown": "Se produjo un error desconocido."
+        },
+        "error": {
+            "invalid_pin": "PIN no v\u00e1lido, por favor intente de nuevo.",
+            "press_the_button": "Por favor, presione el bot\u00f3n azul.",
+            "register_failed": "No se pudo registrar, por favor intente de nuevo."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "ID de punto de acceso (SGTIN)",
+                    "name": "Nombre (opcional, usado como prefijo de nombre para todos los dispositivos)",
+                    "pin": "C\u00f3digo PIN (opcional)"
+                }
+            }
+        }
+    }
+}

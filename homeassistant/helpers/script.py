@@ -119,7 +119,7 @@ class Script():
                     self.hass.async_add_job(self._change_listener)
                 return
 
-            elif CONF_WAIT_TEMPLATE in action:
+            if CONF_WAIT_TEMPLATE in action:
                 # Call ourselves in the future to continue work
                 wait_template = action[CONF_WAIT_TEMPLATE]
                 wait_template.hass = self.hass
@@ -147,7 +147,7 @@ class Script():
 
                 return
 
-            elif CONF_CONDITION in action:
+            if CONF_CONDITION in action:
                 if not self._async_check_condition(action, variables):
                     break
 

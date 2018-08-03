@@ -202,7 +202,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         state = self._client.media_state
         if state == 'PLAY':
             return STATE_PLAYING
-        elif state == 'PAUSE':
+        if state == 'PAUSE':
             return STATE_PAUSED
 
         return STATE_ON if self._client.is_on else STATE_OFF
