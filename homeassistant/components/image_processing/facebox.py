@@ -165,7 +165,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         entities = []
         for camera in config[CONF_SOURCE]:
             facebox = FaceClassifyEntity(
-                ip_address, port, username, password, hostname, 
+                ip_address, port, username, password, hostname,
                 camera[CONF_ENTITY_ID], camera.get(CONF_NAME))
             entities.append(facebox)
             hass.data[DATA_FACEBOX].append(facebox)
