@@ -360,7 +360,6 @@ class BroadlinkMP1Switch:
         """Get status of outlet from cached status list."""
         return self._states['s{}'.format(slot)]
 
-    @Throttle(TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for this device."""
         self._update()
