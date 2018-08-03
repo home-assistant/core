@@ -163,7 +163,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hostname = check_box_health(url_health, username, password)
     if hostname is None:
         return
-        
+
     entities = []
     for camera in config[CONF_SOURCE]:
         facebox = FaceClassifyEntity(
