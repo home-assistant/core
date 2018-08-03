@@ -92,8 +92,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -134,8 +133,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -181,8 +179,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -228,8 +225,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -276,8 +272,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -323,8 +318,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -374,8 +368,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -426,8 +419,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -477,8 +469,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -528,8 +519,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -579,8 +569,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -627,8 +616,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -677,8 +665,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -739,9 +726,8 @@ class TestSwitchFlux(unittest.TestCase):
             if event == 'sunrise':
                 print('sunrise {}'.format(sunrise_time))
                 return sunrise_time
-            else:
-                print('sunset {}'.format(sunset_time))
-                return sunset_time
+            print('sunset {}'.format(sunset_time))
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -793,8 +779,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',
@@ -838,8 +823,7 @@ class TestSwitchFlux(unittest.TestCase):
         def event_date(hass, event, now=None):
             if event == 'sunrise':
                 return sunrise_time
-            else:
-                return sunset_time
+            return sunset_time
 
         with patch('homeassistant.util.dt.now', return_value=test_time):
             with patch('homeassistant.helpers.sun.get_astral_event_date',

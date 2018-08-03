@@ -74,7 +74,7 @@ async def async_setup_scanner(hass, config, async_see, discovery_info=None):
     return await scanner.async_init()
 
 
-class TileScanner(object):
+class TileScanner:
     """Define an object to retrieve Tile data."""
 
     def __init__(self, client, hass, async_see, types, show_inactive):
@@ -109,7 +109,7 @@ class TileScanner(object):
         _LOGGER.debug('Updating Tile data')
 
         try:
-            await self._client.asayn_init()
+            await self._client.async_init()
             tiles = await self._client.tiles.all(
                 whitelist=self._types, show_inactive=self._show_inactive)
         except SessionExpiredError:

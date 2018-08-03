@@ -97,7 +97,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_DECONZ_UNSUB] = []
 
     for component in ['binary_sensor', 'light', 'scene', 'sensor']:
-        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
 
     @callback
@@ -178,7 +178,7 @@ async def async_unload_entry(hass, config_entry):
     return True
 
 
-class DeconzEvent(object):
+class DeconzEvent:
     """When you want signals instead of entities.
 
     Stateless sensors such as remotes are expected to generate an event

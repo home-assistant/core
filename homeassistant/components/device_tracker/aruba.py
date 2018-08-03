@@ -94,10 +94,10 @@ class ArubaDeviceScanner(DeviceScanner):
         if query == 1:
             _LOGGER.error("Timeout")
             return
-        elif query == 2:
+        if query == 2:
             _LOGGER.error("Unexpected response from router")
             return
-        elif query == 3:
+        if query == 3:
             ssh.sendline('yes')
             ssh.expect('password:')
         elif query == 4:

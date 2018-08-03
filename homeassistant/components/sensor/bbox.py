@@ -125,7 +125,7 @@ class BboxSensor(Entity):
                                 2)
 
 
-class BboxData(object):
+class BboxData:
     """Get data from the Bbox."""
 
     def __init__(self):

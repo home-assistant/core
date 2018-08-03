@@ -263,7 +263,7 @@ class PollencomSensor(Entity):
             self._state = average
 
 
-class PollenComData(object):
+class PollenComData:
     """Define a data object to retrieve info from Pollen.com."""
 
     def __init__(self, client, sensor_types):
@@ -307,7 +307,7 @@ class PollenComData(object):
                     _LOGGER.error('Unable to get allergy history: %s', err)
                     self.data[TYPE_ALLERGY_HISTORIC] = {}
 
-            if all(s in self._sensor_types
+            if any(s in self._sensor_types
                    for s in [TYPE_ALLERGY_TODAY, TYPE_ALLERGY_TOMORROW,
                              TYPE_ALLERGY_YESTERDAY]):
                 try:

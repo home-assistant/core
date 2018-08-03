@@ -62,7 +62,7 @@ def setup(hass, config):
     return True
 
 
-class Linode(object):
+class Linode:
     """Handle all communication with the Linode API."""
 
     def __init__(self, access_token):

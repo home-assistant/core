@@ -20,7 +20,6 @@ DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
 
-HMIP_OPEN = 'OPEN'
 HMIP_ZONE_AWAY = 'EXTERNAL'
 HMIP_ZONE_HOME = 'INTERNAL'
 
@@ -57,14 +56,18 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
+        from homematicip.base.enums import WindowState
+
         if self._device.active:
             if (self._device.sabotage or self._device.motionDetected or
-                    self._device.windowState == HMIP_OPEN):
+                    self._device.windowState == WindowState.OPEN):
                 return STATE_ALARM_TRIGGERED
 
-            if self._device.label == HMIP_ZONE_HOME:
+            active = self._home.get_security_zones_activation()
+            if active == (True, True):
+                return STATE_ALARM_ARMED_AWAY
+            if active == (False, True):
                 return STATE_ALARM_ARMED_HOME
-            return STATE_ALARM_ARMED_AWAY
 
         return STATE_ALARM_DISARMED
 
@@ -79,10 +82,3 @@ class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         await self._home.set_security_zones_activation(True, True)
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of the alarm control device."""
-        # The base class is loading the battery property, but device doesn't
-        # have this property - base class needs clean-up.
-        return None

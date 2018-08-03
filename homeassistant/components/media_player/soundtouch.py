@@ -269,7 +269,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Title of current playing media."""
         if self._status.station_name is not None:
             return self._status.station_name
-        elif self._status.artist is not None:
+        if self._status.artist is not None:
             return self._status.artist + " - " + self._status.track
 
         return None

@@ -26,8 +26,7 @@ class TestNotifyGroup(unittest.TestCase):
         def mock_get_service(hass, config, discovery_info=None):
             if config['name'] == 'demo1':
                 return self.service1
-            else:
-                return self.service2
+            return self.service2
 
         with assert_setup_component(2), \
                 patch.object(demo, 'get_service', mock_get_service):

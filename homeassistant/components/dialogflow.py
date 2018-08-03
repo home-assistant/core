@@ -119,7 +119,7 @@ async def async_handle_message(hass, message):
     return dialogflow_response.as_dict()
 
 
-class DialogflowResponse(object):
+class DialogflowResponse:
     """Help generating the response for Dialogflow."""
 
     def __init__(self, parameters):

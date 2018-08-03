@@ -163,7 +163,7 @@ class FritzDectSwitch(SwitchDevice):
             self.data.is_online = False
 
 
-class FritzDectSwitchData(object):
+class FritzDectSwitchData:
     """Get the latest data from the fritz box."""
 
     def __init__(self, fritz, ain):

@@ -117,7 +117,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     except KeyError:
         pass
 
-    async_add_devices(dev)
+    async_add_devices(dev, True)
 
 
 class BME280Handler:

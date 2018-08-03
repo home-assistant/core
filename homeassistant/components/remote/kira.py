@@ -7,7 +7,7 @@ https://home-assistant.io/components/remote.kira/
 import functools as ft
 import logging
 
-import homeassistant.components.remote as remote
+from homeassistant.components import remote
 from homeassistant.const import CONF_DEVICE, CONF_NAME
 from homeassistant.helpers.entity import Entity
 

@@ -149,7 +149,7 @@ class GeoRssServiceSensor(Entity):
             self._state_attributes = matrix
 
 
-class GeoRssServiceData(object):
+class GeoRssServiceData:
     """Provide access to GeoRSS feed and stores the latest data."""
 
     def __init__(self, home_latitude, home_longitude, url, radius_in_km):

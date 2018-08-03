@@ -11,7 +11,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.helpers import config_validation as cv
