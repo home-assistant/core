@@ -129,9 +129,9 @@ class ThresholdSensor(BinarySensorDevice):
         if self._threshold_lower is not None and \
                 self._threshold_upper is not None:
             return TYPE_RANGE
-        elif self._threshold_lower is not None:
+        if self._threshold_lower is not None:
             return TYPE_LOWER
-        elif self._threshold_upper is not None:
+        if self._threshold_upper is not None:
             return TYPE_UPPER
 
     @property

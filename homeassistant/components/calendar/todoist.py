@@ -26,6 +26,9 @@ CONF_PROJECT_DUE_DATE = 'due_date_days'
 CONF_PROJECT_LABEL_WHITELIST = 'labels'
 CONF_PROJECT_WHITELIST = 'include_projects'
 
+# https://github.com/PyCQA/pylint/pull/2320
+# pylint: disable=fixme
+
 # Calendar Platform: Does this calendar event last all day?
 ALL_DAY = 'all_day'
 # Attribute: All tasks in this project
@@ -280,7 +283,7 @@ class TodoistProjectDevice(CalendarEventDevice):
         return attributes
 
 
-class TodoistProjectData(object):
+class TodoistProjectData:
     """
     Class used by the Task Device service object to hold all Todoist Tasks.
 
@@ -503,7 +506,7 @@ class TodoistProjectData(object):
         time_format = '%a %d %b %Y %H:%M:%S %z'
         for task in project_task_data:
             due_date = datetime.strptime(task['due_date_utc'], time_format)
-            if due_date > start_date and due_date < end_date:
+            if start_date < due_date < end_date:
                 event = {
                     'uid': task['id'],
                     'title': task['content'],

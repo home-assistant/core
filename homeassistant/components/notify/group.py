@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.group/
 """
 import asyncio
-import collections
+from collections.abc import Mapping
 from copy import deepcopy
 import logging
 import voluptuous as vol
@@ -33,7 +33,7 @@ def update(input_dict, update_source):
     Async friendly.
     """
     for key, val in update_source.items():
-        if isinstance(val, collections.Mapping):
+        if isinstance(val, Mapping):
             recurse = update(input_dict.get(key, {}), val)
             input_dict[key] = recurse
         else:

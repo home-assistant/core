@@ -91,9 +91,9 @@ class XiaomiSensor(XiaomiDevice):
             value = max(value - 300, 0)
         if self._data_key == 'temperature' and (value < -50 or value > 60):
             return False
-        elif self._data_key == 'humidity' and (value <= 0 or value > 100):
+        if self._data_key == 'humidity' and (value <= 0 or value > 100):
             return False
-        elif self._data_key == 'pressure' and value == 0:
+        if self._data_key == 'pressure' and value == 0:
             return False
         self._state = round(value, 1)
         return True

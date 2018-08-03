@@ -113,9 +113,10 @@ the flow from the config panel.
 
 import logging
 import uuid
+from typing import Set, Optional # noqa pylint: disable=unused-import
 
 from homeassistant import data_entry_flow
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
@@ -163,8 +164,9 @@ class ConfigEntry:
     __slots__ = ('entry_id', 'version', 'domain', 'title', 'data', 'source',
                  'state')
 
-    def __init__(self, version, domain, title, data, source, entry_id=None,
-                 state=ENTRY_STATE_NOT_LOADED):
+    def __init__(self, version: str, domain: str, title: str, data: dict,
+                 source: str, entry_id: Optional[str] = None,
+                 state: str = ENTRY_STATE_NOT_LOADED) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
         self.entry_id = entry_id or uuid.uuid4().hex
@@ -187,7 +189,8 @@ class ConfigEntry:
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
 
-    async def async_setup(self, hass, *, component=None):
+    async def async_setup(
+            self, hass: HomeAssistant, *, component=None) -> None:
         """Set up an entry."""
         if component is None:
             component = getattr(hass.components, self.domain)
@@ -279,7 +282,7 @@ class ConfigEntries:
     @callback
     def async_domains(self):
         """Return domains for which we have entries."""
-        seen = set()
+        seen = set()  # type: Set[ConfigEntry]
         result = []
 
         for entry in self._entries:

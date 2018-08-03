@@ -12,7 +12,7 @@ from tests.common import (
 FUNCTION_PATH = 'homeassistant.components.binary_sensor.workday.get_date'
 
 
-class TestWorkdaySetup(object):
+class TestWorkdaySetup:
     """Test class for workday sensor."""
 
     def setup_method(self):

@@ -287,7 +287,7 @@ class NetAtmoSensor(Entity):
                 self._state = "Full"
 
 
-class NetAtmoData(object):
+class NetAtmoData:
     """Get the latest data from NetAtmo."""
 
     def __init__(self, auth, station):
@@ -340,7 +340,7 @@ class NetAtmoData(object):
                         # Never hammer the NetAtmo API more than
                         # twice per update interval
                         newinterval = NETATMO_UPDATE_INTERVAL / 2
-                    _LOGGER.warning(
+                    _LOGGER.info(
                         "NetAtmo refresh interval reset to %d seconds",
                         newinterval)
             else:

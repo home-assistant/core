@@ -83,17 +83,6 @@ COLOR_GROUP = "Color descriptors"
 
 LIGHT_PROFILES_FILE = "light_profiles.csv"
 
-PROP_TO_ATTR = {
-    'brightness': ATTR_BRIGHTNESS,
-    'color_temp': ATTR_COLOR_TEMP,
-    'min_mireds': ATTR_MIN_MIREDS,
-    'max_mireds': ATTR_MAX_MIREDS,
-    'hs_color': ATTR_HS_COLOR,
-    'white_value': ATTR_WHITE_VALUE,
-    'effect_list': ATTR_EFFECT_LIST,
-    'effect': ATTR_EFFECT,
-}
-
 # Service call validation schemas
 VALID_TRANSITION = vol.All(vol.Coerce(float), vol.Clamp(min=0, max=6553))
 VALID_BRIGHTNESS = vol.All(vol.Coerce(int), vol.Clamp(min=0, max=255))
@@ -357,7 +346,12 @@ async def async_setup(hass, config):
         update_tasks = []
         for light in target_lights:
             if service.service == SERVICE_TURN_ON:
-                await light.async_turn_on(**params)
+                pars = params
+                if not pars:
+                    pars = params.copy()
+                    pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
+                    preprocess_turn_on_alternatives(pars)
+                await light.async_turn_on(**pars)
             elif service.service == SERVICE_TURN_OFF:
                 await light.async_turn_off(**params)
             else:
@@ -365,7 +359,9 @@ async def async_setup(hass, config):
 
             if not light.should_poll:
                 continue
-            update_tasks.append(light.async_update_ha_state(True))
+
+            update_tasks.append(
+                light.async_update_ha_state(True, service.context))
 
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)
@@ -442,6 +438,18 @@ class Profiles:
         """Return a named profile."""
         return cls._all.get(name)
 
+    @classmethod
+    def get_default(cls, entity_id):
+        """Return the default turn-on profile for the given light."""
+        # pylint: disable=unsupported-membership-test
+        name = entity_id + ".default"
+        if name in cls._all:
+            return name
+        name = ENTITY_ID_ALL_LIGHTS + ".default"
+        if name in cls._all:
+            return name
+        return None
+
 
 class Light(ToggleEntity):
     """Representation of a light."""
@@ -494,29 +502,37 @@ class Light(ToggleEntity):
     def state_attributes(self):
         """Return optional state attributes."""
         data = {}
+        supported_features = self.supported_features
 
-        if self.supported_features & SUPPORT_COLOR_TEMP:
+        if supported_features & SUPPORT_COLOR_TEMP:
             data[ATTR_MIN_MIREDS] = self.min_mireds
             data[ATTR_MAX_MIREDS] = self.max_mireds
 
         if self.is_on:
-            for prop, attr in PROP_TO_ATTR.items():
-                value = getattr(self, prop)
-                if value is not None:
-                    data[attr] = value
+            if supported_features & SUPPORT_BRIGHTNESS:
+                data[ATTR_BRIGHTNESS] = self.brightness
 
-            # Expose current color also as RGB and XY
-            if ATTR_HS_COLOR in data:
-                data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(
-                    *data[ATTR_HS_COLOR])
-                data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(
-                    *data[ATTR_HS_COLOR])
+            if supported_features & SUPPORT_COLOR_TEMP:
+                data[ATTR_COLOR_TEMP] = self.color_temp
+
+            if self.supported_features & SUPPORT_COLOR and self.hs_color:
+                # pylint: disable=unsubscriptable-object,not-an-iterable
+                hs_color = self.hs_color
                 data[ATTR_HS_COLOR] = (
-                    round(data[ATTR_HS_COLOR][0], 3),
-                    round(data[ATTR_HS_COLOR][1], 3),
+                    round(hs_color[0], 3),
+                    round(hs_color[1], 3),
                 )
+                data[ATTR_RGB_COLOR] = color_util.color_hs_to_RGB(*hs_color)
+                data[ATTR_XY_COLOR] = color_util.color_hs_to_xy(*hs_color)
 
-        return data
+            if supported_features & SUPPORT_WHITE_VALUE:
+                data[ATTR_WHITE_VALUE] = self.white_value
+
+            if supported_features & SUPPORT_EFFECT:
+                data[ATTR_EFFECT_LIST] = self.effect_list
+                data[ATTR_EFFECT] = self.effect
+
+        return {key: val for key, val in data.items() if val is not None}
 
     @property
     def supported_features(self):

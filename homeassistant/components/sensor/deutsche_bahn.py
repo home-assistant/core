@@ -85,7 +85,7 @@ class DeutscheBahnSensor(Entity):
             self._state += " + {}".format(self.data.connections[0]['delay'])
 
 
-class SchieneData(object):
+class SchieneData:
     """Pull data from the bahn.de web page."""
 
     def __init__(self, start, goal, only_direct):

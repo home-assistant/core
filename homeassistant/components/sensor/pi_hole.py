@@ -153,7 +153,7 @@ class PiHoleSensor(Entity):
         self.data = self.pi_hole.api.data
 
 
-class PiHoleData(object):
+class PiHoleData:
     """Get the latest data and update the states."""
 
     def __init__(self, api):

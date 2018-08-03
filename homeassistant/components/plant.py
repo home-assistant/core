@@ -324,7 +324,7 @@ class Plant(Entity):
         return attrib
 
 
-class DailyHistory(object):
+class DailyHistory:
     """Stores one measurement per day for a maximum number of days.
 
     At the moment only the maximum value per day is kept.

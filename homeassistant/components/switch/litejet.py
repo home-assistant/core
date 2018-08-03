@@ -6,7 +6,7 @@ https://home-assistant.io/components/switch.litejet/
 """
 import logging
 
-import homeassistant.components.litejet as litejet
+from homeassistant.components import litejet
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['litejet']
