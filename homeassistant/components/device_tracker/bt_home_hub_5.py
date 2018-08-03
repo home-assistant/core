@@ -4,9 +4,9 @@ Support for BT Home Hub 5.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.bt_home_hub_5/
 """
-
 import logging
 import re
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -17,10 +17,11 @@ from homeassistant.const import CONF_HOST
 REQUIREMENTS = ['bthomehub5-devicelist==0.1.1']
 
 _LOGGER = logging.getLogger(__name__)
-_MAC_REGEX = re.compile(r'(([0-9A-Fa-f]{1,2}:){5}[0-9A-Fa-f]{1,2})')
+
+CONF_DEFAULT_IP = '192.168.1.254'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string
+    vol.Optional(CONF_HOST, default=CONF_DEFAULT_IP): cv.string,
 })
 
 
@@ -39,7 +40,7 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
 
         """Initialise the scanner."""
         _LOGGER.info("Initialising BT Home Hub 5")
-        self.host = config.get(CONF_HOST, '192.168.1.254')
+        self.host = config[CONF_HOST]
         self.last_results = {}
 
         # Test the router is accessible
@@ -70,9 +71,6 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
 
         import bthomehub5_devicelist
 
-        if not self.success_init:
-            return False
-
         _LOGGER.info("Scanning")
 
         data = bthomehub5_devicelist.get_devicelist(self.host)
@@ -82,5 +80,3 @@ class BTHomeHub5DeviceScanner(DeviceScanner):
             return False
 
         self.last_results = data
-
-        return True
