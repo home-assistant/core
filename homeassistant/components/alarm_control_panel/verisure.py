@@ -82,14 +82,18 @@ class VerisureAlarm(alarm.AlarmControlPanel):
             _LOGGER.error('Unknown alarm state %s', status)
         self._changed_by = hub.get_first("$.armState.name")
 
-    def alarm_disarm(self, code=None):
+    def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         set_arm_state('DISARMED', code)
 
-    def alarm_arm_home(self, code=None):
+    def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         set_arm_state('ARMED_HOME', code)
 
-    def alarm_arm_away(self, code=None):
+	def async_alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        set_arm_state('ARMED_HOME', code)
+
+    def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         set_arm_state('ARMED_AWAY', code)
