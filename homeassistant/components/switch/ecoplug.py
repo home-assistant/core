@@ -30,7 +30,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([EcoPlugSwitch(plug)])
             discovered[plug.name] = plug
 
-    disco = EcoDiscovery(add)
+    def remove(plug):
+         """Remove switch from the list."""
+         async_will_remove_from_hass([EcoPlugSwitch(plug)], True)
+            
+    disco = EcoDiscovery(add, remove)
     disco.start()
 
     def stop_disco(event):
