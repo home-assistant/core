@@ -7,7 +7,8 @@ https://home-assistant.io/components/binary_sensor.velbus/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.velbus import (DOMAIN, VelbusEntity)
+from homeassistant.components.velbus import (
+    DOMAIN as VELBUS_DOMAIN, VelbusEntity)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         return
     sensors = []
     for sensor in discovery_info:
-        module = hass.data[DOMAIN].get_module(sensor[0])
+        module = hass.data[VELBUS_DOMAIN].get_module(sensor[0])
         channel = sensor[1]
         sensors.append(VelbusBinarySensor(module, channel))
     async_add_devices(sensors)

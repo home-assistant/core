@@ -7,7 +7,8 @@ https://home-assistant.io/components/switch.velbus/
 import logging
 
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.velbus import (DOMAIN, VelbusEntity)
+from homeassistant.components.velbus import (
+    DOMAIN as VELBUS_DOMAIN, VelbusEntity)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         return
     switches = []
     for switch in discovery_info:
-        module = hass.data[DOMAIN].get_module(switch[0])
+        module = hass.data[VELBUS_DOMAIN].get_module(switch[0])
         channel = switch[1]
         switches.append(VelbusSwitch(module, channel))
     async_add_devices(switches)
