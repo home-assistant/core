@@ -199,6 +199,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
         self._open_since = 0
         XiaomiBinarySensor.__init__(self, device, 'Door Window Sensor',
                                     xiaomi_hub, data_key, 'opening')
+        self._should_poll = True
 
     @property
     def device_state_attributes(self):
