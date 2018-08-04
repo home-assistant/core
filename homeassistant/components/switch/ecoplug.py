@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             add_devices([EcoPlugSwitch(plug)])
             discovered[plug.name] = plug
 
-    disco = EcoDiscovery(add, remove)
+    disco = EcoDiscovery(add)
     disco.start()
 
     def stop_disco(event):
