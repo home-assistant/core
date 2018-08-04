@@ -15,7 +15,6 @@ from typing import Awaitable
 import homeassistant.core as ha
 import homeassistant.config as conf_util
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service import extract_entity_ids
 from homeassistant.helpers import intent
 from homeassistant.const import (
@@ -169,7 +168,7 @@ def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
     def async_handle_core_service(call):
         """Service handler for handling core services."""
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            async_call_later(hass, 0, hass.async_stop())
+            hass.async_create_task(hass.async_stop())
             return
 
         try:
@@ -185,7 +184,7 @@ def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             return
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            async_call_later(hass, 0, hass.async_stop(RESTART_EXIT_CODE))
+            hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)

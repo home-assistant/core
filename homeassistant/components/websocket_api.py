@@ -519,8 +519,12 @@ def handle_call_service(hass, connection, msg):
     """
     async def call_service_helper(msg):
         """Call a service and fire complete message."""
+        blocking = True
+        if (msg['domain'] == 'homeassistant' and
+                msg['service'] in ['restart', 'stop']):
+            blocking = False
         await hass.services.async_call(
-            msg['domain'], msg['service'], msg.get('service_data'), True,
+            msg['domain'], msg['service'], msg.get('service_data'), blocking,
             connection.context(msg))
         connection.send_message_outside(result_message(msg['id']))
 
