@@ -10,6 +10,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_PORT
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['python-velbus==2.0.17']
 
@@ -66,21 +67,37 @@ async def async_setup(hass, config):
     return True
 
 
-class VelbusEntity:
+class VelbusEntity(Entity):
     """Representation of a Velbus entity."""
 
-    def __init__(self, module, channel, hass):
+    def __init__(self, module, channel):
         """Initialize a Velbus entity."""
         self._module = module
         self._channel = channel
-        self.hass = hass
 
-    def _load_module(self):
-        """Update module status."""
-        future = self.hass.loop.create_future()
+    @property
+    def unique_id(self):
+        """Get unique ID."""
+        serial = 0
+        if self._module.serial == 0:
+            serial = self._module.get_module_address()
+        else:
+            serial = self._module.serial
+        return "{}-{}".format(serial, self._channel)
 
-        def callback():
-            future.set_result(None)
+    @property
+    def name(self):
+        """Return the display name of this entity."""
+        return self._module.get_name(self._channel)
 
-        self._module.load(callback)
-        return future
+    @property
+    def should_poll(self):
+        """Disable polling."""
+        return False
+
+    async def async_added_to_hass(self):
+        """Add listener for state changes."""
+        self._module.on_status_update(self._channel, self._on_update)
+
+    def _on_update(self, state):
+        self.schedule_update_ha_state()
