@@ -86,7 +86,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         assert sensor.name == "Name 1 Category 1"
         assert sensor.unit_of_measurement == "Unit 1"
         assert sensor.icon == "mdi:alert"
-        assert len(sensor._data.events) == 4
+        assert len(sensor._data.events) == 6
         assert sensor.state == 1
         assert sensor.device_state_attributes == {'Title 1': "117km"}
         # Check entries of first hit
@@ -111,12 +111,14 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         assert sensor.name == "Name 2 Any"
         assert sensor.unit_of_measurement == "Unit 2"
         assert sensor.icon == "mdi:alert"
-        assert len(sensor._data.events) == 4
-        assert sensor.state == 4
+        assert len(sensor._data.events) == 6
+        assert sensor.state == 6
         assert sensor.device_state_attributes == {'Title 1': "117km",
                                                   'Title 2': "302km",
                                                   'Title 3': "204km",
-                                                  'Title 6': "48km"}
+                                                  'Title 6': "48km",
+                                                  None: '117km',
+                                                  'Title 9': '117km'}
 
     def test_update_sensor_without_data(self):
         """Test updating sensor object."""
