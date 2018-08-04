@@ -63,15 +63,12 @@ class TahomaCover(TahomaDevice, CoverDevice):
         self.controller.get_states([self.tahoma_device])
 
         # For vertical covers
-        if 'core:ClosureState' in self.tahoma_device.active_states:
-            self._closure = \
-                self.tahoma_device.active_states['core:ClosureState']
+        self._closure = self.tahoma_device.active_states.get(
+            'core:ClosureState')
         # For horizontal covers
-        elif 'core:DeploymentState' in self.tahoma_device.active_states:
-            self._closure = \
-                self.tahoma_device.active_states['core:DeploymentState']
-        else:
-            self._closure = None
+        if self._closure is None:
+            self._closure = self.tahoma_device.active_states.get(
+                'core:DeploymentState')
 
         # For all, if available
         if 'core:PriorityLockTimerState' in self.tahoma_device.active_states:
@@ -97,25 +94,14 @@ class TahomaCover(TahomaDevice, CoverDevice):
             self._lock_start_ts = None
             self._lock_end_ts = None
 
-        if 'io:PriorityLockLevelState' in self.tahoma_device.active_states:
-            self._lock_level = \
-                self.tahoma_device.active_states['io:PriorityLockLevelState']
-        else:
-            self._lock_level = None
+        self._lock_level = self.tahoma_device.active_states.get(
+            'io:PriorityLockLevelState')
 
-        if 'io:PriorityLockOriginatorState' in \
-                self.tahoma_device.active_states:
-            self._lock_originator = \
-                self.tahoma_device.active_states[
-                    'io:PriorityLockOriginatorState']
-        else:
-            self._lock_originator = None
+        self._lock_originator = self.tahoma_device.active_states.get(
+            'io:PriorityLockOriginatorState')
 
-        if 'core:RSSILevelState' in self.tahoma_device.active_states:
-            self._rssi_level = self.tahoma_device.active_states[
-                'core:RSSILevelState']
-        else:
-            self._rssi_level = None
+        self._rssi_level = self.tahoma_device.active_states.get(
+            'core:RSSILevelState')
 
         # Define which icon to use
         if self._lock_timer > 0:
