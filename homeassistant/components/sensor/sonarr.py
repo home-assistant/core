@@ -158,8 +158,8 @@ class SonarrSensor(Entity):
                 )
         elif self.type == 'series':
             for show in self.data:
-                if 'episodeFileCount' not in show 
-                or 'episodeCount' not in show:
+                if 'episodeFileCount' not in show \
+                        or 'episodeCount' not in show:
                     attributes[show['title']] = 'N/A'
                 else:
                     attributes[show['title']] = '{}/{} Episodes'.format(
