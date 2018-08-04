@@ -126,7 +126,8 @@ def async_setup(hass, config):
         """Handle a successful connection."""
         _LOGGER.info("Established a connection with the Envisalink")
         if not sync_connect.done():
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                       stop_envisalink)
             sync_connect.set_result(True)
 
     @callback
