@@ -55,7 +55,7 @@ HANDLERS = Registry()
 ENTITY_ADAPTERS = Registry()
 
 
-class _DisplayCategory(object):
+class _DisplayCategory:
     """Possible display categories for Discovery response.
 
     https://developer.amazon.com/docs/device-apis/alexa-discovery.html#display-categories
@@ -153,7 +153,7 @@ class _UnsupportedProperty(Exception):
     """This entity does not support the requested Smart Home API property."""
 
 
-class _AlexaEntity(object):
+class _AlexaEntity:
     """An adaptation of an entity, expressed in Alexa's terms.
 
     The API handlers should manipulate entities only through this interface.
@@ -208,7 +208,7 @@ class _AlexaEntity(object):
         raise NotImplementedError
 
 
-class _AlexaInterface(object):
+class _AlexaInterface:
     def __init__(self, entity):
         self.entity = entity
 
@@ -315,7 +315,7 @@ class _AlexaLockController(_AlexaInterface):
 
         if self.entity.state == STATE_LOCKED:
             return 'LOCKED'
-        elif self.entity.state == STATE_UNLOCKED:
+        if self.entity.state == STATE_UNLOCKED:
             return 'UNLOCKED'
         return 'JAMMED'
 
@@ -615,7 +615,7 @@ class _SensorCapabilities(_AlexaEntity):
             yield _AlexaTemperatureSensor(self.entity)
 
 
-class _Cause(object):
+class _Cause:
     """Possible causes for property changes.
 
     https://developer.amazon.com/docs/smarthome/state-reporting-for-a-smart-home-skill.html#cause-object

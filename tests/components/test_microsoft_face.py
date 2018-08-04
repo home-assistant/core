@@ -9,7 +9,7 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro, load_fixture)
 
 
-class TestMicrosoftFaceSetup(object):
+class TestMicrosoftFaceSetup:
     """Test the microsoft face component."""
 
     def setup_method(self):

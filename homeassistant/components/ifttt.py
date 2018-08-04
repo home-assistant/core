@@ -63,7 +63,7 @@ def setup(hass, config):
         value3 = call.data.get(ATTR_VALUE3)
 
         try:
-            import pyfttt as pyfttt
+            import pyfttt
             pyfttt.send_event(key, event, value1, value2, value3)
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")

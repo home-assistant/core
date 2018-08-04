@@ -14,7 +14,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ['youtube_dl==2018.07.04']
+REQUIREMENTS = ['youtube_dl==2018.07.29']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,7 +58,7 @@ class MEQueryException(Exception):
     pass
 
 
-class MediaExtractor(object):
+class MediaExtractor:
     """Class which encapsulates all extraction logic."""
 
     def __init__(self, hass, component_config, call_data):

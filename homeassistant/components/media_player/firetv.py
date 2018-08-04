@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Could not connect to firetv-server at %s", host)
 
 
-class FireTV(object):
+class FireTV:
     """The firetv-server client.
 
     Should a native Python 3 ADB module become available, python-firetv can

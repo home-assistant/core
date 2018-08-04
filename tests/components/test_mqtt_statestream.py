@@ -12,7 +12,7 @@ from tests.common import (
 )
 
 
-class TestMqttStateStream(object):
+class TestMqttStateStream:
     """Test the MQTT statestream module."""
 
     def setup_method(self):

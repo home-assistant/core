@@ -7,7 +7,7 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro)
 
 
-class TestFFmpegNoiseSetup(object):
+class TestFFmpegNoiseSetup:
     """Test class for ffmpeg."""
 
     def setup_method(self):
@@ -72,7 +72,7 @@ class TestFFmpegNoiseSetup(object):
         assert entity.state == 'on'
 
 
-class TestFFmpegMotionSetup(object):
+class TestFFmpegMotionSetup:
     """Test class for ffmpeg."""
 
     def setup_method(self):

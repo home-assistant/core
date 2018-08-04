@@ -103,12 +103,10 @@ def extract_entity_ids(hass, service_call, expand_group=True):
         return [ent_id for ent_id in
                 group.expand_entity_ids(service_ent_id)]
 
-    else:
+    if isinstance(service_ent_id, str):
+        return [service_ent_id]
 
-        if isinstance(service_ent_id, str):
-            return [service_ent_id]
-
-        return service_ent_id
+    return service_ent_id
 
 
 @bind_hass
@@ -123,7 +121,7 @@ async def async_get_all_descriptions(hass):
     def domain_yaml_file(domain):
         """Return the services.yaml location for a domain."""
         if domain == ha.DOMAIN:
-            import homeassistant.components as components
+            from homeassistant import components
             component_path = path.dirname(components.__file__)
         else:
             component_path = path.dirname(get_component(hass, domain).__file__)

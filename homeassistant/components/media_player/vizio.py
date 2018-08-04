@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON,
     STATE_UNKNOWN)
 from homeassistant.helpers import config_validation as cv
-import homeassistant.util as util
+from homeassistant import util
 
 REQUIREMENTS = ['pyvizio==0.0.3']
 
@@ -95,7 +95,7 @@ class VizioDevice(MediaPlayerDevice):
         if is_on is None:
             self._state = STATE_UNKNOWN
             return
-        elif is_on is False:
+        if is_on is False:
             self._state = STATE_OFF
         else:
             self._state = STATE_ON

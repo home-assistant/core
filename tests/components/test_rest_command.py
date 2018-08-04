@@ -10,7 +10,7 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component)
 
 
-class TestRestCommandSetup(object):
+class TestRestCommandSetup:
     """Test the rest command component."""
 
     def setup_method(self):
@@ -47,7 +47,7 @@ class TestRestCommandSetup(object):
         assert self.hass.services.has_service(rc.DOMAIN, 'test_get')
 
 
-class TestRestCommandComponent(object):
+class TestRestCommandComponent:
     """Test the rest command component."""
 
     def setup_method(self):

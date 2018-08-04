@@ -152,7 +152,7 @@ async def async_setup(hass, config):
     return True
 
 
-class HomeAssistantHTTP(object):
+class HomeAssistantHTTP:
     """HTTP server for Home Assistant."""
 
     def __init__(self, hass, api_password,

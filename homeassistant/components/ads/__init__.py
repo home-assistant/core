@@ -110,7 +110,7 @@ NotificationItem = namedtuple(
 )
 
 
-class AdsHub(object):
+class AdsHub:
     """Representation of an ADS connection."""
 
     def __init__(self, ads_client):

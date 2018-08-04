@@ -18,7 +18,7 @@ from tests.common import (
 )
 
 
-class TestMqttEventStream(object):
+class TestMqttEventStream:
     """Test the MQTT eventstream module."""
 
     def setup_method(self):
@@ -104,12 +104,14 @@ class TestMqttEventStream(object):
             "state": "on",
             "entity_id": e_id,
             "attributes": {},
-            "last_changed": now.isoformat()
+            "last_changed": now.isoformat(),
         }
         event['event_data'] = {"new_state": new_state, "entity_id": e_id}
 
         # Verify that the message received was that expected
-        assert json.loads(msg) == event
+        result = json.loads(msg)
+        result['event_data']['new_state'].pop('context')
+        assert result == event
 
     @patch('homeassistant.components.mqtt.async_publish')
     def test_time_event_does_not_send_message(self, mock_pub):

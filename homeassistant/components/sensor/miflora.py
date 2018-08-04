@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
     try:
-        import bluepy.btle  # noqa: F401 # pylint: disable=unused-variable
+        import bluepy.btle  # noqa: F401 pylint: disable=unused-variable
         from btlewrap import BluepyBackend
         backend = BluepyBackend
     except ImportError:

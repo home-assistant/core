@@ -38,7 +38,7 @@ def load_json(filename: str, default: Union[List, Dict, None] = None) \
     return {} if default is None else default
 
 
-def save_json(filename: str, data: Union[List, Dict]):
+def save_json(filename: str, data: Union[List, Dict]) -> None:
     """Save JSON data to a file.
 
     Returns True on success.

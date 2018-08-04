@@ -61,7 +61,7 @@ def setup(hass, config):
     return True
 
 
-class MochadCtrl(object):
+class MochadCtrl:
     """Mochad controller."""
 
     def __init__(self, host, port):
