@@ -16,6 +16,7 @@ import re
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.components import group
 from homeassistant.components.feedreader import StoredData, FeedManager
 from homeassistant.components.geo_location import DOMAIN, GeoLocationEvent, \
     ENTITY_ID_FORMAT
@@ -89,7 +90,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, disc_info=None):
-    """Set up the GeoRSS platform."""
+    """Set up the GeoRSS Events platform."""
     home_latitude = hass.config.latitude
     home_longitude = hass.config.longitude
     data_file = hass.config.path("{}.pickle".format(DOMAIN))
@@ -104,7 +105,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
     for definition in attributes_definition:
         if definition[CONF_ATTRIBUTES_NAME] in BUILT_IN_ATTRIBUTES:
             _LOGGER.warning("'%s' is a built-in attribute name and cannot be "
-                            "used in a custom attribute",
+                            "used in a custom attribute definition",
                             definition[CONF_ATTRIBUTES_NAME])
             attributes_definition.remove(definition)
     filters_definition = config.get(CONF_FILTERS)
@@ -118,7 +119,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                                 radius_in_km, categories,
                                 attributes_definition, filters_definition,
                                 icon)
-    return True
+    return manager is not None
 
 
 class GeoRssFeedManager(FeedManager):
@@ -143,7 +144,8 @@ class GeoRssFeedManager(FeedManager):
         self._event_type = entity_id
         self._feed_id = entity_id
         self._managed_devices = []
-        self.group = None
+        self.group = group.Group.create_group(self._hass, name,
+                                              object_id=util.slugify(name))
 
     @property
     def name(self):
@@ -195,7 +197,8 @@ class GeoRssFeedManager(FeedManager):
             if self._matches_category(entry):
                 # Filter by distance.
                 geometry, distance = self._calculate_distance(entry)
-                if distance <= self._radius_in_km:
+                _LOGGER.warning("Entry %s - distance %s", entry, distance)
+                if distance and distance <= self._radius_in_km:
                     # Add distance value as a new attribute
                     entry.update({ATTR_DISTANCE: distance})
                     entry.update({ATTR_GEOMETRY: geometry})
@@ -253,21 +256,21 @@ class GeoRssFeedManager(FeedManager):
         """Update the feed and then update connected devices."""
         super()._update()
         if self._last_update_successful:
+            _LOGGER.debug("Devices BEFORE updating: %s", self._managed_devices)
             # Update existing and remove obsolete devices.
             remaining_entries = self._update_or_remove_devices()
             # Add new devices.
             self._generate_new_devices(remaining_entries)
             # Group all devices.
             self._group_devices()
+            _LOGGER.debug("Devices AFTER updating: %s", self._managed_devices)
 
     def _group_devices(self):
         """Re-group all entities"""
-        if not self.group:
-            self.group = self._hass.components.group
-        self.group.set_group(
-            util.slugify(self._name), visible=True,
-            name=self._name, entity_ids=[device.entity_id for device
-                                         in self._managed_devices])
+        # TODO: sort entries in group
+        entity_ids = [device.entity_id for device in self._managed_devices]
+        # Update group.
+        self.group.update_tracked_entity_ids(entity_ids)
 
     def _generate_new_devices(self, entries):
         """Generate new entities for events that have occurred for the first
@@ -278,7 +281,7 @@ class GeoRssFeedManager(FeedManager):
                 custom_attributes = self._extract_data(entry)
             entity_id = generate_entity_id(ENTITY_ID_FORMAT,
                                            self._name + '_'
-                                           + entry.get(ATTR_TITLE),
+                                           + name,
                                            hass=self._hass)
             new_device = GeoRssLocationEvent(self._hass, entity_id, distance,
                                              latitude, longitude, external_id,
@@ -291,7 +294,8 @@ class GeoRssFeedManager(FeedManager):
 
     def _extract_data(self, entry):
         """Extract relevant data from the external event."""
-        geometry = entry.get(ATTR_GEOMETRY)
+        geometry = entry.get(ATTR_GEOMETRY, None)
+        latitude, longitude = None, None
         if geometry.type == 'Point':
             latitude, longitude = geometry.coordinates[1], \
                                   geometry.coordinates[0]
@@ -299,36 +303,37 @@ class GeoRssFeedManager(FeedManager):
             # TODO: find the center of polygon?
             latitude, longitude = geometry.coordinates[0][0][1], \
                                   geometry.coordinates[0][0][0]
-        else:
-            latitude, longitude = None, None
         custom_attributes = {}
         for definition in self._attributes_definition:
             name = definition[CONF_ATTRIBUTES_NAME]
             custom_attributes[name] = entry[name]
         return entry.get(ATTR_DISTANCE), latitude, longitude, \
-            entry.get(ATTR_ID), entry.get(ATTR_TITLE), \
-            entry.get(ATTR_CATEGORY), custom_attributes
+            self._external_id(entry), entry.get(ATTR_TITLE, ""), \
+            entry.get(ATTR_CATEGORY, ""), custom_attributes
 
     def _update_or_remove_devices(self):
         """Update existing devices with new incoming data and remove devices
            if feed does not contain corresponding entry anymore."""
-        entries = self._feed.entries
+        remaining_entries = self._feed.entries.copy()
+        _LOGGER.debug("Entries for updating: %s", remaining_entries)
         remove_entry = None
         # Remove obsolete entities for events that have disappeared
-        for device in self._managed_devices:
+        managed_devices = self._managed_devices.copy()
+        for device in managed_devices:
             # Remove entry from previous iteration - if applicable.
             if remove_entry:
-                entries.remove(remove_entry)
+                remaining_entries.remove(remove_entry)
                 remove_entry = None
-            for entry in entries:
-                entry_id = entry.get(ATTR_ID)
+            for entry in remaining_entries:
+                entry_id = self._external_id(entry)
                 if device.external_id == entry_id:
                     # Existing device - update details.
                     _LOGGER.debug("Existing device found %s", device)
                     remove_entry = entry
                     # Update existing device's details with event data.
                     distance, latitude, longitude, external_id, name, \
-                        category, custom_attributes = self._extract_data(entry)
+                        category, custom_attributes=self._extract_data(
+                        entry)
                     device.distance = distance
                     device.latitude = latitude
                     device.longitude = longitude
@@ -343,9 +348,14 @@ class GeoRssFeedManager(FeedManager):
                 self._hass.add_job(device.async_remove())
         # Remove entry from very last iteration - if applicable.
         if remove_entry:
-            entries.remove(remove_entry)
+            remaining_entries.remove(remove_entry)
         # Return the remaining entries that new devices must be created for.
-        return entries
+        return remaining_entries
+
+    @staticmethod
+    def _external_id(entry):
+        """Find a suitable ID for the provided entry."""
+        return entry.get(ATTR_ID, None) or entry.get(ATTR_TITLE, id(entry))
 
 
 class GeoDistanceHelper(object):
