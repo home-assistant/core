@@ -9,8 +9,6 @@ https://home-assistant.io/components/media_player.dlna_dmr/
 import asyncio
 import functools
 import logging
-import socket
-import urllib.parse
 from datetime import datetime
 
 import aiohttp
@@ -18,8 +16,6 @@ import aiohttp.web
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.http.view import (
-    request_handler_factory, HomeAssistantView)
 from homeassistant.components.media_player import (
     SUPPORT_PLAY, SUPPORT_PAUSE, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
@@ -34,6 +30,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util import get_local_ip
 
 
 DLNA_DMR_DATA = 'dlna_dmr'
@@ -101,7 +98,7 @@ def catch_request_errors():
     return call_wrapper
 
 
-def determine_listen_ip(target_url, config):
+def determine_listen_ip(config):
     """
     Determine the IP and port to listen on.
 
@@ -112,15 +109,7 @@ def determine_listen_ip(target_url, config):
     server_port = config.get(CONF_LISTEN_PORT)
 
     if server_host is None:
-        # determine server_host by opening a UDP socket to target,
-        # but don't actually send anything
-        parsed = urllib.parse.urlparse(target_url)
-        target_host = parsed.hostname
-        target_port = parsed.port
-        temp_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        temp_sock.connect((target_host, target_port))
-        server_host = temp_sock.getsockname()[0]
-        temp_sock.close()
+        server_host = get_local_ip()
 
     return server_host, server_port
 
@@ -210,7 +199,7 @@ async def async_setup_platform(hass: HomeAssistant,
         # discovered components don't get default values in config
         config[CONF_LISTEN_PORT] = config.get(CONF_LISTEN_PORT,
                                               DEFAULT_LISTEN_PORT)
-        server_host, server_port = determine_listen_ip(url, config)
+        server_host, server_port = determine_listen_ip(config)
         notify_view = await async_start_notify_view(hass,
                                                     server_host,
                                                     server_port,
