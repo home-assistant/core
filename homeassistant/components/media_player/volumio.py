@@ -142,7 +142,7 @@ class Volumio(MediaPlayerDevice):
         status = self._state.get('status', None)
         if status == 'pause':
             return STATE_PAUSED
-        elif status == 'play':
+        if status == 'play':
             return STATE_PLAYING
 
         return STATE_IDLE

@@ -58,7 +58,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             devices.append(LifxCloudScene(hass, headers, timeout, scene))
         async_add_devices(devices)
         return True
-    elif status == 401:
+    if status == 401:
         _LOGGER.error("Unauthorized (bad token?) on %s", url)
         return False
 

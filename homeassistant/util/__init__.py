@@ -1,9 +1,8 @@
 """Helper methods for various modules."""
 import asyncio
-from collections.abc import MutableSet
+from datetime import datetime, timedelta
 from itertools import chain
 import threading
-from datetime import datetime
 import re
 import enum
 import socket
@@ -13,12 +12,16 @@ from functools import wraps
 from types import MappingProxyType
 from unicodedata import normalize
 
-from typing import Any, Optional, TypeVar, Callable, KeysView, Union, Iterable
+from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
+                    Iterable, List, Dict, Iterator, Coroutine, MutableSet)
 
 from .dt import as_local, utcnow
 
+# pylint: disable=invalid-name
 T = TypeVar('T')
 U = TypeVar('U')
+ENUM_T = TypeVar('ENUM_T', bound=enum.Enum)
+# pylint: enable=invalid-name
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
@@ -55,7 +58,7 @@ def repr_helper(inp: Any) -> str:
         return ", ".join(
             repr_helper(key)+"="+repr_helper(item) for key, item
             in inp.items())
-    elif isinstance(inp, datetime):
+    if isinstance(inp, datetime):
         return as_local(inp).isoformat()
 
     return str(inp)
@@ -90,7 +93,7 @@ def ensure_unique_string(preferred_string: str, current_strings:
 
 
 # Taken from: http://stackoverflow.com/a/11735897
-def get_local_ip():
+def get_local_ip() -> str:
     """Try to determine the local IP address of the machine."""
     try:
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -98,7 +101,7 @@ def get_local_ip():
         # Use Google Public DNS server to determine own IP
         sock.connect(('8.8.8.8', 80))
 
-        return sock.getsockname()[0]
+        return sock.getsockname()[0]  # type: ignore
     except socket.error:
         try:
             return socket.gethostbyname(socket.gethostname())
@@ -109,7 +112,7 @@ def get_local_ip():
 
 
 # Taken from http://stackoverflow.com/a/23728630
-def get_random_string(length=10):
+def get_random_string(length: int = 10) -> str:
     """Return a random string with letters and digits."""
     generator = random.SystemRandom()
     source_chars = string.ascii_letters + string.digits
@@ -120,59 +123,62 @@ def get_random_string(length=10):
 class OrderedEnum(enum.Enum):
     """Taken from Python 3.4.0 docs."""
 
-    def __ge__(self, other):
+    # https://github.com/PyCQA/pylint/issues/2306
+    # pylint: disable=comparison-with-callable
+
+    def __ge__(self, other: ENUM_T) -> bool:
         """Return the greater than element."""
         if self.__class__ is other.__class__:
-            return self.value >= other.value
+            return bool(self.value >= other.value)
         return NotImplemented
 
-    def __gt__(self, other):
+    def __gt__(self, other: ENUM_T) -> bool:
         """Return the greater element."""
         if self.__class__ is other.__class__:
-            return self.value > other.value
+            return bool(self.value > other.value)
         return NotImplemented
 
-    def __le__(self, other):
+    def __le__(self, other: ENUM_T) -> bool:
         """Return the lower than element."""
         if self.__class__ is other.__class__:
-            return self.value <= other.value
+            return bool(self.value <= other.value)
         return NotImplemented
 
-    def __lt__(self, other):
+    def __lt__(self, other: ENUM_T) -> bool:
         """Return the lower element."""
         if self.__class__ is other.__class__:
-            return self.value < other.value
+            return bool(self.value < other.value)
         return NotImplemented
 
 
-class OrderedSet(MutableSet):
+class OrderedSet(MutableSet[T]):
     """Ordered set taken from http://code.activestate.com/recipes/576694/."""
 
-    def __init__(self, iterable=None):
+    def __init__(self, iterable: Iterable[T] = None) -> None:
         """Initialize the set."""
-        self.end = end = []
-        end += [None, end, end]         # sentinel node for doubly linked list
-        self.map = {}                   # key --> [key, prev, next]
+        self.end = end = []  # type: List[Any]
+        end += [None, end, end]  # sentinel node for doubly linked list
+        self.map = {}  # type: Dict[T, List] # key --> [key, prev, next]
         if iterable is not None:
-            self |= iterable
+            self |= iterable  # type: ignore
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Return the length of the set."""
         return len(self.map)
 
-    def __contains__(self, key):
+    def __contains__(self, key: T) -> bool:  # type: ignore
         """Check if key is in set."""
         return key in self.map
 
     # pylint: disable=arguments-differ
-    def add(self, key):
+    def add(self, key: T) -> None:
         """Add an element to the end of the set."""
         if key not in self.map:
             end = self.end
             curr = end[1]
             curr[2] = end[1] = self.map[key] = [key, curr, end]
 
-    def promote(self, key):
+    def promote(self, key: T) -> None:
         """Promote element to beginning of the set, add if not there."""
         if key in self.map:
             self.discard(key)
@@ -182,14 +188,14 @@ class OrderedSet(MutableSet):
         curr[2] = begin[1] = self.map[key] = [key, curr, begin]
 
     # pylint: disable=arguments-differ
-    def discard(self, key):
+    def discard(self, key: T) -> None:
         """Discard an element from the set."""
         if key in self.map:
             key, prev_item, next_item = self.map.pop(key)
             prev_item[2] = next_item
             next_item[1] = prev_item
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[T]:
         """Iterate of the set."""
         end = self.end
         curr = end[2]
@@ -197,7 +203,7 @@ class OrderedSet(MutableSet):
             yield curr[0]
             curr = curr[2]
 
-    def __reversed__(self):
+    def __reversed__(self) -> Iterator[T]:
         """Reverse the ordering."""
         end = self.end
         curr = end[1]
@@ -206,7 +212,7 @@ class OrderedSet(MutableSet):
             curr = curr[1]
 
     # pylint: disable=arguments-differ
-    def pop(self, last=True):
+    def pop(self, last: bool = True) -> T:
         """Pop element of the end of the set.
 
         Set last=False to pop from the beginning.
@@ -215,27 +221,27 @@ class OrderedSet(MutableSet):
             raise KeyError('set is empty')
         key = self.end[1][0] if last else self.end[2][0]
         self.discard(key)
-        return key
+        return key  # type: ignore
 
-    def update(self, *args):
+    def update(self, *args: Any) -> None:
         """Add elements from args to the set."""
         for item in chain(*args):
             self.add(item)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Return the representation."""
         if not self:
             return '%s()' % (self.__class__.__name__,)
         return '%s(%r)' % (self.__class__.__name__, list(self))
 
-    def __eq__(self, other):
+    def __eq__(self, other: Any) -> bool:
         """Return the comparison."""
         if isinstance(other, OrderedSet):
             return len(self) == len(other) and list(self) == list(other)
         return set(self) == set(other)
 
 
-class Throttle(object):
+class Throttle:
     """A class for throttling the execution of tasks.
 
     This method decorator adds a cooldown to a method to prevent it from being
@@ -253,20 +259,21 @@ class Throttle(object):
     Adds a datetime attribute `last_call` to the method.
     """
 
-    def __init__(self, min_time, limit_no_throttle=None):
+    def __init__(self, min_time: timedelta,
+                 limit_no_throttle: timedelta = None) -> None:
         """Initialize the throttle."""
         self.min_time = min_time
         self.limit_no_throttle = limit_no_throttle
 
-    def __call__(self, method):
+    def __call__(self, method: Callable) -> Callable:
         """Caller for the throttle."""
         # Make sure we return a coroutine if the method is async.
         if asyncio.iscoroutinefunction(method):
-            async def throttled_value():
+            async def throttled_value() -> None:
                 """Stand-in function for when real func is being throttled."""
                 return None
         else:
-            def throttled_value():
+            def throttled_value() -> None:  # type: ignore
                 """Stand-in function for when real func is being throttled."""
                 return None
 
@@ -287,14 +294,14 @@ class Throttle(object):
                    '.' not in method.__qualname__.split('.<locals>.')[-1])
 
         @wraps(method)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Union[Callable, Coroutine]:
             """Wrap that allows wrapped to be called only once per min_time.
 
             If we cannot acquire the lock, it is running so return None.
             """
             # pylint: disable=protected-access
             if hasattr(method, '__self__'):
-                host = method.__self__
+                host = getattr(method, '__self__')
             elif is_func:
                 host = wrapper
             else:
@@ -317,7 +324,7 @@ class Throttle(object):
                 if force or utcnow() - throttle[1] > self.min_time:
                     result = method(*args, **kwargs)
                     throttle[1] = utcnow()
-                    return result
+                    return result  # type: ignore
 
                 return throttled_value()
             finally:

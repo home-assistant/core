@@ -143,7 +143,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return True
 
 
-class LogitechMediaServer(object):
+class LogitechMediaServer:
     """Representation of a Logitech media server."""
 
     def __init__(self, hass, host, port, username, password):

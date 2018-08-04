@@ -105,6 +105,6 @@ class NetatmoCamera(Camera):
         """Return the camera model."""
         if self._cameratype == "NOC":
             return "Presence"
-        elif self._cameratype == "NACamera":
+        if self._cameratype == "NACamera":
             return "Welcome"
         return None

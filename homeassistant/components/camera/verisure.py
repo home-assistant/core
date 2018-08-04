@@ -66,8 +66,7 @@ class VerisureSmartcam(Camera):
         if not image_ids:
             return
         new_image_id = image_ids[0]
-        if (new_image_id == '-1' or
-                self._image_id == new_image_id):
+        if new_image_id in ('-1', self._image_id):
             _LOGGER.debug("The image is the same, or loading image_id")
             return
         _LOGGER.debug("Download new image %s", new_image_id)

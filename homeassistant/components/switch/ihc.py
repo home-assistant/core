@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.ihc/
 """
-from xml.etree.ElementTree import Element
-
 import voluptuous as vol
 
 from homeassistant.components.ihc import (
@@ -53,7 +51,7 @@ class IHCSwitch(IHCDevice, SwitchDevice):
     """IHC Switch."""
 
     def __init__(self, ihc_controller, name: str, ihc_id: int,
-                 info: bool, product: Element = None) -> None:
+                 info: bool, product=None) -> None:
         """Initialize the IHC switch."""
         super().__init__(ihc_controller, name, ihc_id, product)
         self._state = False

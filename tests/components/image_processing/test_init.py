@@ -12,7 +12,7 @@ from tests.common import (
     get_test_home_assistant, get_test_instance_port, assert_setup_component)
 
 
-class TestSetupImageProcessing(object):
+class TestSetupImageProcessing:
     """Test class for setup image processing."""
 
     def setup_method(self):
@@ -48,7 +48,7 @@ class TestSetupImageProcessing(object):
         assert self.hass.services.has_service(ip.DOMAIN, 'scan')
 
 
-class TestImageProcessing(object):
+class TestImageProcessing:
     """Test class for image processing."""
 
     def setup_method(self):
@@ -109,7 +109,7 @@ class TestImageProcessing(object):
         assert state.state == '0'
 
 
-class TestImageProcessingAlpr(object):
+class TestImageProcessingAlpr:
     """Test class for alpr image processing."""
 
     def setup_method(self):
@@ -211,7 +211,7 @@ class TestImageProcessingAlpr(object):
         assert event_data[0]['entity_id'] == 'image_processing.demo_alpr'
 
 
-class TestImageProcessingFace(object):
+class TestImageProcessingFace:
     """Test class for face image processing."""
 
     def setup_method(self):

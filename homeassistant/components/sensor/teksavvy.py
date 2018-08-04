@@ -119,7 +119,7 @@ class TekSavvySensor(Entity):
             self._state = round(self.teksavvydata.data[self.type], 2)
 
 
-class TekSavvyData(object):
+class TekSavvyData:
     """Get data from TekSavvy API."""
 
     def __init__(self, loop, websession, api_key, bandwidth_cap):

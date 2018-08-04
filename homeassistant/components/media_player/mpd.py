@@ -141,11 +141,11 @@ class MpdDevice(MediaPlayerDevice):
         """Return the media state."""
         if self._status is None:
             return STATE_OFF
-        elif self._status['state'] == 'play':
+        if self._status['state'] == 'play':
             return STATE_PLAYING
-        elif self._status['state'] == 'pause':
+        if self._status['state'] == 'pause':
             return STATE_PAUSED
-        elif self._status['state'] == 'stop':
+        if self._status['state'] == 'stop':
             return STATE_OFF
 
         return STATE_OFF
@@ -182,9 +182,9 @@ class MpdDevice(MediaPlayerDevice):
             if file_name is None:
                 return "None"
             return os.path.basename(file_name)
-        elif name is None:
+        if name is None:
             return title
-        elif title is None:
+        if title is None:
             return name
 
         return '{}: {}'.format(name, title)

@@ -7,7 +7,7 @@ https://home-assistant.io/components/sensor.thinkingcleaner/
 import logging
 from datetime import timedelta
 
-import homeassistant.util as util
+from homeassistant import util
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)

@@ -115,7 +115,7 @@ def daikin_api_setup(hass, host, name=None):
     return api
 
 
-class DaikinApi(object):
+class DaikinApi:
     """Keep the Daikin instance in one place and centralize the update."""
 
     def __init__(self, device, name):

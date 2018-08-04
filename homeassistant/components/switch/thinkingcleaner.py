@@ -8,8 +8,7 @@ import time
 import logging
 from datetime import timedelta
 
-import homeassistant.util as util
-
+from homeassistant import util
 from homeassistant.const import (STATE_ON, STATE_OFF)
 from homeassistant.helpers.entity import ToggleEntity
 

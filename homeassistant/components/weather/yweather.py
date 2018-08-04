@@ -175,7 +175,7 @@ class YahooWeatherWeather(WeatherEntity):
             return
 
 
-class YahooWeatherData(object):
+class YahooWeatherData:
     """Handle the Yahoo! API object and limit updates."""
 
     def __init__(self, woeid, temp_unit):

@@ -11,7 +11,7 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture, mock_coro)
 
 
-class TestMicrosoftFaceIdentifySetup(object):
+class TestMicrosoftFaceIdentifySetup:
     """Test class for image processing."""
 
     def setup_method(self):
@@ -75,7 +75,7 @@ class TestMicrosoftFaceIdentifySetup(object):
         assert self.hass.states.get('image_processing.test_local')
 
 
-class TestMicrosoftFaceIdentify(object):
+class TestMicrosoftFaceIdentify:
     """Test class for image processing."""
 
     def setup_method(self):
