@@ -18,6 +18,16 @@ REQUIREMENTS = ['pyecoplug==0.0.5']
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
+DEVICE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(SCAN_INTERVAL, default=5):
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA},
+    vol.Optional(CONF_AUTOMATIC_ADD, default=TRUE):  cv.boolean,
+})
+
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up EcoPlug switches."""
@@ -31,8 +41,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             discovered[plug.name] = plug
 
     def remove(plug):
-         """Remove switch from the list."""
-         async_will_remove_from_hass([EcoPlugSwitch(plug)], True)
+        """Remove switch from the list."""
+        async_will_remove_from_hass([EcoPlugSwitch(plug)], True)
             
     disco = EcoDiscovery(add, remove)
     disco.start()
