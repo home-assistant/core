@@ -359,7 +359,9 @@ async def async_setup(hass, config):
 
             if not light.should_poll:
                 continue
-            update_tasks.append(light.async_update_ha_state(True))
+
+            update_tasks.append(
+                light.async_update_ha_state(True, service.context))
 
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)
@@ -439,6 +441,7 @@ class Profiles:
     @classmethod
     def get_default(cls, entity_id):
         """Return the default turn-on profile for the given light."""
+        # pylint: disable=unsupported-membership-test
         name = entity_id + ".default"
         if name in cls._all:
             return name

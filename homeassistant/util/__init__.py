@@ -17,9 +17,11 @@ from typing import (Any, Optional, TypeVar, Callable, KeysView, Union,  # noqa
 
 from .dt import as_local, utcnow
 
+# pylint: disable=invalid-name
 T = TypeVar('T')
 U = TypeVar('U')
 ENUM_T = TypeVar('ENUM_T', bound=enum.Enum)
+# pylint: enable=invalid-name
 
 RE_SANITIZE_FILENAME = re.compile(r'(~|\.\.|/|\\)')
 RE_SANITIZE_PATH = re.compile(r'(~|\.(\.)+)')
@@ -121,25 +123,28 @@ def get_random_string(length: int = 10) -> str:
 class OrderedEnum(enum.Enum):
     """Taken from Python 3.4.0 docs."""
 
-    def __ge__(self: ENUM_T, other: ENUM_T) -> bool:
+    # https://github.com/PyCQA/pylint/issues/2306
+    # pylint: disable=comparison-with-callable
+
+    def __ge__(self, other: ENUM_T) -> bool:
         """Return the greater than element."""
         if self.__class__ is other.__class__:
             return bool(self.value >= other.value)
         return NotImplemented
 
-    def __gt__(self: ENUM_T, other: ENUM_T) -> bool:
+    def __gt__(self, other: ENUM_T) -> bool:
         """Return the greater element."""
         if self.__class__ is other.__class__:
             return bool(self.value > other.value)
         return NotImplemented
 
-    def __le__(self: ENUM_T, other: ENUM_T) -> bool:
+    def __le__(self, other: ENUM_T) -> bool:
         """Return the lower than element."""
         if self.__class__ is other.__class__:
             return bool(self.value <= other.value)
         return NotImplemented
 
-    def __lt__(self: ENUM_T, other: ENUM_T) -> bool:
+    def __lt__(self, other: ENUM_T) -> bool:
         """Return the lower element."""
         if self.__class__ is other.__class__:
             return bool(self.value < other.value)

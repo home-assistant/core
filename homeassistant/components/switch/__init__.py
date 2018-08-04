@@ -114,7 +114,8 @@ async def async_setup(hass, config):
 
             if not switch.should_poll:
                 continue
-            update_tasks.append(switch.async_update_ha_state(True))
+            update_tasks.append(
+                switch.async_update_ha_state(True, service.context))
 
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)

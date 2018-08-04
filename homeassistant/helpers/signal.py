@@ -3,7 +3,7 @@ import logging
 import signal
 import sys
 
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.const import RESTART_EXIT_CODE
 from homeassistant.loader import bind_hass
 
@@ -12,13 +12,13 @@ _LOGGER = logging.getLogger(__name__)
 
 @callback
 @bind_hass
-def async_register_signal_handling(hass):
+def async_register_signal_handling(hass: HomeAssistant) -> None:
     """Register system signal handler for core."""
     if sys.platform != 'win32':
         @callback
         def async_signal_handle(exit_code):
             """Wrap signal handling."""
-            hass.async_add_job(hass.async_stop(exit_code))
+            hass.async_create_task(hass.async_stop(exit_code))
 
         try:
             hass.loop.add_signal_handler(

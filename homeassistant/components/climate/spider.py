@@ -48,7 +48,6 @@ class SpiderThermostat(ClimateDevice):
         """Initialize the thermostat."""
         self.api = api
         self.thermostat = thermostat
-        self.master = self.thermostat.has_operation_mode
 
     @property
     def supported_features(self):
@@ -125,16 +124,4 @@ class SpiderThermostat(ClimateDevice):
 
     def update(self):
         """Get the latest data."""
-        try:
-            # Only let the master thermostat refresh
-            # and let the others use the cache
-            thermostats = self.api.get_thermostats(
-                force_refresh=self.master)
-            for thermostat in thermostats:
-                if thermostat.id == self.unique_id:
-                    self.thermostat = thermostat
-                    break
-
-        except StopIteration:
-            _LOGGER.error("No data from the Spider API")
-            return
+        self.thermostat = self.api.get_thermostat(self.unique_id)
