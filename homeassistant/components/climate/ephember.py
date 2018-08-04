@@ -9,13 +9,14 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.climate import (
-    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_IDLE, SUPPORT_AUX_HEAT,
+    ClimateDevice, PLATFORM_SCHEMA, STATE_HEAT, STATE_OFF,
+    STATE_AUTO, SUPPORT_AUX_HEAT, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (
     TEMP_CELSIUS, CONF_USERNAME, CONF_PASSWORD, ATTR_TEMPERATURE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyephember==0.1.1']
+REQUIREMENTS = ['pyephember==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +27,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string
 })
+
+STATE_ALL_DAY = "all_day"
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -61,9 +64,11 @@ class EphEmberThermostat(ClimateDevice):
     def supported_features(self):
         """Return the list of supported features."""
         if self._hot_water:
-            return SUPPORT_AUX_HEAT
+            return SUPPORT_AUX_HEAT | SUPPORT_OPERATION_MODE
 
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AUX_HEAT
+        return (SUPPORT_TARGET_TEMPERATURE |
+                SUPPORT_AUX_HEAT |
+                SUPPORT_OPERATION_MODE)
 
     @property
     def name(self):
@@ -94,11 +99,40 @@ class EphEmberThermostat(ClimateDevice):
         return 1
 
     @property
+    def device_state_attributes(self):
+        """Show Device Attributes."""
+        attributes = {
+            'currently_active': self._zone['isCurrentlyActive']
+        }
+        return attributes
+
+    @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
+        mode = self._ember.get_zone_mode(self._zone_name)
+        return self.map_mode_eph_hass(mode)
+
+    @property
+    def operation_list(self):
+        """Return the supported operations."""
+        return [STATE_AUTO, STATE_ALL_DAY, STATE_HEAT, STATE_OFF]
+
+    def set_operation_mode(self, operation_mode):
+        """Set the operation mode."""
+        mode = self.map_mode_hass_eph(operation_mode)
+        if mode is not None:
+            self._ember.set_mode_by_name(self._zone_name, mode)
+        else:
+            _LOGGER.error("Invalid operation mode provided {}".format(
+                operation_mode))
+
+    @property
+    def is_on(self):
+        """Return current state."""
         if self._zone['isCurrentlyActive']:
-            return STATE_HEAT
-        return STATE_IDLE
+            return True
+
+        return None
 
     @property
     def is_aux_heat_on(self):
@@ -152,3 +186,33 @@ class EphEmberThermostat(ClimateDevice):
     def update(self):
         """Get the latest data."""
         self._zone = self._ember.get_zone(self._zone_name)
+
+    @staticmethod
+    def map_mode_hass_eph(operation_mode):
+        """Map from home assistant mode to eph mode."""
+        from pyephember.pyephember import ZoneMode
+        if operation_mode == STATE_AUTO:
+            return ZoneMode.AUTO
+        elif operation_mode == STATE_ALL_DAY:
+            return ZoneMode.ALL_DAY
+        elif operation_mode == STATE_HEAT:
+            return ZoneMode.ON
+        elif operation_mode == STATE_OFF:
+            return ZoneMode.OFF
+
+        return None
+
+    @staticmethod
+    def map_mode_eph_hass(operation_mode):
+        """Map from eph mode to home assistant mode."""
+        from pyephember.pyephember import ZoneMode
+        if operation_mode == ZoneMode.AUTO:
+            return STATE_AUTO
+        elif operation_mode == ZoneMode.ALL_DAY:
+            return STATE_ALL_DAY
+        elif operation_mode == ZoneMode.ON:
+            return STATE_HEAT
+        elif operation_mode == ZoneMode.OFF:
+            return STATE_OFF
+
+        return None
