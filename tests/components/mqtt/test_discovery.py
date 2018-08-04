@@ -125,6 +125,28 @@ def test_discover_climate(hass, mqtt_mock, caplog):
 
 
 @asyncio.coroutine
+def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
+    """Test discovering an MQTT alarm control panel component."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    data = (
+        '{ "name": "AlarmControlPanelTest",'
+        '  "state_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(
+        hass, 'homeassistant/alarm_control_panel/bla/config', data)
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.AlarmControlPanelTest')
+
+    assert state is not None
+    assert state.name == 'AlarmControlPanelTest'
+    assert ('alarm_control_panel', 'bla') in hass.data[ALREADY_DISCOVERED]
+
+
+@asyncio.coroutine
 def test_discovery_incl_nodeid(hass, mqtt_mock, caplog):
     """Test sending in correct JSON with optional node_id included."""
     yield from async_start(hass, 'homeassistant', {})

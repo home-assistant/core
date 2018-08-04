@@ -86,7 +86,6 @@ class ThresholdSensor(BinarySensorDevice):
         self._state = False
         self.sensor_value = None
 
-        # pylint: disable=invalid-name
         @callback
         def async_threshold_sensor_state_listener(
                 entity, old_state, new_state):
@@ -129,9 +128,9 @@ class ThresholdSensor(BinarySensorDevice):
         if self._threshold_lower is not None and \
                 self._threshold_upper is not None:
             return TYPE_RANGE
-        elif self._threshold_lower is not None:
+        if self._threshold_lower is not None:
             return TYPE_LOWER
-        elif self._threshold_upper is not None:
+        if self._threshold_upper is not None:
             return TYPE_UPPER
 
     @property

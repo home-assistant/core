@@ -216,12 +216,8 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def force_update_sync_status(
             self, on_updated_cb=None, raise_timeout=False):
         """Update the internal status."""
-        resp = None
-        try:
-            resp = await self.send_bluesound_command(
-                'SyncStatus', raise_timeout, raise_timeout)
-        except Exception:
-            raise
+        resp = await self.send_bluesound_command(
+            'SyncStatus', raise_timeout, raise_timeout)
 
         if not resp:
             return None
@@ -530,7 +526,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         status = self._status.get('state', None)
         if status in ('pause', 'stop'):
             return STATE_PAUSED
-        elif status in ('stream', 'play'):
+        if status in ('stream', 'play'):
             return STATE_PLAYING
         return STATE_IDLE
 
@@ -974,6 +970,5 @@ class BluesoundPlayer(MediaPlayerDevice):
             if volume > 0:
                 self._lastvol = volume
             return await self.send_bluesound_command('Volume?level=0')
-        else:
-            return await self.send_bluesound_command(
-                'Volume?level=' + str(float(self._lastvol) * 100))
+        return await self.send_bluesound_command(
+            'Volume?level=' + str(float(self._lastvol) * 100))

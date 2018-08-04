@@ -502,7 +502,7 @@ class TelegramNotificationService:
                                   text, chat_id=chat_id, message_id=message_id,
                                   inline_message_id=inline_message_id,
                                   **params)
-        elif type_edit == SERVICE_EDIT_CAPTION:
+        if type_edit == SERVICE_EDIT_CAPTION:
             func_send = self.bot.editMessageCaption
             params[ATTR_CAPTION] = kwargs.get(ATTR_CAPTION)
         else:

@@ -537,7 +537,7 @@ class Device(Entity):
         """
         if not self.last_seen:
             return
-        elif self.location_name:
+        if self.location_name:
             self._state = self.location_name
         elif self.gps is not None and self.source_type == SOURCE_TYPE_GPS:
             zone_state = async_active_zone(

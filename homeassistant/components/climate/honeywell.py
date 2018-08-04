@@ -165,7 +165,7 @@ class RoundThermostat(ClimateDevice):
         self.client.set_temperature(self._name, temperature)
 
     @property
-    def current_operation(self: ClimateDevice) -> str:
+    def current_operation(self) -> str:
         """Get the current operation of the system."""
         return getattr(self.client, ATTR_SYSTEM_MODE, None)
 
@@ -174,7 +174,7 @@ class RoundThermostat(ClimateDevice):
         """Return true if away mode is on."""
         return self._away
 
-    def set_operation_mode(self: ClimateDevice, operation_mode: str) -> None:
+    def set_operation_mode(self, operation_mode: str) -> None:
         """Set the HVAC mode for the thermostat."""
         if hasattr(self.client, ATTR_SYSTEM_MODE):
             self.client.system_mode = operation_mode
@@ -280,7 +280,7 @@ class HoneywellUSThermostat(ClimateDevice):
         return self._device.setpoint_heat
 
     @property
-    def current_operation(self: ClimateDevice) -> str:
+    def current_operation(self) -> str:
         """Return current operation ie. heat, cool, idle."""
         oper = getattr(self._device, ATTR_CURRENT_OPERATION, None)
         if oper == "off":
@@ -373,7 +373,7 @@ class HoneywellUSThermostat(ClimateDevice):
         except somecomfort.SomeComfortError:
             _LOGGER.error('Can not stop hold mode')
 
-    def set_operation_mode(self: ClimateDevice, operation_mode: str) -> None:
+    def set_operation_mode(self, operation_mode: str) -> None:
         """Set the system mode (Cool, Heat, etc)."""
         if hasattr(self._device, ATTR_SYSTEM_MODE):
             self._device.system_mode = operation_mode

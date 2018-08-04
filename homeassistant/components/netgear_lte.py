@@ -61,7 +61,7 @@ class LTEData:
         """Get the requested or the only modem_data value."""
         if CONF_HOST in config:
             return self.modem_data.get(config[CONF_HOST])
-        elif len(self.modem_data) == 1:
+        if len(self.modem_data) == 1:
             return next(iter(self.modem_data.values()))
 
         return None

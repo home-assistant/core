@@ -96,7 +96,7 @@ class MfiSensor(Entity):
             tag = None
         if tag is None:
             return STATE_OFF
-        elif self._port.model == 'Input Digital':
+        if self._port.model == 'Input Digital':
             return STATE_ON if self._port.value > 0 else STATE_OFF
         digits = DIGITS.get(self._port.tag, 0)
         return round(self._port.value, digits)
@@ -111,9 +111,9 @@ class MfiSensor(Entity):
 
         if tag == 'temperature':
             return TEMP_CELSIUS
-        elif tag == 'active_pwr':
+        if tag == 'active_pwr':
             return 'Watts'
-        elif self._port.model == 'Input Digital':
+        if self._port.model == 'Input Digital':
             return 'State'
         return tag
 

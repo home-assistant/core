@@ -101,11 +101,10 @@ class OpenHardwareMonitorDevice(Entity):
 
                 self.attributes = _attributes
                 return
-            else:
-                array = array[path_number][OHM_CHILDREN]
-                _attributes.update({
-                    'level_%s' % path_index: values[OHM_NAME]
-                })
+            array = array[path_number][OHM_CHILDREN]
+            _attributes.update({
+                'level_%s' % path_index: values[OHM_NAME]
+            })
 
 
 class OpenHardwareMonitorData:

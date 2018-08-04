@@ -83,7 +83,7 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         """Return one or more digits/characters."""
         if self._code is None:
             return None
-        elif isinstance(self._code, str) and re.search('^\\d+$', self._code):
+        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
             return 'Number'
         return 'Any'
 
@@ -92,9 +92,9 @@ class AlarmDotCom(alarm.AlarmControlPanel):
         """Return the state of the device."""
         if self._alarm.state.lower() == 'disarmed':
             return STATE_ALARM_DISARMED
-        elif self._alarm.state.lower() == 'armed stay':
+        if self._alarm.state.lower() == 'armed stay':
             return STATE_ALARM_ARMED_HOME
-        elif self._alarm.state.lower() == 'armed away':
+        if self._alarm.state.lower() == 'armed away':
             return STATE_ALARM_ARMED_AWAY
         return STATE_UNKNOWN
 

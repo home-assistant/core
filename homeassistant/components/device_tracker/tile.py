@@ -109,7 +109,7 @@ class TileScanner:
         _LOGGER.debug('Updating Tile data')
 
         try:
-            await self._client.asayn_init()
+            await self._client.async_init()
             tiles = await self._client.tiles.all(
                 whitelist=self._types, show_inactive=self._show_inactive)
         except SessionExpiredError:

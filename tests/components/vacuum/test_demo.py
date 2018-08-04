@@ -6,10 +6,12 @@ from homeassistant.components.vacuum import (
     ATTR_BATTERY_LEVEL, ATTR_COMMAND, ATTR_ENTITY_ID, ATTR_FAN_SPEED,
     ATTR_FAN_SPEED_LIST, ATTR_PARAMS, ATTR_STATUS, DOMAIN,
     ENTITY_ID_ALL_VACUUMS,
-    SERVICE_SEND_COMMAND, SERVICE_SET_FAN_SPEED)
+    SERVICE_SEND_COMMAND, SERVICE_SET_FAN_SPEED,
+    STATE_DOCKED, STATE_CLEANING, STATE_PAUSED, STATE_IDLE,
+    STATE_RETURNING)
 from homeassistant.components.vacuum.demo import (
     DEMO_VACUUM_BASIC, DEMO_VACUUM_COMPLETE, DEMO_VACUUM_MINIMAL,
-    DEMO_VACUUM_MOST, DEMO_VACUUM_NONE, FAN_SPEEDS)
+    DEMO_VACUUM_MOST, DEMO_VACUUM_NONE, DEMO_VACUUM_STATE, FAN_SPEEDS)
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF, STATE_ON)
 from homeassistant.setup import setup_component
@@ -21,6 +23,7 @@ ENTITY_VACUUM_COMPLETE = '{}.{}'.format(DOMAIN, DEMO_VACUUM_COMPLETE).lower()
 ENTITY_VACUUM_MINIMAL = '{}.{}'.format(DOMAIN, DEMO_VACUUM_MINIMAL).lower()
 ENTITY_VACUUM_MOST = '{}.{}'.format(DOMAIN, DEMO_VACUUM_MOST).lower()
 ENTITY_VACUUM_NONE = '{}.{}'.format(DOMAIN, DEMO_VACUUM_NONE).lower()
+ENTITY_VACUUM_STATE = '{}.{}'.format(DOMAIN, DEMO_VACUUM_STATE).lower()
 
 
 class TestVacuumDemo(unittest.TestCase):
@@ -78,6 +81,14 @@ class TestVacuumDemo(unittest.TestCase):
         self.assertEqual(None, state.attributes.get(ATTR_FAN_SPEED))
         self.assertEqual(None, state.attributes.get(ATTR_FAN_SPEED_LIST))
         self.assertEqual(STATE_OFF, state.state)
+
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertEqual(13436, state.attributes.get(ATTR_SUPPORTED_FEATURES))
+        self.assertEqual(STATE_DOCKED, state.state)
+        self.assertEqual(100, state.attributes.get(ATTR_BATTERY_LEVEL))
+        self.assertEqual("medium", state.attributes.get(ATTR_FAN_SPEED))
+        self.assertListEqual(FAN_SPEEDS,
+                             state.attributes.get(ATTR_FAN_SPEED_LIST))
 
     def test_methods(self):
         """Test if methods call the services as expected."""
@@ -147,6 +158,41 @@ class TestVacuumDemo(unittest.TestCase):
         self.assertIn("spot", state.attributes.get(ATTR_STATUS))
         self.assertEqual(STATE_ON, state.state)
 
+        vacuum.start(self.hass, ENTITY_VACUUM_STATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertEqual(STATE_CLEANING, state.state)
+
+        vacuum.pause(self.hass, ENTITY_VACUUM_STATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertEqual(STATE_PAUSED, state.state)
+
+        vacuum.stop(self.hass, ENTITY_VACUUM_STATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertEqual(STATE_IDLE, state.state)
+
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertLess(state.attributes.get(ATTR_BATTERY_LEVEL), 100)
+        self.assertNotEqual(STATE_DOCKED, state.state)
+
+        vacuum.return_to_base(self.hass, ENTITY_VACUUM_STATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertEqual(STATE_RETURNING, state.state)
+
+        vacuum.set_fan_speed(self.hass, FAN_SPEEDS[-1],
+                             entity_id=ENTITY_VACUUM_STATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertEqual(FAN_SPEEDS[-1], state.attributes.get(ATTR_FAN_SPEED))
+
+        vacuum.clean_spot(self.hass, entity_id=ENTITY_VACUUM_STATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertEqual(STATE_CLEANING, state.state)
+
     def test_unsupported_methods(self):
         """Test service calls for unsupported vacuums."""
         self.hass.states.set(ENTITY_VACUUM_NONE, STATE_ON)
@@ -201,6 +247,39 @@ class TestVacuumDemo(unittest.TestCase):
         self.assertNotIn("spot", state.attributes.get(ATTR_STATUS))
         self.assertEqual(STATE_OFF, state.state)
 
+        # VacuumDevice should not support start and pause methods.
+        self.hass.states.set(ENTITY_VACUUM_COMPLETE, STATE_ON)
+        self.hass.block_till_done()
+        self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
+
+        vacuum.pause(self.hass, ENTITY_VACUUM_COMPLETE)
+        self.hass.block_till_done()
+        self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
+
+        self.hass.states.set(ENTITY_VACUUM_COMPLETE, STATE_OFF)
+        self.hass.block_till_done()
+        self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
+
+        vacuum.start(self.hass, ENTITY_VACUUM_COMPLETE)
+        self.hass.block_till_done()
+        self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
+
+        # StateVacuumDevice does not support on/off
+        vacuum.turn_on(self.hass, entity_id=ENTITY_VACUUM_STATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertNotEqual(STATE_CLEANING, state.state)
+
+        vacuum.turn_off(self.hass, entity_id=ENTITY_VACUUM_STATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertNotEqual(STATE_RETURNING, state.state)
+
+        vacuum.toggle(self.hass, entity_id=ENTITY_VACUUM_STATE)
+        self.hass.block_till_done()
+        state = self.hass.states.get(ENTITY_VACUUM_STATE)
+        self.assertNotEqual(STATE_CLEANING, state.state)
+
     def test_services(self):
         """Test vacuum services."""
         # Test send_command
@@ -241,9 +320,11 @@ class TestVacuumDemo(unittest.TestCase):
     def test_set_fan_speed(self):
         """Test vacuum service to set the fan speed."""
         group_vacuums = ','.join([ENTITY_VACUUM_BASIC,
-                                  ENTITY_VACUUM_COMPLETE])
+                                  ENTITY_VACUUM_COMPLETE,
+                                  ENTITY_VACUUM_STATE])
         old_state_basic = self.hass.states.get(ENTITY_VACUUM_BASIC)
         old_state_complete = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
+        old_state_state = self.hass.states.get(ENTITY_VACUUM_STATE)
 
         vacuum.set_fan_speed(
             self.hass, FAN_SPEEDS[0], entity_id=group_vacuums)
@@ -251,6 +332,7 @@ class TestVacuumDemo(unittest.TestCase):
         self.hass.block_till_done()
         new_state_basic = self.hass.states.get(ENTITY_VACUUM_BASIC)
         new_state_complete = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
+        new_state_state = self.hass.states.get(ENTITY_VACUUM_STATE)
 
         self.assertEqual(old_state_basic, new_state_basic)
         self.assertNotIn(ATTR_FAN_SPEED, new_state_basic.attributes)
@@ -260,6 +342,12 @@ class TestVacuumDemo(unittest.TestCase):
                          old_state_complete.attributes[ATTR_FAN_SPEED])
         self.assertEqual(FAN_SPEEDS[0],
                          new_state_complete.attributes[ATTR_FAN_SPEED])
+
+        self.assertNotEqual(old_state_state, new_state_state)
+        self.assertEqual(FAN_SPEEDS[1],
+                         old_state_state.attributes[ATTR_FAN_SPEED])
+        self.assertEqual(FAN_SPEEDS[0],
+                         new_state_state.attributes[ATTR_FAN_SPEED])
 
     def test_send_command(self):
         """Test vacuum service to send a command."""

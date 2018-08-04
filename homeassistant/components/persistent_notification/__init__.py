@@ -6,10 +6,11 @@ https://home-assistant.io/components/persistent_notification/
 """
 import asyncio
 import logging
+from typing import Awaitable
 
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import bind_hass
 from homeassistant.helpers import config_validation as cv
@@ -58,7 +59,8 @@ def dismiss(hass, notification_id):
 
 @callback
 @bind_hass
-def async_create(hass, message, title=None, notification_id=None):
+def async_create(hass: HomeAssistant, message: str, title: str = None,
+                 notification_id: str = None) -> None:
     """Generate a notification."""
     data = {
         key: value for key, value in [
@@ -68,7 +70,8 @@ def async_create(hass, message, title=None, notification_id=None):
         ] if value is not None
     }
 
-    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_CREATE, data))
+    hass.async_create_task(
+        hass.services.async_call(DOMAIN, SERVICE_CREATE, data))
 
 
 @callback
@@ -81,7 +84,7 @@ def async_dismiss(hass, notification_id):
 
 
 @asyncio.coroutine
-def async_setup(hass, config):
+def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
     """Set up the persistent notification component."""
     @callback
     def create_service(call):

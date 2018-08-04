@@ -97,7 +97,6 @@ class StatisticsSensor(Entity):
             hass.async_add_job(self._initialize_from_database)
 
         @callback
-        # pylint: disable=invalid-name
         def async_stats_sensor_state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
             self._unit_of_measurement = new_state.attributes.get(
