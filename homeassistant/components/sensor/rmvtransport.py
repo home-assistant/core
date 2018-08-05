@@ -117,10 +117,10 @@ class RMVDepartureSensor(Entity):
         try:
             result = {
                 'next_departures': [val for val in self.data.departures[1:]],
-                'direction': self.data.departures[0].get('direction', None),
-                'line': self.data.departures[0].get('number', None),
-                'minutes': self.data.departures[0].get('minutes', None),
-                'product': self.data.departures[0].get('product', None),
+                'direction': self.data.departures[0].get('direction'),
+                'line': self.data.departures[0].get('number'),
+                'minutes': self.data.departures[0].get('minutes'),
+                'product': self.data.departures[0].get('product'),
             }
         except IndexError:
             pass
