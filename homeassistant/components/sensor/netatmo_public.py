@@ -122,6 +122,7 @@ class NetatmoPublicData(object):
     def update(self):
         """Request an update from the Netatmo API."""
         import pyatmo
+        _LOGGER.error('Updating Netatmo data.')
         raindata = pyatmo.PublicData(self.auth,
                                      LAT_NE=self.lat_ne,
                                      LON_NE=self.lon_ne,
@@ -130,31 +131,12 @@ class NetatmoPublicData(object):
 
         if raindata.CountStationInArea() == 0:
             _LOGGER.warning('No Rain Station available in this area.')
+            return
+
+        raindata_live = raindata.getLive()
+
+        _LOGGER.error(raindata_live.values())
+        if self.calculation == 'avg':
+            self.data = sum(raindata_live.values()) / len(raindata_live)
         else:
-            raindata_live = raindata.getLive()
-
-            if self.calculation == 'avg':
-                self.data = calculate_average(raindata_live)
-            else:
-                self.data = calculate_max(raindata_live)
-
-
-def calculate_average(raindata):
-    """Get the average value in the area."""
-    total = 0
-    counter = 0
-    for measure in raindata.items():
-        counter += 1
-        total += measure
-
-    if counter <= 0:
-        _LOGGER.error('Shouldn\'t have ever gotten this far')
-
-    return total / counter
-
-
-def calculate_max(raindata):
-    """Get the highest value in the area."""
-    key_max = max(raindata.keys(), key=(lambda k: raindata[k]))
-
-    return raindata[key_max]
+            self.data = max(raindata_live.values())
