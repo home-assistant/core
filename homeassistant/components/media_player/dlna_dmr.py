@@ -172,7 +172,7 @@ async def async_setup_platform(hass: HomeAssistant,
     requester = AiohttpSessionRequester(session, True)
 
     # ensure event handler has been started
-    with (await ASYNC_LOCK):
+    with await ASYNC_LOCK:
         # discovered components don't get default values in config
         config[CONF_LISTEN_PORT] = config.get(CONF_LISTEN_PORT,
                                               DEFAULT_LISTEN_PORT)
@@ -233,7 +233,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
 
     async def _async_on_hass_stop(self, event):
         """Event handler on HASS stop."""
-        with (await ASYNC_LOCK):
+        with await ASYNC_LOCK:
             await self._device.async_unsubscribe_services()
 
     async def async_update(self):
@@ -400,9 +400,9 @@ class DlnaDmrDevice(MediaPlayerDevice):
         from async_upnp_client import dlna
         if self._device.state is None:
             return STATE_ON
-        elif self._device.state == dlna.STATE_PLAYING:
+        if self._device.state == dlna.STATE_PLAYING:
             return STATE_PLAYING
-        elif self._device.state == dlna.STATE_PAUSED:
+        if self._device.state == dlna.STATE_PAUSED:
             return STATE_PAUSED
 
         return STATE_IDLE
