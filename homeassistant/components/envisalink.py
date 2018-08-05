@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-REQUIREMENTS = ['pyenvisalink==2.2']
+REQUIREMENTS = ['pyenvisalink==2.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -111,20 +111,24 @@ def async_setup(hass, config):
     def login_fail_callback(data):
         """Handle when the evl rejects our login."""
         _LOGGER.error("The Envisalink rejected your credentials")
-        sync_connect.set_result(False)
+        if not sync_connect.done():
+            sync_connect.set_result(False)
 
     @callback
     def connection_fail_callback(data):
         """Network failure callback."""
         _LOGGER.error("Could not establish a connection with the Envisalink")
-        sync_connect.set_result(False)
+        if not sync_connect.done():
+            sync_connect.set_result(False)
 
     @callback
     def connection_success_callback(data):
         """Handle a successful connection."""
         _LOGGER.info("Established a connection with the Envisalink")
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_envisalink)
-        sync_connect.set_result(True)
+        if not sync_connect.done():
+            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+                                       stop_envisalink)
+            sync_connect.set_result(True)
 
     @callback
     def zones_updated_callback(data):
