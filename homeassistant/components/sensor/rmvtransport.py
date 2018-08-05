@@ -45,7 +45,7 @@ ICONS = {
     'IC': 'mdi:train',
     'ICE': 'mdi:train',
     'SEV': 'mdi:checkbox-blank-circle-outline',
-    '-': 'mdi:clock'
+    None: 'mdi:clock'
 }
 ATTRIBUTION = "Data provided by opendata.rmv.de"
 
@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_DIRECTIONS, default=['']): cv.ensure_list_csv,
         vol.Optional(CONF_LINES, default=['']): cv.ensure_list_csv,
         vol.Optional(CONF_PRODUCTS, default=DEFAULT_PRODUCT):
-            cv.ensure_list_csv,
+            vol.All(cv.ensure_list, [vol.In(DEFAULT_PRODUCT)]),
         vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
         vol.Optional(CONF_MAXJOURNEYS, default=5): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}]
@@ -93,7 +93,7 @@ class RMVDepartureSensor(Entity):
         self.data = RMVDepartureData(station, destinations, directions,
                                      lines, products, timeoffset, maxjourneys)
         self._state = STATE_UNKNOWN
-        self._icon = ICONS['-']
+        self._icon = ICONS[None]
 
     @property
     def name(self):
@@ -103,9 +103,7 @@ class RMVDepartureSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        if self._state is STATE_UNKNOWN:
-            return False
-        return True
+        return self._state != STATE_UNKNOWN
 
     @property
     def state(self):
@@ -119,10 +117,10 @@ class RMVDepartureSensor(Entity):
         try:
             result = {
                 'next_departures': [val for val in self.data.departures[1:]],
-                'direction': self.data.departures[0].get('direction', '-'),
-                'line': self.data.departures[0].get('number', '-'),
-                'minutes': self.data.departures[0].get('minutes', '-'),
-                'product': self.data.departures[0].get('product', '-'),
+                'direction': self.data.departures[0].get('direction', None),
+                'line': self.data.departures[0].get('number', None),
+                'minutes': self.data.departures[0].get('minutes', None),
+                'product': self.data.departures[0].get('product', None),
             }
         except IndexError:
             pass
@@ -142,16 +140,16 @@ class RMVDepartureSensor(Entity):
         """Get the latest data and update the state."""
         self.data.update()
         if not self.data.departures:
-            self._state = '-'
-            self._icon = ICONS['-']
+            self._state = None
+            self._icon = ICONS[None]
+            return
         else:
-            if self._name is DEFAULT_NAME:
+            if self._name == DEFAULT_NAME:
                 self._name = self.data.station
-            else:
-                self._name = self._name
             self._station = self.data.station
-            self._state = self.data.departures[0].get('minutes', '-')
-            self._icon = ICONS[self.data.departures[0].get('product', '-')]
+            self._state = self.data.departures[0].get('minutes', None)
+            self._icon = ICONS[self.data.departures[0].get('product', None)]
+            return
 
 
 class RMVDepartureData:
@@ -182,7 +180,7 @@ class RMVDepartureData:
             self.departures = {}
             _LOGGER.warning("Returned data not understood")
             return
-        self.station = _data.get('station', '-')
+        self.station = _data.get('station', None)
         _deps = []
         for journey in _data['journeys']:
             # find the first departure meeting the criteria

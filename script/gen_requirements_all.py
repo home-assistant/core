@@ -77,6 +77,7 @@ TEST_REQUIREMENTS = (
     'pymonoprice',
     'pynx584',
     'pyqwikswitch',
+    'PyRMVtransport',
     'python-forecastio',
     'python-nest',
     'pytradfri\[async\]',
@@ -98,8 +99,7 @@ TEST_REQUIREMENTS = (
     'yahoo-finance',
     'pythonwhois',
     'wakeonlan',
-    'vultr',
-    'PyRMVtransport'
+    'vultr'
 )
 
 IGNORE_PACKAGES = (
