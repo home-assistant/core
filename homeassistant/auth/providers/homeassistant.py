@@ -15,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.auth.util import generate_secret
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
+from ..models import UserMeta
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth_provider.homeassistant'
@@ -185,10 +186,7 @@ class HassAuthProvider(AuthProvider):
 
     async def async_user_meta_for_credentials(self, credentials):
         """Get extra info for this credential."""
-        return {
-            'name': credentials.data['username'],
-            'is_active': True,
-        }
+        return UserMeta(name=credentials.data['username'], is_active=True)
 
     async def async_will_remove_credentials(self, credentials):
         """When credentials get removed, also remove the auth."""

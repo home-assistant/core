@@ -127,8 +127,8 @@ class AuthManager:
 
         return await self._store.async_create_user(
             credentials=credentials,
-            name=info.get('name'),
-            is_active=info.get('is_active', False)
+            name=info.name,
+            is_active=info.is_active,
         )
 
     async def async_link_user(self, user, credentials):

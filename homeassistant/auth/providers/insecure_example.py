@@ -9,6 +9,7 @@ from homeassistant import data_entry_flow
 from homeassistant.core import callback
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
+from ..models import UserMeta
 
 
 USER_SCHEMA = vol.Schema({
@@ -75,16 +76,14 @@ class ExampleAuthProvider(AuthProvider):
         Will be used to populate info when creating a new user.
         """
         username = credentials.data['username']
-        info = {
-            'is_active': True,
-        }
+        name = None
 
         for user in self.config['users']:
             if user['username'] == username:
-                info['name'] = user.get('name')
+                name = user.get('name')
                 break
 
-        return info
+        return UserMeta(name=name, is_active=True)
 
 
 class LoginFlow(data_entry_flow.FlowHandler):

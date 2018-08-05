@@ -13,6 +13,7 @@ from homeassistant import data_entry_flow
 from homeassistant.core import callback
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
+from ..models import UserMeta
 
 
 USER_SCHEMA = vol.Schema({
@@ -70,10 +71,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
 
         Will be used to populate info when creating a new user.
         """
-        return {
-            'name': LEGACY_USER,
-            'is_active': True,
-        }
+        return UserMeta(name=LEGACY_USER, is_active=True)
 
 
 class LoginFlow(data_entry_flow.FlowHandler):

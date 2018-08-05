@@ -1,5 +1,6 @@
 """Auth models."""
 from datetime import datetime, timedelta
+from typing import NamedTuple, Optional
 import uuid
 
 import attr
@@ -55,3 +56,7 @@ class Credentials:
 
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     is_new = attr.ib(type=bool, default=True)
+
+
+UserMeta = NamedTuple("UserMeta",
+                      [('name', Optional[str]), ('is_active', bool)])
