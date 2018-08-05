@@ -128,7 +128,7 @@ class NetatmoPublicData(object):
                                      LON_NE=self.lon_ne,
                                      LAT_SW=self.lat_sw,
                                      LON_SW=self.lon_sw,
-                                     required_data_type = "rain")
+                                     required_data_type="rain")
 
         if raindata.CountStationInArea() == 0:
             _LOGGER.warning('No Rain Station available in this area.')
