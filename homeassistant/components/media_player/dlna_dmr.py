@@ -12,7 +12,6 @@ import logging
 from datetime import datetime
 
 import aiohttp
-import aiohttp.web
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -38,8 +37,6 @@ DLNA_DMR_DATA = 'dlna_dmr'
 REQUIREMENTS = [
     'async-upnp-client==0.12.2',
 ]
-
-DEPENDENCIES = []
 
 DEFAULT_NAME = 'DLNA Digital Media Renderer'
 DEFAULT_LISTEN_PORT = 8301
@@ -78,8 +75,6 @@ UPNP_DEVICE_MEDIA_RENDERER = [
 
 _LOGGER = logging.getLogger(__name__)
 
-ASYNC_LOCK = asyncio.Lock()
-
 
 def catch_request_errors():
     """Catch asyncio.TimeoutError, aiohttp.ClientError errors."""
@@ -96,22 +91,6 @@ def catch_request_errors():
         return wrapper
 
     return call_wrapper
-
-
-def determine_listen_ip(config):
-    """
-    Determine the IP and port to listen on.
-
-    If specified in config, use config.
-    Otherwise try to figure it out.
-    """
-    server_host = config.get(CONF_LISTEN_IP)
-    server_port = config.get(CONF_LISTEN_PORT)
-
-    if server_host is None:
-        server_host = get_local_ip()
-
-    return server_host, server_port
 
 
 async def async_start_event_handler(hass, server_host, server_port, requester):
@@ -166,17 +145,20 @@ async def async_setup_platform(hass: HomeAssistant,
     if DLNA_DMR_DATA not in hass.data:
         hass.data[DLNA_DMR_DATA] = {}
 
+    if 'lock' not in hass.data[DLNA_DMR_DATA]:
+        hass.data[DLNA_DMR_DATA]['lock'] = asyncio.Lock()
+
     # build upnp/aiohttp requester
     from async_upnp_client.aiohttp import AiohttpSessionRequester
     session = async_get_clientsession(hass)
     requester = AiohttpSessionRequester(session, True)
 
     # ensure event handler has been started
-    with await ASYNC_LOCK:
-        # discovered components don't get default values in config
-        config[CONF_LISTEN_PORT] = config.get(CONF_LISTEN_PORT,
-                                              DEFAULT_LISTEN_PORT)
-        server_host, server_port = determine_listen_ip(config)
+    with await hass.data[DLNA_DMR_DATA]['lock']:
+        server_host = config.get(CONF_LISTEN_IP)
+        if server_host is None:
+            server_host = get_local_ip()
+        server_port = config.get(CONF_LISTEN_PORT, DEFAULT_LISTEN_PORT)
         event_handler = await async_start_event_handler(hass,
                                                         server_host,
                                                         server_port,
@@ -188,7 +170,6 @@ async def async_setup_platform(hass: HomeAssistant,
     try:
         upnp_device = await factory.async_create_device(url)
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.debug('PlatformNotReady')
         raise PlatformNotReady()
 
     # wrap with DmrDevice
@@ -222,18 +203,13 @@ class DlnaDmrDevice(MediaPlayerDevice):
                               self._async_on_hass_stop)
 
     @property
-    def udn(self):
-        """Get UDN of DLNA DMR device."""
-        return self._device.udn
-
-    @property
     def available(self):
         """Device is available."""
         return self._available
 
     async def _async_on_hass_stop(self, event):
         """Event handler on HASS stop."""
-        with await ASYNC_LOCK:
+        with await self.hass.data[DLNA_DMR_DATA]['lock']:
             await self._device.async_unsubscribe_services()
 
     async def async_update(self):
@@ -435,4 +411,4 @@ class DlnaDmrDevice(MediaPlayerDevice):
     @property
     def unique_id(self) -> str:
         """Return an unique ID."""
-        return self.udn
+        return self._device.udn
