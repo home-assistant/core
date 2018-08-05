@@ -36,7 +36,7 @@ from homeassistant.util import get_local_ip
 DLNA_DMR_DATA = 'dlna_dmr'
 
 REQUIREMENTS = [
-    'async-upnp-client==0.12.1',
+    'async-upnp-client==0.12.2',
 ]
 
 DEPENDENCIES = []
@@ -114,55 +114,32 @@ def determine_listen_ip(config):
     return server_host, server_port
 
 
-async def async_start_notify_view(hass, server_host, server_port, requester):
+async def async_start_event_handler(hass, server_host, server_port, requester):
     """Register notify view."""
     hass_data = hass.data[DLNA_DMR_DATA]
-    if 'notify_view' in hass_data:
-        return hass_data['notify_view']
+    if 'event_handler' in hass_data:
+        return hass_data['event_handler']
 
-    app = aiohttp.web.Application()
-    app['hass'] = hass
-    handler = None
-    server = None
-    hass_data['notify_server'] = app
+    # start event handler
+    from async_upnp_client.aiohttp import AiohttpNotifyServer
+    server = AiohttpNotifyServer(requester,
+                                 server_port,
+                                 server_host,
+                                 hass.loop)
+    await server.start_server()
+    _LOGGER.info('UPNP/DLNA event handler listening on: %s',
+                 server.callback_url)
+    hass_data['notify_server'] = server
+    hass_data['event_handler'] = server.event_handler
 
-    base_url = 'http://{}:{}/'.format(server_host, server_port)
-    view = UpnpNotifyView(base_url)
-    hass_data['notify_view'] = view
-    view.register(app, app.router)
-
-    from async_upnp_client import UpnpEventHandler
-    view.event_handler = UpnpEventHandler(view.callback_url, requester)
-
+    # register for graceful shutdown
     async def async_stop_server(event):
         """Stop server."""
-        _LOGGER.debug('Stopping NOTIFY server')
-        if server:
-            server.close()
-            await server.wait_closed()
-        await app.shutdown()
-        if handler:
-            await handler.shutdown(10)
-        await app.cleanup()
-
-    async def async_start_server():
-        """Start server."""
-        _LOGGER.debug('Starting NOTIFY server')
-        nonlocal handler
-        nonlocal server
-        handler = app.make_handler(loop=hass.loop)
-        try:
-            server = await hass.loop.create_server(
-                handler, server_host, server_port)
-        except OSError as error:
-            _LOGGER.error("Failed to create HTTP server at port %d: %s",
-                          server_port, error)
-
-    await async_start_server()
+        _LOGGER.debug('Stopping UPNP/DLNA event handler')
+        await server.stop_server()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_server)
 
-    _LOGGER.info('UPNP/DLNA notify server listening on: %s', base_url)
-    return view
+    return hass_data['event_handler']
 
 
 async def async_setup_platform(hass: HomeAssistant,
@@ -189,68 +166,39 @@ async def async_setup_platform(hass: HomeAssistant,
     if DLNA_DMR_DATA not in hass.data:
         hass.data[DLNA_DMR_DATA] = {}
 
-    # build requester
+    # build upnp/aiohttp requester
     from async_upnp_client.aiohttp import AiohttpSessionRequester
     session = async_get_clientsession(hass)
     requester = AiohttpSessionRequester(session, True)
 
-    # ensure view has been started
+    # ensure event handler has been started
     with (await ASYNC_LOCK):
         # discovered components don't get default values in config
         config[CONF_LISTEN_PORT] = config.get(CONF_LISTEN_PORT,
                                               DEFAULT_LISTEN_PORT)
         server_host, server_port = determine_listen_ip(config)
-        notify_view = await async_start_notify_view(hass,
-                                                    server_host,
-                                                    server_port,
-                                                    requester)
+        event_handler = await async_start_event_handler(hass,
+                                                        server_host,
+                                                        server_port,
+                                                        requester)
 
-    # create device
+    # create upnp device
     from async_upnp_client import UpnpFactory
-    from async_upnp_client.dlna import DmrDevice
     factory = UpnpFactory(requester, disable_state_variable_validation=True)
     try:
         upnp_device = await factory.async_create_device(url)
     except (asyncio.TimeoutError, aiohttp.ClientError):
+        _LOGGER.debug('PlatformNotReady')
         raise PlatformNotReady()
 
-    dlna_device = DmrDevice(upnp_device, notify_view.event_handler)
-    device = DlnaDmrDevice(dlna_device, name)
+    # wrap with DmrDevice
+    from async_upnp_client.dlna import DmrDevice
+    dlna_device = DmrDevice(upnp_device, event_handler)
 
+    # create our own device
+    device = DlnaDmrDevice(dlna_device, name)
     _LOGGER.debug("Adding device: %s", device)
     async_add_devices([device], True)
-
-
-class UpnpNotifyView(HomeAssistantView):
-    """Callback view for UPnP NOTIFY messages."""
-
-    url = '/api/dlna_dmr.notify'
-    name = 'dlna_dmr:api:notify'
-    requires_auth = False
-
-    def __init__(self, base_url):
-        """Initializer."""
-        self.base_url = base_url
-        self.event_handler = None
-        self._registered_services = {}
-        self._backlog = {}
-
-    def register(self, app, router):
-        """Register the view with a router."""
-        handler = request_handler_factory(self, self.async_notify)
-        router.add_route('notify', UpnpNotifyView.url, handler)
-
-    async def async_notify(self, request):
-        """Callback method for NOTIFY requests."""
-        headers = request.headers
-        body = await request.text()
-        status = await self.event_handler.handle_notify(headers, body)
-        return aiohttp.web.Response(status=status)
-
-    @property
-    def callback_url(self):
-        """Full URL to be called by device/service."""
-        return urllib.parse.urljoin(self.base_url, self.url)
 
 
 class DlnaDmrDevice(MediaPlayerDevice):
