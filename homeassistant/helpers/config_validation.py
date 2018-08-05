@@ -13,7 +13,7 @@ from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_PLATFORM, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
+    CONF_PLATFORM, CONF_PROCEED, CONF_SCAN_INTERVAL, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     CONF_ALIAS, CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, WEEKDAYS,
     CONF_CONDITION, CONF_BELOW, CONF_ABOVE, CONF_TIMEOUT, SUN_EVENT_SUNSET,
     SUN_EVENT_SUNRISE, CONF_UNIT_SYSTEM_IMPERIAL, CONF_UNIT_SYSTEM_METRIC)
@@ -613,6 +613,7 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("wait_template"): template,
     vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
+    vol.Optional(CONF_PROCEED): boolean,
 })
 
 SCRIPT_SCHEMA = vol.All(

@@ -7,7 +7,7 @@ from typing import Optional, Sequence
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
+from homeassistant.const import CONF_CONDITION, CONF_PROCEED, CONF_TIMEOUT
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
     service, condition, template as template,
@@ -130,7 +130,7 @@ class Script():
                     continue
 
                 @callback
-                def async_script_wait(entity_id, from_s, to_s):
+                def async_script_wait(entity_id, from_s = None, to_s = None):
                     """Handle script after template condition is true."""
                     self._async_remove_listener()
                     self.hass.async_add_job(self.async_run(variables))
@@ -142,8 +142,24 @@ class Script():
                 if self._change_listener:
                     self.hass.async_add_job(self._change_listener)
 
+                # Allow proceed to be false by default
+                proceed = False
+
+                if CONF_PROCEED in action:
+                    proceed = action[CONF_PROCEED]
+
                 if CONF_TIMEOUT in action:
-                    self._async_set_timeout(action, variables)
+                    # Check if we want to proceed to execute
+                    # the script after the timeout
+                    # or exit as the default behaviour
+                    if proceed:
+                        unsub = async_track_point_in_utc_time(
+                            self.hass, async_script_wait,
+                            date_util.utcnow() + action[CONF_TIMEOUT]
+                        )
+                        self._async_listener.append(unsub)
+                    else:
+                        self._async_set_timeout(action, variables)
 
                 return
 
