@@ -79,6 +79,9 @@ class AuthStore:
 
     async def async_remove_user(self, user):
         """Remove a user."""
+        if self._users is None:
+            await self.async_load()
+
         self._users.pop(user.id)
         await self.async_save()
 
@@ -94,6 +97,9 @@ class AuthStore:
 
     async def async_remove_credentials(self, credentials):
         """Remove credentials."""
+        if self._users is None:
+            await self.async_load()
+
         for user in self._users.values():
             found = None
 
@@ -189,6 +195,9 @@ class AuthStore:
 
     async def async_save(self):
         """Save users."""
+        if self._users is None:
+            await self.async_load()
+
         users = [
             {
                 'id': user.id,
