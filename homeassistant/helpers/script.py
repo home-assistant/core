@@ -130,7 +130,7 @@ class Script():
                     continue
 
                 @callback
-                def async_script_wait(entity_id, from_s = None, to_s = None):
+                def async_script_wait(entity_id, from_s=None, to_s=None):
                     """Handle script after template condition is true."""
                     self._async_remove_listener()
                     self.hass.async_add_job(self.async_run(variables))
