@@ -95,7 +95,8 @@ async def async_setup(hass, config):
         else:
             attr = 'async_toggle'
 
-        tasks = [getattr(input_b, attr)() for input_b in target_inputs]
+        tasks = [getattr(input_b, attr)(context=service.context)
+                 for input_b in target_inputs]
         if tasks:
             await asyncio.wait(tasks, loop=hass.loop)
 
@@ -155,9 +156,9 @@ class InputBoolean(ToggleEntity):
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
         self._state = True
-        await self.async_update_ha_state()
+        await self.async_update_ha_state(context=kwargs.get('context'))
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         self._state = False
-        await self.async_update_ha_state()
+        await self.async_update_ha_state(context=kwargs.get('context'))

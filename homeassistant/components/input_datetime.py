@@ -97,7 +97,8 @@ def async_setup(hass, config):
                               str(call.data))
                 continue
 
-            tasks.append(input_datetime.async_set_datetime(date, time))
+            tasks.append(
+                input_datetime.async_set_datetime(date, time, call.context))
 
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
@@ -214,7 +215,7 @@ class InputDatetime(Entity):
         return attrs
 
     @asyncio.coroutine
-    def async_set_datetime(self, date_val, time_val):
+    def async_set_datetime(self, date_val, time_val, context):
         """Set a new date / time."""
         if self._has_date and self._has_time and date_val and time_val:
             self._current_datetime = datetime.datetime.combine(date_val,
@@ -224,4 +225,4 @@ class InputDatetime(Entity):
         if self._has_time and not self._has_date and time_val:
             self._current_datetime = time_val
 
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(context=context)

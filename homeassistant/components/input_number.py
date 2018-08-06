@@ -151,6 +151,7 @@ def async_setup(hass, config):
         method = SERVICE_TO_METHOD.get(service.service)
         params = service.data.copy()
         params.pop(ATTR_ENTITY_ID, None)
+        params['context'] = service.context
 
         # call method
         update_tasks = []
@@ -238,7 +239,7 @@ class InputNumber(Entity):
             self._current_value = self._minimum
 
     @asyncio.coroutine
-    def async_set_value(self, value):
+    def async_set_value(self, value, context):
         """Set new value."""
         num_value = float(value)
         if num_value < self._minimum or num_value > self._maximum:
@@ -246,10 +247,10 @@ class InputNumber(Entity):
                             num_value, self._minimum, self._maximum)
             return
         self._current_value = num_value
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(context=context)
 
     @asyncio.coroutine
-    def async_increment(self):
+    def async_increment(self, context):
         """Increment value."""
         new_value = self._current_value + self._step
         if new_value > self._maximum:
@@ -257,10 +258,10 @@ class InputNumber(Entity):
                             new_value, self._minimum, self._maximum)
             return
         self._current_value = new_value
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(context=context)
 
     @asyncio.coroutine
-    def async_decrement(self):
+    def async_decrement(self, context):
         """Decrement value."""
         new_value = self._current_value - self._step
         if new_value < self._minimum:
@@ -268,4 +269,4 @@ class InputNumber(Entity):
                             new_value, self._minimum, self._maximum)
             return
         self._current_value = new_value
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(context=context)
