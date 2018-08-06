@@ -129,7 +129,7 @@ async def get_system_info(hass, include_components):
     info_object = {
         'arch': platform.machine(),
         'dev': 'dev' in current_version,
-        'docker': False,
+        'docker': run_inside_container(),
         'os_name': platform.system(),
         'python_version': platform.python_version(),
         'timezone': dt_util.DEFAULT_TIME_ZONE.zone,
@@ -153,7 +153,6 @@ async def get_system_info(hass, include_components):
             distro.linux_distribution, False)
         info_object['distribution'] = linux_dist[0]
         info_object['os_version'] = linux_dist[1]
-        info_object['docker'] = run_inside_container()
 
     return info_object
 
