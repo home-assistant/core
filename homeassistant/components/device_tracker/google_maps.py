@@ -85,19 +85,20 @@ class GoogleMapsScanner:
                              "accuracy %s is not met: %s",
                              person.nickname, self.max_gps_accuracy,
                              person.accuracy)
-            else:
-                attrs = {
-                    ATTR_ADDRESS: person.address,
-                    ATTR_FULL_NAME: person.full_name,
-                    ATTR_ID: person.id,
-                    ATTR_LAST_SEEN: person.datetime,
-                    ATTR_NICKNAME: person.nickname,
-                }
-                self.see(
-                    dev_id=dev_id,
-                    gps=(person.latitude, person.longitude),
-                    picture=person.picture_url,
-                    source_type=SOURCE_TYPE_GPS,
-                    gps_accuracy=person.accuracy,
-                    attributes=attrs,
-                )
+                continue
+
+            attrs = {
+                ATTR_ADDRESS: person.address,
+                ATTR_FULL_NAME: person.full_name,
+                ATTR_ID: person.id,
+                ATTR_LAST_SEEN: person.datetime,
+                ATTR_NICKNAME: person.nickname,
+            }
+            self.see(
+                dev_id=dev_id,
+                gps=(person.latitude, person.longitude),
+                picture=person.picture_url,
+                source_type=SOURCE_TYPE_GPS,
+                gps_accuracy=person.accuracy,
+                attributes=attrs,
+            )
