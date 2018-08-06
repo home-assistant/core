@@ -27,7 +27,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
 from homeassistant.util.yaml import load_yaml, SECRET_YAML
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import dt as date_util, location as loc_util
+from homeassistant.util import (
+    dt as date_util, location as loc_util, run_inside_container)
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
 from homeassistant.helpers.entity_values import EntityValues
 from homeassistant.helpers import config_per_platform, extract_domain_configs
@@ -347,8 +348,9 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
     _LOGGER.info("Upgrading configuration directory from %s to %s",
                  conf_version, __version__)
 
-    if LooseVersion(conf_version) < LooseVersion('0.50'):
-        # 0.50 introduced persistent deps dir.
+    # 0.50 introduced persistent deps dir but not inside a container
+    if run_inside_container() or \
+            LooseVersion(conf_version) < LooseVersion('0.50'):
         lib_path = hass.config.path('deps')
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
