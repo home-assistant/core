@@ -123,8 +123,7 @@ class EphEmberThermostat(ClimateDevice):
         if mode is not None:
             self._ember.set_mode_by_name(self._zone_name, mode)
         else:
-            _LOGGER.error("Invalid operation mode provided {}".format(
-                operation_mode))
+            _LOGGER.error("Invalid operation mode provided %s", operation_mode)
 
     @property
     def is_on(self):
@@ -193,11 +192,11 @@ class EphEmberThermostat(ClimateDevice):
         from pyephember.pyephember import ZoneMode
         if operation_mode == STATE_AUTO:
             return ZoneMode.AUTO
-        elif operation_mode == STATE_ALL_DAY:
+        if operation_mode == STATE_ALL_DAY:
             return ZoneMode.ALL_DAY
-        elif operation_mode == STATE_HEAT:
+        if operation_mode == STATE_HEAT:
             return ZoneMode.ON
-        elif operation_mode == STATE_OFF:
+        if operation_mode == STATE_OFF:
             return ZoneMode.OFF
 
         return None
@@ -208,11 +207,11 @@ class EphEmberThermostat(ClimateDevice):
         from pyephember.pyephember import ZoneMode
         if operation_mode == ZoneMode.AUTO:
             return STATE_AUTO
-        elif operation_mode == ZoneMode.ALL_DAY:
+        if operation_mode == ZoneMode.ALL_DAY:
             return STATE_ALL_DAY
-        elif operation_mode == ZoneMode.ON:
+        if operation_mode == ZoneMode.ON:
             return STATE_HEAT
-        elif operation_mode == ZoneMode.OFF:
+        if operation_mode == ZoneMode.OFF:
             return STATE_OFF
 
         return None
