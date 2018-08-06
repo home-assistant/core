@@ -9,7 +9,7 @@ pip>=8.0.3
 pytz>=2018.04
 pyyaml>=3.13,<4
 requests==2.19.1
-voluptuous==0.11.3
+voluptuous==0.11.5
 
 # homeassistant.components.nuimo_controller
 --only-binary=all nuimo==0.1.0
@@ -421,7 +421,7 @@ hole==0.3.0
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180803.0
+home-assistant-frontend==20180804.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -817,7 +817,7 @@ pyeight==0.0.9
 pyemby==1.5
 
 # homeassistant.components.envisalink
-pyenvisalink==2.2
+pyenvisalink==2.3
 
 # homeassistant.components.climate.ephember
 pyephember==0.1.1
