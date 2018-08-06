@@ -24,6 +24,7 @@ from homeassistant.helpers import event
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
+from homeassistant.util import run_inside_container
 
 REQUIREMENTS = ['distro==1.3.0']
 
@@ -152,7 +153,7 @@ async def get_system_info(hass, include_components):
             distro.linux_distribution, False)
         info_object['distribution'] = linux_dist[0]
         info_object['os_version'] = linux_dist[1]
-        info_object['docker'] = os.path.isfile('/.dockerenv')
+        info_object['docker'] = run_inside_container()
 
     return info_object
 
