@@ -66,6 +66,7 @@ def check_box_health(url, username, password):
             return response.json()['hostname']
     except requests.exceptions.ConnectionError:
         _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
+        return None
 
 
 def encode_image(image):
@@ -115,6 +116,7 @@ def post_image(url, image, username, password):
         return response
     except requests.exceptions.ConnectionError:
         _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
+        return None
 
 
 def teach_file(url, name, file_path, username, password):
