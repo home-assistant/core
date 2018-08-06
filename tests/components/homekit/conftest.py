@@ -3,8 +3,6 @@ from unittest.mock import patch
 
 import pytest
 
-
-from pyhap import util
 from pyhap.accessory_driver import AccessoryDriver
 
 
@@ -15,7 +13,4 @@ def hk_driver():
         patch('pyhap.accessory_driver.AccessoryEncoder'), \
         patch('pyhap.accessory_driver.HAPServer'), \
             patch('pyhap.accessory_driver.AccessoryDriver.publish'):
-        return AccessoryDriver(pincode=b'123-45-678')
-
-
-util.get_local_address = lambda: '127.0.0.1'
+        return AccessoryDriver(pincode=b'123-45-678', address='127.0.0.1')
