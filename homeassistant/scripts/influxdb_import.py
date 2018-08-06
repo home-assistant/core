@@ -3,6 +3,7 @@ import argparse
 import json
 import os
 import sys
+import time
 
 from typing import List
 
@@ -15,6 +16,7 @@ def run(script_args: List) -> int:
     from sqlalchemy import func
     from sqlalchemy.orm import sessionmaker
     from influxdb import InfluxDBClient
+    from influxdb.exceptions import InfluxDBClientError
     from homeassistant.components.recorder import models
     from homeassistant.helpers import state as state_helper
     from homeassistant.core import State
@@ -94,6 +96,21 @@ def run(script_args: List) -> int:
         help=("Do not write points but simulate preprocessing and print "
               "statistics"))
     parser.add_argument(
+        '--retries',
+        metavar='retries',
+        default=5,
+        help="InfluxDB retry amount")
+    parser.add_argument(
+        '--timeout',
+        metavar='timeout',
+        default=300,
+        help="InfluxDB timeout")
+    parser.add_argument(
+        '--sleep',
+        metavar='sleep',
+        default=30,
+        help="InfluxDB delay between retries in seconds")
+    parser.add_argument(
         '--script',
         choices=['influxdb_import'])
 
@@ -103,7 +120,7 @@ def run(script_args: List) -> int:
     client = None
     if not simulate:
         client = InfluxDBClient(
-            args.host, args.port, args.username, args.password)
+            args.host, args.port, args.username, args.password, timeout=args.timeout, retries=args.retries)
         client.switch_database(args.dbname)
 
     config_dir = os.path.join(os.getcwd(), args.config)  # type: str
@@ -233,7 +250,13 @@ def run(script_args: List) -> int:
 
         if points:
             if not simulate:
-                client.write_points(points)
+                retry_count = 0
+                while retry_count < args.retries:
+                    try:
+                        client.write_points(points)
+                    except InfluxDBClientError:
+                        time.sleep(args.sleep)
+                        retry_count += 1
             count += len(points)
             # This prevents the progress bar from going over 100% when
             # the last step happens
