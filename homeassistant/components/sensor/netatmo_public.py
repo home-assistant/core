@@ -136,7 +136,6 @@ class NetatmoPublicData(object):
 
         raindata_live = raindata.getLive()
 
-        _LOGGER.error(raindata_live.values())
         if self.calculation == 'avg':
             self.data = sum(raindata_live.values()) / len(raindata_live)
         else:
