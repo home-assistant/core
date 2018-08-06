@@ -5,10 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.noaa_tides/
 """
 import logging
-import time
 from datetime import datetime, timedelta
-
-import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -78,12 +75,12 @@ class NOAATidesAndCurrentsSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of this device."""
         attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        if "H" == self.data['hi_lo'][1]:
+        if self.data['hi_lo'][1] == 'H':
             attr['high_tide_time'] = self.data.index[1].strftime('%I:%M %p')
             attr['high_tide_height'] = self.data['predicted_wl'][1]
             attr['low_tide_time'] = self.data.index[2].strftime('%I:%M %p')
             attr['low_tide_height'] = self.data['predicted_wl'][2]
-        elif "L" == self.data['hi_lo'][1]:
+        elif self.data['hi_lo'][1] == 'L':
             attr['low_tide_time'] = self.data.index[1].strftime('%I:%M %p')
             attr['low_tide_height'] = self.data['predicted_wl'][1]
             attr['high_tide_time'] = self.data.index[2].strftime('%I:%M %p')
@@ -95,10 +92,10 @@ class NOAATidesAndCurrentsSensor(Entity):
         """Return the state of the device."""
         if self.data is not None:
             api_time = self.data.index[0]
-            if "H" == self.data['hi_lo'][0]:
+            if self.data['hi_lo'][0] == 'H':
                 tidetime = api_time.strftime('%I:%M %p')
                 return "High tide at %s" % (tidetime)
-            if "L" == self.data['hi_lo'][0]:
+            if self.data['hi_lo'][0] == 'L':
                 tidetime = api_time.strftime('%I:%M %p')
                 return "Low tide at %s" % (tidetime)
             return STATE_UNKNOWN
@@ -112,7 +109,7 @@ class NOAATidesAndCurrentsSensor(Entity):
         delta = timedelta(days=2)
         end = begin + delta
         try:
-            df = coops.get_data(
+            df_predictions = coops.get_data(
                 begin_date=begin.strftime("%Y%m%d %H:%M"),
                 end_date=end.strftime("%Y%m%d %H:%M"),
                 stationid=self._sta,
@@ -121,9 +118,10 @@ class NOAATidesAndCurrentsSensor(Entity):
                 interval="hilo",
                 units=self._units,
                 time_zone=self._tz)
-            self.data = df.head()
+            self.data = df_predictions.head()
             _LOGGER.debug("Data = %s", self.data)
-            _LOGGER.info("Recent Tide data queried with start time set to %s", begin.strftime("%m-%d-%Y %H:%M"))
+            _LOGGER.info("Recent Tide data queried with start time set to %s",
+                         begin.strftime("%m-%d-%Y %H:%M"))
         except ValueError as err:
             _LOGGER.error("Check NOAA Tides and Currents %s", err.args)
             self.data = None
