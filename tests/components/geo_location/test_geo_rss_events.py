@@ -3,7 +3,7 @@ import unittest
 from genericpath import exists
 
 from os import remove
-from unittest.mock import MagicMock, Mock
+from unittest.mock import MagicMock
 
 from homeassistant.components.feedreader import StoredData
 from homeassistant.components.geo_location.geo_rss_events import \
@@ -11,8 +11,8 @@ from homeassistant.components.geo_location.geo_rss_events import \
     CONF_ATTRIBUTES_NAME, CONF_ATTRIBUTES_SOURCE, CONF_ATTRIBUTES_REGEXP, \
     CONF_CUSTOM_ATTRIBUTE, ATTR_TITLE, CONF_FILTERS_ATTRIBUTE, \
     CONF_FILTERS_REGEXP, ATTR_DISTANCE, CONF_CATEGORIES, \
-    CONF_ATTRIBUTES, ATTR_ID, ATTR_GEOMETRY
-from homeassistant.const import CONF_URL, ATTR_LATITUDE
+    CONF_ATTRIBUTES, ATTR_ID, ATTR_GEOMETRY, DEFAULT_ICON
+from homeassistant.const import CONF_URL, ATTR_LATITUDE, ATTR_FRIENDLY_NAME
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant, \
@@ -20,14 +20,14 @@ from tests.common import load_fixture, get_test_home_assistant, \
 import homeassistant.components.geo_location as geo_rss_events
 
 URL = 'http://geo.rss.local/geo_rss_events.xml'
-VALID_CONFIG_WITHOUT_URL = {
+CONFIG_WITHOUT_URL = {
     geo_rss_events.DOMAIN: [
         {
             'platform': 'geo_rss_events'
         }
     ]
 }
-VALID_CONFIG_WITHOUT_CATEGORIES = {
+CONFIG_WITHOUT_CATEGORIES = {
     geo_rss_events.DOMAIN: [
         {
             'platform': 'geo_rss_events',
@@ -35,7 +35,7 @@ VALID_CONFIG_WITHOUT_CATEGORIES = {
         }
     ]
 }
-VALID_CONFIG_WITH_CATEGORIES = {
+CONFIG_WITH_CATEGORIES = {
     geo_rss_events.DOMAIN: [
         {
             'platform': 'geo_rss_events',
@@ -44,7 +44,7 @@ VALID_CONFIG_WITH_CATEGORIES = {
         }
     ]
 }
-VALID_CONFIG_WITH_CUSTOM_ATTRIBUTES = {
+CONFIG_WITH_CUSTOM_ATTRIBUTES = {
     geo_rss_events.DOMAIN: [
         {
             'platform': 'geo_rss_events',
@@ -78,52 +78,39 @@ class TestGeoRssEventsComponent(unittest.TestCase):
         """Test the general setup of this component."""
         with assert_setup_component(0, 'geo_location'):
             self.assertTrue(setup_component(self.hass, geo_rss_events.DOMAIN,
-                                            VALID_CONFIG_WITHOUT_URL))
+                                            CONFIG_WITHOUT_URL))
 
     def test_setup_one_feed(self):
         """Test the general setup of this component."""
         with assert_setup_component(1, 'geo_location'):
             self.assertTrue(setup_component(self.hass, geo_rss_events.DOMAIN,
-                                            VALID_CONFIG_WITHOUT_CATEGORIES))
-        self.hass.block_till_done()
-        # TODO: proper test of setup required
-        # self.assertEqual(
-        #     dict(self.hass.states.get('geo_location.name_1').attributes),
-        #     {
-        #         'friendly_name': 'Name 1'
-        #     })
+                                            CONFIG_WITHOUT_CATEGORIES))
+        assert self.hass.states.get(
+            'group.event_service').attributes[ATTR_FRIENDLY_NAME] == \
+            DEFAULT_NAME
 
     def test_setup_with_categories(self):
         """Test the setup with categories explicitly defined."""
         with assert_setup_component(1, 'geo_location'):
             self.assertTrue(setup_component(self.hass, geo_rss_events.DOMAIN,
-                                            VALID_CONFIG_WITH_CATEGORIES))
-        self.hass.block_till_done()
-        # TODO: proper test of setup required
-        # self.assertEqual(
-        #     dict(self.hass.states.get('geo_location.name_1_category_1')
-        #          .attributes),
-        #     {
-        #         'friendly_name': 'Name 1 Category 1'
-        #     })
-        # self.assertEqual(
-        #     dict(self.hass.states.get('geo_location.name_1_category_2')
-        #          .attributes),
-        #     {
-        #         'friendly_name': 'Name 1 Category 2'
-        #     })
+                                            CONFIG_WITH_CATEGORIES))
+        assert self.hass.states.get(
+            'group.event_service').attributes[ATTR_FRIENDLY_NAME] == \
+            DEFAULT_NAME
 
     def test_setup_with_invalid_custom_attribute_name(self):
         """Test the setup with categories explicitly defined."""
         with assert_setup_component(1, 'geo_location'):
-            self.assertTrue(
-                setup_component(self.hass, geo_rss_events.DOMAIN,
-                                VALID_CONFIG_WITH_CUSTOM_ATTRIBUTES))
-        # TODO: proper test of setup required
+            self.assertTrue(setup_component(self.hass, geo_rss_events.DOMAIN,
+                                            CONFIG_WITH_CUSTOM_ATTRIBUTES))
+        assert self.hass.states.get(
+            'group.event_service').attributes[ATTR_FRIENDLY_NAME] == \
+            DEFAULT_NAME
 
     def setup_manager(self, url='url', name=DEFAULT_NAME,
-                      scan_interval=DEFAULT_SCAN_INTERVAL,
-                      attributes_definition=None, filters_definition=None):
+                      scan_interval=DEFAULT_SCAN_INTERVAL, categories=None,
+                      attributes_definition=None, filters_definition=None,
+                      icon=DEFAULT_ICON):
         """Set up data object for use by sensors."""
         devices = []
 
@@ -140,8 +127,6 @@ class TestGeoRssEventsComponent(unittest.TestCase):
             geo_rss_events.DOMAIN))
         storage = StoredData(data_file)
         radius_in_km = 500
-        categories = []
-        icon = ''
         manager = GeoRssFeedManager(self.hass, add_devices_callback, storage,
                                     scan_interval, name, home_latitude,
                                     home_longitude, url, radius_in_km,
@@ -150,13 +135,13 @@ class TestGeoRssEventsComponent(unittest.TestCase):
         manager._update()
         return manager
 
-    def prepare_test(self, url=None, attributes_definition=None,
-                     filters_definition=None):
+    def prepare_test(self, url=None, categories=None,
+                     attributes_definition=None, filters_definition=None):
         """Run generic test with a configuration as provided."""
         name = "Name 1"
         if url is None:
             url = load_fixture('geo_rss_events.xml')
-        manager = self.setup_manager(url, name=name,
+        manager = self.setup_manager(url, name=name, categories=categories,
                                      attributes_definition=
                                      attributes_definition,
                                      filters_definition=filters_definition)
@@ -212,6 +197,8 @@ class TestGeoRssEventsComponent(unittest.TestCase):
                                                       'longitude': 151.75,
                                                       'external id': "GUID 1",
                                                       'category': "Category 1"}
+        assert devices[0].unit_of_measurement == "km"
+        assert devices[0].icon == DEFAULT_ICON
 
         assert devices[1].external_id == "GUID 2"
         assert devices[1].name == "Title 2"
@@ -239,6 +226,13 @@ class TestGeoRssEventsComponent(unittest.TestCase):
         self.assertAlmostEqual(devices[3].distance, 48.06, 0)
         assert devices[3].latitude == -33.75801
         assert devices[3].longitude == 150.70544
+
+    def test_filter_by_categories(self):
+        """Test filtering the feed entries by category."""
+        categories = ['Category 6']
+        devices = self.prepare_test(categories=categories)._managed_devices
+        self.assertEqual(1, len(devices))
+        assert devices[0].external_id == "Title 6"
 
     def test_find_external_id(self):
         """Test to find an external ID for a GeoRSS entry."""
