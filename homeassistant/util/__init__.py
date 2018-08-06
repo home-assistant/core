@@ -3,6 +3,7 @@ import asyncio
 from datetime import datetime, timedelta
 from itertools import chain
 import threading
+import os
 import re
 import enum
 import socket
@@ -72,6 +73,11 @@ def convert(value: T, to_type: Callable[[T], U],
     except (ValueError, TypeError):
         # If value could not be converted
         return default
+
+
+def run_inside_container() -> bool:
+    """Return true, if you call this function inside container."""
+    return os.path.isfile('/.dockerenv')
 
 
 def ensure_unique_string(preferred_string: str, current_strings:
