@@ -15,6 +15,7 @@ from homeassistant import (
 from homeassistant.components import persistent_notification
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
+from homeassistant.util import run_inside_container
 from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
@@ -317,6 +318,11 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     """
     deps_dir = os.path.join(config_dir, 'deps')
     lib_dir = await async_get_user_site(deps_dir)
-    if lib_dir not in sys.path:
+    if lib_dir in sys.path:
+        return deps_dir
+
+    if run_inside_container():
+        sys.path.append(lib_dir)
+    else:
         sys.path.insert(0, lib_dir)
     return deps_dir
