@@ -626,33 +626,6 @@ def test_cover(hass):
 
 
 @asyncio.coroutine
-def assert_percentage_changes(
-        hass,
-        adjustments,
-        namespace,
-        name,
-        endpoint,
-        parameter,
-        service,
-        changed_parameter):
-    """Assert an API request making percentage changes works.
-
-    AdjustPercentage, AdjustBrightness, etc. are examples of such requests.
-    """
-    for result_volume, adjustment in adjustments:
-        if parameter:
-            payload = {parameter: adjustment}
-        else:
-            payload = {}
-
-        call, _ = yield from assert_request_calls_service(
-            namespace, name, endpoint, service,
-            hass,
-            payload=payload)
-        assert call.data[changed_parameter] == result_volume
-
-
-@asyncio.coroutine
 def test_temp_sensor(hass):
     """Test temperature sensor discovery."""
     device = (
@@ -828,6 +801,89 @@ async def test_thermostat(hass):
     assert msg['event']['payload']['type'] == 'UNSUPPORTED_THERMOSTAT_MODE'
 
 
+async def test_sous_vide(hass):
+    """Test sous-vide discovery."""
+    device = (
+        'sous_vide.test',
+        'off',
+        {
+            'friendly_name': "Test cooker",
+            'unit_of_measurement': TEMP_FAHRENHEIT,
+            'min_temp': 32,
+            'max_temp': 150,
+            'current_temperature': 42,
+            'temperature': 70,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance['endpointId'] == 'sous_vide#test'
+    assert appliance['displayCategories'][0] == "MICROWAVE"
+    assert appliance['friendlyName'] == "Test cooker"
+    (capability, _, _) = \
+        assert_endpoint_capabilities(appliance,
+                                     'Alexa.PowerController',
+                                     'Alexa.TemperatureSensor',
+                                     'Alexa.ThermostatController')
+    assert capability['interface'] == 'Alexa.TemperatureSensor'
+    properties = capability['properties']
+    assert properties['retrievable'] is True
+    assert {'name': 'temperature'} in properties['supported']
+
+    properties = await reported_properties(hass, 'sous_vide#test')
+    properties.assert_equal('Alexa.TemperatureSensor', 'temperature',
+                            {'value': 42.0, 'scale': 'FAHRENHEIT'})
+    properties.assert_equal(
+        'Alexa.ThermostatController', 'targetSetpoint',
+        {'value': 70.0, 'scale': 'FAHRENHEIT'})
+
+    call, _ = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'SetTargetTemperature',
+        'sous_vide#test', 'sous_vide.set_temperature',
+        hass,
+        payload={'targetSetpoint': {'value': 40.0, 'scale': 'FAHRENHEIT'}}
+    )
+    assert call.data['temperature'] == 40.0
+
+    call, _ = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'SetTargetTemperature',
+        'sous_vide#test', 'sous_vide.set_temperature',
+        hass,
+        payload={'targetSetpoint': {'value': 0.0, 'scale': 'CELSIUS'}}
+    )
+    assert call.data['temperature'] == 32.0
+
+    msg = await assert_request_fails(
+        'Alexa.ThermostatController', 'SetTargetTemperature',
+        'sous_vide#test', 'sous_vide.set_temperature',
+        hass,
+        payload={'targetSetpoint': {'value': 0.0, 'scale': 'FAHRENHEIT'}}
+    )
+    assert msg['event']['payload']['type'] == 'TEMPERATURE_VALUE_OUT_OF_RANGE'
+
+    call, _ = await assert_request_calls_service(
+        'Alexa.ThermostatController', 'AdjustTargetTemperature',
+        'sous_vide#test', 'sous_vide.set_temperature',
+        hass,
+        payload={'targetSetpointDelta': {'value': -10.0, 'scale': 'KELVIN'}}
+    )
+    assert call.data['temperature'] == 52.0
+
+    msg = await assert_request_fails(
+        'Alexa.ThermostatController', 'AdjustTargetTemperature',
+        'sous_vide#test', 'sous_vide.set_temperature',
+        hass,
+        payload={'targetSetpointDelta': {'value': 100.0, 'scale': 'CELSIUS'}}
+    )
+    assert msg['event']['payload']['type'] == 'TEMPERATURE_VALUE_OUT_OF_RANGE'
+
+    await assert_power_controller_works(
+        'sous_vide#test',
+        'sous_vide.turn_on',
+        'sous_vide.turn_off',
+        hass)
+
+
 @asyncio.coroutine
 def test_exclude_filters(hass):
     """Test exclusion filters."""
@@ -980,6 +1036,33 @@ def assert_request_calls_service(
     assert msg['event']['header']['name'] == response_type
 
     return call[0], msg
+
+
+@asyncio.coroutine
+def assert_percentage_changes(
+        hass,
+        adjustments,
+        namespace,
+        name,
+        endpoint,
+        parameter,
+        service,
+        changed_parameter):
+    """Assert an API request making percentage changes works.
+
+    AdjustPercentage, AdjustBrightness, etc. are examples of such requests.
+    """
+    for result_volume, adjustment in adjustments:
+        if parameter:
+            payload = {parameter: adjustment}
+        else:
+            payload = {}
+
+        call, _ = yield from assert_request_calls_service(
+            namespace, name, endpoint, service,
+            hass,
+            payload=payload)
+        assert call.data[changed_parameter] == result_volume
 
 
 @asyncio.coroutine

@@ -1,24 +1,16 @@
 """Tests for the Google Assistant traits."""
 import pytest
-
-from homeassistant.const import (
-    STATE_ON, STATE_OFF, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS, TEMP_FAHRENHEIT)
-from homeassistant.core import State, DOMAIN as HA_DOMAIN
 from homeassistant.components import (
-    climate,
-    cover,
-    fan,
-    input_boolean,
-    light,
-    media_player,
-    scene,
-    script,
-    switch,
-)
-from homeassistant.components.google_assistant import trait, helpers, const
-from homeassistant.util import color
-
+    climate, cover, fan, input_boolean, light, media_player, scene, script,
+    sous_vide, switch)
+from homeassistant.components.google_assistant import const, helpers, trait
+from homeassistant.const import (
+    ATTR_ENTITY_ID, ATTR_TEMPERATURE, ATTR_UNIT_OF_MEASUREMENT,
+    PRECISION_WHOLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON,
+    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.core import State
+from homeassistant.util import color, temperature
 from tests.common import async_mock_service
 
 
@@ -357,6 +349,42 @@ async def test_onoff_media_player(hass):
     }
 
 
+async def test_onoff_sous_vide(hass):
+    """Test OnOff trait support for sous_vide domain."""
+    assert trait.OnOffTrait.supported(sous_vide.DOMAIN, 0)
+
+    trt_on = trait.OnOffTrait(State('sous_vide.bla', STATE_ON))
+
+    assert trt_on.sync_attributes() == {}
+
+    assert trt_on.query_attributes() == {
+        'on': True
+    }
+
+    trt_off = trait.OnOffTrait(State('sous_vide.bla', STATE_OFF))
+    assert trt_off.query_attributes() == {
+        'on': False
+    }
+
+    on_calls = async_mock_service(hass, sous_vide.DOMAIN, SERVICE_TURN_ON)
+    await trt_on.execute(hass, trait.COMMAND_ONOFF, {
+        'on': True
+    })
+    assert len(on_calls) == 1
+    assert on_calls[0].data == {
+        ATTR_ENTITY_ID: 'sous_vide.bla',
+    }
+
+    off_calls = async_mock_service(hass, sous_vide.DOMAIN, SERVICE_TURN_OFF)
+    await trt_on.execute(hass, trait.COMMAND_ONOFF, {
+        'on': False
+    })
+    assert len(off_calls) == 1
+    assert off_calls[0].data == {
+        ATTR_ENTITY_ID: 'sous_vide.bla',
+    }
+
+
 async def test_color_spectrum_light(hass):
     """Test ColorSpectrum trait support for light domain."""
     assert not trait.ColorSpectrumTrait.supported(light.DOMAIN, 0)
@@ -454,6 +482,64 @@ async def test_color_temperature_light(hass):
     assert calls[0].data == {
         ATTR_ENTITY_ID: 'light.bla',
         light.ATTR_COLOR_TEMP: color.color_temperature_kelvin_to_mired(2857)
+    }
+
+
+async def test_temperature_control_sous_vide(hass):
+    """Test TemperatureControl trait support for sous_vide domain."""
+    assert trait.TemperatureControlTrait.supported(sous_vide.DOMAIN, 0)
+
+    trt = trait.TemperatureControlTrait(State('sous_vide.bla', STATE_OFF, {
+        climate.ATTR_MIN_TEMP: 50,
+        climate.ATTR_MAX_TEMP: 150,
+        climate.ATTR_CURRENT_TEMPERATURE: 90,
+        ATTR_TEMPERATURE: 130,
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_FAHRENHEIT,
+        sous_vide.ATTR_MEASUREMENT_PRECISION: PRECISION_WHOLE,
+    }))
+
+    assert trt.sync_attributes() == {
+        'temperatureRange': {
+            'minThresholdCelsius': round(temperature.convert(
+                50, TEMP_FAHRENHEIT, TEMP_CELSIUS), 1),
+            'maxThresholdCelsius': round(temperature.convert(
+                150, TEMP_FAHRENHEIT, TEMP_CELSIUS), 1),
+        },
+        'temperatureStepCelsius': PRECISION_WHOLE,
+        'temperatureUnitForUX': trait._google_temp_unit(trt.state),
+    }
+
+    assert trt.query_attributes() == {
+        'temperatureAmbientCelsius': round(temperature.convert(
+            90, TEMP_FAHRENHEIT, TEMP_CELSIUS), 1),
+        'temperatureSetpointCelsius': round(temperature.convert(
+            130, TEMP_FAHRENHEIT, TEMP_CELSIUS), 1),
+    }
+
+    assert trt.can_execute(trait.COMMAND_SET_TEMPERATURE, {
+        'temperature': 100,
+    })
+    assert not trt.can_execute(trait.COMMAND_THERMOSTAT_SET_MODE, {
+        'temperature': 5000,
+    })
+
+    calls = async_mock_service(
+        hass, sous_vide.DOMAIN, climate.SERVICE_SET_TEMPERATURE)
+
+    with pytest.raises(helpers.SmartHomeError) as err:
+        await trt.execute(hass, trait.COMMAND_SET_TEMPERATURE, {
+            'temperature': 5555
+        })
+    assert err.value.code == const.ERR_VALUE_OUT_OF_RANGE
+
+    await trt.execute(hass, trait.COMMAND_SET_TEMPERATURE, {
+        'temperature': 40  # Celsius
+    })
+    assert len(calls) == 1
+    assert calls[0].data == {
+        ATTR_ENTITY_ID: 'sous_vide.bla',
+        ATTR_TEMPERATURE: temperature.convert(40, TEMP_CELSIUS,
+                                              TEMP_FAHRENHEIT)
     }
 
 
