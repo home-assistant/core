@@ -208,6 +208,9 @@ brunt==0.1.2
 # homeassistant.components.device_tracker.bluetooth_tracker
 bt_proximity==0.1.2
 
+# homeassistant.components.device_tracker.bt_home_hub_5
+bthomehub5-devicelist==0.1.1
+
 # homeassistant.components.sensor.buienradar
 # homeassistant.components.weather.buienradar
 buienradar==0.91
