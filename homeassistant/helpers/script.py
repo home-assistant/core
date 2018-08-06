@@ -7,7 +7,7 @@ from typing import Optional, Sequence
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.const import CONF_CONDITION, CONF_PROCEED, CONF_TIMEOUT
+from homeassistant.const import CONF_CONDITION, CONF_TIMEOUT
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import (
     service, condition, template as template,
@@ -30,6 +30,7 @@ CONF_EVENT_DATA = 'event_data'
 CONF_EVENT_DATA_TEMPLATE = 'event_data_template'
 CONF_DELAY = 'delay'
 CONF_WAIT_TEMPLATE = 'wait_template'
+CONF_CONTINUE = 'continue_on_timeout'
 
 
 def call_from_config(hass: HomeAssistant, config: ConfigType,
@@ -130,7 +131,7 @@ class Script():
                     continue
 
                 @callback
-                def async_script_wait(entity_id, from_s=None, to_s=None):
+                def async_script_wait(entity_id, from_s, to_s):
                     """Handle script after template condition is true."""
                     self._async_remove_listener()
                     self.hass.async_add_job(self.async_run(variables))
@@ -142,24 +143,9 @@ class Script():
                 if self._change_listener:
                     self.hass.async_add_job(self._change_listener)
 
-                # Allow proceed to be false by default
-                proceed = False
-
-                if CONF_PROCEED in action:
-                    proceed = action[CONF_PROCEED]
-
                 if CONF_TIMEOUT in action:
-                    # Check if we want to proceed to execute
-                    # the script after the timeout
-                    # or exit as the default behaviour
-                    if proceed:
-                        unsub = async_track_point_in_utc_time(
-                            self.hass, async_script_wait,
-                            date_util.utcnow() + action[CONF_TIMEOUT]
-                        )
-                        self._async_listener.append(unsub)
-                    else:
-                        self._async_set_timeout(action, variables)
+                    self._async_set_timeout(
+                        action, variables, action.get(CONF_CONTINUE, False))
 
                 return
 
@@ -230,17 +216,23 @@ class Script():
         self._log("Test condition {}: {}".format(self.last_action, check))
         return check
 
-    def _async_set_timeout(self, action, variables):
-        """Schedule a timeout to abort script."""
+    def _async_set_timeout(self, action, variables, continue_on_timeout=False):
+        """Schedule a timeout to abort or continue script."""
         timeout = action[CONF_TIMEOUT]
         unsub = None
 
         @callback
         def async_script_timeout(now):
-            """Call after timeout is retrieve stop script."""
+            """Call after timeout is retrieve."""
             self._async_listener.remove(unsub)
-            self._log("Timeout reached, abort script.")
-            self.async_stop()
+
+            # Check if we want to continue to execute
+            # the script after the timeout
+            if continue_on_timeout:
+                self.hass.async_add_job(self.async_run(variables))
+            else:
+                self._log("Timeout reached, abort script.")
+                self.async_stop()
 
         unsub = async_track_point_in_utc_time(
             self.hass, async_script_timeout,

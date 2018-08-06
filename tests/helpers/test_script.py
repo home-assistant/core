@@ -412,7 +412,7 @@ class TestScriptHelper(unittest.TestCase):
         assert not script_obj.is_running
         assert len(events) == 1
 
-    def test_wait_template_timeout_proceed(self):
+    def test_wait_template_timeout_continue(self):
         """Test the wait template with proceed."""
         event = 'test_event'
         events = []
@@ -431,7 +431,7 @@ class TestScriptHelper(unittest.TestCase):
             {
                 'wait_template': "{{states.switch.test.state == 'off'}}",
                 'timeout': 5,
-                'proceed': True
+                'continue_on_timeout': True
             },
             {'event': event}]))
 
