@@ -1,6 +1,7 @@
 """The tests for the rmvtransport platform."""
 import unittest
 from unittest.mock import patch
+import datetime
 
 from homeassistant.setup import setup_component
 
@@ -47,6 +48,7 @@ def get_departuresMock(stationId, maxJourneys,
             'stationId': '3000010', 'filter': '11111111111', 'journeys': [
                 {'product': 'Tram', 'number': 12, 'trainId': '1123456',
                  'direction': 'Frankfurt (Main) Hugo-Junkers-Straße/Schleife',
+                 'departure_time': datetime.datetime(2018, 8, 6, 14, 21),
                  'minutes': 7, 'delay': 3, 'stops': [
                      'Frankfurt (Main) Willy-Brandt-Platz',
                      'Frankfurt (Main) Römer/Paulskirche',
@@ -60,6 +62,7 @@ def get_departuresMock(stationId, maxJourneys,
                  'icon': 'https://products/32_pic.png'},
                 {'product': 'Bus', 'number': 21, 'trainId': '1234567',
                  'direction': 'Frankfurt (Main) Hugo-Junkers-Straße/Schleife',
+                 'departure_time': datetime.datetime(2018, 8, 6, 14, 22),
                  'minutes': 8, 'delay': 1, 'stops': [
                      'Frankfurt (Main) Weser-/Münchener Straße',
                      'Frankfurt (Main) Hugo-Junkers-Straße/Schleife'],
@@ -67,27 +70,30 @@ def get_departuresMock(stationId, maxJourneys,
                  'icon': 'https://products/32_pic.png'},
                 {'product': 'Bus', 'number': 12, 'trainId': '1234568',
                  'direction': 'Frankfurt (Main) Hugo-Junkers-Straße/Schleife',
+                 'departure_time': datetime.datetime(2018, 8, 6, 14, 25),
                  'minutes': 11, 'delay': 1, 'stops': [
                      'Frankfurt (Main) Stadion'],
                  'info': None, 'info_long': None,
                  'icon': 'https://products/32_pic.png'},
                 {'product': 'Bus', 'number': 21, 'trainId': '1234569',
                  'direction': 'Frankfurt (Main) Hugo-Junkers-Straße/Schleife',
+                 'departure_time': datetime.datetime(2018, 8, 6, 14, 25),
                  'minutes': 11, 'delay': 1, 'stops': [],
                  'info': None, 'info_long': None,
                  'icon': 'https://products/32_pic.png'},
                 {'product': 'Bus', 'number': 12, 'trainId': '1234570',
                  'direction': 'Frankfurt (Main) Hugo-Junkers-Straße/Schleife',
+                 'departure_time': datetime.datetime(2018, 8, 6, 14, 25),
                  'minutes': 11, 'delay': 1, 'stops': [],
                  'info': None, 'info_long': None,
                  'icon': 'https://products/32_pic.png'},
                 {'product': 'Bus', 'number': 21, 'trainId': '1234571',
                  'direction': 'Frankfurt (Main) Hugo-Junkers-Straße/Schleife',
+                 'departure_time': datetime.datetime(2018, 8, 6, 14, 25),
                  'minutes': 11, 'delay': 1, 'stops': [],
                  'info': None, 'info_long': None,
                  'icon': 'https://products/32_pic.png'}
-                ]
-            }
+                ]}
     return data
 
 
@@ -118,12 +124,10 @@ class TestRMVtransportSensor(unittest.TestCase):
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
 
         state = self.hass.states.get('sensor.frankfurt_main_hauptbahnhof')
-        print("state: ", repr(state))
 
-        print("ref: ", state.attributes)
-
-        self.assertEqual(state.state, '7')
-        self.assertEqual(state.attributes['minutes'], 7)
+        self.assertEqual(state.state, '2018-08-06 14:21:00')
+        self.assertEqual(state.attributes['departure_time'],
+                         datetime.datetime(2018, 8, 6, 14, 21))
         self.assertEqual(state.attributes['direction'],
                          'Frankfurt (Main) Hugo-Junkers-Straße/Schleife')
         self.assertEqual(state.attributes['product'], 'Tram')
@@ -166,4 +170,5 @@ class TestRMVtransportSensor(unittest.TestCase):
         self.assertEqual(state.attributes['direction'],
                          'Frankfurt (Main) Hugo-Junkers-Straße/Schleife')
         self.assertEqual(state.attributes['line'], 12)
-        self.assertEqual(state.attributes['minutes'], 11)
+        self.assertEqual(state.attributes['departure_time'],
+                         datetime.datetime(2018, 8, 6, 14, 25))

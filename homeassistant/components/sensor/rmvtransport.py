@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
     )
 
-REQUIREMENTS = ['PyRMVtransport==0.0.5']
+REQUIREMENTS = ['PyRMVtransport==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,6 +119,7 @@ class RMVDepartureSensor(Entity):
     @property
     def state(self):
         """Return the next departure time."""
+        self._state = self.data.departures[0].get('departure_time', None)
         return self._state
 
     @property
@@ -131,6 +132,8 @@ class RMVDepartureSensor(Entity):
                 'direction': self.data.departures[0].get('direction'),
                 'line': self.data.departures[0].get('number'),
                 'minutes': self.data.departures[0].get('minutes'),
+                'departure_time':
+                    self.data.departures[0].get('departure_time'),
                 'product': self.data.departures[0].get('product'),
             }
         except IndexError:
@@ -157,7 +160,7 @@ class RMVDepartureSensor(Entity):
         if self._name == DEFAULT_NAME:
             self._name = self.data.station
         self._station = self.data.station
-        self._state = self.data.departures[0].get('minutes', None)
+        self._state = self.data.departures[0].get('departure_time', None)
         self._icon = ICONS[self.data.departures[0].get('product', None)]
         return
 
@@ -208,8 +211,7 @@ class RMVDepartureData:
                 continue
             elif journey['minutes'] < self._timeoffset:
                 continue
-            for k in ['direction', 'number', 'minutes',
-                      'product']:
+            for k in ['direction', 'number', 'departure_time', 'product']:
                 _nextdep[k] = journey.get(k, '')
             _deps.append(_nextdep)
             if len(_deps) > self._maxjourneys:
