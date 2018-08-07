@@ -120,7 +120,8 @@ def run(script_args: List) -> int:
     client = None
     if not simulate:
         client = InfluxDBClient(
-            args.host, args.port, args.username, args.password, timeout=args.timeout, retries=args.retries)
+            args.host, args.port, args.username, args.password,
+            timeout=args.timeout, retries=args.retries)
         client.switch_database(args.dbname)
 
     config_dir = os.path.join(os.getcwd(), args.config)  # type: str
