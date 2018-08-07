@@ -1,5 +1,5 @@
 """
-Support for Chinese wifi thermostats (Floureon, Beok, Beca Energy)
+Support for Chinese wifi thermostats (Floureon, Beok, Beca Energy).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.broadlink/
@@ -186,6 +186,7 @@ class BroadlinkThermostat(ClimateDevice):
 
     @property
     def state(self):
+        """Return the current state."""
         return self._device.current_operation
 
     @property
@@ -255,15 +256,15 @@ class BroadlinkThermostat(ClimateDevice):
         return False if self._device.current_operation == STATE_OFF else True
 
     def set_advance_config(self, config_json):
-        """Set the thermostat advanced config"""
+        """Set the thermostat advanced config."""
         self._device.set_advanced_config(json.loads(config_json))
         self.schedule_update_ha_state()
 
     def set_schedule(self, schedule_json):
-        """Set the thermostat schedule"""
+        """Set the thermostat schedule."""
         self._device.set_schedule(json.loads(schedule_json))
         self.schedule_update_ha_state()
 
     def update(self):
-        """Update component data"""
+        """Update component data."""
         self._device.read_status()
