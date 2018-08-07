@@ -14,7 +14,7 @@ from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
 
 DOMAIN = 'ais_local_audio_service'
-G_LOCAL_FILES_ROOT = '/sdcard/dom'
+G_LOCAL_FILES_ROOT = '/data/data/pl.sviete.dom/files/home/dom'
 G_CURRENT_PATH = ''
 _LOGGER = logging.getLogger(__name__)
 
