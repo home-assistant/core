@@ -149,9 +149,9 @@ class RMVDepartureSensor(Entity):
         if self._name == DEFAULT_NAME:
             self._name = self.data.station
         self._station = self.data.station
-        self._state = self.data.departures[0].get('minutes', None)
-        self._state = self.data.departures[0].get('departure_time', None)
-        self._icon = ICONS[self.data.departures[0].get('product', None)]
+        self._state = self.data.departures[0].get('minutes')
+        self._state = self.data.departures[0].get('departure_time')
+        self._icon = ICONS[self.data.departures[0].get('product')]
         return
 
 
