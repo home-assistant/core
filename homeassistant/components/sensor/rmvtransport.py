@@ -32,18 +32,7 @@ CONF_MAXJOURNEYS = 'max'
 
 DEFAULT_NAME = 'RMV Journey'
 
-VALID_PRODUCTS = {
-    'U-Bahn': ['U-Bahn'],
-    'Tram': ['Tram'],
-    'Bus': ['Bus'],
-    'S': ['S'],
-    'RB': ['RB'],
-    'RE': ['RE'],
-    'EC': ['EC'],
-    'IC': ['IC'],
-    'ICE': ['ICE']
-}
-DEFAULT_PRODUCT = list(VALID_PRODUCTS.keys())
+VALID_PRODUCTS = ['U-Bahn', 'Tram', 'Bus', 'S', 'RB', 'RE', 'EC', 'IC', 'ICE']
 
 ICONS = {
     'U-Bahn': 'mdi:subway',
@@ -68,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.Optional(CONF_DESTINATIONS, default=['']): cv.ensure_list_csv,
         vol.Optional(CONF_DIRECTIONS, default=['']): cv.ensure_list_csv,
         vol.Optional(CONF_LINES, default=['']): cv.ensure_list_csv,
-        vol.Optional(CONF_PRODUCTS, default=DEFAULT_PRODUCT):
+        vol.Optional(CONF_PRODUCTS, default=VALID_PRODUCTS):
             vol.All(cv.ensure_list, [vol.In(VALID_PRODUCTS)]),
         vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
         vol.Optional(CONF_MAXJOURNEYS, default=5): cv.positive_int,
