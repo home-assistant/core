@@ -191,8 +191,7 @@ class BroadlinkThermostat(ClimateDevice):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE \
-               | SUPPORT_OPERATION_MODE
+        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
     @property
     def should_poll(self):
