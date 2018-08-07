@@ -65,6 +65,7 @@ INTENT_SWITCHES_ON = 'AisSwitchesOn'
 INTENT_SWITCHES_OFF = 'AisSwitchesOff'
 INTENT_OPEN_COVER = 'AisCoverOpen'
 INTENT_CLOSE_COVER = 'AisCoverClose'
+INTENT_STOP = 'AisStop'
 
 
 REGEX_TYPE = type(re.compile(''))
@@ -950,6 +951,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisSwitchesOff())
     hass.helpers.intent.async_register(AisOpenCover())
     hass.helpers.intent.async_register(AisCloseCover())
+    hass.helpers.intent.async_register(AisStop())
     async_register(hass, INTENT_GET_WEATHER, [
             'pogoda',
             'pogoda w {location}',
@@ -1049,6 +1051,8 @@ async def async_setup(hass, config):
         'Kim są {item}', 'Kto to {item}'])
     async_register(hass, INTENT_OPEN_COVER, ['Otwórz {item}', 'Odsłoń {item}'])
     async_register(hass, INTENT_CLOSE_COVER, ['Zamknij {item}', 'Odsłoń {item}'])
+    async_register(hass, INTENT_STOP, ['Stop', 'Zatrzymaj', 'Koniec', 'Pauza', 'Zaniechaj', 'Stój'])
+
 
     return True
 
@@ -2007,3 +2011,17 @@ class AisCloseCover(intent.IntentHandler):
             else:
                 msg = 'Urządzenia ' + name + ' nie można zamknąć'
         return msg, success
+
+
+class AisStop(intent.IntentHandler):
+    """Handle AisStop intents."""
+    intent_type = INTENT_STOP
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        yield from hass.services.async_call(
+            'media_player', 'media_stop')
+        message = 'ok, stop'
+        return message, True
