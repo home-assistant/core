@@ -75,21 +75,21 @@ class DaikinClimate(ClimateDevice):
         self._api = api
         self._force_refresh = False
         self._list = {
-            ATTR_OPERATION_MODE: list(
+            ATTR_OPERATION_MODE: sorted(list(
                 map(str.title, set(HA_STATE_TO_DAIKIN.values()))
-            ),
-            ATTR_FAN_MODE: list(
+            )),
+            ATTR_FAN_MODE: sorted(list(
                 map(
                     str.title,
                     appliance.daikin_values(HA_ATTR_TO_DAIKIN[ATTR_FAN_MODE])
                 )
-            ),
-            ATTR_SWING_MODE: list(
+            )),
+            ATTR_SWING_MODE: sorted(list(
                 map(
                     str.title,
                     appliance.daikin_values(HA_ATTR_TO_DAIKIN[ATTR_SWING_MODE])
                 )
-            ),
+            )),
         }
 
         self._supported_features = SUPPORT_TARGET_TEMPERATURE \
