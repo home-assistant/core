@@ -112,7 +112,8 @@ def async_setup(hass, config):
         """Handle a calls to the input box services."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_text.async_set_value(call.data[ATTR_VALUE])
+        tasks = [input_text.async_set_value(call.data[ATTR_VALUE],
+                                            call.context)
                  for input_text in target_inputs]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
@@ -190,11 +191,11 @@ class InputText(Entity):
             self._current_value = value
 
     @asyncio.coroutine
-    def async_set_value(self, value):
+    def async_set_value(self, value, context):
         """Select new value."""
         if len(value) < self._minimum or len(value) > self._maximum:
             _LOGGER.warning("Invalid value: %s (length range %s - %s)",
                             value, self._minimum, self._maximum)
             return
         self._current_value = value
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(context=context)

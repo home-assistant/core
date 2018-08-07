@@ -125,7 +125,8 @@ async def async_setup(hass, config):
         elif service.service == SERVICE_RESET:
             attr = 'async_reset'
 
-        tasks = [getattr(counter, attr)() for counter in target_counters]
+        tasks = [getattr(counter, attr)(service.context)
+                 for counter in target_counters]
         if tasks:
             await asyncio.wait(tasks, loop=hass.loop)
 
@@ -188,17 +189,17 @@ class Counter(Entity):
         state = await async_get_last_state(self.hass, self.entity_id)
         self._state = state and state.state == state
 
-    async def async_decrement(self):
+    async def async_decrement(self, context):
         """Decrement the counter."""
         self._state -= self._step
-        await self.async_update_ha_state()
+        await self.async_update_ha_state(context=context)
 
-    async def async_increment(self):
+    async def async_increment(self, context):
         """Increment a counter."""
         self._state += self._step
-        await self.async_update_ha_state()
+        await self.async_update_ha_state(context=context)
 
-    async def async_reset(self):
+    async def async_reset(self, context):
         """Reset a counter."""
         self._state = self._initial
-        await self.async_update_ha_state()
+        await self.async_update_ha_state(context=context)

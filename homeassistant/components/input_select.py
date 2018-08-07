@@ -134,7 +134,8 @@ def async_setup(hass, config):
         """Handle a calls to the input select option service."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_select.async_select_option(call.data[ATTR_OPTION])
+        tasks = [input_select.async_select_option(call.data[ATTR_OPTION],
+                                                  call.context)
                  for input_select in target_inputs]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
@@ -148,7 +149,7 @@ def async_setup(hass, config):
         """Handle a calls to the input select next service."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_select.async_offset_index(1)
+        tasks = [input_select.async_offset_index(1, call.context)
                  for input_select in target_inputs]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
@@ -162,7 +163,7 @@ def async_setup(hass, config):
         """Handle a calls to the input select previous service."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_select.async_offset_index(-1)
+        tasks = [input_select.async_offset_index(-1, call.context)
                  for input_select in target_inputs]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
@@ -176,7 +177,8 @@ def async_setup(hass, config):
         """Handle a calls to the set options service."""
         target_inputs = component.async_extract_from_service(call)
 
-        tasks = [input_select.async_set_options(call.data[ATTR_OPTIONS])
+        tasks = [input_select.async_set_options(call.data[ATTR_OPTIONS],
+                                                call.context)
                  for input_select in target_inputs]
         if tasks:
             yield from asyncio.wait(tasks, loop=hass.loop)
@@ -240,26 +242,26 @@ class InputSelect(Entity):
         }
 
     @asyncio.coroutine
-    def async_select_option(self, option):
+    def async_select_option(self, option, context):
         """Select new option."""
         if option not in self._options:
             _LOGGER.warning('Invalid option: %s (possible options: %s)',
                             option, ', '.join(self._options))
             return
         self._current_option = option
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(context=context)
 
     @asyncio.coroutine
-    def async_offset_index(self, offset):
+    def async_offset_index(self, offset, context):
         """Offset current index."""
         current_index = self._options.index(self._current_option)
         new_index = (current_index + offset) % len(self._options)
         self._current_option = self._options[new_index]
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(context=context)
 
     @asyncio.coroutine
-    def async_set_options(self, options):
+    def async_set_options(self, options, context):
         """Set options."""
         self._current_option = options[0]
         self._options = options
-        yield from self.async_update_ha_state()
+        yield from self.async_update_ha_state(context=context)

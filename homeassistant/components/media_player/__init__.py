@@ -442,7 +442,8 @@ async def async_setup(hass, config):
             await getattr(player, method['method'])(**params)
             if not player.should_poll:
                 continue
-            update_tasks.append(player.async_update_ha_state(True))
+            update_tasks.append(
+                player.async_update_ha_state(True, service.context))
 
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)

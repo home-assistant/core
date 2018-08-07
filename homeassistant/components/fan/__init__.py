@@ -219,7 +219,8 @@ def async_setup(hass, config: dict):
             yield from getattr(fan, method['method'])(**params)
             if not fan.should_poll:
                 continue
-            update_tasks.append(fan.async_update_ha_state(True))
+            update_tasks.append(
+                fan.async_update_ha_state(True, service.context))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)

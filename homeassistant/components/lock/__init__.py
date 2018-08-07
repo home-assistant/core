@@ -119,7 +119,8 @@ def async_setup(hass, config):
 
             if not entity.should_poll:
                 continue
-            update_tasks.append(entity.async_update_ha_state(True))
+            update_tasks.append(
+                entity.async_update_ha_state(True, service.context))
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)

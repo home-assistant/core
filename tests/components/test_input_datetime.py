@@ -4,7 +4,7 @@ import asyncio
 import unittest
 import datetime
 
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, State, Context
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_datetime import (
     DOMAIN, async_set_datetime)
@@ -202,3 +202,27 @@ def test_restore_state(hass):
 
     state_bogus = hass.states.get('input_datetime.test_bogus_data')
     assert state_bogus.state == str(initial)
+
+
+async def test_input_datetime_context(hass):
+    """Test that input_datetime context works."""
+    assert await async_setup_component(hass, 'input_datetime', {
+        'input_datetime': {
+            'only_date': {
+                'has_date': True,
+            }
+        }
+    })
+
+    state = hass.states.get('input_datetime.only_date')
+    assert state is not None
+
+    await hass.services.async_call('input_datetime', 'set_datetime', {
+        'entity_id': state.entity_id,
+        'date': '2018-01-02'
+    }, True, Context(user_id='abcd'))
+
+    state2 = hass.states.get('input_datetime.only_date')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'
