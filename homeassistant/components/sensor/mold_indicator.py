@@ -107,11 +107,10 @@ class MoldIndicator(Entity):
         # convert to celsius if necessary
         if unit == TEMP_FAHRENHEIT:
             return util.temperature.fahrenheit_to_celsius(temp)
-        elif unit == TEMP_CELSIUS:
+        if unit == TEMP_CELSIUS:
             return temp
-        else:
-            _LOGGER.error("Temp sensor has unsupported unit: %s (allowed: %s, "
-                          "%s)", unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+        _LOGGER.error("Temp sensor has unsupported unit: %s (allowed: %s, "
+                      "%s)", unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
         return None
 

@@ -11,7 +11,8 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.alarmdecoder import (
     ZONE_SCHEMA, CONF_ZONES, CONF_ZONE_NAME, CONF_ZONE_TYPE,
     CONF_ZONE_RFID, SIGNAL_ZONE_FAULT, SIGNAL_ZONE_RESTORE,
-    SIGNAL_RFX_MESSAGE)
+    SIGNAL_RFX_MESSAGE, SIGNAL_REL_MESSAGE, CONF_RELAY_ADDR,
+    CONF_RELAY_CHAN)
 
 DEPENDENCIES = ['alarmdecoder']
 
@@ -37,8 +38,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
         zone_rfid = device_config_data.get(CONF_ZONE_RFID)
+        relay_addr = device_config_data.get(CONF_RELAY_ADDR)
+        relay_chan = device_config_data.get(CONF_RELAY_CHAN)
         device = AlarmDecoderBinarySensor(
-            zone_num, zone_name, zone_type, zone_rfid)
+            zone_num, zone_name, zone_type, zone_rfid, relay_addr, relay_chan)
         devices.append(device)
 
     add_devices(devices)
@@ -49,7 +52,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class AlarmDecoderBinarySensor(BinarySensorDevice):
     """Representation of an AlarmDecoder binary sensor."""
 
-    def __init__(self, zone_number, zone_name, zone_type, zone_rfid):
+    def __init__(self, zone_number, zone_name, zone_type, zone_rfid,
+                 relay_addr, relay_chan):
         """Initialize the binary_sensor."""
         self._zone_number = zone_number
         self._zone_type = zone_type
@@ -57,6 +61,8 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         self._name = zone_name
         self._rfid = zone_rfid
         self._rfstate = None
+        self._relay_addr = relay_addr
+        self._relay_chan = relay_chan
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -69,6 +75,9 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
 
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             SIGNAL_RFX_MESSAGE, self._rfx_message_callback)
+
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            SIGNAL_REL_MESSAGE, self._rel_message_callback)
 
     @property
     def name(self):
@@ -121,4 +130,13 @@ class AlarmDecoderBinarySensor(BinarySensorDevice):
         """Update RF state."""
         if self._rfid and message and message.serial_number == self._rfid:
             self._rfstate = message.value
+            self.schedule_update_ha_state()
+
+    def _rel_message_callback(self, message):
+        """Update relay state."""
+        if (self._relay_addr == message.address and
+                self._relay_chan == message.channel):
+            _LOGGER.debug("Relay %d:%d value:%d", message.address,
+                          message.channel, message.value)
+            self._state = message.value
             self.schedule_update_ha_state()

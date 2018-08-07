@@ -140,7 +140,7 @@ class DirecTvDevice(MediaPlayerDevice):
         """Return the title of current episode of TV show."""
         if self._is_standby:
             return None
-        elif 'episodeTitle' in self._current:
+        if 'episodeTitle' in self._current:
             return self._current['episodeTitle']
         return None
 

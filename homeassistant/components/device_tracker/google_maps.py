@@ -21,6 +21,7 @@ REQUIREMENTS = ['locationsharinglib==2.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 ATTR_ADDRESS = 'address'
 ATTR_FULL_NAME = 'full_name'
 ATTR_LAST_SEEN = 'last_seen'
@@ -31,6 +32,7 @@ CREDENTIALS_FILE = '.google_maps_location_sharing.cookies'
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
 })
@@ -53,6 +55,7 @@ class GoogleMapsScanner:
         self.see = see
         self.username = config[CONF_USERNAME]
         self.password = config[CONF_PASSWORD]
+        self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
 
         try:
             self.service = Service(self.username, self.password,
@@ -75,6 +78,14 @@ class GoogleMapsScanner:
             except TypeError:
                 _LOGGER.warning("No location(s) shared with this account")
                 return
+
+            if self.max_gps_accuracy is not None and \
+                    person.accuracy > self.max_gps_accuracy:
+                _LOGGER.info("Ignoring %s update because expected GPS "
+                             "accuracy %s is not met: %s",
+                             person.nickname, self.max_gps_accuracy,
+                             person.accuracy)
+                continue
 
             attrs = {
                 ATTR_ADDRESS: person.address,

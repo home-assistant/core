@@ -173,10 +173,9 @@ def _request_app_setup(hass, config):
                        ATTR_CLIENT_SECRET: client_secret})
             setup(hass, config)
             return
-        else:
-            error_msg = "Your input was invalid. Please try again."
-            _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
-            configurator.notify_errors(_configurator, error_msg)
+        error_msg = "Your input was invalid. Please try again."
+        _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
+        configurator.notify_errors(_configurator, error_msg)
 
     start_url = "{}{}".format(hass.config.api.base_url,
                               WINK_AUTH_CALLBACK_PATH)

@@ -152,9 +152,9 @@ class VenstarThermostat(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         if self._client.mode == self._client.MODE_HEAT:
             return STATE_HEAT
-        elif self._client.mode == self._client.MODE_COOL:
+        if self._client.mode == self._client.MODE_COOL:
             return STATE_COOL
-        elif self._client.mode == self._client.MODE_AUTO:
+        if self._client.mode == self._client.MODE_AUTO:
             return STATE_AUTO
         return STATE_OFF
 
@@ -178,7 +178,7 @@ class VenstarThermostat(ClimateDevice):
         """Return the target temperature we try to reach."""
         if self._client.mode == self._client.MODE_HEAT:
             return self._client.heattemp
-        elif self._client.mode == self._client.MODE_COOL:
+        if self._client.mode == self._client.MODE_COOL:
             return self._client.cooltemp
         return None
 

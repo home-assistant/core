@@ -113,10 +113,10 @@ the flow from the config panel.
 
 import logging
 import uuid
-from typing import Set # noqa pylint: disable=unused-import
+from typing import Set, Optional, List  # noqa pylint: disable=unused-import
 
 from homeassistant import data_entry_flow
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component, async_process_deps_reqs
 from homeassistant.util.decorator import Registry
@@ -164,8 +164,9 @@ class ConfigEntry:
     __slots__ = ('entry_id', 'version', 'domain', 'title', 'data', 'source',
                  'state')
 
-    def __init__(self, version, domain, title, data, source, entry_id=None,
-                 state=ENTRY_STATE_NOT_LOADED):
+    def __init__(self, version: str, domain: str, title: str, data: dict,
+                 source: str, entry_id: Optional[str] = None,
+                 state: str = ENTRY_STATE_NOT_LOADED) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
         self.entry_id = entry_id or uuid.uuid4().hex
@@ -188,7 +189,8 @@ class ConfigEntry:
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
 
-    async def async_setup(self, hass, *, component=None):
+    async def async_setup(
+            self, hass: HomeAssistant, *, component=None) -> None:
         """Set up an entry."""
         if component is None:
             component = getattr(hass.components, self.domain)
@@ -268,19 +270,19 @@ class ConfigEntries:
     An instance of this object is available via `hass.config_entries`.
     """
 
-    def __init__(self, hass, hass_config):
+    def __init__(self, hass: HomeAssistant, hass_config: dict) -> None:
         """Initialize the entry manager."""
         self.hass = hass
         self.flow = data_entry_flow.FlowManager(
             hass, self._async_create_flow, self._async_finish_flow)
         self._hass_config = hass_config
-        self._entries = None
+        self._entries = []  # type: List[ConfigEntry]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
-    def async_domains(self):
+    def async_domains(self) -> List[str]:
         """Return domains for which we have entries."""
-        seen = set()  # type: Set[ConfigEntry]
+        seen = set()  # type: Set[str]
         result = []
 
         for entry in self._entries:
@@ -291,7 +293,7 @@ class ConfigEntries:
         return result
 
     @callback
-    def async_entries(self, domain=None):
+    def async_entries(self, domain: str = None) -> List[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries)
@@ -317,7 +319,7 @@ class ConfigEntries:
             'require_restart': not unloaded
         }
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Handle loading the config."""
         # Migrating for config entries stored before 0.73
         config = await self.hass.helpers.storage.async_migrator(

@@ -33,7 +33,7 @@ LocationInfo = collections.namedtuple(
      'use_metric'])
 
 
-def detect_location_info():
+def detect_location_info() -> Optional[LocationInfo]:
     """Detect location information."""
     data = _get_freegeoip()
 
@@ -63,7 +63,7 @@ def distance(lat1: Optional[float], lon1: Optional[float],
     return result * 1000
 
 
-def elevation(latitude, longitude):
+def elevation(latitude: float, longitude: float) -> int:
     """Return elevation for given latitude and longitude."""
     try:
         req = requests.get(

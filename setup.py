@@ -42,7 +42,7 @@ REQUIRES = [
     'pytz>=2018.04',
     'pyyaml>=3.13,<4',
     'requests==2.19.1',
-    'voluptuous==0.11.1',
+    'voluptuous==0.11.5',
 ]
 
 MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))

@@ -11,7 +11,6 @@ from homeassistant.components.fan import (
     SPEED_HIGH, SPEED_LOW, SPEED_MEDIUM, STATE_UNKNOWN, SUPPORT_DIRECTION,
     SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.components.wink import DOMAIN, WinkDevice
-from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,19 +38,19 @@ class WinkFanDevice(WinkDevice, FanEntity):
         """Call when entity is added to hass."""
         self.hass.data[DOMAIN]['entities']['fan'].append(self)
 
-    def set_direction(self: ToggleEntity, direction: str) -> None:
+    def set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         self.wink.set_fan_direction(direction)
 
-    def set_speed(self: ToggleEntity, speed: str) -> None:
+    def set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
         self.wink.set_state(True, speed)
 
-    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         self.wink.set_state(True, speed)
 
-    def turn_off(self: ToggleEntity, **kwargs) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
         self.wink.set_state(False)
 
@@ -82,7 +81,7 @@ class WinkFanDevice(WinkDevice, FanEntity):
         return self.wink.current_fan_direction()
 
     @property
-    def speed_list(self: ToggleEntity) -> list:
+    def speed_list(self) -> list:
         """Get the list of available speeds."""
         wink_supported_speeds = self.wink.fan_speeds()
         supported_speeds = []
@@ -99,6 +98,6 @@ class WinkFanDevice(WinkDevice, FanEntity):
         return supported_speeds
 
     @property
-    def supported_features(self: ToggleEntity) -> int:
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORTED_FEATURES

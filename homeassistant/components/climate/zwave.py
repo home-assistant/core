@@ -186,7 +186,7 @@ class ZWaveClimate(ZWaveDeviceEntity, ClimateDevice):
         """Return the unit of measurement."""
         if self._unit == 'C':
             return TEMP_CELSIUS
-        elif self._unit == 'F':
+        if self._unit == 'F':
             return TEMP_FAHRENHEIT
         return self._unit
 

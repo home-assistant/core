@@ -255,7 +255,7 @@ class DSMREntity(Entity):
             return ICON_POWER_FAILURE
         if 'Power' in self._name:
             return ICON_POWER
-        elif 'Gas' in self._name:
+        if 'Gas' in self._name:
             return ICON_GAS
 
     @property
@@ -285,7 +285,7 @@ class DSMREntity(Entity):
         # used for normal rate.
         if value == '0002':
             return 'normal'
-        elif value == '0001':
+        if value == '0001':
             return 'low'
 
         return STATE_UNKNOWN
