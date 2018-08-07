@@ -197,7 +197,7 @@ class GeoRssFeedManager(FeedManager):
             if self._matches_category(entry):
                 # Filter by distance.
                 geometry, distance = self._calculate_distance(entry)
-                _LOGGER.warning("Entry %s - distance %s", entry, distance)
+                _LOGGER.debug("Entry %s has distance %s", entry, distance)
                 if distance and distance <= self._radius_in_km:
                     # Add distance value as a new attribute
                     entry.update({ATTR_DISTANCE: distance})
@@ -256,19 +256,21 @@ class GeoRssFeedManager(FeedManager):
         """Update the feed and then update connected devices."""
         super()._update()
         if self._last_update_successful:
-            _LOGGER.debug("Devices BEFORE updating: %s", self._managed_devices)
+            _LOGGER.debug("Devices before updating: %s", self._managed_devices)
             # Update existing and remove obsolete devices.
             remaining_entries = self._update_or_remove_devices()
             # Add new devices.
             self._generate_new_devices(remaining_entries)
             # Group all devices.
             self._group_devices()
-            _LOGGER.debug("Devices AFTER updating: %s", self._managed_devices)
+            _LOGGER.debug("Devices after updating: %s", self._managed_devices)
 
     def _group_devices(self):
         """Re-group all entities"""
-        # TODO: sort entries in group
-        entity_ids = [device.entity_id for device in self._managed_devices]
+        # Sort entries in group by distance (ascending).
+        devices = sorted(self._managed_devices.copy(),
+                         key=lambda device: device.distance)
+        entity_ids = [device.entity_id for device in devices]
         # Update group.
         self.group.update_tracked_entity_ids(entity_ids)
 
@@ -332,8 +334,7 @@ class GeoRssFeedManager(FeedManager):
                     remove_entry = entry
                     # Update existing device's details with event data.
                     distance, latitude, longitude, external_id, name, \
-                        category, custom_attributes=self._extract_data(
-                        entry)
+                        category, custom_attributes = self._extract_data(entry)
                     device.distance = distance
                     device.latitude = latitude
                     device.longitude = longitude
