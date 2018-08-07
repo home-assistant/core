@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP, STATE_UNKNOWN
+    CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
     )
 
 REQUIREMENTS = ['PyRMVtransport==0.0.6']
@@ -119,7 +119,7 @@ class RMVDepartureSensor(Entity):
     @property
     def state(self):
         """Return the next departure time."""
-        self._state = self.data.departures[0].get('departure_time', None)
+        self._state = self.data.departures[0].get('minutes', None)
         return self._state
 
     @property
@@ -131,6 +131,7 @@ class RMVDepartureSensor(Entity):
                 'next_departures': [val for val in self.data.departures[1:]],
                 'direction': self.data.departures[0].get('direction'),
                 'line': self.data.departures[0].get('line'),
+                'minutes': self.data.departures[0].get('minutes'),
                 'departure_time':
                     self.data.departures[0].get('departure_time'),
                 'product': self.data.departures[0].get('product'),
@@ -145,12 +146,9 @@ class RMVDepartureSensor(Entity):
         return self._icon
 
     @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_TIMESTAMP
-    # def unit_of_measurement(self):
-    #     """Return the unit this state is expressed in."""
-    #     return "min"
+    def unit_of_measurement(self):
+        """Return the unit this state is expressed in."""
+        return "min"
 
     def update(self):
         """Get the latest data and update the state."""
@@ -162,6 +160,7 @@ class RMVDepartureSensor(Entity):
         if self._name == DEFAULT_NAME:
             self._name = self.data.station
         self._station = self.data.station
+        self._state = self.data.departures[0].get('minutes', None)
         self._state = self.data.departures[0].get('departure_time', None)
         self._icon = ICONS[self.data.departures[0].get('product', None)]
         return
@@ -213,7 +212,7 @@ class RMVDepartureData:
                 continue
             elif journey['minutes'] < self._timeoffset:
                 continue
-            for k in ['direction', 'departure_time', 'product']:
+            for k in ['direction', 'departure_time', 'product', 'minutes']:
                 _nextdep[k] = journey.get(k, '')
             _nextdep['line'] = journey.get('number', '')
             _deps.append(_nextdep)

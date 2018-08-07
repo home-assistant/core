@@ -171,7 +171,6 @@ DEVICE_CLASS_BATTERY = 'battery'
 DEVICE_CLASS_HUMIDITY = 'humidity'
 DEVICE_CLASS_ILLUMINANCE = 'illuminance'
 DEVICE_CLASS_TEMPERATURE = 'temperature'
-DEVICE_CLASS_TIMESTAMP = 'timestamp'
 
 # #### STATES ####
 STATE_ON = 'on'

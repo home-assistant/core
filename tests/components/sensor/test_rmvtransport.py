@@ -122,10 +122,8 @@ class TestRMVtransportSensor(unittest.TestCase):
     def test_rmvtransport_min_config(self, mock_get_departures):
         """Test minimal rmvtransport configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_MINIMAL)
-
         state = self.hass.states.get('sensor.frankfurt_main_hauptbahnhof')
-
-        self.assertEqual(state.state, '2018-08-06 14:21:00')
+        self.assertEqual(state.state, '7')
         self.assertEqual(state.attributes['departure_time'],
                          datetime.datetime(2018, 8, 6, 14, 21))
         self.assertEqual(state.attributes['direction'],
@@ -166,9 +164,10 @@ class TestRMVtransportSensor(unittest.TestCase):
         """Test misc configuration."""
         assert setup_component(self.hass, 'sensor', VALID_CONFIG_DEST)
         state = self.hass.states.get('sensor.frankfurt_main_hauptbahnhof')
-        print("ref: ", state.attributes)
+        self.assertEqual(state.state, '11')
         self.assertEqual(state.attributes['direction'],
                          'Frankfurt (Main) Hugo-Junkers-Straße/Schleife')
         self.assertEqual(state.attributes['line'], 12)
+        self.assertEqual(state.attributes['minutes'], 11)
         self.assertEqual(state.attributes['departure_time'],
                          datetime.datetime(2018, 8, 6, 14, 25))
