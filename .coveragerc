@@ -242,6 +242,9 @@ omit =
     homeassistant/components/rpi_gpio.py
     homeassistant/components/*/rpi_gpio.py
 
+    homeassistant/components/rpi_gpiozero.py
+    homeassistant/components/*/rpi_gpiozero.py
+
     homeassistant/components/rpi_pfio.py
     homeassistant/components/*/rpi_pfio.py
 
