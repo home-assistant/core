@@ -13,7 +13,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
+    CONF_NAME, ATTR_ATTRIBUTION, DEVICE_CLASS_TIMESTAMP, STATE_UNKNOWN
     )
 
 REQUIREMENTS = ['PyRMVtransport==0.0.6']
@@ -130,8 +130,7 @@ class RMVDepartureSensor(Entity):
             result = {
                 'next_departures': [val for val in self.data.departures[1:]],
                 'direction': self.data.departures[0].get('direction'),
-                'line': self.data.departures[0].get('number'),
-                'minutes': self.data.departures[0].get('minutes'),
+                'line': self.data.departures[0].get('line'),
                 'departure_time':
                     self.data.departures[0].get('departure_time'),
                 'product': self.data.departures[0].get('product'),
@@ -146,9 +145,12 @@ class RMVDepartureSensor(Entity):
         return self._icon
 
     @property
-    def unit_of_measurement(self):
-        """Return the unit this state is expressed in."""
-        return "min"
+    def device_class(self):
+        """Return the device class of the sensor."""
+        return DEVICE_CLASS_TIMESTAMP
+    # def unit_of_measurement(self):
+    #     """Return the unit this state is expressed in."""
+    #     return "min"
 
     def update(self):
         """Get the latest data and update the state."""
@@ -211,8 +213,9 @@ class RMVDepartureData:
                 continue
             elif journey['minutes'] < self._timeoffset:
                 continue
-            for k in ['direction', 'number', 'departure_time', 'product']:
+            for k in ['direction', 'departure_time', 'product']:
                 _nextdep[k] = journey.get(k, '')
+            _nextdep['line'] = journey.get('number', '')
             _deps.append(_nextdep)
             if len(_deps) > self._maxjourneys:
                 break
