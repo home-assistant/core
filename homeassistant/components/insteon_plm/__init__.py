@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.11.7']
+REQUIREMENTS = ['insteonplm==0.12.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -277,8 +277,8 @@ def async_setup(hass, config):
                       event, address.hex, button)
         hass.bus.fire(event, schema)
 
-    _LOGGER.info("Looking for PLM on %s", port)
     if host:
+        _LOGGER.info('Connecting to Hub on %s', host)
         conn = yield from insteonplm.Connection.create(
             host=host,
             port=ip_port,
@@ -287,6 +287,7 @@ def async_setup(hass, config):
             loop=hass.loop,
             workdir=hass.config.config_dir)
     else:
+        _LOGGER.info("Looking for PLM on %s", port)
         conn = yield from insteonplm.Connection.create(
             device=port,
             loop=hass.loop,
