@@ -105,7 +105,7 @@ class NetatmoPublicSensor(Entity):
         self._state = self.netatmo_data.data
 
 
-class NetatmoPublicData(object):
+class NetatmoPublicData:
     """Get the latest data from NetAtmo."""
 
     def __init__(self, auth, lat_ne, lon_ne, lat_sw, lon_sw, calculation):
