@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ENTITY_ID_FORMAT, Light, SUPPORT_BRIGHTNESS)
+    ATTR_BRIGHTNESS, ATTR_RGB_COLOR, ENTITY_ID_FORMAT, Light,
+    SUPPORT_BRIGHTNESS, SUPPORT_COLOR)
 from homeassistant.const import (
     CONF_VALUE_TEMPLATE, CONF_ICON_TEMPLATE, CONF_ENTITY_PICTURE_TEMPLATE,
     CONF_ENTITY_ID, CONF_FRIENDLY_NAME, STATE_ON, STATE_OFF,
@@ -31,6 +32,8 @@ CONF_ON_ACTION = 'turn_on'
 CONF_OFF_ACTION = 'turn_off'
 CONF_LEVEL_ACTION = 'set_level'
 CONF_LEVEL_TEMPLATE = 'level_template'
+CONF_COLOR_ACTION = 'set_color'
+CONF_COLOR_TEMPLATE = 'color_template'
 
 LIGHT_SCHEMA = vol.Schema({
     vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
@@ -40,6 +43,8 @@ LIGHT_SCHEMA = vol.Schema({
     vol.Optional(CONF_ENTITY_PICTURE_TEMPLATE): cv.template,
     vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
     vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
+    vol.Optional(CONF_COLOR_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_COLOR_TEMPLATE): cv.template,
     vol.Optional(CONF_FRIENDLY_NAME): cv.string,
     vol.Optional(CONF_ENTITY_ID): cv.entity_ids
 })
@@ -64,6 +69,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         off_action = device_config[CONF_OFF_ACTION]
         level_action = device_config.get(CONF_LEVEL_ACTION)
         level_template = device_config.get(CONF_LEVEL_TEMPLATE)
+        color_action = device_config.get(CONF_COLOR_ACTION)
+        color_template = device_config.get(CONF_COLOR_TEMPLATE)
 
         template_entity_ids = set()
 
@@ -74,6 +81,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         if level_template is not None:
             temp_ids = level_template.extract_entities()
+            if str(temp_ids) != MATCH_ALL:
+                template_entity_ids |= set(temp_ids)
+
+        if color_template is not None:
+            temp_ids = color_template.extract_entities()
             if str(temp_ids) != MATCH_ALL:
                 template_entity_ids |= set(temp_ids)
 
@@ -96,7 +108,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             LightTemplate(
                 hass, device, friendly_name, state_template,
                 icon_template, entity_picture_template, on_action,
-                off_action, level_action, level_template, entity_ids)
+                off_action, level_action, level_template,
+                color_action, color_template, entity_ids)
         )
 
     if not lights:
@@ -108,11 +121,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
 
 class LightTemplate(Light):
-    """Representation of a templated Light, including dimmable."""
+    """Representation of a templated Light, including dimmable and color."""
 
     def __init__(self, hass, device_id, friendly_name, state_template,
                  icon_template, entity_picture_template, on_action,
-                 off_action, level_action, level_template, entity_ids):
+                 off_action, level_action, level_template,
+                 color_action, color_template, entity_ids):
         """Initialize the light."""
         self.hass = hass
         self.entity_id = async_generate_entity_id(
@@ -127,17 +141,24 @@ class LightTemplate(Light):
         if level_action is not None:
             self._level_script = Script(hass, level_action)
         self._level_template = level_template
+        self._color_script = None
+        if color_action is not None:
+            self._color_script = Script(hass, color_action)
+        self._color_template = color_template
 
         self._state = False
         self._icon = None
         self._entity_picture = None
         self._brightness = None
+        self._color = None
         self._entities = entity_ids
 
         if self._template is not None:
             self._template.hass = self.hass
         if self._level_template is not None:
             self._level_template.hass = self.hass
+        if self._color_template is not None:
+            self._color_template.hass = self.hass
         if self._icon_template is not None:
             self._icon_template.hass = self.hass
         if self._entity_picture_template is not None:
@@ -149,6 +170,11 @@ class LightTemplate(Light):
         return self._brightness
 
     @property
+    def color(self):
+        """Return the RGB color of the light."""
+        return self._color
+
+    @property
     def name(self):
         """Return the display name of this light."""
         return self._name
@@ -156,9 +182,12 @@ class LightTemplate(Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        if self._level_script is not None:
+        if self._level_script is not None and self._color_script is not None:
+            return SUPPORT_COLOR | SUPPORT_BRIGHTNESS
+        elif self._level_script is not None:
             return SUPPORT_BRIGHTNESS
-
+        elif self._color_script is not None:
+            return SUPPORT_COLOR
         return 0
 
     @property
@@ -193,7 +222,8 @@ class LightTemplate(Light):
         def template_light_startup(event):
             """Update template on startup."""
             if (self._template is not None or
-                    self._level_template is not None):
+                    self._level_template is not None or
+                    self._color_template is not None):
                 async_track_state_change(
                     self.hass, self._entities, template_light_state_listener)
 
@@ -217,10 +247,22 @@ class LightTemplate(Light):
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             optimistic_set = True
 
+        if self._color_template is None and ATTR_RGB_COLOR in kwargs:
+            _LOGGER.info("Optimistically setting color to %s",
+                         kwargs[ATTR_RGB_COLOR])
+            self._color = kwargs[ATTR_RGB_COLOR]
+            optimistic_set = True
+
         if ATTR_BRIGHTNESS in kwargs and self._level_script:
             self.hass.async_add_job(self._level_script.async_run(
                 {"brightness": kwargs[ATTR_BRIGHTNESS]}))
-        else:
+
+        if ATTR_RGB_COLOR in kwargs and self._color_script:
+            self.hass.async_add_job(self._color_script.async_run(
+                {"color": kwargs[ATTR_RGB_COLOR]}))
+
+        if not (ATTR_BRIGHTNESS in kwargs and self._level_script and
+                ATTR_RGB_COLOR in kwargs and self._color_script):
             yield from self._on_script.async_run()
 
         if optimistic_set:
@@ -266,6 +308,25 @@ class LightTemplate(Light):
                     'Received invalid brightness : %s. Expected: 0-255',
                     brightness)
                 self._brightness = None
+
+        if self._color_template is not None:
+            try:
+                color = self._color_template.async_render()
+            except TemplateError as ex:
+                _LOGGER.error(ex)
+                self._state = None
+
+            self._color = []
+            for i in range(3):
+                if 0 <= int(color[i]) <= 255:
+                    self._color[i] = int(color[i])
+                else:
+                    _LOGGER.error(
+                        'Received invalid RGB color : %s' +
+                        'Expected: [0-255, 0-255, 0-255]',
+                        color)
+                    self._color = None
+                    break
 
         for property_name, template in (
                 ('_icon', self._icon_template),
