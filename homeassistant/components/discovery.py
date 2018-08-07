@@ -85,7 +85,7 @@ SERVICE_HANDLERS = {
     'volumio': ('media_player', 'volumio'),
     'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
     'freebox': ('device_tracker', 'freebox'),
-    'DLNA': ('media_player', 'dlna_dmr')
+    'DLNA_DMR': ('media_player', 'dlna_dmr'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
