@@ -67,11 +67,6 @@ HOME_ASSISTANT_UPNP_MIME_TYPE_MAPPING = {
     'channel': 'video/*',
     'playlist': 'playlist/*',
 }
-UPNP_DEVICE_MEDIA_RENDERER = [
-    'urn:schemas-upnp-org:device:MediaRenderer:1',
-    'urn:schemas-upnp-org:device:MediaRenderer:2',
-    'urn:schemas-upnp-org:device:MediaRenderer:3',
-]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -126,15 +121,6 @@ async def async_setup_platform(hass: HomeAssistant,
                                async_add_devices,
                                discovery_info=None):
     """Set up DLNA DMR platform."""
-    # ensure this is a DLNA DMR device, if found via discovery
-    if discovery_info and \
-       'upnp_device_type' in discovery_info and \
-       discovery_info['upnp_device_type'] not in UPNP_DEVICE_MEDIA_RENDERER:
-        _LOGGER.debug('Device is not a MediaRenderer: %s, device_type: %s',
-                      discovery_info.get('ssdp_description'),
-                      discovery_info['upnp_device_type'])
-        return
-
     if config.get(CONF_URL) is not None:
         url = config[CONF_URL]
         name = config.get(CONF_NAME)
