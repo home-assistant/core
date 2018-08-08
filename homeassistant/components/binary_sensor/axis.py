@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.const import (
     ATTR_LOCATION, CONF_EVENT, CONF_NAME, CONF_TRIGGER_TIME)
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 DEPENDENCIES = ['axis']
@@ -65,6 +66,9 @@ class AxisBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the event."""
+        if self.axis_event.event_name:
+            return '{}_{}'.format(
+                self.device_name, slugify(self.axis_event.event_name))
         return '{}_{}_{}'.format(
             self.device_name, self.axis_event.event_type, self.axis_event.id)
 

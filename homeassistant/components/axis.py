@@ -15,6 +15,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.util.json import load_json, save_json
 
 REQUIREMENTS = ['axis==14']
@@ -174,6 +175,11 @@ def setup(hass, config):
             else:
                 # New device, create configuration request for UI
                 request_configuration(hass, config, name, host, serialnumber)
+        else:
+            # Device already registered, but on a different IP
+            device = AXIS_DEVICES[serialnumber]
+            device.config.host = host
+            dispatcher_send(hass, DOMAIN + '_' + device.name + '_new_ip', host)
 
     # Register discovery service
     discovery.listen(hass, SERVICE_AXIS, axis_device_discovered)
@@ -229,7 +235,7 @@ def setup_device(hass, config, device_config):
     device = AxisDevice(hass.loop, **device_config)
     device.name = device_config[CONF_NAME]
 
-    if device.serial_number is None:
+    if device.vapix.serial_number is None:
         # If there is no serial number a connection could not be made
         _LOGGER.error("Couldn't connect to %s", device_config[CONF_HOST])
         return False
@@ -246,7 +252,7 @@ def setup_device(hass, config, device_config):
             discovery.load_platform(
                 hass, component, DOMAIN, camera_config, config)
 
-    AXIS_DEVICES[device.serial_number] = device
+    AXIS_DEVICES[device.vapix.serial_number] = device
     if event_types:
         hass.add_job(device.start)
     return True
