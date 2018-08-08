@@ -20,6 +20,12 @@ SUPPORTED_SWITCHES = {
         "name": "Switch 2 name",
         "type": "Smart plug",
         "state": {}
+    },
+    "3": {
+        "id": "Switch 3 id",
+        "name": "Switch 3 name",
+        "type": "Warning device",
+        "state": {}
     }
 }
 
