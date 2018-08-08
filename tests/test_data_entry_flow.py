@@ -18,7 +18,9 @@ def manager():
         if handler is None:
             raise data_entry_flow.UnknownHandler
 
-        return handler()
+        flow = handler()
+        flow.init_step = source if source is not None else 'init'
+        return flow
 
     async def async_add_entry(result):
         if (result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY):

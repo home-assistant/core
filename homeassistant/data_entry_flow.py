@@ -59,12 +59,7 @@ class FlowManager:
         flow.source = source
         self._progress[flow.flow_id] = flow
 
-        if source is None:
-            step = 'init'
-        else:
-            step = source
-
-        return await self._async_handle_step(flow, step, data)
+        return await self._async_handle_step(flow, flow.init_step, data)
 
     async def async_configure(
             self, flow_id: str, user_input: str = None) -> Any:
@@ -129,6 +124,7 @@ class FlowHandler:
     handler = None
     source = None
     cur_step = None
+    init_step = 'init'
 
     # Set by developer
     VERSION = 1

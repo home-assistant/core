@@ -432,7 +432,12 @@ class ConfigEntries:
                 notification_id=DISCOVERY_NOTIFICATION_ID
             )
 
-        return handler()
+        flow = handler()
+        if source is not None:
+            flow.init_step = source
+        else:
+            flow.init_step = 'init'
+        return flow
 
     async def _async_schedule_save(self):
         """Save the entity registry to a file."""
