@@ -215,6 +215,9 @@ omit =
     homeassistant/components/opencv.py
     homeassistant/components/*/opencv.py
 
+    homeassistant/components/openuv.py
+    homeassistant/components/*/openuv.py
+
     homeassistant/components/pilight.py
     homeassistant/components/*/pilight.py
 
@@ -404,6 +407,7 @@ omit =
     homeassistant/components/climate/touchline.py
     homeassistant/components/climate/venstar.py
     homeassistant/components/climate/zhong_hong.py
+    homeassistant/components/cover/aladdin_connect.py
     homeassistant/components/cover/brunt.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/gogogate2.py
@@ -439,6 +443,7 @@ omit =
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
     homeassistant/components/device_tracker/ping.py
+    homeassistant/components/device_tracker/ritassist.py
     homeassistant/components/device_tracker/sky_hub.py
     homeassistant/components/device_tracker/snmp.py
     homeassistant/components/device_tracker/swisscom.py
@@ -508,6 +513,7 @@ omit =
     homeassistant/components/media_player/denon.py
     homeassistant/components/media_player/denonavr.py
     homeassistant/components/media_player/directv.py
+    homeassistant/components/media_player/dlna_dmr.py
     homeassistant/components/media_player/dunehd.py
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/epson.py
@@ -631,6 +637,7 @@ omit =
     homeassistant/components/sensor/eddystone_temperature.py
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/emoncms.py
+    homeassistant/components/sensor/enphase_envoy.py
     homeassistant/components/sensor/envirophat.py
     homeassistant/components/sensor/etherscan.py
     homeassistant/components/sensor/fastdotcom.py

@@ -8,7 +8,7 @@ pip>=8.0.3
 pytz>=2018.04
 pyyaml>=3.13,<4
 requests==2.19.1
-voluptuous==0.11.1
+voluptuous==0.11.5
 
 # Breaks Python 3.6 and is not needed for our supported Python versions
 enum34==1000000000.0.0

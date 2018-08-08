@@ -122,7 +122,6 @@ class BayesianBinarySensor(BinarySensorDevice):
     def async_added_to_hass(self):
         """Call when entity about to be added."""
         @callback
-        # pylint: disable=invalid-name
         def async_threshold_sensor_state_listener(entity, old_state,
                                                   new_state):
             """Handle sensor state changes."""

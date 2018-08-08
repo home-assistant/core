@@ -254,8 +254,6 @@ def _mean_tuple(*args):
     return tuple(sum(l) / len(l) for l in zip(*args))
 
 
-# https://github.com/PyCQA/pylint/issues/1831
-# pylint: disable=bad-whitespace
 def _reduce_attribute(states: List[State],
                       key: str,
                       default: Optional[Any] = None,

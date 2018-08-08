@@ -86,7 +86,6 @@ class ThresholdSensor(BinarySensorDevice):
         self._state = False
         self.sensor_value = None
 
-        # pylint: disable=invalid-name
         @callback
         def async_threshold_sensor_state_listener(
                 entity, old_state, new_state):
