@@ -27,7 +27,7 @@ At a minimum, each config flow will have to define a version number and the
 'init' step.
 
     @config_entries.HANDLERS.register(DOMAIN)
-    class ExampleConfigFlow(config_entries.FlowHandler):
+    class ExampleConfigFlow(data_entry_flow.FlowHandler):
 
         VERSION = 1
 
@@ -123,6 +123,11 @@ from homeassistant.util.decorator import Registry
 
 
 _LOGGER = logging.getLogger(__name__)
+
+SOURCE_USER = 'user'
+SOURCE_DISCOVERY = 'discovery'
+SOURCE_IMPORT = 'import'
+
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
@@ -151,8 +156,8 @@ ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
 DISCOVERY_SOURCES = (
-    data_entry_flow.SOURCE_DISCOVERY,
-    data_entry_flow.SOURCE_IMPORT,
+    SOURCE_DISCOVERY,
+    SOURCE_IMPORT,
 )
 
 EVENT_FLOW_DISCOVERED = 'config_entry_discovered'
@@ -374,12 +379,15 @@ class ConfigEntries:
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return None
 
+        source = result['source']
+        if source is None:
+            source = SOURCE_USER
         entry = ConfigEntry(
             version=result['version'],
             domain=result['handler'],
             title=result['title'],
             data=result['data'],
-            source=result['source'],
+            source=source,
         )
         self._entries.append(entry)
         await self._async_schedule_save()
@@ -399,13 +407,13 @@ class ConfigEntries:
 
         return entry
 
-    async def _async_create_flow(self, handler, *, source, data):
+    async def _async_create_flow(self, handler_key, *, source, data):
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to setup.
         """
-        component = getattr(self.hass.components, handler)
-        handler = HANDLERS.get(handler)
+        component = getattr(self.hass.components, handler_key)
+        handler = HANDLERS.get(handler_key)
 
         if handler is None:
             raise data_entry_flow.UnknownHandler

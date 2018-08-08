@@ -22,6 +22,10 @@ class DiscoveryFlowHandler(data_entry_flow.FlowHandler):
         self._title = title
         self._discovery_function = discovery_function
 
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
+        return await self.async_step_init(user_input)
+
     async def async_step_init(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():

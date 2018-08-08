@@ -163,7 +163,7 @@ async def test_create_saves_data(manager):
     assert entry['handler'] == 'test'
     assert entry['title'] == 'Test Title'
     assert entry['data'] == 'Test Data'
-    assert entry['source'] == data_entry_flow.SOURCE_USER
+    assert entry['source'] is None
 
 
 async def test_discovery_init_flow(manager):
@@ -181,7 +181,7 @@ async def test_discovery_init_flow(manager):
     }
 
     await manager.async_init(
-        'test', source=data_entry_flow.SOURCE_DISCOVERY, data=data)
+        'test', source='discovery', data=data)
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
 
@@ -190,4 +190,4 @@ async def test_discovery_init_flow(manager):
     assert entry['handler'] == 'test'
     assert entry['title'] == 'hello'
     assert entry['data'] == data
-    assert entry['source'] == data_entry_flow.SOURCE_DISCOVERY
+    assert entry['source'] == 'discovery'

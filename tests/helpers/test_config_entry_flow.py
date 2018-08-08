@@ -90,12 +90,12 @@ async def test_multiple_discoveries(hass, flow_conf):
     loader.set_component(hass, 'test', MockModule('test'))
 
     result = await hass.config_entries.flow.async_init(
-        'test', source=data_entry_flow.SOURCE_DISCOVERY, data={})
+        'test', source=config_entries.SOURCE_DISCOVERY, data={})
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
 
     # Second discovery
     result = await hass.config_entries.flow.async_init(
-        'test', source=data_entry_flow.SOURCE_DISCOVERY, data={})
+        'test', source=config_entries.SOURCE_DISCOVERY, data={})
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
 
 
@@ -105,7 +105,7 @@ async def test_user_init_trumps_discovery(hass, flow_conf):
 
     # Discovery starts flow
     result = await hass.config_entries.flow.async_init(
-        'test', source=data_entry_flow.SOURCE_DISCOVERY, data={})
+        'test', source=config_entries.SOURCE_DISCOVERY, data={})
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
 
     # User starts flow

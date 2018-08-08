@@ -8,10 +8,6 @@ from .exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
 
-SOURCE_USER = 'user'
-SOURCE_DISCOVERY = 'discovery'
-SOURCE_IMPORT = 'import'
-
 RESULT_TYPE_FORM = 'form'
 RESULT_TYPE_CREATE_ENTRY = 'create_entry'
 RESULT_TYPE_ABORT = 'abort'
@@ -53,8 +49,8 @@ class FlowManager:
             'source': flow.source,
         } for flow in self._progress.values()]
 
-    async def async_init(self, handler: Callable, *, source: str = SOURCE_USER,
-                         data: str = None) -> Any:
+    async def async_init(self, handler: Callable, *, source: str = None,
+                         data: Any = None) -> Any:
         """Start a configuration flow."""
         flow = await self._async_create_flow(handler, source=source, data=data)
         flow.hass = self.hass
@@ -63,7 +59,7 @@ class FlowManager:
         flow.source = source
         self._progress[flow.flow_id] = flow
 
-        if source == SOURCE_USER:
+        if source is None:
             step = 'init'
         else:
             step = source
@@ -131,7 +127,7 @@ class FlowHandler:
     flow_id = None
     hass = None
     handler = None
-    source = SOURCE_USER
+    source = None
     cur_step = None
 
     # Set by developer

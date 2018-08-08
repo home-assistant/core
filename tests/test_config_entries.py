@@ -266,7 +266,7 @@ async def test_discovery_notification(hass):
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
         result = await hass.config_entries.flow.async_init(
-            'test', source=data_entry_flow.SOURCE_DISCOVERY)
+            'test', source=config_entries.SOURCE_DISCOVERY)
 
     await hass.async_block_till_done()
     state = hass.states.get('persistent_notification.config_entry_discovery')
@@ -294,7 +294,7 @@ async def test_discovery_notification_not_created(hass):
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
         await hass.config_entries.flow.async_init(
-            'test', source=data_entry_flow.SOURCE_DISCOVERY)
+            'test', source=config_entries.SOURCE_DISCOVERY)
 
     await hass.async_block_till_done()
     state = hass.states.get('persistent_notification.config_entry_discovery')
