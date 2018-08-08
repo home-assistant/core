@@ -87,7 +87,7 @@ CONF_X10_SCHEMA = vol.All(
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(
         vol.Schema(
-            {vol.Exclusive(CONF_PORT,'plm_or_hub',
+            {vol.Exclusive(CONF_PORT, 'plm_or_hub',
                            msg=CONF_PLM_HUB_MSG): cv.isdevice,
              vol.Exclusive(CONF_HOST, 'plm_or_hub',
                            msg=CONF_PLM_HUB_MSG): cv.string,
