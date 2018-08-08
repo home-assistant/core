@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.5.0']
+REQUIREMENTS = ['netdisco==2.0.0']
 
 DOMAIN = 'discovery'
 
