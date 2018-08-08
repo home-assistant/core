@@ -1,0 +1,8 @@
+{
+    "id": null,
+    "result": null,
+    "error": {
+        "message": "Method not found.",
+        "code": -32601
+    }
+}

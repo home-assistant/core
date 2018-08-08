@@ -1,0 +1,26 @@
+{
+    "id": null,
+    "result": {
+        "cfg21fe63": {
+            ".name": "cfg21fe63",
+            ".type": "host",
+            "name": "raspberrypi3",
+            ".index": 32,
+            "mac": "b8:e8:99:5c:6e:12",
+            "dns": "1",
+            ".anonymous": true,
+            "ip": "10.10.10.251"
+        },
+        "cfg21fe62": {
+            ".name": "cfg21fe62",
+            ".type": "host",
+            "name": "mydevicename",
+            ".index": 32,
+            "mac": "18:8b:40:08:14:b2",
+            "dns": "1",
+            ".anonymous": true,
+            "ip": "10.10.10.25"
+        }
+    },
+    "error": null
+}

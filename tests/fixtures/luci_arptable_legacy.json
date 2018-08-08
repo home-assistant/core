@@ -1,0 +1,30 @@
+{
+    "id": null,
+    "result": [
+        {
+            "IP address": "10.10.10.249",
+            "HW address": "B8:E8:99:5C:6E:10",
+            "HW type": "0x1",
+            "Flags": "0x6",
+            "Mask": "*",
+            "Device": "br-lan"
+        },
+        {
+            "IP address": "10.10.10.250",
+            "HW address": "B8:E8:99:5C:6E:11",
+            "HW type": "0x1",
+            "Flags": "0x2",
+            "Mask": "*",
+            "Device": "br-lan"
+        },
+                {
+            "IP address": "10.10.10.251",
+            "HW address": "B8:E8:99:5C:6E:12",
+            "HW type": "0x1",
+            "Flags": "0x2",
+            "Mask": "*",
+            "Device": "br-lan"
+        }
+    ],
+    "error": null
+}
