@@ -109,11 +109,10 @@ class DeconzSirene(DeconzSwitch):
 
     async def async_turn_on(self, **kwargs):
         """Turn on switch."""
-        data['alert'] = 'lselect'
         data = {'alert': 'lselect'}
         await self._switch.async_set_state(data)
 
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
-        data = {'on': False}
+        data = {'alert': 'none'}
         await self._switch.async_set_state(data)
