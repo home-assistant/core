@@ -1477,6 +1477,21 @@ def _process(hass, text, callback):
     m = None
     m_org = None
     found_intent = None
+    # first check the conversation intents
+    conv_intents = hass.data.get('conversation', {})
+    for intent_type, matchers in conv_intents.items():
+        for matcher in matchers:
+            match = matcher.match(text)
+            if not match:
+                continue
+            response = yield from hass.helpers.intent.async_handle(
+                'conversation', intent_type,
+                {key: {'value': value} for key, value
+                 in match.groupdict().items()}, text)
+            return response
+
+
+    # check the AIS dom intents
     intents = hass.data.get(DOMAIN, {})
     try:
         for intent_type, matchers in intents.items():
