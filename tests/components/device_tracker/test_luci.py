@@ -1,16 +1,15 @@
 """The tests for Efergy sensor platform."""
 import unittest
-
 import requests_mock
+from homeassistant.components import device_tracker
 
 from homeassistant.setup import setup_component
-import homeassistant.components.device_tracker as device_tracker
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_SSL)
 
 from tests.common import load_fixture, get_test_home_assistant
 
-token = 'bf13be9ca4cea446c49410963492282a'
+TOKEN = 'bf13be9ca4cea446c49410963492282a'
 
 LUCI_CONFIG = {
     'platform': 'luci',
@@ -28,10 +27,10 @@ def mock_responses_version_pre_18(mock):
         '{}/cgi-bin/luci/rpc/auth'.format(base_url),
         text=load_fixture('luci_auth.json'))
     mock.post(
-        '{}/cgi-bin/luci/rpc/sys?auth={}'.format(base_url, token),
+        '{}/cgi-bin/luci/rpc/sys?auth={}'.format(base_url, TOKEN),
         text=load_fixture('luci_arptable_legacy.json'))
     mock.post(
-        '{}/cgi-bin/luci/rpc/uci?auth={}'.format(base_url, token),
+        '{}/cgi-bin/luci/rpc/uci?auth={}'.format(base_url, TOKEN),
         text=load_fixture('luci_dhcp.json'))
 
 
@@ -42,13 +41,13 @@ def mock_responses_version_v18(mock):
         '{}/cgi-bin/luci/rpc/auth'.format(base_url),
         text=load_fixture('luci_auth.json'))
     mock.post(
-        '{}/cgi-bin/luci/rpc/sys?auth={}'.format(base_url, token),
+        '{}/cgi-bin/luci/rpc/sys?auth={}'.format(base_url, TOKEN),
         text=load_fixture('luci_arptable_v18.json'))
     mock.post(
-        '{}/cgi-bin/luci/rpc/ip?auth={}'.format(base_url, token),
+        '{}/cgi-bin/luci/rpc/ip?auth={}'.format(base_url, TOKEN),
         text=load_fixture('luci_neighbors.json'))
     mock.post(
-        '{}/cgi-bin/luci/rpc/uci?auth={}'.format(base_url, token),
+        '{}/cgi-bin/luci/rpc/uci?auth={}'.format(base_url, TOKEN),
         text=load_fixture('luci_dhcp.json'))
 
 
@@ -67,6 +66,7 @@ class TestLuciDeviceScanner(unittest.TestCase):
         self.hass.stop()
 
     def setup_luci_component(self):
+        """Set up with basic config."""
         self.assertTrue(
             setup_component(self.hass,
                             device_tracker.DOMAIN, {
@@ -76,8 +76,7 @@ class TestLuciDeviceScanner(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_pre_v18_success(self, mock):
-        """Test for successfully setting up
-        the Luci platform on pre-v18."""
+        """Test for platform on pre-v18."""
         mock_responses_version_pre_18(mock)
 
         self.setup_luci_component()
@@ -94,7 +93,7 @@ class TestLuciDeviceScanner(unittest.TestCase):
 
     @requests_mock.Mocker()
     def test_v18_or_newer_success(self, mock):
-        """Test for successfully setting up the Luci platform on v18.06+"""
+        """Test for platform on v18.06+."""
         mock_responses_version_v18(mock)
 
         self.setup_luci_component()
