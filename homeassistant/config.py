@@ -347,8 +347,8 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
     _LOGGER.info("Upgrading configuration directory from %s to %s",
                  conf_version, __version__)
 
+    # 0.50 introduced persistent deps dir
     if LooseVersion(conf_version) < LooseVersion('0.50'):
-        # 0.50 introduced persistent deps dir.
         lib_path = hass.config.path('deps')
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
