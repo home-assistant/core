@@ -55,7 +55,7 @@ class AxisCamera(MjpegCamera):
         dispatcher_connect(
             hass, DOMAIN + '_' + config[CONF_NAME] + '_new_ip', self._new_ip)
 
-     def _new_ip(self, host):
+    def _new_ip(self, host):
         """Set new IP for video stream."""
         self._mjpeg_url = _get_image_url(host, self.port, 'mjpeg')
         self._still_image_url = _get_image_url(host, self.port, 'single')
