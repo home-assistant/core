@@ -75,10 +75,11 @@ class TestLuciDeviceScanner(unittest.TestCase):
         self.hass.stop()
 
     def setup_luci_component(self):
-        self.assertTrue(setup_component(self.hass,
-            device_tracker.DOMAIN, {
-            device_tracker.DOMAIN: LUCI_CONFIG
-        }))
+        self.assertTrue(
+            setup_component(self.hass,
+                            device_tracker.DOMAIN, {
+                                device_tracker.DOMAIN: LUCI_CONFIG
+                            }))
         self.hass.block_till_done()
 
     @requests_mock.Mocker()
