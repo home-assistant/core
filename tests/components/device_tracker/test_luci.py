@@ -57,14 +57,6 @@ class TestLuciDeviceScanner(unittest.TestCase):
 
     DEVICES = []
 
-    @requests_mock.Mocker()
-    def add_devices(self, devices, mock):
-        """Mock add devices."""
-        mock_responses(mock)
-        for device in devices:
-            device.update()
-            self.DEVICES.append(device)
-
     def setUp(self):
         """Initialize values for this test case class."""
         self.hass = get_test_home_assistant()
