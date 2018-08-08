@@ -21,12 +21,14 @@ _LOGGER = logging.getLogger(__name__)
 CONF_PORT = 'port'
 CONF_SITE_ID = 'site_id'
 CONF_DETECTION_TIME = 'detection_time'
+CONF_EXTRA_ATTRIBUTES = 'extra_attributes'
 CONF_SSID_FILTER = 'ssid_filter'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8443
 DEFAULT_VERIFY_SSL = True
 DEFAULT_DETECTION_TIME = timedelta(seconds=300)
+DEFAULT_EXTRA_ATTRIBUTES = False
 
 NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
@@ -41,6 +43,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.boolean, cv.isfile),
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
         cv.time_period, cv.positive_timedelta),
+    vol.Optional(CONF_EXTRA_ATTRIBUTES, default=DEFAULT_EXTRA_ATTRIBUTES):
+        cv.boolean,
     vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
 })
 
@@ -56,6 +60,7 @@ def get_scanner(hass, config):
     port = config[DOMAIN].get(CONF_PORT)
     verify_ssl = config[DOMAIN].get(CONF_VERIFY_SSL)
     detection_time = config[DOMAIN].get(CONF_DETECTION_TIME)
+    extra_attributes = config[DOMAIN].get(CONF_EXTRA_ATTRIBUTES)
     ssid_filter = config[DOMAIN].get(CONF_SSID_FILTER)
 
     try:
@@ -72,18 +77,19 @@ def get_scanner(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    return UnifiScanner(ctrl, detection_time, ssid_filter)
+    return UnifiScanner(ctrl, detection_time, ssid_filter, extra_attributes)
 
 
 class UnifiScanner(DeviceScanner):
     """Provide device_tracker support from Unifi WAP client data."""
 
     def __init__(self, controller, detection_time: timedelta,
-                 ssid_filter) -> None:
+                 ssid_filter, extra_attributes) -> None:
         """Initialize the scanner."""
         self._detection_time = detection_time
         self._controller = controller
         self._ssid_filter = ssid_filter
+        self._extra_attributes = extra_attributes
         self._update()
 
     def _update(self):
@@ -125,6 +131,9 @@ class UnifiScanner(DeviceScanner):
 
     def get_extra_attributes(self, device):
         """Return the extra attributes of the device."""
+        if not self._extra_attributes:
+            return {}
+
         client = self._clients.get(device, {})
         _LOGGER.debug("Device mac %s attributes %s", device, client)
         return client
