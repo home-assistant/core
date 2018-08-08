@@ -35,7 +35,6 @@ def mock_responses_version_pre_18(mock):
         text=load_fixture('luci_dhcp.json'))
 
 
-
 def mock_responses_version_v18(mock):
     """Mock responses for Luci RPC version v18."""
     base_url = 'http://{}'.format(LUCI_CONFIG[CONF_HOST])
@@ -77,7 +76,7 @@ class TestLuciDeviceScanner(unittest.TestCase):
 
     def setup_luci_component(self):
         self.assertTrue(setup_component(self.hass,
-                                        device_tracker.DOMAIN, {
+            device_tracker.DOMAIN, {
             device_tracker.DOMAIN: LUCI_CONFIG
         }))
         self.hass.block_till_done()
