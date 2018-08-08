@@ -66,9 +66,6 @@ class AxisBinarySensor(BinarySensorDevice):
     @property
     def name(self):
         """Return the name of the event."""
-        if self.axis_event.event_name:
-            return '{}_{}'.format(
-                self.device_name, slugify(self.axis_event.event_name))
         return '{}_{}_{}'.format(
             self.device_name, self.axis_event.event_type, self.axis_event.id)
 
