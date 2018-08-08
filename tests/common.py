@@ -12,7 +12,7 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from homeassistant import auth, core as ha, data_entry_flow, config_entries
+from homeassistant import auth, core as ha, config_entries
 from homeassistant.auth import (
     models as auth_models, auth_store, providers as auth_providers)
 from homeassistant.setup import setup_component, async_setup_component
