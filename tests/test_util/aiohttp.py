@@ -15,7 +15,8 @@ from aiohttp.client_exceptions import ClientResponseError
 retype = type(re.compile(''))
 
 
-def create_stream(data):
+def mock_stream(data):
+    """Mock a stream with data."""
     protocol = mock.Mock(_reading_paused=False)
     stream = StreamReader(protocol)
     stream.feed_data(data)
@@ -139,18 +140,6 @@ class AiohttpClientMockResponse:
                 cookie.value = data
                 self._cookies[name] = cookie
 
-        if isinstance(response, list):
-            self.content = mock.MagicMock()
-
-            @asyncio.coroutine
-            def read(*argc, **kwargs):
-                """Read content stream mock."""
-                if self.response:
-                    return self.response.pop()
-                return None
-
-            self.content.read = read
-
     def match_request(self, method, url, params=None):
         """Test if response answers request."""
         if method.lower() != self.method.lower():
@@ -189,7 +178,7 @@ class AiohttpClientMockResponse:
     @property
     def content(self):
         """Return content."""
-        return create_stream(self.response)
+        return mock_stream(self.response)
 
     @asyncio.coroutine
     def read(self):
