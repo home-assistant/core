@@ -100,7 +100,7 @@ class DeconzPowerPlug(DeconzSwitch):
 
 
 class DeconzSirene(DeconzSwitch):
-    """Representation of sirene from deCONZ."""
+    """Representation of sirenes from deCONZ."""
 
     @property
     def is_on(self):
