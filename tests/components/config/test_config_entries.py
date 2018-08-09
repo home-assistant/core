@@ -102,13 +102,13 @@ def test_initialize_flow(hass, client):
     """Test we can initialize a flow."""
     class TestFlow(FlowHandler):
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             schema = OrderedDict()
             schema[vol.Required('username')] = str
             schema[vol.Required('password')] = str
 
             return self.async_show_form(
-                step_id='init',
+                step_id='user',
                 data_schema=schema,
                 description_placeholders={
                     'url': 'https://example.com',
@@ -130,7 +130,7 @@ def test_initialize_flow(hass, client):
     assert data == {
         'type': 'form',
         'handler': 'test',
-        'step_id': 'init',
+        'step_id': 'user',
         'data_schema': [
             {
                 'name': 'username',
@@ -157,7 +157,7 @@ def test_abort(hass, client):
     """Test a flow that aborts."""
     class TestFlow(FlowHandler):
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_abort(reason='bla')
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
@@ -185,7 +185,7 @@ def test_create_account(hass, client):
         VERSION = 1
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='Test Entry',
                 data={'secret': 'account_token'}
@@ -218,7 +218,7 @@ def test_two_step_flow(hass, client):
         VERSION = 1
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_show_form(
                 step_id='account',
                 data_schema=vol.Schema({
@@ -286,7 +286,7 @@ def test_get_progress_index(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         form = yield from hass.config_entries.flow.async_init(
-            'test', source='hassio')
+            'test', context={'source': 'hassio'})
 
     resp = yield from client.get('/api/config/config_entries/flow')
     assert resp.status == 200
@@ -305,13 +305,13 @@ def test_get_progress_flow(hass, client):
     """Test we can query the API for same result as we get from init a flow."""
     class TestFlow(FlowHandler):
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             schema = OrderedDict()
             schema[vol.Required('username')] = str
             schema[vol.Required('password')] = str
 
             return self.async_show_form(
-                step_id='init',
+                step_id='user',
                 data_schema=schema,
                 errors={
                     'username': 'Should be unique.'

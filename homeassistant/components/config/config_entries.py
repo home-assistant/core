@@ -96,7 +96,7 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
 
         return self.json([
             flw for flw in hass.config_entries.flow.async_progress()
-            if flw['source'] != data_entry_flow.SOURCE_USER])
+            if flw['source'] != config_entries.SOURCE_USER])
 
 
 class ConfigManagerFlowResourceView(FlowManagerResourceView):
