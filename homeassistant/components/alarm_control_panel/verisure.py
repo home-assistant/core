@@ -90,6 +90,10 @@ class VerisureAlarm(alarm.AlarmControlPanel):
         """Send arm home command."""
         set_arm_state('ARMED_HOME', code)
 
+    def alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        set_arm_state('ARMED_HOME', code)
+
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         set_arm_state('ARMED_AWAY', code)
