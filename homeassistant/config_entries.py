@@ -24,19 +24,23 @@ Before instantiating the handler, Home Assistant will make sure to load all
 dependencies and install the requirements of the component.
 
 At a minimum, each config flow will have to define a version number and the
-'init' step.
+'user' step.
 
     @config_entries.HANDLERS.register(DOMAIN)
-    class ExampleConfigFlow(config_entries.FlowHandler):
+    class ExampleConfigFlow(data_entry_flow.FlowHandler):
 
         VERSION = 1
 
-        async def async_step_init(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             …
 
-The 'init' step is the first step of a flow and is called when a user
+The 'user' step is the first step of a flow and is called when a user
 starts a new flow. Each step has three different possible results: "Show Form",
 "Abort" and "Create Entry".
+
+> Note: prior 0.76, the default step is 'init' step, some config flows still
+keep 'init' step to avoid break localization. All new config flow should use
+'user' step.
 
 ### Show Form
 
@@ -50,7 +54,7 @@ a title, a description and the schema of the data that needs to be returned.
         data_schema[vol.Required('password')] = str
 
         return self.async_show_form(
-            step_id='init',
+            step_id='user',
             title='Account Info',
             data_schema=vol.Schema(data_schema)
         )
@@ -97,10 +101,10 @@ Assistant, a success message is shown to the user and the flow is finished.
 You might want to initialize a config flow programmatically. For example, if
 we discover a device on the network that requires user interaction to finish
 setup. To do so, pass a source parameter and optional user input to the init
-step:
+method:
 
     await hass.config_entries.flow.async_init(
-        'hue', source='discovery', data=discovery_info)
+        'hue', context={'source': 'discovery'}, data=discovery_info)
 
 The config flow handler will need to add a step to support the source. The step
 should follow the same return values as a normal step.
@@ -123,6 +127,11 @@ from homeassistant.util.decorator import Registry
 
 
 _LOGGER = logging.getLogger(__name__)
+
+SOURCE_USER = 'user'
+SOURCE_DISCOVERY = 'discovery'
+SOURCE_IMPORT = 'import'
+
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
@@ -151,8 +160,8 @@ ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
 DISCOVERY_SOURCES = (
-    data_entry_flow.SOURCE_DISCOVERY,
-    data_entry_flow.SOURCE_IMPORT,
+    SOURCE_DISCOVERY,
+    SOURCE_IMPORT,
 )
 
 EVENT_FLOW_DISCOVERED = 'config_entry_discovered'
@@ -374,12 +383,15 @@ class ConfigEntries:
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return None
 
+        source = result['source']
+        if source is None:
+            source = SOURCE_USER
         entry = ConfigEntry(
             version=result['version'],
             domain=result['handler'],
             title=result['title'],
             data=result['data'],
-            source=result['source'],
+            source=source,
         )
         self._entries.append(entry)
         await self._async_schedule_save()
@@ -399,16 +411,21 @@ class ConfigEntries:
 
         return entry
 
-    async def _async_create_flow(self, handler, *, source, data):
+    async def _async_create_flow(self, handler_key, *, context, data):
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to setup.
         """
-        component = getattr(self.hass.components, handler)
-        handler = HANDLERS.get(handler)
+        component = getattr(self.hass.components, handler_key)
+        handler = HANDLERS.get(handler_key)
 
         if handler is None:
             raise data_entry_flow.UnknownHandler
+
+        if context is not None:
+            source = context.get('source', SOURCE_USER)
+        else:
+            source = SOURCE_USER
 
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(
@@ -424,7 +441,10 @@ class ConfigEntries:
                 notification_id=DISCOVERY_NOTIFICATION_ID
             )
 
-        return handler()
+        flow = handler()
+        flow.source = source
+        flow.init_step = source
+        return flow
 
     async def _async_schedule_save(self):
         """Save the entity registry to a file."""

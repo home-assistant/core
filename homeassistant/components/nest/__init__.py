@@ -11,6 +11,7 @@ from datetime import datetime, timedelta
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
     CONF_MONITORED_CONDITIONS,
@@ -103,7 +104,8 @@ async def async_setup(hass, config):
     access_token_cache_file = hass.config.path(filename)
 
     hass.async_add_job(hass.config_entries.flow.async_init(
-        DOMAIN, source='import', data={
+        DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+        data={
             'nest_conf_path': access_token_cache_file,
         }
     ))

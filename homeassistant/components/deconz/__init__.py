@@ -6,6 +6,7 @@ https://home-assistant.io/components/deconz/
 """
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY, CONF_EVENT, CONF_HOST,
     CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
@@ -60,7 +61,9 @@ async def async_setup(hass, config):
             deconz_config = config[DOMAIN]
         if deconz_config and not configured_hosts(hass):
             hass.async_add_job(hass.config_entries.flow.async_init(
-                DOMAIN, source='import', data=deconz_config
+                DOMAIN,
+                context={'source': config_entries.SOURCE_IMPORT},
+                data=deconz_config
             ))
     return True
 
