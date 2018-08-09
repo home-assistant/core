@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     bulb = SmartBulb(host)
     try:
-        unique_id = bulb.sys_info['deviceId']
+        unique_id = bulb.sys_info['mac']
         if name is None:
             name = bulb.alias
     except SmartDeviceException:

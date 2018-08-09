@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     plug = SmartPlug(host)
     try:
-        unique_id = plug.sys_info['deviceId']
+        unique_id = plug.sys_info['mac']
         if name is None:
             name = plug.alias
     except SmartDeviceException:
