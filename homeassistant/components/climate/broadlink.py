@@ -25,10 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 REQUIREMENTS = ['broadlink==0.9.0', 'BroadlinkWifiThermostat==1.0.1']
 
 DEFAULT_NAME = 'broadlink'
-POWER_ON = 1
-POWER_OFF = 0
-AUTO = 1
-MANUAL = 0
+
 OPERATION_LIST = [STATE_AUTO, STATE_HEAT, STATE_OFF]
 CONF_MODE_LIST = 'modes'
 CONF_MIN_TEMP = 'min_temp'
