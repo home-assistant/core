@@ -52,9 +52,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NEXT_DEPARTURE): [{
         vol.Required(CONF_STATION): cv.string,
-        vol.Optional(CONF_DESTINATIONS, default=['']): cv.ensure_list,
-        vol.Optional(CONF_DIRECTIONS, default=['']): cv.ensure_list,
-        vol.Optional(CONF_LINES, default=['']): cv.ensure_list,
+        vol.Optional(CONF_DESTINATIONS, default=[]): cv.ensure_list,
+        vol.Optional(CONF_DIRECTIONS, default=[]): cv.ensure_list,
+        vol.Optional(CONF_LINES, default=[]): cv.ensure_list,
         vol.Optional(CONF_PRODUCTS, default=VALID_PRODUCTS):
             vol.All(cv.ensure_list, [vol.In(VALID_PRODUCTS)]),
         vol.Optional(CONF_TIME_OFFSET, default=0): cv.positive_int,
@@ -180,7 +180,7 @@ class RMVDepartureData:
         for journey in _data['journeys']:
             # find the first departure meeting the criteria
             _nextdep = {ATTR_ATTRIBUTION: ATTRIBUTION}
-            if '' not in self._destinations[:1]:
+            if self._destinations:
                 dest_found = False
                 for dest in self._destinations:
                     if dest in journey['stops']:
@@ -188,8 +188,7 @@ class RMVDepartureData:
                         _nextdep['destination'] = dest
                 if not dest_found:
                     continue
-            elif ('' not in self._lines[:1] and
-                  journey['number'] not in self._lines):
+            elif self._lines and journey['number'] not in self._lines:
                 continue
             elif journey['minutes'] < self._time_offset:
                 continue
