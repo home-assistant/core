@@ -1201,7 +1201,7 @@ qnapstats==0.2.6
 rachiopy==0.1.3
 
 # homeassistant.components.climate.radiotherm
-radiotherm==1.3
+radiotherm==1.4.1
 
 # homeassistant.components.raincloud
 raincloudy==0.0.5
