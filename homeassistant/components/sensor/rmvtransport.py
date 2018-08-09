@@ -88,6 +88,7 @@ class RMVDepartureSensor(Entity):
         """Initialize the sensor."""
         self._station = station
         self._name = name
+        self._state = None
         self.data = RMVDepartureData(station, destinations, directions, lines,
                                      products, time_offset, max_journeys)
         self._icon = ICONS[None]
