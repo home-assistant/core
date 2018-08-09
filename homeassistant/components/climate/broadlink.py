@@ -201,7 +201,7 @@ class BroadlinkThermostat(ClimateDevice):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        currentTemp = kwargs.get(ATTR_TEMPERATURE)
+        current_temp = kwargs.get(ATTR_TEMPERATURE)
         if currentTemp is not None:
             self._device.set_temperature(currentTemp)
 
