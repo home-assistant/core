@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.alpha_vantage/
 """
 from datetime import timedelta
+import time
 import logging
 
 import voluptuous as vol
@@ -79,17 +80,20 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.warning(msg)
         return
 
-    timeseries = TimeSeries(key=api_key)
-
     dev = []
+
+    timeseries = TimeSeries(key=api_key)
     for symbol in symbols:
         try:
             _LOGGER.debug("Configuring timeseries for symbols: %s",
                           symbol[CONF_SYMBOL])
             timeseries.get_intraday(symbol[CONF_SYMBOL])
-        except ValueError:
+            _LOGGER.debug("Sleep %s seconds to prevent API throttling...", 10)
+            time.sleep(10)
+        except ValueError as error:
             _LOGGER.error(
                 "API Key is not valid or symbol '%s' not known", symbol)
+            _LOGGER.debug(str(error))
         dev.append(AlphaVantageSensor(timeseries, symbol))
 
     forex = ForeignExchange(key=api_key)
@@ -100,6 +104,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.debug("Configuring forex %s - %s", from_cur, to_cur)
             forex.get_currency_exchange_rate(
                 from_currency=from_cur, to_currency=to_cur)
+            _LOGGER.debug("Sleep %s seconds to prevent API throttling...", 10)
+            time.sleep(10)
         except ValueError as error:
             _LOGGER.error(
                 "API Key is not valid or currencies '%s'/'%s' not known",
@@ -160,6 +166,8 @@ class AlphaVantageSensor(Entity):
         all_values, _ = self._timeseries.get_intraday(self._symbol)
         self.values = next(iter(all_values.values()))
         _LOGGER.debug("Received new values for symbol %s", self._symbol)
+        _LOGGER.debug("Sleep %s seconds to prevent API throttling...", 10)
+        time.sleep(10)
 
 
 class AlphaVantageForeignExchange(Entity):
@@ -216,3 +224,5 @@ class AlphaVantageForeignExchange(Entity):
             from_currency=self._from_currency, to_currency=self._to_currency)
         _LOGGER.debug("Received new data for forex %s - %s",
                       self._from_currency, self._to_currency)
+        _LOGGER.debug("Sleep %s seconds to prevent API throttling...", 10)
+        time.sleep(10)
