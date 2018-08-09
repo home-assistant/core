@@ -12,14 +12,17 @@ def manager():
     handlers = Registry()
     entries = []
 
-    async def async_create_flow(handler_name, *, source, data):
+    async def async_create_flow(handler_name, *, context, data):
         handler = handlers.get(handler_name)
 
         if handler is None:
             raise data_entry_flow.UnknownHandler
 
         flow = handler()
-        flow.init_step = source if source is not None else 'init'
+        flow.init_step = context.get('init_step', 'init') \
+            if context is not None else 'init'
+        flow.source = context.get('source') \
+            if context is not None else 'user_input'
         return flow
 
     async def async_add_entry(result):
@@ -79,7 +82,7 @@ async def test_configure_two_steps(manager):
                 data_schema=vol.Schema([str])
             )
 
-    form = await manager.async_init('test', source='first')
+    form = await manager.async_init('test', context={'init_step': 'first'})
 
     with pytest.raises(vol.Invalid):
         form = await manager.async_configure(
@@ -165,7 +168,7 @@ async def test_create_saves_data(manager):
     assert entry['handler'] == 'test'
     assert entry['title'] == 'Test Title'
     assert entry['data'] == 'Test Data'
-    assert entry['source'] is None
+    assert entry['source'] == 'user_input'
 
 
 async def test_discovery_init_flow(manager):
@@ -174,7 +177,7 @@ async def test_discovery_init_flow(manager):
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
 
-        async def async_step_discovery(self, info):
+        async def async_step_init(self, info):
             return self.async_create_entry(title=info['id'], data=info)
 
     data = {
@@ -183,7 +186,7 @@ async def test_discovery_init_flow(manager):
     }
 
     await manager.async_init(
-        'test', source='discovery', data=data)
+        'test', context={'source': 'discovery'}, data=data)
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
 

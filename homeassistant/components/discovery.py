@@ -138,7 +138,7 @@ async def async_setup(hass, config):
         if service in CONFIG_ENTRY_HANDLERS:
             await hass.config_entries.flow.async_init(
                 CONFIG_ENTRY_HANDLERS[service],
-                source=config_entries.SOURCE_DISCOVERY,
+                context={'source': config_entries.SOURCE_DISCOVERY},
                 data=info
             )
             return

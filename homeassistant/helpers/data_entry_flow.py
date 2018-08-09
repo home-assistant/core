@@ -54,7 +54,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
         try:
             result = await self._flow_mgr.async_init(
-                handler, source=config_entries.SOURCE_USER)
+                handler, context={'source': config_entries.SOURCE_USER})
         except data_entry_flow.UnknownHandler:
             return self.json_message('Invalid handler specified', 404)
         except data_entry_flow.UnknownStep:

@@ -62,7 +62,7 @@ async def async_setup(hass, config):
         if deconz_config and not configured_hosts(hass):
             hass.async_add_job(hass.config_entries.flow.async_init(
                 DOMAIN,
-                source=config_entries.SOURCE_IMPORT,
+                context={'source': config_entries.SOURCE_IMPORT},
                 data=deconz_config
             ))
     return True

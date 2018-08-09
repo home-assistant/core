@@ -175,5 +175,5 @@ async def test_discover_config_flow(hass):
     assert len(m_init.mock_calls) == 1
     args, kwargs = m_init.mock_calls[0][1:]
     assert args == ('mock-component',)
-    assert kwargs['source'] == config_entries.SOURCE_DISCOVERY
+    assert kwargs['context']['source'] == config_entries.SOURCE_DISCOVERY
     assert kwargs['data'] == discovery_info

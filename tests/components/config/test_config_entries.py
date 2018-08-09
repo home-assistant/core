@@ -286,7 +286,7 @@ def test_get_progress_index(hass, client):
 
     with patch.dict(HANDLERS, {'test': TestFlow}):
         form = yield from hass.config_entries.flow.async_init(
-            'test', source='hassio')
+            'test', context={'source': 'hassio'})
 
     resp = yield from client.get('/api/config/config_entries/flow')
     assert resp.status == 200

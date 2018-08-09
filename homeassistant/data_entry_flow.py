@@ -49,14 +49,14 @@ class FlowManager:
             'source': flow.source,
         } for flow in self._progress.values()]
 
-    async def async_init(self, handler: Callable, *, source: str = None,
+    async def async_init(self, handler: Callable, *, context: Dict = None,
                          data: Any = None) -> Any:
         """Start a configuration flow."""
-        flow = await self._async_create_flow(handler, source=source, data=data)
+        flow = await self._async_create_flow(
+            handler, context=context, data=data)
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
-        flow.source = source
         self._progress[flow.flow_id] = flow
 
         return await self._async_handle_step(flow, flow.init_step, data)

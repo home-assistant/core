@@ -15,7 +15,7 @@ async def async_setup(hass, config):
 
     if conf is not None:
         hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, source=config_entries.SOURCE_IMPORT))
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
 
     return True
 

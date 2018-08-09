@@ -108,7 +108,8 @@ async def async_setup(hass, config):
         # deadlock: creating a config entry will set up the component but the
         # setup would block till the entry is created!
         hass.async_add_job(hass.config_entries.flow.async_init(
-            DOMAIN, source=config_entries.SOURCE_IMPORT, data={
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            data={
                 'host': bridge_conf[CONF_HOST],
                 'path': bridge_conf[CONF_FILENAME],
             }

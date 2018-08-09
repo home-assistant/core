@@ -104,7 +104,7 @@ setup. To do so, pass a source parameter and optional user input to the init
 method:
 
     await hass.config_entries.flow.async_init(
-        'hue', source='discovery', data=discovery_info)
+        'hue', context={'source': 'discovery'}, data=discovery_info)
 
 The config flow handler will need to add a step to support the source. The step
 should follow the same return values as a normal step.
@@ -411,7 +411,7 @@ class ConfigEntries:
 
         return entry
 
-    async def _async_create_flow(self, handler_key, *, source, data):
+    async def _async_create_flow(self, handler_key, *, context, data):
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to setup.
@@ -421,6 +421,11 @@ class ConfigEntries:
 
         if handler is None:
             raise data_entry_flow.UnknownHandler
+
+        if context is not None:
+            source = context.get('source', SOURCE_USER)
+        else:
+            source = SOURCE_USER
 
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(
@@ -437,10 +442,8 @@ class ConfigEntries:
             )
 
         flow = handler()
-        if source is not None:
-            flow.init_step = source
-        else:
-            flow.init_step = 'user'
+        flow.source = source
+        flow.init_step = source
         return flow
 
     async def _async_schedule_save(self):
