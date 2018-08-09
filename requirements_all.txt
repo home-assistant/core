@@ -48,7 +48,7 @@ PyMVGLive==1.1.4
 PyMata==2.14
 
 # homeassistant.components.sensor.rmvtransport
-PyRMVtransport==0.0.6
+PyRMVtransport==0.0.7
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.9.5

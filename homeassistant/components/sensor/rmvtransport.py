@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 
-REQUIREMENTS = ['PyRMVtransport==0.0.6']
+REQUIREMENTS = ['PyRMVtransport==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
