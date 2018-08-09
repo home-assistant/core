@@ -145,7 +145,6 @@ class RMVDepartureSensor(Entity):
         self._station = self.data.station
         self._state = self.data.departures[0].get('minutes')
         self._icon = ICONS[self.data.departures[0].get('product')]
-        return
 
 
 class RMVDepartureData:
@@ -176,7 +175,7 @@ class RMVDepartureData:
             self.departures = {}
             _LOGGER.warning("Returned data not understood")
             return
-        self.station = _data.get('station', None)
+        self.station = _data.get('station')
         _deps = []
         for journey in _data['journeys']:
             # find the first departure meeting the criteria
