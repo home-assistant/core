@@ -164,7 +164,7 @@ class IrishRailTransportData:
                           ATTR_TRAIN_TYPE: train.get('type')}
             self.info.append(train_data)
 
-        if not self.info or not self.info:
+        if not self.info:
             self.info = self._empty_train_data()
 
     def _empty_train_data(self):
