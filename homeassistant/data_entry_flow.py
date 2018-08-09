@@ -2,7 +2,7 @@
 import logging
 import uuid
 import voluptuous as vol
-from typing import Dict, Any, Callable, List, Optional  # noqa pylint: disable=unused-import
+from typing import Dict, Any, Callable, Hashable, List, Optional  # noqa pylint: disable=unused-import
 from .core import callback, HomeAssistant
 from .exceptions import HomeAssistantError
 
@@ -49,7 +49,7 @@ class FlowManager:
             'source': flow.source,
         } for flow in self._progress.values()]
 
-    async def async_init(self, handler: Callable, *, context: Dict = None,
+    async def async_init(self, handler: Hashable, *, context: Dict = None,
                          data: Any = None) -> Any:
         """Start a configuration flow."""
         flow = await self._async_create_flow(
