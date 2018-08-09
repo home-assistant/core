@@ -601,3 +601,11 @@ nest:
       trip_id:
         description: Optional identity of a trip. Using the same trip_ID will update the estimation.
         example: trip_back_home
+
+zoneminder:
+  set_run_state:
+    description: Set the ZoneMinder run state
+    fields:
+      name:
+        description: The string name of the ZoneMinder run state to set as active.
+        example: 'Home'
