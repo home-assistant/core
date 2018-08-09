@@ -124,6 +124,8 @@ class FlowHandler:
     handler = None
     source = None
     cur_step = None
+
+    # Set by _async_create_flow callback
     init_step = 'init'
 
     # Set by developer

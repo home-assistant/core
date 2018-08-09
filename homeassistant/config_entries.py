@@ -24,19 +24,23 @@ Before instantiating the handler, Home Assistant will make sure to load all
 dependencies and install the requirements of the component.
 
 At a minimum, each config flow will have to define a version number and the
-'init' step.
+'user' step.
 
     @config_entries.HANDLERS.register(DOMAIN)
     class ExampleConfigFlow(data_entry_flow.FlowHandler):
 
         VERSION = 1
 
-        async def async_step_init(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             …
 
-The 'init' step is the first step of a flow and is called when a user
+The 'user' step is the first step of a flow and is called when a user
 starts a new flow. Each step has three different possible results: "Show Form",
 "Abort" and "Create Entry".
+
+> Note: prior 0.76, the default step is 'init' step, some config flows still
+keep 'init' step to avoid break localization. All new config flow should use
+'user' step.
 
 ### Show Form
 
@@ -50,7 +54,7 @@ a title, a description and the schema of the data that needs to be returned.
         data_schema[vol.Required('password')] = str
 
         return self.async_show_form(
-            step_id='init',
+            step_id='user',
             title='Account Info',
             data_schema=vol.Schema(data_schema)
         )
@@ -97,7 +101,7 @@ Assistant, a success message is shown to the user and the flow is finished.
 You might want to initialize a config flow programmatically. For example, if
 we discover a device on the network that requires user interaction to finish
 setup. To do so, pass a source parameter and optional user input to the init
-step:
+method:
 
     await hass.config_entries.flow.async_init(
         'hue', source='discovery', data=discovery_info)
@@ -436,7 +440,7 @@ class ConfigEntries:
         if source is not None:
             flow.init_step = source
         else:
-            flow.init_step = 'init'
+            flow.init_step = 'user'
         return flow
 
     async def _async_schedule_save(self):

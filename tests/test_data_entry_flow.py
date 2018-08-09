@@ -59,12 +59,12 @@ async def test_configure_two_steps(manager):
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 1
 
-        async def async_step_init(self, user_input=None):
+        async def async_step_first(self, user_input=None):
             if user_input is not None:
                 self.init_data = user_input
                 return await self.async_step_second()
             return self.async_show_form(
-                step_id='init',
+                step_id='first',
                 data_schema=vol.Schema([str])
             )
 
@@ -79,7 +79,7 @@ async def test_configure_two_steps(manager):
                 data_schema=vol.Schema([str])
             )
 
-    form = await manager.async_init('test')
+    form = await manager.async_init('test', source='first')
 
     with pytest.raises(vol.Invalid):
         form = await manager.async_configure(
