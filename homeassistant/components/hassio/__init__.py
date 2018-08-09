@@ -178,7 +178,6 @@ def async_setup(hass, config):
     refresh_token = None
     if 'hassio_user' in data:
         user = yield from hass.auth.async_get_user(data['hassio_user'])
-        # user is None when downgrade to 0.75 prior version
         if user:
             refresh_token = list(user.refresh_tokens.values())[0]
 
