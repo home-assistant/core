@@ -21,7 +21,8 @@ from homeassistant.components.feedreader import StoredData, FeedManager
 from homeassistant.components.geo_location import DOMAIN, GeoLocationEvent, \
     ENTITY_ID_FORMAT
 from homeassistant.const import CONF_URL, CONF_RADIUS, CONF_NAME, \
-    CONF_SCAN_INTERVAL, CONF_ICON, ATTR_LATITUDE, ATTR_LONGITUDE
+    CONF_SCAN_INTERVAL, CONF_ICON, ATTR_LATITUDE, ATTR_LONGITUDE, \
+    STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_time_interval
@@ -53,11 +54,14 @@ CONF_FILTERS_REGEXP = 'regexp'
 CONF_SENSOR_CATEGORY = 'category'
 CONF_SENSOR_EVENT_TYPE = 'event_type'
 CONF_SENSOR_NAME = 'name'
+CONF_STATE_ATTRIBUTE = 'state_attribute'
 
 DEFAULT_ICON = 'mdi:alert'
 DEFAULT_NAME = "Event Service"
 DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
+DEFAULT_STATE_ATTRIBUTE = ATTR_DISTANCE
+DEFAULT_UNIT_OF_MEASUREMENT = "km"
 
 DEPENDENCIES = ['group']
 
@@ -85,6 +89,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [ATTRIBUTES_SCHEMA]),
     vol.Optional(CONF_FILTERS, default=[]):
         vol.All(cv.ensure_list, [FILTERS_SCHEMA]),
+    vol.Optional(CONF_STATE_ATTRIBUTE, default=DEFAULT_STATE_ATTRIBUTE):
+        cv.string,
+    vol.Optional(CONF_UNIT_OF_MEASUREMENT,
+                 default=DEFAULT_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
 })
 
@@ -109,6 +117,18 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                             definition[CONF_ATTRIBUTES_NAME])
             attributes_definition.remove(definition)
     filters_definition = config.get(CONF_FILTERS)
+    state_attribute = config.get(CONF_STATE_ATTRIBUTE)
+    # Ensure that the configure state attribute is either a built-in one, or
+    # a custom attribute.
+    if state_attribute not in [ATTR_DISTANCE, ATTR_CATEGORY] and \
+            state_attribute not in [definition[CONF_ATTRIBUTES_NAME]
+                                    for definition in attributes_definition]:
+        _LOGGER.warning("State attribute must either be 'distance', 'category'"
+                        " or a custom attribute. '%s' is not supported.",
+                        state_attribute)
+        # Set to default value.
+        state_attribute = ATTR_DISTANCE
+    unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     icon = config.get(CONF_ICON)
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s, "
                   "scan_interval=%s", home_latitude, home_longitude, url,
@@ -118,7 +138,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                                 name, home_latitude, home_longitude, url,
                                 radius_in_km, categories,
                                 attributes_definition, filters_definition,
-                                icon)
+                                state_attribute, unit_of_measurement, icon)
     return manager is not None
 
 
@@ -127,7 +147,8 @@ class GeoRssFeedManager(FeedManager):
 
     def __init__(self, hass, add_devices, storage, scan_interval, name,
                  home_latitude, home_longitude, url, radius_in_km, categories,
-                 attributes_definition, filters_definition, icon):
+                 attributes_definition, filters_definition, state_attribute,
+                 unit_of_measurement, icon):
         """Initialize the GeoRSS Feed Manager."""
         self._scan_interval = scan_interval
         super().__init__(url, scan_interval, None, hass, storage)
@@ -139,6 +160,8 @@ class GeoRssFeedManager(FeedManager):
         self._categories = categories
         self._attributes_definition = attributes_definition
         self._filters_definition = filters_definition
+        self._state_attribute = state_attribute
+        self._unit_of_measurement = unit_of_measurement
         self._icon = icon
         entity_id = generate_entity_id('{}', name, hass=hass)
         self._event_type = entity_id
@@ -178,6 +201,7 @@ class GeoRssFeedManager(FeedManager):
             return geometry, None
 
     def _matches_category(self, entry):
+        """Check if the provided entry matches any of the categories."""
         if self._categories:
             if hasattr(entry, 'category'):
                 return entry.category in self._categories
@@ -200,8 +224,8 @@ class GeoRssFeedManager(FeedManager):
                 _LOGGER.debug("Entry %s has distance %s", entry, distance)
                 if distance and distance <= self._radius_in_km:
                     # Add distance value as a new attribute
-                    entry.update({ATTR_DISTANCE: distance})
-                    entry.update({ATTR_GEOMETRY: geometry})
+                    entry.update({ATTR_DISTANCE: distance,
+                                  ATTR_GEOMETRY: geometry})
                     # Compute custom attributes.
                     for definition in self._attributes_definition:
                         if hasattr(entry, definition[CONF_ATTRIBUTES_SOURCE]):
@@ -267,16 +291,16 @@ class GeoRssFeedManager(FeedManager):
 
     def _group_devices(self):
         """Re-group all entities"""
-        # Sort entries in group by distance (ascending).
+        # Sort entries in group by their state attribute (ascending).
         devices = sorted(self._managed_devices.copy(),
-                         key=lambda device: device.distance)
+                         key=lambda device: device.state)
         entity_ids = [device.entity_id for device in devices]
         # Update group.
         self.group.update_tracked_entity_ids(entity_ids)
 
     def _generate_new_devices(self, entries):
         """Generate new entities for events that have occurred for the first
-           time"""
+           time."""
         new_devices = []
         for entry in entries:
             distance, latitude, longitude, external_id, name, category, \
@@ -287,7 +311,10 @@ class GeoRssFeedManager(FeedManager):
                                            hass=self._hass)
             new_device = GeoRssLocationEvent(self._hass, entity_id, distance,
                                              latitude, longitude, external_id,
-                                             name, category, self._icon,
+                                             name, category,
+                                             self._state_attribute,
+                                             self._unit_of_measurement,
+                                             self._icon,
                                              custom_attributes)
             _LOGGER.debug("New device added %s", new_device)
             new_devices.append(new_device)
@@ -302,13 +329,24 @@ class GeoRssFeedManager(FeedManager):
             latitude, longitude = geometry.coordinates[1], \
                                   geometry.coordinates[0]
         elif geometry.type == 'Polygon':
-            # TODO: find the center of polygon?
-            latitude, longitude = geometry.coordinates[0][0][1], \
-                                  geometry.coordinates[0][0][0]
+            # Find the polygon's centroid as a best approximation for the map.
+            longitudes_list = [point[0] for point in geometry.coordinates[0]]
+            latitudes_list = [point[1] for point in geometry.coordinates[0]]
+            number_of_points = len(geometry.coordinates[0])
+            centroid_longitude = sum(longitudes_list) / number_of_points
+            centroid_latitude = sum(latitudes_list) / number_of_points
+            latitude, longitude = centroid_latitude, centroid_longitude
+            _LOGGER.debug("Centroid of %s is %s", geometry.coordinates[0],
+                          (latitude, longitude))
         custom_attributes = {}
         for definition in self._attributes_definition:
             name = definition[CONF_ATTRIBUTES_NAME]
             custom_attributes[name] = entry[name]
+        # If the device's attribute is not the distance (default), then add
+        # distance as a custom attribute here.
+        if self._state_attribute is not ATTR_DISTANCE:
+            custom_attributes[ATTR_DISTANCE] \
+                = "{:.1f} {}".format(entry[ATTR_DISTANCE], 'km')
         return entry.get(ATTR_DISTANCE), latitude, longitude, \
             self._external_id(entry), entry.get(ATTR_TITLE, ""), \
             entry.get(ATTR_CATEGORY, ""), custom_attributes
@@ -411,13 +449,16 @@ class GeoRssLocationEvent(GeoLocationEvent):
     """This represents an external event with GeoRSS data."""
 
     def __init__(self, hass, entity_id, distance, latitude, longitude,
-                 external_id, name, category, icon, custom_attributes):
+                 external_id, name, category, state_attribute,
+                 unit_of_measurement, icon, custom_attributes):
         """Initialize entity with data provided."""
-        super().__init__(hass, entity_id, distance, latitude, longitude, icon)
+        super().__init__(hass, entity_id, distance, latitude, longitude,
+                         unit_of_measurement, icon)
         self._external_id = external_id
         self._name = name
         self._category = category
         self._custom_attributes = custom_attributes
+        self._state_attribute = state_attribute
 
     @property
     def external_id(self):
@@ -453,6 +494,18 @@ class GeoRssLocationEvent(GeoLocationEvent):
     def custom_attributes(self, value):
         """Set event's custom attributes."""
         self._custom_attributes = value
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        if self._state_attribute == ATTR_DISTANCE:
+            return round(self._distance, 1)
+        elif self._state_attribute == ATTR_CATEGORY:
+            return self.category
+        elif self._state_attribute in self._custom_attributes.keys():
+            return self._custom_attributes[self._state_attribute]
+        else:
+            return STATE_UNKNOWN
 
     @property
     def device_state_attributes(self):

@@ -36,19 +36,21 @@ async def async_setup(hass, config):
 class GeoLocationEvent(Entity):
     """This represents an external event with an associated geo location."""
 
-    def __init__(self, hass, entity_id, distance, latitude, longitude, icon):
+    def __init__(self, hass, entity_id, distance, latitude, longitude,
+                 unit_of_measurement, icon):
         """Initialize entity with data provided."""
         self.hass = hass
         self.entity_id = entity_id
         self._distance = distance
         self._latitude = latitude
         self._longitude = longitude
+        self._unit_of_measurement = unit_of_measurement
         self._icon = icon
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return 'km'
+        return self._unit_of_measurement
 
     @property
     def state(self):
