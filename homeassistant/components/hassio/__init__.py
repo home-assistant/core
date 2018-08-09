@@ -175,10 +175,13 @@ def async_setup(hass, config):
     if data is None:
         data = {}
 
+    refresh_token = None
     if 'hassio_user' in data:
         user = yield from hass.auth.async_get_user(data['hassio_user'])
-        refresh_token = list(user.refresh_tokens.values())[0]
-    else:
+        if user:
+            refresh_token = list(user.refresh_tokens.values())[0]
+
+    if refresh_token is None:
         user = yield from hass.auth.async_create_system_user('Hass.io')
         refresh_token = yield from hass.auth.async_create_refresh_token(user)
         data['hassio_user'] = user.id
