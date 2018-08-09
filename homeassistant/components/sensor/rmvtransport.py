@@ -12,9 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_NAME, ATTR_ATTRIBUTION, STATE_UNKNOWN
-    )
+from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
 
 REQUIREMENTS = ['PyRMVtransport==0.0.6']
 
@@ -28,7 +26,7 @@ CONF_DIRECTIONS = 'directions'
 CONF_LINES = 'lines'
 CONF_PRODUCTS = 'products'
 CONF_TIME_OFFSET = 'time_offset'
-CONF_MAX_JOURNEYS = 'max'
+CONF_MAX_JOURNEYS = 'max_journeys'
 
 DEFAULT_NAME = 'RMV Journey'
 
@@ -86,12 +84,12 @@ class RMVDepartureSensor(Entity):
     """Implementation of an RMV departure sensor."""
 
     def __init__(self, station, destinations, directions,
-                 lines, products, time_offset, maxjourneys, name):
+                 lines, products, time_offset, max_journeys, name):
         """Initialize the sensor."""
         self._station = station
         self._name = name
-        self.data = RMVDepartureData(station, destinations, directions,
-                                     lines, products, time_offset, maxjourneys)
+        self.data = RMVDepartureData(station, destinations, directions, lines,
+                                     products, time_offset, max_journeys)
         self._icon = ICONS[None]
 
     @property
@@ -102,20 +100,18 @@ class RMVDepartureSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        return self._state != STATE_UNKNOWN
+        return self._state is not None
 
     @property
     def state(self):
         """Return the next departure time."""
-        self._state = self.data.departures[0].get('minutes', None)
         return self._state
 
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        result = {}
         try:
-            result = {
+            return {
                 'next_departures': [val for val in self.data.departures[1:]],
                 'direction': self.data.departures[0].get('direction'),
                 'line': self.data.departures[0].get('line'),
@@ -125,8 +121,7 @@ class RMVDepartureSensor(Entity):
                 'product': self.data.departures[0].get('product'),
             }
         except IndexError:
-            pass
-        return result
+            return {}
 
     @property
     def icon(self):
@@ -149,7 +144,6 @@ class RMVDepartureSensor(Entity):
             self._name = self.data.station
         self._station = self.data.station
         self._state = self.data.departures[0].get('minutes')
-        self._state = self.data.departures[0].get('departure_time')
         self._icon = ICONS[self.data.departures[0].get('product')]
         return
 
@@ -158,7 +152,7 @@ class RMVDepartureData:
     """Pull data from the opendata.rmv.de web page."""
 
     def __init__(self, station_id, destinations, directions,
-                 lines, products, time_offset, maxjourneys):
+                 lines, products, time_offset, max_journeys):
         """Initialize the sensor."""
         import RMVtransport
         self.station = None
@@ -168,7 +162,7 @@ class RMVDepartureData:
         self._lines = lines
         self._products = products
         self._time_offset = time_offset
-        self._maxjourneys = maxjourneys
+        self._max_journeys = max_journeys
         self.rmv = RMVtransport.RMVtransport()
         self.departures = {}
 
@@ -204,6 +198,6 @@ class RMVDepartureData:
                 _nextdep[k] = journey.get(k, '')
             _nextdep['line'] = journey.get('number', '')
             _deps.append(_nextdep)
-            if len(_deps) > self._maxjourneys:
+            if len(_deps) > self._max_journeys:
                 break
         self.departures = _deps
