@@ -16,5 +16,5 @@ ATTR_DARK = 'dark'
 ATTR_ON = 'on'
 
 POWER_PLUGS = ["On/Off plug-in unit", "Smart plug"]
-SIRENES = ["Warning device"]
-SWITCH_TYPES = POWER_PLUGS + SIRENES
+SIRENS = ["Warning device"]
+SWITCH_TYPES = POWER_PLUGS + SIRENS

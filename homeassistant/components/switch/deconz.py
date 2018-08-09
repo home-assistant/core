@@ -6,7 +6,7 @@ https://home-assistant.io/components/switch.deconz/
 """
 from homeassistant.components.deconz.const import (
     DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB,
-    POWER_PLUGS, SIRENES)
+    POWER_PLUGS, SIRENS)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -32,8 +32,8 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         for light in lights:
             if light.type in POWER_PLUGS:
                 entities.append(DeconzPowerPlug(light))
-            elif light.type in SIRENES:
-                entities.append(DeconzSirene(light))
+            elif light.type in SIRENS:
+                entities.append(DeconzSiren(light))
         async_add_devices(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
@@ -99,13 +99,13 @@ class DeconzPowerPlug(DeconzSwitch):
         await self._switch.async_set_state(data)
 
 
-class DeconzSirene(DeconzSwitch):
-    """Representation of sirenes from deCONZ."""
+class DeconzSiren(DeconzSwitch):
+    """Representation of sirens from deCONZ."""
 
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._switch.state
+        return self._switch.alert == 'lselect'
 
     async def async_turn_on(self, **kwargs):
         """Turn on switch."""
