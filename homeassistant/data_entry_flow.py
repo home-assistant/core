@@ -46,6 +46,7 @@ class FlowManager:
         return [{
             'flow_id': flow.flow_id,
             'handler': flow.handler,
+            'source': flow.source,
             'context': flow.context,
         } for flow in self._progress.values()]
 
@@ -128,6 +129,7 @@ class FlowHandler:
 
     # Set by _async_create_flow callback
     init_step = 'init'
+    source = None
 
     # Set by developer
     VERSION = 1

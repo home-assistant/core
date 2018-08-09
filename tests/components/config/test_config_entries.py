@@ -293,6 +293,7 @@ def test_get_progress_index(hass, client):
         {
             'flow_id': form['flow_id'],
             'handler': 'test',
+            'source': 'hassio',
             'context': {'source': 'hassio'}
         }
     ]
