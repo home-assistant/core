@@ -7,11 +7,20 @@ from unittest import mock
 from urllib.parse import parse_qs
 
 from aiohttp import ClientSession
+from aiohttp.streams import StreamReader
 from yarl import URL
 
 from aiohttp.client_exceptions import ClientResponseError
 
 retype = type(re.compile(''))
+
+
+def create_stream(data):
+    protocol = mock.Mock(_reading_paused=False)
+    stream = StreamReader(protocol)
+    stream.feed_data(data)
+    stream.feed_eof()
+    return stream
 
 
 class AiohttpClientMocker:
@@ -45,7 +54,7 @@ class AiohttpClientMocker:
         if not isinstance(url, retype):
             url = URL(url)
         if params:
-                url = url.with_query(params)
+            url = url.with_query(params)
 
         self._mocks.append(AiohttpClientMockResponse(
             method, url, status, content, cookies, exc, headers))
@@ -176,6 +185,11 @@ class AiohttpClientMockResponse:
     def cookies(self):
         """Return dict of cookies."""
         return self._cookies
+
+    @property
+    def content(self):
+        """Return content."""
+        return create_stream(self.response)
 
     @asyncio.coroutine
     def read(self):
