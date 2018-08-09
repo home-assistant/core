@@ -30,7 +30,6 @@ ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME): cv.string
 })
 
 
@@ -38,14 +37,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Initialise pyLB100 SmartBulb."""
     from pyHS100 import SmartBulb, SmartDeviceException
     host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
 
     bulb = SmartBulb(host)
+    # fetch MAC and name already now to avoid I/O inside init
     try:
         unique_id = bulb.sys_info['mac']
-        if name is None:
-            name = bulb.alias
-    except SmartDeviceException:
+        name = bulb.alias
+    except SmartDeviceException as ex:
+        _LOGGER.error("Unable to fetch data from the device: %s", ex)
         raise PlatformNotReady
 
     add_devices([TPLinkSmartBulb(bulb, unique_id, name)], True)
@@ -87,7 +86,7 @@ class TPLinkSmartBulb(Light):
 
     @property
     def name(self):
-        """Return the name of the Smart Bulb, if any."""
+        """Return the name of the Smart Bulb."""
         return self._name
 
     @property

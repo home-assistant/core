@@ -26,7 +26,6 @@ CONF_LEDS = 'enable_leds'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_LEDS): cv.boolean,
 })
 
@@ -35,15 +34,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TPLink switch platform."""
     from pyHS100 import SmartPlug, SmartDeviceException
     host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
     leds_on = config.get(CONF_LEDS)
 
     plug = SmartPlug(host)
+    # fetch MAC and name already now to avoid I/O inside init
     try:
         unique_id = plug.sys_info['mac']
-        if name is None:
-            name = plug.alias
-    except SmartDeviceException:
+        name = plug.alias
+    except SmartDeviceException as ex:
+        _LOGGER.error("Unable to fetch data from the device: %s", ex)
         raise PlatformNotReady
 
     add_devices([SmartPlugSwitch(plug, unique_id, name, leds_on)], True)
@@ -70,7 +69,7 @@ class SmartPlugSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """Return the name of the Smart Plug, if any."""
+        """Return the name of the Smart Plug."""
         return self._name
 
     @property
