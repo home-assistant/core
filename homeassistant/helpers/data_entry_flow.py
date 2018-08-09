@@ -2,7 +2,7 @@
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import data_entry_flow, config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
@@ -53,7 +53,8 @@ class FlowManagerIndexView(_BaseFlowManagerView):
             handler = data['handler']
 
         try:
-            result = await self._flow_mgr.async_init(handler)
+            result = await self._flow_mgr.async_init(
+                handler, context={'source': config_entries.SOURCE_USER})
         except data_entry_flow.UnknownHandler:
             return self.json_message('Invalid handler specified', 404)
         except data_entry_flow.UnknownStep:
