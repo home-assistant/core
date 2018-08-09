@@ -2,7 +2,7 @@
 Support for real-time departure information for Rhein-Main public transport.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.rmvdeparture/
+https://home-assistant.io/components/sensor.rmvtransport/
 """
 import logging
 from datetime import timedelta
@@ -20,15 +20,15 @@ REQUIREMENTS = ['PyRMVtransport==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_NEXT_DEPARTURE = 'nextdeparture'
+CONF_NEXT_DEPARTURE = 'next_departure'
 
 CONF_STATION = 'station'
 CONF_DESTINATIONS = 'destinations'
 CONF_DIRECTIONS = 'directions'
 CONF_LINES = 'lines'
 CONF_PRODUCTS = 'products'
-CONF_TIMEOFFSET = 'timeoffset'
-CONF_MAXJOURNEYS = 'max'
+CONF_TIME_OFFSET = 'time_offset'
+CONF_MAX_JOURNEYS = 'max'
 
 DEFAULT_NAME = 'RMV Journey'
 
@@ -54,13 +54,13 @@ SCAN_INTERVAL = timedelta(seconds=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NEXT_DEPARTURE): [{
         vol.Required(CONF_STATION): cv.string,
-        vol.Optional(CONF_DESTINATIONS, default=['']): cv.ensure_list_csv,
-        vol.Optional(CONF_DIRECTIONS, default=['']): cv.ensure_list_csv,
-        vol.Optional(CONF_LINES, default=['']): cv.ensure_list_csv,
+        vol.Optional(CONF_DESTINATIONS, default=['']): cv.ensure_list,
+        vol.Optional(CONF_DIRECTIONS, default=['']): cv.ensure_list,
+        vol.Optional(CONF_LINES, default=['']): cv.ensure_list,
         vol.Optional(CONF_PRODUCTS, default=VALID_PRODUCTS):
             vol.All(cv.ensure_list, [vol.In(VALID_PRODUCTS)]),
-        vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
-        vol.Optional(CONF_MAXJOURNEYS, default=5): cv.positive_int,
+        vol.Optional(CONF_TIME_OFFSET, default=0): cv.positive_int,
+        vol.Optional(CONF_MAX_JOURNEYS, default=5): cv.positive_int,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string}]
 })
 
@@ -68,17 +68,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RMV departure sensor."""
     sensors = []
-    for nextdeparture in config.get(CONF_NEXT_DEPARTURE):
+    for next_departure in config.get(CONF_NEXT_DEPARTURE):
         sensors.append(
             RMVDepartureSensor(
-                nextdeparture.get(CONF_STATION),
-                nextdeparture.get(CONF_DESTINATIONS),
-                nextdeparture.get(CONF_DIRECTIONS),
-                nextdeparture.get(CONF_LINES),
-                nextdeparture.get(CONF_PRODUCTS),
-                nextdeparture.get(CONF_TIMEOFFSET),
-                nextdeparture.get(CONF_MAXJOURNEYS),
-                nextdeparture.get(CONF_NAME)))
+                next_departure[CONF_STATION],
+                next_departure.get(CONF_DESTINATIONS),
+                next_departure.get(CONF_DIRECTIONS),
+                next_departure.get(CONF_LINES),
+                next_departure.get(CONF_PRODUCTS),
+                next_departure.get(CONF_TIME_OFFSET),
+                next_departure.get(CONF_MAX_JOURNEYS),
+                next_departure.get(CONF_NAME)))
     add_entities(sensors, True)
 
 
@@ -86,13 +86,12 @@ class RMVDepartureSensor(Entity):
     """Implementation of an RMV departure sensor."""
 
     def __init__(self, station, destinations, directions,
-                 lines, products, timeoffset, maxjourneys, name):
+                 lines, products, time_offset, maxjourneys, name):
         """Initialize the sensor."""
         self._station = station
         self._name = name
         self.data = RMVDepartureData(station, destinations, directions,
-                                     lines, products, timeoffset, maxjourneys)
-        self._state = STATE_UNKNOWN
+                                     lines, products, time_offset, maxjourneys)
         self._icon = ICONS[None]
 
     @property
@@ -159,7 +158,7 @@ class RMVDepartureData:
     """Pull data from the opendata.rmv.de web page."""
 
     def __init__(self, station_id, destinations, directions,
-                 lines, products, timeoffset, maxjourneys):
+                 lines, products, time_offset, maxjourneys):
         """Initialize the sensor."""
         import RMVtransport
         self.station = None
@@ -168,10 +167,10 @@ class RMVDepartureData:
         self._directions = directions
         self._lines = lines
         self._products = products
-        self._timeoffset = timeoffset
+        self._time_offset = time_offset
         self._maxjourneys = maxjourneys
         self.rmv = RMVtransport.RMVtransport()
-        self.departures = []
+        self.departures = {}
 
     def update(self):
         """Update the connection data."""
@@ -199,7 +198,7 @@ class RMVDepartureData:
             elif ('' not in self._lines[:1] and
                   journey['number'] not in self._lines):
                 continue
-            elif journey['minutes'] < self._timeoffset:
+            elif journey['minutes'] < self._time_offset:
                 continue
             for k in ['direction', 'departure_time', 'product', 'minutes']:
                 _nextdep[k] = journey.get(k, '')

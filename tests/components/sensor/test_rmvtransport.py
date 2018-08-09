@@ -8,11 +8,11 @@ from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 VALID_CONFIG_MINIMAL = {'sensor': {'platform': 'rmvtransport',
-                                   'nextdeparture': [{'station': '3000010'}]}}
+                                   'next_departure': [{'station': '3000010'}]}}
 
 VALID_CONFIG_NAME = {'sensor': {
     'platform': 'rmvtransport',
-    'nextdeparture': [
+    'next_departure': [
         {
             'station': '3000010',
             'name': 'My Station',
@@ -21,7 +21,7 @@ VALID_CONFIG_NAME = {'sensor': {
 
 VALID_CONFIG_MISC = {'sensor': {
     'platform': 'rmvtransport',
-    'nextdeparture': [
+    'next_departure': [
         {
             'station': '3000010',
             'lines': [21],
@@ -32,7 +32,7 @@ VALID_CONFIG_MISC = {'sensor': {
 
 VALID_CONFIG_DEST = {'sensor': {
     'platform': 'rmvtransport',
-    'nextdeparture': [
+    'next_departure': [
         {
             'station': '3000010',
             'destinations': ['Frankfurt (Main) Flughafen Regionalbahnhof',
