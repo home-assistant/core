@@ -152,7 +152,7 @@ class LoginFlowIndexView(HomeAssistantView):
             handler = data['handler']
 
         try:
-            result = await self._flow_mgr.async_init(handler)
+            result = await self._flow_mgr.async_init(handler, context={})
         except data_entry_flow.UnknownHandler:
             return self.json_message('Invalid handler specified', 404)
         except data_entry_flow.UnknownStep:

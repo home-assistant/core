@@ -47,6 +47,7 @@ class FlowManager:
             'flow_id': flow.flow_id,
             'handler': flow.handler,
             'source': flow.source,
+            'context': flow.context,
         } for flow in self._progress.values()]
 
     async def async_init(self, handler: Callable, *, context: Dict = None,
@@ -57,6 +58,7 @@ class FlowManager:
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
+        flow.context = context
         self._progress[flow.flow_id] = flow
 
         return await self._async_handle_step(flow, flow.init_step, data)
@@ -122,11 +124,12 @@ class FlowHandler:
     flow_id = None
     hass = None
     handler = None
-    source = None
     cur_step = None
+    context = None
 
     # Set by _async_create_flow callback
     init_step = 'init'
+    source = None
 
     # Set by developer
     VERSION = 1
