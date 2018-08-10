@@ -52,9 +52,13 @@ def get_scanner(hass, config):
             TplinkDeviceScanner, Tplink5DeviceScanner, Tplink4DeviceScanner,
             Tplink3DeviceScanner, Tplink2DeviceScanner, Tplink1DeviceScanner
     ]:
-        scanner = cls(config[DOMAIN])
-        if scanner.success_init:
-            return scanner
+        try:
+            scanner = cls(config[DOMAIN])
+            if scanner.success_init:
+                return scanner
+        except Exception:
+            _LOGGER.warn("Error in TpLink scanner " + cls.__name__)
+            pass
 
     return None
 
