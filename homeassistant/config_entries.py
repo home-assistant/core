@@ -142,6 +142,7 @@ FLOWS = [
     'nest',
     'sonos',
     'zone',
+    'tplink',
 ]
 
 
