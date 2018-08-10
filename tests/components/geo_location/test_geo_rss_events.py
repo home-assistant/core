@@ -359,9 +359,9 @@ class TestGeoRssEventsComponent(unittest.TestCase):
         manager = self.prepare_test()
         group = manager.group
         assert group.state_attributes.get(ATTR_ENTITY_ID) == \
-               ('geo_location.name_1_title_6', 'geo_location.name_1_title_1',
-                'geo_location.name_1_', 'geo_location.name_1_title_9',
-                'geo_location.name_1_title_3', 'geo_location.name_1_title_2')
+            ('geo_location.name_1_title_6', 'geo_location.name_1_title_1',
+             'geo_location.name_1_', 'geo_location.name_1_title_9',
+             'geo_location.name_1_title_3', 'geo_location.name_1_title_2')
 
     def test_group_order_by_custom_attribute(self):
         """Test order of entries in group by custom attribute."""
@@ -378,9 +378,9 @@ class TestGeoRssEventsComponent(unittest.TestCase):
             state_attribute=state_attribute)
         group = manager.group
         assert group.state_attributes.get(ATTR_ENTITY_ID) == \
-               ('geo_location.name_1_', 'geo_location.name_1_title_1',
-                'geo_location.name_1_title_2', 'geo_location.name_1_title_3',
-                'geo_location.name_1_title_6', 'geo_location.name_1_title_9')
+            ('geo_location.name_1_', 'geo_location.name_1_title_1',
+             'geo_location.name_1_title_2', 'geo_location.name_1_title_3',
+             'geo_location.name_1_title_6', 'geo_location.name_1_title_9')
 
     def test_group_order_by_custom_attribute_reverse(self):
         """Test reverse order of entries in group by custom attribute."""
@@ -398,6 +398,6 @@ class TestGeoRssEventsComponent(unittest.TestCase):
             sort_group_entries_reverse=True)
         group = manager.group
         assert group.state_attributes.get(ATTR_ENTITY_ID) == \
-               ('geo_location.name_1_title_9', 'geo_location.name_1_title_6',
-                'geo_location.name_1_title_3', 'geo_location.name_1_title_2',
-                'geo_location.name_1_title_1', 'geo_location.name_1_')
+            ('geo_location.name_1_title_9', 'geo_location.name_1_title_6',
+             'geo_location.name_1_title_3', 'geo_location.name_1_title_2',
+             'geo_location.name_1_title_1', 'geo_location.name_1_')
