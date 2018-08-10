@@ -54,7 +54,6 @@ have type "create_entry" and "result" key will contain an authorization code.
     "flow_id": "8f7e42faab604bcab7ac43c44ca34d58",
     "handler": ["insecure_example", null],
     "result": "411ee2f916e648d691e937ae9344681e",
-    "source": "user",
     "title": "Example",
     "type": "create_entry",
     "version": 1
