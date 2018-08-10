@@ -46,7 +46,6 @@ class FlowManager:
         return [{
             'flow_id': flow.flow_id,
             'handler': flow.handler,
-            'source': flow.source,
             'context': flow.context,
         } for flow in self._progress.values()]
 
@@ -110,7 +109,7 @@ class FlowManager:
         self._progress.pop(flow.flow_id)
 
         # We pass a copy of the result because we're mutating our version
-        entry = await self._async_finish_flow(dict(result))
+        entry = await self._async_finish_flow(flow.context, dict(result))
 
         if result['type'] == RESULT_TYPE_CREATE_ENTRY:
             result['result'] = entry
@@ -129,7 +128,6 @@ class FlowHandler:
 
     # Set by _async_create_flow callback
     init_step = 'init'
-    source = None
 
     # Set by developer
     VERSION = 1
@@ -159,7 +157,6 @@ class FlowHandler:
             'handler': self.handler,
             'title': title,
             'data': data,
-            'source': self.source,
         }
 
     @callback
