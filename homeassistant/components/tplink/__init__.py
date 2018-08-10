@@ -1,7 +1,8 @@
 """Component to embed TP-Link smart home devices."""
+import logging
+
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
-import logging
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,12 +35,12 @@ async def async_setup_entry(hass, entry):
         elif isinstance(dev, SmartBulb):
             hass.data[DOMAIN]['light'].append(dev)
         else:
-            _LOGGER.error("Unknown smart device type: %s" % type(dev))
+            _LOGGER.error("Unknown smart device type: %s", type(dev))
 
-    if len(hass.data[DOMAIN]['light']) > 0:
+    if hass.data[DOMAIN]['light']:
         hass.async_add_job(
             hass.config_entries.async_forward_entry_setup(entry, 'light'))
-    if len(hass.data[DOMAIN]['switch']) > 0:
+    if hass.data[DOMAIN]['switch']:
         hass.async_add_job(
             hass.config_entries.async_forward_entry_setup(entry, 'switch'))
 
