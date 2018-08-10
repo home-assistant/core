@@ -140,3 +140,13 @@ async def test_find_link_tag(hass, aioclient_mock):
         "hass://oauth2_redirect",
         "http://127.0.0.1:8000/beer",
     ]
+
+
+async def test_find_link_tag_max_size(hass, aioclient_mock):
+    """Test finding link tag."""
+    text = ("0" * 1024 * 10) + '<link rel="redirect_uri" href="/beer">'
+    aioclient_mock.get("http://127.0.0.1:8000", text=text)
+    redirect_uris = await indieauth.fetch_redirect_uris(
+        hass, "http://127.0.0.1:8000")
+
+    assert redirect_uris == []

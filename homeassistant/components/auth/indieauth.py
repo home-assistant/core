@@ -47,12 +47,11 @@ async def verify_redirect_uri(hass, client_id, redirect_uri):
 class LinkTagParser(HTMLParser):
     """Parser to find link tags."""
 
-    found = []
-
     def __init__(self, rel):
         """Initialize a link tag parser."""
         super().__init__()
         self.rel = rel
+        self.found = []
 
     def handle_starttag(self, tag, attrs):
         """Handle finding a start tag."""
@@ -73,16 +72,22 @@ async def fetch_redirect_uris(hass, url):
     The client SHOULD publish one or more <link> tags or Link HTTP headers with
     a rel attribute of redirect_uri at the client_id URL.
 
+    We limit to the first 10kB of the page.
+
     We do not implement extracting redirect uris from headers.
     """
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     parser = LinkTagParser('redirect_uri')
-
+    chunks = 0
     try:
         resp = await session.get(url, timeout=5)
 
         async for data in resp.content.iter_chunked(1024):
             parser.feed(data.decode())
+            chunks += 1
+
+            if chunks == 10:
+                break
 
     except (asyncio.TimeoutError, ClientError):
         pass
