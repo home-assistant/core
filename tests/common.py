@@ -266,7 +266,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
     if old_state:
         event_data['old_state'] = old_state
 
-    hass.bus.fire(EVENT_STATE_CHANGED, event_data)
+    hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
 @asyncio.coroutine
