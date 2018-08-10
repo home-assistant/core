@@ -17,11 +17,9 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 
 _LOGGER = logging.getLogger(__name__)
 
-GROUP_NAME_ALL_EVENTS = 'All Geo Location Events'
-
 DOMAIN = 'geo_location'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
-
+GROUP_NAME_ALL_EVENTS = 'All Geo Location Events'
 SCAN_INTERVAL = timedelta(seconds=60)
 
 

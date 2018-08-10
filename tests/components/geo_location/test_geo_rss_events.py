@@ -13,7 +13,8 @@ from homeassistant.components.geo_location.geo_rss_events import \
     CONF_FILTERS_REGEXP, ATTR_DISTANCE, CONF_CATEGORIES, \
     CONF_ATTRIBUTES, ATTR_ID, ATTR_GEOMETRY, DEFAULT_ICON, \
     DEFAULT_UNIT_OF_MEASUREMENT, DEFAULT_STATE_ATTRIBUTE, ATTR_CATEGORY
-from homeassistant.const import CONF_URL, ATTR_LATITUDE, ATTR_FRIENDLY_NAME
+from homeassistant.const import CONF_URL, ATTR_LATITUDE, ATTR_FRIENDLY_NAME, \
+    ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant, \
@@ -112,6 +113,7 @@ class TestGeoRssEventsComponent(unittest.TestCase):
                       scan_interval=DEFAULT_SCAN_INTERVAL, categories=None,
                       attributes_definition=None, filters_definition=None,
                       state_attribute=DEFAULT_STATE_ATTRIBUTE,
+                      sort_group_entries_reverse=False,
                       unit_of_measurement=DEFAULT_UNIT_OF_MEASUREMENT,
                       icon=DEFAULT_ICON):
         """Set up data object for use by sensors."""
@@ -135,13 +137,15 @@ class TestGeoRssEventsComponent(unittest.TestCase):
                                     home_longitude, url, radius_in_km,
                                     categories, attributes_definition,
                                     filters_definition, state_attribute,
+                                    sort_group_entries_reverse,
                                     unit_of_measurement, icon)
         manager._update()
         return manager
 
     def prepare_test(self, url=None, categories=None,
                      attributes_definition=None, filters_definition=None,
-                     state_attribute=DEFAULT_STATE_ATTRIBUTE):
+                     state_attribute=DEFAULT_STATE_ATTRIBUTE,
+                     sort_group_entries_reverse=False):
         """Run generic test with a configuration as provided."""
         name = "Name 1"
         if url is None:
@@ -150,7 +154,8 @@ class TestGeoRssEventsComponent(unittest.TestCase):
             url, name=name, categories=categories,
             attributes_definition=attributes_definition,
             filters_definition=filters_definition,
-            state_attribute=state_attribute)
+            state_attribute=state_attribute,
+            sort_group_entries_reverse=sort_group_entries_reverse)
         assert manager.name == name
         assert manager.feed_entries is not None
         group = manager.group
@@ -316,12 +321,12 @@ class TestGeoRssEventsComponent(unittest.TestCase):
             attributes_definition=attributes_definition)._managed_devices
         # Check entries
         self.assertEqual(6, len(devices))
-        assert devices[0].custom_attributes.get('title_index') is ''
-        assert devices[1].custom_attributes.get('title_index') is ''
-        assert devices[2].custom_attributes.get('title_index') is ''
-        assert devices[3].custom_attributes.get('title_index') is ''
-        assert devices[4].custom_attributes.get('title_index') is ''
-        assert devices[5].custom_attributes.get('title_index') is ''
+        assert devices[0].custom_attributes.get('title_index') == ''
+        assert devices[1].custom_attributes.get('title_index') == ''
+        assert devices[2].custom_attributes.get('title_index') == ''
+        assert devices[3].custom_attributes.get('title_index') == ''
+        assert devices[4].custom_attributes.get('title_index') == ''
+        assert devices[5].custom_attributes.get('title_index') == ''
 
     def test_filter(self):
         """Test a custom filter."""
@@ -348,3 +353,51 @@ class TestGeoRssEventsComponent(unittest.TestCase):
             ._managed_devices
         # Check entries
         self.assertEqual(0, len(devices))
+
+    def test_group_order(self):
+        """Test order of entries in group."""
+        manager = self.prepare_test()
+        group = manager.group
+        assert group.state_attributes.get(ATTR_ENTITY_ID) == \
+               ('geo_location.name_1_title_6', 'geo_location.name_1_title_1',
+                'geo_location.name_1_', 'geo_location.name_1_title_9',
+                'geo_location.name_1_title_3', 'geo_location.name_1_title_2')
+
+    def test_group_order_by_custom_attribute(self):
+        """Test order of entries in group by custom attribute."""
+        custom_attribute_name = 'title_index'
+        attributes_definition = [{
+            CONF_ATTRIBUTES_NAME: custom_attribute_name,
+            CONF_ATTRIBUTES_SOURCE: ATTR_TITLE,
+            CONF_ATTRIBUTES_REGEXP:
+                '(?P<' + CONF_CUSTOM_ATTRIBUTE + '>\d+)'
+        }]
+        state_attribute = custom_attribute_name
+        manager = self.prepare_test(
+            attributes_definition=attributes_definition,
+            state_attribute=state_attribute)
+        group = manager.group
+        assert group.state_attributes.get(ATTR_ENTITY_ID) == \
+               ('geo_location.name_1_', 'geo_location.name_1_title_1',
+                'geo_location.name_1_title_2', 'geo_location.name_1_title_3',
+                'geo_location.name_1_title_6', 'geo_location.name_1_title_9')
+
+    def test_group_order_by_custom_attribute_reverse(self):
+        """Test reverse order of entries in group by custom attribute."""
+        custom_attribute_name = 'title_index'
+        attributes_definition = [{
+            CONF_ATTRIBUTES_NAME: custom_attribute_name,
+            CONF_ATTRIBUTES_SOURCE: ATTR_TITLE,
+            CONF_ATTRIBUTES_REGEXP:
+                '(?P<' + CONF_CUSTOM_ATTRIBUTE + '>\d+)'
+        }]
+        state_attribute = custom_attribute_name
+        manager = self.prepare_test(
+            attributes_definition=attributes_definition,
+            state_attribute=state_attribute,
+            sort_group_entries_reverse=True)
+        group = manager.group
+        assert group.state_attributes.get(ATTR_ENTITY_ID) == \
+               ('geo_location.name_1_title_9', 'geo_location.name_1_title_6',
+                'geo_location.name_1_title_3', 'geo_location.name_1_title_2',
+                'geo_location.name_1_title_1', 'geo_location.name_1_')

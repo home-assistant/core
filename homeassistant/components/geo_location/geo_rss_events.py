@@ -20,9 +20,9 @@ from homeassistant.components import group
 from homeassistant.components.feedreader import StoredData, FeedManager
 from homeassistant.components.geo_location import DOMAIN, GeoLocationEvent, \
     ENTITY_ID_FORMAT
-from homeassistant.const import CONF_URL, CONF_RADIUS, CONF_NAME, \
-    CONF_SCAN_INTERVAL, CONF_ICON, ATTR_LATITUDE, ATTR_LONGITUDE, \
-    STATE_UNKNOWN, CONF_UNIT_OF_MEASUREMENT
+from homeassistant.const import ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, \
+    CONF_ICON, CONF_NAME, CONF_RADIUS, CONF_SCAN_INTERVAL, \
+    CONF_UNIT_OF_MEASUREMENT, CONF_URL, STATE_UNKNOWN
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_time_interval
@@ -32,21 +32,18 @@ REQUIREMENTS = ['feedparser==5.2.1', 'haversine==0.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CATEGORIES = "categories"
 ATTR_CATEGORY = 'category'
 ATTR_GEOMETRY = 'geometry'
 ATTR_DISTANCE = 'distance'
-ATTR_ID = 'id'
-ATTR_MANAGER = "manager"
 ATTR_TITLE = 'title'
 BUILT_IN_ATTRIBUTES = [ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_TITLE, ATTR_ID,
                        ATTR_DISTANCE, ATTR_GEOMETRY, ATTR_CATEGORY]
 
-CONF_CATEGORIES = 'categories'
 CONF_ATTRIBUTES = 'attributes'
 CONF_ATTRIBUTES_NAME = 'name'
 CONF_ATTRIBUTES_REGEXP = 'regexp'
 CONF_ATTRIBUTES_SOURCE = 'source'
+CONF_CATEGORIES = 'categories'
 CONF_CUSTOM_ATTRIBUTE = 'custom_attribute'
 CONF_FILTERS = 'filters'
 CONF_FILTERS_ATTRIBUTE = 'attribute'
@@ -54,14 +51,16 @@ CONF_FILTERS_REGEXP = 'regexp'
 CONF_SENSOR_CATEGORY = 'category'
 CONF_SENSOR_EVENT_TYPE = 'event_type'
 CONF_SENSOR_NAME = 'name'
+CONF_SORT_GROUP_ENTRIES_REVERSE = 'sort_group_entries_reverse'
 CONF_STATE_ATTRIBUTE = 'state_attribute'
 
 DEFAULT_ICON = 'mdi:alert'
 DEFAULT_NAME = "Event Service"
 DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
+DEFAULT_SORT_GROUP_ENTRIES_REVERSE = False
 DEFAULT_STATE_ATTRIBUTE = ATTR_DISTANCE
-DEFAULT_UNIT_OF_MEASUREMENT = "km"
+DEFAULT_UNIT_OF_MEASUREMENT = 'km'
 
 DEPENDENCIES = ['group']
 
@@ -91,6 +90,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [FILTERS_SCHEMA]),
     vol.Optional(CONF_STATE_ATTRIBUTE, default=DEFAULT_STATE_ATTRIBUTE):
         cv.string,
+    vol.Optional(CONF_SORT_GROUP_ENTRIES_REVERSE,
+                 default=DEFAULT_SORT_GROUP_ENTRIES_REVERSE): cv.boolean,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT,
                  default=DEFAULT_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
@@ -128,6 +129,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                         state_attribute)
         # Set to default value.
         state_attribute = ATTR_DISTANCE
+    sort_group_entries_reverse = config.get(CONF_SORT_GROUP_ENTRIES_REVERSE)
     unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
     icon = config.get(CONF_ICON)
     _LOGGER.debug("latitude=%s, longitude=%s, url=%s, radius=%s, "
@@ -138,7 +140,8 @@ def setup_platform(hass, config, add_devices, disc_info=None):
                                 name, home_latitude, home_longitude, url,
                                 radius_in_km, categories,
                                 attributes_definition, filters_definition,
-                                state_attribute, unit_of_measurement, icon)
+                                state_attribute, sort_group_entries_reverse,
+                                unit_of_measurement, icon)
     return manager is not None
 
 
@@ -148,7 +151,7 @@ class GeoRssFeedManager(FeedManager):
     def __init__(self, hass, add_devices, storage, scan_interval, name,
                  home_latitude, home_longitude, url, radius_in_km, categories,
                  attributes_definition, filters_definition, state_attribute,
-                 unit_of_measurement, icon):
+                 sort_group_entries_reverse, unit_of_measurement, icon):
         """Initialize the GeoRSS Feed Manager."""
         self._scan_interval = scan_interval
         super().__init__(url, scan_interval, None, hass, storage)
@@ -161,6 +164,7 @@ class GeoRssFeedManager(FeedManager):
         self._attributes_definition = attributes_definition
         self._filters_definition = filters_definition
         self._state_attribute = state_attribute
+        self._sort_group_entries_reverse = sort_group_entries_reverse
         self._unit_of_measurement = unit_of_measurement
         self._icon = icon
         entity_id = generate_entity_id('{}', name, hass=hass)
@@ -293,7 +297,8 @@ class GeoRssFeedManager(FeedManager):
         """Re-group all entities"""
         # Sort entries in group by their state attribute (ascending).
         devices = sorted(self._managed_devices.copy(),
-                         key=lambda device: device.state)
+                         key=lambda device: device.state,
+                         reverse=self._sort_group_entries_reverse)
         entity_ids = [device.entity_id for device in devices]
         # Update group.
         self.group.update_tracked_entity_ids(entity_ids)
