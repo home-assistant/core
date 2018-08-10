@@ -193,8 +193,8 @@ class RMVDepartureData:
                 continue
             elif journey['minutes'] < self._time_offset:
                 continue
-            for k in ['direction', 'departure_time', 'product', 'minutes']:
-                _nextdep[k] = journey.get(k, '')
+            for attr in ['direction', 'departure_time', 'product', 'minutes']:
+                _nextdep[attr] = journey.get(attr, '')
             _nextdep['line'] = journey.get('number', '')
             _deps.append(_nextdep)
             if len(_deps) > self._max_journeys:
