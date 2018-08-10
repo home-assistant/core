@@ -47,8 +47,6 @@ ICONS = {
 }
 ATTRIBUTION = "Data provided by opendata.rmv.de"
 
-SCAN_INTERVAL = timedelta(seconds=30)
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NEXT_DEPARTURE): [{
         vol.Required(CONF_STATION): cv.string,
@@ -164,7 +162,7 @@ class RMVDepartureData:
         self._time_offset = time_offset
         self._max_journeys = max_journeys
         self.rmv = RMVtransport.RMVtransport()
-        self.departures = {}
+        self.departures = []
 
     def update(self):
         """Update the connection data."""
@@ -173,7 +171,7 @@ class RMVDepartureData:
                                             products=self._products,
                                             maxJourneys=50)
         except ValueError:
-            self.departures = {}
+            self.departures = []
             _LOGGER.warning("Returned data not understood")
             return
         self.station = _data.get('station')
