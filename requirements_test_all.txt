@@ -24,6 +24,9 @@ HAP-python==2.2.2
 # homeassistant.components.notify.html5
 PyJWT==1.6.0
 
+# homeassistant.components.sensor.rmvtransport
+PyRMVtransport==0.0.7
+
 # homeassistant.components.sonos
 SoCo==0.14
 
