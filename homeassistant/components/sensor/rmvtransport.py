@@ -50,9 +50,12 @@ ATTRIBUTION = "Data provided by opendata.rmv.de"
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NEXT_DEPARTURE): [{
         vol.Required(CONF_STATION): cv.string,
-        vol.Optional(CONF_DESTINATIONS, default=[]): cv.ensure_list,
-        vol.Optional(CONF_DIRECTIONS, default=[]): cv.ensure_list,
-        vol.Optional(CONF_LINES, default=[]): cv.ensure_list,
+        vol.Optional(CONF_DESTINATIONS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_DIRECTIONS, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_LINES, default=[]):
+            vol.All(cv.ensure_list, [cv.positive_int, cv.string]),
         vol.Optional(CONF_PRODUCTS, default=VALID_PRODUCTS):
             vol.All(cv.ensure_list, [vol.In(VALID_PRODUCTS)]),
         vol.Optional(CONF_TIME_OFFSET, default=0): cv.positive_int,

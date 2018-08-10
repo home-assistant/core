@@ -24,7 +24,7 @@ VALID_CONFIG_MISC = {'sensor': {
     'next_departure': [
         {
             'station': '3000010',
-            'lines': [21],
+            'lines': [21, 'S8'],
             'max_journeys': 2,
             'time_offset': 10
         }
