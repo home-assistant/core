@@ -57,7 +57,7 @@ def get_translation_dict(translations, component, platform):
     if not component:
         return translations['component']
 
-    if component not in translations:
+    if component not in translations['component']:
         translations['component'][component] = {}
 
     if not platform:
