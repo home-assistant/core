@@ -56,9 +56,8 @@ def get_scanner(hass, config):
             scanner = cls(config[DOMAIN])
             if scanner.success_init:
                 return scanner
-        except Exception:
-            _LOGGER.warn("Error in TpLink scanner " + cls.__name__)
-            pass
+        except ConnectionError:
+            _LOGGER.warning("ConnectionError in scanner %s", cls.__name__)
 
     return None
 
