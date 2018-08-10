@@ -72,6 +72,8 @@ async def fetch_redirect_uris(hass, url):
 
     The client SHOULD publish one or more <link> tags or Link HTTP headers with
     a rel attribute of redirect_uri at the client_id URL.
+
+    We do not implement extracting redirect uris from headers.
     """
     session = hass.helpers.aiohttp_client.async_get_clientsession()
     parser = LinkTagParser('redirect_uri')
