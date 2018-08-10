@@ -179,6 +179,7 @@ FLOWS = [
     'zha',
     'zone',
     'zwave'
+    'tplink',
 ]
 
 

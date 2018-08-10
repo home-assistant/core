@@ -11,11 +11,12 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
-from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
+from homeassistant.const import (CONF_HOST, ATTR_VOLTAGE)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['pyHS100==0.3.4']
+DOMAIN = 'tplink'
+REQUIREMENTS = ['pyHS100==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,8 +31,20 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up discovered switches."""
+    devs = []
+    for dev in hass.data[DOMAIN]['switch']:
+        unique_id = dev.sys_info['mac']
+        name = dev.alias
+        devs.append(SmartPlugSwitch(dev, unique_id, name, leds_on=None))
+
+    async_add_devices(devs, True)
+
+
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the TPLink switch platform."""
+    _LOGGER.error("TPLINK setup_platform")
     from pyHS100 import SmartPlug, SmartDeviceException
     host = config.get(CONF_HOST)
     leds_on = config.get(CONF_LEDS)

@@ -9,7 +9,7 @@ import time
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_NAME)
+from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_COLOR, PLATFORM_SCHEMA)
@@ -20,7 +20,9 @@ from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
 from homeassistant.exceptions import PlatformNotReady
 
-REQUIREMENTS = ['pyHS100==0.3.4']
+DOMAIN = 'tplink'
+
+REQUIREMENTS = ['pyHS100==0.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
