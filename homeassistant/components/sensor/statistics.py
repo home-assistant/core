@@ -89,10 +89,10 @@ class StatisticsSensor(Entity):
         self.ages = deque(maxlen=self._sampling_size)
 
         self.count = 0
-        self.mean = self.median = self.stdev = self.variance = STATE_UNKNOWN
-        self.total = self.min = self.max = STATE_UNKNOWN
-        self.min_age = self.max_age = dt_util.utcnow()
-        self.change = self.average_change = self.change_rate = STATE_UNKNOWN
+        self.mean = self.median = self.stdev = self.variance = None
+        self.total = self.min = self.max = None
+        self.min_age = self.max_age = None
+        self.change = self.average_change = self.change_rate = None
 
         if 'recorder' in self._hass.config.components:
             # only use the database if it's configured
