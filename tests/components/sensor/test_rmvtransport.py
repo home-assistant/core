@@ -25,8 +25,8 @@ VALID_CONFIG_MISC = {'sensor': {
         {
             'station': '3000010',
             'lines': [21],
-            'max': 2,
-            'timeoffset': 10
+            'max_journeys': 2,
+            'time_offset': 10
         }
         ]}}
 
