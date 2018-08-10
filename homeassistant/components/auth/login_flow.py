@@ -142,8 +142,8 @@ class LoginFlowIndexView(HomeAssistantView):
     @log_invalid_auth
     async def post(self, request, data):
         """Create a new login flow."""
-        if not indieauth.verify_redirect_uri(data['client_id'],
-                                             data['redirect_uri']):
+        if not await indieauth.verify_redirect_uri(
+                request.app['hass'], data['client_id'], data['redirect_uri']):
             return self.json_message('invalid client id or redirect uri', 400)
 
         if isinstance(data['handler'], list):
