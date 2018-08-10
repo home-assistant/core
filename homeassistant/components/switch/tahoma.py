@@ -19,10 +19,6 @@ DEPENDENCIES = ['tahoma']
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_RSSI_LEVEL = 'rssi_level'
-ATTR_STATUS = 'status'
-ATTR_LOCK_TIMER = 'priority_lock_timer'
-ATTR_LOCK_LEVEL = 'priority_lock_level'
-ATTR_LOCK_ORIG = 'priority_lock_originator'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -42,6 +38,7 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
         super().__init__(tahoma_device, controller)
         self._state = STATE_OFF
         self._skip_update = False
+        self._available = False
 
     def update(self):
         """Update method."""
@@ -51,11 +48,16 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
             return
 
         self.controller.get_states([self.tahoma_device])
+
         if self.tahoma_device.type == 'io:OnOffLightIOComponent':
-            if self.tahoma_device.active_states['core:OnOffState'] == 'on':
+            if self.tahoma_device.active_states.get('core:OnOffState') == 'on':
                 self._state = STATE_ON
             else:
                 self._state = STATE_OFF
+
+        self._available = bool(self.tahoma_device.active_states.get(
+            'core:StatusState') == 'available')
+
         _LOGGER.debug("Update %s, state: %s", self._name, self._state)
 
     @property
@@ -107,18 +109,9 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
         if 'core:RSSILevelState' in self.tahoma_device.active_states:
             attr[ATTR_RSSI_LEVEL] = \
                 self.tahoma_device.active_states['core:RSSILevelState']
-        if 'core:StatusState' in self.tahoma_device.active_states:
-            attr[ATTR_STATUS] = \
-                self.tahoma_device.active_states['core:StatusState']
-        if 'core:PriorityLockTimerState' in self.tahoma_device.active_states:
-            attr[ATTR_LOCK_TIMER] = \
-                self.tahoma_device.active_states['core:PriorityLockTimerState']
-        if 'io:PriorityLockLevelState' in self.tahoma_device.active_states:
-            attr[ATTR_LOCK_LEVEL] = \
-                self.tahoma_device.active_states['io:PriorityLockLevelState']
-        if 'io:PriorityLockOriginatorState' in \
-                self.tahoma_device.active_states:
-            attr[ATTR_LOCK_ORIG] = \
-                self.tahoma_device.active_states[
-                    'io:PriorityLockOriginatorState']
         return attr
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        return self._available
