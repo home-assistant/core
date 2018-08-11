@@ -126,7 +126,7 @@ def test_parse_classes():
 
 async def test_setup_platform(hass, mock_healthybox):
     """Setup platform with one entity."""
-    with patch('homeassistant.components.image_processing.' \
+    with patch('homeassistant.components.image_processing.'
                'classificationbox.get_models',
                return_value=MOCK_MODEL):
         await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
@@ -139,7 +139,7 @@ async def test_setup_platform_with_auth(hass, mock_healthybox):
     valid_config_auth = VALID_CONFIG.copy()
     valid_config_auth[ip.DOMAIN][CONF_USERNAME] = MOCK_USERNAME
     valid_config_auth[ip.DOMAIN][CONF_PASSWORD] = MOCK_PASSWORD
-    with patch('homeassistant.components.image_processing.' \
+    with patch('homeassistant.components.image_processing.'
                'classificationbox.get_models',
                return_value=MOCK_MODEL):
         await async_setup_component(hass, ip.DOMAIN, valid_config_auth)
@@ -148,7 +148,7 @@ async def test_setup_platform_with_auth(hass, mock_healthybox):
 
 async def test_process_image(hass, mock_image, mock_healthybox):
     """Test processing of an image."""
-    with patch('homeassistant.components.image_processing.' \
+    with patch('homeassistant.components.image_processing.'
                'classificationbox.get_models',
                return_value=MOCK_MODEL):
         await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
@@ -193,7 +193,7 @@ async def test_process_image(hass, mock_image, mock_healthybox):
 
 async def test_process_image_errors(hass, mock_healthybox, mock_image, caplog):
     """Test post_image errors."""
-    with patch('homeassistant.components.image_processing.' \
+    with patch('homeassistant.components.image_processing.'
                'classificationbox.get_models',
                return_value=MOCK_MODEL):
         await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
