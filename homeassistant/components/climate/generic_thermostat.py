@@ -340,6 +340,7 @@ class GenericThermostat(ClimateDevice):
                                  self.heater_entity_id)
                     await self._async_heater_turn_off()
                 elif time is not None:
+                    # The time argument is passed only in keep-alive case
                     await self._async_heater_turn_on()
             else:
                 if (self.ac_mode and too_hot) or \
@@ -347,6 +348,7 @@ class GenericThermostat(ClimateDevice):
                     _LOGGER.info("Turning on heater %s", self.heater_entity_id)
                     await self._async_heater_turn_on()
                 elif time is not None:
+                    # The time argument is passed only in keep-alive case
                     await self._async_heater_turn_off()
 
     @property
