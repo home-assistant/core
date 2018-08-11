@@ -34,8 +34,10 @@ SERVICE_PULL_DEVICES = 'pull_devices'
 
 TUYA_TYPE_TO_HA = {
     'climate': 'climate',
+    'cover': 'cover',
     'fan': 'fan',
     'light': 'light',
+    'scene': 'scene',
     'switch': 'switch',
 }
 

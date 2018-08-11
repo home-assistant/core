@@ -1,6 +1,7 @@
 """Decorator utility functions."""
 from typing import Callable, TypeVar
-CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)
+
+CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)  # noqa pylint: disable=invalid-name
 
 
 class Registry(dict):

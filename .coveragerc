@@ -251,6 +251,9 @@ omit =
     homeassistant/components/scsgate.py
     homeassistant/components/*/scsgate.py
 
+    homeassistant/components/sisyphus.py
+    homeassistant/components/*/sisyphus.py
+
     homeassistant/components/skybell.py
     homeassistant/components/*/skybell.py
 
@@ -346,6 +349,9 @@ omit =
     homeassistant/components/tuya.py
     homeassistant/components/*/tuya.py
 
+    homeassistant/components/spider.py
+    homeassistant/components/*/spider.py
+
     homeassistant/components/alarm_control_panel/alarmdotcom.py
     homeassistant/components/alarm_control_panel/canary.py
     homeassistant/components/alarm_control_panel/concord232.py
@@ -398,6 +404,8 @@ omit =
     homeassistant/components/climate/touchline.py
     homeassistant/components/climate/venstar.py
     homeassistant/components/climate/zhong_hong.py
+    homeassistant/components/cover/aladdin_connect.py
+    homeassistant/components/cover/brunt.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/gogogate2.py
     homeassistant/components/cover/homematic.py
@@ -461,6 +469,7 @@ omit =
     homeassistant/components/light/decora_wifi.py
     homeassistant/components/light/decora.py
     homeassistant/components/light/flux_led.py
+    homeassistant/components/light/futurenow.py
     homeassistant/components/light/greenwave.py
     homeassistant/components/light/hue.py
     homeassistant/components/light/hyperion.py
@@ -657,6 +666,7 @@ omit =
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/luftdaten.py
     homeassistant/components/sensor/lyft.py
+    homeassistant/components/sensor/magicseaweed.py
     homeassistant/components/sensor/metoffice.py
     homeassistant/components/sensor/miflora.py
     homeassistant/components/sensor/mitemp_bt.py

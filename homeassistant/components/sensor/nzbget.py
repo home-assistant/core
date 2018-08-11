@@ -173,8 +173,4 @@ class NZBGetAPI:
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update cached response."""
-        try:
-            self.status = self.post('status')['result']
-        except requests.exceptions.ConnectionError:
-            # failed to update status - exception already logged in self.post
-            raise
+        self.status = self.post('status')['result']
