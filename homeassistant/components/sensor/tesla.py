@@ -23,7 +23,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Tesla sensor platform."""
-    controller = hass.data[TESLA_DOMAIN]['devices']['controller']
+    controller = hass.data[TESLA_DOMAIN]['controller']
     devices = []
 
     for device in hass.data[TESLA_DOMAIN]['devices']['sensor']:
