@@ -52,12 +52,9 @@ def get_scanner(hass, config):
             TplinkDeviceScanner, Tplink5DeviceScanner, Tplink4DeviceScanner,
             Tplink3DeviceScanner, Tplink2DeviceScanner, Tplink1DeviceScanner
     ]:
-        try:
-            scanner = cls(config[DOMAIN])
-            if scanner.success_init:
-                return scanner
-        except ConnectionError:
-            _LOGGER.warning("ConnectionError in scanner %s", cls.__name__)
+        scanner = cls(config[DOMAIN])
+        if scanner.success_init:
+            return scanner
 
     return None
 
@@ -72,11 +69,16 @@ class TplinkDeviceScanner(DeviceScanner):
         password = config[CONF_PASSWORD]
         username = config[CONF_USERNAME]
 
-        self.tplink_client = TpLinkClient(
-            password, host=host, username=username)
+        self.success_init = False
+        try:
+            self.tplink_client = TpLinkClient(
+                password, host=host, username=username)
 
-        self.last_results = {}
-        self.success_init = self._update_info()
+            self.last_results = {}
+
+            self.success_init = self._update_info()
+        except requests.exceptions.ConnectionError:
+            _LOGGER.debug("ConnectionError in TplinkDeviceScanner")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -118,7 +120,11 @@ class Tplink1DeviceScanner(DeviceScanner):
         self.password = password
 
         self.last_results = {}
-        self.success_init = self._update_info()
+        self.success_init = False
+        try:
+            self.success_init = self._update_info()
+        except requests.exceptions.ConnectionError:
+            _LOGGER.debug("ConnectionError in Tplink1DeviceScanner")
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
