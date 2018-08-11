@@ -77,8 +77,7 @@ def get_models(url, username, password):
             if number_of_models == 0:
                 _LOGGER.error("%s error: No models found", CLASSIFIER)
                 return None
-            else:
-                return response_json['models']
+            return response_json['models']
     except requests.exceptions.ConnectionError:
         _LOGGER.error("ConnectionError: Is %s running?", CLASSIFIER)
         return None
@@ -154,7 +153,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ClassificationboxEntity(ImageProcessingEntity):
     """Perform an image classification."""
 
-    def __init__(self, ip, port, username, password, hostname, 
+    def __init__(self, ip, port, username, password, hostname,
                  camera_entity, confidence, model_id, model_name):
         """Init with the camera and model info."""
         super().__init__()
