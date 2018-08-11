@@ -65,7 +65,7 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
 
 
 class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
-    """MomematicIP motion detector."""
+    """HomematicIP motion detector."""
 
     @property
     def device_class(self):
@@ -81,7 +81,7 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
 
 
 class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
-    """MomematicIP smoke detector."""
+    """HomematicIP smoke detector."""
 
     @property
     def device_class(self):
