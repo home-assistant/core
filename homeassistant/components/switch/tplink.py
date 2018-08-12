@@ -9,10 +9,13 @@ import time
 
 import voluptuous as vol
 
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.components.switch import (
     SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
 from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
 import homeassistant.helpers.config_validation as cv
+
+from typing import Dict, Callable, Optional, Type
 
 REQUIREMENTS = ['pyHS100==0.3.3']
 
@@ -32,31 +35,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(hass: HomeAssistantType,
+                   config: Dict,
+                   add_entities: Callable[..., None],
+                   discovery_info=None) -> None:
     """Set up the TPLink switch platform."""
     from pyHS100 import SmartPlug
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    leds_on = config.get(CONF_LEDS)
+    host = config.get(CONF_HOST)  # Optional[str]
+    name = config.get(CONF_NAME)  # Optional[str]
+    leds_on = config.get(CONF_LEDS)  # Optional[bool]
 
     add_entities([SmartPlugSwitch(SmartPlug(host), name, leds_on)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
+    from pyHS100 import SmartPlug
 
-    def __init__(self, smartplug, name, leds_on):
+    def __init__(self,
+                 smartplug: Type[SmartPlug],
+                 name: Optional[str],
+                 leds_on: Optional[bool]) -> None:
         """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
         self._leds_on = leds_on
-        self._state = None
+        self._state = False
         self._available = True
         # Set up emeter cache
-        self._emeter_params = {}
+        self._emeter_params = {}  # Dict
 
     @property
-    def name(self):
+    def name(self) -> Optional[str]:
         """Return the name of the Smart Plug, if any."""
         return self._name
 
@@ -66,24 +76,24 @@ class SmartPlugSwitch(SwitchDevice):
         return self._available
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs) -> None:
         """Turn the switch on."""
         self.smartplug.turn_on()
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs) -> None:
         """Turn the switch off."""
         self.smartplug.turn_off()
 
     @property
-    def device_state_attributes(self):
+    def device_state_attributes(self) -> Dict:
         """Return the state attributes of the device."""
         return self._emeter_params
 
-    def update(self):
+    def update(self) -> None:
         """Update the TP-Link switch's state."""
         from pyHS100 import SmartDeviceException
         try:
