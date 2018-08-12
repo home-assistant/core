@@ -378,6 +378,13 @@ class XiaomiCube(XiaomiBinarySensor):
             })
             self._last_action = data['status']
 
+        if 'cube_status' in data:
+            self._hass.bus.fire('cube_action', {
+                'entity_id': self.entity_id,
+                'action_type': data['cube_status']
+            })
+            self._last_action = data['cube_status']
+
         if 'rotate' in data:
             self._hass.bus.fire('cube_action', {
                 'entity_id': self.entity_id,
