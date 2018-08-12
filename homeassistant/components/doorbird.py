@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST, CONF_USERNAME, \
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['doorbirdpy==2.0.2']
+REQUIREMENTS = ['doorbirdpy==2.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +43,8 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Required(CONF_HOST): cv.string,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_DOORBELL_NUMS, default=[1]): cv.ensure_list,
+    vol.Optional(CONF_DOORBELL_NUMS, default=[1]): vol.All(
+        cv.ensure_list, [cv.positive_int]),
     vol.Optional(CONF_CUSTOM_URL): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
@@ -109,8 +110,7 @@ def setup(hass, config):
 class ConfiguredDoorBird(object):
     """Attach additional information to pass along with configured device."""
 
-    def __init__(self, device, name, events=None, custom_url=None,
-                 doorbell_nums=None):
+    def __init__(self, device, name, events, custom_url, doorbell_nums):
         """Initialize configured device."""
         self._name = name
         self._device = device
@@ -133,16 +133,6 @@ class ConfiguredDoorBird(object):
         """Custom url for device."""
         return self._custom_url
 
-    @property
-    def monitored_events(self):
-        """Get monitored events."""
-        return self._monitored_events if self._monitored_events else []
-
-    @property
-    def doorbell_nums(self):
-        """Get monitored doorbell numbers."""
-        return self._doorbell_nums if self._doorbell_nums else [1]
-
     def update_schedule(self, hass):
         """Register monitored sensors and deregister others."""
         from doorbirdpy import DoorBirdScheduleEntrySchedule
@@ -164,7 +154,7 @@ class ConfiguredDoorBird(object):
             slug = slugify(name)
             url = '{}{}/{}'.format(hass_url, API_URL, slug)
 
-            if sensor_type in self.monitored_events:
+            if sensor_type in self._monitored_events:
                 # Enabled -> register
                 self._register_event(url, sensor_type, schedule)
                 _LOGGER.info('Registered for %s pushes from DoorBird "%s". '
@@ -193,36 +183,39 @@ class ConfiguredDoorBird(object):
         if not fav_id:
             _LOGGER.warning('Could not find favorite for URL "%s". '
                             'Skipping sensor "%s".', hass_url, event)
-        else:
-            # Add event handling to device schedule
-            output = DoorBirdScheduleEntryOutput(event='http',
-                                                 param=fav_id,
-                                                 schedule=schedule)
+            return
 
-            if event == 'doorbell':
-                # Repeat edit for each monitored doorbell number
-                for doorbell in self.doorbell_nums:
-                    entry = self.get_schedule_entry(event, str(doorbell))
-                    entry.output.append(output)
-                    self.device.change_schedule(entry)
-            else:
-                entry = self.get_schedule_entry(event)
+        # Add event handling to device schedule
+        output = DoorBirdScheduleEntryOutput(event='http',
+                                             param=fav_id,
+                                             schedule=schedule)
+
+        if event == 'doorbell':
+            # Repeat edit for each monitored doorbell number
+            for doorbell in self._doorbell_nums:
+                entry = self.device.get_schedule_entry(event, str(doorbell))
                 entry.output.append(output)
                 self.device.change_schedule(entry)
+        else:
+            entry = self.device.get_schedule_entry(event)
+            entry.output.append(output)
+            self.device.change_schedule(entry)
 
     def _deregister_event(self, hass_url, event):
         """Remove the schedule entry in the device for a sensor."""
         # Find the right favorite and delete it
         fav_id = self.get_webhook_id(hass_url)
-        if fav_id:
-            self._device.delete_favorite('http', fav_id)
+        if not fav_id:
+            return
 
-            if event == 'doorbell':
-                # Delete the matching schedule for each doorbell number
-                for doorbell in self.doorbell_nums:
-                    self._delete_schedule_action(event, fav_id, str(doorbell))
-            else:
-                self._delete_schedule_action(event, fav_id)
+        self._device.delete_favorite('http', fav_id)
+
+        if event == 'doorbell':
+            # Delete the matching schedule for each doorbell number
+            for doorbell in self._doorbell_nums:
+                self._delete_schedule_action(event, fav_id, str(doorbell))
+        else:
+            self._delete_schedule_action(event, fav_id)
 
     def _delete_schedule_action(self, sensor, fav_id, param=""):
         """
@@ -238,20 +231,6 @@ class ConfiguredDoorBird(object):
                     entry.output.remove(action)
 
             self._device.change_schedule(entry)
-
-    def get_schedule_entry(self, sensor, param=""):
-        """
-        Return the schedule entry that matches the provided sensor and
-        parameter or create a new one that does if none exists.
-        """
-        from doorbirdpy import DoorBirdScheduleEntry
-        entries = self._device.schedule()
-
-        for entry in entries:
-            if entry.input == sensor and entry.param == param:
-                return entry
-
-        return DoorBirdScheduleEntry(sensor, param)
 
     def webhook_is_registered(self, ha_url, favs=None) -> bool:
         """Return whether the given URL is registered as a device favorite."""
@@ -312,8 +291,7 @@ class DoorBirdCleanupView(HomeAssistantView):
     name = 'DoorBird Cleanup'
 
     # pylint: disable=no-self-use
-    @asyncio.coroutine
-    def get(self, request, name):
+    async def get(self, request, name):
         """Act on requests."""
         from aiohttp import web
         hass = request.app['hass']
