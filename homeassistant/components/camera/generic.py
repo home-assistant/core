@@ -110,7 +110,8 @@ class GenericCamera(Camera):
             def fetch():
                 """Read image from a URL."""
                 try:
-                    response = requests.get(url, timeout=10, auth=self._auth, verify=self.verify_ssl)
+                    response = requests.get(url, timeout=10, auth=self._auth,
+                                            verify=self.verify_ssl)
                     return response.content
                 except requests.exceptions.RequestException as error:
                     _LOGGER.error("Error getting camera image: %s", error)
@@ -121,7 +122,8 @@ class GenericCamera(Camera):
         # async
         else:
             try:
-                websession = async_get_clientsession(self.hass, verify_ssl=self.verify_ssl)
+                websession = async_get_clientsession(
+                    self.hass, verify_ssl=self.verify_ssl)
                 with async_timeout.timeout(10, loop=self.hass.loop):
                     response = yield from websession.get(
                         url, auth=self._auth)
