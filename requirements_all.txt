@@ -163,7 +163,7 @@ batinfo==0.4.2
 # homeassistant.components.sensor.geizhals
 # homeassistant.components.sensor.scrape
 # homeassistant.components.sensor.sytadin
-beautifulsoup4==4.6.1
+beautifulsoup4==4.6.3
 
 # homeassistant.components.zha
 bellows==0.6.0
