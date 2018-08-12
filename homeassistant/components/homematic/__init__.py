@@ -741,6 +741,11 @@ class HMDevice(Entity):
         yield from self.hass.async_add_job(self.link_homematic)
 
     @property
+    def unique_id(self):
+        """Return unique ID. HomeMatic entity IDs are unique by default."""
+        return self._name
+
+    @property
     def should_poll(self):
         """Return false. HomeMatic states are pushed by the XML-RPC Server."""
         return False
