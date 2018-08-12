@@ -142,12 +142,14 @@ class GoogleTravelTimeSensor(Entity):
             self._destination = destination
 
         # Check if mode is a trackable entity
-        if CONF_MODE in options and options[CONF_MODE].split('.', 1)[0] in TRACKABLE_DOMAINS:
+        if CONF_MODE in options \
+                and options[CONF_MODE].split('.', 1)[0] in TRACKABLE_DOMAINS:
             self._mode_entity_id = options[CONF_MODE]
         elif options[CONF_MODE] in TRAVEL_MODE:
             self._mode = options[CONF_MODE]
         else:
-            _LOGGER.warning('Invalid travel mode: {}'.format(options[CONF_MODE]))
+            _LOGGER.warning('Invalid travel mode: {}'
+                            .format(options[CONF_MODE]))
             self._mode = 'driving'  # Default
 
         import googlemaps
@@ -205,7 +207,8 @@ class GoogleTravelTimeSensor(Entity):
         """Get the latest data from Google."""
         options_copy = self._get_options_values()
 
-        if 'departure_time' not in options_copy and 'arrival_time' not in options_copy:
+        if 'departure_time' not in options_copy \
+                and 'arrival_time' not in options_copy:
             options_copy['departure_time'] = 'now'
 
         # Convert device_trackers to google friendly location
