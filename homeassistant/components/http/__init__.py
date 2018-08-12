@@ -40,7 +40,6 @@ CONF_API_PASSWORD = 'api_password'
 CONF_SERVER_HOST = 'server_host'
 CONF_SERVER_PORT = 'server_port'
 CONF_BASE_URL = 'base_url'
-CONF_INTERNAL_BASE_URL = 'internal_base_url'
 CONF_SSL_CERTIFICATE = 'ssl_certificate'
 CONF_SSL_PEER_CERTIFICATE = 'ssl_peer_certificate'
 CONF_SSL_KEY = 'ssl_key'
@@ -62,7 +61,6 @@ HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_SERVER_HOST, default=DEFAULT_SERVER_HOST): cv.string,
     vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
     vol.Optional(CONF_BASE_URL): cv.string,
-    vol.Optional(CONF_INTERNAL_BASE_URL): cv.string,
     vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
     vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
     vol.Optional(CONF_SSL_KEY): cv.isfile,
@@ -92,7 +90,6 @@ async def async_setup(hass, config):
         conf = HTTP_SCHEMA({})
 
     api_password = conf.get(CONF_API_PASSWORD)
-    internal_base_url = conf.get(CONF_INTERNAL_BASE_URL)
     server_host = conf[CONF_SERVER_HOST]
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
@@ -149,7 +146,7 @@ async def async_setup(hass, config):
         host = hass_util.get_local_ip()
         port = server_port
 
-    hass.config.api = rem.API(host, api_password, internal_base_url, port,
+    hass.config.api = rem.API(host, api_password, port,
                               ssl_certificate is not None)
 
     return True
