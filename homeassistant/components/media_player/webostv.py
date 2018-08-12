@@ -224,11 +224,10 @@ class LgWebOSDevice(MediaPlayerDevice):
                               for word in conf_sources)):
                         self._source_list[source['label']] = source
 
-
                 for channel in self._client.get_channels():
                     number = channel['channelNumber']
                     name = channel['channelName']
-                    if name is not "":
+                    if name != '':
                         self._channel_list[number] = name
 
         except (OSError, ConnectionClosed, TypeError,
