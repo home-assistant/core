@@ -1,27 +1,10 @@
 """Tests for Vanderbilt SPC alarm control panel platform."""
-import asyncio
-
-import pytest
-
-from homeassistant.components.spc import SpcRegistry
 from homeassistant.components.alarm_control_panel import spc
-from tests.common import async_test_home_assistant
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED)
 
 
-@pytest.fixture
-def hass(loop):
-    """Home Assistant fixture with device mapping registry."""
-    hass = loop.run_until_complete(async_test_home_assistant(loop))
-    hass.data['spc_registry'] = SpcRegistry()
-    hass.data['spc_api'] = None
-    yield hass
-    loop.run_until_complete(hass.async_stop())
-
-
-@asyncio.coroutine
-def test_setup_platform(hass):
+async def test_setup_platform(hass):
     """Test adding areas as separate alarm control panel devices."""
     added_entities = []
 
@@ -29,7 +12,7 @@ def test_setup_platform(hass):
         nonlocal added_entities
         added_entities = list(entities)
 
-    areas = {'areas': [{
+    area_defs = [{
         'id': '1',
         'name': 'House',
         'mode': '3',
@@ -50,12 +33,16 @@ def test_setup_platform(hass):
         'last_unset_time': '1483705808',
         'last_unset_user_id': '9998',
         'last_unset_user_name': 'Lisa'
-    }]}
+    }]
 
-    yield from spc.async_setup_platform(hass=hass,
-                                        config={},
-                                        async_add_entities=add_entities,
-                                        discovery_info=areas)
+    from pyspcwebgw import Area
+
+    areas = [Area(gateway=None, spc_area=a) for a in area_defs]
+
+    await spc.async_setup_platform(hass=hass,
+                                   config={},
+                                   async_add_entities=add_entities,
+                                   discovery_info={'areas': areas})
 
     assert len(added_entities) == 2
 
