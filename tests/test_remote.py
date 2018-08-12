@@ -45,7 +45,7 @@ def setUpModule():
 
     hass.start()
 
-    master_api = remote.API('127.0.0.1', API_PASSWORD, port=MASTER_PORT)
+    master_api = remote.API('127.0.0.1', API_PASSWORD, MASTER_PORT)
 
 
 # pylint: disable=invalid-name
@@ -68,21 +68,10 @@ class TestRemoteMethods(unittest.TestCase):
         self.assertEqual(
             remote.APIStatus.INVALID_PASSWORD,
             remote.validate_api(
-                remote.API('127.0.0.1', API_PASSWORD + 'A', port=MASTER_PORT)))
+                remote.API('127.0.0.1', API_PASSWORD + 'A', MASTER_PORT)))
 
         self.assertEqual(
             remote.APIStatus.CANNOT_CONNECT, remote.validate_api(broken_api))
-
-    def test_clean_up_host(self):
-        """Test Python API clean_up_host."""
-        self.assertEqual("http://example.com:8123",
-                         remote.clean_up_host("example.com:8123", False))
-        self.assertEqual("https://example.com:8123",
-                         remote.clean_up_host("example.com:8123", True))
-        self.assertEqual("http://example.com",
-                         remote.clean_up_host("example.com", False))
-        self.assertEqual("https://example.com",
-                         remote.clean_up_host("example.com", True))
 
     def test_get_event_listeners(self):
         """Test Python API get_event_listeners."""
