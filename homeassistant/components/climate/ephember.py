@@ -198,7 +198,7 @@ class EphEmberThermostat(ClimateDevice):
     def map_mode_hass_eph(operation_mode):
         """Map from home assistant mode to eph mode."""
         from pyephember.pyephember import ZoneMode
-        return getattr(ZoneMode, HA_STATE_TO_EPH.get(operation_mode, None))
+        return getattr(ZoneMode, HA_STATE_TO_EPH.get(operation_mode), None)
 
     @staticmethod
     def map_mode_eph_hass(operation_mode):
