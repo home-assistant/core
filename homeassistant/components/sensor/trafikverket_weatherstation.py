@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_STATION): cv.string,
-    vol.Required(CONF_TYPE): vol.In(['air', 'road']),
+    vol.Required(CONF_TYPE): vol.In(['air', 'road', 'precipitation']),
 })
 
 
@@ -74,7 +74,9 @@ class TrafikverketWeatherStation(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return TEMP_CELSIUS
+        if (self._type == 'road') or (self._type == 'air'):
+            return TEMP_CELSIUS
+
 
     @property
     def device_state_attributes(self):
@@ -88,8 +90,13 @@ class TrafikverketWeatherStation(Entity):
 
         if self._type == 'road':
             air_vs_road = 'Road'
+            keytype = 'Temp'
+        elif self._type == 'precipitation':
+            air_vs_road = 'Precipitation'
+            keytype = 'Type'
         else:
             air_vs_road = 'Air'
+            keytype = 'Temp'
 
         xml = """
         <REQUEST>
@@ -98,7 +105,7 @@ class TrafikverketWeatherStation(Entity):
                     <FILTER>
                           <EQ name="Name" value='""" + self._station + """' />
                     </FILTER>
-                    <INCLUDE>Measurement.""" + air_vs_road + """.Temp</INCLUDE>
+                    <INCLUDE>Measurement.""" + air_vs_road + """.""" + keytype + """</INCLUDE>
               </QUERY>
         </REQUEST>"""
 
@@ -119,4 +126,4 @@ class TrafikverketWeatherStation(Entity):
             return
 
         # air_vs_road contains "Air" or "Road" depending on user input.
-        self._state = final[air_vs_road]["Temp"]
+        self._state = final[air_vs_road][keytype]
