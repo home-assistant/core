@@ -240,9 +240,9 @@ class MpdDevice(MediaPlayerDevice):
             self._playlists = []
             for playlist_data in self._client.listplaylists():
                 self._playlists.append(playlist_data['playlist'])
-        except mpd.CommandError as e:
+        except mpd.CommandError as error:
             self._playlists = None
-            _LOGGER.warning("Playlists could not be updated: %s:", e)
+            _LOGGER.warning("Playlists could not be updated: %s:", error)
 
     def set_volume_level(self, volume):
         """Set volume of media player."""
