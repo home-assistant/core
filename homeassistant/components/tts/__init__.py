@@ -91,7 +91,8 @@ async def async_setup(hass, config):
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
         base_url_override = conf.get(CONF_BASE_URL_OVERRIDE)
 
-        await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url_override)
+        await tts.async_init_cache(use_cache, cache_dir, time_memory,
+                                   base_url_override)
     except (HomeAssistantError, KeyError) as err:
         _LOGGER.error("Error on cache init %s", err)
         return False
@@ -187,7 +188,8 @@ class SpeechManager:
         self.mem_cache = {}
         self.base_url = self.hass.config.api.base_url
 
-    async def async_init_cache(self, use_cache, cache_dir, time_memory, base_url_override):
+    async def async_init_cache(self, use_cache, cache_dir, time_memory,
+                               base_url_override):
         """Init config folder and load file cache."""
         self.use_cache = use_cache
         self.time_memory = time_memory
