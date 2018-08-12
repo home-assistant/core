@@ -52,17 +52,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DESTINATION): cv.string,
     vol.Required(CONF_ORIGIN): cv.string,
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TRAVEL_MODE): vol.In(TRAVEL_MODE),
+    vol.Optional(CONF_TRAVEL_MODE): cv.string,
     vol.Optional(CONF_OPTIONS, default={CONF_MODE: 'driving'}): vol.All(
         dict, vol.Schema({
-            vol.Optional(CONF_MODE, default='driving'): vol.In(TRAVEL_MODE),
+            vol.Optional(CONF_MODE, default='driving'): cv.string,
             vol.Optional('language'): vol.In(ALL_LANGUAGES),
             vol.Optional('avoid'): vol.In(AVOID),
             vol.Optional('units'): vol.In(UNITS),
             vol.Exclusive('arrival_time', 'time'): cv.string,
             vol.Exclusive('departure_time', 'time'): cv.string,
             vol.Optional('traffic_model'): vol.In(TRAVEL_MODEL),
-            vol.Optional('transit_mode'): vol.In(TRANSPORT_TYPE),
+            vol.Optional('transit_mode'): cv.string,
             vol.Optional('transit_routing_preference'): vol.In(TRANSIT_PREFS)
         }))
 })
@@ -141,6 +141,15 @@ class GoogleTravelTimeSensor(Entity):
         else:
             self._destination = destination
 
+        # Check if mode is a trackable entity
+        if CONF_MODE in options and options[CONF_MODE].split('.', 1)[0] in TRACKABLE_DOMAINS:
+            self._mode_entity_id = options[CONF_MODE]
+        elif options[CONF_MODE] in TRAVEL_MODE:
+            self._mode = options[CONF_MODE]
+        else:
+            _LOGGER.warning('Invalid travel mode: {}'.format(options[CONF_MODE]))
+            self._mode = 'driving'  # Default
+
         import googlemaps
         self._client = googlemaps.Client(api_key, timeout=10)
         try:
@@ -175,7 +184,7 @@ class GoogleTravelTimeSensor(Entity):
             return None
 
         res = self._matrix.copy()
-        res.update(self._options)
+        res.update(self._get_options_values())
         del res['rows']
         _data = self._matrix['rows'][0]['elements'][0]
         if 'duration_in_traffic' in _data:
@@ -194,20 +203,10 @@ class GoogleTravelTimeSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Google."""
-        options_copy = self._options.copy()
-        dtime = options_copy.get('departure_time')
-        atime = options_copy.get('arrival_time')
-        if dtime is not None and ':' in dtime:
-            options_copy['departure_time'] = convert_time_to_utc(dtime)
-        elif dtime is not None:
-            options_copy['departure_time'] = dtime
-        elif atime is None:
-            options_copy['departure_time'] = 'now'
+        options_copy = self._get_options_values()
 
-        if atime is not None and ':' in atime:
-            options_copy['arrival_time'] = convert_time_to_utc(atime)
-        elif atime is not None:
-            options_copy['arrival_time'] = atime
+        if 'departure_time' not in options_copy and 'arrival_time' not in options_copy:
+            options_copy['departure_time'] = 'now'
 
         # Convert device_trackers to google friendly location
         if hasattr(self, '_origin_entity_id'):
@@ -226,6 +225,23 @@ class GoogleTravelTimeSensor(Entity):
         if self._destination is not None and self._origin is not None:
             self._matrix = self._client.distance_matrix(
                 self._origin, self._destination, **options_copy)
+
+    def _get_options_values(self):
+        options_copy = self._options.copy()
+
+        # Replace values with entity.state if valid
+        for k, v in options_copy.items():
+            new_v = v
+            entity = self._hass.states.get(v)
+            if entity:
+                new_v = entity.state
+            if k == CONF_MODE and new_v not in TRAVEL_MODE:
+                _LOGGER.warning('Invalid travel mode: {}'.format(new_v))
+                new_v = 'driving'  # Default
+            if k in ['departure_time', 'arrival_time'] and ':' in new_v:
+                new_v = convert_time_to_utc(new_v)
+            options_copy[k] = new_v
+        return options_copy
 
     def _get_location_from_entity(self, entity_id):
         """Get the location from the entity state or attributes."""
