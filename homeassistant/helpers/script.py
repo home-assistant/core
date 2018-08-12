@@ -145,7 +145,7 @@ class Script():
 
                 if CONF_TIMEOUT in action:
                     self._async_set_timeout(
-                        action, variables, action.get(CONF_CONTINUE, False))
+                        action, variables, action.get(CONF_CONTINUE, True))
 
                 return
 
@@ -216,7 +216,7 @@ class Script():
         self._log("Test condition {}: {}".format(self.last_action, check))
         return check
 
-    def _async_set_timeout(self, action, variables, continue_on_timeout=False):
+    def _async_set_timeout(self, action, variables, continue_on_timeout=True):
         """Schedule a timeout to abort or continue script."""
         timeout = action[CONF_TIMEOUT]
         unsub = None
