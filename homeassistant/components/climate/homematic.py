@@ -87,7 +87,7 @@ class HMThermostat(HMDevice, ClimateDevice):
 
         # HM ip etrv 2 uses the set_point_mode to say if its
         # auto or manual
-        elif not set_point_mode == -1:
+        if not set_point_mode == -1:
             code = set_point_mode
         # Other devices use the control_mode
         else:

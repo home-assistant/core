@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
     CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS)
 from homeassistant.helpers.entity import Entity
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.event import async_track_point_in_utc_time

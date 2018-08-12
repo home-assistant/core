@@ -9,10 +9,13 @@ pip>=8.0.3
 pytz>=2018.04
 pyyaml>=3.13,<4
 requests==2.19.1
-voluptuous==0.11.1
+voluptuous==0.11.5
 
 # homeassistant.components.nuimo_controller
 --only-binary=all nuimo==0.1.0
+
+# homeassistant.components.sensor.dht
+# Adafruit-DHT==1.3.3
 
 # homeassistant.components.sensor.sht31
 Adafruit-GPIO==1.0.3
@@ -22,9 +25,6 @@ Adafruit-SHT31==1.0.2
 
 # homeassistant.components.bbb_gpio
 # Adafruit_BBIO==1.0.0
-
-# homeassistant.components.sensor.dht
-# Adafruit_Python_DHT==1.3.2
 
 # homeassistant.components.doorbird
 DoorBirdPy==0.1.3
@@ -108,6 +108,9 @@ aiolifx_effects==0.1.2
 # homeassistant.components.scene.hunterdouglas_powerview
 aiopvapi==1.5.4
 
+# homeassistant.components.cover.aladdin_connect
+aladdin_connect==0.1
+
 # homeassistant.components.alarmdecoder
 alarmdecoder==1.13.2
 
@@ -154,7 +157,7 @@ batinfo==0.4.2
 # homeassistant.components.sensor.geizhals
 # homeassistant.components.sensor.scrape
 # homeassistant.components.sensor.sytadin
-beautifulsoup4==4.6.0
+beautifulsoup4==4.6.1
 
 # homeassistant.components.zha
 bellows==0.6.0
@@ -195,6 +198,9 @@ braviarc-homeassistant==0.3.7.dev0
 # homeassistant.components.sensor.broadlink
 # homeassistant.components.switch.broadlink
 broadlink==0.9.0
+
+# homeassistant.components.cover.brunt
+brunt==0.1.2
 
 # homeassistant.components.device_tracker.bluetooth_tracker
 bt_proximity==0.1.2
@@ -260,7 +266,7 @@ defusedxml==0.5.0
 deluge-client==1.4.0
 
 # homeassistant.components.media_player.denonavr
-denonavr==0.7.4
+denonavr==0.7.5
 
 # homeassistant.components.media_player.directv
 directpy==0.5
@@ -309,7 +315,7 @@ ephem==3.7.6.0
 epson-projector==0.1.3
 
 # homeassistant.components.netgear_lte
-eternalegypt==0.0.2
+eternalegypt==0.0.3
 
 # homeassistant.components.keyboard_remote
 # evdev==0.6.1
@@ -415,7 +421,7 @@ hole==0.3.0
 holidays==0.9.5
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180720.0
+home-assistant-frontend==20180804.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -452,7 +458,7 @@ influxdb==5.0.0
 insteonlocal==0.53
 
 # homeassistant.components.insteon_plm
-insteonplm==0.11.3
+insteonplm==0.11.7
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
@@ -529,6 +535,9 @@ lw12==0.9.2
 # homeassistant.components.sensor.lyft
 lyft_rides==0.2
 
+# homeassistant.components.sensor.magicseaweed
+magicseaweed==1.0.0
+
 # homeassistant.components.matrix
 matrix-client==0.2.0
 
@@ -552,7 +561,7 @@ mitemp_bt==0.0.1
 motorparts==1.0.2
 
 # homeassistant.components.tts
-mutagen==1.40.0
+mutagen==1.41.0
 
 # homeassistant.components.mychevy
 mychevy==0.4.0
@@ -590,7 +599,7 @@ nuheat==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.14.5
+numpy==1.15.0
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -643,7 +652,7 @@ piglow==1.2.4
 pilight==0.1.1
 
 # homeassistant.components.camera.proxy
-pillow==5.0.0
+pillow==5.2.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -728,7 +737,7 @@ pyairvisual==2.0.1
 pyalarmdotcom==0.3.2
 
 # homeassistant.components.arlo
-pyarlo==0.1.9
+pyarlo==0.2.0
 
 # homeassistant.components.notify.xmpp
 pyasn1-modules==0.1.5
@@ -737,7 +746,7 @@ pyasn1-modules==0.1.5
 pyasn1==0.3.7
 
 # homeassistant.components.netatmo
-pyatmo==1.0.0
+pyatmo==1.1.1
 
 # homeassistant.components.apple_tv
 pyatv==0.3.10
@@ -753,7 +762,7 @@ pyblackbird==0.5
 # pybluez==0.22
 
 # homeassistant.components.neato
-pybotvac==0.0.7
+pybotvac==0.0.9
 
 # homeassistant.components.cloudflare
 pycfdns==0.0.1
@@ -808,7 +817,7 @@ pyeight==0.0.9
 pyemby==1.5
 
 # homeassistant.components.envisalink
-pyenvisalink==2.2
+pyenvisalink==2.3
 
 # homeassistant.components.climate.ephember
 pyephember==0.1.1
@@ -821,6 +830,9 @@ pyflexit==0.3
 
 # homeassistant.components.binary_sensor.flic
 pyflic-homeassistant==0.4.dev0
+
+# homeassistant.components.light.futurenow
+pyfnip==0.2
 
 # homeassistant.components.fritzbox
 pyfritzhome==0.3.7
@@ -847,7 +859,7 @@ pyhik==0.1.8
 pyhiveapi==0.2.14
 
 # homeassistant.components.homematic
-pyhomematic==0.1.45
+pyhomematic==0.1.46
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.2.2
@@ -955,7 +967,7 @@ pyotp==2.2.6
 
 # homeassistant.components.sensor.openweathermap
 # homeassistant.components.weather.openweathermap
-pyowm==2.8.0
+pyowm==2.9.0
 
 # homeassistant.components.sensor.pollen
 pypollencom==2.1.0
@@ -1141,7 +1153,7 @@ pyuptimerobot==0.0.5
 # pyuserinput==0.1.11
 
 # homeassistant.components.vera
-pyvera==0.2.43
+pyvera==0.2.44
 
 # homeassistant.components.switch.vesync
 pyvesync==0.1.1
@@ -1241,7 +1253,10 @@ shodan==1.8.1
 simplepush==1.1.4
 
 # homeassistant.components.alarm_control_panel.simplisafe
-simplisafe-python==1.0.5
+simplisafe-python==2.0.2
+
+# homeassistant.components.sisyphus
+sisyphus-control==2.1
 
 # homeassistant.components.skybell
 skybellpy==0.1.2
@@ -1256,7 +1271,7 @@ sleekxmpp==1.3.2
 sleepyq==0.6
 
 # homeassistant.components.smappee
-smappy==0.2.15
+smappy==0.2.16
 
 # homeassistant.components.raspihats
 # homeassistant.components.sensor.bh1750
@@ -1278,6 +1293,9 @@ somecomfort==0.5.2
 # homeassistant.components.sensor.speedtest
 speedtest-cli==2.0.2
 
+# homeassistant.components.spider
+spiderpy==1.2.0
+
 # homeassistant.components.sensor.spotcrime
 spotcrime==1.0.3
 
@@ -1287,7 +1305,7 @@ spotipy-homeassistant==2.4.4.dev1
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.9
+sqlalchemy==1.2.10
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -1339,6 +1357,9 @@ toonlib==1.0.2
 
 # homeassistant.components.alarm_control_panel.totalconnect
 total_connect_client==0.18
+
+# homeassistant.components.device_tracker.tplink
+tplink==0.2.1
 
 # homeassistant.components.sensor.transmission
 # homeassistant.components.switch.transmission
@@ -1442,7 +1463,7 @@ yeelight==0.4.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.07.04
+youtube_dl==2018.07.29
 
 # homeassistant.components.light.zengge
 zengge==0.2

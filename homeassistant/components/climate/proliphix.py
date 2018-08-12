@@ -102,9 +102,9 @@ class ProliphixThermostat(ClimateDevice):
         state = self._pdp.hvac_state
         if state in (1, 2):
             return STATE_IDLE
-        elif state == 3:
+        if state == 3:
             return STATE_HEAT
-        elif state == 6:
+        if state == 6:
             return STATE_COOL
 
     def set_temperature(self, **kwargs):

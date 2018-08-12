@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
 
-class WFSensorConfig(object):
+class WFSensorConfig:
     """Water Furnace Sensor configuration."""
 
     def __init__(self, friendly_name, field, icon="mdi:gauge",

@@ -18,7 +18,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import (
     MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
     __version__)
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 from homeassistant.loader import bind_hass
 from homeassistant.remote import JSONEncoder
 from homeassistant.helpers import config_validation as cv
@@ -262,6 +262,18 @@ class ActiveConnection:
         self._handle_task = None
         self._writer_task = None
 
+    @property
+    def user(self):
+        """Return the user associated with the connection."""
+        return self.request.get('hass_user')
+
+    def context(self, msg):
+        """Return a context."""
+        user = self.user
+        if user is None:
+            return Context()
+        return Context(user_id=user.id)
+
     def debug(self, message1, message2=''):
         """Print a debug message."""
         _LOGGER.debug("WS %s: %s %s", id(self.wsock), message1, message2)
@@ -287,7 +299,7 @@ class ActiveConnection:
 
     @callback
     def send_message_outside(self, message):
-        """Send a message to the client outside of the main task.
+        """Send a message to the client.
 
         Closes connection if the client is not reading the messages.
 
@@ -508,7 +520,8 @@ def handle_call_service(hass, connection, msg):
     async def call_service_helper(msg):
         """Call a service and fire complete message."""
         await hass.services.async_call(
-            msg['domain'], msg['service'], msg.get('service_data'), True)
+            msg['domain'], msg['service'], msg.get('service_data'), True,
+            connection.context(msg))
         connection.send_message_outside(result_message(msg['id']))
 
     hass.async_add_job(call_service_helper(msg))

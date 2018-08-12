@@ -361,7 +361,7 @@ def temperature_unit(value) -> str:
     value = str(value).upper()
     if value == 'C':
         return TEMP_CELSIUS
-    elif value == 'F':
+    if value == 'F':
         return TEMP_FAHRENHEIT
     raise vol.Invalid('invalid temperature unit (expected C or F)')
 
@@ -435,15 +435,14 @@ def socket_timeout(value):
     """
     if value is None:
         return _GLOBAL_DEFAULT_TIMEOUT
-    else:
-        try:
-            float_value = float(value)
-            if float_value > 0.0:
-                return float_value
-            raise vol.Invalid('Invalid socket timeout value.'
-                              ' float > 0.0 required.')
-        except Exception as _:
-            raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
+    try:
+        float_value = float(value)
+        if float_value > 0.0:
+            return float_value
+        raise vol.Invalid('Invalid socket timeout value.'
+                          ' float > 0.0 required.')
+    except Exception as _:
+        raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
 
 
 # pylint: disable=no-value-for-parameter

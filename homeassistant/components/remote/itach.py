@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.components.remote as remote
+from homeassistant.components import remote
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME, CONF_NAME, CONF_MAC, CONF_HOST, CONF_PORT,
     CONF_DEVICES)

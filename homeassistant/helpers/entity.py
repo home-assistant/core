@@ -56,7 +56,7 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
         entity_id_format.format(slugify(name)), current_ids)
 
 
-class Entity(object):
+class Entity:
     """An abstract class for Home Assistant entities."""
 
     # SAFE TO OVERWRITE
@@ -81,6 +81,9 @@ class Entity(object):
 
     # Name in the entity registry
     registry_name = None
+
+    # Hold list for functions to call on remove.
+    _on_remove = None
 
     @property
     def should_poll(self) -> bool:
@@ -176,7 +179,7 @@ class Entity(object):
     # produce undesirable effects in the entity's operation.
 
     @asyncio.coroutine
-    def async_update_ha_state(self, force_refresh=False):
+    def async_update_ha_state(self, force_refresh=False, context=None):
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
@@ -276,7 +279,7 @@ class Entity(object):
             pass
 
         self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update)
+            self.entity_id, state, attr, self.force_update, context)
 
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
@@ -324,8 +327,19 @@ class Entity(object):
             if self.parallel_updates:
                 self.parallel_updates.release()
 
+    @callback
+    def async_on_remove(self, func):
+        """Add a function to call when entity removed."""
+        if self._on_remove is None:
+            self._on_remove = []
+        self._on_remove.append(func)
+
     async def async_remove(self):
         """Remove entity from Home Assistant."""
+        if self._on_remove is not None:
+            while self._on_remove:
+                self._on_remove.pop()()
+
         if self.platform is not None:
             await self.platform.async_remove_entity(self.entity_id)
         else:
@@ -335,7 +349,17 @@ class Entity(object):
     def async_registry_updated(self, old, new):
         """Called when the entity registry has been updated."""
         self.registry_name = new.name
-        self.async_schedule_update_ha_state()
+
+        if new.entity_id == self.entity_id:
+            self.async_schedule_update_ha_state()
+            return
+
+        async def readd():
+            """Remove and add entity again."""
+            await self.async_remove()
+            await self.platform.async_add_entities([self])
+
+        self.hass.async_create_task(readd())
 
     def __eq__(self, other):
         """Return the comparison."""

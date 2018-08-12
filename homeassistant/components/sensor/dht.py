@@ -17,7 +17,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['Adafruit_Python_DHT==1.3.2']
+REQUIREMENTS = ['Adafruit-DHT==1.3.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,7 +128,7 @@ class DHTSensor(Entity):
             temperature = data[SENSOR_TEMPERATURE]
             _LOGGER.debug("Temperature %.1f \u00b0C + offset %.1f",
                           temperature, temperature_offset)
-            if (temperature >= -20) and (temperature < 80):
+            if -20 <= temperature < 80:
                 self._state = round(temperature + temperature_offset, 1)
                 if self.temp_unit == TEMP_FAHRENHEIT:
                     self._state = round(celsius_to_fahrenheit(temperature), 1)
@@ -136,11 +136,11 @@ class DHTSensor(Entity):
             humidity = data[SENSOR_HUMIDITY]
             _LOGGER.debug("Humidity %.1f%% + offset %.1f",
                           humidity, humidity_offset)
-            if (humidity >= 0) and (humidity <= 100):
+            if 0 <= humidity <= 100:
                 self._state = round(humidity + humidity_offset, 1)
 
 
-class DHTClient(object):
+class DHTClient:
     """Get the latest data from the DHT sensor."""
 
     def __init__(self, adafruit_dht, sensor, pin):

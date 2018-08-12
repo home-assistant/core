@@ -107,7 +107,7 @@ class PwrCtrlSwitch(SwitchDevice):
         self._port.off()
 
 
-class PwrCtrlDevice(object):
+class PwrCtrlDevice:
     """Device representation for per device throttling."""
 
     def __init__(self, device):

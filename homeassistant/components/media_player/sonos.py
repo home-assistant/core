@@ -447,11 +447,15 @@ class SonosDevice(MediaPlayerDevice):
 
         self.update_volume()
 
-        self._favorites = []
+        self._set_favorites()
+
+    def _set_favorites(self):
+        """Set available favorites."""
         # SoCo 0.14 raises a generic Exception on invalid xml in favorites.
         # Filter those out now so our list is safe to use.
         # pylint: disable=broad-except
         try:
+            self._favorites = []
             for fav in self.soco.music_library.get_sonos_favorites():
                 try:
                     if fav.reference.get_uri():
@@ -492,6 +496,9 @@ class SonosDevice(MediaPlayerDevice):
 
         queue = _ProcessSonosEventQueue(self.update_groups)
         player.zoneGroupTopology.subscribe(auto_renew=True, event_queue=queue)
+
+        queue = _ProcessSonosEventQueue(self.update_content)
+        player.contentDirectory.subscribe(auto_renew=True, event_queue=queue)
 
     def update(self):
         """Retrieve latest state."""
@@ -734,6 +741,11 @@ class SonosDevice(MediaPlayerDevice):
                         slave._coordinator = self
                         slave._sonos_group = sonos_group
                         slave.schedule_update_ha_state()
+
+    def update_content(self, event=None):
+        """Update information about available content."""
+        self._set_favorites()
+        self.schedule_update_ha_state()
 
     @property
     def volume_level(self):

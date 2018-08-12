@@ -142,7 +142,7 @@ class YrSensor(Entity):
         return self._unit_of_measurement
 
 
-class YrData(object):
+class YrData:
     """Get the latest data and updates the states."""
 
     def __init__(self, hass, coordinates, forecast, devices):

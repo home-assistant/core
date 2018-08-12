@@ -245,7 +245,7 @@ class FluxLight(Light):
             return
 
         # Effect selection
-        elif effect in EFFECT_MAP:
+        if effect in EFFECT_MAP:
             self._bulb.setPresetPattern(EFFECT_MAP[effect], 50)
             return
 

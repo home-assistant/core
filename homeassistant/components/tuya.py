@@ -33,7 +33,11 @@ SERVICE_FORCE_UPDATE = 'force_update'
 SERVICE_PULL_DEVICES = 'pull_devices'
 
 TUYA_TYPE_TO_HA = {
+    'climate': 'climate',
+    'cover': 'cover',
+    'fan': 'fan',
     'light': 'light',
+    'scene': 'scene',
     'switch': 'switch',
 }
 
@@ -139,11 +143,6 @@ class TuyaDevice(Entity):
     def name(self):
         """Return Tuya device name."""
         return self.tuya.name()
-
-    @property
-    def entity_picture(self):
-        """Return the entity picture to use in the frontend, if any."""
-        return self.tuya.iconurl()
 
     @property
     def available(self):
