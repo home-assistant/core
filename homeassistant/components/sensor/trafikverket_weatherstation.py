@@ -73,7 +73,7 @@ class TrafikverketWeatherStation(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Return the unit of measurement."""
+        """Return the unit of measurement for temperature sensors."""
         if (self._type == 'road') or (self._type == 'air'):
             return TEMP_CELSIUS
 
