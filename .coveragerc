@@ -194,7 +194,6 @@ omit =
     homeassistant/components/mychevy.py
     homeassistant/components/*/mychevy.py
 
-    homeassistant/components/mysensors/*
     homeassistant/components/*/mysensors.py
 
     homeassistant/components/neato.py

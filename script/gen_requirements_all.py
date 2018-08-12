@@ -75,6 +75,7 @@ TEST_REQUIREMENTS = (
     'PyJWT',
     'pylitejet',
     'pymonoprice',
+    'pymysensors',
     'pynx584',
     'pyqwikswitch',
     'PyRMVtransport',
