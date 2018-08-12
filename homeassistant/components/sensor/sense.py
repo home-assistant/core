@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['sense_energy==0.3.1']
+REQUIREMENTS = ['sense_energy==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -139,11 +139,10 @@ class Sense(Entity):
 
     def update(self):
         """Get the latest data, update state."""
-        from requests import ReadTimeout
-        from websocket import WebSocketTimeoutException
+        from sense_energy import SenseAPITimeoutException
         try:
             self.update_sensor()
-        except (WebSocketTimeoutException, ReadTimeout):
+        except SenseAPITimeoutException:
             _LOGGER.error("Timeout retrieving data")
             return
 
