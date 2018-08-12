@@ -23,12 +23,20 @@ _LOGGER = logging.getLogger(__name__)
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
 
+OPERATION_LIST = [STATE_AUTO, STATE_HEAT, STATE_OFF]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string
 })
 
-STATE_ALL_DAY = "all_day"
+EPH_TO_HA_STATE = {
+    'AUTO': STATE_AUTO,
+    'ON': STATE_HEAT,
+    'OFF': STATE_OFF
+}
+
+HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -115,7 +123,7 @@ class EphEmberThermostat(ClimateDevice):
     @property
     def operation_list(self):
         """Return the supported operations."""
-        return [STATE_AUTO, STATE_ALL_DAY, STATE_HEAT, STATE_OFF]
+        return OPERATION_LIST
 
     def set_operation_mode(self, operation_mode):
         """Set the operation mode."""
@@ -190,28 +198,9 @@ class EphEmberThermostat(ClimateDevice):
     def map_mode_hass_eph(operation_mode):
         """Map from home assistant mode to eph mode."""
         from pyephember.pyephember import ZoneMode
-        if operation_mode == STATE_AUTO:
-            return ZoneMode.AUTO
-        if operation_mode == STATE_ALL_DAY:
-            return ZoneMode.ALL_DAY
-        if operation_mode == STATE_HEAT:
-            return ZoneMode.ON
-        if operation_mode == STATE_OFF:
-            return ZoneMode.OFF
-
-        return None
+        return getattr(ZoneMode, HA_STATE_TO_EPH.get(operation_mode))
 
     @staticmethod
     def map_mode_eph_hass(operation_mode):
         """Map from eph mode to home assistant mode."""
-        from pyephember.pyephember import ZoneMode
-        if operation_mode == ZoneMode.AUTO:
-            return STATE_AUTO
-        if operation_mode == ZoneMode.ALL_DAY:
-            return STATE_ALL_DAY
-        if operation_mode == ZoneMode.ON:
-            return STATE_HEAT
-        if operation_mode == ZoneMode.OFF:
-            return STATE_OFF
-
-        return None
+        return EPH_TO_HA_STATE.get(operation_mode.name, STATE_AUTO)
