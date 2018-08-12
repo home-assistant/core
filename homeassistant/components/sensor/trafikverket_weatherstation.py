@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices([TrafikverketWeatherStation(
         sensor_name, sensor_api, sensor_station, sensor_type)], True)
-    
+
 
 class TrafikverketWeatherStation(Entity):
     """Representation of a Trafikverket sensor."""
