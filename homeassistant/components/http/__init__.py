@@ -15,8 +15,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, SERVER_PORT)
+from homeassistant.core import ApiConfig
 import homeassistant.helpers.config_validation as cv
-import homeassistant.remote as rem
 import homeassistant.util as hass_util
 from homeassistant.util.logging import HideSensitiveDataFilter
 from homeassistant.util import ssl as ssl_util
@@ -146,8 +146,8 @@ async def async_setup(hass, config):
         host = hass_util.get_local_ip()
         port = server_port
 
-    hass.config.api = rem.API(host, api_password, port,
-                              ssl_certificate is not None)
+    hass.config.api = ApiConfig(host, port, ssl_certificate is not None,
+                                api_password)
 
     return True
 

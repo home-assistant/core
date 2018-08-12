@@ -34,7 +34,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
-    EVENT_SERVICE_REMOVED, __version__)
+    EVENT_SERVICE_REMOVED, SERVER_PORT, __version__)
 from homeassistant import loader
 from homeassistant.exceptions import (
     HomeAssistantError, InvalidEntityFormatError, InvalidStateError)
@@ -1127,6 +1127,28 @@ class ServiceRegistry:
             _LOGGER.exception('Error executing service %s', service_call)
 
 
+class ApiConfig:
+    """Configuration settings for API server."""
+
+    def __init__(self, host: str, port: Optional[int] = SERVER_PORT,
+                 use_ssl: bool = False,
+                 api_password: Optional[str] = None) -> None:
+        """Initialize a new API config object."""
+        self.host = host
+        self.port = port
+        self.api_password = api_password
+
+        if host.startswith(("http://", "https://")):
+            self.base_url = host
+        elif use_ssl:
+            self.base_url = "https://{}".format(host)
+        else:
+            self.base_url = "http://{}".format(host)
+
+        if port is not None:
+            self.base_url += ':{}'.format(port)
+
+
 class Config:
     """Configuration settings for Home Assistant."""
 
@@ -1145,8 +1167,8 @@ class Config:
         # List of loaded components
         self.components = set()  # type: set
 
-        # Remote.API object pointing at local API
-        self.api = None
+        # API (HTTP) server configuration
+        self.api = None  # type: Optional[ApiConfig]
 
         # Directory that holds the configuration
         self.config_dir = None  # type: Optional[str]
