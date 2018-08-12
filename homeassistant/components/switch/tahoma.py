@@ -82,10 +82,10 @@ class TahomaSwitch(TahomaDevice, SwitchDevice):
         _LOGGER.debug("Turn off: %s", self._name)
         if self.tahoma_device.type == 'rts:GarageDoor4TRTSComponent':
             return
-        else:
-            self.apply_action('off')
-            self._skip_update = True
-            self._state = STATE_OFF
+
+        self.apply_action('off')
+        self._skip_update = True
+        self._state = STATE_OFF
 
     def toggle(self, **kwargs):
         """Click the switch."""
