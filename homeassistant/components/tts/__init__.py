@@ -300,7 +300,7 @@ class SpeechManager:
                 engine, key, message, use_cache, language, options)
 
         return "{}/api/tts_proxy/{}".format(
-            self.hass.config.api.base_url, filename)
+            self.hass.config.api.internal_base_url, filename)
 
     async def async_get_tts_audio(self, engine, key, message, cache, language,
                                   options):

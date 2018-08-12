@@ -45,6 +45,7 @@ class API:
     """Object to pass around Home Assistant API location and credentials."""
 
     def __init__(self, host: str, api_password: Optional[str] = None,
+                 internal_base_url: Optional[str] = None,
                  port: Optional[int] = SERVER_PORT,
                  use_ssl: bool = False) -> None:
         """Init the API."""
@@ -52,18 +53,18 @@ class API:
         self.port = port
         self.api_password = api_password
 
-        if host.startswith(("http://", "https://")):
-            self.base_url = host
-        elif use_ssl:
-            self.base_url = "https://{}".format(host)
-        else:
-            self.base_url = "http://{}".format(host)
+        self.base_url = clean_up_host(self.host, use_ssl)
 
         if port is not None:
             self.base_url += ':{}'.format(port)
 
         self.status = None  # type: Optional[APIStatus]
         self._headers = {CONTENT_TYPE: CONTENT_TYPE_JSON}
+
+        if internal_base_url is not None:
+            self.internal_base_url = clean_up_host(internal_base_url, use_ssl)
+        else:
+            self.internal_base_url = self.base_url
 
         if api_password is not None:
             self._headers[HTTP_HEADER_HA_AUTH] = api_password
@@ -144,6 +145,16 @@ def validate_api(api: API) -> APIStatus:
 
     except HomeAssistantError:
         return APIStatus.CANNOT_CONNECT
+
+
+def clean_up_host(host: str, use_ssl: bool) -> str:
+    """Clean up host to add http:// or https:// if necessary."""
+    if host.startswith(("http://", "https://")):
+        return host
+    elif use_ssl:
+        return "https://{}".format(host)
+
+    return "http://{}".format(host)
 
 
 def get_event_listeners(api: API) -> Dict:
