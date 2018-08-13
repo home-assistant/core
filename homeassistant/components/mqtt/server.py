@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['hbmqtt==0.9.2']
+REQUIREMENTS = ['hbmqtt==0.9.4', 'hbmqtt-auth-home-assistant==1.0.2']
 DEPENDENCIES = ['http']
 
 # None allows custom config to be created through generate_config
@@ -38,13 +38,17 @@ def async_start(hass, password, server_config):
     """
     from hbmqtt.broker import Broker, BrokerException
 
-    passwd = tempfile.NamedTemporaryFile()
+    passwd = None
+
     try:
-        if server_config is None:
-            server_config, client_config = generate_config(
-                hass, passwd, password)
-        else:
+        if server_config is not None:
             client_config = None
+        elif hass.auth.active:
+            server_config, client_config = generate_config(hass)
+        else:
+            passwd = tempfile.NamedTemporaryFile()
+            server_config, client_config = generate_config_legacy(
+                hass, passwd, password)
 
         broker = Broker(server_config, hass.loop)
         yield from broker.start()
@@ -52,7 +56,8 @@ def async_start(hass, password, server_config):
         _LOGGER.exception("Error initializing MQTT server")
         return False, None
     finally:
-        passwd.close()
+        if passwd is not None:
+            passwd.close()
 
     @asyncio.coroutine
     def async_shutdown_mqtt_server(event):
@@ -65,7 +70,41 @@ def async_start(hass, password, server_config):
     return True, client_config
 
 
-def generate_config(hass, passwd, password):
+def generate_config(hass):
+    """Generate a configuration based on current Home Assistant instance."""
+    from homeassistant.components.mqtt import PROTOCOL_311
+    config = {
+        'listeners': {
+            'default': {
+                'max-connections': 50000,
+                'bind': '0.0.0.0:1883',
+                'type': 'tcp',
+            },
+            'ws-1': {
+                'bind': '0.0.0.0:8080',
+                'type': 'ws',
+            },
+        },
+        'auth': {
+            'allow-anonymous': hass.config.api.api_password is None,
+            'home-assistant': hass,
+            'plugins': ['auth_home_assistant', 'auth_anonymous']
+        },
+    }
+
+    if hass.config.api.api_password:
+        username = 'homeassistant'
+        password = hass.config.api.api_password
+    else:
+        username = None
+        password = None
+
+    client_config = ('localhost', 1883, username, password, None, PROTOCOL_311)
+
+    return config, client_config
+
+
+def generate_config_legacy(hass, passwd, password):
     """Generate a configuration based on current Home Assistant instance."""
     from . import PROTOCOL_311
 
