@@ -343,6 +343,7 @@ fastdotcom==0.0.3
 fedexdeliverymanager==1.0.6
 
 # homeassistant.components.feedreader
+# homeassistant.components.geo_location.geo_rss_events
 # homeassistant.components.sensor.geo_rss_events
 feedparser==5.2.1
 
@@ -408,6 +409,7 @@ ha-ffmpeg==1.9
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.5
 
+# homeassistant.components.geo_location.geo_rss_events
 # homeassistant.components.sensor.geo_rss_events
 haversine==0.4.5
 
