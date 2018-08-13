@@ -60,7 +60,7 @@ CONFIG_SCHEMA = vol.Schema({
             vol.All(cv.ensure_list, [vol.In(STATE_ATTRS)]),
         vol.Optional(CONF_SCAN_INTERVAL):
             vol.All(cv.time_period, vol.Clamp(min=MIN_SCAN_INTERVAL))
-        })
+        }, extra=vol.ALLOW_EXTRA)
 }, extra=vol.ALLOW_EXTRA)
 
 
