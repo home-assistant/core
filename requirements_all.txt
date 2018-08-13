@@ -498,7 +498,7 @@ kiwiki-client==0.1.1
 konnected==0.1.2
 
 # homeassistant.components.eufy
-lakeside==0.7
+lakeside==0.10
 
 # homeassistant.components.device_tracker.owntracks
 # homeassistant.components.device_tracker.owntracks_http
