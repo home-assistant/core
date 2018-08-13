@@ -220,6 +220,7 @@ class HomeAssistantHTTP:
         self.ssl_key = ssl_key
         self.server_host = server_host
         self.server_port = server_port
+        self.trusted_networks = trusted_networks
         self.is_ban_enabled = is_ban_enabled
         self._handler = None
         self.server = None
