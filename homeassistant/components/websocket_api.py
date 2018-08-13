@@ -344,7 +344,10 @@ class ActiveConnection:
             if request[KEY_AUTHENTICATED]:
                 authenticated = True
 
-            else:
+            # always request auth when auth is active
+            #   even request passed pre-authentication (trusted networks)
+            # or when using legacy api_password
+            if self.hass.auth.active or not authenticated:
                 self.debug("Request auth")
                 await self.wsock.send_json(auth_required_message())
                 msg = await wsock.receive_json()
