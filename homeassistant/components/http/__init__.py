@@ -8,6 +8,7 @@ from ipaddress import ip_network
 import logging
 import os
 import ssl
+from typing import Optional
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
@@ -16,7 +17,6 @@ import voluptuous as vol
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, SERVER_PORT)
 import homeassistant.helpers.config_validation as cv
-import homeassistant.remote as rem
 import homeassistant.util as hass_util
 from homeassistant.util.logging import HideSensitiveDataFilter
 from homeassistant.util import ssl as ssl_util
@@ -80,6 +80,28 @@ HTTP_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: HTTP_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
+
+
+class ApiConfig:
+    """Configuration settings for API server."""
+
+    def __init__(self, host: str, port: Optional[int] = SERVER_PORT,
+                 use_ssl: bool = False,
+                 api_password: Optional[str] = None) -> None:
+        """Initialize a new API config object."""
+        self.host = host
+        self.port = port
+        self.api_password = api_password
+
+        if host.startswith(("http://", "https://")):
+            self.base_url = host
+        elif use_ssl:
+            self.base_url = "https://{}".format(host)
+        else:
+            self.base_url = "http://{}".format(host)
+
+        if port is not None:
+            self.base_url += ':{}'.format(port)
 
 
 async def async_setup(hass, config):
@@ -146,8 +168,8 @@ async def async_setup(hass, config):
         host = hass_util.get_local_ip()
         port = server_port
 
-    hass.config.api = rem.API(host, api_password, port,
-                              ssl_certificate is not None)
+    hass.config.api = ApiConfig(host, port, ssl_certificate is not None,
+                                api_password)
 
     return True
 
