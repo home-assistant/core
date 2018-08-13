@@ -1,5 +1,6 @@
 """The tests for the Home Assistant HTTP component."""
 import logging
+import unittest
 
 from homeassistant.setup import async_setup_component
 
@@ -31,6 +32,50 @@ async def test_registering_view_while_running(hass, aiohttp_client,
     await hass.async_start()
     # This raises a RuntimeError if app is frozen
     hass.http.register_view(TestView)
+
+
+class TestApiConfig(unittest.TestCase):
+    """Test API configuration methods."""
+
+    def test_api_base_url_with_domain(hass):
+        """Test setting API URL with domain."""
+        api_config = http.ApiConfig('example.com')
+        assert api_config.base_url == 'http://example.com:8123'
+
+    def test_api_base_url_with_ip(hass):
+        """Test setting API URL with IP."""
+        api_config = http.ApiConfig('1.1.1.1')
+        assert api_config.base_url == 'http://1.1.1.1:8123'
+
+    def test_api_base_url_with_ip_and_port(hass):
+        """Test setting API URL with IP and port."""
+        api_config = http.ApiConfig('1.1.1.1', 8124)
+        assert api_config.base_url == 'http://1.1.1.1:8124'
+
+    def test_api_base_url_with_protocol(hass):
+        """Test setting API URL with protocol."""
+        api_config = http.ApiConfig('https://example.com')
+        assert api_config.base_url == 'https://example.com:8123'
+
+    def test_api_base_url_with_protocol_and_port(hass):
+        """Test setting API URL with protocol and port."""
+        api_config = http.ApiConfig('https://example.com', 433)
+        assert api_config.base_url == 'https://example.com:433'
+
+    def test_api_base_url_with_ssl_enable(hass):
+        """Test setting API URL with use_ssl enabled."""
+        api_config = http.ApiConfig('example.com', use_ssl=True)
+        assert api_config.base_url == 'https://example.com:8123'
+
+    def test_api_base_url_with_ssl_enable_and_port(hass):
+        """Test setting API URL with use_ssl enabled and port."""
+        api_config = http.ApiConfig('1.1.1.1', use_ssl=True, port=8888)
+        assert api_config.base_url == 'https://1.1.1.1:8888'
+
+    def test_api_base_url_with_protocol_and_ssl_enable(hass):
+        """Test setting API URL with specific protocol and use_ssl enabled."""
+        api_config = http.ApiConfig('http://example.com', use_ssl=True)
+        assert api_config.base_url == 'http://example.com:8123'
 
 
 async def test_api_base_url_with_domain(hass):
