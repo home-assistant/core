@@ -743,7 +743,9 @@ class HMDevice(Entity):
     @property
     def unique_id(self):
         """Return unique ID. HomeMatic entity IDs are unique by default."""
-        return self._name
+        if self._address in self._name:
+            return self._name.replace(" ", "_")
+        return None
 
     @property
     def should_poll(self):
