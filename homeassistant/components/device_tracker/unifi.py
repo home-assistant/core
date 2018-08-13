@@ -31,6 +31,18 @@ DEFAULT_DETECTION_TIME = timedelta(seconds=300)
 NOTIFICATION_ID = 'unifi_notification'
 NOTIFICATION_TITLE = 'Unifi Device Tracker Setup'
 
+AVAILABLE_ATTRS = [
+    '_id', '_is_guest_by_uap', '_last_seen_by_uap', '_uptime_by_uap',
+    'ap_mac', 'assoc_time', 'authorized', 'bssid', 'bytes-r', 'ccq',
+    'channel', 'essid', 'first_seen', 'hostname', 'idletime', 'ip',
+    'is_11r', 'is_guest', 'is_wired', 'last_seen', 'latest_assoc_time',
+    'mac', 'name', 'noise', 'noted', 'oui', 'powersave_enabled',
+    'qos_policy_applied', 'radio', 'radio_proto', 'rssi', 'rx_bytes',
+    'rx_bytes-r', 'rx_packets', 'rx_rate', 'signal', 'site_id',
+    'tx_bytes', 'tx_bytes-r', 'tx_packets', 'tx_power', 'tx_rate',
+    'uptime', 'user_id', 'usergroup_id', 'vlan'
+]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
     vol.Optional(CONF_SITE_ID, default='default'): cv.string,
@@ -42,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DETECTION_TIME, default=DEFAULT_DETECTION_TIME): vol.All(
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [cv.string]),
+        vol.All(cv.ensure_list, [vol.In(AVAILABLE_ATTRS)]),
     vol.Optional(CONF_SSID_FILTER): vol.All(cv.ensure_list, [cv.string])
 })
 
