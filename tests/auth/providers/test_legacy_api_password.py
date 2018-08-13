@@ -63,18 +63,9 @@ async def test_verify_not_load(hass, provider):
 
 
 async def test_verify_login(hass, provider):
-    """Test we raise if http module not load."""
+    """Test login using legacy api password auth provider."""
     hass.http = Mock(api_password='test-password')
     provider.async_validate_login('test-password')
     hass.http = Mock(api_password='test-password')
     with pytest.raises(legacy_api_password.InvalidAuthError):
         provider.async_validate_login('invalid-password')
-
-
-async def test_utf_8_username_password(provider):
-    """Test that we create a new credential."""
-    credentials = await provider.async_get_or_create_credentials({
-        'username': '🎉',
-        'password': '😎',
-    })
-    assert credentials.is_new is True

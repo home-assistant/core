@@ -63,6 +63,7 @@ import aiohttp.web
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.ban import process_wrong_login, \
     log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -151,7 +152,8 @@ class LoginFlowIndexView(HomeAssistantView):
             handler = data['handler']
 
         try:
-            result = await self._flow_mgr.async_init(handler, context={})
+            result = await self._flow_mgr.async_init(
+                handler, context={'ip_address': request[KEY_REAL_IP]})
         except data_entry_flow.UnknownHandler:
             return self.json_message('Invalid handler specified', 404)
         except data_entry_flow.UnknownStep:
@@ -188,6 +190,13 @@ class LoginFlowResourceView(HomeAssistantView):
             return self.json_message('Invalid client id', 400)
 
         try:
+            # do not allow change ip during login flow
+            for flow in self._flow_mgr.async_progress():
+                if (flow['flow_id'] == flow_id and
+                        flow['context']['ip_address'] !=
+                        request.get(KEY_REAL_IP)):
+                    return self.json_message('IP address changed', 400)
+
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message('Invalid flow specified', 404)
