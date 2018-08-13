@@ -201,20 +201,17 @@ class GeoRssFeedManager(FeedManager):
         if geometry:
             return geometry, self._geo_distance_helper.distance_to_geometry(
                 geometry)
-        else:
-            return geometry, None
+        return geometry, None
 
     def _matches_category(self, entry):
         """Check if the provided entry matches any of the categories."""
         if self._categories:
             if hasattr(entry, 'category'):
                 return entry.category in self._categories
-            else:
-                # Entry has no category.
-                return False
-        else:
-            # No categories defined - always match.
-            return True
+            # Entry has no category.
+            return False
+        # No categories defined - always match.
+        return True
 
     def _filter_entries(self):
         """Filter entries by distance from home coordinates."""
@@ -230,55 +227,54 @@ class GeoRssFeedManager(FeedManager):
                     # Add distance value as a new attribute
                     entry.update({ATTR_DISTANCE: distance,
                                   ATTR_GEOMETRY: geometry})
-                    # Compute custom attributes.
-                    for definition in self._attributes_definition:
-                        if hasattr(entry, definition[CONF_ATTRIBUTES_SOURCE]):
-                            # Use 'search' to allow for matching anywhere in
-                            # the source attribute.
-                            match = re.search(
-                                definition[CONF_ATTRIBUTES_REGEXP],
-                                entry[definition[CONF_ATTRIBUTES_SOURCE]])
-                            entry.update({definition[CONF_ATTRIBUTES_NAME]:
-                                         '' if not match else match.group(
-                                                  CONF_CUSTOM_ATTRIBUTE)})
-                        else:
-                            _LOGGER.warning("No attribute '%s' found",
-                                            definition[CONF_ATTRIBUTES_SOURCE])
-                            # Add empty string to allow for applying filter
-                            # rules.
-                            entry.update(
-                                {definition[CONF_ATTRIBUTES_NAME]: ''})
-                    # Run custom filters if defined.
-                    keep_entry = True
-                    if self._filters_definition:
-                        for definition in self._filters_definition:
-                            if hasattr(entry, definition[
-                                    CONF_FILTERS_ATTRIBUTE]):
-                                match = re.match(
-                                    definition[CONF_FILTERS_REGEXP],
-                                    entry.get(
-                                        definition[CONF_FILTERS_ATTRIBUTE]))
-                                # If the attribute does not match, immediately
-                                # drop out of loop to eliminate the entry.
-                                if not match:
-                                    _LOGGER.debug(
-                                        "Entry %s does not match filter %s",
-                                        entry, definition)
-                                    keep_entry = False
-                                    break
-                            else:
-                                # Discard entry because it does not contain
-                                # attribute
-                                _LOGGER.debug(
-                                    "Entry %s does not contain attribute %s",
-                                    entry, definition[CONF_FILTERS_ATTRIBUTE])
-                                keep_entry = False
-                                break
-                    if keep_entry:
+                    self._compute_custom_attributes(entry)
+                    if self._custom_filters(entry):
                         keep_entries.append(entry)
         _LOGGER.debug("%s entries found nearby after filtering",
                       len(keep_entries))
         self._feed.entries = keep_entries
+
+    def _compute_custom_attributes(self, entry):
+        """Compute custom attributes."""
+        for definition in self._attributes_definition:
+            if hasattr(entry, definition[CONF_ATTRIBUTES_SOURCE]):
+                # Use 'search' to allow for matching anywhere in
+                # the source attribute.
+                match = re.search(definition[CONF_ATTRIBUTES_REGEXP],
+                                  entry[definition[CONF_ATTRIBUTES_SOURCE]])
+                entry.update({definition[CONF_ATTRIBUTES_NAME]:
+                              '' if not match else match.group(
+                                  CONF_CUSTOM_ATTRIBUTE)})
+            else:
+                _LOGGER.warning("No attribute '%s' found",
+                                definition[CONF_ATTRIBUTES_SOURCE])
+                # Add empty string to allow for applying filter rules.
+                entry.update({definition[CONF_ATTRIBUTES_NAME]: ''})
+
+    def _custom_filters(self, entry):
+        """Run custom filters if defined."""
+        keep_entry = True
+        if self._filters_definition:
+            for definition in self._filters_definition:
+                if hasattr(entry, definition[CONF_FILTERS_ATTRIBUTE]):
+                    match = re.match(definition[CONF_FILTERS_REGEXP],
+                                     entry.get(definition[
+                                                   CONF_FILTERS_ATTRIBUTE]))
+                    # If the attribute does not match, immediately
+                    # drop out of loop to eliminate the entry.
+                    if not match:
+                        _LOGGER.debug("Entry %s does not match filter %s",
+                                      entry, definition)
+                        keep_entry = False
+                        break
+                else:
+                    # Discard entry because it does not contain
+                    # attribute
+                    _LOGGER.debug("Entry %s does not contain attribute %s",
+                                  entry, definition[CONF_FILTERS_ATTRIBUTE])
+                    keep_entry = False
+                    break
+        return keep_entry
 
     def _update(self):
         """Update the feed and then update connected devices."""
@@ -294,7 +290,7 @@ class GeoRssFeedManager(FeedManager):
             _LOGGER.debug("Devices after updating: %s", self._managed_devices)
 
     def _group_devices(self):
-        """Re-group all entities"""
+        """Re-group all entities."""
         # Sort entries in group by their state attribute (ascending).
         devices = sorted(self._managed_devices.copy(),
                          key=lambda device: device.state,
@@ -304,8 +300,7 @@ class GeoRssFeedManager(FeedManager):
         self.group.update_tracked_entity_ids(entity_ids)
 
     def _generate_new_devices(self, entries):
-        """Generate new entities for events that have occurred for the first
-           time."""
+        """Generate new entities for events."""
         new_devices = []
         for entry in entries:
             distance, latitude, longitude, external_id, name, category, \
@@ -357,8 +352,7 @@ class GeoRssFeedManager(FeedManager):
             entry.get(ATTR_CATEGORY, ""), custom_attributes
 
     def _update_or_remove_devices(self):
-        """Update existing devices with new incoming data and remove devices
-           if feed does not contain corresponding entry anymore."""
+        """Update existing devices and remove obsolete devices."""
         remaining_entries = self._feed.entries.copy()
         _LOGGER.debug("Entries for updating: %s", remaining_entries)
         remove_entry = None
@@ -376,8 +370,8 @@ class GeoRssFeedManager(FeedManager):
                     _LOGGER.debug("Existing device found %s", device)
                     remove_entry = entry
                     # Update existing device's details with event data.
-                    distance, latitude, longitude, external_id, name, \
-                        category, custom_attributes = self._extract_data(entry)
+                    distance, latitude, longitude, _, name, category, \
+                        custom_attributes = self._extract_data(entry)
                     device.distance = distance
                     device.latitude = latitude
                     device.longitude = longitude
@@ -402,7 +396,7 @@ class GeoRssFeedManager(FeedManager):
         return entry.get(ATTR_ID, None) or entry.get(ATTR_TITLE, id(entry))
 
 
-class GeoDistanceHelper(object):
+class GeoDistanceHelper:
     """Helper to calculate distances between geometries."""
 
     def __init__(self, home_coordinates):
@@ -410,8 +404,7 @@ class GeoDistanceHelper(object):
         self._home_coordinates = home_coordinates
 
     def distance_to_geometry(self, geometry):
-        """Calculate the distance between HA's home coordinates and the
-        provided geometry."""
+        """Calculate the distance between home coordinates and geometry."""
         distance = float("inf")
         if geometry.type == 'Point':
             distance = self._distance_to_point(geometry)
@@ -509,8 +502,7 @@ class GeoRssLocationEvent(GeoLocationEvent):
             return self.category
         elif self._state_attribute in self._custom_attributes.keys():
             return self._custom_attributes[self._state_attribute]
-        else:
-            return STATE_UNKNOWN
+        return STATE_UNKNOWN
 
     @property
     def device_state_attributes(self):
