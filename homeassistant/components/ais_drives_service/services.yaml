@@ -1,4 +1,4 @@
-# Describes the format for available AIS local audio services
+# Describes the format for available AIS drives services
 browse_path:
   description: Listowanie zawartości (foldery i pliki) wskazanej ścieżki na dysku
   fields:

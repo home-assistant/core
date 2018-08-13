@@ -12,6 +12,10 @@ if [ $# != 0 ]; then
     show_usage
 fi
 
+apt update
+apt install -y rclone
+pip install sh
+
 if [ ! -e "/sdcard/dom" ] ; then
     mkdir -p /sdcard/dom
     mkdir -p /sdcard/dom/Książki
@@ -21,12 +25,14 @@ fi
 
 if [ ! -e "/sdcard/dom/informacja.txt" ] ; then
     touch "/sdcard/dom/informacja.txt"
-    echo "Cześć, przeglądasz folder w lokalizacji dostępnej dla wszystkich aplikacji, ta lokalizacja to /sdcard/dom" > /sdcard/dom/informacja.txt
+    echo "Cześć, przeglądasz dyski w systemie. Obsługujemy trzy rodzaje dysków:" > /sdcard/dom/informacja.txt
+    echo "1. 'Dysk-wewnętrzny' jest to folder w pamięci urządzenia umieszczony w lokalizacji dostępnej dla wszystkich aplikacji, ta lokalizacja to /sdcard/dom "
     echo "folder ten jest dostępny w twojej lokalnej sieci (protokół ftp) pod adresem ftp://ais-dom:1024/sdcard/dom" >> /sdcard/dom/informacja.txt
-    echo "możesz tu dodać muzykę lub pliki tekstowe a następnie je odtwarzać w aplikacji" >> /sdcard/dom/informacja.txt
-    echo "w przyszłości będziemy synchronizować pliki w tej lokalizacji z Google Drive " >> /sdcard/dom/informacja.txt
+    echo "możesz tu dodać muzykę lub pliki tekstowe a następnie je odtwarzać w aplikacji." >> /sdcard/dom/informacja.txt
+    echo "2. 'Dyski-zewnętrzne' są to dołączone do urządzenia karty SD lub pamięciu USB " >> /sdcard/dom/informacja.txt
+    echo "3. 'Dyski-zdalne' są to dyski/usługi przechowywania danych w churach. Połączenie z dyskami zdalnymi definiowane jest w ustawieniach aplikacji. " >> /sdcard/dom/informacja.txt
     echo "Pozdrowienia, Twój Asystent domowy!" >> /sdcard/dom/informacja.txt
-    echo "PS w tej pierwszej wersji, odsługujemy tylko mp3 i txt, oczywiście to się w przyszłości rozwinie. Koniec wiadomości." >> /sdcard/dom/informacja.txt
+    echo "PS Obecnie odtwarzamy pliki tekstowe i pliki audio. Koniec wiadomości." >> /sdcard/dom/informacja.txt
 fi
 
 

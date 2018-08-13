@@ -150,7 +150,7 @@ sensor.since_last_boot_templated:
   friendly_name: Czas od ostatniego uruchomienia
   icon: mdi:camera-timer
 sensor.internal_ip_address:
-  friendly_name: Wewnętrzny adres IP
+  friendly_name: Adres IP
   icon: mdi:access-point-network
 sensor.ais_android_wifi_current_network_info:
   friendly_name: Połączenie Wifi
@@ -350,7 +350,7 @@ group.audiobooks_player:
   remote_group_view: Audio
   order: 5
 group.local_audio:
-  context_key_words: lokalne pliki
+  context_key_words: lokalne pliki, dyski
   context_answer: OK, wybierz pilotem plik
   context_suffix: Plik
   remote_group_view: Audio

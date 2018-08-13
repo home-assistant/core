@@ -8,20 +8,20 @@ binary_sensor:
   - platform: mqtt
     state_topic: ais/button/sensor
     name: selected_entity
-  - platform: mqtt
-    state_topic: ais/secure_android_id/sensor
-    name: secure_android_id
+#  - platform: mqtt
+#    state_topic: ais/secure_android_id/sensor
+#    name: secure_android_id
 
 
 sensor:
   - platform: ais_android_cmd
     name: current_host_name
     command: "getprop net.hostname"
-  - platform: template
-    sensors:
-      certification_info:
-        value_template: To urządzenie do pełnego działania (komendy głosowe, synteza mowy) wymaga usług Google Android.
-                        Zarejestruj swoje urządzenie, przesyłając jego identyfikator do Google Android by bezpiecznie kożystać z pełnej funkcjonalności urządzenia.
+#  - platform: template
+#    sensors:
+#      certification_info:
+#        value_template: To urządzenie do pełnego działania (komendy głosowe, synteza mowy) wymaga usług Google Android.
+#                        Zarejestruj swoje urządzenie, przesyłając jego identyfikator do Google Android by bezpiecznie kożystać z pełnej funkcjonalności urządzenia.
   - platform: template
     sensors:
       network_devices_info:
@@ -123,13 +123,13 @@ group:
       - sensor.current_host_name
       - input_text.new_host_name
       - script.ais_change_host_name
-  ais_android_certification:
-    name: Certyfikacja urządzenia
-    entities:
-      - sensor.certification_info
-      - script.ais_getsecure_android_id
-      - binary_sensor.secure_android_id
-      - weblink.uncertified_android_registration
+#  ais_android_certification:
+#    name: Certyfikacja urządzenia
+#    entities:
+#      - sensor.certification_info
+#      - script.ais_getsecure_android_id
+#      - binary_sensor.secure_android_id
+#      - weblink.uncertified_android_registration
   ais_dev_ssh:
     name: Zdalny dostęp
     entities:

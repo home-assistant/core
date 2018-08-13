@@ -35,7 +35,7 @@
        val: true
        ip: 127.0.0.1
    - delay: '5'
-   - service: ais_local_audio_service.refresh_files
+   - service: ais_drives_service.refresh_files
    - service: ais_ai_service.welcome_home
 
 
@@ -335,6 +335,6 @@
     condition: template
     value_template: "{{ states.input_select.folder_name.state != '-' }}"
   action:
-    - service: ais_local_audio_service.browse_path
+    - service: ais_drives_service.browse_path
       data_template:
         path: "{{ states('input_select.folder_name') }}"

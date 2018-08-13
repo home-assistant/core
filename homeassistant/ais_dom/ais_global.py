@@ -34,6 +34,7 @@ G_MODEL_SONOFF_SLAMPHER = "slampher"
 G_MODEL_SONOFF_TOUCH = "sonoff_touch"
 G_MODEL_SONOFF_TH = "sonoff_th"
 G_MODEL_SONOFF_B1 = "sonoff_b1"
+G_MODEL_SONOFF_POW = "sonoff_pow"
 #
 def get_my_global_ip():
     if GLOBAL_MY_IP is None:

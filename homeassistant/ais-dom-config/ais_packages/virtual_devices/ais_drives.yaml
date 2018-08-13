@@ -13,7 +13,7 @@ input_select:
 # OPTIONAL
 group:
   local_audio:
-    name: Lokalne zasoby
+    name: Dyski
     entities:
     - input_select.folder_name
     - input_select.file_player

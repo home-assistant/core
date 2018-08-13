@@ -104,9 +104,9 @@ weblink:
     - name: ftp_url
       url: ftp://ais-dom:1024
       icon: mdi:play-network
-    - name: uncertified_android_registration
-      url: https://www.google.com/android/uncertified/
-      icon: mdi:certificate
+#    - name: uncertified_android_registration
+#      url: https://www.google.com/android/uncertified/
+#      icon: mdi:certificate
     - name: cloud
       url: https://powiedz.co/ords/f?p=1000:101
       icon: mdi:open-in-new

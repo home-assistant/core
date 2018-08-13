@@ -24,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.helpers import intent, config_validation as cv
 from homeassistant.components import ais_cloud
 import homeassistant.components.mqtt as mqtt
-from homeassistant.components import ais_local_audio_service
+from homeassistant.components import ais_drives_service
 import homeassistant.ais_dom.ais_global as ais_global
 aisCloudWS = ais_cloud.AisCloudWS()
 
@@ -497,7 +497,18 @@ def set_next_position(hass):
             if CURR_ENTITIE == "input_select.folder_name":
                 if CURR_ENTITIE_POSITION == "..":
                     CURR_ENTITIE_POSITION = get_next(arr, CURR_ENTITIE_POSITION)
-                _say_it(hass, os.path.basename(CURR_ENTITIE_POSITION), None)
+                # check if we have remote or local path
+                if CURR_ENTITIE_POSITION.startswith(ais_drives_service.G_CLOUD_PREFIX):
+                    if CURR_ENTITIE_POSITION == ais_drives_service.G_CLOUD_PREFIX:
+                        item = ais_drives_service.G_CLOUD_PREFIX.replace("/", "")
+                    else:
+                        item = CURR_ENTITIE_POSITION.replace(ais_drives_service.G_CLOUD_PREFIX, "")
+                        k = item.find(":")
+                        if k+1 < len(item):
+                            item = item[k:]
+                    _say_it(hass, os.path.basename(item), None)
+                else:
+                    _say_it(hass, os.path.basename(CURR_ENTITIE_POSITION), None)
             else:
                 _say_it(hass, CURR_ENTITIE_POSITION, None)
     elif CURR_ENTITIE.startswith('input_number.'):
@@ -524,7 +535,18 @@ def set_prev_position(hass):
             if CURR_ENTITIE == "input_select.folder_name":
                 if CURR_ENTITIE_POSITION == "..":
                     CURR_ENTITIE_POSITION = get_prev(arr, CURR_ENTITIE_POSITION)
-                _say_it(hass, os.path.basename(CURR_ENTITIE_POSITION), None)
+                # check if we have remote or local path
+                if CURR_ENTITIE_POSITION.startswith(ais_drives_service.G_CLOUD_PREFIX):
+                    if CURR_ENTITIE_POSITION == ais_drives_service.G_CLOUD_PREFIX:
+                        item = ais_drives_service.G_CLOUD_PREFIX.replace("/", "")
+                    else:
+                        item = CURR_ENTITIE_POSITION.replace(ais_drives_service.G_CLOUD_PREFIX, "")
+                        k = item.find(":")
+                        if k+1 < len(item):
+                            item = item[k:]
+                    _say_it(hass, os.path.basename(item), None)
+                else:
+                    _say_it(hass, os.path.basename(CURR_ENTITIE_POSITION), None)
             else:
                 _say_it(hass, CURR_ENTITIE_POSITION, None)
     elif CURR_ENTITIE.startswith('input_number.'):
@@ -793,17 +815,9 @@ def go_up_in_menu(hass):
     if CURR_ENTITIE is not None:
         # check if we are browsing files
         if CURR_ENTITIE == "input_select.folder_name":
-            if ais_local_audio_service.G_CURRENT_PATH != ais_local_audio_service.G_LOCAL_FILES_ROOT:
-                # go up in folders
-                l_curr_path = ais_local_audio_service.G_CURRENT_PATH
-                hass.services.call('ais_local_audio_service', 'browse_path', {"path": '..'})
-                _beep_it(hass, 28)
-                k = l_curr_path.rfind("/" + os.path.basename(l_curr_path))
-                if l_curr_path[:k] == ais_local_audio_service.G_LOCAL_FILES_ROOT:
-                    _say_it(hass, "Główny folder", None)
-                else:
-                    _say_it(hass, os.path.basename(l_curr_path[:k]), None)
-                return
+            _beep_it(hass, 33)
+            hass.services.call('ais_drives_service', 'browse_path', {"path": "..", "say": True})
+            return
         # go up in the group menu
         set_curr_group(hass, None)
         say_curr_group(hass)
@@ -1189,14 +1203,19 @@ def _process_command_from_frame(hass, service):
         elif len(iot_names) == 2:
             if item["model"] == ais_global.G_MODEL_SONOFF_S20:
                 info = "Znaleziono nowe inteligentne gniazdo"
-            if item["model"] == ais_global.G_MODEL_SONOFF_SLAMPHER:
+            elif item["model"] == ais_global.G_MODEL_SONOFF_SLAMPHER:
                 info = "Znaleziono nową oprawkę"
-            if item["model"] == ais_global.G_MODEL_SONOFF_TOUCH:
+            elif item["model"] == ais_global.G_MODEL_SONOFF_TOUCH:
                 info = "Znaleziono nowy przełącznik dotykowy"
-            if item["model"] == ais_global.G_MODEL_SONOFF_TH:
+            elif item["model"] == ais_global.G_MODEL_SONOFF_TH:
                 info = "Znaleziono nowy przełącznik z czujnikami"
-            if item["model"] == ais_global.G_MODEL_SONOFF_B1:
+            elif item["model"] == ais_global.G_MODEL_SONOFF_B1:
                 info = "Znaleziono nową żarówkę"
+            elif item["model"] == ais_global.G_MODEL_SONOFF_POW:
+                info = "Znaleziono nowy przełącznik z monitorem energii"
+            else:
+                info = "Znaleziono nowe urządzenie, to urządzenie może"
+                info += " nie być w pełni wspierane przez system 'Asystent domowy'"
         else:
             info = "Znaleziono " + str(len(iot_names)-1) + " nowe urządzenia."
         _say_it(hass, info, callback)
