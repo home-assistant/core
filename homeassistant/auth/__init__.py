@@ -215,9 +215,9 @@ class AuthManager:
         """Create a login flow."""
         auth_provider = self._providers[handler]
 
-        return await auth_provider.async_credential_flow()
+        return await auth_provider.async_credential_flow(context)
 
-    async def _async_finish_login_flow(self, result):
+    async def _async_finish_login_flow(self, context, result):
         """Result of a credential login flow."""
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return None

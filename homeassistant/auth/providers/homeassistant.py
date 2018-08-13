@@ -158,7 +158,7 @@ class HassAuthProvider(AuthProvider):
         self.data = Data(self.hass)
         await self.data.async_load()
 
-    async def async_credential_flow(self):
+    async def async_credential_flow(self, context):
         """Return a flow to login."""
         return LoginFlow(self)
 
