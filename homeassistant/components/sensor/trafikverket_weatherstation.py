@@ -124,6 +124,6 @@ class TrafikverketWeatherStation(Entity):
             _LOGGER.error("Incorrect weather station or API key")
             return
 
-        # air_vs_road contains "Air", "Road" or "Precipitation" 
+        # air_vs_road contains "Air", "Road" or "Precipitation"
         # depending on user input as well as suffix key.
         self._state = final[air_vs_road][keytype]
