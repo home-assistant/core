@@ -259,7 +259,7 @@ class GeoRssFeedManager(FeedManager):
                 if hasattr(entry, definition[CONF_FILTERS_ATTRIBUTE]):
                     match = re.match(definition[CONF_FILTERS_REGEXP],
                                      entry.get(definition[
-                                                   CONF_FILTERS_ATTRIBUTE]))
+                                         CONF_FILTERS_ATTRIBUTE]))
                     # If the attribute does not match, immediately
                     # drop out of loop to eliminate the entry.
                     if not match:
@@ -498,9 +498,9 @@ class GeoRssLocationEvent(GeoLocationEvent):
         """Return the state of the sensor."""
         if self._state_attribute == ATTR_DISTANCE:
             return round(self._distance, 1)
-        elif self._state_attribute == ATTR_CATEGORY:
+        if self._state_attribute == ATTR_CATEGORY:
             return self.category
-        elif self._state_attribute in self._custom_attributes.keys():
+        if self._state_attribute in self._custom_attributes.keys():
             return self._custom_attributes[self._state_attribute]
         return STATE_UNKNOWN
 
