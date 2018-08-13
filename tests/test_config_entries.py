@@ -116,7 +116,8 @@ def test_add_entry_calls_setup_entry(hass, manager):
                 })
 
     with patch.dict(config_entries.HANDLERS, {'comp': TestFlow, 'beer': 5}):
-        yield from manager.flow.async_init('comp')
+        yield from manager.flow.async_init(
+            'comp', context={'source': config_entries.SOURCE_USER})
         yield from hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -171,7 +172,8 @@ async def test_saving_and_loading(hass):
             )
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        await hass.config_entries.flow.async_init('test')
+        await hass.config_entries.flow.async_init(
+            'test', context={'source': config_entries.SOURCE_USER})
 
     class Test2Flow(data_entry_flow.FlowHandler):
         VERSION = 3
@@ -187,7 +189,8 @@ async def test_saving_and_loading(hass):
 
     with patch('homeassistant.config_entries.HANDLERS.get',
                return_value=Test2Flow):
-        await hass.config_entries.flow.async_init('test')
+        await hass.config_entries.flow.async_init(
+            'test', context={'source': config_entries.SOURCE_USER})
 
     # To trigger the call_later
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
