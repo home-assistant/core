@@ -10,7 +10,7 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.const import (CONF_ELEVATION, CONF_MONITORED_CONDITIONS,
-    CONF_SCAN_INTERVAL)
+        CONF_SCAN_INTERVAL)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -46,10 +46,11 @@ STATE_ATTR_DAYLIGHT = 'daylight'
 STATE_ATTR_PREV_DAYLIGHT = 'prev_daylight'
 STATE_ATTR_NEXT_DAYLIGHT = 'next_daylight'
 DEFAULT_STATE_ATTRS = [STATE_ATTR_AZIMUTH, STATE_ATTR_ELEVATION,
-    STATE_ATTR_NEXT_DAWN, STATE_ATTR_NEXT_DUSK, STATE_ATTR_NEXT_MIDNIGHT,
-    STATE_ATTR_NEXT_NOON, STATE_ATTR_NEXT_RISING, STATE_ATTR_NEXT_SETTING]
+        STATE_ATTR_NEXT_DAWN, STATE_ATTR_NEXT_DUSK, STATE_ATTR_NEXT_MIDNIGHT,
+        STATE_ATTR_NEXT_NOON, STATE_ATTR_NEXT_RISING, STATE_ATTR_NEXT_SETTING]
 OPTIONAL_STATE_ATTRS = [STATE_ATTR_SUNRISE, STATE_ATTR_SUNSET,
-    STATE_ATTR_DAYLIGHT, STATE_ATTR_PREV_DAYLIGHT, STATE_ATTR_NEXT_DAYLIGHT]
+        STATE_ATTR_DAYLIGHT, STATE_ATTR_PREV_DAYLIGHT,
+        STATE_ATTR_NEXT_DAYLIGHT]
 STATE_ATTRS = DEFAULT_STATE_ATTRS + OPTIONAL_STATE_ATTRS
 
 CONFIG_SCHEMA = vol.Schema({
@@ -59,6 +60,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SCAN_INTERVAL):
             vol.All(cv.time_period, vol.Clamp(min=MIN_SCAN_INTERVAL))})},
     extra=vol.ALLOW_EXTRA)
+
 
 @asyncio.coroutine
 def async_setup(hass, config):
@@ -165,11 +167,12 @@ class Sun(Entity):
         # (as opposed to next_midnight, which is solar midnight.) But subtract
         # one second because point_in_time_listener() will add one.
         if any(a in self._monitored_condtions for a in
-                   (STATE_ATTR_SUNRISE, STATE_ATTR_SUNSET,
-                    STATE_ATTR_DAYLIGHT, STATE_ATTR_PREV_DAYLIGHT,
-                    STATE_ATTR_NEXT_DAYLIGHT)):
-            next_events.append(dt_util.as_utc(dt_util.start_of_local_day(
-            dt_util.now()+timedelta(days=1))-timedelta(seconds=1)))
+                (STATE_ATTR_SUNRISE, STATE_ATTR_SUNSET,
+                        STATE_ATTR_DAYLIGHT, STATE_ATTR_PREV_DAYLIGHT,
+                        STATE_ATTR_NEXT_DAYLIGHT)):
+            midnight = dt_util.start_of_local_day(
+                    dt_util.now() + timedelta(days=1))
+            next_events.append(dt_util.as_utc(midnight) - timedelta(seconds=1))
         return min(next_events)
 
     @callback
@@ -197,16 +200,16 @@ class Sun(Entity):
                      (STATE_ATTR_NEXT_DAYLIGHT, 1)]:
             if a in self._monitored_condtions:
                 dl = get_astral_event_date(self.hass, 'daylight',
-                    utc_time+timedelta(days=d))
+                        utc_time+timedelta(days=d))
                 setattr(self, a, (dl[1]-dl[0]).total_seconds())
 
     @callback
     def update_sun_position(self, utc_time):
         """Calculate the position of the sun."""
         setattr(self, STATE_ATTR_AZIMUTH,
-            self.location.solar_azimuth(utc_time))
+                self.location.solar_azimuth(utc_time))
         setattr(self, STATE_ATTR_ELEVATION,
-            self.location.solar_elevation(utc_time))
+                self.location.solar_elevation(utc_time))
 
     @callback
     def point_in_time_listener(self, now):
