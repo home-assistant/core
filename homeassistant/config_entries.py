@@ -372,10 +372,10 @@ class ConfigEntries:
         return await entry.async_unload(
             self.hass, component=getattr(self.hass.components, component))
 
-    async def _async_finish_flow(self, result):
+    async def _async_finish_flow(self, context, result):
         """Finish a config flow and add an entry."""
         # If no discovery config entries in progress, remove notification.
-        if not any(ent['source'] in DISCOVERY_SOURCES for ent
+        if not any(ent['context']['source'] in DISCOVERY_SOURCES for ent
                    in self.hass.config_entries.flow.async_progress()):
             self.hass.components.persistent_notification.async_dismiss(
                 DISCOVERY_NOTIFICATION_ID)
@@ -383,15 +383,12 @@ class ConfigEntries:
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return None
 
-        source = result['source']
-        if source is None:
-            source = SOURCE_USER
         entry = ConfigEntry(
             version=result['version'],
             domain=result['handler'],
             title=result['title'],
             data=result['data'],
-            source=source,
+            source=context['source'],
         )
         self._entries.append(entry)
         await self._async_schedule_save()
@@ -406,7 +403,7 @@ class ConfigEntries:
                 self.hass, entry.domain, self._hass_config)
 
         # Return Entry if they not from a discovery request
-        if result['source'] not in DISCOVERY_SOURCES:
+        if context['source'] not in DISCOVERY_SOURCES:
             return entry
 
         return entry
@@ -422,10 +419,7 @@ class ConfigEntries:
         if handler is None:
             raise data_entry_flow.UnknownHandler
 
-        if context is not None:
-            source = context.get('source', SOURCE_USER)
-        else:
-            source = SOURCE_USER
+        source = context['source']
 
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(
@@ -442,7 +436,6 @@ class ConfigEntries:
             )
 
         flow = handler()
-        flow.source = source
         flow.init_step = source
         return flow
 

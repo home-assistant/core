@@ -109,7 +109,8 @@ async def test_user_init_trumps_discovery(hass, flow_conf):
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
 
     # User starts flow
-    result = await hass.config_entries.flow.async_init('test', data={})
+    result = await hass.config_entries.flow.async_init(
+        'test', context={'source': config_entries.SOURCE_USER}, data={})
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
     # Discovery flow has been aborted

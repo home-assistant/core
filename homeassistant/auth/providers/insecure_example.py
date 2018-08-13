@@ -31,7 +31,7 @@ class InvalidAuthError(HomeAssistantError):
 class ExampleAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
-    async def async_credential_flow(self):
+    async def async_credential_flow(self, context):
         """Return a flow to login."""
         return LoginFlow(self)
 
