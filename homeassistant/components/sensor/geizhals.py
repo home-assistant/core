@@ -15,14 +15,16 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (CONF_DOMAIN, CONF_NAME)
 
-REQUIREMENTS = ['beautifulsoup4==4.6.1']
+REQUIREMENTS = ['beautifulsoup4==4.6.3']
+
 _LOGGER = logging.getLogger(__name__)
 
-CONF_PRODUCT_ID = 'product_id'
 CONF_DESCRIPTION = 'description'
+CONF_PRODUCT_ID = 'product_id'
 CONF_REGEX = 'regex'
 
 ICON = 'mdi:coin'
+
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=120)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -54,8 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class Geizwatch(Entity):
     """Implementation of Geizwatch."""
 
-    def __init__(self, name, description, product_id, domain,
-                 regex):
+    def __init__(self, name, description, product_id, domain, regex):
         """Initialize the sensor."""
         self._name = name
         self.description = description
