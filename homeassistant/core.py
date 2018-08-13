@@ -1145,8 +1145,8 @@ class Config:
         # List of loaded components
         self.components = set()  # type: set
 
-        # Remote.API object pointing at local API
-        self.api = None
+        # API (HTTP) server configuration
+        self.api = None  # type: Optional[Any]
 
         # Directory that holds the configuration
         self.config_dir = None  # type: Optional[str]
