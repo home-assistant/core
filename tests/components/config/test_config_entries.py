@@ -202,7 +202,6 @@ def test_create_account(hass, client):
         'handler': 'test',
         'title': 'Test Entry',
         'type': 'create_entry',
-        'source': 'user',
         'version': 1,
     }
 
@@ -264,7 +263,6 @@ def test_two_step_flow(hass, client):
             'type': 'create_entry',
             'title': 'user-title',
             'version': 1,
-            'source': 'user',
         }
 
 
@@ -295,7 +293,7 @@ def test_get_progress_index(hass, client):
         {
             'flow_id': form['flow_id'],
             'handler': 'test',
-            'source': 'hassio'
+            'context': {'source': 'hassio'}
         }
     ]
 
