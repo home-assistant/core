@@ -36,7 +36,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = 'Legacy API Password'
 
-    async def async_credential_flow(self):
+    async def async_credential_flow(self, context):
         """Return a flow to login."""
         return LoginFlow(self)
 

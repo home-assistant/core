@@ -25,8 +25,10 @@ def manager():
             if context is not None else 'user_input'
         return flow
 
-    async def async_add_entry(result):
+    async def async_add_entry(context, result):
         if (result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY):
+            result['source'] = context.get('source') \
+                if context is not None else 'user'
             entries.append(result)
 
     manager = data_entry_flow.FlowManager(
@@ -168,7 +170,7 @@ async def test_create_saves_data(manager):
     assert entry['handler'] == 'test'
     assert entry['title'] == 'Test Title'
     assert entry['data'] == 'Test Data'
-    assert entry['source'] == 'user_input'
+    assert entry['source'] == 'user'
 
 
 async def test_discovery_init_flow(manager):
