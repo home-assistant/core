@@ -148,6 +148,16 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
                 str(self._code), self._partition_number)
 
     @asyncio.coroutine
+    def async_alarm_arm_night(self, code=None):
+        """Send arm night command."""
+        if code:
+            self.hass.data[DATA_EVL].arm_night_partition(
+                str(code), self._partition_number)
+        else:
+            self.hass.data[DATA_EVL].arm_night_partition(
+                str(self._code), self._partition_number)
+
+    @asyncio.coroutine
     def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         if code:

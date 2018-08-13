@@ -832,7 +832,7 @@ pyeight==0.0.9
 pyemby==1.5
 
 # homeassistant.components.envisalink
-pyenvisalink==2.3
+pyenvisalink==2.4
 
 # homeassistant.components.climate.ephember
 pyephember==0.2.0
