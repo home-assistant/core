@@ -22,9 +22,12 @@ REQUIREMENTS = ['glances_api==0.1.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_VERSION = 'version'
+
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Glances'
 DEFAULT_PORT = '61208'
+DEFAULT_VERSION = 2
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
@@ -55,6 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_RESOURCES, default=['disk_use']):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): vol.In([2, 3]),
 })
 
 
@@ -66,7 +70,7 @@ async def async_setup_platform(
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-    version = 2
+    version = config.get(CONF_VERSION)
     var_conf = config.get(CONF_RESOURCES)
 
     session = async_get_clientsession(hass)
