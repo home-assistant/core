@@ -32,6 +32,10 @@ DOMAIN = 'konnected'
 
 CONF_ACTIVATION = 'activation'
 CONF_API_HOST = 'api_host'
+CONF_MOMENTARY = 'momentary'
+CONF_PAUSE = 'pause'
+CONF_REPEAT = 'repeat'
+
 STATE_LOW = 'low'
 STATE_HIGH = 'high'
 
@@ -53,7 +57,13 @@ _SWITCH_SCHEMA = vol.All(
         vol.Exclusive(CONF_ZONE, 'a_pin'): vol.Any(*ZONE_TO_PIN),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_ACTIVATION, default=STATE_HIGH):
-            vol.All(vol.Lower, vol.Any(STATE_HIGH, STATE_LOW))
+            vol.All(vol.Lower, vol.Any(STATE_HIGH, STATE_LOW)),
+        vol.Optional(CONF_MOMENTARY):
+            vol.All(vol.Coerce(int), vol.Range(min=10)),
+        vol.Optional(CONF_PAUSE):
+            vol.All(vol.Coerce(int), vol.Range(min=10)),
+        vol.Optional(CONF_REPEAT):
+            vol.All(vol.Coerce(int), vol.Range(min=-1)),
     }), cv.has_at_least_one_key(CONF_PIN, CONF_ZONE)
 )
 
@@ -185,7 +195,7 @@ class KonnectedDevice:
                           sensors[pin].get('name'),
                           sensors[pin].get(ATTR_STATE))
 
-        actuators = {}
+        actuators = []
         for entity in self.config().get(CONF_SWITCHES) or []:
             if 'zone' in entity:
                 pin = ZONE_TO_PIN[entity['zone']]
@@ -200,16 +210,18 @@ class KonnectedDevice:
             else:
                 initial_state = None
 
-            actuators[pin] = {
+            act = {
+                CONF_PIN: pin,
                 CONF_NAME: entity.get(
                     CONF_NAME, 'Konnected {} Actuator {}'.format(
                         self.device_id[6:], PIN_TO_ZONE[pin])),
                 ATTR_STATE: initial_state,
                 CONF_ACTIVATION: entity[CONF_ACTIVATION],
-            }
-            _LOGGER.debug('Set up actuator %s (initial state: %s)',
-                          actuators[pin].get(CONF_NAME),
-                          actuators[pin].get(ATTR_STATE))
+                CONF_MOMENTARY: entity.get(CONF_MOMENTARY),
+                CONF_PAUSE: entity.get(CONF_PAUSE),
+                CONF_REPEAT: entity.get(CONF_REPEAT)}
+            actuators.append(act)
+            _LOGGER.debug('Set up actuator %s', act)
 
         device_data = {
             'client': self.client,
@@ -237,11 +249,10 @@ class KonnectedDevice:
 
     def actuator_configuration(self):
         """Return the configuration map for syncing actuators."""
-        return [{'pin': p,
+        return [{'pin': data.get(CONF_PIN),
                  'trigger': (0 if data.get(CONF_ACTIVATION) in [0, STATE_LOW]
                              else 1)}
-                for p, data in
-                self.stored_configuration[CONF_SWITCHES].items()]
+                for data in self.stored_configuration[CONF_SWITCHES]]
 
     def sync_device_config(self):
         """Sync the new pin configuration to the Konnected device."""
@@ -320,8 +331,7 @@ class KonnectedView(HomeAssistantView):
         if device is None:
             return self.json_message('unregistered device',
                                      status_code=HTTP_BAD_REQUEST)
-        pin_data = device[CONF_BINARY_SENSORS].get(pin_num) or \
-            device[CONF_SWITCHES].get(pin_num)
+        pin_data = device[CONF_BINARY_SENSORS].get(pin_num)
 
         if pin_data is None:
             return self.json_message('unregistered sensor/actuator',
