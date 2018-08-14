@@ -15,7 +15,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_NAME, CONF_SLAVE, TEMP_CELSIUS,
+    CONF_HOST, CONF_PORT, CONF_NAME, CONF_SLAVE, TEMP_CELSIUS,
     ATTR_TEMPERATURE, DEVICE_DEFAULT_NAME)
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
@@ -23,10 +23,18 @@ from homeassistant.components.climate import (
 from homeassistant.components import modbus
 import homeassistant.helpers.config_validation as cv
 
+from pymodbus.client.sync import ModbusTcpClient as ModbusClient
+
 #REQUIREMENTS = ['pyflexit==0.3']
 DEPENDENCIES = ['modbus']
 
+DEVICE_DEFAULT_NAME = "Stiebel Eltron Heatpump"
+DEFAULT_PORT = 502
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Required(CONF_SLAVE): vol.All(int, vol.Range(min=0, max=32)),
     vol.Optional(CONF_NAME, default=DEVICE_DEFAULT_NAME): cv.string
 })
@@ -39,33 +47,37 @@ SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the StiebelEltron Platform."""
+    host = config.get(CONF_HOST, None)
+    port = config.get(CONF_PORT, None)
     modbus_slave = config.get(CONF_SLAVE, None)
     name = config.get(CONF_NAME, None)
-    add_devices([StiebelEltron(modbus_slave, name)], True)
+    add_devices([StiebelEltron(host, port, modbus_slave, name)], True)
 
 
 class StiebelEltron(ClimateDevice):
     """Representation of a Stiebel Eltron heat pump."""
 
-    def __init__(self, modbus_slave, name):
+    def __init__(self, host, port, modbus_slave, name):
         """Initialize the unit."""
-        from pyflexit import pyflexit
+        #from pyflexit import pyflexit
         self._name = name
+        self._host = host
+        self._port = port
         self._slave = modbus_slave
-        self._target_temperature = None
+        #self._target_temperature = None
         self._current_temperature = None
-        self._current_fan_mode = None
-        self._current_operation = None
-        self._fan_list = ['Off', 'Low', 'Medium', 'High']
-        self._current_operation = None
-        self._filter_hours = None
-        self._filter_alarm = None
-        self._heat_recovery = None
-        self._heater_enabled = False
-        self._heating = None
-        self._cooling = None
-        self._alarm = False
-        self.unit = pyflexit.pyflexit(modbus.HUB, modbus_slave)
+        #self._current_fan_mode = None
+        #self._current_operation = None
+        #self._fan_list = ['Off', 'Low', 'Medium', 'High']
+        #self._current_operation = None
+        #self._filter_hours = None
+        #self._filter_alarm = None
+        #self._heat_recovery = None
+        #self._heater_enabled = False
+        #self._heating = None
+        #self._cooling = None
+        #self._alarm = False
+        #self.unit = pyflexit.pyflexit(modbus.HUB, modbus_slave)
 
     @property
     def supported_features(self):
@@ -74,26 +86,33 @@ class StiebelEltron(ClimateDevice):
 
     def update(self):
         """Update unit attributes."""
-        if not self.unit.update():
-            _LOGGER.warning("Modbus read failed")
+        #if not self.unit.update():
+        #    _LOGGER.warning("Modbus read failed")
+        # https://www.stiebel-eltron.de/content/dam/ste/de/de/home/services/Downloadlisten/ISG%20Modbus_Stiebel_Bedienungsanleitung.pdf
+        client = ModbusClient(self._host, self._port)
+        client.connect()
+        rr = client.read_input_registers(1, 33, unit=self._slave)
+        
 
-        self._target_temperature = self.unit.get_target_temp
-        self._current_temperature = self.unit.get_temp
-        self._current_fan_mode =\
-            self._fan_list[self.unit.get_fan_speed]
-        self._filter_hours = self.unit.get_filter_hours
+        #self._target_temperature = self.unit.get_target_temp
+        #self._current_temperature = self.unit.get_temp
+        self._current_temperature = rr.registers[6]*0.1
+        client.close()
+        #self._current_fan_mode =\
+        #    self._fan_list[self.unit.get_fan_speed]
+        #self._filter_hours = self.unit.get_filter_hours
         # Mechanical heat recovery, 0-100%
-        self._heat_recovery = self.unit.get_heat_recovery
+        #self._heat_recovery = self.unit.get_heat_recovery
         # Heater active 0-100%
-        self._heating = self.unit.get_heating
+        #self._heating = self.unit.get_heating
         # Cooling active 0-100%
-        self._cooling = self.unit.get_cooling
+        #self._cooling = self.unit.get_cooling
         # Filter alarm 0/1
-        self._filter_alarm = self.unit.get_filter_alarm
+        #self._filter_alarm = self.unit.get_filter_alarm
         # Heater enabled or not. Does not mean it's necessarily heating
-        self._heater_enabled = self.unit.get_heater_enabled
+        #self._heater_enabled = self.unit.get_heater_enabled
         # Current operation mode
-        self._current_operation = self.unit.get_operation
+        #self._current_operation = self.unit.get_operation
 
 #    @property
 #    def device_state_attributes(self):
@@ -117,10 +136,10 @@ class StiebelEltron(ClimateDevice):
         """Return the name of the climate device."""
         return self._name
 
- #   @property
- #   def temperature_unit(self):
- #       """Return the unit of measurement."""
- #       return TEMP_CELSIUS
+    @property
+    def temperature_unit(self):
+        """Return the unit of measurement."""
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
