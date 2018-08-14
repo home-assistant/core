@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 
-REQUIREMENTS = ['pywebpush==1.6.0', 'PyJWT==1.6.0']
+REQUIREMENTS = ['pywebpush==1.6.0']
 
 DEPENDENCIES = ['frontend']
 
