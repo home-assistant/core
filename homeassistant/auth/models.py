@@ -39,26 +39,8 @@ class RefreshToken:
                                       default=ACCESS_TOKEN_EXPIRATION)
     token = attr.ib(type=str,
                     default=attr.Factory(lambda: generate_secret(64)))
-    access_tokens = attr.ib(type=list, default=attr.Factory(list), cmp=False)
-
-
-@attr.s(slots=True)
-class AccessToken:
-    """Access token to access the API.
-
-    These will only ever be stored in memory and not be persisted.
-    """
-
-    refresh_token = attr.ib(type=RefreshToken)
-    created_at = attr.ib(type=datetime, default=attr.Factory(dt_util.utcnow))
-    token = attr.ib(type=str,
-                    default=attr.Factory(generate_secret))
-
-    @property
-    def expired(self):
-        """Return if this token has expired."""
-        expires = self.created_at + self.refresh_token.access_token_expiration
-        return dt_util.utcnow() > expires
+    jwt_key = attr.ib(type=str,
+                      default=attr.Factory(lambda: generate_secret(64)))
 
 
 @attr.s(slots=True)

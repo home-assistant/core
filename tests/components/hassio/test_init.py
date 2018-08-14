@@ -106,7 +106,11 @@ async def test_setup_api_push_api_data_default(hass, aioclient_mock,
     )
     assert hassio_user is not None
     assert hassio_user.system_generated
-    assert refresh_token in hassio_user.refresh_tokens
+    for token in hassio_user.refresh_tokens.values():
+        if token.token == refresh_token:
+            break
+    else:
+        assert False, 'refresh token not found'
 
 
 async def test_setup_api_push_api_data_no_auth(hass, aioclient_mock,
