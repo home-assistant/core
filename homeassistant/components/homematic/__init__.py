@@ -47,6 +47,7 @@ ATTR_ERRORCODE = 'error'
 ATTR_MESSAGE = 'message'
 ATTR_MODE = 'mode'
 ATTR_TIME = 'time'
+ATTR_UNIQUE_ID = 'unique_id'
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
@@ -173,6 +174,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_INTERFACE): cv.string,
     vol.Optional(ATTR_CHANNEL, default=1): vol.Coerce(int),
     vol.Optional(ATTR_PARAM): cv.string,
+    vol.Optional(ATTR_UNIQUE_ID): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -530,8 +532,12 @@ def _get_devices(hass, discovery_type, keys, interface):
             _LOGGER.debug("%s: Handling %s: %s: %s",
                           discovery_type, key, param, channels)
             for channel in channels:
-                name = _create_ha_name(
+                name = _create_ha_id(
                     name=device.NAME, channel=channel, param=param,
+                    count=len(channels)
+                )
+                unique_id = _create_ha_id(
+                    name=key, channel=channel, param=param,
                     count=len(channels)
                 )
                 device_dict = {
@@ -539,7 +545,8 @@ def _get_devices(hass, discovery_type, keys, interface):
                     ATTR_ADDRESS: key,
                     ATTR_INTERFACE: interface,
                     ATTR_NAME: name,
-                    ATTR_CHANNEL: channel
+                    ATTR_CHANNEL: channel,
+                    ATTR_UNIQUE_ID: unique_id
                 }
                 if param is not None:
                     device_dict[ATTR_PARAM] = param
@@ -554,7 +561,7 @@ def _get_devices(hass, discovery_type, keys, interface):
     return device_arr
 
 
-def _create_ha_name(name, channel, param, count):
+def _create_ha_id(name, channel, param, count):
     """Generate a unique entity id."""
     # HMDevice is a simple device
     if count == 1 and param is None:
@@ -725,6 +732,7 @@ class HMDevice(Entity):
         self._interface = config.get(ATTR_INTERFACE)
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
+        self._unique_id = config.get(ATTR_UNIQUE_ID)
         self._data = {}
         self._homematic = None
         self._hmdevice = None
@@ -739,6 +747,11 @@ class HMDevice(Entity):
     def async_added_to_hass(self):
         """Load data init callbacks."""
         yield from self.hass.async_add_job(self.link_homematic)
+
+    @property
+    def unique_id(self):
+        """Return unique ID. HomeMatic entity IDs are unique by default."""
+        return self._unique_id.replace(" ", "_")
 
     @property
     def should_poll(self):
