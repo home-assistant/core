@@ -122,7 +122,6 @@ class NetatmoPublicData:
     def update(self):
         """Request an update from the Netatmo API."""
         import pyatmo
-        _LOGGER.error('Updating Netatmo data.')
         raindata = pyatmo.PublicData(self.auth,
                                      LAT_NE=self.lat_ne,
                                      LON_NE=self.lon_ne,
