@@ -354,11 +354,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         if (conf.get(CONF_PASSWORD) is None and
                 config.get('http') is not None and
                 config['http'].get('api_password') is not None):
-            _LOGGER.error("Starting from 0.77, embedded MQTT broker doesn't"
-                          " use api_password as default password any more."
-                          " Please set password configuration. See https://"
-                          "home-assistant.io/docs/mqtt/broker#embedded-broker"
-                          " for details")
+            _LOGGER.error(
+                "Starting from release 0.76, the embedded MQTT broker does not"
+                " use api_password as default password anymore. Please set"
+                " password configuration. See https://home-assistant.io/docs/"
+                "mqtt/broker#embedded-broker for details")
             return False
 
         broker_config = await _async_setup_server(hass, config)
