@@ -199,9 +199,7 @@ async def test_saving_loading(hass, hass_storage):
     })
     user = await manager.async_get_or_create_user(step['result'])
     await manager.async_activate_user(user)
-    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
-
-    manager.async_create_access_token(refresh_token)
+    await manager.async_create_refresh_token(user, CLIENT_ID)
 
     await flush_store(manager._store._store)
 
@@ -227,7 +225,7 @@ async def test_cannot_retrieve_expired_access_token(hass):
 
     with patch('homeassistant.util.dt.utcnow',
                return_value=dt_util.utcnow() -
-               auth_const.ACCESS_TOKEN_EXPIRATION - timedelta(seconds=1)):
+               auth_const.ACCESS_TOKEN_EXPIRATION - timedelta(seconds=11)):
         access_token = manager.async_create_access_token(refresh_token)
 
     assert (

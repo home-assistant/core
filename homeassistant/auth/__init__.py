@@ -193,6 +193,7 @@ class AuthManager:
     @callback
     def async_create_access_token(self, refresh_token):
         """Create a new access token."""
+        # pylint: disable=no-self-use
         return jwt.encode({
             'iss': refresh_token.id,
             'iat': dt_util.utcnow(),
@@ -210,17 +211,21 @@ class AuthManager:
             unverif_claims.get('iss'))
 
         if refresh_token is None:
-            return None
+            jwt_key = ''
+            issuer = ''
+        else:
+            jwt_key = refresh_token.jwt_key
+            issuer = refresh_token.id
 
         try:
             jwt.decode(
                 token,
-                refresh_token.jwt_key,
-                issuer=refresh_token.id,
+                jwt_key,
+                leeway=10,
+                issuer=issuer,
                 algorithms=['HS256']
             )
         except jwt.InvalidTokenError:
-            _LOGGER.exception("KUT 2")
             return None
 
         if not refresh_token.user.is_active:
