@@ -1444,7 +1444,7 @@ warrant==0.6.1
 watchdog==0.8.3
 
 # homeassistant.components.waterfurnace
-waterfurnace==0.4.0
+waterfurnace==0.7.0
 
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
