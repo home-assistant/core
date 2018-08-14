@@ -60,11 +60,20 @@ class LocalData:
         self.buffer = ""
         self.current_path = ""
         self.text_to_say = None
-        self.url_to_stream = None
+        self.url_to_copy = None
+
+    @staticmethod
+    def list_dir(path):
+        dirs = os.listdir(path)
+        dirs_filtered = []
+        for d in dirs:
+            if not d.startswith('.'):
+                dirs_filtered.append(d)
+        return dirs_filtered
 
     def refresh_files(self, call):
         self.current_path = os.path.abspath(G_LOCAL_FILES_ROOT)
-        dirs = os.listdir(self.current_path)
+        dirs = self.list_dir(self.current_path)
         self.folders = [ais_global.G_EMPTY_OPTION]
         for d in dirs:
             self.folders.append(self.current_path.replace(G_LOCAL_FILES_ROOT, "") + '/' + d)
@@ -87,6 +96,9 @@ class LocalData:
             return []
 
         if call.data["path"] == "..":
+            # do not allow to browse outside root
+            if self.current_path == G_LOCAL_FILES_ROOT:
+                return []
             # check if this is cloud drive
             if self.is_rclone_path(self.current_path):
                 if self.current_path == G_CLOUD_PREFIX:
@@ -128,7 +140,7 @@ class LocalData:
                 self.folders.append('..')
             else:
                 self.folders.append(G_CLOUD_PREFIX)
-            dirs = os.listdir(self.current_path)
+            dirs = self.list_dir(self.current_path)
             for dir in dirs:
                 self.folders.append(self.current_path.replace(G_LOCAL_FILES_ROOT, "") + "/" + dir)
             self.hass.services.call(
@@ -157,6 +169,8 @@ class LocalData:
         else:
             # file was selected, check mimetype and play if possible
             mime_type = mimetypes.MimeTypes().guess_type(self.current_path)[0]
+            if mime_type is None:
+                mime_type = ""
             if mime_type.startswith('text/'):
                 self.hass.services.call(
                     'ais_ai_service',
@@ -245,6 +259,14 @@ class LocalData:
     def process_output(self, line):
         self.buffer += line
 
+    def interact_serve_output(self, line):
+        _LOGGER.error('line: ' + str(line))
+        if "NOTICE" in line:
+            self.rclone_serve_done(True)
+        elif "ERROR" in line:
+            self.rclone_serve_done(False)
+            return True
+
     def rclone_browse_done(self, cmd, success, exit_code):
         if success:
             self.folders = [ais_global.G_EMPTY_OPTION]
@@ -287,7 +309,7 @@ class LocalData:
     def rclone_copy_done(self, cmd, success, exit_code):
         if success:
             try:
-                with open(self.url_to_stream) as file:
+                with open(self.url_to_copy) as file:
                     self.hass.services.call(
                         'ais_ai_service',
                         'say_it', {
@@ -306,36 +328,28 @@ class LocalData:
                     "text": "Nie udało się pobrać pliku "
                 })
 
-    def rclone_serve_done(self, cmd, success, exit_code):
-        if success:
-            if self.url_to_stream is not None:
-                player_name = self.hass.states.get(
-                    'input_select.file_player').state
-                player = ais_cloud.get_player_data(player_name)
-                self.hass.services.call(
-                    'media_player',
-                    'play_media', {
-                        "entity_id": player["entity_id"],
-                        "media_content_type": "audio/mp4",
-                        "media_content_id": self.url_to_stream
-                    })
-                _audio_info = {"NAME": os.path.basename(self.url_to_stream),
-                               "MEDIA_SOURCE": ais_global.G_AN_LOCAL}
-                _audio_info = json.dumps(_audio_info)
-                # to set the stream image and title
-                if player["device_ip"] is not None:
-                    self.hass.services.call(
-                        'media_player',
-                        'play_media', {
-                            "entity_id": player["entity_id"],
-                            "media_content_type": "ais_info",
-                            "media_content_id": _audio_info
-                        })
-        else:
+    def play_the_stream(self, url_to_stream):
+        player_name = self.hass.states.get(
+            'input_select.file_player').state
+        player = ais_cloud.get_player_data(player_name)
+        self.hass.services.call(
+            'media_player',
+            'play_media', {
+                "entity_id": player["entity_id"],
+                "media_content_type": "audio/mp4",
+                "media_content_id": url_to_stream
+            })
+        _audio_info = {"NAME": os.path.basename(url_to_stream),
+                       "MEDIA_SOURCE": ais_global.G_AN_LOCAL}
+        _audio_info = json.dumps(_audio_info)
+        # to set the stream image and title
+        if player["device_ip"] is not None:
             self.hass.services.call(
-                'ais_ai_service',
-                'say_it', {
-                    "text": "Nie udało się uruchomić odtwarzania "
+                'media_player',
+                'play_media', {
+                    "entity_id": player["entity_id"],
+                    "media_content_type": "ais_info",
+                    "media_content_id": _audio_info
                 })
 
     def rclone_browse(self, path, say):
@@ -373,8 +387,9 @@ class LocalData:
         else:
             # file was selected, check the MimeType
             # "MimeType":"audio/mp3" and "text/plain" are supported
-            info = ""
             path = path.replace(G_CLOUD_PREFIX, "")
+            if mime_type is None:
+                mime_type = ""
             if mime_type.startswith("audio/") or mime_type.startswith("video/"):
                 # StreamTask().execute(fileItem);
                 info = "Pobieram i odtwarzam: " + str(item_name)
@@ -383,18 +398,19 @@ class LocalData:
                     'say_it', {
                         "text": info
                     })
-                # to kill previous serve and clear cache
-                p = sh.pkill(["-9", "rclone"])
-                p.wait()
+                # try to kill previous serve if exists
+                try:
+                    sh.pkill(['-9', 'rclone'])
+                except Exception as e:
+                    pass
                 # start new serve
-                url = path.replace(self.rclone_remote_from_path(path), "")
-                self.url_to_stream = "http://localhost:8080" + quote(url)
-                p = sh.rclone(
-                    ['serve', 'http', path, G_RCLONE_CONF],
-                    _out=self.process_output,
-                    _bg=True,
-                    _done=self.rclone_serve_done)
-                p.wait()
+                url_to_stream = "http://127.0.0.1:8080/" + str(item_path)
+                sh.rclone(['serve', 'http', path, G_RCLONE_CONF, '--addr=:8080'],
+                    _out=self.interact_serve_output,
+                    _iter=True)
+                import time
+                time.sleep(3)
+                self.play_the_stream(url_to_stream)
             elif mime_type.startswith("text/"):
                 info = "Pobieram i czytam: " + str(item_name)
                 self.hass.services.call(
@@ -402,9 +418,9 @@ class LocalData:
                     'say_it', {
                         "text": info
                     })
-                self.url_to_stream = '/sdcard/dom/pobrane/' + item_path
+                self.url_to_copy = G_LOCAL_FILES_ROOT + '/.temp/' + item_path
                 p = sh.rclone(
-                    ['copy', path, '/sdcard/dom/pobrane/', G_RCLONE_CONF],
+                    ['copy', path, G_LOCAL_FILES_ROOT + '/.temp/', G_RCLONE_CONF],
                     _out=self.process_output,
                     _bg=True,
                     _done=self.rclone_copy_done)
@@ -425,7 +441,7 @@ class LocalData:
         def load():
             self.current_path = os.path.abspath(G_LOCAL_FILES_ROOT)
             try:
-                dirs = os.listdir(self.current_path)
+                dirs = self.list_dir(self.current_path)
                 self.folders = [ais_global.G_EMPTY_OPTION]
                 for d in dirs:
                     self.folders.append(self.current_path.replace(G_LOCAL_FILES_ROOT, "") + '/' + d)

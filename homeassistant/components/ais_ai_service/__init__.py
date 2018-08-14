@@ -815,9 +815,13 @@ def go_up_in_menu(hass):
     if CURR_ENTITIE is not None:
         # check if we are browsing files
         if CURR_ENTITIE == "input_select.folder_name":
-            _beep_it(hass, 33)
-            hass.services.call('ais_drives_service', 'browse_path', {"path": "..", "say": True})
-            return
+            # check if we can go up
+            state = hass.states.get(CURR_ENTITIE)
+            options = state.attributes.get('options')
+            if ".." in options:
+                _beep_it(hass, 33)
+                hass.services.call('ais_drives_service', 'browse_path', {"path": "..", "say": True})
+                return
         # go up in the group menu
         set_curr_group(hass, None)
         say_curr_group(hass)
