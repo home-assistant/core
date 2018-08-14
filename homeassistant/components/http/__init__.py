@@ -49,6 +49,10 @@ CONF_TRUSTED_PROXIES = 'trusted_proxies'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
+CONF_SSL_PROFILE = 'ssl_profile'
+
+SSL_MODERN = 'modern'
+SSL_INTERMEDIATE = 'intermediate'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +78,9 @@ HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
                  default=NO_LOGIN_ATTEMPT_THRESHOLD):
         vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
-    vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean
+    vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+    vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN):
+        vol.In([SSL_INTERMEDIATE, SSL_MODERN]),
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -123,6 +129,7 @@ async def async_setup(hass, config):
     trusted_networks = conf[CONF_TRUSTED_NETWORKS]
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
+    ssl_profile = conf[CONF_SSL_PROFILE]
 
     if api_password is not None:
         logging.getLogger('aiohttp.access').addFilter(
@@ -141,7 +148,8 @@ async def async_setup(hass, config):
         trusted_proxies=trusted_proxies,
         trusted_networks=trusted_networks,
         login_threshold=login_threshold,
-        is_ban_enabled=is_ban_enabled
+        is_ban_enabled=is_ban_enabled,
+        ssl_profile=ssl_profile,
     )
 
     async def stop_server(event):
@@ -181,7 +189,7 @@ class HomeAssistantHTTP:
                  ssl_certificate, ssl_peer_certificate,
                  ssl_key, server_host, server_port, cors_origins,
                  use_x_forwarded_for, trusted_proxies, trusted_networks,
-                 login_threshold, is_ban_enabled):
+                 login_threshold, is_ban_enabled, ssl_profile):
         """Initialize the HTTP Home Assistant server."""
         app = self.app = web.Application(
             middlewares=[staticresource_middleware])
@@ -222,6 +230,7 @@ class HomeAssistantHTTP:
         self.server_port = server_port
         self.trusted_networks = trusted_networks
         self.is_ban_enabled = is_ban_enabled
+        self.ssl_profile = ssl_profile
         self._handler = None
         self.server = None
 
@@ -308,7 +317,10 @@ class HomeAssistantHTTP:
 
         if self.ssl_certificate:
             try:
-                context = ssl_util.server_context()
+                if self.ssl_profile == SSL_INTERMEDIATE:
+                    context = ssl_util.server_context_intermediate()
+                else:
+                    context = ssl_util.server_context_modern()
                 context.load_cert_chain(self.ssl_certificate, self.ssl_key)
             except OSError as error:
                 _LOGGER.error("Could not read SSL certificate from %s: %s",
