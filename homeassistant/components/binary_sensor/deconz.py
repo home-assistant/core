@@ -113,3 +113,21 @@ class DeconzBinarySensor(BinarySensorDevice):
         if self._sensor.type in PRESENCE and self._sensor.dark is not None:
             attr[ATTR_DARK] = self._sensor.dark
         return attr
+
+    @property
+    def device(self):
+        """"""
+        if (self._sensor.uniqueid is not None and
+                self._sensor.uniqueid.count(':') == 7):
+            serial = self._sensor.uniqueid.split('-', 1)[0]
+        else:
+            return None
+        dev = {
+            'unique_id': serial,
+            'serial': serial,
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'connection': ('Zigbee', serial),
+            'sw_version': self._sensor.swversion,
+        }
+        return dev

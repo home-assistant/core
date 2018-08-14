@@ -7,6 +7,7 @@ from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
+from .device_registry import async_get_registry as async_get_device_registry
 from .event import async_track_time_interval, async_call_later
 from .entity_registry import async_get_registry
 
@@ -209,11 +210,13 @@ class EntityPlatform:
         hass = self.hass
         component_entities = set(hass.states.async_entity_ids(self.domain))
 
+
+        device_registry = async_get_device_registry(self.hass)
         registry = await async_get_registry(hass)
 
         tasks = [
             self._async_add_entity(entity, update_before_add,
-                                   component_entities, registry)
+                                   component_entities, registry, device_registry)
             for entity in new_entities]
 
         # No entities for processing
@@ -233,7 +236,7 @@ class EntityPlatform:
         )
 
     async def _async_add_entity(self, entity, update_before_add,
-                                component_entities, registry):
+                                component_entities, registry, device_registry):
         """Helper method to add an entity to the platform."""
         if entity is None:
             raise ValueError('Entity cannot be None')
@@ -269,10 +272,22 @@ class EntityPlatform:
             else:
                 config_entry_id = None
 
+            if entity.device is not None:
+                device = device_registry.async_get_or_create(
+                    entity.device['unique_id'], entity.device['serial'],
+                    entity.device['manufacturer'], entity.device['model'],
+                    entity.device['connection'],
+                    sw_version=entity.device.get('sw_version'),
+                    config_entry_id=config_entry_id)
+                device_id = device.unique_id
+            else:
+                device_id = None
+
             entry = registry.async_get_or_create(
                 self.domain, self.platform_name, entity.unique_id,
                 suggested_object_id=suggested_object_id,
-                config_entry_id=config_entry_id)
+                config_entry_id=config_entry_id,
+                device_id=device_id)
 
             if entry.disabled:
                 self.logger.info(

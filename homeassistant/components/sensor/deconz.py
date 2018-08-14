@@ -134,6 +134,24 @@ class DeconzSensor(Entity):
             attr[ATTR_DAYLIGHT] = self._sensor.daylight
         return attr
 
+    @property
+    def device(self):
+        """"""
+        if (self._sensor.uniqueid is not None and
+                self._sensor.uniqueid.count(':') == 7):
+            serial = self._sensor.uniqueid.split('-', 1)[0]
+        else:
+            return None
+        dev = {
+            'unique_id': serial,
+            'serial': serial,
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'connection': ('Zigbee', serial),
+            'sw_version': self._sensor.swversion,
+        }
+        return dev
+
 
 class DeconzBattery(Entity):
     """Battery class for when a device is only represented as an event."""

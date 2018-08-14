@@ -125,6 +125,11 @@ class Entity:
         return None
 
     @property
+    def device(self):
+        """"""
+        return None
+
+    @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return None

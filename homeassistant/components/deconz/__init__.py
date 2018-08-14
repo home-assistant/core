@@ -12,6 +12,8 @@ from homeassistant.const import (
     CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.device_registry import (
+    async_get_registry as async_get_device_registry)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.util import slugify
@@ -118,6 +120,13 @@ async def async_setup_entry(hass, config_entry):
     async_add_remote(deconz.sensors.values())
 
     deconz.start()
+
+    device_registry = async_get_device_registry(hass)
+    device_registry.async_get_or_create(
+        deconz.config.bridgeid, deconz.config.bridgeid, 'Dresden Elektronik',
+        deconz.config.modelid, ('Ethernet', config_entry.data['host']),
+        sw_version=deconz.config.swversion,
+        config_entry_id=config_entry.entry_id)
 
     async def async_configure(call):
         """Set attribute of device in deCONZ.

@@ -199,3 +199,21 @@ class DeconzLight(Light):
         if self._light.type == 'LightGroup':
             attributes['all_on'] = self._light.all_on
         return attributes
+
+    @property
+    def device(self):
+        """"""
+        if (self._light.uniqueid is not None and
+                self._light.uniqueid.count(':') == 7):
+            serial = self._light.uniqueid.split('-', 1)[0]
+        else:
+            return None
+        dev = {
+            'unique_id': serial,
+            'serial': serial,
+            'manufacturer': self._light.manufacturer,
+            'model': self._light.modelid,
+            'connection': ('Zigbee', serial),
+            'sw_version': self._light.swversion,
+        }
+        return dev
