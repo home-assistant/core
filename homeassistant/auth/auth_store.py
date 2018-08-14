@@ -1,6 +1,7 @@
 """Storage for auth models."""
 from collections import OrderedDict
 from datetime import timedelta
+import hmac
 
 from homeassistant.util import dt as dt_util
 
@@ -110,21 +111,35 @@ class AuthStore:
     async def async_create_refresh_token(self, user, client_id=None):
         """Create a new token for a user."""
         refresh_token = models.RefreshToken(user=user, client_id=client_id)
-        user.refresh_tokens[refresh_token.token] = refresh_token
+        user.refresh_tokens[refresh_token.id] = refresh_token
         await self.async_save()
         return refresh_token
 
-    async def async_get_refresh_token(self, token):
-        """Get refresh token by token."""
+    async def async_get_refresh_token(self, token_id):
+        """Get refresh token by id."""
         if self._users is None:
             await self.async_load()
 
         for user in self._users.values():
-            refresh_token = user.refresh_tokens.get(token)
+            refresh_token = user.refresh_tokens.get(token_id)
             if refresh_token is not None:
                 return refresh_token
 
         return None
+
+    async def async_get_refresh_token_by_token(self, token):
+        """Get refresh token by token."""
+        if self._users is None:
+            await self.async_load()
+
+        found = None
+
+        for user in self._users.values():
+            for refresh_token in user.refresh_tokens.values():
+                if hmac.compare_digest(refresh_token.token, token):
+                    found = refresh_token
+
+        return found
 
     async def async_load(self):
         """Load the users."""
@@ -153,9 +168,11 @@ class AuthStore:
                 data=cred_dict['data'],
             ))
 
-        refresh_tokens = OrderedDict()
-
         for rt_dict in data['refresh_tokens']:
+            # Filter out the old keys that don't have jwt_key (pre-0.76)
+            if 'jwt_key' not in rt_dict:
+                continue
+
             token = models.RefreshToken(
                 id=rt_dict['id'],
                 user=users[rt_dict['user_id']],
@@ -164,18 +181,9 @@ class AuthStore:
                 access_token_expiration=timedelta(
                     seconds=rt_dict['access_token_expiration']),
                 token=rt_dict['token'],
+                jwt_key=rt_dict['jwt_key']
             )
-            refresh_tokens[token.id] = token
-            users[rt_dict['user_id']].refresh_tokens[token.token] = token
-
-        for ac_dict in data['access_tokens']:
-            refresh_token = refresh_tokens[ac_dict['refresh_token_id']]
-            token = models.AccessToken(
-                refresh_token=refresh_token,
-                created_at=dt_util.parse_datetime(ac_dict['created_at']),
-                token=ac_dict['token'],
-            )
-            refresh_token.access_tokens.append(token)
+            users[rt_dict['user_id']].refresh_tokens[token.id] = token
 
         self._users = users
 
@@ -213,27 +221,15 @@ class AuthStore:
                 'access_token_expiration':
                     refresh_token.access_token_expiration.total_seconds(),
                 'token': refresh_token.token,
+                'jwt_key': refresh_token.jwt_key,
             }
             for user in self._users.values()
             for refresh_token in user.refresh_tokens.values()
-        ]
-
-        access_tokens = [
-            {
-                'id': user.id,
-                'refresh_token_id': refresh_token.id,
-                'created_at': access_token.created_at.isoformat(),
-                'token': access_token.token,
-            }
-            for user in self._users.values()
-            for refresh_token in user.refresh_tokens.values()
-            for access_token in refresh_token.access_tokens
         ]
 
         data = {
             'users': users,
             'credentials': credentials,
-            'access_tokens': access_tokens,
             'refresh_tokens': refresh_tokens,
         }
 

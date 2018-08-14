@@ -44,7 +44,10 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert resp.status == 200
     tokens = await resp.json()
 
-    assert hass.auth.async_get_access_token(tokens['access_token']) is not None
+    assert (
+        await hass.auth.async_validate_access_token(tokens['access_token'])
+        is not None
+    )
 
     # Use refresh token to get more tokens.
     resp = await client.post('/auth/token', data={
@@ -56,7 +59,10 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert resp.status == 200
     tokens = await resp.json()
     assert 'refresh_token' not in tokens
-    assert hass.auth.async_get_access_token(tokens['access_token']) is not None
+    assert (
+        await hass.auth.async_validate_access_token(tokens['access_token'])
+        is not None
+    )
 
     # Test using access token to hit API.
     resp = await client.get('/api/')
@@ -98,7 +104,9 @@ async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
         }
     })
 
-    user = hass_access_token.refresh_token.user
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    user = refresh_token.user
     credential = Credentials(auth_provider_type='homeassistant',
                              auth_provider_id=None,
                              data={}, id='test-id')
@@ -169,7 +177,10 @@ async def test_refresh_token_system_generated(hass, aiohttp_client):
 
     assert resp.status == 200
     tokens = await resp.json()
-    assert hass.auth.async_get_access_token(tokens['access_token']) is not None
+    assert (
+        await hass.auth.async_validate_access_token(tokens['access_token'])
+        is not None
+    )
 
 
 async def test_refresh_token_different_client_id(hass, aiohttp_client):
@@ -208,4 +219,7 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
 
     assert resp.status == 200
     tokens = await resp.json()
-    assert hass.auth.async_get_access_token(tokens['access_token']) is not None
+    assert (
+        await hass.auth.async_validate_access_token(tokens['access_token'])
+        is not None
+    )
