@@ -211,30 +211,6 @@ async def test_saving_loading(hass, hass_storage):
     assert users[0] == user
 
 
-def test_access_token_expired():
-    """Test that the expired property on access tokens work."""
-    refresh_token = auth_models.RefreshToken(
-        user=None,
-        client_id='bla'
-    )
-
-    access_token = auth_models.AccessToken(
-        refresh_token=refresh_token
-    )
-
-    assert access_token.expired is False
-
-    with patch('homeassistant.util.dt.utcnow',
-               return_value=dt_util.utcnow() +
-               auth_const.ACCESS_TOKEN_EXPIRATION):
-        assert access_token.expired is True
-
-    almost_exp = \
-        dt_util.utcnow() + auth_const.ACCESS_TOKEN_EXPIRATION - timedelta(1)
-    with patch('homeassistant.util.dt.utcnow', return_value=almost_exp):
-        assert access_token.expired is False
-
-
 async def test_cannot_retrieve_expired_access_token(hass):
     """Test that we cannot retrieve expired access tokens."""
     manager = await auth.auth_manager_from_config(hass, [])
@@ -244,15 +220,20 @@ async def test_cannot_retrieve_expired_access_token(hass):
     assert refresh_token.client_id == CLIENT_ID
 
     access_token = manager.async_create_access_token(refresh_token)
-    assert manager.async_get_access_token(access_token.token) is access_token
+    assert (
+        await manager.async_validate_access_token(access_token)
+        is refresh_token
+    )
 
     with patch('homeassistant.util.dt.utcnow',
-               return_value=dt_util.utcnow() +
-               auth_const.ACCESS_TOKEN_EXPIRATION):
-        assert manager.async_get_access_token(access_token.token) is None
+               return_value=dt_util.utcnow() -
+               auth_const.ACCESS_TOKEN_EXPIRATION - timedelta(seconds=1)):
+        access_token = manager.async_create_access_token(refresh_token)
 
-    # Even with unpatched time, it should have been removed from manager
-    assert manager.async_get_access_token(access_token.token) is None
+    assert (
+        await manager.async_validate_access_token(access_token)
+        is None
+    )
 
 
 async def test_generating_system_user(hass):
