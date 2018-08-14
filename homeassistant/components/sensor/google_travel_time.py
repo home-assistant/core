@@ -62,7 +62,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
             vol.Exclusive('arrival_time', 'time'): cv.string,
             vol.Exclusive('departure_time', 'time'): cv.string,
             vol.Optional('traffic_model'): vol.In(TRAVEL_MODEL),
-            vol.Optional('transit_mode'): cv.string,
+            vol.Optional('transit_mode'): vol.In(TRANSPORT_TYPE),
             vol.Optional('transit_routing_preference'): vol.In(TRANSIT_PREFS)
         }))
 })
@@ -150,7 +150,28 @@ class GoogleTravelTimeSensor(Entity):
         else:
             _LOGGER.warning('Invalid travel mode: {}'
                             .format(options[CONF_MODE]))
-            self._mode = 'driving'  # Default
+
+        # Check if arrival_time or departure_time is a trackable entity.
+        # Only process one - departure time takes precedence.
+        # Arrival time must be an int.
+        if 'departure_time' in options:
+            if options['departure_time'].split('.', 1)[0] in TRACKABLE_DOMAINS:
+                self._departure_time_entity_id = options['departure_time']
+            elif ':' in options['departure_time']:
+                self.departure_time = convert_time_to_utc(
+                    options['departure_time']
+                )
+            else:
+                self._departure_time = options['departure_time']
+        elif 'arrival_time' in options:
+            if options['arrival_time'].split('.', 1)[0] in TRACKABLE_DOMAINS:
+                self._arrival_time_entity_id = options['arrival_time']
+            elif ':' in options['arrival_time']:
+                self.arrival_time = int(
+                    convert_time_to_utc(options['arrival_time'])
+                )
+            else:
+                self._arrival_time = int(options['arrival_time'])
 
         import googlemaps
         self._client = googlemaps.Client(api_key, timeout=10)
@@ -186,7 +207,7 @@ class GoogleTravelTimeSensor(Entity):
             return None
 
         res = self._matrix.copy()
-        res.update(self._get_options_values())
+        res.update(self._options)
         del res['rows']
         _data = self._matrix['rows'][0]['elements'][0]
         if 'duration_in_traffic' in _data:
@@ -205,11 +226,11 @@ class GoogleTravelTimeSensor(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Google."""
-        options_copy = self._get_options_values()
+        options = self._options
 
-        if 'departure_time' not in options_copy \
-                and 'arrival_time' not in options_copy:
-            options_copy['departure_time'] = 'now'
+        if 'departure_time' not in options \
+                and 'arrival_time' not in options:
+            options['departure_time'] = 'now'
 
         # Convert device_trackers to google friendly location
         if hasattr(self, '_origin_entity_id'):
@@ -222,29 +243,48 @@ class GoogleTravelTimeSensor(Entity):
                 self._destination_entity_id
             )
 
+        # Update device_trackers to values
+        if hasattr(self, '_mode_entity_id'):
+            mode_entity = self._hass.states.get(self._mode_entity_id)
+            if mode_entity.state in TRAVEL_MODE:
+                self._mode = mode_entity.state
+                options[CONF_MODE] = mode_entity.state
+            else:
+                _LOGGER.warning('Invalid travel mode: {}'.format(
+                    mode_entity.state)
+                )
+
+        if hasattr(self, '_departure_time_entity_id'):
+            departure_time_entity = self._hass.states.get(
+                self._departure_time_entity_id
+            )
+            if ':' in departure_time_entity.state:
+                self._departure_time = convert_time_to_utc(
+                    departure_time_entity.state
+                )
+                options['departure_time'] = departure_time_entity.state
+            else:
+                self._departure_time = int(departure_time_entity.state)
+                options['departure_time'] = departure_time_entity.state
+
+        elif hasattr(self, '_arrival_time_entity_id'):
+            arrival_time_entity = self._hass.states.get(
+                self._arrival_time_entity_id
+            )
+            if ':' in arrival_time_entity.state:
+                self._arrival_time = int(convert_time_to_utc(
+                    arrival_time_entity.state
+                ))
+            else:
+                self._arrival_time = int(arrival_time_entity.state)
+            options['arrival_time'] = arrival_time_entity.state
+
         self._destination = self._resolve_zone(self._destination)
         self._origin = self._resolve_zone(self._origin)
 
         if self._destination is not None and self._origin is not None:
             self._matrix = self._client.distance_matrix(
-                self._origin, self._destination, **options_copy)
-
-    def _get_options_values(self):
-        options_copy = self._options.copy()
-
-        # Replace values with entity.state if valid
-        for k, v in options_copy.items():
-            new_v = v
-            entity = self._hass.states.get(v)
-            if entity:
-                new_v = entity.state
-            if k == CONF_MODE and new_v not in TRAVEL_MODE:
-                _LOGGER.warning('Invalid travel mode: {}'.format(new_v))
-                new_v = 'driving'  # Default
-            if k in ['departure_time', 'arrival_time'] and ':' in new_v:
-                new_v = convert_time_to_utc(new_v)
-            options_copy[k] = new_v
-        return options_copy
+                self._origin, self._destination, **options)
 
     def _get_location_from_entity(self, entity_id):
         """Get the location from the entity state or attributes."""
