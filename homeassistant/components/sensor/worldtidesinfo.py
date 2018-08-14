@@ -106,7 +106,7 @@ class WorldTidesInfoSensor(Entity):
         start = int(time.time())
         resource = ('https://www.worldtides.info/api?extremes&length=86400'
                     '&key={}&lat={}&lon={}&start={}').format(
-            self._key, self._lat, self._lon, start)
+                        self._key, self._lat, self._lon, start)
 
         try:
             self.data = requests.get(resource, timeout=10).json()
