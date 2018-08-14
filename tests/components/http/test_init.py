@@ -1,10 +1,13 @@
 """The tests for the Home Assistant HTTP component."""
 import logging
 import unittest
+from unittest.mock import patch
 
 from homeassistant.setup import async_setup_component
 
 import homeassistant.components.http as http
+from homeassistant.util.ssl import (
+    server_context_modern, server_context_intermediate)
 
 
 class TestView(http.HomeAssistantView):
@@ -169,3 +172,56 @@ async def test_proxy_config_only_trust_proxies(hass):
             http.CONF_TRUSTED_PROXIES: ['127.0.0.1']
         }
     }) is not True
+
+
+async def test_ssl_profile_defaults_modern(hass):
+    """Test default ssl profile."""
+    assert await async_setup_component(hass, 'http', {}) is True
+
+    hass.http.ssl_certificate = 'bla'
+
+    with patch('ssl.SSLContext.load_cert_chain'), \
+        patch('homeassistant.util.ssl.server_context_modern',
+              side_effect=server_context_modern) as mock_context:
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert len(mock_context.mock_calls) == 1
+
+
+async def test_ssl_profile_change_intermediate(hass):
+    """Test setting ssl profile to intermediate."""
+    assert await async_setup_component(hass, 'http', {
+        'http': {
+            'ssl_profile': 'intermediate'
+        }
+    }) is True
+
+    hass.http.ssl_certificate = 'bla'
+
+    with patch('ssl.SSLContext.load_cert_chain'), \
+        patch('homeassistant.util.ssl.server_context_intermediate',
+              side_effect=server_context_intermediate) as mock_context:
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert len(mock_context.mock_calls) == 1
+
+
+async def test_ssl_profile_change_modern(hass):
+    """Test setting ssl profile to modern."""
+    assert await async_setup_component(hass, 'http', {
+        'http': {
+            'ssl_profile': 'modern'
+        }
+    }) is True
+
+    hass.http.ssl_certificate = 'bla'
+
+    with patch('ssl.SSLContext.load_cert_chain'), \
+        patch('homeassistant.util.ssl.server_context_modern',
+              side_effect=server_context_modern) as mock_context:
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert len(mock_context.mock_calls) == 1
