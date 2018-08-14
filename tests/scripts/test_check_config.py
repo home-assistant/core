@@ -159,7 +159,9 @@ class TestCheckConfig(unittest.TestCase):
                 'login_attempts_threshold': -1,
                 'server_host': '0.0.0.0',
                 'server_port': 8123,
-                'trusted_networks': []}
+                'trusted_networks': [],
+                'ssl_profile': 'modern',
+            }
             assert res['secret_cache'] == {secrets_path: {'http_pw': 'abc123'}}
             assert res['secrets'] == {'http_pw': 'abc123'}
             assert normalize_yaml_files(res) == [
