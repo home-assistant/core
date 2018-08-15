@@ -121,11 +121,11 @@ async def async_setup_entry(hass, config_entry):
 
     deconz.start()
 
-    device_registry = async_get_device_registry(hass)
-    device_registry.async_get_or_create(
-        deconz.config.bridgeid, 'Dresden Elektronik', deconz.config.modelid,
-        ('Ethernet', config_entry.data['host']),
-        sw_version=deconz.config.swversion)
+    # device_registry = await async_get_device_registry(hass)
+    # device_registry.async_get_or_create(
+    #     ('bridgeid', deconz.config.bridgeid), 'Dresden Elektronik',
+    #     deconz.config.modelid, ('Ethernet', config_entry.data['host']),
+    #     sw_version=deconz.config.swversion)
 
     async def async_configure(call):
         """Set attribute of device in deCONZ.

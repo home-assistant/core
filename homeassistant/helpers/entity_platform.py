@@ -208,7 +208,8 @@ class EntityPlatform:
         hass = self.hass
         component_entities = set(hass.states.async_entity_ids(self.domain))
 
-        device_registry = hass.helpers.device_registry.async_get_registry()
+        device_registry = (await \
+            hass.helpers.device_registry.async_get_registry())
         entity_registry = (await \
             hass.helpers.entity_registry.async_get_registry())
 
@@ -274,8 +275,8 @@ class EntityPlatform:
 
             device = entity.device
             if device is not None:
-                device = device_registry.async_get_or_create(
-                    device['serial'], device['manufacturer'],
+                device = await device_registry.async_get_or_create(
+                    device['identifiers'], device['manufacturer'],
                     device['model'], device['connection'],
                     sw_version=device.get('sw_version'))
                 device_id = device.id

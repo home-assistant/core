@@ -209,11 +209,10 @@ class DeconzLight(Light):
         else:
             return None
         dev = {
-            'unique_id': serial,
-            'serial': serial,
+            'identifiers': [['serial', serial]],
             'manufacturer': self._light.manufacturer,
             'model': self._light.modelid,
-            'connection': ('Zigbee', serial),
+            'connection': ['Zigbee', serial],
             'sw_version': self._light.swversion,
         }
         return dev

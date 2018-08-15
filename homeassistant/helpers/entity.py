@@ -126,7 +126,10 @@ class Entity:
 
     @property
     def device(self):
-        """"""
+        """Return device specific attributes.
+
+        Implemented by platform classes.
+        """
         return None
 
     @property
