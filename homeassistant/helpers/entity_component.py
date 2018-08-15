@@ -142,6 +142,18 @@ class EntityComponent:
         return [entity for entity in self.entities
                 if entity.available and entity.entity_id in entity_ids]
 
+    @callback
+    def async_register_entity_service(self, name, schema, func):
+        """Register an entity service."""
+        async def handle_service(call):
+            """Handle the service."""
+            await self.hass.helpers.service.entity_service_call(
+                self._platforms.values(), func, call
+            )
+
+        self.hass.services.async_register(
+            self.domain, name, handle_service, schema)
+
     async def _async_setup_platform(self, platform_type, platform_config,
                                     discovery_info=None):
         """Set up a platform for this component."""
