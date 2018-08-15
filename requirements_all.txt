@@ -386,6 +386,9 @@ gearbest_parser==1.0.7
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.7
 
+# homeassistant.components.sensor.glances
+glances_api==0.1.0
+
 # homeassistant.components.notify.gntp
 gntp==1.0.3
 
