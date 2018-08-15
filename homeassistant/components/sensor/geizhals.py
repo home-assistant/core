@@ -129,12 +129,13 @@ class GeizParser:
         soup = bs4.BeautifulSoup(request.text, 'html.parser')
 
         # parse name
-        raw = soup.find_all('span', attrs={'itemprop': 'name'})
-        self.device_name = raw[1].string
+        raw = soup.find('h1', attrs={'class': 'gh-headline'})
+        self.device_name = raw.string
+
 
         # parse prices
         prices = []
-        for tmp in soup.find_all('span', attrs={'class': 'gh_price'}):
+        for tmp in soup.select('div.offer__price .gh_price'):
             matches = re.search(self.regex, tmp.string)
             raw = '{}.{}'.format(matches.group(1),
                                  matches.group(2))
