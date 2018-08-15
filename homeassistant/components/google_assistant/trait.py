@@ -580,20 +580,18 @@ class StartStopTrait(_Trait):
         domain = self.state.domain
         param_start = 'start'
         param_pause = 'pause'
-        start_stop_command = 'action.devices.commands.StartStop'
-        pause_unpause_command = 'action.devices.commands.PauseUnpause'
 
         if domain == vacuum.DOMAIN:
             service_domain = domain
             state = self.state.state
 
-            if command == start_stop_command:
+            if command == COMMAND_STARTSTOP:
                 if params[param_start]:
                     service = vacuum.SERVICE_START
                 else:
                     service = vacuum.SERVICE_STOP
 
-            if command == pause_unpause_command:
+            if command == COMMAND_PAUSEUNPAUSE:
                 if params[param_pause]:
                     if state == vacuum.STATE_CLEANING:
                         service = vacuum.SERVICE_PAUSE
