@@ -1,5 +1,5 @@
 """
-This component provides HA sensor support for the NOAA Tides and Currents API.
+This platform provides HA sensor support for the NOAA Tides and Currents API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.noaa_tides/
@@ -11,58 +11,62 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (ATTR_ATTRIBUTION, CONF_NAME)
+from homeassistant.const import (ATTR_ATTRIBUTION, CONF_NAME, CONF_UNIT_SYSTEM)
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['py_noaa==0.2.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_STA_ID = 'station_id'
-CONF_TZ = 'timezone'
-CONF_UNITS = 'units'
+CONF_STATION_ID = 'station_id'
+CONF_TIMEZONE = 'timezone'
 DEFAULT_ATTRIBUTION = "Data provided by NOAA"
 DEFAULT_NAME = 'NOAA Tides'
-DEFAULT_TZ = 'lst_ldt'
+DEFAULT_TIMEZONE = 'lst_ldt'
 
 SCAN_INTERVAL = timedelta(minutes=60)
 
-TZS = ['gmt', 'lst', 'lst_ldt']
-UNITS = ['english', 'metric']
+TIMEZONES = ['gmt', 'lst', 'lst_ldt']
+UNIT_SYSTEMS = ['english', 'metric']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_STA_ID): cv.string,
+    vol.Required(CONF_STATION_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TZ, default=DEFAULT_TZ): vol.In(TZS),
-    vol.Optional(CONF_UNITS): vol.In(UNITS),
+    vol.Optional(CONF_TIMEZONE, default=DEFAULT_TIMEZONE): vol.In(TIMEZONES),
+    vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNIT_SYSTEMS),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the NOAATidesAndCurrents sensor."""
-    sta = config[CONF_STA_ID]
+    station_id = config[CONF_STATION_ID]
     name = config.get(CONF_NAME)
-    t_z = config.get(CONF_TZ)
+    timezone = config.get(CONF_TIMEZONE)
 
-    if CONF_UNITS in config:
-        units = config[CONF_UNITS]
+    if CONF_UNIT_SYSTEM in config:
+        unit_system = config[CONF_UNIT_SYSTEM]
     elif hass.config.units.is_metric:
-        units = UNITS[1]
+        unit_system = UNIT_SYSTEMS[1]
     else:
-        units = UNITS[0]
+        unit_system = UNIT_SYSTEMS[0]
 
-    add_devices([NOAATidesAndCurrentsSensor(name, sta, t_z, units)], True)
+    noaa_sensor = NOAATidesAndCurrentsSensor(name, station_id,
+                                             timezone, unit_system)
+    noaa_sensor.update()
+    if noaa_sensor.data is None:
+        return
+    add_devices([noaa_sensor], True)
 
 
 class NOAATidesAndCurrentsSensor(Entity):
     """Representation of a NOAATidesAndCurrents sensor."""
 
-    def __init__(self, name, sta, t_z, units):
+    def __init__(self, name, station_id, timezone, unit_system):
         """Initialize the sensor."""
         self._name = name
-        self._sta = sta
-        self._tz = t_z
-        self._units = units
+        self._station_id = station_id
+        self._timezone = timezone
+        self._unit_system = unit_system
         self.data = None
 
     @property
@@ -74,33 +78,36 @@ class NOAATidesAndCurrentsSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes of this device."""
         attr = {ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION}
-        if self.data is not None:
-            if self.data['hi_lo'][1] == 'H':
-                attr['high_tide_time'] = \
-                    self.data.index[1].strftime('%I:%M %p')
-                attr['high_tide_height'] = self.data['predicted_wl'][1]
-                attr['low_tide_time'] = self.data.index[2].strftime('%I:%M %p')
-                attr['low_tide_height'] = self.data['predicted_wl'][2]
-            elif self.data['hi_lo'][1] == 'L':
-                attr['low_tide_time'] = self.data.index[1].strftime('%I:%M %p')
-                attr['low_tide_height'] = self.data['predicted_wl'][1]
-                attr['high_tide_time'] = \
-                    self.data.index[2].strftime('%I:%M %p')
-                attr['high_tide_height'] = self.data['predicted_wl'][2]
+        if self.data is None:
+            return attr
+        if self.data['hi_lo'][1] == 'H':
+            attr['high_tide_time'] = \
+                self.data.index[1].strftime('%Y-%m-%dT%H:%M')
+            attr['high_tide_height'] = self.data['predicted_wl'][1]
+            attr['low_tide_time'] = \
+                self.data.index[2].strftime('%Y-%m-%dT%H:%M')
+            attr['low_tide_height'] = self.data['predicted_wl'][2]
+        elif self.data['hi_lo'][1] == 'L':
+            attr['low_tide_time'] = \
+                self.data.index[1].strftime('%Y-%m-%dT%H:%M')
+            attr['low_tide_height'] = self.data['predicted_wl'][1]
+            attr['high_tide_time'] = \
+                self.data.index[2].strftime('%Y-%m-%dT%H:%M')
+            attr['high_tide_height'] = self.data['predicted_wl'][2]
         return attr
 
     @property
     def state(self):
         """Return the state of the device."""
-        if self.data is not None:
-            api_time = self.data.index[0]
-            if self.data['hi_lo'][0] == 'H':
-                tidetime = api_time.strftime('%I:%M %p')
-                return "High tide at {}".format(tidetime)
-            if self.data['hi_lo'][0] == 'L':
-                tidetime = api_time.strftime('%I:%M %p')
-                return "Low tide at {}".format(tidetime)
+        if self.data is None:
             return None
+        api_time = self.data.index[0]
+        if self.data['hi_lo'][0] == 'H':
+            tidetime = api_time.strftime('%-I:%M %p')
+            return "High tide at {}".format(tidetime)
+        if self.data['hi_lo'][0] == 'L':
+            tidetime = api_time.strftime('%-I:%M %p')
+            return "Low tide at {}".format(tidetime)
         return None
 
     def update(self):
@@ -113,12 +120,12 @@ class NOAATidesAndCurrentsSensor(Entity):
             df_predictions = coops.get_data(
                 begin_date=begin.strftime("%Y%m%d %H:%M"),
                 end_date=end.strftime("%Y%m%d %H:%M"),
-                stationid=self._sta,
+                stationid=self._station_id,
                 product="predictions",
                 datum="MLLW",
                 interval="hilo",
-                units=self._units,
-                time_zone=self._tz)
+                units=self._unit_system,
+                time_zone=self._timezone)
             self.data = df_predictions.head()
             _LOGGER.debug("Data = %s", self.data)
             _LOGGER.debug("Recent Tide data queried with start time set to %s",
