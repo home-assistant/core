@@ -10,7 +10,7 @@ from collections import namedtuple
 
 import voluptuous as vol
 from homeassistant.const import \
-    CONF_NAME, CONF_URL, CONF_SENSORS, CONF_PATH
+    CONF_NAME, CONF_URL, CONF_SENSORS, CONF_PATH, CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import \
     config_validation as cv, discovery
@@ -20,10 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "habitica"
 
 CONF_API_USER = "api_user"
-CONF_API_KEY = "api_key"
 
-CONF_EXCLUDE_NAMES = 'exclude_names'
-CONF_SENSORS_LIST = 'sensors_customization'
 ST = SensorType = namedtuple('SensorType', [
     "name", "icon", "unit", "path"
 ])
@@ -42,19 +39,46 @@ SENSORS_TYPES = {
     'gp': ST('Gold', 'mdi:coin', 'Gold', ["stats", "gp"]),
     'class': ST('Class', 'mdi:sword', '', ["stats", "class"])
 }
-ALL_SENSORS_TYPES = list(SENSORS_TYPES.keys())
 
 INSTANCE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_URL): cv.url,
+    vol.Optional(CONF_URL, default='https://habitica.com'): cv.url,
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_API_USER): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
     vol.Optional(CONF_SENSORS):
-        vol.All(cv.ensure_list, [vol.In(ALL_SENSORS_TYPES)])
+        vol.All(
+            cv.ensure_list,
+            vol.Schema(vol.Unique()),
+            [vol.In(list(SENSORS_TYPES))])
 })
 
+has_unique_values = vol.Schema(vol.Unique())  # pylint: disable=invalid-name
+# because we want a handy alias
 
-INSTANCE_LIST_SCHEMA = vol.All(cv.ensure_list, [INSTANCE_SCHEMA])
+
+def has_all_unique_users(value):
+    """Validate that all `api_user`s are unique."""
+    api_users = [user[CONF_API_USER] for user in value]
+    has_unique_values(api_users)
+    return value
+
+
+def has_all_unique_users_names(value):
+    """Validate that all user's names are unique and set if any is set."""
+    names = [user.get(CONF_NAME) for user in value]
+    if None in names and any(name is not None for name in names):
+        raise vol.Invalid(
+            'user names of all users must be set if any is set')
+    if not all(name is None for name in names):
+        has_unique_values(names)
+    return value
+
+
+INSTANCE_LIST_SCHEMA = vol.All(
+    cv.ensure_list,
+    has_all_unique_users,
+    has_all_unique_users_names,
+    [INSTANCE_SCHEMA])
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: INSTANCE_LIST_SCHEMA
@@ -64,7 +88,8 @@ SERVICE_API_CALL = 'api_call'
 ATTR_NAME = CONF_NAME
 ATTR_PATH = CONF_PATH
 ATTR_ARGS = "args"
-EVENT_API_CALL_SUCCESS = "_".join((DOMAIN, SERVICE_API_CALL, "success"))
+EVENT_API_CALL_SUCCESS = "{0}_{1}_{2}".format(
+    DOMAIN, SERVICE_API_CALL, "success")
 
 SERVICE_API_CALL_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): str,
@@ -75,7 +100,7 @@ SERVICE_API_CALL_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the habitica service."""
-    conf = config.get(DOMAIN, None)
+    conf = config[DOMAIN]
     data = hass.data[DOMAIN] = {}
     websession = async_get_clientsession(hass)
     from habitipy.aio import HabitipyAsync
@@ -87,11 +112,11 @@ async def async_setup(hass, config):
             return super().__call__(websession, **kwargs)
 
     for instance in conf:
-        url = instance.get(CONF_URL, 'https://habitica.com')
+        url = instance[CONF_URL]
         username = instance[CONF_API_USER]
         password = instance[CONF_API_KEY]
         name = instance.get(CONF_NAME)
-        config_dict = dict(url=url, login=username, password=password)
+        config_dict = {"url": url, "login": username, "password": password}
         api = HAHabitipyAsync(config_dict)
         user = await api.user.get()
         if name is None:
@@ -104,7 +129,8 @@ async def async_setup(hass, config):
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass, "sensor", DOMAIN,
-                    dict(name=name, sensors=instance[CONF_SENSORS]), config))
+                    {"name": name, "sensors": instance[CONF_SENSORS]},
+                    config))
 
     async def handle_api_call(call):
         name = call.data[ATTR_NAME]
@@ -121,11 +147,12 @@ async def async_setup(hass, config):
             _LOGGER.error(
                 "API_CALL: Path %s is invalid"
                 " for api on '{%s}' element", path, element)
+            return
         kwargs = call.data.get(ATTR_ARGS, {})
         data = await api(**kwargs)
-        hass.bus.fire(EVENT_API_CALL_SUCCESS, dict(
-            name=name, path=path, data=data
-        ))
+        hass.bus.fire(EVENT_API_CALL_SUCCESS, {
+            "name": name, "path": path, "data": data
+        })
 
     hass.services.async_register(
         DOMAIN, SERVICE_API_CALL,
