@@ -86,7 +86,7 @@ def setup_account(account_config: dict, hass, name: str) \
     region = account_config[CONF_REGION]
     enable_services = account_config[CONF_ENABLE_SERVICES]
     _LOGGER.debug('Adding new account %s', name)
-    cd_account = BMWConnectedDriveAccount(username, password, region, name, 
+    cd_account = BMWConnectedDriveAccount(username, password, region, name,
                                           enable_services)
 
     def execute_service(call):
