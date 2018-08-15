@@ -24,8 +24,6 @@ async def async_setup_platform(
 
     name = discovery_info[habitica.CONF_NAME]
     sensors = discovery_info[habitica.CONF_SENSORS]
-    if not sensors:
-        sensors = list(habitica.SENSORS_TYPES)
     sensor_data = HabitipyData(hass.data[habitica.DOMAIN][name])
     await sensor_data.update()
     async_add_devices([

@@ -45,10 +45,10 @@ INSTANCE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME): cv.string,
     vol.Required(CONF_API_USER): cv.string,
     vol.Required(CONF_API_KEY): cv.string,
-    vol.Optional(CONF_SENSORS):
+    vol.Optional(CONF_SENSORS, default=list(SENSORS_TYPES)):
         vol.All(
             cv.ensure_list,
-            vol.Schema(vol.Unique()),
+            vol.Unique(),
             [vol.In(list(SENSORS_TYPES))])
 })
 
@@ -150,7 +150,7 @@ async def async_setup(hass, config):
             return
         kwargs = call.data.get(ATTR_ARGS, {})
         data = await api(**kwargs)
-        hass.bus.fire(EVENT_API_CALL_SUCCESS, {
+        await hass.bus.async_fire(EVENT_API_CALL_SUCCESS, {
             "name": name, "path": path, "data": data
         })
 
