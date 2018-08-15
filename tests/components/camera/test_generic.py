@@ -1,5 +1,6 @@
 """The tests for generic camera component."""
 import asyncio
+
 from unittest import mock
 
 from homeassistant.setup import async_setup_component
@@ -33,7 +34,7 @@ def test_fetching_url(aioclient_mock, hass, aiohttp_client):
 
 
 @asyncio.coroutine
-def test_fetching_url_without_ssl_verification(aioclient_mock, hass, aiohttp_client):
+def test_fetching_without_verify_ssl(aioclient_mock, hass, aiohttp_client):
     """Test that it fetches the given url when ssl verify is off."""
     aioclient_mock.get('https://example.com', text='hello world')
 
@@ -55,7 +56,7 @@ def test_fetching_url_without_ssl_verification(aioclient_mock, hass, aiohttp_cli
 
 
 @asyncio.coroutine
-def test_fetching_url_with_ssl_verification(aioclient_mock, hass, aiohttp_client):
+def test_fetching_url_with_verify_ssl(aioclient_mock, hass, aiohttp_client):
     """Test that it fetches the given url when ssl verify is explicitly on."""
     aioclient_mock.get('https://example.com', text='hello world')
 
