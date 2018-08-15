@@ -23,7 +23,6 @@ class DeviceEntry:
     model = attr.ib(type=str)
     connection = attr.ib(type=tuple)
     sw_version = attr.ib(type=str, default=None)
-    config_entry_id = attr.ib(type=set, default=attr.Factory(set))
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
 
 
@@ -46,8 +45,7 @@ class DeviceRegistry:
 
     @callback
     def async_get_or_create(self, serial, manufacturer, model,
-                            connection, *, sw_version=None,
-                            config_entry_id=None):
+                            connection, *, sw_version=None):
         """Get device. Create if it doesn't exist"""
         device = self.async_get_device(serial, connection)
         if device is None:
@@ -59,7 +57,6 @@ class DeviceRegistry:
                 sw_version=sw_version
             )
             self.devices[device.id] = device
-        device.config_entry_id.add(config_entry_id)
         return device
 
 

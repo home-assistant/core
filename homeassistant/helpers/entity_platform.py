@@ -277,8 +277,7 @@ class EntityPlatform:
                 device = device_registry.async_get_or_create(
                     device['serial'], device['manufacturer'],
                     device['model'], device['connection'],
-                    sw_version=device.get('sw_version'),
-                    config_entry_id=config_entry_id)
+                    sw_version=device.get('sw_version'))
                 device_id = device.id
             else:
                 device_id = None
