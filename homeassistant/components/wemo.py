@@ -37,11 +37,35 @@ KNOWN_DEVICES = []
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def coerce_host_port(value):
+    """Validate that provided value is either just host or host:port.
+    Returns (host, None) or (host, port) respectively."""
+    host, _, port = value.partition(':')
+
+    if not host:
+        raise vol.Invalid('host cannot be empty')
+
+    if port:
+        try:
+            port = cv.port(port)
+        except vol.Invalid as exc:
+            _slice = slice(value.index(':') + 1, len(value))
+            exc.path.append(_slice)
+            raise
+    else:
+        port = None
+
+    return host, port
+
+
 CONF_STATIC = 'static'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_STATIC, default=[]): vol.Schema([cv.string])
+        vol.Optional(CONF_STATIC, default=[]): vol.Schema([
+            vol.All(cv.string, coerce_host_port)
+        ])
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -84,13 +108,9 @@ def setup(hass, config):
         """Determine setup.xml url for given device."""
         return 'http://{}:{}/setup.xml'.format(device.host, device.port)
 
-    def setup_url_for_address(address):
-        """Determine setup.xml url for given address."""
-        host, _, port = address.partition(':')
-
-        if port:
-            port = cv.port(port)
-        else:
+    def setup_url_for_address(host, port):
+        """Determine setup.xml url for given host and port pair."""
+        if not port:
             port = pywemo.ouimeaux_device.probe_wemo(host)
 
         if not port:
@@ -100,15 +120,13 @@ def setup(hass, config):
 
     devices = []
 
-    for address in config.get(DOMAIN, {}).get(CONF_STATIC, []):
-        try:
-            url = setup_url_for_address(address)
-        except vol.Invalid as err:
-            _LOGGER.error('Invalid address %s (%s)', address, err)
-            return False
+    for host, port in config.get(DOMAIN, {}).get(CONF_STATIC, []):
+        url = setup_url_for_address(host, port)
 
         if not url:
-            _LOGGER.error('Unable to get description url for %s', address)
+            _LOGGER.error(
+                'Unable to get description url for %s',
+                '{}:{}'.format(host, port) if port else host)
             return False
 
         try:
