@@ -178,7 +178,7 @@ def async_setup(hass, config):
     refresh_token = None
     if 'hassio_user' in data:
         user = yield from hass.auth.async_get_user(data['hassio_user'])
-        if user:
+        if user and user.refresh_tokens:
             refresh_token = list(user.refresh_tokens.values())[0]
 
     if refresh_token is None:
