@@ -20,8 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'bmw_connected_drive'
 CONF_REGION = 'region'
-CONF_ENABLE_SERVICES = 'serviceenabled'
-
+CONF_ENABLE_SERVICES = 'services'
 ATTR_VIN = 'vin'
 
 ACCOUNT_SCHEMA = vol.Schema({
@@ -85,10 +84,9 @@ def setup_account(account_config: dict, hass, name: str) \
     username = account_config[CONF_USERNAME]
     password = account_config[CONF_PASSWORD]
     region = account_config[CONF_REGION]
-    services_enabled = account_config[CONF_ENABLE_SERVICES]
-		
+    enable_services = account_config[CONF_ENABLE_SERVICES]
     _LOGGER.debug('Adding new account %s', name)
-    cd_account = BMWConnectedDriveAccount(username, password, region, name,services_enabled)
+    cd_account = BMWConnectedDriveAccount(username, password, region, name,enable_services)
 
     def execute_service(call):
         """Execute a service for a vehicle.
@@ -104,7 +102,7 @@ def setup_account(account_config: dict, hass, name: str) \
         function_name = _SERVICE_MAP[call.service]
         function_call = getattr(vehicle.remote_services, function_name)
         function_call()
-    if services_enabled:
+    if enable_services:
         # register the remote services
         for service in _SERVICE_MAP:
             hass.services.register(
@@ -127,14 +125,14 @@ class BMWConnectedDriveAccount:
     """Representation of a BMW vehicle."""
 
     def __init__(self, username: str, password: str, region_str: str,
-                 name: str, services_enabled=True) -> None:
+                 name: str, enable_services=True) -> None:
         """Constructor."""
         from bimmer_connected.account import ConnectedDriveAccount
         from bimmer_connected.country_selector import get_region_from_name
 
         region = get_region_from_name(region_str)
 
-        self.services_enabled = services_enabled
+        self.enable_services = enable_services
         self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
         self._update_listeners = []
