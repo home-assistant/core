@@ -40,7 +40,9 @@ _LOGGER = logging.getLogger(__name__)
 
 def coerce_host_port(value):
     """Validate that provided value is either just host or host:port.
-    Returns (host, None) or (host, port) respectively."""
+
+    Returns (host, None) or (host, port) respectively.
+    """
     host, _, port = value.partition(':')
 
     if not host:
