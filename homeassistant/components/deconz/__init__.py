@@ -123,8 +123,8 @@ async def async_setup_entry(hass, config_entry):
 
     device_registry = async_get_device_registry(hass)
     device_registry.async_get_or_create(
-        deconz.config.bridgeid, deconz.config.bridgeid, 'Dresden Elektronik',
-        deconz.config.modelid, ('Ethernet', config_entry.data['host']),
+        deconz.config.bridgeid, 'Dresden Elektronik', deconz.config.modelid,
+        ('Ethernet', config_entry.data['host']),
         sw_version=deconz.config.swversion,
         config_entry_id=config_entry.entry_id)
 

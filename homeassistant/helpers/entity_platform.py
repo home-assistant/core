@@ -274,12 +274,11 @@ class EntityPlatform:
 
             if entity.device is not None:
                 device = device_registry.async_get_or_create(
-                    entity.device['unique_id'], entity.device['serial'],
-                    entity.device['manufacturer'], entity.device['model'],
-                    entity.device['connection'],
+                    entity.device['serial'], entity.device['manufacturer'],
+                    entity.device['model'], entity.device['connection'],
                     sw_version=entity.device.get('sw_version'),
                     config_entry_id=config_entry_id)
-                device_id = device.unique_id
+                device_id = device.id
             else:
                 device_id = None
 

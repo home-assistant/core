@@ -2,6 +2,7 @@
 """
 
 import logging
+import uuid
 
 import attr
 
@@ -17,13 +18,13 @@ DATA_REGISTRY = 'device_registry'
 class DeviceEntry:
     """Device Registry Entry."""
 
-    unique_id = attr.ib(type=str)
     serial = attr.ib(type=str)
     manufacturer = attr.ib(type=str)
     model = attr.ib(type=str)
     connection = attr.ib(type=tuple)
     sw_version = attr.ib(type=str, default=None)
     config_entry_id = attr.ib(type=set, default=attr.Factory(set))
+    id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
 
 
 class DeviceRegistry:
@@ -44,20 +45,20 @@ class DeviceRegistry:
         return None
 
     @callback
-    def async_get_or_create(self, unique_id, serial, manufacturer, model,
+    def async_get_or_create(self, serial, manufacturer, model,
                             connection, *, sw_version=None,
                             config_entry_id=None):
         """Get device. Create if it doesn't exist"""
         device = self.async_get_device(serial, connection)
         if device is None:
-            self.devices[unique_id] = device = DeviceEntry(
-                unique_id=unique_id,
+            device = DeviceEntry(
                 serial=serial,
                 manufacturer=manufacturer,
                 model=model,
                 connection=connection,
                 sw_version=sw_version
             )
+            self.devices[device.id] = device
         device.config_entry_id.add(config_entry_id)
         return device
 
