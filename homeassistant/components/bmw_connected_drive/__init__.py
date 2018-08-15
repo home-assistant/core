@@ -20,6 +20,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'bmw_connected_drive'
 CONF_REGION = 'region'
+CONF_ENABLE_SERVICES = 'serviceenabled'
+
 ATTR_VIN = 'vin'
 
 ACCOUNT_SCHEMA = vol.Schema({
@@ -27,6 +29,7 @@ ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_REGION): vol.Any('north_america', 'china',
                                        'rest_of_world'),
+    vol.Optional(CONF_ENABLE_SERVICES, default=True): cv.boolean,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -82,8 +85,10 @@ def setup_account(account_config: dict, hass, name: str) \
     username = account_config[CONF_USERNAME]
     password = account_config[CONF_PASSWORD]
     region = account_config[CONF_REGION]
+    services_enabled = account_config[CONF_ENABLE_SERVICES]
+		
     _LOGGER.debug('Adding new account %s', name)
-    cd_account = BMWConnectedDriveAccount(username, password, region, name)
+    cd_account = BMWConnectedDriveAccount(username, password, region, name,services_enabled)
 
     def execute_service(call):
         """Execute a service for a vehicle.
@@ -99,13 +104,13 @@ def setup_account(account_config: dict, hass, name: str) \
         function_name = _SERVICE_MAP[call.service]
         function_call = getattr(vehicle.remote_services, function_name)
         function_call()
-
-    # register the remote services
-    for service in _SERVICE_MAP:
-        hass.services.register(
-            DOMAIN, service,
-            execute_service,
-            schema=SERVICE_SCHEMA)
+    if services_enabled:
+        # register the remote services
+        for service in _SERVICE_MAP:
+            hass.services.register(
+                DOMAIN, service,
+                execute_service,
+                schema=SERVICE_SCHEMA)
 
     # update every UPDATE_INTERVAL minutes, starting now
     # this should even out the load on the servers
@@ -122,13 +127,14 @@ class BMWConnectedDriveAccount:
     """Representation of a BMW vehicle."""
 
     def __init__(self, username: str, password: str, region_str: str,
-                 name: str) -> None:
+                 name: str, services_enabled=True) -> None:
         """Constructor."""
         from bimmer_connected.account import ConnectedDriveAccount
         from bimmer_connected.country_selector import get_region_from_name
 
         region = get_region_from_name(region_str)
 
+        self.services_enabled = services_enabled
         self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
         self._update_listeners = []
