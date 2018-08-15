@@ -9,9 +9,7 @@ import asyncio
 import logging
 import os
 import json
-import sh
 import mimetypes
-from urllib.parse import quote
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
@@ -221,6 +219,7 @@ class LocalData:
 
 
     def rclone_append_listremotes(self, say):
+        import sh
         self.folders = [ais_global.G_EMPTY_OPTION]
         self.folders.append('..')
         for l in sh.rclone('listremotes', G_RCLONE_CONF):
@@ -260,7 +259,6 @@ class LocalData:
         self.buffer += line
 
     def interact_serve_output(self, line):
-        _LOGGER.error('line: ' + str(line))
         if "NOTICE" in line:
             self.rclone_serve_done(True)
         elif "ERROR" in line:
@@ -353,6 +351,7 @@ class LocalData:
                 })
 
     def rclone_browse(self, path, say):
+        import sh
         if say:
             if path == G_CLOUD_PREFIX + self.rclone_remote_from_path(path):
                 self.text_to_say = self.rclone_remote_from_path(path)
