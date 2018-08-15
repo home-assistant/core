@@ -33,6 +33,50 @@ def test_fetching_url(aioclient_mock, hass, aiohttp_client):
 
 
 @asyncio.coroutine
+def test_fetching_url_without_ssl_verification(aioclient_mock, hass, aiohttp_client):
+    """Test that it fetches the given url when ssl verify is off."""
+    aioclient_mock.get('https://example.com', text='hello world')
+
+    yield from async_setup_component(hass, 'camera', {
+        'camera': {
+            'name': 'config_test',
+            'platform': 'generic',
+            'still_image_url': 'https://example.com',
+            'username': 'user',
+            'password': 'pass',
+            'verify_ssl': 'false',
+        }})
+
+    client = yield from aiohttp_client(hass.http.app)
+
+    resp = yield from client.get('/api/camera_proxy/camera.config_test')
+
+    assert resp.status == 200
+
+
+@asyncio.coroutine
+def test_fetching_url_with_ssl_verification(aioclient_mock, hass, aiohttp_client):
+    """Test that it fetches the given url when ssl verify is explicitly on."""
+    aioclient_mock.get('https://example.com', text='hello world')
+
+    yield from async_setup_component(hass, 'camera', {
+        'camera': {
+            'name': 'config_test',
+            'platform': 'generic',
+            'still_image_url': 'https://example.com',
+            'username': 'user',
+            'password': 'pass',
+            'verify_ssl': 'true',
+        }})
+
+    client = yield from aiohttp_client(hass.http.app)
+
+    resp = yield from client.get('/api/camera_proxy/camera.config_test')
+
+    assert resp.status == 200
+
+
+@asyncio.coroutine
 def test_limit_refetch(aioclient_mock, hass, aiohttp_client):
     """Test that it fetches the given url."""
     aioclient_mock.get('http://example.com/5a', text='hello world')
