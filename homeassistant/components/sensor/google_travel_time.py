@@ -148,8 +148,7 @@ class GoogleTravelTimeSensor(Entity):
         elif options[CONF_MODE] in TRAVEL_MODE:
             self._mode = options[CONF_MODE]
         else:
-            _LOGGER.warning('Invalid travel mode: {}'
-                            .format(options[CONF_MODE]))
+            _LOGGER.warning('Invalid travel mode: %s', options[CONF_MODE])
 
         # Check if arrival_time or departure_time is a trackable entity.
         # Only process one - departure time takes precedence.
@@ -250,18 +249,14 @@ class GoogleTravelTimeSensor(Entity):
                 self._mode = mode_entity.state
                 options[CONF_MODE] = mode_entity.state
             else:
-                _LOGGER.warning('Invalid travel mode: {}'.format(
-                    mode_entity.state)
-                )
+                _LOGGER.warning('Invalid travel mode: %s', mode_entity.state)
 
         if hasattr(self, '_departure_time_entity_id'):
             departure_time_entity = self._hass.states.get(
-                self._departure_time_entity_id
-            )
+                self._departure_time_entity_id)
             if ':' in departure_time_entity.state:
                 self._departure_time = convert_time_to_utc(
-                    departure_time_entity.state
-                )
+                    departure_time_entity.state)
                 options['departure_time'] = departure_time_entity.state
             else:
                 self._departure_time = int(departure_time_entity.state)
@@ -269,8 +264,7 @@ class GoogleTravelTimeSensor(Entity):
 
         elif hasattr(self, '_arrival_time_entity_id'):
             arrival_time_entity = self._hass.states.get(
-                self._arrival_time_entity_id
-            )
+                self._arrival_time_entity_id)
             if ':' in arrival_time_entity.state:
                 self._arrival_time = int(convert_time_to_utc(
                     arrival_time_entity.state
