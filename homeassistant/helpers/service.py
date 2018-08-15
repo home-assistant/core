@@ -203,14 +203,14 @@ async def entity_service_call(hass, platforms, func, call):
         _handle_service_platform_call(func, data, [
             entity for entity in platform.entities.values()
             if all_entities or entity.entity_id in entity_ids
-        ]) for platform in platforms
+        ], call.context) for platform in platforms
     ]
 
     if tasks:
         await asyncio.wait(tasks)
 
 
-async def _handle_service_platform_call(func, data, entities):
+async def _handle_service_platform_call(func, data, entities, context):
     """Handle a function call."""
     tasks = []
 
@@ -224,7 +224,7 @@ async def _handle_service_platform_call(func, data, entities):
             await func(entity, data)
 
         if entity.should_poll:
-            tasks.append(entity.async_update_ha_state(True))
+            tasks.append(entity.async_update_ha_state(True, context))
 
     if tasks:
         await asyncio.wait(tasks)
