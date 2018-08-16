@@ -345,6 +345,8 @@ async def async_setup(hass, config):
 
         update_tasks = []
         for light in target_lights:
+            light.async_set_context(service.context)
+
             pars = params
             if not pars:
                 pars = params.copy()
@@ -356,7 +358,7 @@ async def async_setup(hass, config):
                 continue
 
             update_tasks.append(
-                light.async_update_ha_state(True, service.context))
+                light.async_update_ha_state(True))
 
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)
