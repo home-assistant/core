@@ -93,6 +93,7 @@ class Geizwatch(Entity):
                  'price4': self.device.prices[3]}
         return attrs
 
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest price from geizhals and updates the state."""
         self.device = self.geizhals.parse()
