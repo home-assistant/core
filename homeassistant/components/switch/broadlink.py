@@ -384,7 +384,7 @@ class BroadlinkMP1Switch:
         self._states = None
         self._available = False
         self._last_update_time = datetime.now()
-        self._update_slot= 1
+        self._update_slot = 1
 
     @property
     def available(self) -> bool:
