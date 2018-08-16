@@ -7,7 +7,7 @@ https://home-assistant.io/components/switch.broadlink/
 import asyncio
 from base64 import b64decode, b64encode
 import binascii
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import socket
 
@@ -318,11 +318,17 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         self._command_off = 0
         self._slot = slot
         self._parent_device = parent_device
+        self._update_force = True   #force update()
 
     @property
     def assumed_state(self):
         """Return true if unable to access real state of entity."""
         return False
+
+    @property
+    def available(self) -> bool:
+        """Return true if power strip is available."""
+        return self._parent_device.available
 
     def _sendpacket(self, packet, retry=2):
         """Send packet to device."""
@@ -342,10 +348,30 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         """Return the polling state."""
         return True
 
+    def turn_on(self, **kwargs):    #新增
+        """Turn the device on."""
+        if self._sendpacket(self._command_on):
+            self._state = True
+            self._update_force = True
+            self.schedule_update_ha_state()
+
+    def turn_off(self, **kwargs):   #新增
+        """Turn the device off."""
+        if self._sendpacket(self._command_off):
+            self._state = False
+            self._update_force = True
+            self.schedule_update_ha_state()
+
     def update(self):
         """Trigger update for all switches on the parent device."""
-        self._parent_device.update()
+        # in HA's auto update task, only update_slot call update()
+        # TIME_BETWEEN_UPDATES works with a small SCAN_INTERVAL
+        if not self._update_force and (datetime.now()-self._parent_device.last_update_time < TIME_BETWEEN_UPDATES or self._parent_device._update_slot !=self._slot):
+            pass
+        else:
+            self._parent_device.update()
         self._state = self._parent_device.get_outlet_status(self._slot)
+        self._update_force = False
 
 
 class BroadlinkMP1Switch:
@@ -355,30 +381,50 @@ class BroadlinkMP1Switch:
         """Initialize the switch."""
         self._device = device
         self._states = None
+        self._available = False
+        self._last_update_time = datetime.now()
+        self._update_slot= 1
+
+    @property
+    def available(self) -> bool:
+        """Return true if power strip is available."""
+        return self._available
+
+    @property
+    def last_update_time(self):
+        return self._last_update_time
 
     def get_outlet_status(self, slot):
         """Get status of outlet from cached status list."""
+        if self._states is None:
+            return None
         return self._states['s{}'.format(slot)]
 
-    @Throttle(TIME_BETWEEN_UPDATES)
     def update(self):
         """Fetch new state data for this device."""
         self._update()
 
     def _update(self, retry=2):
         """Update the state of the device."""
+        self._last_update_time = datetime.now()
         try:
             states = self._device.check_power()
         except (socket.timeout, ValueError) as error:
             if retry < 1:
-                _LOGGER.error(error)
+                if self._available: #announce once
+                    _LOGGER.error("Unable to update power strip status, error: %s", error)
+                self._available = False
                 return
             if not self._auth():
+                if self._available: #announce once
+                    _LOGGER.error("Unable to update power strip status, error: auth failure")
+                self._available = False
                 return
             return self._update(max(0, retry-1))
         if states is None and retry > 0:
             return self._update(max(0, retry-1))
         self._states = states
+        self._available = True
 
     def _auth(self, retry=2):
         """Authenticate the device."""
