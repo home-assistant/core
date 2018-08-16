@@ -138,7 +138,7 @@ apns2==0.3.0
 asterisk_mbox==0.4.0
 
 # homeassistant.components.media_player.dlna_dmr
-async-upnp-client==0.12.2
+async-upnp-client==0.12.3
 
 # homeassistant.components.light.avion
 # avion==0.7
