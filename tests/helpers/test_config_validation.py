@@ -523,21 +523,6 @@ def test_has_at_least_one_key():
         schema(value)
 
 
-def test_has_at_least_one_key_value():
-    """Test has_at_least_one_key_value validator."""
-    schema = vol.Schema(cv.has_at_least_one_key_value(('drink', 'beer'),
-                                                      ('drink', 'soda'),
-                                                      ('food', 'maultaschen')))
-
-    for value in (None, [], {}, {'wine': None}, {'drink': 'water'}):
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
-    for value in ({'drink': 'beer'}, {'food': 'maultaschen'},
-                  {'drink': 'soda', 'food': 'maultaschen'}):
-        schema(value)
-
-
 def test_enum():
     """Test enum validator."""
     class TestEnum(enum.Enum):
