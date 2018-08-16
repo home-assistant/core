@@ -111,7 +111,7 @@ aiolifx_effects==0.1.2
 aiopvapi==1.5.4
 
 # homeassistant.components.cover.aladdin_connect
-aladdin_connect==0.1
+aladdin_connect==0.3
 
 # homeassistant.components.alarmdecoder
 alarmdecoder==1.13.2
