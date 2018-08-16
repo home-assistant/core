@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'bmw_connected_drive'
 CONF_REGION = 'region'
-CONF_ENABLE_SERVICES = 'services'
+CONF_READ_ONLY = 'read_only'
 ATTR_VIN = 'vin'
 
 ACCOUNT_SCHEMA = vol.Schema({
@@ -28,7 +28,7 @@ ACCOUNT_SCHEMA = vol.Schema({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Required(CONF_REGION): vol.Any('north_america', 'china',
                                        'rest_of_world'),
-    vol.Optional(CONF_ENABLE_SERVICES, default=True): cv.boolean,
+    vol.Optional(CONF_READ_ONLY, default=False): cv.boolean,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -84,10 +84,10 @@ def setup_account(account_config: dict, hass, name: str) \
     username = account_config[CONF_USERNAME]
     password = account_config[CONF_PASSWORD]
     region = account_config[CONF_REGION]
-    enable_services = account_config[CONF_ENABLE_SERVICES]
+    read_only = account_config[CONF_READ_ONLY]
     _LOGGER.debug('Adding new account %s', name)
     cd_account = BMWConnectedDriveAccount(username, password, region, name,
-                                          enable_services)
+                                          read_only)
 
     def execute_service(call):
         """Execute a service for a vehicle.
@@ -103,7 +103,7 @@ def setup_account(account_config: dict, hass, name: str) \
         function_name = _SERVICE_MAP[call.service]
         function_call = getattr(vehicle.remote_services, function_name)
         function_call()
-    if enable_services:
+    if not read_only:
         # register the remote services
         for service in _SERVICE_MAP:
             hass.services.register(
@@ -126,14 +126,14 @@ class BMWConnectedDriveAccount:
     """Representation of a BMW vehicle."""
 
     def __init__(self, username: str, password: str, region_str: str,
-                 name: str, enable_services=True) -> None:
+                 name: str, read_only) -> None:
         """Constructor."""
         from bimmer_connected.account import ConnectedDriveAccount
         from bimmer_connected.country_selector import get_region_from_name
 
         region = get_region_from_name(region_str)
 
-        self.enable_services = enable_services
+        self.read_only = read_only
         self.account = ConnectedDriveAccount(username, password, region)
         self.name = name
         self._update_listeners = []
