@@ -1,4 +1,5 @@
 """Service calling related helpers."""
+import asyncio
 import logging
 from os import path
 
@@ -178,3 +179,52 @@ async def async_get_all_descriptions(hass):
             descriptions[domain][service] = description
 
     return descriptions
+
+
+@bind_hass
+async def entity_service_call(hass, platforms, func, call):
+    """Handle an entity service call.
+
+    Calls all platforms simultaneously.
+    """
+    tasks = []
+    all_entities = ATTR_ENTITY_ID not in call.data
+    if not all_entities:
+        entity_ids = set(
+            extract_entity_ids(hass, call, True))
+
+    if isinstance(func, str):
+        data = {key: val for key, val in call.data.items()
+                if key != ATTR_ENTITY_ID}
+    else:
+        data = call
+
+    tasks = [
+        _handle_service_platform_call(func, data, [
+            entity for entity in platform.entities.values()
+            if all_entities or entity.entity_id in entity_ids
+        ], call.context) for platform in platforms
+    ]
+
+    if tasks:
+        await asyncio.wait(tasks)
+
+
+async def _handle_service_platform_call(func, data, entities, context):
+    """Handle a function call."""
+    tasks = []
+
+    for entity in entities:
+        if not entity.available:
+            continue
+
+        if isinstance(func, str):
+            await getattr(entity, func)(**data)
+        else:
+            await func(entity, data)
+
+        if entity.should_poll:
+            tasks.append(entity.async_update_ha_state(True, context))
+
+    if tasks:
+        await asyncio.wait(tasks)
