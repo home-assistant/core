@@ -348,14 +348,14 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         """Return the polling state."""
         return True
 
-    def turn_on(self, **kwargs):    #新增
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         if self._sendpacket(self._command_on):
             self._state = True
             self._update_force = True
             self.schedule_update_ha_state()
 
-    def turn_off(self, **kwargs):   #新增
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         if self._sendpacket(self._command_off):
             self._state = False
