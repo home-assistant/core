@@ -5,14 +5,17 @@ It will be removed when auth system production ready
 """
 from collections import OrderedDict
 import hmac
+from typing import Any, Dict, Optional
 
 import voluptuous as vol
 
+from homeassistant.components.http import HomeAssistantHTTP  # noqa: F401
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant import data_entry_flow
 from homeassistant.core import callback
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
+from ..models import Credentials, UserMeta
 
 
 USER_SCHEMA = vol.Schema({
@@ -36,25 +39,29 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = 'Legacy API Password'
 
-    async def async_credential_flow(self, context):
+    async def async_credential_flow(
+            self, context: Optional[Dict]) -> 'LoginFlow':
         """Return a flow to login."""
         return LoginFlow(self)
 
     @callback
-    def async_validate_login(self, password):
+    def async_validate_login(self, password: str) -> None:
         """Helper to validate a username and password."""
-        if not hasattr(self.hass, 'http'):
+        hass_http = getattr(self.hass, 'http', None)  # type: HomeAssistantHTTP
+
+        if not hass_http:
             raise ValueError('http component is not loaded')
 
-        if self.hass.http.api_password is None:
+        if hass_http.api_password is None:
             raise ValueError('http component is not configured using'
                              ' api_password')
 
-        if not hmac.compare_digest(self.hass.http.api_password.encode('utf-8'),
+        if not hmac.compare_digest(hass_http.api_password.encode('utf-8'),
                                    password.encode('utf-8')):
             raise InvalidAuthError
 
-    async def async_get_or_create_credentials(self, flow_result):
+    async def async_get_or_create_credentials(
+            self, flow_result: Dict[str, str]) -> Credentials:
         """Return LEGACY_USER always."""
         for credential in await self.async_credentials():
             if credential.data['username'] == LEGACY_USER:
@@ -64,26 +71,25 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
             'username': LEGACY_USER
         })
 
-    async def async_user_meta_for_credentials(self, credentials):
+    async def async_user_meta_for_credentials(
+            self, credentials: Credentials) -> UserMeta:
         """
         Set name as LEGACY_USER always.
 
         Will be used to populate info when creating a new user.
         """
-        return {
-            'name': LEGACY_USER,
-            'is_active': True,
-        }
+        return UserMeta(name=LEGACY_USER, is_active=True)
 
 
 class LoginFlow(data_entry_flow.FlowHandler):
     """Handler for the login flow."""
 
-    def __init__(self, auth_provider):
+    def __init__(self, auth_provider: LegacyApiPasswordAuthProvider) -> None:
         """Initialize the login flow."""
         self._auth_provider = auth_provider
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+            self, user_input: Dict[str, str] = None) -> Dict[str, Any]:
         """Handle the step of the form."""
         errors = {}
 
@@ -100,7 +106,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
                     data={}
                 )
 
-        schema = OrderedDict()
+        schema = OrderedDict()  # type: Dict[str, type]
         schema['password'] = str
 
         return self.async_show_form(
