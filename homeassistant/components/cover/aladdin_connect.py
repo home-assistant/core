@@ -14,7 +14,7 @@ from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, STATE_CLOSED,
                                  STATE_OPENING, STATE_CLOSING, STATE_OPEN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['aladdin_connect==0.2']
+REQUIREMENTS = ['aladdin_connect==0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ class AladdinDevice(CoverDevice):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return f'{self._device_id}-{self._number}'
+        return '{}-{}'.format(self._device_id, self._number)
 
     @property
     def name(self):
