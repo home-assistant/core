@@ -367,9 +367,9 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         # in HA's auto update task, only update_slot call update()
         # TIME_BETWEEN_UPDATES works with a small SCAN_INTERVAL
         if (not self._update_force and
-            (datetime.now() - self._parent_device.last_update_time <
-             TIME_BETWEEN_UPDATES or
-             self._parent_device._update_slot != self._slot)):
+                (datetime.now() - self._parent_device.last_update_time <
+                 TIME_BETWEEN_UPDATES or
+                 self._parent_device._update_slot != self._slot)):
             pass
         else:
             self._parent_device.update()
@@ -395,6 +395,7 @@ class BroadlinkMP1Switch:
 
     @property
     def last_update_time(self):
+        """Return last time update from power strip."""
         return self._last_update_time
 
     def get_outlet_status(self, slot):
