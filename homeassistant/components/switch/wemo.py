@@ -7,10 +7,12 @@ https://home-assistant.io/components/switch.wemo/
 import asyncio
 import logging
 from datetime import datetime, timedelta
+import requests
 
 import async_timeout
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import convert
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
@@ -40,7 +42,13 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     if discovery_info is not None:
         location = discovery_info['ssdp_description']
         mac = discovery_info['mac_address']
-        device = discovery.device_from_description(location, mac)
+
+        try:
+            device = discovery.device_from_description(location, mac)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as err:
+            _LOGGER.error('Unable to access %s (%s)', location, err)
+            raise PlatformNotReady
 
         if device:
             add_devices_callback([WemoSwitch(device)])
