@@ -16,17 +16,15 @@ import re
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components import group
 from homeassistant.components.feedreader import StoredData, FeedManager
 from homeassistant.components.geo_location import DOMAIN, GeoLocationEvent, \
-    ENTITY_ID_FORMAT
+    GeoLocationDeviceManager, DEFAULT_SORT_GROUP_ENTRIES_REVERSE
 from homeassistant.const import ATTR_ID, ATTR_LATITUDE, ATTR_LONGITUDE, \
     CONF_ICON, CONF_NAME, CONF_RADIUS, CONF_SCAN_INTERVAL, \
     CONF_UNIT_OF_MEASUREMENT, CONF_URL, STATE_UNKNOWN
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_time_interval
-from homeassistant import util
 
 REQUIREMENTS = ['feedparser==5.2.1', 'haversine==0.4.5']
 
@@ -58,7 +56,6 @@ DEFAULT_ICON = 'mdi:alert'
 DEFAULT_NAME = "Event Service"
 DEFAULT_RADIUS_IN_KM = 20.0
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
-DEFAULT_SORT_GROUP_ENTRIES_REVERSE = False
 DEFAULT_STATE_ATTRIBUTE = ATTR_DISTANCE
 DEFAULT_UNIT_OF_MEASUREMENT = 'km'
 
@@ -145,7 +142,7 @@ def setup_platform(hass, config, add_devices, disc_info=None):
     return manager is not None
 
 
-class GeoRssFeedManager(FeedManager):
+class GeoRssFeedManager(GeoLocationDeviceManager, FeedManager):
     """Feed Manager for Geo RSS feeds."""
 
     def __init__(self, hass, add_devices, storage, scan_interval, name,
@@ -153,10 +150,10 @@ class GeoRssFeedManager(FeedManager):
                  attributes_definition, filters_definition, state_attribute,
                  sort_group_entries_reverse, unit_of_measurement, icon):
         """Initialize the GeoRSS Feed Manager."""
+        GeoLocationDeviceManager.__init__(self, hass, add_devices, name,
+                                          sort_group_entries_reverse)
         self._scan_interval = scan_interval
-        super().__init__(url, scan_interval, None, hass, storage)
-        self._add_devices = add_devices
-        self._name = name
+        FeedManager.__init__(self, url, scan_interval, None, hass, storage)
         self._home_coordinates = [home_latitude, home_longitude]
         self._geo_distance_helper = GeoDistanceHelper(self._home_coordinates)
         self._radius_in_km = radius_in_km
@@ -164,20 +161,11 @@ class GeoRssFeedManager(FeedManager):
         self._attributes_definition = attributes_definition
         self._filters_definition = filters_definition
         self._state_attribute = state_attribute
-        self._sort_group_entries_reverse = sort_group_entries_reverse
         self._unit_of_measurement = unit_of_measurement
         self._icon = icon
         entity_id = generate_entity_id('{}', name, hass=hass)
         self._event_type = entity_id
         self._feed_id = entity_id
-        self._managed_devices = []
-        self.group = group.Group.create_group(self._hass, name,
-                                              object_id=util.slugify(name))
-
-    @property
-    def name(self):
-        """Return the name."""
-        return self._name
 
     @property
     def feed_entries(self):
@@ -289,26 +277,13 @@ class GeoRssFeedManager(FeedManager):
             self._group_devices()
             _LOGGER.debug("Devices after updating: %s", self._managed_devices)
 
-    def _group_devices(self):
-        """Re-group all entities."""
-        # Sort entries in group by their state attribute (ascending).
-        devices = sorted(self._managed_devices.copy(),
-                         key=lambda device: device.state,
-                         reverse=self._sort_group_entries_reverse)
-        entity_ids = [device.entity_id for device in devices]
-        # Update group.
-        self.group.update_tracked_entity_ids(entity_ids)
-
     def _generate_new_devices(self, entries):
         """Generate new entities for events."""
         new_devices = []
         for entry in entries:
             distance, latitude, longitude, external_id, name, category, \
                 custom_attributes = self._extract_data(entry)
-            entity_id = generate_entity_id(ENTITY_ID_FORMAT,
-                                           self._name + '_'
-                                           + name,
-                                           hass=self._hass)
+            entity_id = self._generate_entity_id(name)
             new_device = GeoRssLocationEvent(self._hass, entity_id, distance,
                                              latitude, longitude, external_id,
                                              name, category,
@@ -450,10 +425,9 @@ class GeoRssLocationEvent(GeoLocationEvent):
                  external_id, name, category, state_attribute,
                  unit_of_measurement, icon, custom_attributes):
         """Initialize entity with data provided."""
-        super().__init__(hass, entity_id, distance, latitude, longitude,
+        super().__init__(hass, entity_id, name, distance, latitude, longitude,
                          unit_of_measurement, icon)
         self._external_id = external_id
-        self._name = name
         self._category = category
         self._custom_attributes = custom_attributes
         self._state_attribute = state_attribute
@@ -462,16 +436,6 @@ class GeoRssLocationEvent(GeoLocationEvent):
     def external_id(self):
         """Return external id of this event."""
         return self._external_id
-
-    @property
-    def name(self):
-        """Return the name of the event."""
-        return self._name
-
-    @name.setter
-    def name(self, value):
-        """Set event's name."""
-        self._name = value
 
     @property
     def category(self):
