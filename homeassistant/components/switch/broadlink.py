@@ -366,9 +366,9 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         """Trigger update for all switches on the parent device."""
         # in HA's auto update task, only update_slot call update()
         # TIME_BETWEEN_UPDATES works with a small SCAN_INTERVAL
-        if not self._update_force and \
-            (datetime.now() - self._parent_device.last_update_time < TIME_BETWEEN_UPDATES 
-            or self._parent_device._update_slot !=self._slot):
+        if (not self._update_force and
+            (datetime.now() - self._parent_device.last_update_time < TIME_BETWEEN_UPDATES or
+             self._parent_device._update_slot != self._slot)):
             pass
         else:
             self._parent_device.update()
