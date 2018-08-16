@@ -54,6 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                              timezone, unit_system)
     noaa_sensor.update()
     if noaa_sensor.data is None:
+        _LOGGER.error("Unable to setup NOAA Tides Sensor.")
         return
     add_devices([noaa_sensor], True)
 
@@ -112,7 +113,7 @@ class NOAATidesAndCurrentsSensor(Entity):
 
     def update(self):
         """Get the latest data from NOAA Tides and Currents API."""
-        from py_noaa import coops
+        from py_noaa import coops # pylint: disable=import-error
         begin = datetime.now()
         delta = timedelta(days=2)
         end = begin + delta
