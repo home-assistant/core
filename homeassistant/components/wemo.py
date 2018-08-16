@@ -49,12 +49,7 @@ def coerce_host_port(value):
         raise vol.Invalid('host cannot be empty')
 
     if port:
-        try:
-            port = cv.port(port)
-        except vol.Invalid as exc:
-            _slice = slice(value.index(':') + 1, len(value))
-            exc.path.append(_slice)
-            raise
+        port = cv.port(port)
     else:
         port = None
 
