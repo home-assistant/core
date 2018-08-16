@@ -366,8 +366,9 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         """Trigger update for all switches on the parent device."""
         # in HA's auto update task, only update_slot call update()
         # TIME_BETWEEN_UPDATES works with a small SCAN_INTERVAL
-        if not self._update_force and (datetime.now() - self._parent_device.last_update_time < TIME_BETWEEN_UPDATES 
-                                       or self._parent_device._update_slot !=self._slot):
+        if not self._update_force and \
+            (datetime.now() - self._parent_device.last_update_time < TIME_BETWEEN_UPDATES 
+            or self._parent_device._update_slot !=self._slot):
             pass
         else:
             self._parent_device.update()
@@ -413,12 +414,14 @@ class BroadlinkMP1Switch:
         except (socket.timeout, ValueError) as error:
             if retry < 1:
                 if self._available:  # announce once
-                    _LOGGER.error("Unable to update power strip status, error: %s", error)
+                    _LOGGER.error("Unable to update power strip status, \
+                    error: %s", error)
                 self._available = False
                 return
             if not self._auth():
                 if self._available:  # announce once
-                    _LOGGER.error("Unable to update power strip status, error: auth failure")
+                    _LOGGER.error("Unable to update power strip status, \
+                    error: auth failure")
                 self._available = False
                 return
             return self._update(max(0, retry-1))
