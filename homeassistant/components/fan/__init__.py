@@ -89,33 +89,6 @@ FAN_SET_DIRECTION_SCHEMA = vol.Schema({
     vol.Optional(ATTR_DIRECTION): cv.string
 })  # type: dict
 
-SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: {
-        'method': 'async_turn_on',
-        'schema': FAN_TURN_ON_SCHEMA,
-    },
-    SERVICE_TURN_OFF: {
-        'method': 'async_turn_off',
-        'schema': FAN_TURN_OFF_SCHEMA,
-    },
-    SERVICE_TOGGLE: {
-        'method': 'async_toggle',
-        'schema': FAN_TOGGLE_SCHEMA,
-    },
-    SERVICE_SET_SPEED: {
-        'method': 'async_set_speed',
-        'schema': FAN_SET_SPEED_SCHEMA,
-    },
-    SERVICE_OSCILLATE: {
-        'method': 'async_oscillate',
-        'schema': FAN_OSCILLATE_SCHEMA,
-    },
-    SERVICE_SET_DIRECTION: {
-        'method': 'async_set_direction',
-        'schema': FAN_SET_DIRECTION_SCHEMA,
-    },
-}
-
 
 @bind_hass
 def is_on(hass, entity_id: str = None) -> bool:
@@ -204,30 +177,30 @@ def async_setup(hass, config: dict):
 
     yield from component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_fan_service(service):
-        """Handle service call for fans."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        params = service.data.copy()
-
-        # Convert the entity ids to valid fan ids
-        target_fans = component.async_extract_from_service(service)
-        params.pop(ATTR_ENTITY_ID, None)
-
-        update_tasks = []
-        for fan in target_fans:
-            yield from getattr(fan, method['method'])(**params)
-            if not fan.should_poll:
-                continue
-            update_tasks.append(fan.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    for service_name in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service_name].get('schema')
-        hass.services.async_register(
-            DOMAIN, service_name, async_handle_fan_service, schema=schema)
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, FAN_TURN_ON_SCHEMA,
+        'async_turn_on'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, FAN_TURN_OFF_SCHEMA,
+        'async_turn_off'
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, FAN_TOGGLE_SCHEMA,
+        'async_toggle'
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_SPEED, FAN_SET_SPEED_SCHEMA,
+        'async_set_speed'
+    )
+    component.async_register_entity_service(
+        SERVICE_OSCILLATE, FAN_OSCILLATE_SCHEMA,
+        'async_oscillate'
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_DIRECTION, FAN_SET_DIRECTION_SCHEMA,
+        'async_set_direction'
+    )
 
     return True
 
