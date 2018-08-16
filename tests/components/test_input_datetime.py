@@ -7,9 +7,18 @@ import datetime
 from homeassistant.core import CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_datetime import (
-    DOMAIN, async_set_datetime)
+    DOMAIN, ATTR_ENTITY_ID, ATTR_DATE, ATTR_TIME, SERVICE_SET_DATETIME)
 
 from tests.common import get_test_home_assistant, mock_restore_cache
+
+
+async def async_set_datetime(hass, entity_id, dt_value):
+    """Set date and / or time of input_datetime."""
+    await hass.services.async_call(DOMAIN, SERVICE_SET_DATETIME, {
+        ATTR_ENTITY_ID: entity_id,
+        ATTR_DATE: dt_value.date(),
+        ATTR_TIME: dt_value.time()
+    }, blocking=True)
 
 
 class TestInputDatetime(unittest.TestCase):
@@ -57,7 +66,6 @@ def test_set_datetime(hass):
     dt_obj = datetime.datetime(2017, 9, 7, 19, 46)
 
     yield from async_set_datetime(hass, entity_id, dt_obj)
-    yield from hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == str(dt_obj)
@@ -89,7 +97,6 @@ def test_set_datetime_time(hass):
     time_portion = dt_obj.time()
 
     yield from async_set_datetime(hass, entity_id, dt_obj)
-    yield from hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == str(time_portion)
@@ -144,7 +151,6 @@ def test_set_datetime_date(hass):
     date_portion = dt_obj.date()
 
     yield from async_set_datetime(hass, entity_id, dt_obj)
-    yield from hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state.state == str(date_portion)
