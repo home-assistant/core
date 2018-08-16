@@ -113,7 +113,7 @@ class NOAATidesAndCurrentsSensor(Entity):
 
     def update(self):
         """Get the latest data from NOAA Tides and Currents API."""
-        from py_noaa import coops # pylint: disable=import-error
+        from py_noaa import coops  # pylint: disable=import-error
         begin = datetime.now()
         delta = timedelta(days=2)
         end = begin + delta
