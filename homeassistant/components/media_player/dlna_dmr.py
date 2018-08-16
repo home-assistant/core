@@ -35,7 +35,7 @@ from homeassistant.util import get_local_ip
 DLNA_DMR_DATA = 'dlna_dmr'
 
 REQUIREMENTS = [
-    'async-upnp-client==0.12.2',
+    'async-upnp-client==0.12.3',
 ]
 
 DEFAULT_NAME = 'DLNA Digital Media Renderer'
@@ -126,7 +126,7 @@ async def async_setup_platform(hass: HomeAssistant,
         name = config.get(CONF_NAME)
     elif discovery_info is not None:
         url = discovery_info['ssdp_description']
-        name = discovery_info['name']
+        name = discovery_info.get('name')
 
     if DLNA_DMR_DATA not in hass.data:
         hass.data[DLNA_DMR_DATA] = {}
