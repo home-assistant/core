@@ -7,11 +7,13 @@ https://home-assistant.io/components/light.wemo/
 import asyncio
 import logging
 from datetime import timedelta
+import requests
 
 from homeassistant import util
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, ATTR_TRANSITION,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP, SUPPORT_COLOR, SUPPORT_TRANSITION)
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['wemo']
@@ -32,7 +34,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if discovery_info is not None:
         location = discovery_info['ssdp_description']
         mac = discovery_info['mac_address']
-        device = discovery.device_from_description(location, mac)
+
+        try:
+            device = discovery.device_from_description(location, mac)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as err:
+            _LOGGER.error('Unable to access %s (%s)', location, err)
+            raise PlatformNotReady
 
         if device.model_name == 'Dimmer':
             add_devices([WemoDimmer(device)])
