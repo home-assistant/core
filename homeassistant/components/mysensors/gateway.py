@@ -193,7 +193,7 @@ async def _gw_start(hass, gateway):
     def gw_stop(event):
         """Trigger to stop the gateway."""
         hass.async_add_job(gateway.stop())
-        if not connect_task.cancelled():
+        if not connect_task.done():
             connect_task.cancel()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gw_stop)
