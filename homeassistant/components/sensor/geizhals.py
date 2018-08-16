@@ -128,12 +128,11 @@ class GeizParser:
                            timeout=1)
         soup = bs4.BeautifulSoup(request.text, 'html.parser')
 
-        # parse name
+        # Parse name
         raw = soup.find('h1', attrs={'class': 'gh-headline'})
         self.device_name = raw.string
 
-
-        # parse prices
+        # Parse prices
         prices = []
         for tmp in soup.select('div.offer__price .gh_price'):
             matches = re.search(self.regex, tmp.string)
@@ -143,7 +142,7 @@ class GeizParser:
         prices.sort()
         self.prices = prices[1:]
 
-        # parse unit
+        # Parse unit
         price_match = soup.find('span', attrs={'class': 'gh_price'})
         matches = re.search(r'€|£|PLN', price_match.string)
         self.unit_of_measurement = matches.group()
