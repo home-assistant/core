@@ -49,7 +49,8 @@ class FlowManager:
             'context': flow.context,
         } for flow in self._progress.values()]
 
-    async def async_init(self, handler: Hashable, *, context: Dict = None,
+    async def async_init(self, handler: Hashable, *,
+                         context: Optional[Dict] = None,
                          data: Any = None) -> Any:
         """Start a configuration flow."""
         flow = await self._async_create_flow(
@@ -63,7 +64,7 @@ class FlowManager:
         return await self._async_handle_step(flow, flow.init_step, data)
 
     async def async_configure(
-            self, flow_id: str, user_input: str = None) -> Any:
+            self, flow_id: str, user_input: Optional[str] = None) -> Any:
         """Continue a configuration flow."""
         flow = self._progress.get(flow_id)
 
@@ -134,8 +135,9 @@ class FlowHandler:
 
     @callback
     def async_show_form(self, *, step_id: str, data_schema: vol.Schema = None,
-                        errors: Dict = None,
-                        description_placeholders: Dict = None) -> Dict:
+                        errors: Optional[Dict] = None,
+                        description_placeholders: Optional[Dict] = None) \
+            -> Dict:
         """Return the definition of a form to gather user input."""
         return {
             'type': RESULT_TYPE_FORM,
