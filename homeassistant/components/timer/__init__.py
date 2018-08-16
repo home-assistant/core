@@ -4,7 +4,6 @@ Timer component.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/timer/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -141,39 +140,18 @@ async def async_setup(hass, config):
     if not entities:
         return False
 
-    async def async_handler_service(service):
-        """Handle a call to the timer services."""
-        target_timers = component.async_extract_from_service(service)
-
-        attr = None
-        if service.service == SERVICE_PAUSE:
-            attr = 'async_pause'
-        elif service.service == SERVICE_CANCEL:
-            attr = 'async_cancel'
-        elif service.service == SERVICE_FINISH:
-            attr = 'async_finish'
-
-        tasks = [getattr(timer, attr)() for timer in target_timers if attr]
-        if service.service == SERVICE_START:
-            for timer in target_timers:
-                tasks.append(
-                    timer.async_start(service.data.get(ATTR_DURATION))
-                )
-        if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_START, async_handler_service,
-        schema=SERVICE_SCHEMA_DURATION)
-    hass.services.async_register(
-        DOMAIN, SERVICE_PAUSE, async_handler_service,
-        schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_CANCEL, async_handler_service,
-        schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_FINISH, async_handler_service,
-        schema=SERVICE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_START, SERVICE_SCHEMA_DURATION,
+        'async_start')
+    component.async_register_entity_service(
+        SERVICE_PAUSE, SERVICE_SCHEMA,
+        'async_pause')
+    component.async_register_entity_service(
+        SERVICE_CANCEL, SERVICE_SCHEMA,
+        'async_cancel')
+    component.async_register_entity_service(
+        SERVICE_FINISH, SERVICE_SCHEMA,
+        'async_finish')
 
     await component.async_add_entities(entities)
     return True
