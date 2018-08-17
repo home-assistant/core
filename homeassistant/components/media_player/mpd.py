@@ -203,6 +203,7 @@ class MpdDevice(MediaPlayerDevice):
         """Return the volume level."""
         if 'volume' in self._status:
             return int(self._status['volume'])/100
+        return None
 
     @property
     def supported_features(self):
@@ -290,10 +291,10 @@ class MpdDevice(MediaPlayerDevice):
     def mute_volume(self, mute):
         """Mute. Emulated with set_volume_level."""
         if 'volume' in self._status:
-            if mute is True:
+            if mute:
                 self._muted_volume = self.volume_level
                 self.set_volume_level(0)
-            elif mute is False:
+            else:
                 self.set_volume_level(self._muted_volume)
             self._muted = mute
 
