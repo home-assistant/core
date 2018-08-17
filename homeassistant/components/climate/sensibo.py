@@ -71,7 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         for dev in (
                 yield from client.async_get_devices(_INITIAL_FETCH_FIELDS)):
             if config[CONF_ID] == ALL or dev['id'] in config[CONF_ID]:
-                devices.append(SensiboClimate(client, dev))
+                devices.append(SensiboClimate(hass, client, dev))
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError):
         _LOGGER.exception('Failed to connect to Sensibo servers.')
@@ -106,12 +106,13 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SensiboClimate(ClimateDevice):
     """Representation of a Sensibo device."""
 
-    def __init__(self, client, data):
+    def __init__(self, hass, client, data):
         """Build SensiboClimate.
 
         client: aiohttp session.
         data: initially-fetched data.
         """
+        self.hass = hass
         self._client = client
         self._id = data['id']
         self._external_state = None
@@ -139,7 +140,7 @@ class SensiboClimate(ClimateDevice):
             self._temperatures_list = self._current_capabilities[
                 'temperatures'].get(temperature_unit_key, {}).get('values', [])
         else:
-            self._temperature_unit = self.unit_of_measurement
+            self._temperature_unit = self.hass.config.units.temperature_unit
             self._temperatures_list = []
         self._supported_features = 0
         for key in self._ac_states:
@@ -175,7 +176,7 @@ class SensiboClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        if self.temperature_unit == self.unit_of_measurement:
+        if self.temperature_unit == self.hass.config.units.temperature_unit:
             # We are working in same units as the a/c unit. Use whole degrees
             # like the API supports.
             return 1
