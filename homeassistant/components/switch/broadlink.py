@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_FRIENDLY_NAME, CONF_HOST, CONF_MAC,
     CONF_SWITCHES, CONF_TIMEOUT, CONF_TYPE)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle, slugify
+from homeassistant.util import slugify
 from homeassistant.util.dt import utcnow
 
 REQUIREMENTS = ['broadlink==0.9.0']
@@ -369,7 +369,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         if (not self._update_force and
                 (datetime.now() - self._parent_device.last_update_time <
                  TIME_BETWEEN_UPDATES or
-                 self._parent_device._update_slot != self._slot)):
+                 self._parent_device.update_slot != self._slot)):
             pass
         else:
             self._parent_device.update()
@@ -397,7 +397,12 @@ class BroadlinkMP1Switch:
     def last_update_time(self):
         """Return last time update from power strip."""
         return self._last_update_time
-
+    
+    @property
+    def update_slot(self):
+        """Return slot which can call update from power strip."""
+        return self._update_slot
+    
     def get_outlet_status(self, slot):
         """Get status of outlet from cached status list."""
         if self._states is None:
