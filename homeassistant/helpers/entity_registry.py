@@ -6,9 +6,6 @@ identified by their domain, platform and a unique id provided by that platform.
 The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
-
-After initializing, call EntityRegistry.async_ensure_loaded to load the data
-from disk.
 """
 
 from itertools import chain
@@ -81,12 +78,6 @@ class EntityRegistry:
         self.hass = hass
         self.entities = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-        self._load_task = None
-
-    @property
-    def loaded(self):
-        """Return if registry is loaded."""
-        return self.entities is not None
 
     @callback
     def async_is_registered(self, entity_id):
@@ -205,22 +196,13 @@ class EntityRegistry:
 
         return new
 
-    async def async_ensure_loaded(self):
-        """Load the registry from disk."""
-        if self._load_task is None:
-            self._load_task = self.hass.async_create_task(self._async_load())
-
-        await self._load_task
-
-    async def _async_load(self):
+    async def async_load(self):
         """Load the entity registry."""
         data = await self.hass.helpers.storage.async_migrator(
             self.hass.config.path(PATH_REGISTRY), self._store,
             old_conf_load_func=load_yaml,
             old_conf_migrate_func=_async_migrate
         )
-
-        self._load_task = None
 
         if data is None:
             self.entities = {}
@@ -262,15 +244,17 @@ class EntityRegistry:
 @bind_hass
 async def async_get_registry(hass) -> EntityRegistry:
     """Return entity registry instance."""
-    registry = hass.data.get(DATA_REGISTRY)
+    task = hass.data.get(DATA_REGISTRY)
 
-    if registry is None:
-        registry = hass.data[DATA_REGISTRY] = EntityRegistry(hass)
+    if task is None:
+        async def _load_reg():
+            registry = EntityRegistry(hass)
+            await registry.async_load()
+            return registry
 
-    if not registry.loaded:
-        await registry.async_ensure_loaded()
+        task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
 
-    return registry
+    return await task
 
 
 async def _async_migrate(entities):

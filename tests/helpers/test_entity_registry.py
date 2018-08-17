@@ -79,7 +79,7 @@ async def test_loading_saving_data(hass, registry):
     registry2 = entity_registry.EntityRegistry(hass)
     registry2._store = registry._store
 
-    await registry2.async_ensure_loaded()
+    await registry2.async_load()
 
     # Ensure same order
     assert list(registry.entities) == list(registry2.entities)
