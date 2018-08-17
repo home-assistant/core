@@ -51,7 +51,8 @@ class HueBridge:
             # linking procedure. When linking succeeds, it will remove the
             # old config entry.
             hass.async_add_job(hass.config_entries.flow.async_init(
-                DOMAIN, source='import', data={
+                DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+                data={
                     'host': host,
                 }
             ))

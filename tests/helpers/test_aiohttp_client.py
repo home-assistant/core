@@ -135,9 +135,8 @@ class TestHelpersAiohttpClient(unittest.TestCase):
 @asyncio.coroutine
 def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
     """Test that it fetches the given url."""
-    aioclient_mock.get('http://example.com/mjpeg_stream', content=[
-        b'Frame1', b'Frame2', b'Frame3'
-    ])
+    aioclient_mock.get('http://example.com/mjpeg_stream',
+                       content=b'Frame1Frame2Frame3')
 
     resp = yield from camera_client.get(
         '/api/camera_proxy_stream/camera.config_test')
@@ -145,7 +144,7 @@ def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
     assert resp.status == 200
     assert aioclient_mock.call_count == 1
     body = yield from resp.text()
-    assert body == 'Frame3Frame2Frame1'
+    assert body == 'Frame1Frame2Frame3'
 
 
 @asyncio.coroutine

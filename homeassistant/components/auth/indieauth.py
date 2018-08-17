@@ -1,6 +1,10 @@
 """Helpers to resolve client ID/secret."""
+import asyncio
+from html.parser import HTMLParser
 from ipaddress import ip_address, ip_network
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
+
+from aiohttp.client_exceptions import ClientError
 
 # IP addresses of loopback interfaces
 ALLOWED_IPS = (
@@ -16,7 +20,7 @@ ALLOWED_NETWORKS = (
 )
 
 
-def verify_redirect_uri(client_id, redirect_uri):
+async def verify_redirect_uri(hass, client_id, redirect_uri):
     """Verify that the client and redirect uri match."""
     try:
         client_id_parts = _parse_client_id(client_id)
@@ -25,15 +29,74 @@ def verify_redirect_uri(client_id, redirect_uri):
 
     redirect_parts = _parse_url(redirect_uri)
 
-    # IndieAuth 4.2.2 allows for redirect_uri to be on different domain
-    # but needs to be specified in link tag when fetching `client_id`.
-    # This is not implemented.
-
     # Verify redirect url and client url have same scheme and domain.
-    return (
+    is_valid = (
         client_id_parts.scheme == redirect_parts.scheme and
         client_id_parts.netloc == redirect_parts.netloc
     )
+
+    if is_valid:
+        return True
+
+    # IndieAuth 4.2.2 allows for redirect_uri to be on different domain
+    # but needs to be specified in link tag when fetching `client_id`.
+    redirect_uris = await fetch_redirect_uris(hass, client_id)
+    return redirect_uri in redirect_uris
+
+
+class LinkTagParser(HTMLParser):
+    """Parser to find link tags."""
+
+    def __init__(self, rel):
+        """Initialize a link tag parser."""
+        super().__init__()
+        self.rel = rel
+        self.found = []
+
+    def handle_starttag(self, tag, attrs):
+        """Handle finding a start tag."""
+        if tag != 'link':
+            return
+
+        attrs = dict(attrs)
+
+        if attrs.get('rel') == self.rel:
+            self.found.append(attrs.get('href'))
+
+
+async def fetch_redirect_uris(hass, url):
+    """Find link tag with redirect_uri values.
+
+    IndieAuth 4.2.2
+
+    The client SHOULD publish one or more <link> tags or Link HTTP headers with
+    a rel attribute of redirect_uri at the client_id URL.
+
+    We limit to the first 10kB of the page.
+
+    We do not implement extracting redirect uris from headers.
+    """
+    session = hass.helpers.aiohttp_client.async_get_clientsession()
+    parser = LinkTagParser('redirect_uri')
+    chunks = 0
+    try:
+        resp = await session.get(url, timeout=5)
+
+        async for data in resp.content.iter_chunked(1024):
+            parser.feed(data.decode())
+            chunks += 1
+
+            if chunks == 10:
+                break
+
+    except (asyncio.TimeoutError, ClientError):
+        pass
+
+    # Authorization endpoints verifying that a redirect_uri is allowed for use
+    # by a client MUST look for an exact match of the given redirect_uri in the
+    # request against the list of redirect_uris discovered after resolving any
+    # relative URLs.
+    return [urljoin(url, found) for found in parser.found]
 
 
 def verify_client_id(client_id):

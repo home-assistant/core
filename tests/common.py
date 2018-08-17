@@ -12,7 +12,7 @@ import logging
 import threading
 from contextlib import contextmanager
 
-from homeassistant import auth, core as ha, data_entry_flow, config_entries
+from homeassistant import auth, core as ha, config_entries
 from homeassistant.auth import (
     models as auth_models, auth_store, providers as auth_providers)
 from homeassistant.setup import setup_component, async_setup_component
@@ -266,7 +266,7 @@ def mock_state_change_event(hass, new_state, old_state=None):
     if old_state:
         event_data['old_state'] = old_state
 
-    hass.bus.fire(EVENT_STATE_CHANGED, event_data)
+    hass.bus.fire(EVENT_STATE_CHANGED, event_data, context=new_state.context)
 
 
 @asyncio.coroutine
@@ -314,12 +314,18 @@ def mock_registry(hass, mock_entries=None):
 class MockUser(auth_models.User):
     """Mock a user in Home Assistant."""
 
-    def __init__(self, id='mock-id', is_owner=False, is_active=True,
+    def __init__(self, id=None, is_owner=False, is_active=True,
                  name='Mock User', system_generated=False):
         """Initialize mock user."""
-        super().__init__(
-            id=id, is_owner=is_owner, is_active=is_active, name=name,
-            system_generated=system_generated)
+        kwargs = {
+            'is_owner': is_owner,
+            'is_active': is_active,
+            'name': name,
+            'system_generated': system_generated
+        }
+        if id is not None:
+            kwargs['id'] = id
+        super().__init__(**kwargs)
 
     def add_to_hass(self, hass):
         """Test helper to add entry to hass."""
@@ -509,7 +515,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
     """Helper for creating config entries that adds some defaults."""
 
     def __init__(self, *, domain='test', data=None, version=0, entry_id=None,
-                 source=data_entry_flow.SOURCE_USER, title='Mock Title',
+                 source=config_entries.SOURCE_USER, title='Mock Title',
                  state=None):
         """Initialize a mock config entry."""
         kwargs = {

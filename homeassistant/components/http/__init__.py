@@ -8,6 +8,7 @@ from ipaddress import ip_network
 import logging
 import os
 import ssl
+from typing import Optional
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPMovedPermanently
@@ -16,7 +17,6 @@ import voluptuous as vol
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, SERVER_PORT)
 import homeassistant.helpers.config_validation as cv
-import homeassistant.remote as rem
 import homeassistant.util as hass_util
 from homeassistant.util.logging import HideSensitiveDataFilter
 from homeassistant.util import ssl as ssl_util
@@ -49,6 +49,10 @@ CONF_TRUSTED_PROXIES = 'trusted_proxies'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
 CONF_LOGIN_ATTEMPTS_THRESHOLD = 'login_attempts_threshold'
 CONF_IP_BAN_ENABLED = 'ip_ban_enabled'
+CONF_SSL_PROFILE = 'ssl_profile'
+
+SSL_MODERN = 'modern'
+SSL_INTERMEDIATE = 'intermediate'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -66,20 +70,44 @@ HTTP_SCHEMA = vol.Schema({
     vol.Optional(CONF_SSL_KEY): cv.isfile,
     vol.Optional(CONF_CORS_ORIGINS, default=[]):
         vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_USE_X_FORWARDED_FOR, default=False): cv.boolean,
-    vol.Optional(CONF_TRUSTED_PROXIES, default=[]):
+    vol.Inclusive(CONF_USE_X_FORWARDED_FOR, 'proxy'): cv.boolean,
+    vol.Inclusive(CONF_TRUSTED_PROXIES, 'proxy'):
         vol.All(cv.ensure_list, [ip_network]),
     vol.Optional(CONF_TRUSTED_NETWORKS, default=[]):
         vol.All(cv.ensure_list, [ip_network]),
     vol.Optional(CONF_LOGIN_ATTEMPTS_THRESHOLD,
                  default=NO_LOGIN_ATTEMPT_THRESHOLD):
         vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
-    vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean
+    vol.Optional(CONF_IP_BAN_ENABLED, default=True): cv.boolean,
+    vol.Optional(CONF_SSL_PROFILE, default=SSL_MODERN):
+        vol.In([SSL_INTERMEDIATE, SSL_MODERN]),
 })
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: HTTP_SCHEMA,
 }, extra=vol.ALLOW_EXTRA)
+
+
+class ApiConfig:
+    """Configuration settings for API server."""
+
+    def __init__(self, host: str, port: Optional[int] = SERVER_PORT,
+                 use_ssl: bool = False,
+                 api_password: Optional[str] = None) -> None:
+        """Initialize a new API config object."""
+        self.host = host
+        self.port = port
+        self.api_password = api_password
+
+        if host.startswith(("http://", "https://")):
+            self.base_url = host
+        elif use_ssl:
+            self.base_url = "https://{}".format(host)
+        else:
+            self.base_url = "http://{}".format(host)
+
+        if port is not None:
+            self.base_url += ':{}'.format(port)
 
 
 async def async_setup(hass, config):
@@ -96,11 +124,12 @@ async def async_setup(hass, config):
     ssl_peer_certificate = conf.get(CONF_SSL_PEER_CERTIFICATE)
     ssl_key = conf.get(CONF_SSL_KEY)
     cors_origins = conf[CONF_CORS_ORIGINS]
-    use_x_forwarded_for = conf[CONF_USE_X_FORWARDED_FOR]
-    trusted_proxies = conf[CONF_TRUSTED_PROXIES]
+    use_x_forwarded_for = conf.get(CONF_USE_X_FORWARDED_FOR, False)
+    trusted_proxies = conf.get(CONF_TRUSTED_PROXIES, [])
     trusted_networks = conf[CONF_TRUSTED_NETWORKS]
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
+    ssl_profile = conf[CONF_SSL_PROFILE]
 
     if api_password is not None:
         logging.getLogger('aiohttp.access').addFilter(
@@ -119,7 +148,8 @@ async def async_setup(hass, config):
         trusted_proxies=trusted_proxies,
         trusted_networks=trusted_networks,
         login_threshold=login_threshold,
-        is_ban_enabled=is_ban_enabled
+        is_ban_enabled=is_ban_enabled,
+        ssl_profile=ssl_profile,
     )
 
     async def stop_server(event):
@@ -146,8 +176,8 @@ async def async_setup(hass, config):
         host = hass_util.get_local_ip()
         port = server_port
 
-    hass.config.api = rem.API(host, api_password, port,
-                              ssl_certificate is not None)
+    hass.config.api = ApiConfig(host, port, ssl_certificate is not None,
+                                api_password)
 
     return True
 
@@ -159,7 +189,7 @@ class HomeAssistantHTTP:
                  ssl_certificate, ssl_peer_certificate,
                  ssl_key, server_host, server_port, cors_origins,
                  use_x_forwarded_for, trusted_proxies, trusted_networks,
-                 login_threshold, is_ban_enabled):
+                 login_threshold, is_ban_enabled, ssl_profile):
         """Initialize the HTTP Home Assistant server."""
         app = self.app = web.Application(
             middlewares=[staticresource_middleware])
@@ -199,6 +229,7 @@ class HomeAssistantHTTP:
         self.server_host = server_host
         self.server_port = server_port
         self.is_ban_enabled = is_ban_enabled
+        self.ssl_profile = ssl_profile
         self._handler = None
         self.server = None
 
@@ -285,7 +316,10 @@ class HomeAssistantHTTP:
 
         if self.ssl_certificate:
             try:
-                context = ssl_util.server_context()
+                if self.ssl_profile == SSL_INTERMEDIATE:
+                    context = ssl_util.server_context_intermediate()
+                else:
+                    context = ssl_util.server_context_modern()
                 context.load_cert_chain(self.ssl_certificate, self.ssl_key)
             except OSError as error:
                 _LOGGER.error("Could not read SSL certificate from %s: %s",

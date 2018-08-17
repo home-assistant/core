@@ -54,7 +54,6 @@ have type "create_entry" and "result" key will contain an authorization code.
     "flow_id": "8f7e42faab604bcab7ac43c44ca34d58",
     "handler": ["insecure_example", null],
     "result": "411ee2f916e648d691e937ae9344681e",
-    "source": "user",
     "title": "Example",
     "type": "create_entry",
     "version": 1
@@ -68,8 +67,6 @@ from homeassistant.components.http.ban import process_wrong_login, \
     log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.helpers.data_entry_flow import (
-    FlowManagerIndexView, FlowManagerResourceView)
 from . import indieauth
 
 
@@ -97,12 +94,40 @@ class AuthProvidersView(HomeAssistantView):
         } for provider in request.app['hass'].auth.auth_providers])
 
 
-class LoginFlowIndexView(FlowManagerIndexView):
+def _prepare_result_json(result):
+    """Convert result to JSON."""
+    if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        data = result.copy()
+        data.pop('result')
+        data.pop('data')
+        return data
+
+    if result['type'] != data_entry_flow.RESULT_TYPE_FORM:
+        return result
+
+    import voluptuous_serialize
+
+    data = result.copy()
+
+    schema = data['data_schema']
+    if schema is None:
+        data['data_schema'] = []
+    else:
+        data['data_schema'] = voluptuous_serialize.convert(schema)
+
+    return data
+
+
+class LoginFlowIndexView(HomeAssistantView):
     """View to create a config flow."""
 
     url = '/auth/login_flow'
     name = 'api:auth:login_flow'
     requires_auth = False
+
+    def __init__(self, flow_mgr):
+        """Initialize the flow manager index view."""
+        self._flow_mgr = flow_mgr
 
     async def get(self, request):
         """Do not allow index of flows in progress."""
@@ -116,15 +141,26 @@ class LoginFlowIndexView(FlowManagerIndexView):
     @log_invalid_auth
     async def post(self, request, data):
         """Create a new login flow."""
-        if not indieauth.verify_redirect_uri(data['client_id'],
-                                             data['redirect_uri']):
+        if not await indieauth.verify_redirect_uri(
+                request.app['hass'], data['client_id'], data['redirect_uri']):
             return self.json_message('invalid client id or redirect uri', 400)
 
-        # pylint: disable=no-value-for-parameter
-        return await super().post(request)
+        if isinstance(data['handler'], list):
+            handler = tuple(data['handler'])
+        else:
+            handler = data['handler']
+
+        try:
+            result = await self._flow_mgr.async_init(handler, context={})
+        except data_entry_flow.UnknownHandler:
+            return self.json_message('Invalid handler specified', 404)
+        except data_entry_flow.UnknownStep:
+            return self.json_message('Handler does not support init', 400)
+
+        return self.json(_prepare_result_json(result))
 
 
-class LoginFlowResourceView(FlowManagerResourceView):
+class LoginFlowResourceView(HomeAssistantView):
     """View to interact with the flow manager."""
 
     url = '/auth/login_flow/{flow_id}'
@@ -133,10 +169,10 @@ class LoginFlowResourceView(FlowManagerResourceView):
 
     def __init__(self, flow_mgr, store_credentials):
         """Initialize the login flow resource view."""
-        super().__init__(flow_mgr)
+        self._flow_mgr = flow_mgr
         self._store_credentials = store_credentials
 
-    async def get(self, request, flow_id):
+    async def get(self, request):
         """Do not allow getting status of a flow in progress."""
         return self.json_message('Invalid flow specified', 404)
 
@@ -164,9 +200,18 @@ class LoginFlowResourceView(FlowManagerResourceView):
             if result['errors'] is not None and \
                     result['errors'].get('base') == 'invalid_auth':
                 await process_wrong_login(request)
-            return self.json(self._prepare_result_json(result))
+            return self.json(_prepare_result_json(result))
 
         result.pop('data')
         result['result'] = self._store_credentials(client_id, result['result'])
 
         return self.json(result)
+
+    async def delete(self, request, flow_id):
+        """Cancel a flow in progress."""
+        try:
+            self._flow_mgr.async_abort(flow_id)
+        except data_entry_flow.UnknownFlow:
+            return self.json_message('Invalid flow specified', 404)
+
+        return self.json_message('Flow aborted')

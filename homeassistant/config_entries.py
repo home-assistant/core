@@ -24,19 +24,23 @@ Before instantiating the handler, Home Assistant will make sure to load all
 dependencies and install the requirements of the component.
 
 At a minimum, each config flow will have to define a version number and the
-'init' step.
+'user' step.
 
     @config_entries.HANDLERS.register(DOMAIN)
-    class ExampleConfigFlow(config_entries.FlowHandler):
+    class ExampleConfigFlow(data_entry_flow.FlowHandler):
 
         VERSION = 1
 
-        async def async_step_init(self, user_input=None):
+        async def async_step_user(self, user_input=None):
             …
 
-The 'init' step is the first step of a flow and is called when a user
+The 'user' step is the first step of a flow and is called when a user
 starts a new flow. Each step has three different possible results: "Show Form",
 "Abort" and "Create Entry".
+
+> Note: prior 0.76, the default step is 'init' step, some config flows still
+keep 'init' step to avoid break localization. All new config flow should use
+'user' step.
 
 ### Show Form
 
@@ -50,7 +54,7 @@ a title, a description and the schema of the data that needs to be returned.
         data_schema[vol.Required('password')] = str
 
         return self.async_show_form(
-            step_id='init',
+            step_id='user',
             title='Account Info',
             data_schema=vol.Schema(data_schema)
         )
@@ -97,10 +101,10 @@ Assistant, a success message is shown to the user and the flow is finished.
 You might want to initialize a config flow programmatically. For example, if
 we discover a device on the network that requires user interaction to finish
 setup. To do so, pass a source parameter and optional user input to the init
-step:
+method:
 
     await hass.config_entries.flow.async_init(
-        'hue', source='discovery', data=discovery_info)
+        'hue', context={'source': 'discovery'}, data=discovery_info)
 
 The config flow handler will need to add a step to support the source. The step
 should follow the same return values as a normal step.
@@ -113,7 +117,7 @@ the flow from the config panel.
 
 import logging
 import uuid
-from typing import Set, Optional # noqa pylint: disable=unused-import
+from typing import Set, Optional, List  # noqa pylint: disable=unused-import
 
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant
@@ -123,6 +127,11 @@ from homeassistant.util.decorator import Registry
 
 
 _LOGGER = logging.getLogger(__name__)
+
+SOURCE_USER = 'user'
+SOURCE_DISCOVERY = 'discovery'
+SOURCE_IMPORT = 'import'
+
 HANDLERS = Registry()
 # Components that have config flows. In future we will auto-generate this list.
 FLOWS = [
@@ -151,8 +160,8 @@ ENTRY_STATE_FAILED_UNLOAD = 'failed_unload'
 
 DISCOVERY_NOTIFICATION_ID = 'config_entry_discovery'
 DISCOVERY_SOURCES = (
-    data_entry_flow.SOURCE_DISCOVERY,
-    data_entry_flow.SOURCE_IMPORT,
+    SOURCE_DISCOVERY,
+    SOURCE_IMPORT,
 )
 
 EVENT_FLOW_DISCOVERED = 'config_entry_discovered'
@@ -270,19 +279,19 @@ class ConfigEntries:
     An instance of this object is available via `hass.config_entries`.
     """
 
-    def __init__(self, hass, hass_config):
+    def __init__(self, hass: HomeAssistant, hass_config: dict) -> None:
         """Initialize the entry manager."""
         self.hass = hass
         self.flow = data_entry_flow.FlowManager(
             hass, self._async_create_flow, self._async_finish_flow)
         self._hass_config = hass_config
-        self._entries = None
+        self._entries = []  # type: List[ConfigEntry]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
-    def async_domains(self):
+    def async_domains(self) -> List[str]:
         """Return domains for which we have entries."""
-        seen = set()  # type: Set[ConfigEntry]
+        seen = set()  # type: Set[str]
         result = []
 
         for entry in self._entries:
@@ -293,7 +302,7 @@ class ConfigEntries:
         return result
 
     @callback
-    def async_entries(self, domain=None):
+    def async_entries(self, domain: str = None) -> List[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries)
@@ -319,7 +328,7 @@ class ConfigEntries:
             'require_restart': not unloaded
         }
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Handle loading the config."""
         # Migrating for config entries stored before 0.73
         config = await self.hass.helpers.storage.async_migrator(
@@ -363,10 +372,10 @@ class ConfigEntries:
         return await entry.async_unload(
             self.hass, component=getattr(self.hass.components, component))
 
-    async def _async_finish_flow(self, result):
+    async def _async_finish_flow(self, context, result):
         """Finish a config flow and add an entry."""
         # If no discovery config entries in progress, remove notification.
-        if not any(ent['source'] in DISCOVERY_SOURCES for ent
+        if not any(ent['context']['source'] in DISCOVERY_SOURCES for ent
                    in self.hass.config_entries.flow.async_progress()):
             self.hass.components.persistent_notification.async_dismiss(
                 DISCOVERY_NOTIFICATION_ID)
@@ -379,7 +388,7 @@ class ConfigEntries:
             domain=result['handler'],
             title=result['title'],
             data=result['data'],
-            source=result['source'],
+            source=context['source'],
         )
         self._entries.append(entry)
         await self._async_schedule_save()
@@ -394,21 +403,23 @@ class ConfigEntries:
                 self.hass, entry.domain, self._hass_config)
 
         # Return Entry if they not from a discovery request
-        if result['source'] not in DISCOVERY_SOURCES:
+        if context['source'] not in DISCOVERY_SOURCES:
             return entry
 
         return entry
 
-    async def _async_create_flow(self, handler, *, source, data):
+    async def _async_create_flow(self, handler_key, *, context, data):
         """Create a flow for specified handler.
 
         Handler key is the domain of the component that we want to setup.
         """
-        component = getattr(self.hass.components, handler)
-        handler = HANDLERS.get(handler)
+        component = getattr(self.hass.components, handler_key)
+        handler = HANDLERS.get(handler_key)
 
         if handler is None:
             raise data_entry_flow.UnknownHandler
+
+        source = context['source']
 
         # Make sure requirements and dependencies of component are resolved
         await async_process_deps_reqs(
@@ -424,7 +435,9 @@ class ConfigEntries:
                 notification_id=DISCOVERY_NOTIFICATION_ID
             )
 
-        return handler()
+        flow = handler()
+        flow.init_step = source
+        return flow
 
     async def _async_schedule_save(self):
         """Save the entity registry to a file."""
