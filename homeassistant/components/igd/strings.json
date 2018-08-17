@@ -1,0 +1,26 @@
+{
+    "config": {
+        "title": "IGD",
+        "step": {
+            "options": {
+                "title": "Extra configuration options for the IGD",
+                "data":{
+                    "sensors": "Add traffic in/out sensors",
+                    "port_forward": "Enable port forward for Home Assistant\nOnly enable this when your Home Assistant is password protected!",
+                    "ssdp_ur": "SSDP URL",
+                }
+            },
+            "import": {
+                "title": "Link with IGD",
+                "description": "Setup the IGD"
+            }
+        },
+        "error": {
+        },
+        "abort": {
+            "already_configured": "IGD is already configured",
+            "no_igds": "No IGDs discovered",
+            "todo": "TODO"
+        }
+    }
+}
