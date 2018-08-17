@@ -55,7 +55,7 @@ class HabitipySensor(Entity):
 
     def __init__(self, name, sensor_name, updater):
         """
-        A generic Habitica sensor.
+        Init a generic Habitica sensor.
 
         name - Habitica platform name
         sensor_name - one of the names from ALL_SENSOR_TYPES

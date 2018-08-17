@@ -420,6 +420,7 @@ omit =
     homeassistant/components/climate/touchline.py
     homeassistant/components/climate/venstar.py
     homeassistant/components/climate/zhong_hong.py
+    homeassistant/components/cover/aladdin_connect.py
     homeassistant/components/cover/brunt.py
     homeassistant/components/cover/garadget.py
     homeassistant/components/cover/gogogate2.py
@@ -455,6 +456,7 @@ omit =
     homeassistant/components/device_tracker/netgear.py
     homeassistant/components/device_tracker/nmap_tracker.py
     homeassistant/components/device_tracker/ping.py
+    homeassistant/components/device_tracker/ritassist.py
     homeassistant/components/device_tracker/sky_hub.py
     homeassistant/components/device_tracker/snmp.py
     homeassistant/components/device_tracker/swisscom.py
@@ -524,6 +526,7 @@ omit =
     homeassistant/components/media_player/denon.py
     homeassistant/components/media_player/denonavr.py
     homeassistant/components/media_player/directv.py
+    homeassistant/components/media_player/dlna_dmr.py
     homeassistant/components/media_player/dunehd.py
     homeassistant/components/media_player/emby.py
     homeassistant/components/media_player/epson.py
@@ -547,6 +550,7 @@ omit =
     homeassistant/components/media_player/pandora.py
     homeassistant/components/media_player/philips_js.py
     homeassistant/components/media_player/pioneer.py
+    homeassistant/components/media_player/pjlink.py
     homeassistant/components/media_player/plex.py
     homeassistant/components/media_player/roku.py
     homeassistant/components/media_player/russound_rio.py
@@ -692,7 +696,9 @@ omit =
     homeassistant/components/sensor/mvglive.py
     homeassistant/components/sensor/nederlandse_spoorwegen.py
     homeassistant/components/sensor/netdata.py
+    homeassistant/components/sensor/netdata_public.py
     homeassistant/components/sensor/neurio_energy.py
+    homeassistant/components/sensor/noaa_tides.py
     homeassistant/components/sensor/nsw_fuel_station.py
     homeassistant/components/sensor/nut.py
     homeassistant/components/sensor/nzbget.py
@@ -756,6 +762,7 @@ omit =
     homeassistant/components/sensor/uscis.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/viaggiatreno.py
+    homeassistant/components/sensor/volkszaehler.py
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/waze_travel_time.py
     homeassistant/components/sensor/whois.py

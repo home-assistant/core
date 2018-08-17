@@ -121,9 +121,6 @@ async def async_setup(hass, config):
         user = await api.user.get()
         if name is None:
             name = user['profile']['name']
-        if name in data:
-            _LOGGER.warning(
-                "Same user is specified twice: %s", name)
         data[name] = api
         if CONF_SENSORS in instance:
             hass.async_create_task(
@@ -150,7 +147,7 @@ async def async_setup(hass, config):
             return
         kwargs = call.data.get(ATTR_ARGS, {})
         data = await api(**kwargs)
-        await hass.bus.async_fire(EVENT_API_CALL_SUCCESS, {
+        hass.bus.async_fire(EVENT_API_CALL_SUCCESS, {
             "name": name, "path": path, "data": data
         })
 
