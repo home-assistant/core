@@ -397,12 +397,12 @@ class BroadlinkMP1Switch:
     def last_update_time(self):
         """Return last time update from power strip."""
         return self._last_update_time
-    
+
     @property
     def update_slot(self):
         """Return slot which can call update from power strip."""
         return self._update_slot
-    
+
     def get_outlet_status(self, slot):
         """Get status of outlet from cached status list."""
         if self._states is None:
