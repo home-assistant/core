@@ -320,7 +320,7 @@ class ConfigEntries:
             raise UnknownEntry
 
         entry = self._entries.pop(found)
-        await self._async_schedule_save()
+        self._async_schedule_save()
 
         unloaded = await entry.async_unload(self.hass)
 
@@ -391,7 +391,7 @@ class ConfigEntries:
             source=context['source'],
         )
         self._entries.append(entry)
-        await self._async_schedule_save()
+        self._async_schedule_save()
 
         # Setup entry
         if entry.domain in self.hass.config.components:
@@ -439,12 +439,16 @@ class ConfigEntries:
         flow.init_step = source
         return flow
 
-    async def _async_schedule_save(self):
+    def _async_schedule_save(self):
         """Save the entity registry to a file."""
-        data = {
+        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
+
+    @callback
+    def _data_to_save(self):
+        """Return data to save."""
+        return {
             'entries': [entry.as_dict() for entry in self._entries]
         }
-        await self._store.async_save(data, delay=SAVE_DELAY)
 
 
 async def _old_conf_migrator(old_config):
