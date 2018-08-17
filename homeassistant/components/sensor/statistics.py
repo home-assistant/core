@@ -189,25 +189,31 @@ class StatisticsSensor(Entity):
 
         if not self.is_binary:
             try:  # require only one data point
-                self.mean = round(statistics.mean(self.states), 2)
-                self.median = round(statistics.median(self.states), 2)
+                self.mean = round(statistics.mean(self.states),
+                                  self._precision)
+                self.median = round(statistics.median(self.states),
+                                    self._precision)
             except statistics.StatisticsError as err:
                 _LOGGER.debug(err)
                 self.mean = self.median = STATE_UNKNOWN
 
             try:  # require at least two data points
-                self.stdev = round(statistics.stdev(self.states), 2)
-                self.variance = round(statistics.variance(self.states), 2)
+                self.stdev = round(statistics.stdev(self.states),
+                                   self._precision)
+                self.variance = round(statistics.variance(self.states),
+                                      self._precision)
             except statistics.StatisticsError as err:
                 _LOGGER.debug(err)
                 self.stdev = self.variance = STATE_UNKNOWN
 
             if self.states:
-                self.total = round(sum(self.states), 2)
-                self.min = min(self.states)
-                self.max = max(self.states)
+                self.total = round(sum(self.states), self._precision)
+                self.min = round(min(self.states), self._precision)
+                self.max = round(max(self.states), self._precision)
+
                 self.min_age = self.ages[0]
                 self.max_age = self.ages[-1]
+
                 self.change = self.states[-1] - self.states[0]
                 self.average_change = self.change
                 self.change_rate = 0
@@ -218,6 +224,11 @@ class StatisticsSensor(Entity):
                     time_diff = (self.max_age - self.min_age).total_seconds()
                     if time_diff > 0:
                         self.change_rate = self.average_change / time_diff
+
+                self.change = round(self.change, self._precision)
+                self.average_change = round(self.average_change,
+                                            self._precision)
+                self.change_rate = round(self.change_rate, self._precision)
 
             else:
                 self.total = self.min = self.max = STATE_UNKNOWN
