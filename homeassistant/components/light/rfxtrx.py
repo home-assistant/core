@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.rfxtrx as rfxtrx
+from homeassistant.components import rfxtrx
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light, PLATFORM_SCHEMA)
 from homeassistant.const import CONF_NAME

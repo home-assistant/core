@@ -2,7 +2,7 @@
 Support for Google Calendar Search binary sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.google_calendar/
+https://home-assistant.io/components/calendar.google/
 """
 import logging
 from datetime import timedelta
@@ -55,7 +55,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         return await self.data.async_get_events(hass, start_date, end_date)
 
 
-class GoogleCalendarData(object):
+class GoogleCalendarData:
     """Class to utilize calendar service object to get next event."""
 
     def __init__(self, calendar_service, calendar_id, search,

@@ -26,7 +26,7 @@ from homeassistant.const import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util import ensure_unique_string
 
-REQUIREMENTS = ['pywebpush==1.6.0', 'PyJWT==1.6.0']
+REQUIREMENTS = ['pywebpush==1.6.0']
 
 DEPENDENCIES = ['frontend']
 
@@ -280,7 +280,7 @@ class HTML5PushCallbackView(HomeAssistantView):
             return self.json_message('Authorization header must '
                                      'start with Bearer',
                                      status_code=HTTP_UNAUTHORIZED)
-        elif len(parts) != 2:
+        if len(parts) != 2:
             return self.json_message('Authorization header must '
                                      'be Bearer token',
                                      status_code=HTTP_UNAUTHORIZED)

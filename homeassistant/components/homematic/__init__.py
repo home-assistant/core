@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.44']
+REQUIREMENTS = ['pyhomematic==0.1.46']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +47,7 @@ ATTR_ERRORCODE = 'error'
 ATTR_MESSAGE = 'message'
 ATTR_MODE = 'mode'
 ATTR_TIME = 'time'
+ATTR_UNIQUE_ID = 'unique_id'
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
@@ -61,7 +62,8 @@ SERVICE_SET_INSTALL_MODE = 'set_install_mode'
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
         'Switch', 'SwitchPowermeter', 'IOSwitch', 'IPSwitch', 'RFSiren',
-        'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic'],
+        'IPSwitchPowermeter', 'HMWIOSwitch', 'Rain', 'EcoLogic',
+        'IPKeySwitchPowermeter'],
     DISCOVER_LIGHTS: ['Dimmer', 'KeyDimmer', 'IPKeyDimmer'],
     DISCOVER_SENSORS: [
         'SwitchPowermeter', 'Motion', 'MotionV2', 'RemoteMotion', 'MotionIP',
@@ -71,7 +73,8 @@ HM_DEVICE_TYPES = {
         'TemperatureSensor', 'CO2Sensor', 'IPSwitchPowermeter', 'HMWIOSwitch',
         'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
         'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
-        'IPWeatherSensor', 'RotaryHandleSensorIP'],
+        'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
+        'IPKeySwitchPowermeter'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
@@ -80,7 +83,8 @@ HM_DEVICE_TYPES = {
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
         'IPShutterContact', 'HMWIOSwitch', 'MaxShutterContact', 'Rain',
-        'WiredSensor', 'PresenceIP', 'IPWeatherSensor'],
+        'WiredSensor', 'PresenceIP', 'IPWeatherSensor', 'IPPassageSensor',
+        'SmartwareMotion'],
     DISCOVER_COVER: ['Blind', 'KeyBlind', 'IPKeyBlind', 'IPKeyBlindTilt'],
     DISCOVER_LOCKS: ['KeyMatic']
 }
@@ -114,7 +118,7 @@ HM_ATTRIBUTE_SUPPORT = {
     'CURRENT': ['current', {}],
     'VOLTAGE': ['voltage', {}],
     'OPERATING_VOLTAGE': ['voltage', {}],
-    'WORKING': ['working', {0: 'No', 1: 'Yes'}],
+    'WORKING': ['working', {0: 'No', 1: 'Yes'}]
 }
 
 HM_PRESS_EVENTS = [
@@ -170,6 +174,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_INTERFACE): cv.string,
     vol.Optional(ATTR_CHANNEL, default=1): vol.Coerce(int),
     vol.Optional(ATTR_PARAM): cv.string,
+    vol.Optional(ATTR_UNIQUE_ID): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -527,8 +532,12 @@ def _get_devices(hass, discovery_type, keys, interface):
             _LOGGER.debug("%s: Handling %s: %s: %s",
                           discovery_type, key, param, channels)
             for channel in channels:
-                name = _create_ha_name(
+                name = _create_ha_id(
                     name=device.NAME, channel=channel, param=param,
+                    count=len(channels)
+                )
+                unique_id = _create_ha_id(
+                    name=key, channel=channel, param=param,
                     count=len(channels)
                 )
                 device_dict = {
@@ -536,7 +545,8 @@ def _get_devices(hass, discovery_type, keys, interface):
                     ATTR_ADDRESS: key,
                     ATTR_INTERFACE: interface,
                     ATTR_NAME: name,
-                    ATTR_CHANNEL: channel
+                    ATTR_CHANNEL: channel,
+                    ATTR_UNIQUE_ID: unique_id
                 }
                 if param is not None:
                     device_dict[ATTR_PARAM] = param
@@ -551,7 +561,7 @@ def _get_devices(hass, discovery_type, keys, interface):
     return device_arr
 
 
-def _create_ha_name(name, channel, param, count):
+def _create_ha_id(name, channel, param, count):
     """Generate a unique entity id."""
     # HMDevice is a simple device
     if count == 1 and param is None:
@@ -722,6 +732,7 @@ class HMDevice(Entity):
         self._interface = config.get(ATTR_INTERFACE)
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
+        self._unique_id = config.get(ATTR_UNIQUE_ID)
         self._data = {}
         self._homematic = None
         self._hmdevice = None
@@ -736,6 +747,11 @@ class HMDevice(Entity):
     def async_added_to_hass(self):
         """Load data init callbacks."""
         yield from self.hass.async_add_job(self.link_homematic)
+
+    @property
+    def unique_id(self):
+        """Return unique ID. HomeMatic entity IDs are unique by default."""
+        return self._unique_id.replace(" ", "_")
 
     @property
     def should_poll(self):

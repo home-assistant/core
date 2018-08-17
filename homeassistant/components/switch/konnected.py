@@ -8,10 +8,11 @@ https://home-assistant.io/components/switch.konnected/
 import logging
 
 from homeassistant.components.konnected import (
-    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, CONF_ACTIVATION,
-    STATE_LOW, STATE_HIGH)
+    DOMAIN as KONNECTED_DOMAIN, PIN_TO_ZONE, CONF_ACTIVATION, CONF_MOMENTARY,
+    CONF_PAUSE, CONF_REPEAT, STATE_LOW, STATE_HIGH)
 from homeassistant.helpers.entity import ToggleEntity
-from homeassistant.const import (CONF_DEVICES, CONF_SWITCHES, ATTR_STATE)
+from homeassistant.const import (
+    CONF_DEVICES, CONF_SWITCHES, CONF_PIN, ATTR_STATE)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,9 +28,9 @@ async def async_setup_platform(hass, config, async_add_devices,
     data = hass.data[KONNECTED_DOMAIN]
     device_id = discovery_info['device_id']
     client = data[CONF_DEVICES][device_id]['client']
-    switches = [KonnectedSwitch(device_id, pin_num, pin_data, client)
-                for pin_num, pin_data in
-                data[CONF_DEVICES][device_id][CONF_SWITCHES].items()]
+    switches = [
+        KonnectedSwitch(device_id, pin_data.get(CONF_PIN), pin_data, client)
+        for pin_data in data[CONF_DEVICES][device_id][CONF_SWITCHES]]
     async_add_devices(switches)
 
 
@@ -42,6 +43,9 @@ class KonnectedSwitch(ToggleEntity):
         self._device_id = device_id
         self._pin_num = pin_num
         self._activation = self._data.get(CONF_ACTIVATION, STATE_HIGH)
+        self._momentary = self._data.get(CONF_MOMENTARY)
+        self._pause = self._data.get(CONF_PAUSE)
+        self._repeat = self._data.get(CONF_REPEAT)
         self._state = self._boolean_state(self._data.get(ATTR_STATE))
         self._name = self._data.get(
             'name', 'Konnected {} Actuator {}'.format(
@@ -62,10 +66,19 @@ class KonnectedSwitch(ToggleEntity):
     def turn_on(self, **kwargs):
         """Send a command to turn on the switch."""
         resp = self._client.put_device(
-            self._pin_num, int(self._activation == STATE_HIGH))
+            self._pin_num,
+            int(self._activation == STATE_HIGH),
+            self._momentary,
+            self._repeat,
+            self._pause
+        )
 
         if resp.get(ATTR_STATE) is not None:
-            self._set_state(self._boolean_state(resp.get(ATTR_STATE)))
+            self._set_state(True)
+
+            if self._momentary and resp.get(ATTR_STATE) != -1:
+                # Immediately set the state back off for momentary switches
+                self._set_state(self._boolean_state(False))
 
     def turn_off(self, **kwargs):
         """Send a command to turn off the switch."""

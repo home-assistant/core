@@ -88,7 +88,7 @@ class AbodeLight(AbodeDevice, Light):
         """Flag supported features."""
         if self._device.is_dimmable and self._device.has_color:
             return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
-        elif self._device.is_dimmable:
+        if self._device.is_dimmable:
             return SUPPORT_BRIGHTNESS
 
         return 0

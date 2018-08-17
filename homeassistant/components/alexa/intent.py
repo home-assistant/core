@@ -210,7 +210,7 @@ def resolve_slot_synonyms(key, request):
     return resolved_value
 
 
-class AlexaResponse(object):
+class AlexaResponse:
     """Help generating the response for Alexa."""
 
     def __init__(self, hass, intent_info):

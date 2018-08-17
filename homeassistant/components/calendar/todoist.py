@@ -280,7 +280,7 @@ class TodoistProjectDevice(CalendarEventDevice):
         return attributes
 
 
-class TodoistProjectData(object):
+class TodoistProjectData:
     """
     Class used by the Task Device service object to hold all Todoist Tasks.
 
@@ -503,7 +503,7 @@ class TodoistProjectData(object):
         time_format = '%a %d %b %Y %H:%M:%S %z'
         for task in project_task_data:
             due_date = datetime.strptime(task['due_date_utc'], time_format)
-            if due_date > start_date and due_date < end_date:
+            if start_date < due_date < end_date:
                 event = {
                     'uid': task['id'],
                     'title': task['content'],

@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant import config_entries
 
 from .const import (
     DOMAIN, HMIPC_HAPID, HMIPC_AUTHTOKEN, HMIPC_NAME,
@@ -19,7 +20,7 @@ from .config_flow import configured_haps
 from .hap import HomematicipHAP, HomematicipAuth  # noqa: F401
 from .device import HomematicipGenericDevice  # noqa: F401
 
-REQUIREMENTS = ['homematicip==0.9.6']
+REQUIREMENTS = ['homematicip==0.9.8']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +42,8 @@ async def async_setup(hass, config):
     for conf in accesspoints:
         if conf[CONF_ACCESSPOINT] not in configured_haps(hass):
             hass.async_add_job(hass.config_entries.flow.async_init(
-                DOMAIN, source='import', data={
+                DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+                data={
                     HMIPC_HAPID: conf[CONF_ACCESSPOINT],
                     HMIPC_AUTHTOKEN: conf[CONF_AUTHTOKEN],
                     HMIPC_NAME: conf[CONF_NAME],

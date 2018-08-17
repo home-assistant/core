@@ -70,16 +70,15 @@ class GeofencyView(HomeAssistantView):
 
         if self._is_mobile_beacon(data):
             return (yield from self._set_location(hass, data, None))
+        if data['entry'] == LOCATION_ENTRY:
+            location_name = data['name']
         else:
-            if data['entry'] == LOCATION_ENTRY:
-                location_name = data['name']
-            else:
-                location_name = STATE_NOT_HOME
-                if ATTR_CURRENT_LATITUDE in data:
-                    data[ATTR_LATITUDE] = data[ATTR_CURRENT_LATITUDE]
-                    data[ATTR_LONGITUDE] = data[ATTR_CURRENT_LONGITUDE]
+            location_name = STATE_NOT_HOME
+            if ATTR_CURRENT_LATITUDE in data:
+                data[ATTR_LATITUDE] = data[ATTR_CURRENT_LATITUDE]
+                data[ATTR_LONGITUDE] = data[ATTR_CURRENT_LONGITUDE]
 
-            return (yield from self._set_location(hass, data, location_name))
+        return (yield from self._set_location(hass, data, location_name))
 
     @staticmethod
     def _validate_data(data):

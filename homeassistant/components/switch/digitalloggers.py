@@ -122,7 +122,7 @@ class DINRelay(SwitchDevice):
         self._state = outlet_status[2] == 'ON'
 
 
-class DINRelayDevice(object):
+class DINRelayDevice:
     """Device representation for per device throttling."""
 
     def __init__(self, power_switch):

@@ -1,11 +1,13 @@
 """Script to manage users for the Home Assistant auth provider."""
 import argparse
 import asyncio
+import logging
 import os
 
+from homeassistant.auth import auth_manager_from_config
 from homeassistant.core import HomeAssistant
 from homeassistant.config import get_default_config_dir
-from homeassistant.auth_providers import homeassistant as hass_auth
+from homeassistant.auth.providers import homeassistant as hass_auth
 
 
 def run(args):
@@ -42,16 +44,28 @@ def run(args):
     args = parser.parse_args(args)
     loop = asyncio.get_event_loop()
     hass = HomeAssistant(loop=loop)
+    loop.run_until_complete(run_command(hass, args))
+
+    # Triggers save on used storage helpers with delay (core auth)
+    logging.getLogger('homeassistant.core').setLevel(logging.WARNING)
+    loop.run_until_complete(hass.async_stop())
+
+
+async def run_command(hass, args):
+    """Run the command."""
     hass.config.config_dir = os.path.join(os.getcwd(), args.config)
-    data = hass_auth.Data(hass)
-    loop.run_until_complete(data.async_load())
-    loop.run_until_complete(args.func(data, args))
+    hass.auth = await auth_manager_from_config(hass, [{
+        'type': 'homeassistant',
+    }])
+    provider = hass.auth.auth_providers[0]
+    await provider.async_initialize()
+    await args.func(hass, provider, args)
 
 
-async def list_users(data, args):
+async def list_users(hass, provider, args):
     """List the users."""
     count = 0
-    for user in data.users:
+    for user in provider.data.users:
         count += 1
         print(user['username'])
 
@@ -59,27 +73,33 @@ async def list_users(data, args):
     print("Total users:", count)
 
 
-async def add_user(data, args):
+async def add_user(hass, provider, args):
     """Create a user."""
-    data.add_user(args.username, args.password)
-    await data.async_save()
-    print("User created")
+    try:
+        provider.data.add_auth(args.username, args.password)
+    except hass_auth.InvalidUser:
+        print("Username already exists!")
+        return
+
+    # Save username/password
+    await provider.data.async_save()
+    print("Auth created")
 
 
-async def validate_login(data, args):
+async def validate_login(hass, provider, args):
     """Validate a login."""
     try:
-        data.validate_login(args.username, args.password)
+        provider.data.validate_login(args.username, args.password)
         print("Auth valid")
     except hass_auth.InvalidAuth:
         print("Auth invalid")
 
 
-async def change_password(data, args):
+async def change_password(hass, provider, args):
     """Change password."""
     try:
-        data.change_password(args.username, args.new_password)
-        await data.async_save()
+        provider.data.change_password(args.username, args.new_password)
+        await provider.data.async_save()
         print("Password changed")
     except hass_auth.InvalidUser:
         print("User not found")

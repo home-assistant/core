@@ -22,7 +22,7 @@ from .const import (
 from .device import get_mysensors_devices
 from .gateway import get_mysensors_gateway, setup_gateways, finish_setup
 
-REQUIREMENTS = ['pymysensors==0.14.0']
+REQUIREMENTS = ['pymysensors==0.17.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,9 +52,8 @@ def is_persistence_file(value):
     """Validate that persistence file path ends in either .pickle or .json."""
     if value.endswith(('.json', '.pickle')):
         return value
-    else:
-        raise vol.Invalid(
-            '{} does not end in either `.json` or `.pickle`'.format(value))
+    raise vol.Invalid(
+        '{} does not end in either `.json` or `.pickle`'.format(value))
 
 
 def deprecated(key):

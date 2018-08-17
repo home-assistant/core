@@ -23,7 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util.decorator import Registry
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
-import homeassistant.components.history as history
+from homeassistant.components import history
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -258,7 +258,7 @@ class SensorFilter(Entity):
         return state_attr
 
 
-class FilterState(object):
+class FilterState:
     """State abstraction for filter usage."""
 
     def __init__(self, state):
@@ -283,7 +283,7 @@ class FilterState(object):
         return "{} : {}".format(self.timestamp, self.state)
 
 
-class Filter(object):
+class Filter:
     """Filter skeleton.
 
     Args:

@@ -26,10 +26,11 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 from homeassistant.util.yaml import load_yaml
 
-REQUIREMENTS = ['home-assistant-frontend==20180710.0']
+REQUIREMENTS = ['home-assistant-frontend==20180816.1']
 
 DOMAIN = 'frontend'
-DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log']
+DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
+                'auth', 'onboarding']
 
 CONF_THEMES = 'themes'
 CONF_EXTRA_HTML_URL = 'extra_html_url'
@@ -248,6 +249,7 @@ async def async_setup(hass, config):
 
     index_view = IndexView(repo_path, js_version, hass.auth.active)
     hass.http.register_view(index_view)
+    hass.http.register_view(AuthorizeView(repo_path, js_version))
 
     @callback
     def async_finalize_panel(panel):
@@ -257,7 +259,7 @@ async def async_setup(hass, config):
     await asyncio.wait(
         [async_register_built_in_panel(hass, panel) for panel in (
             'dev-event', 'dev-info', 'dev-service', 'dev-state',
-            'dev-template', 'dev-mqtt', 'kiosk', 'lovelace')],
+            'dev-template', 'dev-mqtt', 'kiosk', 'lovelace', 'profile')],
         loop=hass.loop)
 
     hass.data[DATA_FINALIZE_PANEL] = async_finalize_panel
@@ -333,6 +335,35 @@ def _async_setup_themes(hass, themes):
     hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes)
 
 
+class AuthorizeView(HomeAssistantView):
+    """Serve the frontend."""
+
+    url = '/auth/authorize'
+    name = 'auth:authorize'
+    requires_auth = False
+
+    def __init__(self, repo_path, js_option):
+        """Initialize the frontend view."""
+        self.repo_path = repo_path
+        self.js_option = js_option
+
+    async def get(self, request: web.Request):
+        """Redirect to the authorize page."""
+        latest = self.repo_path is not None or \
+            _is_latest(self.js_option, request)
+
+        if latest:
+            location = '/frontend_latest/authorize.html'
+        else:
+            location = '/frontend_es5/authorize.html'
+
+        location += '?{}'.format(request.query_string)
+
+        return web.Response(status=302, headers={
+            'location': location
+        })
+
+
 class IndexView(HomeAssistantView):
     """Serve the frontend."""
 
@@ -351,7 +382,7 @@ class IndexView(HomeAssistantView):
     def get_template(self, latest):
         """Get template."""
         if self.repo_path is not None:
-            root = self.repo_path
+            root = os.path.join(self.repo_path, 'hass_frontend')
         elif latest:
             import hass_frontend
             root = hass_frontend.where()
@@ -376,6 +407,16 @@ class IndexView(HomeAssistantView):
         hass = request.app['hass']
         latest = self.repo_path is not None or \
             _is_latest(self.js_option, request)
+
+        if not hass.components.onboarding.async_is_onboarded():
+            if latest:
+                location = '/frontend_latest/onboarding.html'
+            else:
+                location = '/frontend_es5/onboarding.html'
+
+            return web.Response(status=302, headers={
+                'location': location
+            })
 
         no_auth = '1'
         if hass.config.api.api_password and not request[KEY_AUTHENTICATED]:
@@ -480,7 +521,7 @@ def websocket_get_translations(hass, connection, msg):
     Async friendly.
     """
     async def send_translations():
-        """Send a camera still."""
+        """Send a translation."""
         resources = await async_get_translations(hass, msg['language'])
         connection.send_message_outside(websocket_api.result_message(
             msg['id'], {
