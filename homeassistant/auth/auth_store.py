@@ -218,6 +218,7 @@ class AuthStore:
 
         self._users = users
 
+    @callback
     def _async_schedule_save(self) -> None:
         """Save users."""
         if self._users is None:
