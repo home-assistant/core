@@ -7,7 +7,7 @@ The Entity Registry will persist itself 10 seconds after a new entity is
 registered. Registering a new entity while a timer is in progress resets the
 timer.
 """
-
+from collections import OrderedDict
 from itertools import chain
 import logging
 import weakref
@@ -203,20 +203,20 @@ class EntityRegistry:
             old_conf_load_func=load_yaml,
             old_conf_migrate_func=_async_migrate
         )
+        entities = OrderedDict()
 
-        if data is None:
-            self.entities = {}
-            return
+        if data is not None:
+            for entity in data['entities']:
+                entities[entity['entity_id']] = RegistryEntry(
+                    entity_id=entity['entity_id'],
+                    config_entry_id=entity.get('config_entry_id'),
+                    unique_id=entity['unique_id'],
+                    platform=entity['platform'],
+                    name=entity.get('name'),
+                    disabled_by=entity.get('disabled_by')
+                )
 
-        self.entities = {
-            entity['entity_id']: RegistryEntry(
-                entity_id=entity['entity_id'],
-                config_entry_id=entity.get('config_entry_id'),
-                unique_id=entity['unique_id'],
-                platform=entity['platform'],
-                name=entity.get('name'),
-                disabled_by=entity.get('disabled_by')
-            ) for entity in data['entities']}
+        self.entities = entities
 
     @callback
     def async_schedule_save(self):
