@@ -10,7 +10,6 @@ from contextlib import suppress
 from functools import partial, wraps
 import json
 import logging
-import sys
 
 from aiohttp import web
 import voluptuous as vol
