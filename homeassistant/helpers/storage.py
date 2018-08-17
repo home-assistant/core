@@ -2,7 +2,7 @@
 import asyncio
 import logging
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, Callable
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -76,8 +76,13 @@ class Store:
 
     async def _async_load(self):
         """Helper to load the data."""
+        # Check if we have a pending write
         if self._data is not None:
             data = self._data
+
+            # If we didn't generate data yet, do it now.
+            if 'data_func' in data:
+                data['data'] = data.pop('data_func')()
         else:
             data = await self.hass.async_add_executor_job(
                 json.load_json, self.path)
@@ -95,8 +100,8 @@ class Store:
         self._load_task = None
         return stored
 
-    async def async_save(self, data: Dict, *, delay: Optional[int] = None):
-        """Save data with an optional delay."""
+    async def async_save(self, data):
+        """Save data."""
         self._data = {
             'version': self.version,
             'key': self.key,
@@ -104,11 +109,20 @@ class Store:
         }
 
         self._async_cleanup_delay_listener()
+        self._async_cleanup_stop_listener()
+        await self._async_handle_write_data()
 
-        if delay is None:
-            self._async_cleanup_stop_listener()
-            await self._async_handle_write_data()
-            return
+    @callback
+    def async_delay_save(self, data_func: Callable[[], Dict],
+                         delay: Optional[int] = None):
+        """Save data with an optional delay."""
+        self._data = {
+            'version': self.version,
+            'key': self.key,
+            'data_func': data_func,
+        }
+
+        self._async_cleanup_delay_listener()
 
         self._unsub_delay_listener = async_call_later(
             self.hass, delay, self._async_callback_delayed_write)
@@ -151,6 +165,10 @@ class Store:
     async def _async_handle_write_data(self, *_args):
         """Handler to handle writing the config."""
         data = self._data
+
+        if 'data_func' in data:
+            data['data'] = data.pop('data_func')()
+
         self._data = None
 
         async with self._write_lock:

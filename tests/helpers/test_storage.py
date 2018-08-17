@@ -92,7 +92,7 @@ async def test_loading_while_delay(hass, store, hass_storage):
         'data': {'delay': 'no'},
     }
 
-    await store.async_save({'delay': 'yes'}, delay=1)
+    await store.async_delay_save(lambda: {'delay': 'yes'}, 1)
     assert hass_storage[store.key] == {
         'version': MOCK_VERSION,
         'key': MOCK_KEY,
@@ -105,7 +105,7 @@ async def test_loading_while_delay(hass, store, hass_storage):
 
 async def test_writing_while_writing_delay(hass, store, hass_storage):
     """Test a write while a write with delay is active."""
-    await store.async_save({'delay': 'yes'}, delay=1)
+    await store.async_delay_save(lambda: {'delay': 'yes'}, 1)
     assert store.key not in hass_storage
     await store.async_save({'delay': 'no'})
     assert hass_storage[store.key] == {
