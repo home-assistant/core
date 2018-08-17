@@ -73,8 +73,7 @@ def test_constructor_loads_info_from_config():
     assert cl.relayer == 'test-relayer'
 
 
-@asyncio.coroutine
-def test_initialize_loads_info(mock_os, hass):
+async def test_initialize_loads_info(mock_os, hass):
     """Test initialize will load info from config file."""
     mock_os.path.isfile.return_value = True
     mopen = mock_open(read_data=json.dumps({
@@ -88,8 +87,10 @@ def test_initialize_loads_info(mock_os, hass):
     cl.iot.connect.return_value = mock_coro()
 
     with patch('homeassistant.components.cloud.open', mopen, create=True), \
+            patch('homeassistant.components.cloud.Cloud._fetch_jwt_keyset',
+                  return_value=mock_coro(True)), \
             patch('homeassistant.components.cloud.Cloud._decode_claims'):
-        yield from cl.async_start(None)
+        await cl.async_start(None)
 
     assert cl.id_token == 'test-id-token'
     assert cl.access_token == 'test-access-token'

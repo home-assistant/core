@@ -2,15 +2,11 @@
 import logging
 import uuid
 import voluptuous as vol
-from typing import Dict, Any, Callable, List, Optional  # noqa pylint: disable=unused-import
+from typing import Dict, Any, Callable, Hashable, List, Optional  # noqa pylint: disable=unused-import
 from .core import callback, HomeAssistant
 from .exceptions import HomeAssistantError
 
 _LOGGER = logging.getLogger(__name__)
-
-SOURCE_USER = 'user'
-SOURCE_DISCOVERY = 'discovery'
-SOURCE_IMPORT = 'import'
 
 RESULT_TYPE_FORM = 'form'
 RESULT_TYPE_CREATE_ENTRY = 'create_entry'
@@ -50,25 +46,21 @@ class FlowManager:
         return [{
             'flow_id': flow.flow_id,
             'handler': flow.handler,
-            'source': flow.source,
+            'context': flow.context,
         } for flow in self._progress.values()]
 
-    async def async_init(self, handler: Callable, *, source: str = SOURCE_USER,
-                         data: str = None) -> Any:
+    async def async_init(self, handler: Hashable, *, context: Dict = None,
+                         data: Any = None) -> Any:
         """Start a configuration flow."""
-        flow = await self._async_create_flow(handler, source=source, data=data)
+        flow = await self._async_create_flow(
+            handler, context=context, data=data)
         flow.hass = self.hass
         flow.handler = handler
         flow.flow_id = uuid.uuid4().hex
-        flow.source = source
+        flow.context = context
         self._progress[flow.flow_id] = flow
 
-        if source == SOURCE_USER:
-            step = 'init'
-        else:
-            step = source
-
-        return await self._async_handle_step(flow, step, data)
+        return await self._async_handle_step(flow, flow.init_step, data)
 
     async def async_configure(
             self, flow_id: str, user_input: str = None) -> Any:
@@ -117,7 +109,7 @@ class FlowManager:
         self._progress.pop(flow.flow_id)
 
         # We pass a copy of the result because we're mutating our version
-        entry = await self._async_finish_flow(dict(result))
+        entry = await self._async_finish_flow(flow.context, dict(result))
 
         if result['type'] == RESULT_TYPE_CREATE_ENTRY:
             result['result'] = entry
@@ -131,8 +123,11 @@ class FlowHandler:
     flow_id = None
     hass = None
     handler = None
-    source = SOURCE_USER
     cur_step = None
+    context = None
+
+    # Set by _async_create_flow callback
+    init_step = 'init'
 
     # Set by developer
     VERSION = 1
@@ -162,7 +157,6 @@ class FlowHandler:
             'handler': self.handler,
             'title': title,
             'data': data,
-            'source': self.source,
         }
 
     @callback

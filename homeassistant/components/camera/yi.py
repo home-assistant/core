@@ -57,6 +57,7 @@ class YiCamera(Camera):
         self._last_url = None
         self._manager = hass.data[DATA_FFMPEG]
         self._name = config[CONF_NAME]
+        self._is_on = True
         self.host = config[CONF_HOST]
         self.port = config[CONF_PORT]
         self.path = config[CONF_PATH]
@@ -67,6 +68,11 @@ class YiCamera(Camera):
     def brand(self):
         """Camera brand."""
         return DEFAULT_BRAND
+
+    @property
+    def is_on(self):
+        """Determine whether the camera is on."""
+        return self._is_on
 
     @property
     def name(self):
@@ -81,7 +87,7 @@ class YiCamera(Camera):
         try:
             await ftp.connect(self.host)
             await ftp.login(self.user, self.passwd)
-        except StatusCodeError as err:
+        except (ConnectionRefusedError, StatusCodeError) as err:
             raise PlatformNotReady(err)
 
         try:
@@ -101,12 +107,13 @@ class YiCamera(Camera):
                 return None
 
             await ftp.quit()
-
+            self._is_on = True
             return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(
                 self.user, self.passwd, self.host, self.port, self.path,
                 latest_dir, videos[-1])
         except (ConnectionRefusedError, StatusCodeError) as err:
             _LOGGER.error('Error while fetching video: %s', err)
+            self._is_on = False
             return None
 
     async def async_camera_image(self):
@@ -114,7 +121,7 @@ class YiCamera(Camera):
         from haffmpeg import ImageFrame, IMAGE_JPEG
 
         url = await self._get_latest_video_url()
-        if url != self._last_url:
+        if url and url != self._last_url:
             ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
             self._last_image = await asyncio.shield(
                 ffmpeg.get_image(
@@ -129,6 +136,9 @@ class YiCamera(Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
+
+        if not self._is_on:
+            return
 
         stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
         await stream.open_camera(

@@ -16,10 +16,7 @@ DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_WINDOW_STATE = 'window_state'
-ATTR_EVENT_DELAY = 'event_delay'
-ATTR_MOTION_DETECTED = 'motion_detected'
-ATTR_ILLUMINATION = 'illumination'
+STATE_SMOKE_OFF = 'IDLE_OFF'
 
 
 async def async_setup_platform(hass, config, async_add_devices,
@@ -30,15 +27,18 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up the HomematicIP binary sensor from a config entry."""
-    from homematicip.device import (ShutterContact, MotionDetectorIndoor)
+    from homematicip.aio.device import (
+        AsyncShutterContact, AsyncMotionDetectorIndoor, AsyncSmokeDetector)
 
     home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
-        if isinstance(device, ShutterContact):
+        if isinstance(device, AsyncShutterContact):
             devices.append(HomematicipShutterContact(home, device))
-        elif isinstance(device, MotionDetectorIndoor):
+        elif isinstance(device, AsyncMotionDetectorIndoor):
             devices.append(HomematicipMotionDetector(home, device))
+        elif isinstance(device, AsyncSmokeDetector):
+            devices.append(HomematicipSmokeDetector(home, device))
 
     if devices:
         async_add_devices(devices)
@@ -46,10 +46,6 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
 class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
     """HomematicIP shutter contact."""
-
-    def __init__(self, home, device):
-        """Initialize the shutter contact."""
-        super().__init__(home, device)
 
     @property
     def device_class(self):
@@ -69,11 +65,7 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
 
 
 class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
-    """MomematicIP motion detector."""
-
-    def __init__(self, home, device):
-        """Initialize the shutter contact."""
-        super().__init__(home, device)
+    """HomematicIP motion detector."""
 
     @property
     def device_class(self):
@@ -86,3 +78,17 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
         if self._device.sabotage:
             return True
         return self._device.motionDetected
+
+
+class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
+    """HomematicIP smoke detector."""
+
+    @property
+    def device_class(self):
+        """Return the class of this sensor."""
+        return 'smoke'
+
+    @property
+    def is_on(self):
+        """Return true if smoke is detected."""
+        return self._device.smokeDetectorAlarmType != STATE_SMOKE_OFF

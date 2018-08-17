@@ -160,8 +160,8 @@ class TestCheckConfig(unittest.TestCase):
                 'server_host': '0.0.0.0',
                 'server_port': 8123,
                 'trusted_networks': [],
-                'trusted_proxies': [],
-                'use_x_forwarded_for': False}
+                'ssl_profile': 'modern',
+            }
             assert res['secret_cache'] == {secrets_path: {'http_pw': 'abc123'}}
             assert res['secrets'] == {'http_pw': 'abc123'}
             assert normalize_yaml_files(res) == [

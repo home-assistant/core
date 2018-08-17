@@ -48,6 +48,7 @@ class API:
                  port: Optional[int] = SERVER_PORT,
                  use_ssl: bool = False) -> None:
         """Init the API."""
+        _LOGGER.warning('This class is deprecated and will be removed in 0.77')
         self.host = host
         self.port = port
         self.api_password = api_password

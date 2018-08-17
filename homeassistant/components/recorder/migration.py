@@ -114,6 +114,27 @@ def _drop_index(engine, table_name, index_name):
                         "critical operation.", index_name, table_name)
 
 
+def _add_columns(engine, table_name, columns_def):
+    """Add columns to a table."""
+    from sqlalchemy import text
+    from sqlalchemy.exc import SQLAlchemyError
+
+    columns_def = ['ADD COLUMN {}'.format(col_def) for col_def in columns_def]
+
+    try:
+        engine.execute(text("ALTER TABLE {table} {columns_def}".format(
+            table=table_name,
+            columns_def=', '.join(columns_def))))
+        return
+    except SQLAlchemyError:
+        pass
+
+    for column_def in columns_def:
+        engine.execute(text("ALTER TABLE {table} {column_def}".format(
+            table=table_name,
+            column_def=column_def)))
+
+
 def _apply_update(engine, new_version, old_version):
     """Perform operations to bring schema up to date."""
     if new_version == 1:
@@ -146,6 +167,19 @@ def _apply_update(engine, new_version, old_version):
     elif new_version == 5:
         # Create supporting index for States.event_id foreign key
         _create_index(engine, "states", "ix_states_event_id")
+    elif new_version == 6:
+        _add_columns(engine, "events", [
+            'context_id CHARACTER(36)',
+            'context_user_id CHARACTER(36)',
+        ])
+        _create_index(engine, "events", "ix_events_context_id")
+        _create_index(engine, "events", "ix_events_context_user_id")
+        _add_columns(engine, "states", [
+            'context_id CHARACTER(36)',
+            'context_user_id CHARACTER(36)',
+        ])
+        _create_index(engine, "states", "ix_states_context_id")
+        _create_index(engine, "states", "ix_states_context_user_id")
     else:
         raise ValueError("No schema migration defined for version {}"
                          .format(new_version))

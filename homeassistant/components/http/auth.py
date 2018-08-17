@@ -106,11 +106,11 @@ async def async_validate_auth_header(request, api_password=None):
 
     if auth_type == 'Bearer':
         hass = request.app['hass']
-        access_token = hass.auth.async_get_access_token(auth_val)
-        if access_token is None:
+        refresh_token = await hass.auth.async_validate_access_token(auth_val)
+        if refresh_token is None:
             return False
 
-        request['hass_user'] = access_token.refresh_token.user
+        request['hass_user'] = refresh_token.user
         return True
 
     if auth_type == 'Basic' and api_password is not None:
