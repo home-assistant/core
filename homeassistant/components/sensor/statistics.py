@@ -40,9 +40,11 @@ ATTR_VARIANCE = 'variance'
 
 CONF_SAMPLING_SIZE = 'sampling_size'
 CONF_MAX_AGE = 'max_age'
+CONF_PRECISION = 'precision'
 
 DEFAULT_NAME = 'Stats'
 DEFAULT_SIZE = 20
+DEFAULT_PRECISION = 2
 ICON = 'mdi:calculator'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -50,7 +52,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_SAMPLING_SIZE, default=DEFAULT_SIZE):
         vol.All(vol.Coerce(int), vol.Range(min=1)),
-    vol.Optional(CONF_MAX_AGE): cv.time_period
+    vol.Optional(CONF_MAX_AGE): cv.time_period,
+    vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION):
+        vol.Coerce(int)
 })
 
 
@@ -62,17 +66,19 @@ def async_setup_platform(hass, config, async_add_entities,
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
     max_age = config.get(CONF_MAX_AGE, None)
+    precision = config.get(CONF_PRECISION)
 
-    async_add_entities(
-        [StatisticsSensor(hass, entity_id, name, sampling_size, max_age)],
-        True)
+    async_add_entities([StatisticsSensor(hass, entity_id, name, sampling_size,
+                                         max_age, precision)], True)
+
     return True
 
 
 class StatisticsSensor(Entity):
     """Representation of a Statistics sensor."""
 
-    def __init__(self, hass, entity_id, name, sampling_size, max_age):
+    def __init__(self, hass, entity_id, name, sampling_size, max_age,
+                 precision):
         """Initialize the Statistics sensor."""
         self._hass = hass
         self._entity_id = entity_id
@@ -84,6 +90,7 @@ class StatisticsSensor(Entity):
             self._name = '{} {}'.format(name, ATTR_COUNT)
         self._sampling_size = sampling_size
         self._max_age = max_age
+        self._precision = precision
         self._unit_of_measurement = None
         self.states = deque(maxlen=self._sampling_size)
         self.ages = deque(maxlen=self._sampling_size)
