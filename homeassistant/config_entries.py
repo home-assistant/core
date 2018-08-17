@@ -302,7 +302,7 @@ class ConfigEntries:
         return result
 
     @callback
-    def async_entries(self, domain: str = None) -> List[ConfigEntry]:
+    def async_entries(self, domain: Optional[str] = None) -> List[ConfigEntry]:
         """Return all entries or entries for a specific domain."""
         if domain is None:
             return list(self._entries)
