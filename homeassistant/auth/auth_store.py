@@ -228,6 +228,8 @@ class AuthStore:
     @callback
     def _data_to_save(self) -> Dict:
         """Return the data to store."""
+        assert self._users is not None
+
         users = [
             {
                 'id': user.id,
