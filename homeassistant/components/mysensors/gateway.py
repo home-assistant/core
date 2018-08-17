@@ -186,12 +186,16 @@ def _discover_mysensors_platform(hass, platform, new_devices):
 
 async def _gw_start(hass, gateway):
     """Start the gateway."""
+    # Don't use hass.async_create_task to avoid holding up setup indefinitely.
+    connect_task = hass.loop.create_task(gateway.start())
+
     @callback
     def gw_stop(event):
         """Trigger to stop the gateway."""
         hass.async_add_job(gateway.stop())
+        if not connect_task.done():
+            connect_task.cancel()
 
-    await gateway.start()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gw_stop)
     if gateway.device == 'mqtt':
         # Gatways connected via mqtt doesn't send gateway ready message.

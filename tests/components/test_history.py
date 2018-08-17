@@ -83,9 +83,10 @@ class TestComponentHistory(unittest.TestCase):
             self.wait_recording_done()
 
         # Get states returns everything before POINT
-        self.assertEqual(states,
-                         sorted(history.get_states(self.hass, future),
-                                key=lambda state: state.entity_id))
+        for state1, state2 in zip(
+                states, sorted(history.get_states(self.hass, future),
+                               key=lambda state: state.entity_id)):
+            assert state1 == state2
 
         # Test get_state here because we have a DB setup
         self.assertEqual(

@@ -448,13 +448,15 @@ async def test_api_fire_event_context(hass, mock_api_client,
     await mock_api_client.post(
         const.URL_API_EVENTS_EVENT.format("test.event"),
         headers={
-            'authorization': 'Bearer {}'.format(hass_access_token.token)
+            'authorization': 'Bearer {}'.format(hass_access_token)
         })
     await hass.async_block_till_done()
 
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+
     assert len(test_value) == 1
-    assert test_value[0].context.user_id == \
-        hass_access_token.refresh_token.user.id
+    assert test_value[0].context.user_id == refresh_token.user.id
 
 
 async def test_api_call_service_context(hass, mock_api_client,
@@ -465,12 +467,15 @@ async def test_api_call_service_context(hass, mock_api_client,
     await mock_api_client.post(
         '/api/services/test_domain/test_service',
         headers={
-            'authorization': 'Bearer {}'.format(hass_access_token.token)
+            'authorization': 'Bearer {}'.format(hass_access_token)
         })
     await hass.async_block_till_done()
 
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+
     assert len(calls) == 1
-    assert calls[0].context.user_id == hass_access_token.refresh_token.user.id
+    assert calls[0].context.user_id == refresh_token.user.id
 
 
 async def test_api_set_state_context(hass, mock_api_client, hass_access_token):
@@ -481,8 +486,11 @@ async def test_api_set_state_context(hass, mock_api_client, hass_access_token):
             'state': 'on'
         },
         headers={
-            'authorization': 'Bearer {}'.format(hass_access_token.token)
+            'authorization': 'Bearer {}'.format(hass_access_token)
         })
 
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+
     state = hass.states.get('light.kitchen')
-    assert state.context.user_id == hass_access_token.refresh_token.user.id
+    assert state.context.user_id == refresh_token.user.id

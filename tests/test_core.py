@@ -246,8 +246,9 @@ class TestEvent(unittest.TestCase):
         """Test events."""
         now = dt_util.utcnow()
         data = {'some': 'attr'}
+        context = ha.Context()
         event1, event2 = [
-            ha.Event('some_type', data, time_fired=now)
+            ha.Event('some_type', data, time_fired=now, context=context)
             for _ in range(2)
         ]
 

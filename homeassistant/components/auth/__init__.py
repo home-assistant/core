@@ -155,7 +155,7 @@ class GrantTokenView(HomeAssistantView):
         access_token = hass.auth.async_create_access_token(refresh_token)
 
         return self.json({
-            'access_token': access_token.token,
+            'access_token': access_token,
             'token_type': 'Bearer',
             'refresh_token': refresh_token.token,
             'expires_in':
@@ -178,7 +178,7 @@ class GrantTokenView(HomeAssistantView):
                 'error': 'invalid_request',
             }, status_code=400)
 
-        refresh_token = await hass.auth.async_get_refresh_token(token)
+        refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
 
         if refresh_token is None:
             return self.json({
@@ -193,7 +193,7 @@ class GrantTokenView(HomeAssistantView):
         access_token = hass.auth.async_create_access_token(refresh_token)
 
         return self.json({
-            'access_token': access_token.token,
+            'access_token': access_token,
             'token_type': 'Bearer',
             'expires_in':
                 int(refresh_token.access_token_expiration.total_seconds()),

@@ -1,5 +1,9 @@
 {
     "config": {
+        "abort": {
+            "all_configured": "Toate pun\u021bile Philips Hue sunt deja configurate",
+            "discover_timeout": "Imposibil de descoperit podurile Hue"
+        },
         "error": {
             "linking": "A ap\u0103rut o eroare de leg\u0103tur\u0103 necunoscut\u0103.",
             "register_failed": "Nu a reu\u0219it \u00eenregistrarea, \u00eencerca\u021bi din nou"
