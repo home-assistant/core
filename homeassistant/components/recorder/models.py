@@ -9,14 +9,15 @@ from sqlalchemy import (
 from sqlalchemy.ext.declarative import declarative_base
 
 import homeassistant.util.dt as dt_util
-from homeassistant.core import Event, EventOrigin, State, split_entity_id
+from homeassistant.core import (
+    Context, Event, EventOrigin, State, split_entity_id)
 from homeassistant.remote import JSONEncoder
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 5
+SCHEMA_VERSION = 6
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,6 +32,8 @@ class Events(Base):  # type: ignore
     origin = Column(String(32))
     time_fired = Column(DateTime(timezone=True), index=True)
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
+    context_id = Column(String(36), index=True)
+    context_user_id = Column(String(36), index=True)
 
     @staticmethod
     def from_event(event):
@@ -38,16 +41,23 @@ class Events(Base):  # type: ignore
         return Events(event_type=event.event_type,
                       event_data=json.dumps(event.data, cls=JSONEncoder),
                       origin=str(event.origin),
-                      time_fired=event.time_fired)
+                      time_fired=event.time_fired,
+                      context_id=event.context.id,
+                      context_user_id=event.context.user_id)
 
     def to_native(self):
         """Convert to a natve HA Event."""
+        context = Context(
+            id=self.context_id,
+            user_id=self.context_user_id
+        )
         try:
             return Event(
                 self.event_type,
                 json.loads(self.event_data),
                 EventOrigin(self.origin),
-                _process_timestamp(self.time_fired)
+                _process_timestamp(self.time_fired),
+                context=context,
             )
         except ValueError:
             # When json.loads fails
@@ -69,6 +79,8 @@ class States(Base):   # type: ignore
     last_updated = Column(DateTime(timezone=True), default=datetime.utcnow,
                           index=True)
     created = Column(DateTime(timezone=True), default=datetime.utcnow)
+    context_id = Column(String(36), index=True)
+    context_user_id = Column(String(36), index=True)
 
     __table_args__ = (
         # Used for fetching the state of entities at a specific time
@@ -82,7 +94,11 @@ class States(Base):   # type: ignore
         entity_id = event.data['entity_id']
         state = event.data.get('new_state')
 
-        dbstate = States(entity_id=entity_id)
+        dbstate = States(
+            entity_id=entity_id,
+            context_id=event.context.id,
+            context_user_id=event.context.user_id,
+        )
 
         # State got deleted
         if state is None:
@@ -103,12 +119,17 @@ class States(Base):   # type: ignore
 
     def to_native(self):
         """Convert to an HA state object."""
+        context = Context(
+            id=self.context_id,
+            user_id=self.context_user_id
+        )
         try:
             return State(
                 self.entity_id, self.state,
                 json.loads(self.attributes),
                 _process_timestamp(self.last_changed),
-                _process_timestamp(self.last_updated)
+                _process_timestamp(self.last_updated),
+                context=context,
             )
         except ValueError:
             # When json.loads fails

@@ -352,11 +352,12 @@ class ActiveConnection:
 
                 if self.hass.auth.active and 'access_token' in msg:
                     self.debug("Received access_token")
-                    token = self.hass.auth.async_get_access_token(
-                        msg['access_token'])
-                    authenticated = token is not None
+                    refresh_token = \
+                        await self.hass.auth.async_validate_access_token(
+                            msg['access_token'])
+                    authenticated = refresh_token is not None
                     if authenticated:
-                        request['hass_user'] = token.refresh_token.user
+                        request['hass_user'] = refresh_token.user
 
                 elif ((not self.hass.auth.active or
                        self.hass.auth.support_legacy) and
@@ -519,8 +520,12 @@ def handle_call_service(hass, connection, msg):
     """
     async def call_service_helper(msg):
         """Call a service and fire complete message."""
+        blocking = True
+        if (msg['domain'] == 'homeassistant' and
+                msg['service'] in ['restart', 'stop']):
+            blocking = False
         await hass.services.async_call(
-            msg['domain'], msg['service'], msg.get('service_data'), True,
+            msg['domain'], msg['service'], msg.get('service_data'), blocking,
             connection.context(msg))
         connection.send_message_outside(result_message(msg['id']))
 

@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_PAYLOAD_ON, CONF_PAYLOAD_OFF)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pysnmp==4.4.4']
+REQUIREMENTS = ['pysnmp==4.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 

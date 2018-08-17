@@ -77,6 +77,7 @@ TEST_REQUIREMENTS = (
     'pymonoprice',
     'pynx584',
     'pyqwikswitch',
+    'PyRMVtransport',
     'python-forecastio',
     'python-nest',
     'pytradfri\[async\]',

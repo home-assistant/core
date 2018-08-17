@@ -124,7 +124,6 @@ class MinMaxSensor(Entity):
         self.states = {}
 
         @callback
-        # pylint: disable=invalid-name
         def async_min_max_sensor_state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
             if new_state.state is None or new_state.state in STATE_UNKNOWN:

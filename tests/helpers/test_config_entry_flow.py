@@ -31,7 +31,7 @@ async def test_single_entry_allowed(hass, flow_conf):
     flow.hass = hass
 
     MockConfigEntry(domain='test').add_to_hass(hass)
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'single_instance_allowed'
@@ -42,7 +42,7 @@ async def test_user_no_devices_found(hass, flow_conf):
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
     assert result['reason'] == 'no_devices_found'
@@ -54,7 +54,7 @@ async def test_user_no_confirmation(hass, flow_conf):
     flow.hass = hass
     flow_conf['discovered'] = True
 
-    result = await flow.async_step_init()
+    result = await flow.async_step_user()
 
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
@@ -90,12 +90,12 @@ async def test_multiple_discoveries(hass, flow_conf):
     loader.set_component(hass, 'test', MockModule('test'))
 
     result = await hass.config_entries.flow.async_init(
-        'test', source=data_entry_flow.SOURCE_DISCOVERY, data={})
+        'test', context={'source': config_entries.SOURCE_DISCOVERY}, data={})
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
 
     # Second discovery
     result = await hass.config_entries.flow.async_init(
-        'test', source=data_entry_flow.SOURCE_DISCOVERY, data={})
+        'test', context={'source': config_entries.SOURCE_DISCOVERY}, data={})
     assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
 
 
@@ -105,11 +105,12 @@ async def test_user_init_trumps_discovery(hass, flow_conf):
 
     # Discovery starts flow
     result = await hass.config_entries.flow.async_init(
-        'test', source=data_entry_flow.SOURCE_DISCOVERY, data={})
+        'test', context={'source': config_entries.SOURCE_DISCOVERY}, data={})
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
 
     # User starts flow
-    result = await hass.config_entries.flow.async_init('test', data={})
+    result = await hass.config_entries.flow.async_init(
+        'test', context={'source': config_entries.SOURCE_USER}, data={})
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
     # Discovery flow has been aborted
