@@ -18,6 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_NIGHT_MODE = 'night_mode'
 
+ATTR_IS_NIGHT_MODE = 'is_night_mode'
+ATTR_IS_AUTO_MODE = 'is_auto_mode'
+
 DEPENDENCIES = ['dyson']
 DYSON_FAN_DEVICES = 'dyson_fan_devices'
 
@@ -158,7 +161,7 @@ class DysonPureCoolLinkDevice(FanEntity):
     def is_on(self):
         """Return true if the entity is on."""
         if self._device.state:
-            return self._device.state.fan_state == "FAN"
+            return self._device.state.fan_mode == "FAN"
         return False
 
     @property
@@ -232,3 +235,11 @@ class DysonPureCoolLinkDevice(FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
+
+    @property
+    def device_state_attributes(self) -> dict:
+        """Return optional state attributes."""
+        return {
+            ATTR_IS_NIGHT_MODE: self.is_night_mode,
+            ATTR_IS_AUTO_MODE: self.is_auto_mode
+            }

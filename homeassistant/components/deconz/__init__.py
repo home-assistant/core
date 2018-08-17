@@ -6,6 +6,7 @@ https://home-assistant.io/components/deconz/
 """
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_API_KEY, CONF_EVENT, CONF_HOST,
     CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
@@ -22,7 +23,7 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==42']
+REQUIREMENTS = ['pydeconz==43']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -60,7 +61,9 @@ async def async_setup(hass, config):
             deconz_config = config[DOMAIN]
         if deconz_config and not configured_hosts(hass):
             hass.async_add_job(hass.config_entries.flow.async_init(
-                DOMAIN, source='import', data=deconz_config
+                DOMAIN,
+                context={'source': config_entries.SOURCE_IMPORT},
+                data=deconz_config
             ))
     return True
 
@@ -96,7 +99,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_DECONZ_EVENT] = []
     hass.data[DATA_DECONZ_UNSUB] = []
 
-    for component in ['binary_sensor', 'light', 'scene', 'sensor']:
+    for component in ['binary_sensor', 'light', 'scene', 'sensor', 'switch']:
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
 

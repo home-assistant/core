@@ -108,7 +108,7 @@ def test_add_entry_calls_setup_entry(hass, manager):
         VERSION = 1
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='title',
                 data={
@@ -116,7 +116,8 @@ def test_add_entry_calls_setup_entry(hass, manager):
                 })
 
     with patch.dict(config_entries.HANDLERS, {'comp': TestFlow, 'beer': 5}):
-        yield from manager.flow.async_init('comp')
+        yield from manager.flow.async_init(
+            'comp', context={'source': config_entries.SOURCE_USER})
         yield from hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -162,7 +163,7 @@ async def test_saving_and_loading(hass):
         VERSION = 5
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='Test Title',
                 data={
@@ -171,13 +172,14 @@ async def test_saving_and_loading(hass):
             )
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        await hass.config_entries.flow.async_init('test')
+        await hass.config_entries.flow.async_init(
+            'test', context={'source': config_entries.SOURCE_USER})
 
     class Test2Flow(data_entry_flow.FlowHandler):
         VERSION = 3
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='Test 2 Title',
                 data={
@@ -187,7 +189,8 @@ async def test_saving_and_loading(hass):
 
     with patch('homeassistant.config_entries.HANDLERS.get',
                return_value=Test2Flow):
-        await hass.config_entries.flow.async_init('test')
+        await hass.config_entries.flow.async_init(
+            'test', context={'source': config_entries.SOURCE_USER})
 
     # To trigger the call_later
     async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
@@ -266,7 +269,7 @@ async def test_discovery_notification(hass):
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
         result = await hass.config_entries.flow.async_init(
-            'test', source=data_entry_flow.SOURCE_DISCOVERY)
+            'test', context={'source': config_entries.SOURCE_DISCOVERY})
 
     await hass.async_block_till_done()
     state = hass.states.get('persistent_notification.config_entry_discovery')
@@ -294,7 +297,7 @@ async def test_discovery_notification_not_created(hass):
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
         await hass.config_entries.flow.async_init(
-            'test', source=data_entry_flow.SOURCE_DISCOVERY)
+            'test', context={'source': config_entries.SOURCE_DISCOVERY})
 
     await hass.async_block_till_done()
     state = hass.states.get('persistent_notification.config_entry_discovery')
