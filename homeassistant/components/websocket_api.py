@@ -10,6 +10,7 @@ from contextlib import suppress
 from functools import partial, wraps
 import json
 import logging
+import sys
 
 from aiohttp import web
 import voluptuous as vol
@@ -326,7 +327,10 @@ class ActiveConnection:
         self.debug("Connected")
 
         # Get a reference to current task so we can cancel our connection
-        self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)
+        if sys.version_info[:2] < (3, 7):
+            self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)
+        else:
+            self._handle_task = asyncio.current_task()
 
         @callback
         def handle_hass_stop(event):
