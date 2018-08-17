@@ -10,6 +10,7 @@ import logging
 import os
 import json
 import mimetypes
+import subprocess
 from homeassistant.components import ais_cloud
 from homeassistant.ais_dom import ais_global
 aisCloud = ais_cloud.AisCloudWS()
@@ -38,10 +39,16 @@ def async_setup(hass, config):
         _LOGGER.info("refresh_files")
         data.refresh_files(call)
 
+    def sync_locations(call):
+        _LOGGER.info("sync_locations")
+        data.sync_locations(call)
+
     hass.services.async_register(
         DOMAIN, 'browse_path', browse_path)
     hass.services.async_register(
         DOMAIN, 'refresh_files', refresh_files)
+    hass.services.async_register(
+        DOMAIN, 'sync_locations', sync_locations)
 
     return True
 
@@ -55,10 +62,9 @@ class LocalData:
         self.folders = []
         self.folders_json = []
         self.config = config
-        self.buffer = ""
         self.current_path = ""
         self.text_to_say = None
-        self.url_to_copy = None
+        self.rclone_serving_process = None
 
     @staticmethod
     def list_dir(path):
@@ -217,32 +223,44 @@ class LocalData:
                         "text": "Tego typu plików jeszcze nie obsługuję."
                     })
 
+    def sync_locations(self, call):
+        if "source_path" not in call.data:
+            _LOGGER.error("No source_path")
+            return []
+        if "dest_path" not in call.data:
+            _LOGGER.error("No dest_path")
+            return []
+        if "say" in call.data:
+            say = call.data["say"]
+        else:
+            say = False
 
-    def rclone_append_listremotes(self, say):
-        import sh
-        self.folders = [ais_global.G_EMPTY_OPTION]
-        self.folders.append('..')
-        for l in sh.rclone('listremotes', G_RCLONE_CONF):
-            self.folders.append(G_CLOUD_PREFIX + l.strip())
-        self.hass.services.call(
-            'input_select',
-            'set_options', {
-                "entity_id": "input_select.folder_name",
-                "options": sorted(self.folders)})
         if say:
             self.hass.services.call(
                 'ais_ai_service',
                 'say_it', {
-                    "text": G_CLOUD_PREFIX.replace("/", "")
+                    "text": "Synchronizuję lokalizację " + call.data["source_path"] + " z " + call.data["dest_path"]
+                    + " modyfikuję tylko " + call.data["source_path"]
                 })
-        else:
-            # beep
+
+        rclone_cmd = ["rclone", "sync", call.data["source_path"], call.data["dest_path"],
+                      "--transfers=1", "--stats=0", G_RCLONE_CONF]
+        proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        #  will wait for the process to complete and then we are going to return the output
+        if "" != proc.stderr:
             self.hass.services.call(
                 'ais_ai_service',
-                'publish_command_to_frame', {
-                    "key": 'tone',
-                    "val": 97
+                'say_it', {
+                    "text": "Błąd podczas synchronizacji: " + proc.stderr
                 })
+        else:
+            self.hass.services.call(
+                'ais_ai_service',
+                'say_it', {
+                    "text": "Synchronizacja zakończona."
+                })
+
 
     def is_rclone_path(self, path):
         if path.startswith(G_CLOUD_PREFIX):
@@ -255,21 +273,59 @@ class LocalData:
         remote = remote[:k+1]
         return remote
 
-    def process_output(self, line):
-        self.buffer += line
+    def rclone_append_listremotes(self, say):
+        self.folders = [ais_global.G_EMPTY_OPTION]
+        self.folders.append('..')
+        rclone_cmd = ["rclone", "listremotes", G_RCLONE_CONF]
+        proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    def interact_serve_output(self, line):
-        if "NOTICE" in line:
-            self.rclone_serve_done(True)
-        elif "ERROR" in line:
-            self.rclone_serve_done(False)
-            return True
+        #  will wait for the process to complete and then we are going to return the output
+        if "" != proc.stderr:
+            self.hass.services.call(
+                'ais_ai_service',
+                'say_it', {
+                    "text": "Nie można pobrać informacji o połączeniach do dysków: " + proc.stderr
+                })
+        else:
+            for l in proc.stdout.split("\n"):
+                    if len(l) > 0:
+                        self.folders.append(G_CLOUD_PREFIX + l.strip())
 
-    def rclone_browse_done(self, cmd, success, exit_code):
-        if success:
+            self.hass.services.call(
+                'input_select',
+                'set_options', {
+                    "entity_id": "input_select.folder_name",
+                    "options": sorted(self.folders)})
+            if say:
+                self.hass.services.call(
+                    'ais_ai_service',
+                    'say_it', {
+                        "text": G_CLOUD_PREFIX.replace("/", "")
+                    })
+            else:
+                # beep
+                self.hass.services.call(
+                    'ais_ai_service',
+                    'publish_command_to_frame', {
+                        "key": 'tone',
+                        "val": 97
+                    })
+
+    def rclone_browse_folder(self, path):
+        rclone_cmd = ["rclone", "lsjson", path, G_RCLONE_CONF]
+        proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        #  will wait for the process to complete and then we are going to return the output
+        if "" != proc.stderr:
+            self.hass.services.call(
+                'ais_ai_service',
+                'say_it', {
+                    "text": "Nie można pobrać zawartości folderu " + proc.stderr
+                })
+        else:
             self.folders = [ais_global.G_EMPTY_OPTION]
             self.folders.append('..')
-            self.folders_json = json.loads(self.buffer)
+            self.folders_json = json.loads(proc.stdout)
             for item in self.folders_json:
                 if self.current_path.endswith(':'):
                     self.folders.append(self.current_path + item["Path"])
@@ -296,18 +352,20 @@ class LocalData:
                         "val": 97
                     })
 
-        else:
+    def rclone_copy_and_read(self, path, item_path):
+        # TODO clear .temp files...
+        rclone_cmd = ["rclone", "copy", path, G_LOCAL_FILES_ROOT + '/.temp/', G_RCLONE_CONF]
+        proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+        if "" != proc.stderr:
             self.hass.services.call(
                 'ais_ai_service',
                 'say_it', {
-                    "text": "Nie można pobrać zawartości folderu "
+                    "text": "Nie udało się pobrać pliku " + proc.stderr
                 })
-
-
-    def rclone_copy_done(self, cmd, success, exit_code):
-        if success:
+        else:
             try:
-                with open(self.url_to_copy) as file:
+                with open(G_LOCAL_FILES_ROOT + '/.temp/' + item_path) as file:
                     self.hass.services.call(
                         'ais_ai_service',
                         'say_it', {
@@ -319,14 +377,20 @@ class LocalData:
                     'say_it', {
                         "text": "Nie udało się otworzyć pliku "
                     })
-        else:
-            self.hass.services.call(
-                'ais_ai_service',
-                'say_it', {
-                    "text": "Nie udało się pobrać pliku "
-                })
 
-    def play_the_stream(self, url_to_stream):
+    def rclone_play_the_stream(self, path, item_path):
+        rclone_cmd = ["rclone", "serve", 'http', path, G_RCLONE_CONF, '--addr=:8080']
+
+        # try to kill previous serve if exists
+        if self.rclone_serving_process is not None:
+            self.rclone_serving_process.kill()
+        #
+        self.rclone_serving_process = subprocess.Popen(
+                rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # import time
+        # time.sleep(3)
+        # start new serve
+        url_to_stream = "http://127.0.0.1:8080/" + str(item_path)
         player_name = self.hass.states.get(
             'input_select.file_player').state
         player = ais_cloud.get_player_data(player_name)
@@ -350,8 +414,8 @@ class LocalData:
                     "media_content_id": _audio_info
                 })
 
+
     def rclone_browse(self, path, say):
-        import sh
         if say:
             if path == G_CLOUD_PREFIX + self.rclone_remote_from_path(path):
                 self.text_to_say = self.rclone_remote_from_path(path)
@@ -377,11 +441,8 @@ class LocalData:
 
         if is_dir:
             # browse the cloud drive
-            self.buffer = ""
             path = path.replace(G_CLOUD_PREFIX, "")
-            p = sh.rclone(
-                ['lsjson', path, G_RCLONE_CONF], _out=self.process_output, _bg=True, _done=self.rclone_browse_done)
-            p.wait()
+            self.rclone_browse_folder(path)
 
         else:
             # file was selected, check the MimeType
@@ -397,19 +458,7 @@ class LocalData:
                     'say_it', {
                         "text": info
                     })
-                # try to kill previous serve if exists
-                try:
-                    sh.pkill(['-9', 'rclone'])
-                except Exception as e:
-                    pass
-                # start new serve
-                url_to_stream = "http://127.0.0.1:8080/" + str(item_path)
-                sh.rclone(['serve', 'http', path, G_RCLONE_CONF, '--addr=:8080'],
-                    _out=self.interact_serve_output,
-                    _iter=True)
-                import time
-                time.sleep(3)
-                self.play_the_stream(url_to_stream)
+                self.rclone_play_the_stream(path, item_path)
             elif mime_type.startswith("text/"):
                 info = "Pobieram i czytam: " + str(item_name)
                 self.hass.services.call(
@@ -417,13 +466,7 @@ class LocalData:
                     'say_it', {
                         "text": info
                     })
-                self.url_to_copy = G_LOCAL_FILES_ROOT + '/.temp/' + item_path
-                p = sh.rclone(
-                    ['copy', path, G_LOCAL_FILES_ROOT + '/.temp/', G_RCLONE_CONF],
-                    _out=self.process_output,
-                    _bg=True,
-                    _done=self.rclone_copy_done)
-                p.wait()
+                self.rclone_copy_and_read(path, item_path)
             else:
                 info = "Jeszcze nie obsługuję plików typu: " + str(mime_type)
                 self.hass.services.call(
