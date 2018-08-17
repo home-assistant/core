@@ -14,7 +14,6 @@ from homeassistant.components import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -379,9 +378,10 @@ class SceneTrait(_Trait):
     async def execute(self, command, params):
         """Execute a scene command."""
         # Don't block for scripts as they can be slow.
-        await self.hass.services.async_call(self.state.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: self.state.entity_id
-        }, blocking=self.state.domain != script.DOMAIN)
+        await self.hass.services.async_call(
+            self.state.domain, SERVICE_TURN_ON, {
+                ATTR_ENTITY_ID: self.state.entity_id
+            }, blocking=self.state.domain != script.DOMAIN)
 
 
 @register_trait
