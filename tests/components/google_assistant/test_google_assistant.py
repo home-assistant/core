@@ -235,8 +235,8 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
     for entity_id in ('climate.hvac', 'climate.heatpump', 'climate.ecobee'):
         state = hass_fixture.states.get(entity_id)
         attr = dict(state.attributes)
-        attr[const.ATTR_UNIT_OF_MEASUREMENT] = const.TEMP_FAHRENHEIT
         hass_fixture.states.async_set(entity_id, state.state, attr)
+        hass_fixture.config.units.temperature_unit = const.TEMP_FAHRENHEIT
 
     reqid = '5711642932632160984'
     data = {
