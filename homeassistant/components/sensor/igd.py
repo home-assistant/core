@@ -6,12 +6,12 @@ https://home-assistant.io/components/sensor.upnp/
 """
 import logging
 
-from homeassistant.components.upnp import DATA_UPNP, UNITS, CIC_SERVICE
+from homeassistant.components.igd import DATA_IGD, UNITS
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['upnp']
+DEPENDENCIES = ['igd']
 
 BYTES_RECEIVED = 1
 BYTES_SENT = 2
@@ -33,20 +33,19 @@ async def async_setup_platform(hass, config, async_add_devices,
     if discovery_info is None:
         return
 
-    device = hass.data[DATA_UPNP]
-    service = device.find_first_service(CIC_SERVICE)
+    device = hass.data[DATA_IGD]['device']
     unit = discovery_info['unit']
     async_add_devices([
-        IGDSensor(service, t, unit if SENSOR_TYPES[t][1] else '#')
+        IGDSensor(device, t, unit if SENSOR_TYPES[t][1] else '#')
         for t in SENSOR_TYPES], True)
 
 
 class IGDSensor(Entity):
     """Representation of a UPnP IGD sensor."""
 
-    def __init__(self, service, sensor_type, unit=None):
+    def __init__(self, device, sensor_type, unit=None):
         """Initialize the IGD sensor."""
-        self._service = service
+        self._device = device
         self.type = sensor_type
         self.unit = unit
         self.unit_factor = UNITS[unit] if unit in UNITS else 1
@@ -78,10 +77,10 @@ class IGDSensor(Entity):
     async def async_update(self):
         """Get the latest information from the IGD."""
         if self.type == BYTES_RECEIVED:
-            self._state = await self._service.get_total_bytes_received()
+            self._state = await self._device.async_get_total_bytes_received()
         elif self.type == BYTES_SENT:
-            self._state = await self._service.get_total_bytes_sent()
+            self._state = await self._device.async_get_total_bytes_sent()
         elif self.type == PACKETS_RECEIVED:
-            self._state = await self._service.get_total_packets_received()
+            self._state = await self._device.async_get_total_packets_received()
         elif self.type == PACKETS_SENT:
-            self._state = await self._service.get_total_packets_sent()
+            self._state = await self._device.async_get_total_packets_sent()
