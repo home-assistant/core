@@ -28,9 +28,10 @@ class TestStatisticsSensor(unittest.TestCase):
         self.median = round(statistics.median(self.values), 2)
         self.deviation = round(statistics.stdev(self.values), 2)
         self.variance = round(statistics.variance(self.values), 2)
-        self.change = self.values[-1] - self.values[0]
-        self.average_change = self.change / (len(self.values) - 1)
-        self.change_rate = self.average_change / (60 * (self.count - 1))
+        self.change = round(self.values[-1] - self.values[0], 2)
+        self.average_change = round(self.change / (len(self.values) - 1), 2)
+        self.change_rate = round(self.average_change / (60 * (self.count - 1)),
+                                 2)
 
     def teardown_method(self, method):
         """Stop everything that was started."""
