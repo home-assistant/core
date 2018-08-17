@@ -58,7 +58,7 @@ class Switchmate(SwitchDevice):
     @property
     def unique_id(self) -> str:
         """Return a unique, HASS-friendly identifier for this entity."""
-        return '{0}'.format(self._mac.replace(':', ''))
+        return self._mac.replace(':', '')
 
     @property
     def name(self) -> str:
