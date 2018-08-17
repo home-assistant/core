@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
-from homeassistant.components.upnp import IP_SERVICE, DATA_UPNP
+from homeassistant.components.igd import IP_SERVICE, DATA_IGD
 
 
 class MockService(MagicMock):
@@ -107,7 +107,7 @@ async def test_setup_succeeds_if_specify_ip(hass, mock_msearch_first):
         })
 
     assert result
-    mock_service = hass.data[DATA_UPNP].peep_first_service()
+    mock_service = hass.data[DATA_IGD].peep_first_service()
     assert len(mock_service.mock_add_port_mapping.mock_calls) == 1
     mock_service.mock_add_port_mapping.assert_called_once_with(
         8123, 8123, '192.168.0.10', 'TCP', desc='Home Assistant')
@@ -122,7 +122,7 @@ async def test_no_config_maps_hass_local_to_remote_port(hass,
     })
 
     assert result
-    mock_service = hass.data[DATA_UPNP].peep_first_service()
+    mock_service = hass.data[DATA_IGD].peep_first_service()
     assert len(mock_service.mock_add_port_mapping.mock_calls) == 1
     mock_service.mock_add_port_mapping.assert_called_once_with(
         8123, 8123, '192.168.0.10', 'TCP', desc='Home Assistant')
@@ -141,7 +141,7 @@ async def test_map_hass_to_remote_port(hass,
     })
 
     assert result
-    mock_service = hass.data[DATA_UPNP].peep_first_service()
+    mock_service = hass.data[DATA_IGD].peep_first_service()
     assert len(mock_service.mock_add_port_mapping.mock_calls) == 1
     mock_service.mock_add_port_mapping.assert_called_once_with(
         8123, 1000, '192.168.0.10', 'TCP', desc='Home Assistant')
@@ -162,7 +162,7 @@ async def test_map_internal_to_remote_ports(hass,
     })
 
     assert result
-    mock_service = hass.data[DATA_UPNP].peep_first_service()
+    mock_service = hass.data[DATA_IGD].peep_first_service()
     assert len(mock_service.mock_add_port_mapping.mock_calls) == 2
 
     mock_service.mock_add_port_mapping.assert_any_call(
