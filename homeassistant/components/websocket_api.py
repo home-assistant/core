@@ -330,6 +330,7 @@ class ActiveConnection:
         if sys.version_info[:2] < (3, 7):
             self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)
         else:
+            # pylint: disable=no-member
             self._handle_task = asyncio.current_task()
 
         @callback
