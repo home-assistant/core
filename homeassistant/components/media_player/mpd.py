@@ -207,15 +207,17 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        features = SUPPORT_MPD
-        if not self._status:
-            self.update()
+        if self._status is None:
+            return None
+
+        supported = SUPPORT_MPD
         if 'volume' in self._status:
-            features |= \
+            supported |= \
                 SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE
         if self._playlists is not None:
-            features |= SUPPORT_SELECT_SOURCE
-        return features
+            supported |= SUPPORT_SELECT_SOURCE
+
+        return supported
 
     @property
     def source(self):
