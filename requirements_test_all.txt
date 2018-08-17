@@ -25,7 +25,7 @@ HAP-python==2.2.2
 PyRMVtransport==0.0.7
 
 # homeassistant.components.sonos
-SoCo==0.14
+SoCo==0.16
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
