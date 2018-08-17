@@ -15,7 +15,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_NAME
 
-REQUIREMENTS = ['geizhals==0.0.4']
+REQUIREMENTS = ['geizhals==0.0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,12 +56,13 @@ class Geizwatch(Entity):
 
     def __init__(self, name, description, product_id, domain):
         """Initialize the sensor."""
-        from geizhals import Geizhals
+        from geizhals import Device, Geizhals
 
         self._name = name
         self.description = description
         self.product_id = product_id
         self.geizhals = Geizhals(product_id, domain)
+        self.device = Device()
 
     @property
     def name(self):
