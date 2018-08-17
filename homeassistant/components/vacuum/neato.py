@@ -10,10 +10,11 @@ import requests
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.components.vacuum import (
-    VacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
-    SUPPORT_STATUS, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    StateVacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
+    SUPPORT_STATE, SUPPORT_STOP, SUPPORT_START, STATE_IDLE,
+    STATE_PAUSED, STATE_CLEANING, STATE_DOCKED, STATE_RETURNING, STATE_ERROR,
     SUPPORT_MAP, ATTR_STATUS, ATTR_BATTERY_LEVEL, ATTR_BATTERY_ICON,
-    SUPPORT_LOCATE)
+    SUPPORT_LOCATE, VACUUM_SERVICE_SCHEMA)
 from homeassistant.components.neato import (
     NEATO_ROBOTS, NEATO_LOGIN, NEATO_MAP_DATA, ACTION, ERRORS, MODE, ALERTS)
 
@@ -24,8 +25,8 @@ DEPENDENCIES = ['neato']
 SCAN_INTERVAL = timedelta(minutes=5)
 
 SUPPORT_NEATO = SUPPORT_BATTERY | SUPPORT_PAUSE | SUPPORT_RETURN_HOME | \
-                 SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON | \
-                 SUPPORT_STATUS | SUPPORT_MAP | SUPPORT_LOCATE
+                 SUPPORT_STOP | SUPPORT_START | \
+                 SUPPORT_STATE | SUPPORT_MAP | SUPPORT_LOCATE
 
 ATTR_CLEAN_START = 'clean_start'
 ATTR_CLEAN_STOP = 'clean_stop'
@@ -45,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     add_devices(dev, True)
 
 
-class NeatoConnectedVacuum(VacuumDevice):
+class NeatoConnectedVacuum(StateVacuumDevice):
     """Representation of a Neato Connected Vacuum."""
 
     def __init__(self, hass, robot):
@@ -79,11 +80,14 @@ class NeatoConnectedVacuum(VacuumDevice):
         _LOGGER.debug('self._state=%s', self._state)
         if self._state['state'] == 1:
             if self._state['details']['isCharging']:
+                self._clean_state = STATE_DOCKED
                 self._status_state = 'Charging'
             elif (self._state['details']['isDocked'] and
                   not self._state['details']['isCharging']):
+                self._clean_state = STATE_DOCKED
                 self._status_state = 'Docked'
             else:
+                self._clean_state = STATE_IDLE
                 self._status_state = 'Stopped'
         elif self._state['state'] == 2:
             if ALERTS.get(self._state['error']) is None:
@@ -93,21 +97,11 @@ class NeatoConnectedVacuum(VacuumDevice):
             else:
                 self._status_state = ALERTS.get(self._state['error'])
         elif self._state['state'] == 3:
+            self._clean_state = STATE_PAUSED
             self._status_state = 'Paused'
         elif self._state['state'] == 4:
+            self._clean_state = STATE_ERROR
             self._status_state = ERRORS.get(self._state['error'])
-
-        if (self._state['action'] == 1 or
-                self._state['action'] == 2 or
-                self._state['action'] == 3 and
-                self._state['state'] == 2):
-            self._clean_state = STATE_ON
-        elif (self._state['action'] == 11 or
-              self._state['action'] == 12 and
-              self._state['state'] == 2):
-            self._clean_state = STATE_ON
-        else:
-            self._clean_state = STATE_OFF
 
         if not self._mapdata.get(self.robot.serial, {}).get('maps', []):
             return
@@ -147,17 +141,17 @@ class NeatoConnectedVacuum(VacuumDevice):
         return self._state['details']['charge']
 
     @property
-    def status(self):
+    def state(self):
         """Return the status of the vacuum cleaner."""
-        return self._status_state
+        return self._clean_state
 
     @property
     def state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
 
-        if self.status is not None:
-            data[ATTR_STATUS] = self.status
+        if self._status_state is not None:
+            data[ATTR_STATUS] = self._status_state
 
         if self.battery_level is not None:
             data[ATTR_BATTERY_LEVEL] = self.battery_level
@@ -181,37 +175,25 @@ class NeatoConnectedVacuum(VacuumDevice):
 
         return data
 
-    def turn_on(self, **kwargs):
+    def start(self, **kwargs):
         """Turn the vacuum on and start cleaning."""
+        self._clean_state = STATE_CLEANING
         self.robot.start_cleaning()
 
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._clean_state == STATE_ON
-
-    def turn_off(self, **kwargs):
-        """Turn the switch off."""
+    def pause(self, **kwargs):
+        """Pause the vacuum."""
+        self._clean_state = STATE_PAUSED
         self.robot.pause_cleaning()
-        self.robot.send_to_base()
 
     def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
+        self._clean_state = STATE_RETURNING
         self.robot.send_to_base()
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
+        self._clean_state = STATE_IDLE
         self.robot.stop_cleaning()
-
-    def start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task."""
-        if self._state['state'] == 1:
-            self.robot.start_cleaning()
-        elif self._state['state'] == 2 and\
-                ALERTS.get(self._state['error']) is None:
-            self.robot.pause_cleaning()
-        if self._state['state'] == 3:
-            self.robot.resume_cleaning()
 
     def locate(self, **kwargs):
         """Locate the robot by making it emit a sound."""
