@@ -89,7 +89,8 @@ class LoginFlow(data_entry_flow.FlowHandler):
         self._auth_provider = auth_provider
 
     async def async_step_init(
-            self, user_input: Dict[str, str] = None) -> Dict[str, Any]:
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
         """Handle the step of the form."""
         errors = {}
 
