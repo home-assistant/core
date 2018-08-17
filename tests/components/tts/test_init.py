@@ -29,7 +29,7 @@ def mutagen_mock():
         yield
 
 
-class TestTTS(object):
+class TestTTS:
     """Test the Google speech component."""
 
     def setup_method(self):

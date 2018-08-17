@@ -51,7 +51,6 @@ SENSOR_TYPES = {
     'rf_status_lvl': ['Radio_lvl', '', 'mdi:signal', None],
     'wifi_status': ['Wifi', '', 'mdi:wifi', None],
     'wifi_status_lvl': ['Wifi_lvl', 'dBm', 'mdi:wifi', None],
-    'lastupdated': ['Last Updated', 's', 'mdi:timer', None],
 }
 
 MODULE_SCHEMA = vol.Schema({
@@ -286,11 +285,9 @@ class NetAtmoSensor(Entity):
                 self._state = "High"
             elif data['wifi_status'] <= 55:
                 self._state = "Full"
-        elif self.type == 'lastupdated':
-            self._state = int(time() - data['When'])
 
 
-class NetAtmoData(object):
+class NetAtmoData:
     """Get the latest data from NetAtmo."""
 
     def __init__(self, auth, station):
@@ -343,7 +340,7 @@ class NetAtmoData(object):
                         # Never hammer the NetAtmo API more than
                         # twice per update interval
                         newinterval = NETATMO_UPDATE_INTERVAL / 2
-                    _LOGGER.warning(
+                    _LOGGER.info(
                         "NetAtmo refresh interval reset to %d seconds",
                         newinterval)
             else:

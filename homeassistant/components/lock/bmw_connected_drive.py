@@ -23,9 +23,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                   ', '.join([a.name for a in accounts]))
     devices = []
     for account in accounts:
-        for vehicle in account.account.vehicles:
-            device = BMWLock(account, vehicle, 'lock', 'BMW lock')
-            devices.append(device)
+        if not account.read_only:
+            for vehicle in account.account.vehicles:
+                device = BMWLock(account, vehicle, 'lock', 'BMW lock')
+                devices.append(device)
     add_devices(devices, True)
 
 

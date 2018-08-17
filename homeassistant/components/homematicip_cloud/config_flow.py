@@ -27,6 +27,10 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
         """Initialize HomematicIP Cloud config flow."""
         self.auth = None
 
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
+        return await self.async_step_init(user_input)
+
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         errors = {}
@@ -70,8 +74,7 @@ class HomematicipCloudFlowHandler(data_entry_flow.FlowHandler):
                         HMIPC_NAME: self.auth.config.get(HMIPC_NAME)
                     })
             return self.async_abort(reason='conection_aborted')
-        else:
-            errors['base'] = 'press_the_button'
+        errors['base'] = 'press_the_button'
 
         return self.async_show_form(step_id='link', errors=errors)
 

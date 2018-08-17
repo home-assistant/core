@@ -100,7 +100,7 @@ class AnthemAVR(MediaPlayerDevice):
 
         if pwrstate is True:
             return STATE_ON
-        elif pwrstate is False:
+        if pwrstate is False:
             return STATE_OFF
         return STATE_UNKNOWN
 

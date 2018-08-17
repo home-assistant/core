@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dostopna to\u010dka je \u017ee konfigurirana",
+            "conection_aborted": "Povezave s stre\u017enikom HMIP ni bila mogo\u010da",
+            "unknown": "Pri\u0161lo je do neznane napake"
+        },
+        "error": {
+            "invalid_pin": "Neveljavna koda PIN, poskusite znova.",
+            "press_the_button": "Prosimo, pritisnite modri gumb.",
+            "register_failed": "Registracija ni uspela, poskusite znova",
+            "timeout_button": "Potekla je \u010dasovna omejitev za pritisk modrega gumba, poskusite znova."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "hapid": "ID dostopne to\u010dke (SGTIN)",
+                    "name": "Ime (neobvezno, ki se uporablja kot predpona za vse naprave)",
+                    "pin": "Koda PIN (neobvezno)"
+                },
+                "title": "Izberite dostopno to\u010dko HomematicIP"
+            },
+            "link": {
+                "description": "Pritisnite modro tipko na dostopni to\u010dko in gumb po\u0161lji, da registrirate homematicIP s Home Assistentom. \n\n![Location of button on bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "title": "Pove\u017eite dostopno to\u010dno"
+            }
+        },
+        "title": "HomematicIP Cloud"
+    }
+}

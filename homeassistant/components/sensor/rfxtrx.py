@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.rfxtrx as rfxtrx
+from homeassistant.components import rfxtrx
 from homeassistant.components.rfxtrx import (
     ATTR_DATA_TYPE, ATTR_FIRE_EVENT, CONF_AUTOMATIC_ADD, CONF_DATA_TYPE,
     CONF_DEVICES, CONF_FIRE_EVENT, DATA_TYPES)

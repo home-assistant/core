@@ -7,7 +7,7 @@ https://home-assistant.io/developers/websocket_api/
 import asyncio
 from concurrent import futures
 from contextlib import suppress
-from functools import partial
+from functools import partial, wraps
 import json
 import logging
 
@@ -18,7 +18,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import (
     MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
     __version__)
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 from homeassistant.loader import bind_hass
 from homeassistant.remote import JSONEncoder
 from homeassistant.helpers import config_validation as cv
@@ -26,7 +26,8 @@ from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import validate_password
 from homeassistant.components.http.const import KEY_AUTHENTICATED
-from homeassistant.components.http.ban import process_wrong_login
+from homeassistant.components.http.ban import process_wrong_login, \
+    process_success_login
 
 DOMAIN = 'websocket_api'
 
@@ -196,6 +197,23 @@ def async_register_command(hass, command, handler, schema):
     handlers[command] = (handler, schema)
 
 
+def require_owner(func):
+    """Websocket decorator to require user to be an owner."""
+    @wraps(func)
+    def with_owner(hass, connection, msg):
+        """Check owner and call function."""
+        user = connection.request.get('hass_user')
+
+        if user is None or not user.is_owner:
+            connection.to_write.put_nowait(error_message(
+                msg['id'], 'unauthorized', 'This command is for owners only.'))
+            return
+
+        func(hass, connection, msg)
+
+    return with_owner
+
+
 async def async_setup(hass, config):
     """Initialize the websocket API."""
     hass.http.register_view(WebsocketAPIView)
@@ -244,6 +262,18 @@ class ActiveConnection:
         self._handle_task = None
         self._writer_task = None
 
+    @property
+    def user(self):
+        """Return the user associated with the connection."""
+        return self.request.get('hass_user')
+
+    def context(self, msg):
+        """Return a context."""
+        user = self.user
+        if user is None:
+            return Context()
+        return Context(user_id=user.id)
+
     def debug(self, message1, message2=''):
         """Print a debug message."""
         _LOGGER.debug("WS %s: %s %s", id(self.wsock), message1, message2)
@@ -269,7 +299,7 @@ class ActiveConnection:
 
     @callback
     def send_message_outside(self, message):
-        """Send a message to the client outside of the main task.
+        """Send a message to the client.
 
         Closes connection if the client is not reading the messages.
 
@@ -314,7 +344,10 @@ class ActiveConnection:
             if request[KEY_AUTHENTICATED]:
                 authenticated = True
 
-            else:
+            # always request auth when auth is active
+            #   even request passed pre-authentication (trusted networks)
+            # or when using legacy api_password
+            if self.hass.auth.active or not authenticated:
                 self.debug("Request auth")
                 await self.wsock.send_json(auth_required_message())
                 msg = await wsock.receive_json()
@@ -322,9 +355,12 @@ class ActiveConnection:
 
                 if self.hass.auth.active and 'access_token' in msg:
                     self.debug("Received access_token")
-                    token = self.hass.auth.async_get_access_token(
-                        msg['access_token'])
-                    authenticated = token is not None
+                    refresh_token = \
+                        await self.hass.auth.async_validate_access_token(
+                            msg['access_token'])
+                    authenticated = refresh_token is not None
+                    if authenticated:
+                        request['hass_user'] = refresh_token.user
 
                 elif ((not self.hass.auth.active or
                        self.hass.auth.support_legacy) and
@@ -341,6 +377,7 @@ class ActiveConnection:
                 return wsock
 
             self.debug("Auth OK")
+            await process_success_login(request)
             await self.wsock.send_json(auth_ok_message())
 
             # ---------- AUTH PHASE OVER ----------
@@ -486,8 +523,13 @@ def handle_call_service(hass, connection, msg):
     """
     async def call_service_helper(msg):
         """Call a service and fire complete message."""
+        blocking = True
+        if (msg['domain'] == 'homeassistant' and
+                msg['service'] in ['restart', 'stop']):
+            blocking = False
         await hass.services.async_call(
-            msg['domain'], msg['service'], msg.get('service_data'), True)
+            msg['domain'], msg['service'], msg.get('service_data'), blocking,
+            connection.context(msg))
         connection.send_message_outside(result_message(msg['id']))
 
     hass.async_add_job(call_service_helper(msg))

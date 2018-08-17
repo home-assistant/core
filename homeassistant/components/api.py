@@ -220,7 +220,8 @@ class APIEntityStateView(HomeAssistantView):
         is_new_state = hass.states.get(entity_id) is None
 
         # Write state
-        hass.states.async_set(entity_id, new_state, attributes, force_update)
+        hass.states.async_set(entity_id, new_state, attributes, force_update,
+                              self.context(request))
 
         # Read the state back for our response
         status_code = HTTP_CREATED if is_new_state else 200
@@ -279,7 +280,8 @@ class APIEventView(HomeAssistantView):
                     event_data[key] = state
 
         request.app['hass'].bus.async_fire(
-            event_type, event_data, ha.EventOrigin.remote)
+            event_type, event_data, ha.EventOrigin.remote,
+            self.context(request))
 
         return self.json_message("Event {} fired.".format(event_type))
 
@@ -316,7 +318,8 @@ class APIDomainServicesView(HomeAssistantView):
                 "Data should be valid JSON.", HTTP_BAD_REQUEST)
 
         with AsyncTrackStates(hass) as changed_states:
-            await hass.services.async_call(domain, service, data, True)
+            await hass.services.async_call(
+                domain, service, data, True, self.context(request))
 
         return self.json(changed_states)
 

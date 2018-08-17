@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-class Itunes(object):
+class Itunes:
     """The iTunes API client."""
 
     def __init__(self, host, port, use_ssl):

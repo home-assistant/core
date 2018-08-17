@@ -1,7 +1,11 @@
 """Tests for the client validator."""
-from homeassistant.components.auth import indieauth
+from unittest.mock import patch
 
 import pytest
+
+from homeassistant.components.auth import indieauth
+
+from tests.common import mock_coro
 
 
 def test_client_id_scheme():
@@ -84,27 +88,65 @@ def test_parse_url_path():
     assert indieauth._parse_url('http://ex.com').path == '/'
 
 
-def test_verify_redirect_uri():
+async def test_verify_redirect_uri():
     """Test that we verify redirect uri correctly."""
-    assert indieauth.verify_redirect_uri(
+    assert await indieauth.verify_redirect_uri(
+        None,
         'http://ex.com',
         'http://ex.com/callback'
     )
 
-    # Different domain
-    assert not indieauth.verify_redirect_uri(
-        'http://ex.com',
-        'http://different.com/callback'
-    )
+    with patch.object(indieauth, 'fetch_redirect_uris',
+                      side_effect=lambda *_: mock_coro([])):
+        # Different domain
+        assert not await indieauth.verify_redirect_uri(
+            None,
+            'http://ex.com',
+            'http://different.com/callback'
+        )
 
-    # Different scheme
-    assert not indieauth.verify_redirect_uri(
-        'http://ex.com',
-        'https://ex.com/callback'
-    )
+        # Different scheme
+        assert not await indieauth.verify_redirect_uri(
+            None,
+            'http://ex.com',
+            'https://ex.com/callback'
+        )
 
-    # Different subdomain
-    assert not indieauth.verify_redirect_uri(
-        'https://sub1.ex.com',
-        'https://sub2.ex.com/callback'
-    )
+        # Different subdomain
+        assert not await indieauth.verify_redirect_uri(
+            None,
+            'https://sub1.ex.com',
+            'https://sub2.ex.com/callback'
+        )
+
+
+async def test_find_link_tag(hass, aioclient_mock):
+    """Test finding link tag."""
+    aioclient_mock.get("http://127.0.0.1:8000", text="""
+<!doctype html>
+<html>
+  <head>
+    <link rel="redirect_uri" href="hass://oauth2_redirect">
+    <link rel="other_value" href="hass://oauth2_redirect">
+    <link rel="redirect_uri" href="/beer">
+  </head>
+  ...
+</html>
+""")
+    redirect_uris = await indieauth.fetch_redirect_uris(
+        hass, "http://127.0.0.1:8000")
+
+    assert redirect_uris == [
+        "hass://oauth2_redirect",
+        "http://127.0.0.1:8000/beer",
+    ]
+
+
+async def test_find_link_tag_max_size(hass, aioclient_mock):
+    """Test finding link tag."""
+    text = ("0" * 1024 * 10) + '<link rel="redirect_uri" href="/beer">'
+    aioclient_mock.get("http://127.0.0.1:8000", text=text)
+    redirect_uris = await indieauth.fetch_redirect_uris(
+        hass, "http://127.0.0.1:8000")
+
+    assert redirect_uris == []

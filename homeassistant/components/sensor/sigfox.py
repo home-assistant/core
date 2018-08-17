@@ -55,7 +55,7 @@ def epoch_to_datetime(epoch_time):
     return datetime.datetime.fromtimestamp(epoch_time).isoformat()
 
 
-class SigfoxAPI(object):
+class SigfoxAPI:
     """Class for interacting with the SigFox API."""
 
     def __init__(self, api_login, api_password):

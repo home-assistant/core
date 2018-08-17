@@ -96,7 +96,7 @@ class BroadlinkSensor(Entity):
         self._state = self._broadlink_data.data[self._type]
 
 
-class BroadlinkData(object):
+class BroadlinkData:
     """Representation of a Broadlink data object."""
 
     def __init__(self, interval, ip_addr, mac_addr, timeout):

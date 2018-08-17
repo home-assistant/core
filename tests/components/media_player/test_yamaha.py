@@ -15,7 +15,7 @@ def _create_zone_mock(name, url):
     return zone
 
 
-class FakeYamahaDevice(object):
+class FakeYamahaDevice:
     """A fake Yamaha device."""
 
     def __init__(self, ctrl_url, name, zones=None):

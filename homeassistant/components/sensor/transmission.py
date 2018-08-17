@@ -148,7 +148,7 @@ class TransmissionSensor(Entity):
                 self._state = self._data.torrentCount
 
 
-class TransmissionData(object):
+class TransmissionData:
     """Get the latest data and update the states."""
 
     def __init__(self, api):

@@ -17,7 +17,7 @@ from .entity_platform import EntityPlatform
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=15)
 
 
-class EntityComponent(object):
+class EntityComponent:
     """The EntityComponent manages platforms that manages entities.
 
     This class has the following responsibilities:
@@ -141,6 +141,18 @@ class EntityComponent(object):
         entity_ids = set(extract_entity_ids(self.hass, service, expand_group))
         return [entity for entity in self.entities
                 if entity.available and entity.entity_id in entity_ids]
+
+    @callback
+    def async_register_entity_service(self, name, schema, func):
+        """Register an entity service."""
+        async def handle_service(call):
+            """Handle the service."""
+            await self.hass.helpers.service.entity_service_call(
+                self._platforms.values(), func, call
+            )
+
+        self.hass.services.async_register(
+            self.domain, name, handle_service, schema)
 
     async def _async_setup_platform(self, platform_type, platform_config,
                                     discovery_info=None):

@@ -97,7 +97,7 @@ class DemoCover(CoverDevice):
         """Close the cover."""
         if self._position == 0:
             return
-        elif self._position is None:
+        if self._position is None:
             self._closed = True
             self.schedule_update_ha_state()
             return
@@ -119,7 +119,7 @@ class DemoCover(CoverDevice):
         """Open the cover."""
         if self._position == 100:
             return
-        elif self._position is None:
+        if self._position is None:
             self._closed = False
             self.schedule_update_ha_state()
             return

@@ -9,7 +9,7 @@ import struct
 
 import voluptuous as vol
 
-import homeassistant.components.modbus as modbus
+from homeassistant.components import modbus
 from homeassistant.const import (
     CONF_NAME, CONF_OFFSET, CONF_UNIT_OF_MEASUREMENT, CONF_SLAVE,
     CONF_STRUCTURE)

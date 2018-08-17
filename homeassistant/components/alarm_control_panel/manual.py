@@ -205,7 +205,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
         """Return one or more digits/characters."""
         if self._code is None:
             return None
-        elif isinstance(self._code, str) and re.search('^\\d+$', self._code):
+        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
             return 'Number'
         return 'Any'
 

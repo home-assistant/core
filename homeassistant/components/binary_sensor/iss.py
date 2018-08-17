@@ -101,7 +101,7 @@ class IssBinarySensor(BinarySensorDevice):
         self.iss_data.update()
 
 
-class IssData(object):
+class IssData:
     """Get data from the ISS API."""
 
     def __init__(self, latitude, longitude):

@@ -84,7 +84,7 @@ class LocativeView(HomeAssistantView):
                         gps=gps_location))
             return 'Setting location to {}'.format(location_name)
 
-        elif direction == 'exit':
+        if direction == 'exit':
             current_state = hass.states.get(
                 '{}.{}'.format(DOMAIN, device))
 
@@ -102,7 +102,7 @@ class LocativeView(HomeAssistantView):
             return 'Ignoring exit from {} (already in {})'.format(
                 location_name, current_state)
 
-        elif direction == 'test':
+        if direction == 'test':
             # In the app, a test message can be sent. Just return something to
             # the user to let them know that it works.
             return 'Received test message.'
