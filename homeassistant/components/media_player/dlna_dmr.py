@@ -35,7 +35,7 @@ from homeassistant.util import get_local_ip
 DLNA_DMR_DATA = 'dlna_dmr'
 
 REQUIREMENTS = [
-    'async-upnp-client==0.12.3',
+    'async-upnp-client==0.12.4',
 ]
 
 DEFAULT_NAME = 'DLNA Digital Media Renderer'
