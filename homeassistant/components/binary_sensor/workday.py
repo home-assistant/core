@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['holidays==0.9.5']
+REQUIREMENTS = ['holidays==0.9.6']
 
 # List of all countries currently supported by holidays
 # There seems to be no way to get the list out at runtime
@@ -25,9 +25,9 @@ ALL_COUNTRIES = ['Argentina', 'AR', 'Australia', 'AU', 'Austria', 'AT',
                  'Belgium', 'BE', 'Canada', 'CA', 'Colombia', 'CO', 'Czech',
                  'CZ', 'Denmark', 'DK', 'England', 'EuropeanCentralBank',
                  'ECB', 'TAR', 'Finland', 'FI', 'France', 'FRA', 'Germany',
-                 'DE', 'Hungary', 'HU', 'Ireland', 'Isle of Man', 'Italy',
-                 'IT', 'Japan', 'JP', 'Mexico', 'MX', 'Netherlands', 'NL',
-                 'NewZealand', 'NZ', 'Northern Ireland',
+                 'DE', 'Hungary', 'HU', 'India', 'IND', 'Ireland',
+                 'Isle of Man', 'Italy', 'IT', 'Japan', 'JP', 'Mexico', 'MX',
+                 'Netherlands', 'NL', 'NewZealand', 'NZ', 'Northern Ireland',
                  'Norway', 'NO', 'Polish', 'PL', 'Portugal', 'PT',
                  'PortugalExt', 'PTE', 'Scotland', 'Slovenia', 'SI',
                  'Slovakia', 'SK', 'South Africa', 'ZA', 'Spain', 'ES',

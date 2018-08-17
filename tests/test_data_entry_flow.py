@@ -12,16 +12,23 @@ def manager():
     handlers = Registry()
     entries = []
 
-    async def async_create_flow(handler_name, *, source, data):
+    async def async_create_flow(handler_name, *, context, data):
         handler = handlers.get(handler_name)
 
         if handler is None:
             raise data_entry_flow.UnknownHandler
 
-        return handler()
+        flow = handler()
+        flow.init_step = context.get('init_step', 'init') \
+            if context is not None else 'init'
+        flow.source = context.get('source') \
+            if context is not None else 'user_input'
+        return flow
 
-    async def async_add_entry(result):
+    async def async_add_entry(context, result):
         if (result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY):
+            result['source'] = context.get('source') \
+                if context is not None else 'user'
             entries.append(result)
 
     manager = data_entry_flow.FlowManager(
@@ -57,12 +64,12 @@ async def test_configure_two_steps(manager):
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 1
 
-        async def async_step_init(self, user_input=None):
+        async def async_step_first(self, user_input=None):
             if user_input is not None:
                 self.init_data = user_input
                 return await self.async_step_second()
             return self.async_show_form(
-                step_id='init',
+                step_id='first',
                 data_schema=vol.Schema([str])
             )
 
@@ -77,7 +84,7 @@ async def test_configure_two_steps(manager):
                 data_schema=vol.Schema([str])
             )
 
-    form = await manager.async_init('test')
+    form = await manager.async_init('test', context={'init_step': 'first'})
 
     with pytest.raises(vol.Invalid):
         form = await manager.async_configure(
@@ -163,7 +170,7 @@ async def test_create_saves_data(manager):
     assert entry['handler'] == 'test'
     assert entry['title'] == 'Test Title'
     assert entry['data'] == 'Test Data'
-    assert entry['source'] == data_entry_flow.SOURCE_USER
+    assert entry['source'] == 'user'
 
 
 async def test_discovery_init_flow(manager):
@@ -172,7 +179,7 @@ async def test_discovery_init_flow(manager):
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
 
-        async def async_step_discovery(self, info):
+        async def async_step_init(self, info):
             return self.async_create_entry(title=info['id'], data=info)
 
     data = {
@@ -181,7 +188,7 @@ async def test_discovery_init_flow(manager):
     }
 
     await manager.async_init(
-        'test', source=data_entry_flow.SOURCE_DISCOVERY, data=data)
+        'test', context={'source': 'discovery'}, data=data)
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
 
@@ -190,4 +197,4 @@ async def test_discovery_init_flow(manager):
     assert entry['handler'] == 'test'
     assert entry['title'] == 'hello'
     assert entry['data'] == data
-    assert entry['source'] == data_entry_flow.SOURCE_DISCOVERY
+    assert entry['source'] == 'discovery'

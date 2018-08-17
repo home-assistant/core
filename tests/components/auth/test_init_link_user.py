@@ -52,7 +52,7 @@ async def async_get_code(hass, aiohttp_client):
         'user': user,
         'code': step['result'],
         'client': client,
-        'access_token': access_token.token,
+        'access_token': access_token,
     }
 
 

@@ -26,9 +26,6 @@ CONF_PROJECT_DUE_DATE = 'due_date_days'
 CONF_PROJECT_LABEL_WHITELIST = 'labels'
 CONF_PROJECT_WHITELIST = 'include_projects'
 
-# https://github.com/PyCQA/pylint/pull/2320
-# pylint: disable=fixme
-
 # Calendar Platform: Does this calendar event last all day?
 ALL_DAY = 'all_day'
 # Attribute: All tasks in this project

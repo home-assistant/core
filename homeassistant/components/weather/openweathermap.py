@@ -131,7 +131,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self.data.get_wind().get('speed')
+        return round(self.data.get_wind().get('speed') * 3.6, 2)
 
     @property
     def wind_bearing(self):
@@ -173,7 +173,10 @@ class OpenWeatherMapWeather(WeatherEntity):
                     ATTR_FORECAST_TEMP:
                         entry.get_temperature('celsius').get('temp'),
                     ATTR_FORECAST_PRECIPITATION:
-                        entry.get_rain().get('3h'),
+                        (round(entry.get_rain().get('3h'), 1)
+                         if entry.get_rain().get('3h') is not None
+                         and (round(entry.get_rain().get('3h'), 1) > 0)
+                         else None),
                     ATTR_FORECAST_CONDITION:
                         [k for k, v in CONDITION_CLASSES.items()
                          if entry.get_weather_code() in v][0]

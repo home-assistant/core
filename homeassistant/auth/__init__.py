@@ -2,18 +2,23 @@
 import asyncio
 import logging
 from collections import OrderedDict
+from typing import List, Awaitable
+
+import jwt
 
 from homeassistant import data_entry_flow
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
+from homeassistant.util import dt as dt_util
 
-from . import models
 from . import auth_store
 from .providers import auth_provider_from_config
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def auth_manager_from_config(hass, provider_configs):
+async def auth_manager_from_config(
+        hass: HomeAssistant,
+        provider_configs: List[dict]) -> Awaitable['AuthManager']:
     """Initialize an auth manager from config."""
     store = auth_store.AuthStore(hass)
     if provider_configs:
@@ -51,7 +56,6 @@ class AuthManager:
         self.login_flow = data_entry_flow.FlowManager(
             hass, self._async_create_login_flow,
             self._async_finish_login_flow)
-        self._access_tokens = OrderedDict()
 
     @property
     def active(self):
@@ -178,43 +182,64 @@ class AuthManager:
 
         return await self._store.async_create_refresh_token(user, client_id)
 
-    async def async_get_refresh_token(self, token):
+    async def async_get_refresh_token(self, token_id):
+        """Get refresh token by id."""
+        return await self._store.async_get_refresh_token(token_id)
+
+    async def async_get_refresh_token_by_token(self, token):
         """Get refresh token by token."""
-        return await self._store.async_get_refresh_token(token)
+        return await self._store.async_get_refresh_token_by_token(token)
 
     @callback
     def async_create_access_token(self, refresh_token):
         """Create a new access token."""
-        access_token = models.AccessToken(refresh_token=refresh_token)
-        self._access_tokens[access_token.token] = access_token
-        return access_token
+        # pylint: disable=no-self-use
+        return jwt.encode({
+            'iss': refresh_token.id,
+            'iat': dt_util.utcnow(),
+            'exp': dt_util.utcnow() + refresh_token.access_token_expiration,
+        }, refresh_token.jwt_key, algorithm='HS256').decode()
 
-    @callback
-    def async_get_access_token(self, token):
-        """Get an access token."""
-        tkn = self._access_tokens.get(token)
-
-        if tkn is None:
-            _LOGGER.debug('Attempt to get non-existing access token')
+    async def async_validate_access_token(self, token):
+        """Return if an access token is valid."""
+        try:
+            unverif_claims = jwt.decode(token, verify=False)
+        except jwt.InvalidTokenError:
             return None
 
-        if tkn.expired or not tkn.refresh_token.user.is_active:
-            if tkn.expired:
-                _LOGGER.debug('Attempt to get expired access token')
-            else:
-                _LOGGER.debug('Attempt to get access token for inactive user')
-            self._access_tokens.pop(token)
+        refresh_token = await self.async_get_refresh_token(
+            unverif_claims.get('iss'))
+
+        if refresh_token is None:
+            jwt_key = ''
+            issuer = ''
+        else:
+            jwt_key = refresh_token.jwt_key
+            issuer = refresh_token.id
+
+        try:
+            jwt.decode(
+                token,
+                jwt_key,
+                leeway=10,
+                issuer=issuer,
+                algorithms=['HS256']
+            )
+        except jwt.InvalidTokenError:
             return None
 
-        return tkn
+        if not refresh_token.user.is_active:
+            return None
 
-    async def _async_create_login_flow(self, handler, *, source, data):
+        return refresh_token
+
+    async def _async_create_login_flow(self, handler, *, context, data):
         """Create a login flow."""
         auth_provider = self._providers[handler]
 
-        return await auth_provider.async_credential_flow()
+        return await auth_provider.async_credential_flow(context)
 
-    async def _async_finish_login_flow(self, result):
+    async def _async_finish_login_flow(self, context, result):
         """Result of a credential login flow."""
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             return None

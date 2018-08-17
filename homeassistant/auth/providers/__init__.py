@@ -123,7 +123,7 @@ class AuthProvider:
 
     # Implement by extending class
 
-    async def async_credential_flow(self):
+    async def async_credential_flow(self, context):
         """Return the data flow for logging in with auth provider."""
         raise NotImplementedError
 

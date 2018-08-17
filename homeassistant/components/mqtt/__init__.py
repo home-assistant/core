@@ -32,7 +32,8 @@ from homeassistant.util.async_ import (
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE, CONF_USERNAME,
     CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
-from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
+
+from .server import HBMQTT_CONFIG_SCHEMA
 
 REQUIREMENTS = ['paho-mqtt==1.3.1']
 
@@ -306,7 +307,8 @@ async def _async_setup_server(hass: HomeAssistantType,
         return None
 
     success, broker_config = \
-        await server.async_start(hass, conf.get(CONF_EMBEDDED))
+        await server.async_start(
+            hass, conf.get(CONF_PASSWORD), conf.get(CONF_EMBEDDED))
 
     if not success:
         return None
@@ -349,6 +351,16 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     if CONF_EMBEDDED not in conf and CONF_BROKER in conf:
         broker_config = None
     else:
+        if (conf.get(CONF_PASSWORD) is None and
+                config.get('http') is not None and
+                config['http'].get('api_password') is not None):
+            _LOGGER.error(
+                "Starting from release 0.76, the embedded MQTT broker does not"
+                " use api_password as default password anymore. Please set"
+                " password configuration. See https://home-assistant.io/docs/"
+                "mqtt/broker#embedded-broker for details")
+            return False
+
         broker_config = await _async_setup_server(hass, config)
 
     if CONF_BROKER in conf:

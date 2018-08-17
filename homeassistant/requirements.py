@@ -3,7 +3,7 @@ import asyncio
 from functools import partial
 import logging
 import os
-from typing import List, Dict, Optional
+from typing import Any, Dict, List, Optional
 
 import homeassistant.util.package as pkg_util
 from homeassistant.core import HomeAssistant
@@ -37,7 +37,7 @@ async def async_process_requirements(hass: HomeAssistant, name: str,
     return True
 
 
-def pip_kwargs(config_dir: Optional[str]) -> Dict[str, str]:
+def pip_kwargs(config_dir: Optional[str]) -> Dict[str, Any]:
     """Return keyword arguments for PIP install."""
     kwargs = {
         'constraints': os.path.join(os.path.dirname(__file__), CONSTRAINT_FILE)
