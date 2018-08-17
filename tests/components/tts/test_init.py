@@ -44,10 +44,10 @@ class TestTTS:
 
     def teardown_method(self):
         """Stop everything that was started."""
+        self.hass.stop()
+
         if os.path.isdir(self.default_tts_cache):
             shutil.rmtree(self.default_tts_cache)
-
-        self.hass.stop()
 
     def test_setup_component_demo(self):
         """Setup the demo platform with defaults."""
