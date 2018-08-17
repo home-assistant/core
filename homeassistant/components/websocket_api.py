@@ -326,12 +326,7 @@ class ActiveConnection:
         await wsock.prepare(request)
         self.debug("Connected")
 
-        # Get a reference to current task so we can cancel our connection
-        if sys.version_info[:2] < (3, 7):
-            self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)
-        else:
-            # pylint: disable=no-member
-            self._handle_task = asyncio.current_task()
+        self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)
 
         @callback
         def handle_hass_stop(event):
