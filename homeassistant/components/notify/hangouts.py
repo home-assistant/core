@@ -9,7 +9,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA, NOTIFY_SERVICE_SCHEMA,
+from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
+                                             NOTIFY_SERVICE_SCHEMA,
                                              BaseNotificationService,
                                              ATTR_MESSAGE)
 
@@ -57,13 +58,14 @@ class HangoutsNotificationService(BaseNotificationService):
         if ATTR_TARGET in kwargs:
             target_conversations = []
             for target in kwargs.get(ATTR_TARGET):
-                target_conversations.append({'id':target})
+                target_conversations.append({'id': target})
         else:
             target_conversations = self._default_conversations
-        
+
         messages = []
-        if 'title' in kwargs: messages.append({'text': kwargs['title'], 'is_bold': True})
-        
+        if 'title' in kwargs:
+            messages.append({'text': kwargs['title'], 'is_bold': True})
+
         messages.append({'text': message, 'parse_str': True})
         service_data = {
             ATTR_TARGET: target_conversations,
