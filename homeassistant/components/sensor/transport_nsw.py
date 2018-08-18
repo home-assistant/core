@@ -1,5 +1,5 @@
 """
-Transport NSW sensor to query next leave event for a specified stop 
+Transport NSW sensor to query next leave event for a specified stop
 (bus, train or ferry).
 
 For more details about this platform, please refer to the documentation at
