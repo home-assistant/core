@@ -66,6 +66,7 @@ COMMAND_SCHEMA = vol.All(
         vol.Exclusive(CONF_WORD, 'trigger'): cv.string,
         vol.Exclusive(CONF_EXPRESSION, 'trigger'): cv.is_regex,
         vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_CONVERSATIONS): [TARGETS_SCHEMA]
     }),
     # Make sure it's either a word or an expression command
     cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION)
@@ -149,7 +150,18 @@ class HangoutsBot:
         self._expression_commands = {}
 
         for command in self._commands:
-            if not command.get(CONF_CONVERSATIONS):
+            if command.get(CONF_CONVERSATIONS):
+                conversations = []
+                for conversation in command.get(CONF_CONVERSATIONS):
+                    if 'id' in conversation:
+                        conversations.append(conversation['id'])
+                    elif 'name' in conversation:
+                        for conv in self._conversation_list.get_all():
+                            if conv.name == conversation['name']:
+                                conversations.append(conv.id_)
+                                break
+                command[CONF_CONVERSATIONS] = conversations
+            else:
                 command[CONF_CONVERSATIONS] = \
                     [conv.id_ for conv in self._conversation_list.get_all()]
 
