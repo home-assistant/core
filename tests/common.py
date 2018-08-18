@@ -307,7 +307,12 @@ def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
     registry.entities = mock_entries or {}
-    hass.data[entity_registry.DATA_REGISTRY] = registry
+
+    async def _get_reg():
+        return registry
+
+    hass.data[entity_registry.DATA_REGISTRY] = \
+        hass.loop.create_task(_get_reg())
     return registry
 
 
