@@ -15,7 +15,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
-async def async_migrator(hass, old_path, store, *, old_conf_migrate_func=None):
+async def async_migrator(hass, old_path, store, *,
+                         old_conf_load_func=json.load_json,
+                         old_conf_migrate_func=None):
     """Helper function to migrate old data to a store and then load data.
 
     async def old_conf_migrate_func(old_data)
@@ -25,7 +27,7 @@ async def async_migrator(hass, old_path, store, *, old_conf_migrate_func=None):
         if not os.path.isfile(old_path):
             return None
 
-        return json.load_json(old_path)
+        return old_conf_load_func(old_path)
 
     config = await hass.async_add_executor_job(load_old_config)
 
@@ -52,7 +54,7 @@ class Store:
         self._data = None
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
-        self._write_lock = asyncio.Lock()
+        self._write_lock = asyncio.Lock(loop=hass.loop)
         self._load_task = None
 
     @property
