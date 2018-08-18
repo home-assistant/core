@@ -119,7 +119,8 @@ async def async_setup(hass, config):
             await service.add_port_mapping(internal, external, host, 'TCP',
                                            desc='Home Assistant')
             registered.append(external)
-            _LOGGER.debug("external %s -> %s @ %s", external, internal, host)
+            _LOGGER.debug("Mapping external TCP port %s -> %s @ %s",
+                          external, internal, host)
         except UpnpSoapError as error:
             _LOGGER.error(error)
             hass.components.persistent_notification.create(
