@@ -1,5 +1,6 @@
 """
-Transport NSW sensor to query next leave event for a specified stop (bus, train or ferry).
+Transport NSW sensor to query next leave event for a specified stop 
+(bus, train or ferry).
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt/
@@ -11,7 +12,6 @@ import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
