@@ -145,7 +145,7 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         return self._clean_state
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the vacuum cleaner."""
         data = {}
 
@@ -175,13 +175,14 @@ class NeatoConnectedVacuum(StateVacuumDevice):
         return data
 
     def start(self):
-        """Turn the vacuum on and start cleaning."""
-        self._clean_state = STATE_CLEANING
-        self.robot.start_cleaning()
+        """Start cleaning or resume cleaning."""
+        if self._state['state'] == 1:
+            self.robot.start_cleaning()
+        elif self._state['state'] == 3:
+            self.robot.resume_cleaning()
 
     def pause(self):
         """Pause the vacuum."""
-        self._clean_state = STATE_PAUSED
         self.robot.pause_cleaning()
 
     def return_to_base(self, **kwargs):
@@ -191,7 +192,6 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
-        self._clean_state = STATE_IDLE
         self.robot.stop_cleaning()
 
     def locate(self, **kwargs):
