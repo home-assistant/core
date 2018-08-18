@@ -74,9 +74,9 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert resp.status == 200
 
 
-def test_credential_store_expiration():
-    """Test that the credential store will not return expired tokens."""
-    store, retrieve = auth._create_cred_store()
+def test_auth_code_store_expiration():
+    """Test that the auth code store will not return expired tokens."""
+    store, retrieve = auth._create_auth_code_store()
     client_id = 'bla'
     credentials = 'creds'
     now = utcnow()

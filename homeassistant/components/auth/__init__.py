@@ -51,6 +51,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.auth.models import User, Credentials
 from homeassistant.components import websocket_api
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -73,17 +74,17 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Component to allow users to login."""
-    store_credentials, retrieve_credentials = _create_cred_store()
+    store_result, retrieve_result = _create_auth_code_store()
 
-    hass.http.register_view(GrantTokenView(retrieve_credentials))
-    hass.http.register_view(LinkUserView(retrieve_credentials))
+    hass.http.register_view(GrantTokenView(retrieve_result))
+    hass.http.register_view(LinkUserView(retrieve_result))
 
     hass.components.websocket_api.async_register_command(
         WS_TYPE_CURRENT_USER, websocket_current_user,
         SCHEMA_WS_CURRENT_USER
     )
 
-    await login_flow.async_setup(hass, store_credentials)
+    await login_flow.async_setup(hass, store_result)
 
     return True
 
@@ -96,9 +97,9 @@ class GrantTokenView(HomeAssistantView):
     requires_auth = False
     cors_allowed = True
 
-    def __init__(self, retrieve_credentials):
+    def __init__(self, retrieve_user):
         """Initialize the grant token view."""
-        self._retrieve_credentials = retrieve_credentials
+        self._retrieve_user = retrieve_user
 
     @log_invalid_auth
     async def post(self, request):
@@ -134,15 +135,16 @@ class GrantTokenView(HomeAssistantView):
                 'error': 'invalid_request',
             }, status_code=400)
 
-        credentials = self._retrieve_credentials(client_id, code)
+        user = self._retrieve_user(client_id, code)
 
-        if credentials is None:
+        if user is None or not isinstance(user, User):
             return self.json({
                 'error': 'invalid_request',
                 'error_description': 'Invalid code',
             }, status_code=400)
 
-        user = await hass.auth.async_get_or_create_user(credentials)
+        # refresh user
+        user = await hass.auth.async_get_user(user.id)
 
         if not user.is_active:
             return self.json({
@@ -222,7 +224,7 @@ class LinkUserView(HomeAssistantView):
         credentials = self._retrieve_credentials(
             data['client_id'], data['code'])
 
-        if credentials is None:
+        if credentials is None or not isinstance(credentials, Credentials):
             return self.json_message('Invalid code', status_code=400)
 
         await hass.auth.async_link_user(user, credentials)
@@ -230,37 +232,37 @@ class LinkUserView(HomeAssistantView):
 
 
 @callback
-def _create_cred_store():
-    """Create a credential store."""
-    temp_credentials = {}
+def _create_auth_code_store():
+    """Create an in memory store."""
+    temp_results = {}
 
     @callback
-    def store_credentials(client_id, credentials):
-        """Store credentials and return a code to retrieve it."""
+    def store_result(client_id, result):
+        """Store flow result and return a code to retrieve it."""
         code = uuid.uuid4().hex
-        temp_credentials[(client_id, code)] = (dt_util.utcnow(), credentials)
+        temp_results[(client_id, code)] = (dt_util.utcnow(), result)
         return code
 
     @callback
-    def retrieve_credentials(client_id, code):
-        """Retrieve credentials."""
+    def retrieve_result(client_id, code):
+        """Retrieve flow result."""
         key = (client_id, code)
 
-        if key not in temp_credentials:
+        if key not in temp_results:
             return None
 
-        created, credentials = temp_credentials.pop(key)
+        created, result = temp_results.pop(key)
 
         # OAuth 4.2.1
         # The authorization code MUST expire shortly after it is issued to
         # mitigate the risk of leaks.  A maximum authorization code lifetime of
         # 10 minutes is RECOMMENDED.
         if dt_util.utcnow() - created < timedelta(minutes=10):
-            return credentials
+            return result
 
         return None
 
-    return store_credentials, retrieve_credentials
+    return store_result, retrieve_result
 
 
 @callback
