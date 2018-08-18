@@ -139,11 +139,11 @@ class HangoutsBot:
                                    self.
                                    async_handle_update_users_and_conversations)
         self.hass.bus.async_listen(EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
-                                   self._async_update_conversaition_commands)
+                                   self._update_conversaition_commands)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                         self._async_handle_hass_stop)
 
-    def _async_update_conversaition_commands(self, _):
+    def _update_conversaition_commands(self, _):
         self._word_commands = {}
 
         self._expression_commands = {}
@@ -197,12 +197,9 @@ class HangoutsBot:
             event_data = {
                 'command': command[CONF_NAME],
                 'conversation_id': conv_id,
-                'user': {
-                    'id_': user_id,
-                    'chat_id': user_id.chat_id,
-                    'full_name': user.full_name
-                },
-                'args': pieces[1:]
+                'user_id': user_id,
+                'user_name': user.full_name,
+                'data': pieces[1:]
             }
         else:
             # After single-word commands, check all regex commands in the room
@@ -212,10 +209,10 @@ class HangoutsBot:
                     continue
                 event_data = {
                     'command': command[CONF_NAME],
-                    'conversation': conv_id,
+                    'conversation_id': conv_id,
                     'user_id': user_id,
                     'user_name': user.full_name,
-                    'args': match.groupdict()
+                    'data': match.groupdict()
                 }
         if event_data is not None:
             self.hass.bus.fire(EVENT_HANGOUTS_COMMAND, event_data)
