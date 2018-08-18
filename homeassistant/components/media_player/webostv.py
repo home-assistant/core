@@ -275,7 +275,9 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        return MEDIA_TYPE_CHANNEL
+        if (self._channel is not None) and ('channelName' in self._channel):
+            return MEDIA_TYPE_CHANNEL
+        return None
 
     @property
     def media_title(self):
@@ -354,6 +356,8 @@ class LgWebOSDevice(MediaPlayerDevice):
         elif source_dict.get('label'):
             self._current_source = source_dict['label']
             self._client.set_input(source_dict['id'])
+        self._channel = None
+        self.schedule_update_ha_state()
 
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
