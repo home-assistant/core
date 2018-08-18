@@ -182,10 +182,9 @@ class EcovacsVacuum(VacuumDevice):
         self.device.run(VacBotCommand(command, params))
 
     @property
-    def state_attributes(self):
-        """Return the state attributes of the vacuum cleaner."""
-        data = super().state_attributes
-
+    def device_state_attributes(self):
+        """Return the device-specific state attributes of this vacuum."""
+        data = {}
         data[ATTR_ERROR] = self._error
 
         for key, val in self.device.components.items():
