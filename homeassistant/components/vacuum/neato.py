@@ -8,7 +8,6 @@ import logging
 from datetime import timedelta
 import requests
 
-from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.components.vacuum import (
     StateVacuumDevice, SUPPORT_BATTERY, SUPPORT_PAUSE, SUPPORT_RETURN_HOME,
     SUPPORT_STATE, SUPPORT_STOP, SUPPORT_START, STATE_IDLE,
@@ -175,12 +174,12 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
         return data
 
-    def start(self, **kwargs):
+    def start(self):
         """Turn the vacuum on and start cleaning."""
         self._clean_state = STATE_CLEANING
         self.robot.start_cleaning()
 
-    def pause(self, **kwargs):
+    def pause(self):
         """Pause the vacuum."""
         self._clean_state = STATE_PAUSED
         self.robot.pause_cleaning()
