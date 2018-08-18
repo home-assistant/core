@@ -144,6 +144,12 @@ class HangoutsBot:
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                         self._async_handle_hass_stop)
 
+    def _resolve_conversation_name(self, name):
+        for conv in self._conversation_list.get_all():
+            if conv.name == name:
+                return conv
+        return None
+
     def _update_conversaition_commands(self, _):
         self._word_commands = {}
 
@@ -156,7 +162,7 @@ class HangoutsBot:
                     if 'id' in conversation:
                         conversations.append(conversation['id'])
                     elif 'name' in conversation:
-                        conversations.append(self._resolv_conversation_name(
+                        conversations.append(self._resolve_conversation_name(
                             conversation['name']).id_)
                 command[CONF_CONVERSATIONS] = conversations
             else:
@@ -282,7 +288,7 @@ class HangoutsBot:
             if 'id' in target:
                 conversation = self._conversation_list.get(target['id'])
             elif 'name' in target:
-                conversation = self._resolv_conversation_name(target['name'])
+                conversation = self._resolve_conversation_name(target['name'])
             if conversation is not None:
                 conversations.append(conversation)
 
@@ -342,9 +348,3 @@ class HangoutsBot:
     async def async_handle_update_users_and_conversations(self, _):
         """Handle the update_users_and_conversations service."""
         await self._async_list_conversations()
-
-    def _resolve_conversation_name(self, name):
-        for conv in self._conversation_list.get_all():
-            if conv.name == name:
-                return conv
-        return None
