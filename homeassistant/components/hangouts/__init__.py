@@ -156,10 +156,8 @@ class HangoutsBot:
                     if 'id' in conversation:
                         conversations.append(conversation['id'])
                     elif 'name' in conversation:
-                        for conv in self._conversation_list.get_all():
-                            if conv.name == conversation['name']:
-                                conversations.append(conv.id_)
-                                break
+                        conversations.append(self._resolv_conversation_name(
+                            conversation['name']).id_)
                 command[CONF_CONVERSATIONS] = conversations
             else:
                 command[CONF_CONVERSATIONS] = \
@@ -284,10 +282,7 @@ class HangoutsBot:
             if 'id' in target:
                 conversation = self._conversation_list.get(target['id'])
             elif 'name' in target:
-                for conv in self._conversation_list.get_all():
-                    if conv.name == target['name']:
-                        conversation = conv
-                        break
+                conversation = self._resolv_conversation_name(target['name'])
             if conversation is not None:
                 conversations.append(conversation)
 
@@ -347,3 +342,9 @@ class HangoutsBot:
     async def async_handle_update_users_and_conversations(self, _):
         """Handle the update_users_and_conversations service."""
         await self._async_list_conversations()
+
+    def _resolve_conversation_name(self, name):
+        for conv in self._conversation_list.get_all():
+            if conv.name == name:
+                return conv
+        return None
