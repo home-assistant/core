@@ -1,14 +1,18 @@
 """Schema migration helpers."""
 import logging
+import os
 
 from .util import session_scope
 
 _LOGGER = logging.getLogger(__name__)
+PROGRESS_FILE = '.migration_progress'
 
 
 def migrate_schema(instance):
     """Check if the schema needs to be upgraded."""
     from .models import SchemaChanges, SCHEMA_VERSION
+
+    progress_path = instance.hass.config.path(PROGRESS_FILE)
 
     with session_scope(session=instance.get_session()) as session:
         res = session.query(SchemaChanges).order_by(
@@ -16,24 +20,34 @@ def migrate_schema(instance):
         current_version = getattr(res, 'schema_version', None)
 
         if current_version == SCHEMA_VERSION:
+            # Clean up if old migration left file
+            if os.path.isfile(progress_path):
+                _LOGGER.warning("Found existing migration file, cleaning up")
+                os.remove(instance.hass.config.path(PROGRESS_FILE))
             return
 
-        _LOGGER.debug("Database requires upgrade. Schema version: %s",
-                      current_version)
+        with open(progress_path, 'w'):
+            pass
+
+        _LOGGER.warning("Database requires upgrade. Schema version: %s",
+                        current_version)
 
         if current_version is None:
             current_version = _inspect_schema_version(instance.engine, session)
             _LOGGER.debug("No schema version found. Inspected version: %s",
                           current_version)
 
-        for version in range(current_version, SCHEMA_VERSION):
-            new_version = version + 1
-            _LOGGER.info("Upgrading recorder db schema to version %s",
-                         new_version)
-            _apply_update(instance.engine, new_version, current_version)
-            session.add(SchemaChanges(schema_version=new_version))
+        try:
+            for version in range(current_version, SCHEMA_VERSION):
+                new_version = version + 1
+                _LOGGER.info("Upgrading recorder db schema to version %s",
+                             new_version)
+                _apply_update(instance.engine, new_version, current_version)
+                session.add(SchemaChanges(schema_version=new_version))
 
-            _LOGGER.info("Upgrade to version %s done", new_version)
+                _LOGGER.info("Upgrade to version %s done", new_version)
+        finally:
+            os.remove(instance.hass.config.path(PROGRESS_FILE))
 
 
 def _create_index(engine, table_name, index_name):
@@ -125,7 +139,7 @@ def _add_columns(engine, table_name, columns_def):
                  ', '.join(column.split(' ')[0] for column in columns_def),
                  table_name)
 
-    columns_def = ['ADD COLUMN {}'.format(col_def) for col_def in columns_def]
+    columns_def = ['ADD {}'.format(col_def) for col_def in columns_def]
 
     try:
         engine.execute(text("ALTER TABLE {table} {columns_def}".format(
@@ -147,7 +161,7 @@ def _add_columns(engine, table_name, columns_def):
                 raise
 
             _LOGGER.warning('Column %s already exists on %s, continueing',
-                            column_def.split(' ')[0], table_name)
+                            column_def.split(' ')[1], table_name)
 
 
 def _apply_update(engine, new_version, old_version):
