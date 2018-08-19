@@ -18,7 +18,6 @@ STORAGE_VERSION = 1
 SAVE_DELAY = 10
 
 
-
 @attr.s(slots=True, frozen=True)
 class DeviceEntry:
     """Device Registry Entry."""
@@ -44,16 +43,18 @@ class DeviceRegistry:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
-    def async_get_device(self, identifiers: str, connection: tuple):
+    def async_get_device(self, identifiers: str, connections: tuple):
         """Check if device is registered."""
         for device in self.devices:
-            if device.identifiers == identifiers or \
-                    device.connection == connection:
+            if any([identifier in device.identifiers
+                    for identifier in identifiers]) or \
+               any([connection in device.connection
+                    for connection in connections]):
                 return device
         return None
 
     async def async_get_or_create(self, identifiers, manufacturer, model,
-                            connection, *, name=None, sw_version=None):
+                                  connection, *, name=None, sw_version=None):
         """Get device. Create if it doesn't exist"""
         device = self.async_get_device(identifiers, connection)
         if device is None:

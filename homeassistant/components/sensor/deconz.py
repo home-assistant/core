@@ -146,7 +146,7 @@ class DeconzSensor(Entity):
             'identifiers': [['serial', serial]],
             'manufacturer': self._sensor.manufacturer,
             'model': self._sensor.modelid,
-            'connection': ['Zigbee', serial],
+            'connection': [['Zigbee', serial]],
             'sw_version': self._sensor.swversion,
         }
         return dev

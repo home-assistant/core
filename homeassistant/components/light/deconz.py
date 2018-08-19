@@ -212,7 +212,7 @@ class DeconzLight(Light):
             'identifiers': [['serial', serial]],
             'manufacturer': self._light.manufacturer,
             'model': self._light.modelid,
-            'connection': ['Zigbee', serial],
+            'connection': [['Zigbee', serial]],
             'sw_version': self._light.swversion,
         }
         return dev

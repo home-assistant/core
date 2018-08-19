@@ -91,7 +91,7 @@ class DeconzSwitch(SwitchDevice):
             'identifiers': [['serial', serial]],
             'manufacturer': self._switch.manufacturer,
             'model': self._switch.modelid,
-            'connection': ['Zigbee', serial],
+            'connection': [['Zigbee', serial]],
             'sw_version': self._switch.swversion,
         }
         return dev
