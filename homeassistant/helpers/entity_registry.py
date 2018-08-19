@@ -218,7 +218,7 @@ class EntityRegistry:
                 entities[entity['entity_id']] = RegistryEntry(
                     entity_id=entity['entity_id'],
                     config_entry_id=entity.get('config_entry_id'),
-                    device_id=info.get('device_id'),
+                    device_id=entity.get('device_id'),
                     unique_id=entity['unique_id'],
                     platform=entity['platform'],
                     name=entity.get('name'),
