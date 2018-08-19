@@ -233,6 +233,7 @@ class HomeAssistantHTTP:
         self.ssl_profile = ssl_profile
         self._handler = None
         self.runner = None
+        self.site = None
 
     def register_view(self, view):
         """Register a view with the WSGI server.
@@ -346,14 +347,15 @@ class HomeAssistantHTTP:
 
         self.runner = web.AppRunner(self.app)
         await self.runner.setup()
-        site = web.TCPSite(self.runner, self.server_host, self.server_port,
-                           ssl_context=context)
+        self.site = web.TCPSite(self.runner, self.server_host,
+                                self.server_port, ssl_context=context)
         try:
-            await site.start()
+            await self.site.start()
         except OSError as error:
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
                           self.server_port, error)
 
     async def stop(self):
         """Stop the aiohttp server."""
+        await self.site.stop()
         await self.runner.cleanup()
