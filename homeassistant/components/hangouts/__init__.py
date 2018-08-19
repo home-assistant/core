@@ -40,8 +40,8 @@ DOMAIN = 'hangouts'
 
 TARGETS_SCHEMA = vol.All(
     vol.Schema({
-        vol.Exclusive(CONF_CONVERSATION_ID, 'id'): cv.string,
-        vol.Exclusive(CONF_CONVERSATION_NAME, 'id'): cv.string
+        vol.Exclusive(CONF_CONVERSATION_ID, 'id or name'): cv.string,
+        vol.Exclusive(CONF_CONVERSATION_NAME, 'id or name'): cv.string
     }),
     cv.has_at_least_one_key(CONF_CONVERSATION_ID, CONF_CONVERSATION_NAME)
 )
