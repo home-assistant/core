@@ -22,6 +22,7 @@ def migrate_schema(instance):
         if current_version == SCHEMA_VERSION:
             # Clean up if old migration left file
             if os.path.isfile(progress_path):
+                _LOGGER.warning("Found existing migration file, cleaning up")
                 os.remove(instance.hass.config.path(PROGRESS_FILE))
             return
 
