@@ -136,7 +136,6 @@ def _add_columns(engine, table_name, columns_def):
         # Some engines support adding all columns at once,
         # this error is when they dont'
         _LOGGER.info('Unable to use quick column add. Adding 1 by 1.')
-        pass
 
     for column_def in columns_def:
         try:
