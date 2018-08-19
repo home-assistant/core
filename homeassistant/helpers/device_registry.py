@@ -11,11 +11,12 @@ from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
+DATA_REGISTRY = 'device_registry'
+
 STORAGE_KEY = 'core.device_registry'
 STORAGE_VERSION = 1
-STORAGE_DELAY = 1
+SAVE_DELAY = 10
 
-DATA_REGISTRY = 'device_registry'
 
 
 @attr.s(slots=True, frozen=True)
@@ -26,6 +27,7 @@ class DeviceEntry:
     manufacturer = attr.ib(type=str)
     model = attr.ib(type=str)
     connection = attr.ib(type=list)
+    name = attr.ib(type=str, default=None)
     sw_version = attr.ib(type=str, default=None)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
 
@@ -51,7 +53,7 @@ class DeviceRegistry:
         return None
 
     async def async_get_or_create(self, identifiers, manufacturer, model,
-                            connection, *, sw_version=None):
+                            connection, *, name=None, sw_version=None):
         """Get device. Create if it doesn't exist"""
         device = self.async_get_device(identifiers, connection)
         if device is None:
@@ -60,37 +62,57 @@ class DeviceRegistry:
                 manufacturer=manufacturer,
                 model=model,
                 connection=connection,
+                name=name,
                 sw_version=sw_version
             )
             self.devices.append(device)
-            await self.async_save()
+            self.async_schedule_save()
         return device
 
-    async def async_ensure_loaded(self):
-        """Load the registry from disk."""
-        if self.devices is not None:
-            return
+    async def async_load(self):
+        """Load the device registry."""
         devices = await self._store.async_load()
         if devices is None:
             self.devices = []
             return
         self.devices = [DeviceEntry(**device) for device in devices['devices']]
 
-    async def async_save(self):
-        """Save the device registry to a file."""
-        data = {
-            'devices': [attr.asdict(device) for device in self.devices]
-        }
-        await self._store.async_save(data, delay=STORAGE_DELAY)
+    @callback
+    def async_schedule_save(self):
+        """Schedule saving the device registry."""
+        self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
+
+    @callback
+    def _data_to_save(self):
+        """Data of device registry to store in a file."""
+        data = {}
+
+        data['devices'] = [
+            {
+                'id': entry.id,
+                'identifiers': entry.identifiers,
+                'manufacturer': entry.manufacturer,
+                'model': entry.model,
+                'connection': entry.connection,
+                'name': entry.name,
+                'sw_version': entry.sw_version,
+            } for entry in self.devices
+        ]
+
+        return data
 
 
 @bind_hass
 async def async_get_registry(hass) -> DeviceRegistry:
     """Return device registry instance."""
-    registry = hass.data.get(DATA_REGISTRY)
+    task = hass.data.get(DATA_REGISTRY)
 
-    if registry is None:
-        registry = hass.data[DATA_REGISTRY] = DeviceRegistry(hass)
+    if task is None:
+        async def _load_reg():
+            registry = DeviceRegistry(hass)
+            await registry.async_load()
+            return registry
 
-    await registry.async_ensure_loaded()
-    return registry
+        task = hass.data[DATA_REGISTRY] = hass.async_create_task(_load_reg())
+
+    return await task
