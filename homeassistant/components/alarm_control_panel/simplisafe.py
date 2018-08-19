@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         simplisafe = SimpliSafeApiInterface(username, password)
     except SimpliSafeAPIException:
-        _LOGGER.error("Failed to setup SimpliSafe")
+        _LOGGER.error("Failed to set up SimpliSafe")
         return
 
     systems = []

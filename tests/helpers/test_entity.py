@@ -75,7 +75,7 @@ class TestHelpersEntity:
     """Test homeassistant.helpers.entity module."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.entity = entity.Entity()
         self.entity.entity_id = 'test.overwrite_hidden_true'
         self.hass = self.entity.hass = get_test_home_assistant()

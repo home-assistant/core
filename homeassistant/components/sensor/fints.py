@@ -151,7 +151,7 @@ class FinTsClient:
 
 
 class FinTsAccount(Entity):
-    """Sensor for a FinTS balanc account.
+    """Sensor for a FinTS balance account.
 
     A balance account contains an amount of money (=balance). The amount may
     also be negative.

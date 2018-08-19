@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ihc sensor platform."""
+    """Set up the IHC sensor platform."""
     ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
     info = hass.data[IHC_DATA][IHC_INFO]
     devices = []
@@ -77,6 +77,6 @@ class IHCSensor(IHCDevice, Entity):
         return self._unit_of_measurement
 
     def on_ihc_change(self, ihc_id, value):
-        """Callback when ihc resource changes."""
+        """Callback when IHC resource changes."""
         self._state = value
         self.schedule_update_ha_state()

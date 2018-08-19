@@ -28,7 +28,7 @@ class TestMochadSwitchSetup(unittest.TestCase):
     THING = 'light'
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -57,7 +57,7 @@ class TestMochadLight(unittest.TestCase):
     """Test for mochad light platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         controller_mock = mock.MagicMock()
         dev_dict = {'address': 'a1', 'name': 'fake_light',
@@ -94,7 +94,7 @@ class TestMochadLight256Levels(unittest.TestCase):
     """Test for mochad light platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         controller_mock = mock.MagicMock()
         dev_dict = {'address': 'a1', 'name': 'fake_light',
@@ -126,7 +126,7 @@ class TestMochadLight64Levels(unittest.TestCase):
     """Test for mochad light platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         controller_mock = mock.MagicMock()
         dev_dict = {'address': 'a1', 'name': 'fake_light',
