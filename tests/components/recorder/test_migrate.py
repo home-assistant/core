@@ -5,11 +5,11 @@ from unittest.mock import patch, call
 
 import pytest
 from sqlalchemy import create_engine
+from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.recorder import wait_connection_ready, migration
-from homeassistant.components.recorder.models import SCHEMA_VERSION
-from homeassistant.components.recorder.const import DATA_INSTANCE
+from homeassistant.components.recorder import (
+    wait_connection_ready, migration, const, models)
 from tests.components.recorder import models_original
 
 
@@ -37,8 +37,8 @@ def test_schema_update_calls(hass):
         yield from wait_connection_ready(hass)
 
     update.assert_has_calls([
-        call(hass.data[DATA_INSTANCE].engine, version+1, 0) for version
-        in range(0, SCHEMA_VERSION)])
+        call(hass.data[const.DATA_INSTANCE].engine, version+1, 0) for version
+        in range(0, models.SCHEMA_VERSION)])
 
 
 @asyncio.coroutine
@@ -65,3 +65,18 @@ def test_invalid_update():
     """Test that an invalid new version raises an exception."""
     with pytest.raises(ValueError):
         migration._apply_update(None, -1, 0)
+
+
+def test_forgiving_add_column():
+    """Test that add column will continue if column exists."""
+    engine = create_engine(
+        'sqlite://',
+        poolclass=StaticPool
+    )
+    engine.execute('CREATE TABLE hello (id int)')
+    migration._add_columns(engine, 'hello', [
+        'context_id CHARACTER(36)',
+    ])
+    migration._add_columns(engine, 'hello', [
+        'context_id CHARACTER(36)',
+    ])
