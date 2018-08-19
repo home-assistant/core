@@ -33,7 +33,7 @@ class TestTemplateFan:
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup."""
+        """Set up."""
         self.hass = get_test_home_assistant()
 
         self.calls = []

@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the melissa sensor platform."""
+    """Set up the melissa sensor platform."""
     sensors = []
     api = hass.data[DATA_MELISSA]
     devices = api.fetch_devices().values()

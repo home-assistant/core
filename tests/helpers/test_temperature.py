@@ -13,10 +13,10 @@ TEMP = 24.636626
 
 
 class TestHelpersTemperature(unittest.TestCase):
-    """Setup the temperature tests."""
+    """Set up the temperature tests."""
 
     def setUp(self):
-        """Setup the tests."""
+        """Set up the tests."""
         self.hass = get_test_home_assistant()
         self.hass.config.unit_system = METRIC_SYSTEM
 

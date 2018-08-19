@@ -48,7 +48,7 @@ def get_fake_chromecast_info(host='192.168.178.42', port=8009,
 
 
 async def async_setup_cast(hass, config=None, discovery_info=None):
-    """Helper to setup the cast platform."""
+    """Helper to set up the cast platform."""
     if config is None:
         config = {}
     add_devices = Mock()
@@ -62,7 +62,7 @@ async def async_setup_cast(hass, config=None, discovery_info=None):
 
 async def async_setup_cast_internal_discovery(hass, config=None,
                                               discovery_info=None):
-    """Setup the cast platform and the discovery."""
+    """Set up the cast platform and the discovery."""
     listener = MagicMock(services={})
 
     with patch('pychromecast.start_discovery',
@@ -85,7 +85,7 @@ async def async_setup_cast_internal_discovery(hass, config=None,
 
 async def async_setup_media_player_cast(hass: HomeAssistantType,
                                         info: ChromecastInfo):
-    """Setup the cast platform with async_setup_component."""
+    """Set up the cast platform with async_setup_component."""
     chromecast = get_fake_chromecast(info)
 
     cast.CastStatusListener = MagicMock()

@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the BMW Connected Drive lock."""
+    """Set up the BMW Connected Drive lock."""
     accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
                   ', '.join([a.name for a in accounts]))

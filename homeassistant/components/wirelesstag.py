@@ -87,7 +87,7 @@ class WirelessTagPlatform:
             'content': content, 'disabled': False, 'nat': True})
 
     def install_push_notifications(self, binary_sensors):
-        """Setup local push notification from tag manager."""
+        """Set up local push notification from tag manager."""
         _LOGGER.info("Registering local push notifications.")
         configs = []
 

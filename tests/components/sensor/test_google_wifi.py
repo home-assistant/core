@@ -36,7 +36,7 @@ class TestGoogleWifiSetup(unittest.TestCase):
     """Tests for setting up the Google Wifi sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -83,7 +83,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
     """Tests for Google Wifi sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         with requests_mock.Mocker() as mock_req:
             self.setup_api(MOCK_DATA, mock_req)
@@ -93,7 +93,7 @@ class TestGoogleWifiSensor(unittest.TestCase):
         self.hass.stop()
 
     def setup_api(self, data, mock_req):
-        """Setup API with fake data."""
+        """Set up API with fake data."""
         resource = '{}{}{}'.format(
             'http://', 'localhost', google_wifi.ENDPOINT)
         now = datetime(1970, month=1, day=1)

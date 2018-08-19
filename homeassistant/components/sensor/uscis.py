@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setting the platform in HASS and Case Information."""
+    """Set up the platform in HASS and Case Information."""
     uscis = UscisSensor(config['case_id'], config[CONF_FRIENDLY_NAME])
     uscis.update()
     if uscis.valid_case_id:

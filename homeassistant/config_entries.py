@@ -411,7 +411,7 @@ class ConfigEntries:
     async def _async_create_flow(self, handler_key, *, context, data):
         """Create a flow for specified handler.
 
-        Handler key is the domain of the component that we want to setup.
+        Handler key is the domain of the component that we want to set up.
         """
         component = getattr(self.hass.components, handler_key)
         handler = HANDLERS.get(handler_key)

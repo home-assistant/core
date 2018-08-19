@@ -34,7 +34,7 @@ class TestSetup:
 
     # pylint: disable=invalid-name, no-self-use
     def setup_method(self, method):
-        """Setup the test."""
+        """Set up the test."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
@@ -179,7 +179,7 @@ class TestSetup:
         assert not setup.setup_component(self.hass, 'non_existing')
 
     def test_component_not_double_initialized(self):
-        """Test we do not setup a component twice."""
+        """Test we do not set up a component twice."""
         mock_setup = mock.MagicMock(return_value=True)
 
         loader.set_component(
@@ -206,7 +206,7 @@ class TestSetup:
         assert 'comp' not in self.hass.config.components
 
     def test_component_not_setup_twice_if_loaded_during_other_setup(self):
-        """Test component setup while waiting for lock is not setup twice."""
+        """Test component setup while waiting for lock is not set up twice."""
         result = []
 
         @asyncio.coroutine
@@ -219,7 +219,7 @@ class TestSetup:
             'comp', MockModule('comp', async_setup=async_setup))
 
         def setup_component():
-            """Setup the component."""
+            """Set up the component."""
             setup.setup_component(self.hass, 'comp')
 
         thread = threading.Thread(target=setup_component)
@@ -231,7 +231,7 @@ class TestSetup:
         assert len(result) == 1
 
     def test_component_not_setup_missing_dependencies(self):
-        """Test we do not setup a component if not all dependencies loaded."""
+        """Test we do not set up a component if not all dependencies loaded."""
         deps = ['non_existing']
         loader.set_component(
             self.hass, 'comp', MockModule('comp', dependencies=deps))
@@ -377,7 +377,7 @@ class TestSetup:
         call_order = []
 
         def component1_setup(hass, config):
-            """Setup mock component."""
+            """Set up mock component."""
             discovery.discover(hass, 'test_component2',
                                component='test_component2')
             discovery.discover(hass, 'test_component3',
@@ -385,7 +385,7 @@ class TestSetup:
             return True
 
         def component_track_setup(hass, config):
-            """Setup mock component."""
+            """Set up mock component."""
             call_order.append(1)
             return True
 

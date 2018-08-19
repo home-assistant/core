@@ -57,7 +57,7 @@ class RitAssistDeviceScanner:
                         config.get(CONF_PASSWORD))
 
     def setup(self, hass):
-        """Setup a timer and start gathering devices."""
+        """Set up a timer and start gathering devices."""
         self._refresh()
         track_utc_time_change(hass,
                               lambda now: self._refresh(),
