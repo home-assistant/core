@@ -34,7 +34,7 @@ CONFIG_SCHEMA = vol.Schema({
     })
 }, extra=vol.ALLOW_EXTRA)
 
-SIGNIFICANT_DOMAINS = ('thermostat', 'climate')
+SIGNIFICANT_DOMAINS = ('thermostat', 'climate', 'device_tracker')
 IGNORE_DOMAINS = ('zone', 'scene',)
 
 
