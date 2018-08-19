@@ -117,7 +117,13 @@ def _drop_index(engine, table_name, index_name):
 def _add_columns(engine, table_name, columns_def):
     """Add columns to a table."""
     from sqlalchemy import text
-    from sqlalchemy.exc import SQLAlchemyError
+    from sqlalchemy.exc import OperationalError
+
+    _LOGGER.info("Adding columns %s to table %s. Note: this can take several "
+                 "minutes on large databases and slow computers. Please "
+                 "be patient!",
+                 ', '.join(column.split(' ')[0] for column in columns_def),
+                 table_name)
 
     columns_def = ['ADD COLUMN {}'.format(col_def) for col_def in columns_def]
 
@@ -126,13 +132,22 @@ def _add_columns(engine, table_name, columns_def):
             table=table_name,
             columns_def=', '.join(columns_def))))
         return
-    except SQLAlchemyError:
-        pass
+    except OperationalError:
+        # Some engines support adding all columns at once,
+        # this error is when they dont'
+        _LOGGER.info('Unable to use quick column add. Adding 1 by 1.')
 
     for column_def in columns_def:
-        engine.execute(text("ALTER TABLE {table} {column_def}".format(
-            table=table_name,
-            column_def=column_def)))
+        try:
+            engine.execute(text("ALTER TABLE {table} {column_def}".format(
+                table=table_name,
+                column_def=column_def)))
+        except OperationalError as err:
+            if 'duplicate' not in str(err).lower():
+                raise
+
+            _LOGGER.warning('Column %s already exists on %s, continueing',
+                            column_def.split(' ')[0], table_name)
 
 
 def _apply_update(engine, new_version, old_version):
