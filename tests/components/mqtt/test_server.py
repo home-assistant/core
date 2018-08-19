@@ -18,7 +18,7 @@ class TestMQTT:
     """Test the MQTT component."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
@@ -33,7 +33,7 @@ class TestMQTT:
     def test_creating_config_with_http_pass_only(self, mock_mqtt):
         """Test if the MQTT server failed starts.
 
-        Since 0.77, MQTT server has to setup its own password.
+        Since 0.77, MQTT server has to set up its own password.
         If user has api_password but don't have mqtt.password, MQTT component
          will fail to start
         """
@@ -51,7 +51,7 @@ class TestMQTT:
     def test_creating_config_with_pass_and_no_http_pass(self, mock_mqtt):
         """Test if the MQTT server gets started with password.
 
-        Since 0.77, MQTT server has to setup its own password.
+        Since 0.77, MQTT server has to set up its own password.
         """
         mock_mqtt().async_connect.return_value = mock_coro(True)
         self.hass.bus.listen_once = MagicMock()
@@ -74,7 +74,7 @@ class TestMQTT:
     def test_creating_config_with_pass_and_http_pass(self, mock_mqtt):
         """Test if the MQTT server gets started with password.
 
-        Since 0.77, MQTT server has to setup its own password.
+        Since 0.77, MQTT server has to set up its own password.
         """
         mock_mqtt().async_connect.return_value = mock_coro(True)
         self.hass.bus.listen_once = MagicMock()

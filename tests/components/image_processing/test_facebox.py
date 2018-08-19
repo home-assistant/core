@@ -141,13 +141,13 @@ def test_valid_file_path():
 
 
 async def test_setup_platform(hass, mock_healthybox):
-    """Setup platform with one entity."""
+    """Set up platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
 
 
 async def test_setup_platform_with_auth(hass, mock_healthybox):
-    """Setup platform with one entity and auth."""
+    """Set up platform with one entity and auth."""
     valid_config_auth = VALID_CONFIG.copy()
     valid_config_auth[ip.DOMAIN][CONF_USERNAME] = MOCK_USERNAME
     valid_config_auth[ip.DOMAIN][CONF_PASSWORD] = MOCK_PASSWORD
@@ -297,7 +297,7 @@ async def test_teach_service(
 
 
 async def test_setup_platform_with_name(hass, mock_healthybox):
-    """Setup platform with one entity and a name."""
+    """Set up platform with one entity and a name."""
     named_entity_id = 'image_processing.{}'.format(MOCK_NAME)
 
     valid_config_named = VALID_CONFIG.copy()

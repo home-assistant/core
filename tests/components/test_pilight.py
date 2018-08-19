@@ -70,7 +70,7 @@ class TestPilight(unittest.TestCase):
     """Test the Pilight component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.skip_teardown_stop = False
 
@@ -351,7 +351,7 @@ class TestPilightCallrateThrottler(unittest.TestCase):
     """Test the Throttler used to throttle calls to send_code."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):

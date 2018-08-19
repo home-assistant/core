@@ -307,7 +307,7 @@ def async_enable_logging(hass: core.HomeAssistant,
         hass.data[DATA_LOGGING] = err_log_path
     else:
         _LOGGER.error(
-            "Unable to setup error log %s (access denied)", err_log_path)
+            "Unable to set up error log %s (access denied)", err_log_path)
 
 
 async def async_mount_local_lib_path(config_dir: str) -> str:
