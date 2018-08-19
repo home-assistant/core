@@ -55,7 +55,7 @@ class DeviceRegistry:
 
     @callback
     def async_get_or_create(self, identifiers, manufacturer, model,
-                                  connection, *, name=None, sw_version=None):
+                            connection, *, name=None, sw_version=None):
         """Get device. Create if it doesn't exist"""
         device = self.async_get_device(identifiers, connection)
         if device is None:

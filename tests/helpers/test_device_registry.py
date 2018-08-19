@@ -1,8 +1,4 @@
 """Tests for the Device Registry."""
-import asyncio
-
-from unittest.mock import patch
-
 import pytest
 
 from homeassistant.helpers import device_registry
