@@ -118,7 +118,7 @@ class KNXLight(Light):
             return max(self.device.current_color) \
                 if self.device.current_color is not None else \
                 DEFAULT_BRIGHTNESS
-        elif self.device.supports_brightness:
+        if self.device.supports_brightness:
             return self.device.current_brightness
         return None
 
