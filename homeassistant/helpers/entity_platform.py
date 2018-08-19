@@ -71,13 +71,13 @@ class EntityPlatform:
             self.parallel_updates = None
 
     async def async_setup(self, platform_config, discovery_info=None):
-        """Setup the platform from a config file."""
+        """Set up the platform from a config file."""
         platform = self.platform
         hass = self.hass
 
         @callback
         def async_create_setup_task():
-            """Get task to setup platform."""
+            """Get task to set up platform."""
             if getattr(platform, 'async_setup_platform', None):
                 return platform.async_setup_platform(
                     hass, platform_config,
@@ -93,21 +93,21 @@ class EntityPlatform:
         await self._async_setup_platform(async_create_setup_task)
 
     async def async_setup_entry(self, config_entry):
-        """Setup the platform from a config entry."""
+        """Set up the platform from a config entry."""
         # Store it so that we can save config entry ID in entity registry
         self.config_entry = config_entry
         platform = self.platform
 
         @callback
         def async_create_setup_task():
-            """Get task to setup platform."""
+            """Get task to set up platform."""
             return platform.async_setup_entry(
                 self.hass, config_entry, self._async_schedule_add_entities)
 
         return await self._async_setup_platform(async_create_setup_task)
 
     async def _async_setup_platform(self, async_create_setup_task, tries=0):
-        """Helper to setup a platform via config file or config entry.
+        """Helper to set up a platform via config file or config entry.
 
         async_create_setup_task creates a coroutine that sets up platform.
         """

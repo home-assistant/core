@@ -33,7 +33,7 @@ class TestYamahaMediaPlayer(unittest.TestCase):
     """Test the Yamaha media player."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.main_zone = _create_zone_mock('Main zone', 'http://main')
         self.device = FakeYamahaDevice(

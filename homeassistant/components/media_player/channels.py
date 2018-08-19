@@ -56,7 +56,7 @@ REQUIREMENTS = ['pychannels==1.0.0']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Channels platform."""
+    """Set up the Channels platform."""
     device = ChannelsPlayer(
         config.get('name'),
         config.get(CONF_HOST),

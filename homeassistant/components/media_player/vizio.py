@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     device = VizioDevice(host, token, name, volume_step)
     if device.validate_setup() is False:
-        _LOGGER.error("Failed to setup Vizio TV platform, "
+        _LOGGER.error("Failed to set up Vizio TV platform, "
                       "please check if host and API key are correct")
         return
 
