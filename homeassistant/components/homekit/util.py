@@ -109,7 +109,7 @@ def show_setup_message(hass, pincode):
     """Display persistent notification with setup information."""
     pin = pincode.decode()
     _LOGGER.info('Pincode: %s', pin)
-    message = 'To setup Home Assistant in the Home App, enter the ' \
+    message = 'To set up Home Assistant in the Home App, enter the ' \
               'following code:\n### {}'.format(pin)
     hass.components.persistent_notification.create(
         message, 'HomeKit Setup', HOMEKIT_NOTIFY_ID)

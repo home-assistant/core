@@ -17,7 +17,7 @@ class TestLoader(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup tests."""
+        """Set up tests."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name

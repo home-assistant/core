@@ -145,7 +145,7 @@ async def async_get_image(hass, entity_id, timeout=10):
     component = hass.data.get(DOMAIN)
 
     if component is None:
-        raise HomeAssistantError('Camera component not setup')
+        raise HomeAssistantError('Camera component not set up')
 
     camera = component.get_entity(entity_id)
 
@@ -214,7 +214,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, entry):
-    """Setup a config entry."""
+    """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 

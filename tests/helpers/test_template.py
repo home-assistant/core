@@ -27,7 +27,7 @@ class TestHelpersTemplate(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup the tests."""
+        """Set up the tests."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = UnitSystem('custom', TEMP_CELSIUS,
                                             LENGTH_METERS, VOLUME_LITERS,

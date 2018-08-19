@@ -94,7 +94,7 @@ class EntityComponent:
             self.hass, self.domain, component_platform_discovered)
 
     async def async_setup_entry(self, config_entry):
-        """Setup a config entry."""
+        """Set up a config entry."""
         platform_type = config_entry.domain
         platform = await async_prepare_setup_platform(
             self.hass, self.config, self.domain, platform_type)
