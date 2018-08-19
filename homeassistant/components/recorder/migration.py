@@ -29,8 +29,8 @@ def migrate_schema(instance):
         with open(progress_path, 'w'):
             pass
 
-        _LOGGER.debug("Database requires upgrade. Schema version: %s",
-                      current_version)
+        _LOGGER.warning("Database requires upgrade. Schema version: %s",
+                        current_version)
 
         if current_version is None:
             current_version = _inspect_schema_version(instance.engine, session)
