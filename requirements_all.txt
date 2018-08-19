@@ -1392,7 +1392,7 @@ tplink==0.2.1
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyapy==0.1.2
+tuyapy==0.1.3
 
 # homeassistant.components.twilio
 twilio==5.7.0
