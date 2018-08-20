@@ -563,6 +563,7 @@ async def test_temperature_setting_climate_range(hass):
             'thermostatTemperatureSetpoint': -100,
         })
     assert err.value.code == const.ERR_VALUE_OUT_OF_RANGE
+    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 async def test_temperature_setting_climate_setpoint(hass):

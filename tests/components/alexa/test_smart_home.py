@@ -6,8 +6,8 @@ from uuid import uuid4
 import pytest
 
 from homeassistant.const import (
-    TEMP_FAHRENHEIT, STATE_LOCKED, STATE_UNLOCKED,
-    STATE_UNKNOWN)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_LOCKED,
+    STATE_UNLOCKED, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 from homeassistant.components import alexa
 from homeassistant.components.alexa import smart_home
@@ -826,6 +826,7 @@ async def test_thermostat(hass):
         payload={'thermostatMode': {'value': 'INVALID'}}
     )
     assert msg['event']['payload']['type'] == 'UNSUPPORTED_THERMOSTAT_MODE'
+    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 @asyncio.coroutine

@@ -282,6 +282,7 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
         'thermostatMode': 'cool',
         'thermostatHumidityAmbient': 54,
     }
+    hass_fixture.config.units.temperature_unit = const.TEMP_CELSIUS
 
 
 @asyncio.coroutine
