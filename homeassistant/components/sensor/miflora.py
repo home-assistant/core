@@ -4,6 +4,8 @@ Support for Xiaomi Mi Flora BLE plant sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.miflora/
 """
+from datetime import timedelta
+
 import logging
 
 import voluptuous as vol
@@ -12,8 +14,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC
-)
+    CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC,
+    CONF_SCAN_INTERVAL)
 
 
 REQUIREMENTS = ['miflora==0.4.0']
@@ -21,18 +23,17 @@ REQUIREMENTS = ['miflora==0.4.0']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ADAPTER = 'adapter'
-CONF_CACHE = 'cache_value'
 CONF_MEDIAN = 'median'
 CONF_RETRIES = 'retries'
 CONF_TIMEOUT = 'timeout'
 
 DEFAULT_ADAPTER = 'hci0'
-DEFAULT_UPDATE_INTERVAL = 1200
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_MEDIAN = 3
 DEFAULT_NAME = 'Mi Flora'
 DEFAULT_RETRIES = 2
 DEFAULT_TIMEOUT = 10
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=1200)
 
 
 # Sensor types are defined like: Name, units
@@ -53,8 +54,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Optional(CONF_RETRIES, default=DEFAULT_RETRIES): cv.positive_int,
-    vol.Optional(CONF_CACHE, default=DEFAULT_UPDATE_INTERVAL): cv.positive_int,
     vol.Optional(CONF_ADAPTER, default=DEFAULT_ADAPTER): cv.string,
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+        cv.time_period,
 })
 
 
@@ -70,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         backend = GatttoolBackend
     _LOGGER.debug('Miflora is using %s backend.', backend.__name__)
 
-    cache = config.get(CONF_CACHE)
+    cache = config.get(CONF_SCAN_INTERVAL).total_seconds()
     poller = miflora_poller.MiFloraPoller(
         config.get(CONF_MAC), cache_timeout=cache,
         adapter=config.get(CONF_ADAPTER), backend=backend)
