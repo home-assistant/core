@@ -695,6 +695,7 @@ def test_unknown_sensor(hass):
 
 async def test_thermostat(hass):
     """Test thermostat discovery."""
+    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
     device = (
         'climate.test_thermostat',
         'cool',
@@ -709,7 +710,6 @@ async def test_thermostat(hass):
             'operation_list': ['heat', 'cool', 'auto', 'off'],
             'min_temp': 50,
             'max_temp': 90,
-            'unit_of_measurement': TEMP_FAHRENHEIT,
         }
     )
     appliance = await discovery_test(device, hass)
