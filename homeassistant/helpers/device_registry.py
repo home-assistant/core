@@ -38,7 +38,6 @@ class DeviceRegistry:
         """Initialize the device registry."""
         self.hass = hass
         self.devices = None
-        self._load_task = None
         self._sched_save = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
@@ -58,25 +57,32 @@ class DeviceRegistry:
                             connection, *, name=None, sw_version=None):
         """Get device. Create if it doesn't exist"""
         device = self.async_get_device(identifiers, connection)
-        if device is None:
-            device = DeviceEntry(
-                identifiers=identifiers,
-                manufacturer=manufacturer,
-                model=model,
-                connection=connection,
-                name=name,
-                sw_version=sw_version
-            )
-            self.devices.append(device)
-            self.async_schedule_save()
+
+        if device is not None:
+            return device
+
+        device = DeviceEntry(
+            identifiers=identifiers,
+            manufacturer=manufacturer,
+            model=model,
+            connection=connection,
+            name=name,
+            sw_version=sw_version
+        )
+
+        self.devices.append(device)
+        self.async_schedule_save()
+
         return device
 
     async def async_load(self):
         """Load the device registry."""
         devices = await self._store.async_load()
+
         if devices is None:
             self.devices = []
             return
+
         self.devices = [DeviceEntry(**device) for device in devices['devices']]
 
     @callback

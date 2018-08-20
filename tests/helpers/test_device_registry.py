@@ -26,14 +26,14 @@ def registry(hass):
 async def test_get_or_create_returns_same_entry(registry):
     """Make sure we do not duplicate entries."""
     entry = registry.async_get_or_create(
-        [['bridgeid', '0123']], 'Dresden Elektronik', 'Conbee',
-        [['Ethernet', '1.0.0.0']])
+        [['bridgeid', '0123']], 'manufacturer', 'model',
+        [['ethernet', '12:34:56:78:90:AB:CD:EF']])
     entry2 = registry.async_get_or_create(
-        [['bridgeid', '0123']], 'Dresden Elektronik', 'Conbee',
-        [['Ethernet', '1.0.0.0']])
+        [['bridgeid', '0123']], 'manufacturer', 'model',
+        [['ethernet', '11:22:33:44:55:66:77:88']])
     entry3 = registry.async_get_or_create(
-        [['bridgeid', '1234']], 'Dresden Elektronik', 'Conbee',
-        [['Ethernet', '1.0.0.0']])
+        [['bridgeid', '1234']], 'manufacturer', 'model',
+        [['ethernet', '12:34:56:78:90:AB:CD:EF']])
 
     assert len(registry.devices) == 1
     assert entry is entry2
@@ -61,10 +61,10 @@ async def test_loading_from_storage(hass, hass_storage):
                             '12:34:56:78:90:AB:CD:EF'
                         ]
                     ],
-                    'manufacturer': 'manufacturer name',
-                    'model': 'brand new',
-                    'name': 'wireless sensor',
-                    'sw_version': 'V1'
+                    'manufacturer': 'manufacturer',
+                    'model': 'model',
+                    'name': 'name',
+                    'sw_version': 'version'
                 }
             ]
         }
@@ -73,6 +73,6 @@ async def test_loading_from_storage(hass, hass_storage):
     registry = await device_registry.async_get_registry(hass)
 
     entry = registry.async_get_or_create(
-        [['serial', '12:34:56:78:90:AB:CD:EF']], 'manufacturer name',
-        'brand new', [['Zigbee', '01.23.45.67.89']])
+        [['serial', '12:34:56:78:90:AB:CD:EF']], 'manufacturer',
+        'model', [['Zigbee', '01.23.45.67.89']])
     assert entry.id == 'abcdefghijklm'
