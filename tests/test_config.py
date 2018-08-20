@@ -853,7 +853,9 @@ def test_secure_git_writes_correct_entries():
 secrets.yaml
 """)
 
-    with mock.patch('homeassistant.config.open', write_mock):
+    with mock.patch('homeassistant.config.open', write_mock), \
+        mock.patch.object(config_util, 'GIT_IGNORE',
+                          ('secrets.yaml', '.storage')):
         config_util._secure_git(hass)
 
     written = write_mock.mock_calls[6][1][0].split('\n')

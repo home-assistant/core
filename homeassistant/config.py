@@ -128,6 +128,12 @@ DEFAULT_SECRETS = """
 # Learn more at https://home-assistant.io/docs/configuration/secrets/
 http_password: welcome
 """
+GIT_IGNORE = (
+    'secrets.yaml',
+    '.storage',
+    '.cloud',
+    '.tradfri_psk.conf',
+)
 
 
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
@@ -775,10 +781,7 @@ def _secure_git(hass: HomeAssistant) -> None:
     except FileNotFoundError:
         ignore_entries = set()
 
-    to_add = [entry for entry in (
-        'secrets.yaml',
-        '.storage',
-    ) if entry not in ignore_entries]
+    to_add = [entry for entry in GIT_IGNORE if entry not in ignore_entries]
 
     if not to_add:
         return
