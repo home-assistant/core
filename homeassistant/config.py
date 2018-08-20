@@ -21,7 +21,8 @@ from homeassistant.const import (
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
-    CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS, CONF_TYPE)
+    CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS, CONF_TYPE,
+    EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback, DOMAIN as CONF_CORE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
@@ -361,6 +362,9 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
         if os.path.isfile(hass.config.path(oldf)):
             _LOGGER.info("Migrating %s to %s", oldf, newf)
             os.rename(hass.config.path(oldf), hass.config.path(newf))
+
+    if os.path.isdir(hass.config.path('.git')):
+        _secure_git(hass)
 
 
 @callback
@@ -758,3 +762,48 @@ def async_notify_setup_error(
 
     persistent_notification.async_create(
         hass, message, 'Invalid config', 'invalid_config')
+
+
+def _secure_git(hass):
+    """Make sure the git repo has Home Assistant security features enabled."""
+    ignore_path = hass.config.path('.gitignore')
+
+    try:
+        with open(ignore_path, 'rt') as file:
+            ignore_entries = set(entry.strip() for entry in file.readlines())
+    except FileNotFoundError:
+        ignore_entries = set()
+
+    to_add = [entry for entry in (
+        'secrets.yaml',
+        '.storage',
+    ) if entry not in ignore_entries]
+
+    if not to_add:
+        return
+
+    with open(ignore_path, 'at') as fp:
+        fp.write("""
+
+# Added by Home Assistant to avoid storing auth
+{}
+""".format('\n'.join(to_add)))
+
+    # no components loaded yet, listen for start and do it then.
+    @callback
+    def started(_):
+        """Create message when Home Assistant started."""
+        message = """
+You are hosting your configuration in git but we noticed that you are not ignoring files containing authentication!
+
+To help with this, we've updated your gitignore with the following entries: {}.
+
+For more information, please [read the documentation](https://www.home-assistant.io/docs/ecosystem/backup/backup_github/#step-2-creating-gitignore).
+    """.format(', '.join(to_add))  # noqa
+
+        hass.components.persistent_notification.async_create(
+            message,
+            'Updated .gitignore', 'gitignore'
+        )
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, started)
