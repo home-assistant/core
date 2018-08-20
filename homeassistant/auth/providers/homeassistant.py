@@ -90,8 +90,10 @@ class Data:
                            dummy)
             raise InvalidAuth
 
-        # NOTE: not sure why this isn't utf-8... boo loose typing!
-        user_hash = base64.b64decode(found['password']).decode('ISO-8859-1')
+        # NOTE: this fails but works with ISO-8859-1, which doesn't
+        # seem right since we're storing as utf-8 and the data is base64...
+        # leaving this for someone who's smarter than me.
+        user_hash = base64.b64decode(found['password']).decode()
 
         # if the hash is not a bcrypt hash...
         # provide a transparant upgrade for old pbkdf2 hash format
