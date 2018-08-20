@@ -926,6 +926,7 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
 
 
 class TestClimateGenericThermostatTurnOnOff(unittest.TestCase):
+
     """Test the Generic Thermostat."""
     HEAT_ENTITY = 'climate.test_heat'
     COOL_ENTITY = 'climate.test_cool'
