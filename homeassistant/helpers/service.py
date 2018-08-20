@@ -218,13 +218,15 @@ async def _handle_service_platform_call(func, data, entities, context):
         if not entity.available:
             continue
 
+        entity.async_set_context(context)
+
         if isinstance(func, str):
             await getattr(entity, func)(**data)
         else:
             await func(entity, data)
 
         if entity.should_poll:
-            tasks.append(entity.async_update_ha_state(True, context))
+            tasks.append(entity.async_update_ha_state(True))
 
     if tasks:
         await asyncio.wait(tasks)

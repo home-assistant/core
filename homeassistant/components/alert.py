@@ -111,6 +111,7 @@ def async_setup(hass, config):
 
         for alert_id in alert_ids:
             alert = all_alerts[alert_id]
+            alert.async_set_context(service_call.context)
             if service_call.service == SERVICE_TURN_ON:
                 yield from alert.async_turn_on()
             elif service_call.service == SERVICE_TOGGLE:
