@@ -252,11 +252,11 @@ class GenericThermostat(ClimateDevice):
         self.schedule_update_ha_state()
 
     async def async_turn_on(self):
-        """Turn thermostat on"""
+        """Turn thermostat on."""
         await self.async_set_operation_mode(self.operation_list[0])
 
     async def async_turn_off(self):
-        """Turn thermostat off"""
+        """Turn thermostat off."""
         await self.async_set_operation_mode(STATE_OFF)
 
     async def async_set_temperature(self, **kwargs):
