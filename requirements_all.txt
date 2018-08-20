@@ -594,7 +594,7 @@ nad_receiver==0.0.9
 nanoleaf==0.4.1
 
 # homeassistant.components.device_tracker.keenetic_ndms2
-ndms2_client==0.0.3
+ndms2_client==0.0.4
 
 # homeassistant.components.sensor.netdata
 netdata==0.1.2
