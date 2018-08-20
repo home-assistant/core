@@ -2,6 +2,8 @@
 import base64
 from collections import OrderedDict
 import bcrypt
+import hashlib
+import hmac
 from typing import Any, Dict, List, Optional, cast
 
 import voluptuous as vol
@@ -11,7 +13,9 @@ from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
+
 from ..models import Credentials, UserMeta
+from ..util import generate_secret
 
 
 STORAGE_VERSION = 1
@@ -56,6 +60,7 @@ class Data:
 
         if data is None:
             data = {
+                'salt': generate_secret(),
                 'users': []
             }
 
@@ -85,10 +90,37 @@ class Data:
                            dummy)
             raise InvalidAuth
 
+        # NOTE: not sure why this isn't utf-8... boo loose typing!
+        user_hash = base64.b64decode(found['password']).decode('ISO-8859-1')
+
+        # if the hash is not a bcrypt hash...
+        # provide a transparant upgrade for old pbkdf2 hash format
+        if not (user_hash.startswith('$2a$')
+                or user_hash.startswith('$2b$')
+                or user_hash.startswith('$2x$')
+                or user_hash.startswith('$2y$')):
+            # IMPORTANT! validate the login, bail if invalid
+            hashed = self.legacy_hash_password(password)
+            if not hmac.compare_digest(hashed, user_hash.encode()):
+                raise InvalidAuth
+            # then re-hash the valid password with bcrypt
+            self.change_password(found['username'], password)
+
         # bcrypt.checkpw is timing-safe
         if not bcrypt.checkpw(password.encode(),
-                              base64.b64decode(found['password'])):
+                              user_hash.encode()):
             raise InvalidAuth
+
+    def legacy_hash_password(self, password: str,
+                             for_storage: bool = False) -> bytes:
+        """LEGACY password encoding"""
+        # We're no longer storing salts in data, but if one exists we
+        # should be able to retrieve it.
+        salt = self._data['salt'].encode()  # type: ignore
+        hashed = hashlib.pbkdf2_hmac('sha512', password.encode(), salt, 100000)
+        if for_storage:
+            hashed = base64.b64encode(hashed)
+        return hashed
 
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""

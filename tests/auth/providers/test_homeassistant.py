@@ -1,6 +1,7 @@
 """Test the Home Assistant local auth provider."""
 from unittest.mock import Mock
 
+import base64
 import pytest
 
 from homeassistant import data_entry_flow
@@ -132,3 +133,42 @@ async def test_new_users_populate_values(hass, data):
     user = await manager.async_get_or_create_user(credentials)
     assert user.name == 'hello'
     assert user.is_active
+
+
+async def test_new_hashes_are_bcrypt(data, hass):
+    data.add_auth('newuser', 'newpass')
+    found = None
+    for user in data.users:
+        if user['username'] == 'newuser':
+            found = user
+    assert found is not None
+    user_hash = base64.b64decode(found['password']).decode()
+    assert (user_hash.startswith('$2a$')
+            or user_hash.startswith('$2b$')
+            or user_hash.startswith('$2x$')
+            or user_hash.startswith('$2y$'))
+
+
+async def test_pbkdf2_to_bcrypt_hash_upgrade(data, hass):
+    data.add_auth('legacyuser', 'user-pass')
+    # overwrite with pbkdf2 hash
+    data.salt = b'testingsalt'  # simulates legacy salt
+    found = None
+    for user in data.users:
+        if user['username'] == 'legacyuser':
+            found = user
+    assert found is not None
+
+    # NOTE: this needs to be wired into the underlying structure
+    # ...or something.
+    found['password'] = data.legacy_hash_password(
+        'testtest', True).decode()
+
+    # verify the correct (pbkdf2) password successfuly authenticates the user
+    data.validate_login('legacyuser', 'testtest')
+    # ...and that the hashes are now bcrypt hashes
+    user_hash = base64.b64decode(found['password']).decode()
+    assert (user_hash.startswith('$2a$')
+            or user_hash.startswith('$2b$')
+            or user_hash.startswith('$2x$')
+            or user_hash.startswith('$2y$'))
