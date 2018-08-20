@@ -580,6 +580,29 @@ def regex_findall_index(value, find='', index=0, ignorecase=False):
     return re.findall(find, value, flags)[index]
 
 
+def closest_match(value, items):
+    """Find closest match using Levenstein distance."""
+    max_score = -1
+    best_match = None
+    import jellyfish
+
+    for item in items:
+        if value == item:
+            max_score = 1
+            best_match = item
+            break
+        else:
+            ratio = 1/(
+                1+jellyfish.levenshtein_distance(
+                    value.lower(), item.lower()))
+            if ratio > max_score:
+                max_score = ratio
+                best_match = item
+
+    _LOGGER.debug("Best match <%s> for <%s> in <%s>", best_match, value, list)
+    return best_match
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -617,6 +640,8 @@ ENV.filters['regex_match'] = regex_match
 ENV.filters['regex_replace'] = regex_replace
 ENV.filters['regex_search'] = regex_search
 ENV.filters['regex_findall_index'] = regex_findall_index
+ENV.filters['regex_search'] = regex_search
+ENV.globals['closest_match'] = closest_match
 ENV.globals['log'] = logarithm
 ENV.globals['sin'] = sine
 ENV.globals['cos'] = cosine
