@@ -23,7 +23,8 @@ from homeassistant.const import (
     __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
     CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS, CONF_TYPE,
     EVENT_HOMEASSISTANT_START)
-from homeassistant.core import callback, DOMAIN as CONF_CORE, HomeAssistant
+from homeassistant.core import (
+    callback, DOMAIN as CONF_CORE, Event, HomeAssistant)
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
 from homeassistant.util.yaml import load_yaml, SECRET_YAML
@@ -764,7 +765,7 @@ def async_notify_setup_error(
         hass, message, 'Invalid config', 'invalid_config')
 
 
-def _secure_git(hass):
+def _secure_git(hass: HomeAssistant) -> None:
     """Make sure the git repo has Home Assistant security features enabled."""
     ignore_path = hass.config.path('.gitignore')
 
@@ -782,8 +783,8 @@ def _secure_git(hass):
     if not to_add:
         return
 
-    with open(ignore_path, 'at') as fp:
-        fp.write("""
+    with open(ignore_path, 'at') as file:
+        file.write("""
 
 # Added by Home Assistant to avoid storing auth
 {}
@@ -791,7 +792,7 @@ def _secure_git(hass):
 
     # no components loaded yet, listen for start and do it then.
     @callback
-    def started(_):
+    def started(_: Event) -> None:
         """Create message when Home Assistant started."""
         message = """
 You are hosting your configuration in git but we noticed that you are not ignoring files containing authentication!
