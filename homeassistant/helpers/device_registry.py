@@ -1,6 +1,4 @@
-"""Provide a way to connect entities belonging to one device.
-"""
-
+"""Provide a way to connect entities belonging to one device."""
 import logging
 import uuid
 
@@ -55,7 +53,7 @@ class DeviceRegistry:
     @callback
     def async_get_or_create(self, identifiers, manufacturer, model,
                             connection, *, name=None, sw_version=None):
-        """Get device. Create if it doesn't exist"""
+        """Get device. Create if it doesn't exist."""
         device = self.async_get_device(identifiers, connection)
 
         if device is not None:
