@@ -21,6 +21,8 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['http']
+
 CONF_BUFFER_SIZE = 'buffer'
 CONF_IMAGE_FIELD = 'field'
 
