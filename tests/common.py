@@ -123,14 +123,30 @@ def async_test_home_assistant(loop):
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
+    orig_async_add_executor_job = hass.async_add_executor_job
+    orig_async_create_task = hass.async_create_task
 
     def async_add_job(target, *args):
-        """Add a magic mock."""
+        """Add job."""
         if isinstance(target, Mock):
             return mock_coro(target(*args))
         return orig_async_add_job(target, *args)
 
+    def async_add_executor_job(target, *args):
+        """Add executor job."""
+        if isinstance(target, Mock):
+            return mock_coro(target(*args))
+        return orig_async_add_executor_job(target, *args)
+
+    def async_create_task(coroutine):
+        """Create task."""
+        if isinstance(coroutine, Mock):
+            return mock_coro()
+        return orig_async_create_task(coroutine)
+
     hass.async_add_job = async_add_job
+    hass.async_add_executor_job = async_add_executor_job
+    hass.async_create_task = async_create_task
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
