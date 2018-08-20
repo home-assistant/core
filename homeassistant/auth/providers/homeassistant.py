@@ -1,8 +1,7 @@
 """Home Assistant auth provider."""
 import base64
 from collections import OrderedDict
-import hashlib
-import hmac
+import bcrypt
 from typing import Any, Dict, List, Optional, cast
 
 import voluptuous as vol
@@ -13,7 +12,6 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 from ..models import Credentials, UserMeta
-from ..util import generate_secret
 
 
 STORAGE_VERSION = 1
@@ -58,7 +56,6 @@ class Data:
 
         if data is None:
             data = {
-                'salt': generate_secret(),
                 'users': []
             }
 
@@ -74,8 +71,7 @@ class Data:
 
         Raises InvalidAuth if auth invalid.
         """
-        hashed = self.hash_password(password)
-
+        dummy = b'$2b$12$CiuFGszHx9eNHxPuQcwBWez4CwDTOcLTX5CbOpV6gef2nYuXkY7BO'
         found = None
 
         # Compare all users to avoid timing attacks.
@@ -84,18 +80,19 @@ class Data:
                 found = user
 
         if found is None:
-            # Do one more compare to make timing the same as if user was found.
-            hmac.compare_digest(hashed, hashed)
+            # check a hash to make timing the same as if user was found
+            bcrypt.checkpw(b'foo',
+                           dummy)
             raise InvalidAuth
 
-        if not hmac.compare_digest(hashed,
-                                   base64.b64decode(found['password'])):
+        # bcrypt.checkpw is timing-safe
+        if not bcrypt.checkpw(password.encode(),
+                              base64.b64decode(found['password'])):
             raise InvalidAuth
 
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
-        salt = self._data['salt'].encode()  # type: ignore
-        hashed = hashlib.pbkdf2_hmac('sha512', password.encode(), salt, 100000)
+        hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
         if for_storage:
             hashed = base64.b64encode(hashed)
         return hashed
