@@ -1,12 +1,9 @@
 """The tests for the demo platform."""
 import unittest
 
-from os import remove
-from unittest.mock import MagicMock
-
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location.demo import DemoManager, \
-    NUMBER_OF_DEMO_DEVICES, DEFAULT_UNIT_OF_MEASUREMENT, setup_platform
+    NUMBER_OF_DEMO_DEVICES, setup_platform
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_ENTITY_ID
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
