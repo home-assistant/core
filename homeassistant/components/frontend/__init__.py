@@ -26,7 +26,7 @@ from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 from homeassistant.util.yaml import load_yaml
 
-REQUIREMENTS = ['home-assistant-frontend==20180804.0']
+REQUIREMENTS = ['home-assistant-frontend==20180818.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
@@ -249,6 +249,7 @@ async def async_setup(hass, config):
 
     index_view = IndexView(repo_path, js_version, hass.auth.active)
     hass.http.register_view(index_view)
+    hass.http.register_view(AuthorizeView(repo_path, js_version))
 
     @callback
     def async_finalize_panel(panel):
@@ -332,6 +333,35 @@ def _async_setup_themes(hass, themes):
     hass.services.async_register(
         DOMAIN, SERVICE_SET_THEME, set_theme, schema=SERVICE_SET_THEME_SCHEMA)
     hass.services.async_register(DOMAIN, SERVICE_RELOAD_THEMES, reload_themes)
+
+
+class AuthorizeView(HomeAssistantView):
+    """Serve the frontend."""
+
+    url = '/auth/authorize'
+    name = 'auth:authorize'
+    requires_auth = False
+
+    def __init__(self, repo_path, js_option):
+        """Initialize the frontend view."""
+        self.repo_path = repo_path
+        self.js_option = js_option
+
+    async def get(self, request: web.Request):
+        """Redirect to the authorize page."""
+        latest = self.repo_path is not None or \
+            _is_latest(self.js_option, request)
+
+        if latest:
+            location = '/frontend_latest/authorize.html'
+        else:
+            location = '/frontend_es5/authorize.html'
+
+        location += '?{}'.format(request.query_string)
+
+        return web.Response(status=302, headers={
+            'location': location
+        })
 
 
 class IndexView(HomeAssistantView):

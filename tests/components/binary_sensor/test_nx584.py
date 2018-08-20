@@ -21,7 +21,7 @@ class TestNX584SensorSetup(unittest.TestCase):
     """Test the NX584 sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self._mock_client = mock.patch.object(nx584_client, 'Client')
         self._mock_client.start()

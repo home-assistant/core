@@ -54,7 +54,6 @@ have type "create_entry" and "result" key will contain an authorization code.
     "flow_id": "8f7e42faab604bcab7ac43c44ca34d58",
     "handler": ["insecure_example", null],
     "result": "411ee2f916e648d691e937ae9344681e",
-    "source": "user",
     "title": "Example",
     "type": "create_entry",
     "version": 1
@@ -64,6 +63,7 @@ import aiohttp.web
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.ban import process_wrong_login, \
     log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -142,8 +142,8 @@ class LoginFlowIndexView(HomeAssistantView):
     @log_invalid_auth
     async def post(self, request, data):
         """Create a new login flow."""
-        if not indieauth.verify_redirect_uri(data['client_id'],
-                                             data['redirect_uri']):
+        if not await indieauth.verify_redirect_uri(
+                request.app['hass'], data['client_id'], data['redirect_uri']):
             return self.json_message('invalid client id or redirect uri', 400)
 
         if isinstance(data['handler'], list):
@@ -152,7 +152,8 @@ class LoginFlowIndexView(HomeAssistantView):
             handler = data['handler']
 
         try:
-            result = await self._flow_mgr.async_init(handler)
+            result = await self._flow_mgr.async_init(
+                handler, context={'ip_address': request[KEY_REAL_IP]})
         except data_entry_flow.UnknownHandler:
             return self.json_message('Invalid handler specified', 404)
         except data_entry_flow.UnknownStep:
@@ -189,6 +190,13 @@ class LoginFlowResourceView(HomeAssistantView):
             return self.json_message('Invalid client id', 400)
 
         try:
+            # do not allow change ip during login flow
+            for flow in self._flow_mgr.async_progress():
+                if (flow['flow_id'] == flow_id and
+                        flow['context']['ip_address'] !=
+                        request.get(KEY_REAL_IP)):
+                    return self.json_message('IP address changed', 400)
+
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message('Invalid flow specified', 404)

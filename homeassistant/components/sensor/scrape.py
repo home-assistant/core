@@ -19,12 +19,12 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['beautifulsoup4==4.6.1']
+REQUIREMENTS = ['beautifulsoup4==4.6.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SELECT = 'select'
 CONF_ATTR = 'attribute'
+CONF_SELECT = 'select'
 
 DEFAULT_NAME = 'Web scrape'
 DEFAULT_VERIFY_SSL = True

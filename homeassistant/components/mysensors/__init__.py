@@ -22,7 +22,7 @@ from .const import (
 from .device import get_mysensors_devices
 from .gateway import get_mysensors_gateway, setup_gateways, finish_setup
 
-REQUIREMENTS = ['pymysensors==0.16.0']
+REQUIREMENTS = ['pymysensors==0.17.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +133,7 @@ def setup_mysensors_platform(
         async_add_devices=None):
     """Set up a MySensors platform."""
     # Only act if called via MySensors by discovery event.
-    # Otherwise gateway is not setup.
+    # Otherwise gateway is not set up.
     if not discovery_info:
         return
     if device_args is None:

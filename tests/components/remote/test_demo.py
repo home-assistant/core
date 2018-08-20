@@ -15,7 +15,7 @@ class TestDemoRemote(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.assertTrue(setup_component(self.hass, remote.DOMAIN, {'remote': {
             'platform': 'demo',

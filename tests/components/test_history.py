@@ -17,7 +17,7 @@ class TestComponentHistory(unittest.TestCase):
     """Test History component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -83,9 +83,10 @@ class TestComponentHistory(unittest.TestCase):
             self.wait_recording_done()
 
         # Get states returns everything before POINT
-        self.assertEqual(states,
-                         sorted(history.get_states(self.hass, future),
-                                key=lambda state: state.entity_id))
+        for state1, state2 in zip(
+                states, sorted(history.get_states(self.hass, future),
+                               key=lambda state: state.entity_id)):
+            assert state1 == state2
 
         # Test get_state here because we have a DB setup
         self.assertEqual(

@@ -17,7 +17,7 @@ class TestUVCSetup(unittest.TestCase):
     """Test the UVC camera platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -134,7 +134,7 @@ class TestUVCSetup(unittest.TestCase):
     @mock.patch.object(uvc, 'UnifiVideoCamera')
     @mock.patch('uvcclient.nvr.UVCRemote')
     def setup_nvr_errors_during_indexing(self, error, mock_remote, mock_uvc):
-        """Setup test for NVR errors during indexing."""
+        """Set up test for NVR errors during indexing."""
         config = {
             'platform': 'uvc',
             'nvr': 'foo',
@@ -163,7 +163,7 @@ class TestUVCSetup(unittest.TestCase):
     @mock.patch('uvcclient.nvr.UVCRemote.__init__')
     def setup_nvr_errors_during_initialization(self, error, mock_remote,
                                                mock_uvc):
-        """Setup test for NVR errors during initialization."""
+        """Set up test for NVR errors during initialization."""
         config = {
             'platform': 'uvc',
             'nvr': 'foo',
@@ -195,7 +195,7 @@ class TestUVC(unittest.TestCase):
     """Test class for UVC."""
 
     def setup_method(self, method):
-        """Setup the mock camera."""
+        """Set up the mock camera."""
         self.nvr = mock.MagicMock()
         self.uuid = 'uuid'
         self.name = 'name'

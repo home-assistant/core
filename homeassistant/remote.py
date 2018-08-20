@@ -48,6 +48,7 @@ class API:
                  port: Optional[int] = SERVER_PORT,
                  use_ssl: bool = False) -> None:
         """Init the API."""
+        _LOGGER.warning('This class is deprecated and will be removed in 0.77')
         self.host = host
         self.port = port
         self.api_password = api_password
@@ -75,7 +76,7 @@ class API:
 
         return self.status == APIStatus.OK
 
-    def __call__(self, method: str, path: str, data: Dict = None,
+    def __call__(self, method: str, path: str, data: Optional[Dict] = None,
                  timeout: int = 5) -> requests.Response:
         """Make a call to the Home Assistant API."""
         if data is None:
@@ -160,7 +161,7 @@ def get_event_listeners(api: API) -> Dict:
         return {}
 
 
-def fire_event(api: API, event_type: str, data: Dict = None) -> None:
+def fire_event(api: API, event_type: str, data: Optional[Dict] = None) -> None:
     """Fire an event at remote API."""
     try:
         req = api(METH_POST, URL_API_EVENTS_EVENT.format(event_type), data)
@@ -227,7 +228,8 @@ def remove_state(api: API, entity_id: str) -> bool:
 
 
 def set_state(api: API, entity_id: str, new_state: str,
-              attributes: Dict = None, force_update: bool = False) -> bool:
+              attributes: Optional[Dict] = None, force_update: bool = False) \
+        -> bool:
     """Tell API to update state for entity_id.
 
     Return True if success.
@@ -279,7 +281,7 @@ def get_services(api: API) -> Dict:
 
 
 def call_service(api: API, domain: str, service: str,
-                 service_data: Dict = None,
+                 service_data: Optional[Dict] = None,
                  timeout: int = 5) -> None:
     """Call a service at the remote API."""
     try:

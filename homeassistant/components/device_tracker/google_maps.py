@@ -17,29 +17,30 @@ from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['locationsharinglib==2.0.7']
+REQUIREMENTS = ['locationsharinglib==2.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 ATTR_ADDRESS = 'address'
 ATTR_FULL_NAME = 'full_name'
 ATTR_LAST_SEEN = 'last_seen'
 ATTR_NICKNAME = 'nickname'
+
+CONF_MAX_GPS_ACCURACY = 'max_gps_accuracy'
 
 CREDENTIALS_FILE = '.google_maps_location_sharing.cookies'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
-    vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
 })
 
 
 def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
-    """Set up the scanner."""
+    """Set up the Google Maps Location sharing scanner."""
     scanner = GoogleMapsScanner(hass, config, see)
     return scanner.success_init
 
