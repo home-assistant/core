@@ -209,9 +209,9 @@ class EntityPlatform:
         component_entities = set(hass.states.async_entity_ids(self.domain))
 
         device_registry = await \
-                          hass.helpers.device_registry.async_get_registry()
+            hass.helpers.device_registry.async_get_registry()
         entity_registry = await \
-                          hass.helpers.entity_registry.async_get_registry()
+            hass.helpers.entity_registry.async_get_registry()
         tasks = [
             self._async_add_entity(entity, update_before_add,
                                    component_entities, entity_registry,
