@@ -152,15 +152,13 @@ async def test_new_hashes_are_bcrypt(data, hass):
 async def test_pbkdf2_to_bcrypt_hash_upgrade(data, hass):
     data.add_auth('legacyuser', 'user-pass')
     # overwrite with pbkdf2 hash
-    data.salt = b'testingsalt'  # simulates legacy salt
+    # NOTE: this needs to be wired into the underlying structure
+    # ...or something.
     found = None
     for user in data.users:
         if user['username'] == 'legacyuser':
             found = user
     assert found is not None
-
-    # NOTE: this needs to be wired into the underlying structure
-    # ...or something.
     found['password'] = data.legacy_hash_password(
         'testtest', True).decode()
 
