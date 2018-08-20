@@ -52,7 +52,7 @@ class Switchmate(SwitchDevice):
             self._device = bluepy.btle.Peripheral(self._mac,
                                                   bluepy.btle.ADDR_TYPE_RANDOM)
         except bluepy.btle.BTLEException:
-            _LOGGER.error("Failed to setup switchmate", exc_info=True)
+            _LOGGER.error("Failed to set up switchmate")
             raise PlatformNotReady()
 
     @property
