@@ -32,9 +32,9 @@ async def async_get_code(hass, aiohttp_client):
     # Now authenticate with the 2nd flow
     resp = await client.post('/auth/login_flow', json={
         'client_id': CLIENT_ID,
-        'credential_only': True,
         'handler': ['insecure_example', '2nd auth'],
         'redirect_uri': CLIENT_REDIRECT_URI,
+        'type': 'link_user',
     })
     assert resp.status == 200
     step = await resp.json()

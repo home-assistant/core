@@ -69,6 +69,9 @@ SCHEMA_WS_CURRENT_USER = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_CURRENT_USER,
 })
 
+RESULT_TYPE_CREDENTIALS = 'credentials'
+RESULT_TYPE_USER = 'user'
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -135,7 +138,7 @@ class GrantTokenView(HomeAssistantView):
                 'error': 'invalid_request',
             }, status_code=400)
 
-        user = self._retrieve_user(client_id, code)
+        user = self._retrieve_user(client_id, RESULT_TYPE_USER, code)
 
         if user is None or not isinstance(user, User):
             return self.json({
@@ -222,7 +225,7 @@ class LinkUserView(HomeAssistantView):
         user = request['hass_user']
 
         credentials = self._retrieve_credentials(
-            data['client_id'], data['code'])
+            data['client_id'], RESULT_TYPE_CREDENTIALS, data['code'])
 
         if credentials is None or not isinstance(credentials, Credentials):
             return self.json_message('Invalid code', status_code=400)
@@ -239,19 +242,27 @@ def _create_auth_code_store():
     @callback
     def store_result(client_id, result):
         """Store flow result and return a code to retrieve it."""
+        if isinstance(result, User):
+            result_type = RESULT_TYPE_USER
+        elif isinstance(result, Credentials):
+            result_type = RESULT_TYPE_CREDENTIALS
+        else:
+            raise ValueError('result has to be either User or Credentials')
+
         code = uuid.uuid4().hex
-        temp_results[(client_id, code)] = (dt_util.utcnow(), result)
+        temp_results[(client_id, result_type, code)] = \
+            (dt_util.utcnow(), result_type, result)
         return code
 
     @callback
-    def retrieve_result(client_id, code):
+    def retrieve_result(client_id, result_type, code):
         """Retrieve flow result."""
-        key = (client_id, code)
+        key = (client_id, result_type, code)
 
         if key not in temp_results:
             return None
 
-        created, result = temp_results.pop(key)
+        created, _, result = temp_results.pop(key)
 
         # OAuth 4.2.1
         # The authorization code MUST expire shortly after it is issued to

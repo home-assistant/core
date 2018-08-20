@@ -22,13 +22,14 @@ Pass in parameter 'client_id' and 'redirect_url' validate by indieauth.
 Pass in parameter 'handler' to specify the auth provider to use. Auth providers
 are identified by type and id.
 
-And optional parameter 'credential_only' to instruct login flow return
-credential instead of user, this will help to link credential to exist user
+And optional parameter 'type' has to set as 'link_user' if login flow used for
+link credential to exist user. Default 'type' is 'authorize'.
 
 {
     "client_id": "https://hassbian.local:8123/",
     "handler": ["local_provider", null],
-    "redirect_url": "https://hassbian.local:8123/"
+    "redirect_url": "https://hassbian.local:8123/",
+    "type': "authorize"
 }
 
 Return value will be a step in a data entry flow. See the docs for data entry
@@ -53,7 +54,7 @@ Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
 have type "create_entry" and "result" key will contain an authorization code.
 The authorization code associated with an authorized user by default, it will
-associate with an credential if "credential_only" set to true in
+associate with an credential if "type" set to "link_user" in
 "/auth/login_flow"
 
 {
@@ -144,7 +145,7 @@ class LoginFlowIndexView(HomeAssistantView):
         vol.Required('client_id'): str,
         vol.Required('handler'): vol.Any(str, list),
         vol.Required('redirect_uri'): str,
-        vol.Optional('credential_only'): bool,
+        vol.Optional('type', default='authorize'): str,
     }))
     @log_invalid_auth
     async def post(self, request, data):
@@ -162,7 +163,7 @@ class LoginFlowIndexView(HomeAssistantView):
             result = await self._flow_mgr.async_init(
                 handler, context={
                     'ip_address': request[KEY_REAL_IP],
-                    'credential_only': data.get('credential_only'),
+                    'credential_only': data.get('type') == 'link_user',
                 })
         except data_entry_flow.UnknownHandler:
             return self.json_message('Invalid handler specified', 404)
