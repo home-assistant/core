@@ -2,15 +2,15 @@
 Support for INSTEON dimmers via PowerLinc Modem.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/switch.insteon_plm/
+https://home-assistant.io/components/switch.insteon/
 """
 import asyncio
 import logging
 
-from homeassistant.components.insteon_plm import InsteonPLMEntity
+from homeassistant.components.insteon import InsteonEntity
 from homeassistant.components.switch import SwitchDevice
 
-DEPENDENCIES = ['insteon_plm']
+DEPENDENCIES = ['insteon']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
-    plm = hass.data['insteon_plm'].get('plm')
+    plm = hass.data['insteon'].get('plm')
 
     address = discovery_info['address']
     device = plm.devices[address]
@@ -31,15 +31,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     new_entity = None
     if state_name == 'openClosedRelay':
-        new_entity = InsteonPLMOpenClosedDevice(device, state_key)
+        new_entity = InsteonOpenClosedDevice(device, state_key)
     else:
-        new_entity = InsteonPLMSwitchDevice(device, state_key)
+        new_entity = InsteonSwitchDevice(device, state_key)
 
     if new_entity is not None:
         async_add_devices([new_entity])
 
 
-class InsteonPLMSwitchDevice(InsteonPLMEntity, SwitchDevice):
+class InsteonSwitchDevice(InsteonEntity, SwitchDevice):
     """A Class for an Insteon device."""
 
     @property
@@ -58,7 +58,7 @@ class InsteonPLMSwitchDevice(InsteonPLMEntity, SwitchDevice):
         self._insteon_device_state.off()
 
 
-class InsteonPLMOpenClosedDevice(InsteonPLMEntity, SwitchDevice):
+class InsteonOpenClosedDevice(InsteonEntity, SwitchDevice):
     """A Class for an Insteon device."""
 
     @property

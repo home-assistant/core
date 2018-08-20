@@ -1,8 +1,8 @@
 """
-Support for INSTEON PowerLinc Modem.
+Support for INSTEON Modems (PLM and Hub).
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/insteon_plm/
+https://home-assistant.io/components/insteon/
 """
 import asyncio
 import collections
@@ -22,7 +22,7 @@ REQUIREMENTS = ['insteonplm==0.12.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'insteon_plm'
+DOMAIN = 'insteon'
 
 CONF_IP_PORT = 'ip_port'
 CONF_HUB_USERNAME = 'username'
@@ -62,8 +62,8 @@ HOUSECODES = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h',
               'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p']
 
 BUTTON_PRESSED_STATE_NAME = 'onLevelButton'
-EVENT_BUTTON_ON = 'insteon_plm.button_on'
-EVENT_BUTTON_OFF = 'insteon_plm.button_off'
+EVENT_BUTTON_ON = 'insteon.button_on'
+EVENT_BUTTON_OFF = 'insteon.button_off'
 EVENT_CONF_BUTTON = 'button'
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
@@ -425,7 +425,7 @@ class IPDB:
         return None
 
 
-class InsteonPLMEntity(Entity):
+class InsteonEntity(Entity):
     """INSTEON abstract base entity."""
 
     def __init__(self, device, state_key):
@@ -509,7 +509,7 @@ def print_aldb_to_log(aldb):
     _LOGGER.info('ALDB load status is %s', aldb.status.name)
     if aldb.status not in [ALDBStatus.LOADED, ALDBStatus.PARTIAL]:
         _LOGGER.warning('Device All-Link database not loaded')
-        _LOGGER.warning('Use service insteon_plm.load_aldb first')
+        _LOGGER.warning('Use service insteon.load_aldb first')
         return
 
     _LOGGER.info('RecID In Use Mode HWM Group Address  Data 1 Data 2 Data 3')

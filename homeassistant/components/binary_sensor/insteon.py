@@ -2,15 +2,15 @@
 Support for INSTEON dimmers via PowerLinc Modem.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.insteon_plm/
+https://home-assistant.io/components/binary_sensor.insteon/
 """
 import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.insteon_plm import InsteonPLMEntity
+from homeassistant.components.insteon import InsteonEntity
 
-DEPENDENCIES = ['insteon_plm']
+DEPENDENCIES = ['insteon']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,7 +25,7 @@ SENSOR_TYPES = {'openClosedSensor': 'opening',
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the INSTEON PLM device class for the hass platform."""
-    plm = hass.data['insteon_plm'].get('plm')
+    plm = hass.data['insteon'].get('plm')
 
     address = discovery_info['address']
     device = plm.devices[address]
@@ -35,12 +35,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.debug('Adding device %s entity %s to Binary Sensor platform',
                       device.address.hex, device.states[state_key].name)
 
-        new_entity = InsteonPLMBinarySensor(device, state_key)
+        new_entity = InsteonBinarySensor(device, state_key)
 
         async_add_devices([new_entity])
 
 
-class InsteonPLMBinarySensor(InsteonPLMEntity, BinarySensorDevice):
+class InsteonBinarySensor(InsteonEntity, BinarySensorDevice):
     """A Class for an Insteon device entity."""
 
     def __init__(self, device, state_key):
