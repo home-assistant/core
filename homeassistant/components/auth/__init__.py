@@ -45,17 +45,15 @@ a limited expiration.
     "token_type": "Bearer"
 }
 
-### Revoking a refresh token
+## Revoking a refresh token
 
-Grant type refresh_token also supports revoking a refresh token. To revoke,
-pass action=revoke with your request. Response code will ALWAYS be 200.
+It is also possible to revoke a refresh token and all access tokens that have
+ever been granted by that refresh token. Response code will ALWAYS be 200.
 
 {
-    "grant_type": "refresh_token",
-    "refresh_token": "IJKLMNOPQRST",
+    "token": "IJKLMNOPQRST",
     "action": "revoke"
 }
-
 
 """
 import logging
