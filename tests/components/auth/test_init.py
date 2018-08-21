@@ -224,3 +224,46 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
         await hass.auth.async_validate_access_token(tokens['access_token'])
         is not None
     )
+
+
+async def test_revoking_refresh_token(hass, aiohttp_client):
+    """Test that we can revoke refresh tokens."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    user = await hass.auth.async_create_user('Test User')
+    refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
+
+    # Test that we can create an access token
+    resp = await client.post('/auth/token', data={
+        'client_id': CLIENT_ID,
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token.token,
+    })
+
+    assert resp.status == 200
+    tokens = await resp.json()
+    assert (
+        await hass.auth.async_validate_access_token(tokens['access_token'])
+        is not None
+    )
+
+    # Revoke refresh token
+    resp = await client.post('/auth/token', data={
+        'token': refresh_token.token,
+        'action': 'revoke',
+    })
+    assert resp.status == 200
+
+    # Old access token should be no longer valid
+    assert (
+        await hass.auth.async_validate_access_token(tokens['access_token'])
+        is None
+    )
+
+    # Test that we no longer can create an access token
+    resp = await client.post('/auth/token', data={
+        'client_id': CLIENT_ID,
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token.token,
+    })
+
+    assert resp.status == 400
