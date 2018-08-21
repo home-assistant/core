@@ -281,3 +281,20 @@ async def test_cannot_deactive_owner(mock_hass):
 
     with pytest.raises(ValueError):
         await manager.async_deactivate_user(owner)
+
+
+async def test_remove_refresh_token(mock_hass):
+    """Test that we can remove a refresh token."""
+    manager = await auth.auth_manager_from_config(mock_hass, [])
+    user = MockUser().add_to_auth_manager(manager)
+    refresh_token = await manager.async_create_refresh_token(user, CLIENT_ID)
+    access_token = manager.async_create_access_token(refresh_token)
+
+    await manager.async_remove_refresh_token(refresh_token)
+
+    assert (
+        await manager.async_get_refresh_token(refresh_token.id) is None
+    )
+    assert (
+        await manager.async_validate_access_token(access_token) is None
+    )
