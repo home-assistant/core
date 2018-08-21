@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_DISTANCE = 'distance'
 DOMAIN = 'geo_location'
+ENTITY_ID_FORMAT = DOMAIN + '.{}'
 GROUP_NAME_ALL_EVENTS = 'All Geo Location Events'
 SCAN_INTERVAL = timedelta(seconds=60)
 

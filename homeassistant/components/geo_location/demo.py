@@ -11,18 +11,16 @@ from math import pi, cos, sin, radians
 
 from typing import Optional
 
-from homeassistant.components import group
-from homeassistant.components.geo_location import GeoLocationEvent, DOMAIN
+from homeassistant.components.geo_location import GeoLocationEvent, \
+    ENTITY_ID_FORMAT
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import track_time_interval
-from homeassistant import util
 
 _LOGGER = logging.getLogger(__name__)
 
 AVG_KM_PER_DEGREE = 111.0
 DEFAULT_UNIT_OF_MEASUREMENT = "km"
 DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
-ENTITY_ID_FORMAT = DOMAIN + '.{}'
 MAX_RADIUS_IN_KM = 50
 NUMBER_OF_DEMO_DEVICES = 5
 
@@ -47,9 +45,6 @@ class DemoManager:
         self._add_devices = add_devices
         self._name = "Geo Location Demo"
         self._managed_devices = []
-        self.group = group.Group.create_group(self._hass, self._name,
-                                              object_id=util.slugify(
-                                                  self._name))
         self._update(count=NUMBER_OF_DEMO_DEVICES)
         self._init_regular_updates()
 
@@ -60,16 +55,6 @@ class DemoManager:
                                        '{} {}'.format(self._name, event_name),
                                        entity_ids, hass=self._hass)
         return entity_id
-
-    def _group_devices(self):
-        """Re-group all entities."""
-        # Sort entries in group by their state attribute (ascending).
-        devices = sorted(self._managed_devices.copy(),
-                         key=lambda device: device.state,
-                         reverse=False)
-        entity_ids = [device.entity_id for device in devices]
-        # Update group.
-        self.group.update_tracked_entity_ids(entity_ids)
 
     def _generate_random_event(self):
         """Generate a random event in vicinity of this HA instance."""
@@ -89,8 +74,8 @@ class DemoManager:
 
         event_name = random.choice(EVENT_NAMES)
         entity_id = self._generate_entity_id(event_name)
-        return DemoGeoLocationEvent(self._hass, entity_id, event_name,
-                                    radius_in_km, latitude, longitude,
+        return DemoGeoLocationEvent(entity_id, event_name, radius_in_km,
+                                    latitude, longitude,
                                     DEFAULT_UNIT_OF_MEASUREMENT)
 
     def _init_regular_updates(self):
@@ -116,17 +101,14 @@ class DemoManager:
             new_devices.append(new_device)
             self._managed_devices.append(new_device)
         self._add_devices(new_devices)
-        self._group_devices()
 
 
 class DemoGeoLocationEvent(GeoLocationEvent):
     """This represents a demo geo location event."""
 
-    def __init__(self, hass, entity_id, name, distance, latitude, longitude,
+    def __init__(self, entity_id, name, distance, latitude, longitude,
                  unit_of_measurement):
         """Initialize entity with data provided."""
-        super().__init__()
-        self.hass = hass
         self.entity_id = entity_id
         self._name = name
         self._distance = distance

@@ -4,7 +4,7 @@ import unittest
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location.demo import DemoManager, \
     NUMBER_OF_DEMO_DEVICES, setup_platform
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, assert_setup_component
@@ -85,16 +85,3 @@ class TestDemoPlatform(unittest.TestCase):
         devices2 = manager._managed_devices.copy()
         self.assertEqual(NUMBER_OF_DEMO_DEVICES, len(devices2))
         self.assertNotEqual(devices1, devices2)
-
-    def test_group_order(self):
-        """Test order of entries in group."""
-        manager = self.setup_manager()
-        devices = manager._managed_devices.copy()
-        group = manager.group
-        last_distance = 0.0
-        for entity_id in group.state_attributes.get(ATTR_ENTITY_ID):
-            device = next((device for device in devices if device.entity_id
-                           == entity_id), None)
-            self.assertIsNotNone(device)
-            assert device.distance >= last_distance
-            last_distance = device.distance
