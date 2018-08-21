@@ -398,7 +398,7 @@ class AlexaClient(MediaPlayerDevice):
             self._state = STATE_PLAYING
         elif self._media_player_state == 'PAUSED':
             self._state = STATE_PAUSED
-        elif self._media_player_state == 'IDLE':
+        else:
             self._state = STATE_IDLE
         return self._state
 
