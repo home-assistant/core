@@ -435,7 +435,7 @@ hole==0.3.0
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180818.0
+home-assistant-frontend==20180820.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -591,7 +591,7 @@ nad_receiver==0.0.9
 nanoleaf==0.4.1
 
 # homeassistant.components.device_tracker.keenetic_ndms2
-ndms2_client==0.0.3
+ndms2_client==0.0.4
 
 # homeassistant.components.sensor.netdata
 netdata==0.1.2
@@ -873,7 +873,7 @@ pyhik==0.1.8
 pyhiveapi==0.2.14
 
 # homeassistant.components.homematic
-pyhomematic==0.1.46
+pyhomematic==0.1.47
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.2.2
@@ -1335,6 +1335,9 @@ statsd==3.2.1
 
 # homeassistant.components.sensor.steam_online
 steamodd==4.21
+
+# homeassistant.components.ecovacs
+sucks==0.9.1
 
 # homeassistant.components.camera.onvif
 suds-passworddigest-homeassistant==0.1.2a0.dev0

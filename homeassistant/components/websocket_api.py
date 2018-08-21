@@ -325,7 +325,6 @@ class ActiveConnection:
         await wsock.prepare(request)
         self.debug("Connected")
 
-        # Get a reference to current task so we can cancel our connection
         self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)
 
         @callback
