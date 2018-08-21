@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'chuangmi.plug.v3']),
 })
 
-REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
