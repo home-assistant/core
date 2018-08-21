@@ -116,6 +116,9 @@ aladdin_connect==0.3
 # homeassistant.components.alarmdecoder
 alarmdecoder==1.13.2
 
+# homeassistant.components.media_player.alexa
+alexapy==0.0.4
+
 # homeassistant.components.sensor.alpha_vantage
 alpha_vantage==2.0.0
 

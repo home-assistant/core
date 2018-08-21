@@ -56,6 +56,7 @@ homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
 homeassistant/components/lock/nello.py @pschmitt
 homeassistant/components/lock/nuki.py @pschmitt
+homeassistant/components/media_player/alexa.py @keatontaylor
 homeassistant/components/media_player/emby.py @mezz64
 homeassistant/components/media_player/kodi.py @armills
 homeassistant/components/media_player/liveboxplaytv.py @pschmitt
