@@ -22,6 +22,7 @@ CONF_URL_PATH = 'url_path'
 CONF_CONFIG = 'config'
 CONF_WEBCOMPONENT_PATH = 'webcomponent_path'
 CONF_JS_URL = 'js_url'
+CONF_JS_IS_MODULE = 'js_is_module'
 CONF_EMBED_IFRAME = 'embed_iframe'
 CONF_TRUST_EXTERNAL_SCRIPT = 'trust_external_script'
 
@@ -42,6 +43,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_CONFIG): dict,
         vol.Optional(CONF_WEBCOMPONENT_PATH): cv.isfile,
         vol.Optional(CONF_JS_URL): cv.string,
+        vol.Optional(CONF_JS_IS_MODULE): cv.boolean,
         vol.Optional(CONF_EMBED_IFRAME,
                      default=DEFAULT_EMBED_IFRAME): cv.boolean,
         vol.Optional(CONF_TRUST_EXTERNAL_SCRIPT,
@@ -66,6 +68,8 @@ async def async_register_panel(
         html_url=None,
         # JS source of your panel
         js_url=None,
+        # If js_url points to a JavaScript module
+        js_is_module=False,
         # If your panel should be run inside an iframe
         embed_iframe=DEFAULT_EMBED_IFRAME,
         # Should user be asked for confirmation when loading external source
@@ -89,6 +93,7 @@ async def async_register_panel(
 
     if js_url is not None:
         custom_panel_config['js_url'] = js_url
+        custom_panel_config['js_is_module'] = js_is_module
 
     if html_url is not None:
         custom_panel_config['html_url'] = html_url
@@ -135,6 +140,8 @@ async def async_setup(hass, config):
 
         if CONF_JS_URL in panel:
             kwargs['js_url'] = panel[CONF_JS_URL]
+            if CONF_JS_IS_MODULE in panel:
+                kwargs['js_is_module'] = panel[CONF_JS_IS_MODULE]
 
         elif not await hass.async_add_job(os.path.isfile, panel_path):
             _LOGGER.error('Unable to find webcomponent for %s: %s',
