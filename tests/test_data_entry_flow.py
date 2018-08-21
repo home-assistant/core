@@ -25,11 +25,12 @@ def manager():
             if context is not None else 'user_input'
         return flow
 
-    async def async_add_entry(context, result):
-        if (result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY):
-            result['source'] = context.get('source') \
-                if context is not None else 'user'
+    async def async_add_entry(flow, result):
+        if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            result['source'] = flow.context.get('source') \
+                if flow.context is not None else 'user'
             entries.append(result)
+        return result
 
     manager = data_entry_flow.FlowManager(
         None, async_create_flow, async_add_entry)

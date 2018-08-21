@@ -106,14 +106,17 @@ class FlowManager:
             flow.cur_step = (result['step_id'], result['data_schema'])
             return result
 
+        # We pass a copy of the result because we're mutating our version
+        result = await self._async_finish_flow(flow, dict(result))
+
+        # _async_finish_flow may change result type, check it again
+        if result['type'] == RESULT_TYPE_FORM:
+            flow.cur_step = (result['step_id'], result['data_schema'])
+            return result
+
         # Abort and Success results both finish the flow
         self._progress.pop(flow.flow_id)
 
-        # We pass a copy of the result because we're mutating our version
-        entry = await self._async_finish_flow(flow.context, dict(result))
-
-        if result['type'] == RESULT_TYPE_CREATE_ENTRY:
-            result['result'] = entry
         return result
 
 
