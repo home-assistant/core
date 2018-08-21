@@ -90,27 +90,26 @@ class Data:
                            dummy)
             raise InvalidAuth
 
-        # NOTE: this fails but works with ISO-8859-1, which doesn't
-        # seem right since we're storing as utf-8 and the data is base64...
-        # leaving this for someone who's smarter than me.
-        user_hash = base64.b64decode(found['password']).decode()
+        user_hash = base64.b64decode(found['password'])
 
         # if the hash is not a bcrypt hash...
         # provide a transparant upgrade for old pbkdf2 hash format
-        if not (user_hash.startswith('$2a$')
-                or user_hash.startswith('$2b$')
-                or user_hash.startswith('$2x$')
-                or user_hash.startswith('$2y$')):
+        if not (user_hash.startswith(b'$2a$')
+                or user_hash.startswith(b'$2b$')
+                or user_hash.startswith(b'$2x$')
+                or user_hash.startswith(b'$2y$')):
             # IMPORTANT! validate the login, bail if invalid
             hashed = self.legacy_hash_password(password)
-            if not hmac.compare_digest(hashed, user_hash.encode()):
+            if not hmac.compare_digest(hashed, user_hash):
                 raise InvalidAuth
             # then re-hash the valid password with bcrypt
             self.change_password(found['username'], password)
+            self.hass.add_job(self.async_save())
+            user_hash = base64.b64decode(found['password'])
 
         # bcrypt.checkpw is timing-safe
         if not bcrypt.checkpw(password.encode(),
-                              user_hash.encode()):
+                              user_hash):
             raise InvalidAuth
 
     def legacy_hash_password(self, password: str,
