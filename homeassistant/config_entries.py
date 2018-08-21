@@ -382,7 +382,6 @@ class ConfigEntries:
                 DISCOVERY_NOTIFICATION_ID)
 
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            result.pop('result', None)
             return result
 
         entry = ConfigEntry(

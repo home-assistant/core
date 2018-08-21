@@ -260,7 +260,6 @@ class AuthManager:
             -> Dict[str, Any]:
         """Return a user as result of login flow."""
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            result.pop('result', None)
             return result
 
         auth_provider = self._providers[result['handler']]

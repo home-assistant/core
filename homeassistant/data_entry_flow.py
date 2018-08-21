@@ -64,7 +64,7 @@ class FlowManager:
         return await self._async_handle_step(flow, flow.init_step, data)
 
     async def async_configure(
-            self, flow_id: str, user_input: Optional[str] = None) -> Any:
+            self, flow_id: str, user_input: Optional[Dict] = None) -> Any:
         """Continue a configuration flow."""
         flow = self._progress.get(flow_id)
 
@@ -86,7 +86,7 @@ class FlowManager:
             raise UnknownFlow
 
     async def _async_handle_step(self, flow: Any, step_id: str,
-                                 user_input: Optional[str]) -> Dict:
+                                 user_input: Optional[Dict]) -> Dict:
         """Handle a step of a flow."""
         method = "async_step_{}".format(step_id)
 
