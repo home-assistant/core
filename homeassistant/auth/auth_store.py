@@ -136,6 +136,15 @@ class AuthStore:
         self._async_schedule_save()
         return refresh_token
 
+    async def async_remove_refresh_token(
+            self, refresh_token: models.RefreshToken) -> None:
+        """Remove a refresh token."""
+        for user in self._users.values():
+            if user.refresh_tokens.pop(refresh_token.id, None):
+                break
+
+        self._async_schedule_save()
+
     async def async_get_refresh_token(
             self, token_id: str) -> Optional[models.RefreshToken]:
         """Get refresh token by id."""

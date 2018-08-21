@@ -44,11 +44,25 @@ a limited expiration.
     "expires_in": 1800,
     "token_type": "Bearer"
 }
+
+### Revoking a refresh token
+
+Grant type refresh_token also supports revoking a refresh token. To revoke,
+pass action=revoke with your request. Response code will ALWAYS be 200.
+
+{
+    "grant_type": "refresh_token",
+    "refresh_token": "IJKLMNOPQRST",
+    "action": "revoke"
+}
+
+
 """
 import logging
 import uuid
 from datetime import timedelta
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import User, Credentials
@@ -124,6 +138,16 @@ class GrantTokenView(HomeAssistantView):
 
     async def _async_handle_auth_code(self, hass, data):
         """Handle authorization code request."""
+        action = data.get('action')
+        if action == 'revoke':
+            return web.Response(status=200)
+        # We only support no action or action=revoke
+        elif action is not None:
+            return self.json({
+                'error': 'invalid_request',
+                'error_description': 'Invalid action',
+            }, status_code=400)
+
         client_id = data.get('client_id')
         if client_id is None or not indieauth.verify_client_id(client_id):
             return self.json({
@@ -136,6 +160,7 @@ class GrantTokenView(HomeAssistantView):
         if code is None:
             return self.json({
                 'error': 'invalid_request',
+                'error_description': 'Invalid code',
             }, status_code=400)
 
         user = self._retrieve_user(client_id, RESULT_TYPE_USER, code)
@@ -169,31 +194,58 @@ class GrantTokenView(HomeAssistantView):
 
     async def _async_handle_refresh_token(self, hass, data):
         """Handle authorization code request."""
+        action = data.get('action')
+
+        # We only support no action or action=revoke
+        if action is not None and action != 'revoke':
+            return self.json({
+                'error': 'invalid_request',
+                'error_description': 'Invalid action',
+            }, status_code=400)
+
+        # OAuth 2.0 Token Revocation [RFC7009]
+        # 2.2 The authorization server responds with HTTP status code 200
+        # if the token has been revoked successfully or if the client
+        # submitted an invalid token.
+        if action == 'revoke':
+            error_status = 200
+        else:
+            error_status = 400
+
         client_id = data.get('client_id')
         if client_id is not None and not indieauth.verify_client_id(client_id):
             return self.json({
                 'error': 'invalid_request',
                 'error_description': 'Invalid client id',
-            }, status_code=400)
+            }, status_code=error_status)
 
         token = data.get('refresh_token')
 
         if token is None:
             return self.json({
                 'error': 'invalid_request',
-            }, status_code=400)
+            }, status_code=error_status)
 
         refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
 
         if refresh_token is None:
             return self.json({
                 'error': 'invalid_grant',
-            }, status_code=400)
+            }, status_code=error_status)
 
         if refresh_token.client_id != client_id:
             return self.json({
                 'error': 'invalid_request',
-            }, status_code=400)
+            }, status_code=error_status)
+
+        # IndieAuth 6.3.5
+        # The revocation endpoint is the same as the token endpoint.
+        # The revocation request includes an additional parameter,
+        # action=revoke.
+        if action == 'revoke':
+            await hass.auth.async_remove_refresh_token(refresh_token)
+            # Revoke always returns 200.
+            return web.Response(status=200)
 
         access_token = hass.auth.async_create_access_token(refresh_token)
 
