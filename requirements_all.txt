@@ -77,7 +77,7 @@ YesssSMS==0.1.1b3
 abodepy==0.13.1
 
 # homeassistant.components.media_player.frontier_silicon
-afsapi==0.0.3
+afsapi==0.0.4
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
