@@ -1,15 +1,14 @@
 """Example auth provider."""
 from collections import OrderedDict
 import hmac
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant import data_entry_flow
 from homeassistant.core import callback
 
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
+from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 from ..models import Credentials, UserMeta
 
 
@@ -33,10 +32,9 @@ class InvalidAuthError(HomeAssistantError):
 class ExampleAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
-    async def async_credential_flow(
-            self, context: Optional[Dict]) -> 'LoginFlow':
+    async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
-        return LoginFlow(self)
+        return ExampleLoginFlow(self)
 
     @callback
     def async_validate_login(self, username: str, password: str) -> None:
@@ -90,12 +88,8 @@ class ExampleAuthProvider(AuthProvider):
         return UserMeta(name=name, is_active=True)
 
 
-class LoginFlow(data_entry_flow.FlowHandler):
+class ExampleLoginFlow(LoginFlow):
     """Handler for the login flow."""
-
-    def __init__(self, auth_provider: ExampleAuthProvider) -> None:
-        """Initialize the login flow."""
-        self._auth_provider = auth_provider
 
     async def async_step_init(
             self, user_input: Optional[Dict[str, str]] = None) \
@@ -105,16 +99,15 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
         if user_input is not None:
             try:
-                self._auth_provider.async_validate_login(
-                    user_input['username'], user_input['password'])
+                cast(ExampleAuthProvider, self._auth_provider)\
+                    .async_validate_login(user_input['username'],
+                                          user_input['password'])
             except InvalidAuthError:
                 errors['base'] = 'invalid_auth'
 
             if not errors:
-                return self.async_create_entry(
-                    title=self._auth_provider.name,
-                    data=user_input
-                )
+                user_input.pop('password')
+                return await self.async_finish(user_input)
 
         schema = OrderedDict()  # type: Dict[str, type]
         schema['username'] = str

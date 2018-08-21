@@ -10,10 +10,11 @@ from voluptuous.humanize import humanize_error
 from homeassistant import data_entry_flow, requirements
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.const import CONF_TYPE, CONF_NAME, CONF_ID
+from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
-from homeassistant.auth.auth_store import AuthStore
-from homeassistant.auth.models import Credentials, UserMeta
+from ..auth_store import AuthStore
+from ..models import Credentials, UserMeta
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = 'auth_prov_reqs_processed'
@@ -80,9 +81,11 @@ class AuthProvider:
 
     # Implement by extending class
 
-    async def async_credential_flow(
-            self, context: Optional[Dict]) -> data_entry_flow.FlowHandler:
-        """Return the data flow for logging in with auth provider."""
+    async def async_login_flow(self, context: Optional[Dict]) -> 'LoginFlow':
+        """Return the data flow for logging in with auth provider.
+
+        Auth provider should extend LoginFlow and return an instance.
+        """
         raise NotImplementedError
 
     async def async_get_or_create_credentials(
@@ -149,3 +152,30 @@ async def load_auth_provider_module(
 
     processed.add(provider)
     return module
+
+
+class LoginFlow(data_entry_flow.FlowHandler):
+    """Handler for the login flow."""
+
+    def __init__(self, auth_provider: AuthProvider) -> None:
+        """Initialize the login flow."""
+        self._auth_provider = auth_provider
+        self.created_at = dt_util.utcnow()
+        self.user = None
+
+    async def async_step_init(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
+        """Handle the first step of login flow.
+
+        Return self.async_show_form(step_id='init') if user_input == None.
+        Return await self.async_finish(flow_result) if login init step pass.
+        """
+        raise NotImplementedError
+
+    async def async_finish(self, flow_result: Any) -> Dict:
+        """Handle the pass of login flow."""
+        return self.async_create_entry(
+            title=self._auth_provider.name,
+            data=flow_result
+        )
