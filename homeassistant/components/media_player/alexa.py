@@ -233,6 +233,7 @@ class AlexaClient(MediaPlayerDevice):
         self.update_devices = update_devices
         # Device info
         self._device = None
+        self._state = None
         self._device_name = None
         self._device_serial_number = None
         self._device_type = None
@@ -394,12 +395,12 @@ class AlexaClient(MediaPlayerDevice):
     def state(self):
         """Return the state of the device."""
         if self._media_player_state == 'PLAYING':
-            return STATE_PLAYING
+            self._state = STATE_PLAYING
         elif self._media_player_state == 'PAUSED':
-            return STATE_PAUSED
+            self._state = STATE_PAUSED
         elif self._media_player_state == 'IDLE':
-            return STATE_IDLE
-        return STATE_STANDBY
+            self._state = STATE_IDLE
+        return self._state
 
     def update(self):
         """Get the latest details."""
