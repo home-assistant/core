@@ -1,0 +1,10 @@
+{
+  "config": {
+    "title": "Google Hangouts",
+    "step": {
+      "init": {
+        "title": "Google login"
+      }
+    }
+  }
+}

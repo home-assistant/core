@@ -14,22 +14,15 @@ from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
                                              BaseNotificationService,
                                              ATTR_MESSAGE)
 
+from homeassistant.components.hangouts.const import (DOMAIN,
+                                                     SERVICE_SEND_MESSAGE,
+                                                     TARGETS_SCHEMA)
+
 _LOGGER = logging.getLogger(__name__)
 
 CONF_DEFAULT_CONVERSATIONS = 'default_conversations'
-CONF_CONVERSATION_ID = 'id'
-CONF_CONVERSATION_NAME = 'name'
 
-DOMAIN = 'hangouts'
 DEPENDENCIES = [DOMAIN]
-
-TARGETS_SCHEMA = vol.All(
-    vol.Schema({
-        vol.Exclusive(CONF_CONVERSATION_ID, 'id or name'): cv.string,
-        vol.Exclusive(CONF_CONVERSATION_NAME, 'id or name'): cv.string
-    }),
-    cv.has_at_least_one_key(CONF_CONVERSATION_ID, CONF_CONVERSATION_NAME)
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEFAULT_CONVERSATIONS): [TARGETS_SCHEMA]
@@ -73,4 +66,4 @@ class HangoutsNotificationService(BaseNotificationService):
         }
 
         return self.hass.services.call(
-            DOMAIN, 'send_message', service_data=service_data)
+            DOMAIN, SERVICE_SEND_MESSAGE, service_data=service_data)
