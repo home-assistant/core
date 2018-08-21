@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_HOME, STATE_NOT_HOME, CONF_PLATFORM, ATTR_ICON)
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 
 from tests.common import (
     get_test_home_assistant, fire_time_changed,
