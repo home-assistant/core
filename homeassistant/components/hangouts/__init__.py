@@ -2,7 +2,7 @@
 The hangouts bot component.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/matrix/
+https://home-assistant.io/components/hangouts/
 """
 import logging
 
@@ -10,11 +10,9 @@ from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 from .const import (DOMAIN,
-                    CONF_CONVERSATIONS, CONF_WORD, CONF_EXPRESSION,
                     CONF_REFRESH_TOKEN, CONF_BOT, CONF_COMMANDS,
-                    CONFIG_SCHEMA, MESSAGE_SCHEMA,
-                    EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_COMMAND,
-                    EVENT_HANGOUTS_USERS_CHANGED,
+                    MESSAGE_SCHEMA,
+                    EVENT_HANGOUTS_CONNECTED,
                     EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
                     SERVICE_SEND_MESSAGE,
                     SERVICE_UPDATE_USERS_AND_CONVERSATIONS)
