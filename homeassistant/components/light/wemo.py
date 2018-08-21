@@ -133,7 +133,7 @@ class WemoLight(Light):
         if ATTR_COLOR_TEMP in kwargs:
             colortemp = kwargs[ATTR_COLOR_TEMP]
             self.wemo.set_temperature(mireds=colortemp,
-                                        transition=transitiontime)
+                                      transition=transitiontime)
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
