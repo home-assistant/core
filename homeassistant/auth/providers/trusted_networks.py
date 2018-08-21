@@ -7,11 +7,11 @@ from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.components.http import HomeAssistantHTTP  # noqa: F401
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
+
+from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 from ..models import Credentials, UserMeta
 
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
@@ -35,8 +35,7 @@ class TrustedNetworksAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = 'Trusted Networks'
 
-    async def async_credential_flow(
-            self, context: Optional[Dict]) -> 'LoginFlow':
+    async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
         assert context is not None
         users = await self.store.async_get_users()
@@ -44,8 +43,8 @@ class TrustedNetworksAuthProvider(AuthProvider):
                            for user in users
                            if not user.system_generated and user.is_active}
 
-        return LoginFlow(self, cast(str, context.get('ip_address')),
-                         available_users)
+        return TrustedNetworksLoginFlow(
+            self, cast(str, context.get('ip_address')), available_users)
 
     async def async_get_or_create_credentials(
             self, flow_result: Dict[str, str]) -> Credentials:
@@ -92,14 +91,14 @@ class TrustedNetworksAuthProvider(AuthProvider):
             raise InvalidAuthError('Not in trusted_networks')
 
 
-class LoginFlow(data_entry_flow.FlowHandler):
+class TrustedNetworksLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
     def __init__(self, auth_provider: TrustedNetworksAuthProvider,
                  ip_address: str, available_users: Dict[str, Optional[str]]) \
             -> None:
         """Initialize the login flow."""
-        self._auth_provider = auth_provider
+        super().__init__(auth_provider)
         self._available_users = available_users
         self._ip_address = ip_address
 
@@ -109,7 +108,8 @@ class LoginFlow(data_entry_flow.FlowHandler):
         """Handle the step of the form."""
         errors = {}
         try:
-            self._auth_provider.async_validate_access(self._ip_address)
+            cast(TrustedNetworksAuthProvider, self._auth_provider)\
+                .async_validate_access(self._ip_address)
 
         except InvalidAuthError:
             errors['base'] = 'invalid_auth'
@@ -125,10 +125,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
                 errors['base'] = 'invalid_auth'
 
             if not errors:
-                return self.async_create_entry(
-                    title=self._auth_provider.name,
-                    data=user_input
-                )
+                return await self.async_finish(user_input)
 
         schema = {'user': vol.In(self._available_users)}
 

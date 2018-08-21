@@ -259,7 +259,7 @@ class AuthManager:
         """Create a login flow."""
         auth_provider = self._providers[handler]
 
-        return await auth_provider.async_credential_flow(context)
+        return await auth_provider.async_login_flow(context)
 
     async def _async_finish_login_flow(
             self, flow: data_entry_flow.FlowHandler, result: Dict[str, Any]) \
