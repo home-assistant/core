@@ -120,7 +120,7 @@ async def async_setup_entry(hass, config_entry):
     deconz.start()
 
     device_registry = await \
-		              hass.helpers.device_registry.async_get_registry()
+        hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
         [['bridgeid', deconz.config.bridgeid]], 'Dresden Elektronik',
         deconz.config.modelid, [['Ethernet', deconz.config.mac]],
