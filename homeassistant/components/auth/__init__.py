@@ -141,8 +141,9 @@ class GrantTokenView(HomeAssistantView):
         action = data.get('action')
         if action == 'revoke':
             return web.Response(status=200)
+
         # We only support no action or action=revoke
-        elif action is not None:
+        if action is not None:
             return self.json({
                 'error': 'invalid_request',
                 'error_description': 'Invalid action',

@@ -139,6 +139,10 @@ class AuthStore:
     async def async_remove_refresh_token(
             self, refresh_token: models.RefreshToken) -> None:
         """Remove a refresh token."""
+        if self._users is None:
+            await self._async_load()
+            assert self._users is not None
+
         for user in self._users.values():
             if user.refresh_tokens.pop(refresh_token.id, None):
                 break
