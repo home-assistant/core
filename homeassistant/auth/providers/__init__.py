@@ -84,9 +84,9 @@ class AuthProvider:
     async def async_login_flow(self, context: Optional[Dict]) -> 'LoginFlow':
         """Return the data flow for logging in with auth provider.
 
-         Auth provider should extend LoginFlow
+        Auth provider should extend LoginFlow and return an instance.
         """
-        return LoginFlow(self)
+        raise NotImplementedError
 
     async def async_get_or_create_credentials(
             self, flow_result: Dict[str, str]) -> Credentials:

@@ -1,7 +1,7 @@
 """Example auth provider."""
 from collections import OrderedDict
 import hmac
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
@@ -99,8 +99,9 @@ class ExampleLoginFlow(LoginFlow):
 
         if user_input is not None:
             try:
-                self._auth_provider.async_validate_login(
-                    user_input['username'], user_input['password'])
+                cast(ExampleAuthProvider, self._auth_provider)\
+                    .async_validate_login(user_input['username'],
+                                          user_input['password'])
             except InvalidAuthError:
                 errors['base'] = 'invalid_auth'
 

@@ -4,7 +4,7 @@ Support Legacy API password auth provider.
 It will be removed when auth system production ready
 """
 import hmac
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
@@ -89,8 +89,8 @@ class LegacyLoginFlow(LoginFlow):
 
         if user_input is not None:
             try:
-                self._auth_provider.async_validate_login(
-                    user_input['password'])
+                cast(LegacyApiPasswordAuthProvider, self._auth_provider)\
+                    .async_validate_login(user_input['password'])
             except InvalidAuthError:
                 errors['base'] = 'invalid_auth'
 

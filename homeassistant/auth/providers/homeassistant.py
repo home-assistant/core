@@ -3,11 +3,10 @@ import base64
 from collections import OrderedDict
 import hashlib
 import hmac
-from typing import Any, Dict, List, Optional  # noqa: F401,E501 pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, cast
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.const import CONF_ID
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -218,8 +217,9 @@ class HassLoginFlow(LoginFlow):
 
         if user_input is not None:
             try:
-                await self._auth_provider.async_validate_login(
-                    user_input['username'], user_input['password'])
+                await cast(HassAuthProvider, self._auth_provider)\
+                    .async_validate_login(user_input['username'],
+                                          user_input['password'])
             except InvalidAuth:
                 errors['base'] = 'invalid_auth'
 

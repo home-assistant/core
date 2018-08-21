@@ -108,7 +108,8 @@ class TrustedNetworksLoginFlow(LoginFlow):
         """Handle the step of the form."""
         errors = {}
         try:
-            self._auth_provider.async_validate_access(self._ip_address)
+            cast(TrustedNetworksAuthProvider, self._auth_provider)\
+                .async_validate_access(self._ip_address)
 
         except InvalidAuthError:
             errors['base'] = 'invalid_auth'
