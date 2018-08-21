@@ -1,16 +1,15 @@
 """
-Support for HomematicIP binary sensor.
+Support for HomematicIP Cloud binary sensor.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.homematicip_cloud/
 """
-
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN,
-    HMIPC_HAPID)
+    HMIPC_HAPID, HomematicipGenericDevice)
+from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 
 DEPENDENCIES = ['homematicip_cloud']
 
@@ -19,14 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 STATE_SMOKE_OFF = 'IDLE_OFF'
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
-    """Set up the binary sensor devices."""
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
+    """Set up the HomematicIP Cloud binary sensor devices."""
     pass
 
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
-    """Set up the HomematicIP binary sensor from a config entry."""
+    """Set up the HomematicIP Cloud binary sensor from a config entry."""
     from homematicip.aio.device import (
         AsyncShutterContact, AsyncMotionDetectorIndoor, AsyncSmokeDetector)
 
@@ -45,7 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
 
 
 class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
-    """HomematicIP shutter contact."""
+    """Representation of a HomematicIP Cloud shutter contact."""
 
     @property
     def device_class(self):
@@ -65,7 +64,7 @@ class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
 
 
 class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
-    """HomematicIP motion detector."""
+    """Representation of a HomematicIP Cloud motion detector."""
 
     @property
     def device_class(self):
@@ -81,7 +80,7 @@ class HomematicipMotionDetector(HomematicipGenericDevice, BinarySensorDevice):
 
 
 class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
-    """HomematicIP smoke detector."""
+    """Representation of a HomematicIP Cloud smoke detector."""
 
     @property
     def device_class(self):
