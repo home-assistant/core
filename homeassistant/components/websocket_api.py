@@ -20,7 +20,7 @@ from homeassistant.const import (
     __version__)
 from homeassistant.core import Context, callback
 from homeassistant.loader import bind_hass
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.components.http import HomeAssistantView
