@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_ARM_MAX, 
+    SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_ARM_MAX,
     SERVICE_ALARM_ARM_CUSTOM_BYPASS)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
