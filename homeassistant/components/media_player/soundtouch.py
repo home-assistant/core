@@ -166,11 +166,6 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Return specific soundtouch configuration."""
         return self._config
 
-    # @property
-    # def device(self):
-    #     """Return Soundtouch device."""
-    #     return self._device
-
     def update(self):
         """Retrieve the latest data."""
         self._status = self._device.status()
