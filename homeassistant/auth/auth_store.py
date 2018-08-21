@@ -145,9 +145,8 @@ class AuthStore:
 
         for user in self._users.values():
             if user.refresh_tokens.pop(refresh_token.id, None):
+                self._async_schedule_save()
                 break
-
-        self._async_schedule_save()
 
     async def async_get_refresh_token(
             self, token_id: str) -> Optional[models.RefreshToken]:
