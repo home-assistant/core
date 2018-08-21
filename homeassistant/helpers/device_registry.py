@@ -43,10 +43,10 @@ class DeviceRegistry:
     def async_get_device(self, identifiers: str, connections: tuple):
         """Check if device is registered."""
         for device in self.devices:
-            if any([identifier in device.identifiers
-                    for identifier in identifiers]) or \
-               any([connection in device.connection
-                    for connection in connections]):
+            if any(identifier in device.identifiers
+                   for identifier in identifiers) or \
+               any(connection in device.connection
+                   for connection in connections):
                 return device
         return None
 
