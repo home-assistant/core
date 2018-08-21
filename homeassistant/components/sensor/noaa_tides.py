@@ -14,7 +14,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (ATTR_ATTRIBUTION, CONF_NAME, CONF_UNIT_SYSTEM)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py_noaa==0.2.2']
+REQUIREMENTS = ['py_noaa==0.3.0']
 
 _LOGGER = logging.getLogger(__name__)
 
