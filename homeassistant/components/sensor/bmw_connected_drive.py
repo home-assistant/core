@@ -58,7 +58,10 @@ class BMWConnectedDriveSensor(Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Data update is triggered from BMWConnectedDriveEntity."""
+        """Return False.
+
+        Data update is triggered from BMWConnectedDriveEntity.
+        """
         return False
 
     @property

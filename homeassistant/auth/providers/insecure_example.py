@@ -38,7 +38,7 @@ class ExampleAuthProvider(AuthProvider):
 
     @callback
     def async_validate_login(self, username: str, password: str) -> None:
-        """Helper to validate a username and password."""
+        """Validate a username and password."""
         user = None
 
         # Compare all users to avoid timing attacks.

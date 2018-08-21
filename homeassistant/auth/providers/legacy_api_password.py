@@ -43,7 +43,7 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
 
     @callback
     def async_validate_login(self, password: str) -> None:
-        """Helper to validate a username and password."""
+        """Validate a username and password."""
         hass_http = getattr(self.hass, 'http', None)  # type: HomeAssistantHTTP
 
         if not hmac.compare_digest(hass_http.api_password.encode('utf-8'),

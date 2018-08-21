@@ -100,7 +100,7 @@ class YahooWeatherMock():
 
     @property
     def Now(self):  # pylint: disable=invalid-name
-        """Current weather data."""
+        """Return current weather data."""
         if self.woeid == '111':
             raise ValueError
         return self._data['query']['results']['channel']['item']['condition']

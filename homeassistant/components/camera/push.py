@@ -113,7 +113,7 @@ class PushCamera(Camera):
 
     @property
     def state(self):
-        """Current state of the camera."""
+        """Return current state of the camera."""
         return self._state
 
     async def update_image(self, image, filename):
