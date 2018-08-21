@@ -44,11 +44,23 @@ a limited expiration.
     "expires_in": 1800,
     "token_type": "Bearer"
 }
+
+## Revoking a refresh token
+
+It is also possible to revoke a refresh token and all access tokens that have
+ever been granted by that refresh token. Response code will ALWAYS be 200.
+
+{
+    "token": "IJKLMNOPQRST",
+    "action": "revoke"
+}
+
 """
 import logging
 import uuid
 from datetime import timedelta
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.auth.models import User, Credentials
@@ -79,7 +91,7 @@ async def async_setup(hass, config):
     """Component to allow users to login."""
     store_result, retrieve_result = _create_auth_code_store()
 
-    hass.http.register_view(GrantTokenView(retrieve_result))
+    hass.http.register_view(TokenView(retrieve_result))
     hass.http.register_view(LinkUserView(retrieve_result))
 
     hass.components.websocket_api.async_register_command(
@@ -92,8 +104,8 @@ async def async_setup(hass, config):
     return True
 
 
-class GrantTokenView(HomeAssistantView):
-    """View to grant tokens."""
+class TokenView(HomeAssistantView):
+    """View to issue or revoke tokens."""
 
     url = '/auth/token'
     name = 'api:auth:token'
@@ -101,7 +113,7 @@ class GrantTokenView(HomeAssistantView):
     cors_allowed = True
 
     def __init__(self, retrieve_user):
-        """Initialize the grant token view."""
+        """Initialize the token view."""
         self._retrieve_user = retrieve_user
 
     @log_invalid_auth
@@ -112,6 +124,13 @@ class GrantTokenView(HomeAssistantView):
 
         grant_type = data.get('grant_type')
 
+        # IndieAuth 6.3.5
+        # The revocation endpoint is the same as the token endpoint.
+        # The revocation request includes an additional parameter,
+        # action=revoke.
+        if data.get('action') == 'revoke':
+            return await self._async_handle_revoke_token(hass, data)
+
         if grant_type == 'authorization_code':
             return await self._async_handle_auth_code(hass, data)
 
@@ -121,6 +140,25 @@ class GrantTokenView(HomeAssistantView):
         return self.json({
             'error': 'unsupported_grant_type',
         }, status_code=400)
+
+    async def _async_handle_revoke_token(self, hass, data):
+        """Handle revoke token request."""
+        # OAuth 2.0 Token Revocation [RFC7009]
+        # 2.2 The authorization server responds with HTTP status code 200
+        # if the token has been revoked successfully or if the client
+        # submitted an invalid token.
+        token = data.get('token')
+
+        if token is None:
+            return web.Response(status=200)
+
+        refresh_token = await hass.auth.async_get_refresh_token_by_token(token)
+
+        if refresh_token is None:
+            return web.Response(status=200)
+
+        await hass.auth.async_remove_refresh_token(refresh_token)
+        return web.Response(status=200)
 
     async def _async_handle_auth_code(self, hass, data):
         """Handle authorization code request."""
@@ -136,6 +174,7 @@ class GrantTokenView(HomeAssistantView):
         if code is None:
             return self.json({
                 'error': 'invalid_request',
+                'error_description': 'Invalid code',
             }, status_code=400)
 
         user = self._retrieve_user(client_id, RESULT_TYPE_USER, code)
