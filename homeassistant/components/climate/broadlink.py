@@ -214,7 +214,7 @@ class BroadlinkThermostat(ClimateDevice):
         """Return true if the device is on."""
         return self._device.current_operation != STATE_OFF
 
-    def set_advance_config(self, config_json):
+    def set_advanced_config(self, config_json):
         """Set the thermostat advanced config."""
         self._device.set_advanced_config(json.loads(config_json))
 
