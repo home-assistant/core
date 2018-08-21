@@ -5,8 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.homematic/
 """
 import logging
+
+from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ HM_ICON_HA_CAST = {
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the HomeMatic platform."""
+    """Set up the HomeMatic sensor platform."""
     if discovery_info is None:
         return
 
@@ -83,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
 
 class HMSensor(HMDevice):
-    """Represents various HomeMatic sensors in Home Assistant."""
+    """Representation of a HomeMatic sensor."""
 
     @property
     def state(self):
@@ -111,4 +112,4 @@ class HMSensor(HMDevice):
         if self._state:
             self._data.update({self._state: STATE_UNKNOWN})
         else:
-            _LOGGER.critical("Can't initialize sensor %s", self._name)
+            _LOGGER.critical("Unable to initialize sensor: %s", self._name)
