@@ -55,7 +55,7 @@ class MochadLight(Light):
                              'x10_light_dev_{}'.format(self._address))
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
         self.light = device.Device(ctrl, self._address,
-                                    comm_type=self._comm_type)
+                                   comm_type=self._comm_type)
         self._brightness = 0
         self._state = self._get_device_status()
         self._brightness_levels = dev.get(CONF_BRIGHTNESS_LEVELS) - 1
