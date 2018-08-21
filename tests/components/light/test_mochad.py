@@ -76,18 +76,18 @@ class TestMochadLight(unittest.TestCase):
     def test_turn_on_with_no_brightness(self):
         """Test turn_on."""
         self.light.turn_on()
-        self.light.device.send_cmd.assert_called_once_with('on')
+        self.light.light.send_cmd.assert_called_once_with('on')
 
     def test_turn_on_with_brightness(self):
         """Test turn_on."""
         self.light.turn_on(brightness=45)
-        self.light.device.send_cmd.assert_has_calls(
+        self.light.light.send_cmd.assert_has_calls(
             [mock.call('on'), mock.call('dim 25')])
 
     def test_turn_off(self):
         """Test turn_off."""
         self.light.turn_off()
-        self.light.device.send_cmd.assert_called_once_with('off')
+        self.light.light.send_cmd.assert_called_once_with('off')
 
 
 class TestMochadLight256Levels(unittest.TestCase):
@@ -109,17 +109,17 @@ class TestMochadLight256Levels(unittest.TestCase):
     def test_turn_on_with_no_brightness(self):
         """Test turn_on."""
         self.light.turn_on()
-        self.light.device.send_cmd.assert_called_once_with('xdim 255')
+        self.light.light.send_cmd.assert_called_once_with('xdim 255')
 
     def test_turn_on_with_brightness(self):
         """Test turn_on."""
         self.light.turn_on(brightness=45)
-        self.light.device.send_cmd.assert_called_once_with('xdim 45')
+        self.light.light.send_cmd.assert_called_once_with('xdim 45')
 
     def test_turn_off(self):
         """Test turn_off."""
         self.light.turn_off()
-        self.light.device.send_cmd.assert_called_once_with('off')
+        self.light.light.send_cmd.assert_called_once_with('off')
 
 
 class TestMochadLight64Levels(unittest.TestCase):
@@ -141,14 +141,14 @@ class TestMochadLight64Levels(unittest.TestCase):
     def test_turn_on_with_no_brightness(self):
         """Test turn_on."""
         self.light.turn_on()
-        self.light.device.send_cmd.assert_called_once_with('xdim 63')
+        self.light.light.send_cmd.assert_called_once_with('xdim 63')
 
     def test_turn_on_with_brightness(self):
         """Test turn_on."""
         self.light.turn_on(brightness=45)
-        self.light.device.send_cmd.assert_called_once_with('xdim 11')
+        self.light.light.send_cmd.assert_called_once_with('xdim 11')
 
     def test_turn_off(self):
         """Test turn_off."""
         self.light.turn_off()
-        self.light.device.send_cmd.assert_called_once_with('off')
+        self.light.light.send_cmd.assert_called_once_with('off')
