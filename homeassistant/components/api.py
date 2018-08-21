@@ -24,7 +24,6 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import template
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.state import AsyncTrackStates
-import homeassistant.remote as rem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +101,7 @@ class APIEventStream(HomeAssistantView):
             if event.event_type == EVENT_HOMEASSISTANT_STOP:
                 data = stop_obj
             else:
-                data = json.dumps(event, cls=rem.JSONEncoder)
+                data = json.dumps(event, cls=hass.helpers.json.JSONEncoder)
 
             await to_write.put(data)
 
