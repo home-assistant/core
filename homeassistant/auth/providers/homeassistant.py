@@ -1,16 +1,17 @@
 """Home Assistant auth provider."""
 import base64
 from collections import OrderedDict
-import bcrypt
 import hashlib
 import hmac
 from typing import Any, Dict, List, Optional, cast
 
+import bcrypt
 import voluptuous as vol
 
 from homeassistant.const import CONF_ID
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 
@@ -104,7 +105,9 @@ class Data:
                 raise InvalidAuth
             # then re-hash the valid password with bcrypt
             self.change_password(found['username'], password)
-            self.hass.add_job(self.async_save())
+            run_coroutine_threadsafe(
+                self.async_save(), self.hass.loop
+            ).result()
             user_hash = base64.b64decode(found['password'])
 
         # bcrypt.checkpw is timing-safe
@@ -114,7 +117,7 @@ class Data:
 
     def legacy_hash_password(self, password: str,
                              for_storage: bool = False) -> bytes:
-        """LEGACY password encoding"""
+        """LEGACY password encoding."""
         # We're no longer storing salts in data, but if one exists we
         # should be able to retrieve it.
         salt = self._data['salt'].encode()  # type: ignore
@@ -123,9 +126,11 @@ class Data:
             hashed = base64.b64encode(hashed)
         return hashed
 
+    # pylint: disable=no-self-use
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
-        hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
+        hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)) \
+            # type: bytes
         if for_storage:
             hashed = base64.b64encode(hashed)
         return hashed
