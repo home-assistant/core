@@ -1,6 +1,4 @@
-"""
-Helpers to help with encoding Home Assistant objects in JSON
-"""
+"""Helpers to help with encoding Home Assistant objects in JSON."""
 from datetime import datetime
 import json
 import logging
