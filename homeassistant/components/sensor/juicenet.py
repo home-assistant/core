@@ -49,14 +49,14 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
     @property
     def name(self):
         """Return the name of the device."""
-        return '{} {}'.format(self.device.name(), self._name)
+        return '{} {}'.format(self._device.name(), self._name)
 
     @property
     def icon(self):
         """Return the icon of the sensor."""
         icon = None
         if self.type == 'status':
-            status = self.device.getStatus()
+            status = self._device.getStatus()
             if status == 'standby':
                 icon = 'mdi:power-plug-off'
             elif status == 'plugged':
@@ -87,19 +87,19 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
         """Return the state."""
         state = None
         if self.type == 'status':
-            state = self.device.getStatus()
+            state = self._device.getStatus()
         elif self.type == 'temperature':
-            state = self.device.getTemperature()
+            state = self._device.getTemperature()
         elif self.type == 'voltage':
-            state = self.device.getVoltage()
+            state = self._device.getVoltage()
         elif self.type == 'amps':
-            state = self.device.getAmps()
+            state = self._device.getAmps()
         elif self.type == 'watts':
-            state = self.device.getWatts()
+            state = self._device.getWatts()
         elif self.type == 'charge_time':
-            state = self.device.getChargeTime()
+            state = self._device.getChargeTime()
         elif self.type == 'energy_added':
-            state = self.device.getEnergyAdded()
+            state = self._device.getEnergyAdded()
         else:
             state = 'Unknown'
         return state
@@ -109,7 +109,7 @@ class JuicenetSensorDevice(JuicenetDevice, Entity):
         """Return the state attributes."""
         attributes = {}
         if self.type == 'status':
-            man_dev_id = self.device.id()
+            man_dev_id = self._device.id()
             if man_dev_id:
                 attributes["manufacturer_device_id"] = man_dev_id
         return attributes
