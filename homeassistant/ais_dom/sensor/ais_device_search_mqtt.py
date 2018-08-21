@@ -30,7 +30,7 @@ def get_text():
         info = "+sterowalne urządzenia w brokerze mqtt (" + str(
             len(MQTT_DEVICES)) + "):\n"
         for d in MQTT_DEVICES:
-            info += str(d) + "\n"
+            info += "#" + d["FriendlyName"] + ", http://" + d["IPAddress"] + ":80" + "\n"
     if len(NET_DEVICES) > 0:
         info += "+sterowalne urządzenia w sieci (" + str(
             len(NET_DEVICES)) + "):\n"
@@ -72,23 +72,28 @@ class MqttSensor(MqttAvailability, Entity):
             """Handle new MQTT messages."""
             try:
                 message = json.loads(payload)
-                # statusNet = message.get("StatusNET", None)
-                status = message.get("Status", None)
-                if status is not None:
-                    _LOGGER.info("statusNet: " + str(status))
-                    # check if it is already added or not
-                    device_info = "#"
-                    # device_info += statusNet["Hostname"]
-                    # device_info += ", " + statusNet["IPAddress"]
-                    device_info += status["FriendlyName"][0]
-                    # TODO take the ip from device
-                    device_info += ", https://127.0.0.1:8123"
-                    device_not_exist = True
-                    for d in MQTT_DEVICES:
-                        if str(d) == device_info:
-                            device_not_exist = False
-                    if device_not_exist:
-                        MQTT_DEVICES.append(device_info)
+                if "Status" not in message and "StatusNET" not in message:
+                    return
+
+                IPAddress = ""
+                FriendlyName = ""
+                if "StatusNET" in message:
+                    IPAddress = message.get("StatusNET")["IPAddress"]
+                    topic = topic[:-1]
+                if "Status" in message:
+                    FriendlyName = message.get("Status")["FriendlyName"][0]
+
+                # check if device extist in collection
+                device_not_exist = True
+                for d in MQTT_DEVICES:
+                    if d["topic"] == topic:
+                        device_not_exist = False
+                        if IPAddress != "":
+                            d["IPAddress"] = IPAddress
+                        if FriendlyName != "":
+                            d["FriendlyName"] = FriendlyName
+                if device_not_exist:
+                    MQTT_DEVICES.append({"topic": topic, "FriendlyName": FriendlyName, "IPAddress": IPAddress})
 
             except Exception as e:
                 _LOGGER.info("Error: " + str(e))

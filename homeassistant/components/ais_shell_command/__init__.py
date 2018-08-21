@@ -101,7 +101,6 @@ def _change_host_name(hass, call):
     command = 'sudo /data/data/pl.sviete.dom/.ais/run_as_root.sh'
     process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE)
     process.wait()
-    # print process.returncode
 
 
 @asyncio.coroutine
@@ -229,17 +228,6 @@ def _show_network_devices_info(hass, call):
 
 @asyncio.coroutine
 def _silent_scan_network_for_devices(hass, call):
-    # TODO
-    # this should works in background
-    # without calling the hass so many times...
-    # import homeassistant.ais_dom.sensor.ais_device_search_mqtt as dsm
-    # from requests_futures.sessions import FuturesSession
-    # session = FuturesSession()
-    # clear the value
-    # dsm.MQTT_DEVICES = []
-    # dsm.NET_DEVICES = []
-    # dsm.DOM_DEVICES = []
-    # set_global_my_ip()
     # info about start scaning
     hass.states.async_set('sensor.network_devices_info_value', '', {
         'custom_ui_state_card': 'state-card-robot-disco',
@@ -248,54 +236,8 @@ def _silent_scan_network_for_devices(hass, call):
     # send the message to all robots in network
     yield from hass.services.async_call('mqtt', 'publish', {
         'topic': 'cmnd/dom/status',
-        'payload': 5
+        'payload': 0
         })
-    # scan in loop
-    # for x in range(256):
-    #     try:
-    #         # search sonoff devices
-    #         rest_url = "http://{}.{}/cm?cmnd=status%205"
-    #         url = rest_url.format(GLOBAL_MY_IP.rsplit('.', 1)[0], str(x))
-    #         # search android devices
-    #         rest_url_a = "http://{}.{}:8122"
-    #         url_a = rest_url_a.format(GLOBAL_MY_IP.rsplit('.', 1)[0], str(x))
-    #
-    #         def bg_cb(sess, resp):
-    #             try:
-    #                 # parse the json storing the result on the response object
-    #                 json_ws_resp = resp.json()
-    #                 hostname = json_ws_resp["StatusNET"]["Hostname"]
-    #                 ip = json_ws_resp["StatusNET"]["IPAddress"]
-    #                 dsm.NET_DEVICES.append("#" + hostname + ", " + ip + ':80')
-    #                 _LOGGER.error("ip: " + str(ip))
-    #             except:
-    #                 _LOGGER.error("except bg_cb: ")
-    #
-    #         def bg_cb_a(sess, resp):
-    #             try:
-    #                 # parse the json storing the result on the response object
-    #                 json_ws_resp = resp.json()
-    #                 model = json_ws_resp["Model"]
-    #                 manufacturer = json_ws_resp["Manufacturer"]
-    #                 ip = json_ws_resp["IPAddressIPv4"]
-    #                 dsm.DOM_DEVICES.append(
-    #                     "#" + model + " " + manufacturer + ", " + ip + ':8123')
-    #                 _LOGGER.error("model: " + str(model))
-    #                 # add the device to the speakers lists
-    #                 hass.async_add_job(
-    #                     hass.services.async_call(
-    #                         'ais_cloud', 'get_players', {
-    #                             'device_name':  model + " " + manufacturer
-    #                             + "(" + ip + ")",
-    #                             'device_ip': ip
-    #                         }))
-    #             except:
-    #                 _LOGGER.error("Exception bg_cb_a: ")
-    #
-    #         session.get(url, background_callback=bg_cb)
-    #         session.get(url_a, background_callback=bg_cb_a)
-    #     except:
-    #         _LOGGER.error("x Exception: " + str(x))
 
 
 @asyncio.coroutine
@@ -383,7 +325,7 @@ def _scan_network_for_devices(hass, call):
         # send the message to all robots in network
         yield from hass.services.async_call('mqtt', 'publish', {
             'topic': 'cmnd/dom/status',
-            'payload': 5
+            'payload': 0
         })
         yield from hass.services.async_call(
             'ais_shell_command', 'scan_network_for_devices')
@@ -414,11 +356,6 @@ def _scan_network_for_devices(hass, call):
 
     else:
         GLOBAL_X = 0
-        # send the message to all robots in network
-        yield from hass.services.async_call('mqtt', 'publish', {
-            'topic': 'cmnd/dom/status',
-            'payload': ''
-        })
         hass.states.async_set(
             'sensor.network_devices_info_value', '', {
                 'custom_ui_state_card': 'state-card-robot-disco',

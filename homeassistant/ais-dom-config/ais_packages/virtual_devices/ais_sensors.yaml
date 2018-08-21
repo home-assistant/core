@@ -11,3 +11,10 @@ sensor:
     state_topic: "tele/przelacznik_th/SENSOR"
     value_template: "{{ value_json['SI7021'].Humidity | round(2)}}"
     unit_of_measurement: "%"
+
+group:
+  all_ais_sensors:
+    name: Wszystkie czujniki
+    entities:
+      - sensor.temperatura_si7021
+      - sensor.wilgotnosc_si7021
