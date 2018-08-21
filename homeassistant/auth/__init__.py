@@ -202,6 +202,12 @@ class AuthManager:
         """Get refresh token by token."""
         return await self._store.async_get_refresh_token_by_token(token)
 
+    async def async_remove_refresh_token(self,
+                                         refresh_token: models.RefreshToken) \
+            -> None:
+        """Delete a refresh token."""
+        await self._store.async_remove_refresh_token(refresh_token)
+
     @callback
     def async_create_access_token(self,
                                   refresh_token: models.RefreshToken) -> str:
@@ -215,7 +221,7 @@ class AuthManager:
 
     async def async_validate_access_token(
             self, token: str) -> Optional[models.RefreshToken]:
-        """Return if an access token is valid."""
+        """Return refresh token if an access token is valid."""
         try:
             unverif_claims = jwt.decode(token, verify=False)
         except jwt.InvalidTokenError:
