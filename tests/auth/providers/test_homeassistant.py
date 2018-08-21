@@ -170,6 +170,10 @@ async def test_pbkdf2_to_bcrypt_hash_upgrade(hass_storage, hass):
     data = hass_auth.Data(hass)
     await data.async_load()
 
+    # Make sure invalid legacy passwords fail
+    with pytest.raises(hass_auth.InvalidAuth):
+        data.validate_login('legacyuser', 'wine')
+
     # verify the correct (pbkdf2) password successfuly authenticates the user
     data.validate_login('legacyuser', 'beer')
 
