@@ -40,6 +40,16 @@ alarm_arm_night:
       description: An optional code to arm night the alarm control panel with.
       example: 1234
 
+alarm_arm_max:
+  description: Send the alarm the command for arm max.
+  fields:
+    entity_id:
+      description: Name of alarm control panel to arm max.
+      example: 'alarm_control_panel.downstairs'
+    code:
+      description: An optional code to arm max the alarm control panel with.
+      example: 1234
+
 alarm_trigger:
   description: Send the alarm the command for trigger.
   fields:

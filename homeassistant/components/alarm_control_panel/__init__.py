@@ -13,7 +13,8 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, SERVICE_ALARM_TRIGGER,
     SERVICE_ALARM_DISARM, SERVICE_ALARM_ARM_HOME, SERVICE_ALARM_ARM_AWAY,
-    SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_ARM_CUSTOM_BYPASS)
+    SERVICE_ALARM_ARM_NIGHT, SERVICE_ALARM_ARM_MAX, 
+    SERVICE_ALARM_ARM_CUSTOM_BYPASS)
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
@@ -31,6 +32,7 @@ SERVICE_TO_METHOD = {
     SERVICE_ALARM_ARM_HOME: 'alarm_arm_home',
     SERVICE_ALARM_ARM_AWAY: 'alarm_arm_away',
     SERVICE_ALARM_ARM_NIGHT: 'alarm_arm_night',
+    SERVICE_ALARM_ARM_MAX: 'alarm_arm_max',
     SERVICE_ALARM_ARM_CUSTOM_BYPASS: 'alarm_arm_custom_bypass',
     SERVICE_ALARM_TRIGGER: 'alarm_trigger'
 }
@@ -92,6 +94,18 @@ def alarm_arm_night(hass, code=None, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, data)
+
+
+@bind_hass
+def alarm_arm_max(hass, code=None, entity_id=None):
+    """Send the alarm the command for arm max."""
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_ALARM_ARM_MAX, data)
 
 
 @bind_hass

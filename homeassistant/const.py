@@ -359,6 +359,7 @@ SERVICE_ALARM_DISARM = 'alarm_disarm'
 SERVICE_ALARM_ARM_HOME = 'alarm_arm_home'
 SERVICE_ALARM_ARM_AWAY = 'alarm_arm_away'
 SERVICE_ALARM_ARM_NIGHT = 'alarm_arm_night'
+SERVICE_ALARM_ARM_MAX = 'alarm_arm_max'
 SERVICE_ALARM_ARM_CUSTOM_BYPASS = 'alarm_arm_custom_bypass'
 SERVICE_ALARM_TRIGGER = 'alarm_trigger'
 

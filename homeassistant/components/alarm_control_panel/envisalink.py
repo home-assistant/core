@@ -17,8 +17,10 @@ from homeassistant.components.envisalink import (
     DATA_EVL, EnvisalinkDevice, PARTITION_SCHEMA, CONF_CODE, CONF_PANIC,
     CONF_PARTITIONNAME, SIGNAL_KEYPAD_UPDATE, SIGNAL_PARTITION_UPDATE)
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT, STATE_ALARM_ARMED_MAX, STATE_ALARM_DISARMED,
-    STATE_UNKNOWN, STATE_ALARM_ARMING, STATE_ALARM_TRIGGERED, STATE_ALARM_PENDING, ATTR_ENTITY_ID)
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,  
+    STATE_ALARM_ARMED_MAX, STATE_ALARM_DISARMED, STATE_UNKNOWN, 
+    STATE_ALARM_ARMING, STATE_ALARM_TRIGGERED, STATE_ALARM_PENDING, 
+    ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,13 +121,17 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
             state = STATE_ALARM_ARMING
         elif self._info['status']['entry_delay']:
             state = STATE_ALARM_PENDING
-        elif self._info['status']['armed_away'] and not self._info['status']['armed_zero_entry_delay']:
+        elif self._info['status']['armed_away'] and 
+            not self._info['status']['armed_zero_entry_delay']:
             state = STATE_ALARM_ARMED_AWAY
-        elif self._info['status']['armed_away'] and self._info['status']['armed_zero_entry_delay']:
+        elif self._info['status']['armed_away'] and 
+            self._info['status']['armed_zero_entry_delay']:
             state = STATE_ALARM_ARMED_MAX
-        elif self._info['status']['armed_stay'] and not self._info['status']['armed_zero_entry_delay']:
+        elif self._info['status']['armed_stay'] and 
+            not self._info['status']['armed_zero_entry_delay']:
             state = STATE_ALARM_ARMED_HOME
-        elif self._info['status']['armed_stay'] and self._info['status']['armed_zero_entry_delay']:
+        elif self._info['status']['armed_stay'] and 
+            self._info['status']['armed_zero_entry_delay']:
             state = STATE_ALARM_ARMED_NIGHT
         elif self._info['status']['ready']:
             state = STATE_ALARM_DISARMED
@@ -159,6 +165,16 @@ class EnvisalinkAlarm(EnvisalinkDevice, alarm.AlarmControlPanel):
                 str(code), self._partition_number)
         else:
             self.hass.data[DATA_EVL].arm_night_partition(
+                str(self._code), self._partition_number)
+
+    @asyncio.coroutine
+    def async_alarm_arm_max(self, code=None):
+        """Send arm max command."""
+        if code:
+            self.hass.data[DATA_EVL].arm_max_partition(
+                str(code), self._partition_number)
+        else:
+            self.hass.data[DATA_EVL].arm_max_partition(
                 str(self._code), self._partition_number)
 
     @asyncio.coroutine
