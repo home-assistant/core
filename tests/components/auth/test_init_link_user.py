@@ -34,6 +34,7 @@ async def async_get_code(hass, aiohttp_client):
         'client_id': CLIENT_ID,
         'handler': ['insecure_example', '2nd auth'],
         'redirect_uri': CLIENT_REDIRECT_URI,
+        'type': 'link_user',
     })
     assert resp.status == 200
     step = await resp.json()
