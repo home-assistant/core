@@ -49,6 +49,10 @@ FILE_MIGRATION = (
     ('ios.conf', '.ios.conf'),
 )
 
+DEFAULT_AUTH_PROVIDERS = [
+    {'type': 'homeassistant'},
+    {'type': 'legacy_api_password'},
+]
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
     (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
@@ -162,7 +166,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
         # pylint: disable=no-value-for-parameter
         vol.All(cv.ensure_list, [vol.IsDir()]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
-    vol.Optional(CONF_AUTH_PROVIDERS):
+    vol.Optional(CONF_AUTH_PROVIDERS, default=DEFAULT_AUTH_PROVIDERS):
         vol.All(cv.ensure_list,
                 [auth_providers.AUTH_PROVIDER_SCHEMA.extend({
                     CONF_TYPE: vol.NotIn(['insecure_example'],
