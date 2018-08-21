@@ -1,5 +1,6 @@
 """The Hangouts Bot."""
 import logging
+import re
 
 from .const import (DOMAIN,
                     CONF_NAME, CONF_CONVERSATIONS, CONF_WORD, CONF_EXPRESSION,
@@ -62,7 +63,10 @@ class HangoutsBot:
                         self._word_commands[conv_id] = {}
                     word = command[CONF_WORD].lower()
                     self._word_commands[conv_id][word] = command
-            else:
+            elif command.get(CONF_EXPRESSION):
+                command['_' + CONF_EXPRESSION] = re.compile(
+                    command.get(CONF_EXPRESSION))
+
                 for conv_id in command['_' + CONF_CONVERSATIONS]:
                     if conv_id not in self._expression_commands:
                         self._expression_commands[conv_id] = []
@@ -107,7 +111,7 @@ class HangoutsBot:
         else:
             # After single-word commands, check all regex commands in the room
             for command in self._expression_commands.get(conv_id, []):
-                match = command[CONF_EXPRESSION].match(event.text)
+                match = command['_' + CONF_EXPRESSION].match(event.text)
                 if not match:
                     continue
                 event_data = {
