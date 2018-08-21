@@ -17,11 +17,11 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the INSTEON PLM device class for the hass platform."""
-    plm = hass.data['insteon'].get('plm')
+    """Set up the INSTEON device class for the hass platform."""
+    insteon_modem = hass.data['insteon'].get('modem')
 
     address = discovery_info['address']
-    device = plm.devices[address]
+    device = insteon_modem.devices[address]
     state_key = discovery_info['state_key']
 
     state_name = device.states[state_key].name

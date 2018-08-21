@@ -139,11 +139,11 @@ X10_HOUSECODE_SCHEMA = vol.Schema({
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Set up the connection to the PLM."""
+    """Set up the connection to the modem."""
     import insteonplm
 
     ipdb = IPDB()
-    plm = None
+    insteon_modem = None
 
     conf = config[DOMAIN]
     port = conf.get(CONF_PORT)
@@ -158,7 +158,7 @@ def async_setup(hass, config):
     x10_all_lights_off_housecode = conf.get(CONF_X10_ALL_LIGHTS_OFF)
 
     @callback
-    def async_plm_new_device(device):
+    def async_new_insteon_device(device):
         """Detect device from transport to be delegated to platform."""
         for state_key in device.states:
             platform_info = ipdb[device.states[state_key]]
@@ -170,7 +170,7 @@ def async_setup(hass, config):
                         _fire_button_on_off_event)
 
                 else:
-                    _LOGGER.info("New INSTEON PLM device: %s (%s) %s",
+                    _LOGGER.info("New INSTEON device: %s (%s) %s",
                                  device.address,
                                  device.states[state_key].name,
                                  platform)
@@ -187,12 +187,12 @@ def async_setup(hass, config):
         group = service.data.get(SRV_ALL_LINK_GROUP)
         mode = service.data.get(SRV_ALL_LINK_MODE)
         link_mode = 1 if mode.lower() == SRV_CONTROLLER else 0
-        plm.start_all_linking(link_mode, group)
+        insteon_modem.start_all_linking(link_mode, group)
 
     def del_all_link(service):
         """Delete an INSTEON All-Link between two devices."""
         group = service.data.get(SRV_ALL_LINK_GROUP)
-        plm.start_all_linking(255, group)
+        insteon_modem.start_all_linking(255, group)
 
     def load_aldb(service):
         """Load the device All-Link database."""
@@ -221,22 +221,22 @@ def async_setup(hass, config):
         """Print the All-Link Database for a device."""
         # For now this sends logs to the log file.
         # Furture direction is to create an INSTEON control panel.
-        print_aldb_to_log(plm.aldb)
+        print_aldb_to_log(insteon_modem.aldb)
 
     def x10_all_units_off(service):
         """Send the X10 All Units Off command."""
         housecode = service.data.get(SRV_HOUSECODE)
-        plm.x10_all_units_off(housecode)
+        insteon_modem.x10_all_units_off(housecode)
 
     def x10_all_lights_off(service):
         """Send the X10 All Lights Off command."""
         housecode = service.data.get(SRV_HOUSECODE)
-        plm.x10_all_lights_off(housecode)
+        insteon_modem.x10_all_lights_off(housecode)
 
     def x10_all_lights_on(service):
         """Send the X10 All Lights On command."""
         housecode = service.data.get(SRV_HOUSECODE)
-        plm.x10_all_lights_on(housecode)
+        insteon_modem.x10_all_lights_on(housecode)
 
     def _register_services():
         hass.services.register(DOMAIN, SRV_ADD_ALL_LINK, add_all_link,
@@ -258,11 +258,11 @@ def async_setup(hass, config):
         hass.services.register(DOMAIN, SRV_X10_ALL_LIGHTS_ON,
                                x10_all_lights_on,
                                schema=X10_HOUSECODE_SCHEMA)
-        _LOGGER.debug("Insteon_plm Services registered")
+        _LOGGER.debug("Insteon Services registered")
 
     def _fire_button_on_off_event(address, group, val):
         # Firing an event when a button is pressed.
-        device = plm.devices[address.hex]
+        device = insteon_modem.devices[address.hex]
         state_name = device.states[group].name
         button = ("" if state_name == BUTTON_PRESSED_STATE_NAME
                   else state_name[-1].lower())
@@ -278,7 +278,7 @@ def async_setup(hass, config):
         hass.bus.fire(event, schema)
 
     if host:
-        _LOGGER.info('Connecting to Hub on %s', host)
+        _LOGGER.info('Connecting to Insteon Hub on %s', host)
         conn = yield from insteonplm.Connection.create(
             host=host,
             port=ip_port,
@@ -287,13 +287,13 @@ def async_setup(hass, config):
             loop=hass.loop,
             workdir=hass.config.config_dir)
     else:
-        _LOGGER.info("Looking for PLM on %s", port)
+        _LOGGER.info("Looking for Insteon PLM on %s", port)
         conn = yield from insteonplm.Connection.create(
             device=port,
             loop=hass.loop,
             workdir=hass.config.config_dir)
 
-    plm = conn.protocol
+    insteon_modem = conn.protocol
 
     for device_override in overrides:
         #
@@ -302,32 +302,32 @@ def async_setup(hass, config):
         address = device_override.get('address')
         for prop in device_override:
             if prop in [CONF_CAT, CONF_SUBCAT]:
-                plm.devices.add_override(address, prop,
-                                         device_override[prop])
+                insteon_modem.devices.add_override(address, prop,
+                                                   device_override[prop])
             elif prop in [CONF_FIRMWARE, CONF_PRODUCT_KEY]:
-                plm.devices.add_override(address, CONF_PRODUCT_KEY,
-                                         device_override[prop])
+                insteon_modem.devices.add_override(address, CONF_PRODUCT_KEY,
+                                                   device_override[prop])
 
     hass.data[DOMAIN] = {}
-    hass.data[DOMAIN]['plm'] = plm
+    hass.data[DOMAIN]['modem'] = insteon_modem
     hass.data[DOMAIN]['entities'] = {}
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, conn.close)
 
-    plm.devices.add_device_callback(async_plm_new_device)
+    insteon_modem.devices.add_device_callback(async_new_insteon_device)
 
     if x10_all_units_off_housecode:
-        device = plm.add_x10_device(x10_all_units_off_housecode,
-                                    20,
-                                    'allunitsoff')
+        device = insteon_modem.add_x10_device(x10_all_units_off_housecode,
+                                              20,
+                                              'allunitsoff')
     if x10_all_lights_on_housecode:
-        device = plm.add_x10_device(x10_all_lights_on_housecode,
-                                    21,
-                                    'alllightson')
+        device = insteon_modem.add_x10_device(x10_all_lights_on_housecode,
+                                              21,
+                                              'alllightson')
     if x10_all_lights_off_housecode:
-        device = plm.add_x10_device(x10_all_lights_off_housecode,
-                                    22,
-                                    'alllightsoff')
+        device = insteon_modem.add_x10_device(x10_all_lights_off_housecode,
+                                              22,
+                                              'alllightsoff')
     for device in x10_devices:
         housecode = device.get(CONF_HOUSECODE)
         unitcode = device.get(CONF_UNITCODE)
@@ -337,11 +337,11 @@ def async_setup(hass, config):
             x10_type = 'dimmable'
         elif device.get(CONF_PLATFORM) == 'binary_sensor':
             x10_type = 'sensor'
-        _LOGGER.debug("Adding X10 device to insteonplm: %s %d %s",
+        _LOGGER.debug("Adding X10 device to Insteon: %s %d %s",
                       housecode, unitcode, x10_type)
-        device = plm.add_x10_device(housecode,
-                                    unitcode,
-                                    x10_type)
+        device = insteon_modem.add_x10_device(housecode,
+                                              unitcode,
+                                              x10_type)
         if device and hasattr(device.states[0x01], 'steps'):
             device.states[0x01].steps = steps
 
@@ -429,7 +429,7 @@ class InsteonEntity(Entity):
     """INSTEON abstract base entity."""
 
     def __init__(self, device, state_key):
-        """Initialize the INSTEON PLM binary sensor."""
+        """Initialize the INSTEON binary sensor."""
         self._insteon_device_state = device.states[state_key]
         self._insteon_device = device
         self._insteon_device.aldb.add_loaded_callback(self._aldb_loaded)

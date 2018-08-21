@@ -24,11 +24,11 @@ SENSOR_TYPES = {'openClosedSensor': 'opening',
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the INSTEON PLM device class for the hass platform."""
-    plm = hass.data['insteon'].get('plm')
+    """Set up the INSTEON device class for the hass platform."""
+    insteon_modem = hass.data['insteon'].get('modem')
 
     address = discovery_info['address']
-    device = plm.devices[address]
+    device = insteon_modem.devices[address]
     state_key = discovery_info['state_key']
     name = device.states[state_key].name
     if name != 'dryLeakSensor':
@@ -44,7 +44,7 @@ class InsteonBinarySensor(InsteonEntity, BinarySensorDevice):
     """A Class for an Insteon device entity."""
 
     def __init__(self, device, state_key):
-        """Initialize the INSTEON PLM binary sensor."""
+        """Initialize the INSTEON binary sensor."""
         super().__init__(device, state_key)
         self._sensor_type = SENSOR_TYPES.get(self._insteon_device_state.name)
 
