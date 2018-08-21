@@ -18,7 +18,7 @@ def async_setup(hass, config):
     _LOGGER.warning('Please see https://home-assistant.io/components/insteon')
 
     hass.components.persistent_notification.create(
-        'The insteon_plm has been replaced by the insteon component.<br />'
+        'insteon_plm has been replaced by the insteon component.<br />'
         'Please see https://home-assistant.io/components/insteon',
         title='insteon_plm Component Deactivated',
         notification_id='insteon_plm')

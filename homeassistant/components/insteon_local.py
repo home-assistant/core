@@ -16,7 +16,7 @@ def setup(hass, config):
     _LOGGER.warning('Please see https://home-assistant.io/components/insteon')
 
     hass.components.persistent_notification.create(
-        'The insteon_local has been replaced by the insteon component.<br />'
+        'insteon_local has been replaced by the insteon component.<br />'
         'Please see https://home-assistant.io/components/insteon',
         title='insteon_local Component Deactivated',
         notification_id='insteon_local')
