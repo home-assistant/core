@@ -248,9 +248,7 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
 
     # Revoke refresh token
     resp = await client.post('/auth/token', data={
-        'client_id': CLIENT_ID,
-        'grant_type': 'refresh_token',
-        'refresh_token': refresh_token.token,
+        'token': refresh_token.token,
         'action': 'revoke',
     })
     assert resp.status == 200
@@ -269,32 +267,3 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
     })
 
     assert resp.status == 400
-
-
-async def test_revoking_refresh_token_invalid_client_id(hass, aiohttp_client):
-    """Test that we can revoke refresh tokens."""
-    client = await async_setup_auth(hass, aiohttp_client)
-    user = await hass.auth.async_create_user('Test User')
-    refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
-    access_token = hass.auth.async_create_access_token(refresh_token)
-
-    # Revoke refresh token
-    resp = await client.post('/auth/token', data={
-        'client_id': 'something else',
-        'grant_type': 'refresh_token',
-        'refresh_token': refresh_token.token,
-        'action': 'revoke',
-    })
-    # Response is ALWAYS 200
-    assert resp.status == 200
-
-    # Token should not have been revoked
-    assert (
-        await hass.auth.async_get_refresh_token(refresh_token.id) is not None
-    )
-
-    # Existing access tokens should still work
-    assert (
-        await hass.auth.async_validate_access_token(access_token)
-        is not None
-    )
