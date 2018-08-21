@@ -134,6 +134,24 @@ class DeconzSensor(Entity):
             attr[ATTR_DAYLIGHT] = self._sensor.daylight
         return attr
 
+    @property
+    def device(self):
+        """"""
+        if (self._sensor.uniqueid is not None and
+                self._sensor.uniqueid.count(':') == 7):
+            serial = self._sensor.uniqueid.split('-', 1)[0]
+        else:
+            return None
+        dev = {
+            'identifiers': [['serial', serial]],
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'connection': [['Zigbee', serial]],
+            'name': self._sensor.name,
+            'sw_version': self._sensor.swversion,
+        }
+        return dev
+
 
 class DeconzBattery(Entity):
     """Battery class for when a device is only represented as an event."""
@@ -192,3 +210,21 @@ class DeconzBattery(Entity):
             ATTR_EVENT_ID: slugify(self._device.name),
         }
         return attr
+
+    @property
+    def device(self):
+        """Description for device registry."""
+        if (self._device.uniqueid is not None and
+                self._device.uniqueid.count(':') == 7):
+            serial = self._device.uniqueid.split('-', 1)[0]
+        else:
+            return None
+        dev = {
+            'identifiers': [['serial', serial]],
+            'manufacturer': self._device.manufacturer,
+            'model': self._device.modelid,
+            'connection': [['Zigbee', serial]],
+            'name': self._device.name,
+            'sw_version': self._device.swversion,
+        }
+        return dev

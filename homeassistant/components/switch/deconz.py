@@ -79,6 +79,24 @@ class DeconzSwitch(SwitchDevice):
         """No polling needed."""
         return False
 
+    @property
+    def device(self):
+        """Description for device registry."""
+        if (self._switch.uniqueid is not None and
+                self._switch.uniqueid.count(':') == 7):
+            serial = self._switch.uniqueid.split('-', 1)[0]
+        else:
+            return None
+        dev = {
+            'identifiers': [['serial', serial]],
+            'manufacturer': self._switch.manufacturer,
+            'model': self._switch.modelid,
+            'connection': [['Zigbee', serial]],
+            'name': self._switch.name,
+            'sw_version': self._switch.swversion,
+        }
+        return dev
+
 
 class DeconzPowerPlug(DeconzSwitch):
     """Representation of power plugs from deCONZ."""

@@ -23,7 +23,7 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==43']
+REQUIREMENTS = ['pydeconz==44']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -118,6 +118,13 @@ async def async_setup_entry(hass, config_entry):
     async_add_remote(deconz.sensors.values())
 
     deconz.start()
+
+    device_registry = await \
+		              hass.helpers.device_registry.async_get_registry()
+    device_registry.async_get_or_create(
+        [['bridgeid', deconz.config.bridgeid]], 'Dresden Elektronik',
+        deconz.config.modelid, [['Ethernet', deconz.config.mac]],
+        name=deconz.config.name, sw_version=deconz.config.swversion)
 
     async def async_configure(call):
         """Set attribute of device in deCONZ.
