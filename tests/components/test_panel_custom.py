@@ -86,6 +86,7 @@ async def test_js_webcomponent(hass):
                 'hello': 'world',
             },
             'embed_iframe': True,
+            'js_is_module': True,
             'trust_external_script': True,
         }
     }
@@ -109,6 +110,7 @@ async def test_js_webcomponent(hass):
             'name': 'todo-mvc',
             'embed_iframe': True,
             'trust_external': True,
+            'js_is_module': True,
         }
     }
     assert panel.frontend_url_path == 'nice_url'
