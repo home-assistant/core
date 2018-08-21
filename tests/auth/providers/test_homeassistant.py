@@ -171,7 +171,8 @@ async def test_pbkdf2_to_bcrypt_hash_upgrade(hass_storage, hass):
     await data.async_load()
 
     # verify the correct (pbkdf2) password successfuly authenticates the user
-    data.validate_login('legacyuser', 'beer')
+    await hass.async_add_executor_job(
+        data.validate_login, 'legacyuser', 'beer')
 
     # ...and that the hashes are now bcrypt hashes
     user_hash = base64.b64decode(
@@ -208,11 +209,13 @@ async def test_pbkdf2_to_bcrypt_hash_upgrade_with_incorrect_pass(hass_storage,
 
     # Make sure invalid legacy passwords fail
     with pytest.raises(hass_auth.InvalidAuth):
-        data.validate_login('legacyuser', 'wine')
+        await hass.async_add_executor_job(
+            data.validate_login, 'legacyuser', 'wine')
 
     # Make sure we don't change the password/hash when password is incorrect
     with pytest.raises(hass_auth.InvalidAuth):
-        data.validate_login('legacyuser', 'wine')
+        await hass.async_add_executor_job(
+            data.validate_login, 'legacyuser', 'wine')
 
     same_user_hash = base64.b64decode(
         hass_storage[hass_auth.STORAGE_KEY]['data']['users'][0]['password'])
