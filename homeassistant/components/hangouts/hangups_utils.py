@@ -1,3 +1,5 @@
+"""Utils needed for Google Hangouts."""
+
 from hangups import CredentialsPrompt, RefreshTokenCache, GoogleAuthError
 
 
@@ -6,6 +8,7 @@ class Google2FAError(GoogleAuthError):
 
 
 class HangoutsCredentials(CredentialsPrompt):
+    """Google credentials as params."""
 
     def __init__(self, email, password, pin=None):
         self._email = email
@@ -24,10 +27,12 @@ class HangoutsCredentials(CredentialsPrompt):
         return self._pin
 
     def set_verification_code(self, pin):
+        """Set the 2fa pin."""
         self._pin = pin
 
 
 class HangoutsRefreshToken(RefreshTokenCache):
+    """In memory refresh tokens."""
 
     def __init__(self, token):
         super().__init__("")

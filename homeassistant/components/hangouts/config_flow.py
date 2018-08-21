@@ -28,7 +28,7 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
     def __init__(self):
         """Initialize Google Hangouts config flow."""
         self._credentials = None
-        self._refreshToken = None
+        self._refresh_token = None
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -48,10 +48,10 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
                                         GoogleAuthError, Google2FAError)
             self._credentials = HangoutsCredentials(user_input[CONF_EMAIL],
                                                     user_input[CONF_PASSWORD])
-            self._refreshToken = HangoutsRefreshToken(None)
+            self._refresh_token = HangoutsRefreshToken(None)
             try:
                 get_auth(self._credentials,
-                         self._refreshToken)
+                         self._refresh_token)
                 return await self.async_step_final()
             except GoogleAuthError as err:
                 if err.__class__ is Google2FAError:
@@ -72,17 +72,16 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
         )
 
     async def async_step_2fa(self, user_input=None):
+        """Handle the 2fa step, if needed."""
         errors = {}
 
         if user_input is not None:
             from hangups import get_auth
-            from .hangups_utils import (HangoutsCredentials,
-                                        HangoutsRefreshToken,
-                                        GoogleAuthError, Google2FAError)
+            from .hangups_utils import GoogleAuthError
             self._credentials.set_verification_code(user_input[CONF_2FA])
             try:
                 get_auth(self._credentials,
-                         self._refreshToken)
+                         self._refresh_token)
 
                 return await self.async_step_final()
             except GoogleAuthError:
@@ -97,13 +96,16 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
         )
 
     async def async_step_final(self):
+        """Handle the final step, create the config entry."""
+
         _LOGGER.info("Write config entry")
         return self.async_create_entry(
             title=self._credentials.get_email(),
             data={
                 CONF_EMAIL: self._credentials.get_email(),
-                CONF_REFRESH_TOKEN: self._refreshToken.get()
+                CONF_REFRESH_TOKEN: self._refresh_token.get()
             })
 
     async def async_step_import(self, _):
+        """Handle a flow import."""
         return self.async_abort(reason='already_configured')

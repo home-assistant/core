@@ -8,7 +8,6 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
                                              NOTIFY_SERVICE_SCHEMA,
                                              BaseNotificationService,

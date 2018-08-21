@@ -1,3 +1,4 @@
+"""The Hangouts Bot."""
 import logging
 
 from .const import (DOMAIN,
@@ -6,8 +7,6 @@ from .const import (DOMAIN,
                     EVENT_HANGOUTS_USERS_CHANGED,
                     EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
                     ATTR_MESSAGE, ATTR_TARGET)
-
-from .hangups_utils import HangoutsRefreshToken, HangoutsCredentials
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +36,8 @@ class HangoutsBot:
         return None
 
     def update_conversaition_commands(self, _):
+        """Refresh the commands for every conversation."""
+
         self._word_commands = {}
 
         self._expression_commands = {}
@@ -121,6 +122,7 @@ class HangoutsBot:
 
     async def async_connect(self):
         """Login to the Google Hangouts."""
+        from .hangups_utils import HangoutsRefreshToken, HangoutsCredentials
 
         from hangups import Client
         from hangups import get_auth
@@ -145,6 +147,7 @@ class HangoutsBot:
         self.hass.bus.fire('hangouts.disconnected')
 
     async def async_disconnect(self):
+        """Disconnect the client if it is connected."""
         if self._connected:
             await self._client.disconnect()
 
