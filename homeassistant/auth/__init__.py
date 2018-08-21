@@ -2,7 +2,7 @@
 import asyncio
 import logging
 from collections import OrderedDict
-from typing import Any, Dict, List, Optional, Tuple, cast, Union
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 import jwt
 
@@ -256,20 +256,23 @@ class AuthManager:
         return await auth_provider.async_credential_flow(context)
 
     async def _async_finish_login_flow(
-            self, context: Optional[Dict], result: Dict[str, Any]) \
-            -> Optional[Union[models.User, models.Credentials]]:
+            self, flow: data_entry_flow.FlowHandler, result: Dict[str, Any]) \
+            -> Dict[str, Any]:
         """Return a user as result of login flow."""
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            return None
+            return result
 
         auth_provider = self._providers[result['handler']]
-        cred = await auth_provider.async_get_or_create_credentials(
+        credentials = await auth_provider.async_get_or_create_credentials(
             result['data'])
 
-        if context is not None and context.get('credential_only'):
-            return cred
+        if flow.context is not None and flow.context.get('credential_only'):
+            result['result'] = credentials
+            return result
 
-        return await self.async_get_or_create_user(cred)
+        user = await self.async_get_or_create_user(credentials)
+        result['result'] = user
+        return result
 
     @callback
     def _async_get_auth_provider(
