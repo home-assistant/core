@@ -77,8 +77,7 @@ async def test_create_new_user(hass, hass_storage):
         'password': 'test-pass',
     })
     assert step['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    credentials = step['result']
-    user = await manager.async_get_or_create_user(credentials)
+    user = step['result']
     assert user is not None
     assert user.is_owner is False
     assert user.name == 'Test Name'
@@ -134,9 +133,8 @@ async def test_login_as_existing_user(mock_hass):
         'password': 'test-pass',
     })
     assert step['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    credentials = step['result']
 
-    user = await manager.async_get_or_create_user(credentials)
+    user = step['result']
     assert user is not None
     assert user.id == 'mock-user'
     assert user.is_owner is False
@@ -166,16 +164,18 @@ async def test_linking_user_to_two_auth_providers(hass, hass_storage):
         'username': 'test-user',
         'password': 'test-pass',
     })
-    user = await manager.async_get_or_create_user(step['result'])
+    user = step['result']
     assert user is not None
 
-    step = await manager.login_flow.async_init(('insecure_example',
-                                                'another-provider'))
+    step = await manager.login_flow.async_init(
+        ('insecure_example', 'another-provider'),
+        context={'credential_only': True})
     step = await manager.login_flow.async_configure(step['flow_id'], {
         'username': 'another-user',
         'password': 'another-password',
     })
-    await manager.async_link_user(user, step['result'])
+    new_credential = step['result']
+    await manager.async_link_user(user, new_credential)
     assert len(user.credentials) == 2
 
 
@@ -197,7 +197,7 @@ async def test_saving_loading(hass, hass_storage):
         'username': 'test-user',
         'password': 'test-pass',
     })
-    user = await manager.async_get_or_create_user(step['result'])
+    user = step['result']
     await manager.async_activate_user(user)
     await manager.async_create_refresh_token(user, CLIENT_ID)
 
