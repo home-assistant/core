@@ -11,7 +11,7 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """Setup the insteon_local component.
-    
+
     This component is depreciated as of release 0.77 and should be removed in
     release 0.90.
     """

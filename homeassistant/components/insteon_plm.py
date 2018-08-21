@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the insteon_plm component.
-    
+
     This component is depreciated as of release 0.77 and should be removed in
     release 0.90.
     """
