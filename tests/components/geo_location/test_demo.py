@@ -31,8 +31,8 @@ class TestDemoPlatform(unittest.TestCase):
 
     def test_setup_via_config(self):
         """Test setup of demo platform via configuration."""
-        with assert_setup_component(0, 'geo_location'):
-            self.assertTrue(setup_component(self.hass, 'demo',
+        with assert_setup_component(1, geo_location.DOMAIN):
+            self.assertTrue(setup_component(self.hass, geo_location.DOMAIN,
                                             CONFIG))
 
     def test_setup_platform(self):

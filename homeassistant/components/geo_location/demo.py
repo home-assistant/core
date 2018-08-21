@@ -73,7 +73,7 @@ class DemoManager(GeoLocationDeviceManager):
     def _update(self, count=1):
         """Remove events and add new random events."""
         # Remove devices.
-        for i in range(1, count + 1):
+        for _ in range(1, count + 1):
             if self._managed_devices:
                 device = random.choice(self._managed_devices)
                 if device:
@@ -82,7 +82,7 @@ class DemoManager(GeoLocationDeviceManager):
                     self._hass.add_job(device.async_remove())
         # Generate new devices from events.
         new_devices = []
-        for i in range(1, count + 1):
+        for _ in range(1, count + 1):
             new_device = self._generate_random_event()
             _LOGGER.debug("Adding %s", new_device)
             new_devices.append(new_device)
