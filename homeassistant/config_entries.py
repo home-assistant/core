@@ -372,23 +372,24 @@ class ConfigEntries:
         return await entry.async_unload(
             self.hass, component=getattr(self.hass.components, component))
 
-    async def _async_finish_flow(self, context, result):
+    async def _async_finish_flow(self, flow, result):
         """Finish a config flow and add an entry."""
-        # If no discovery config entries in progress, remove notification.
+        # Remove notification if no other discovery config entries in progress
         if not any(ent['context']['source'] in DISCOVERY_SOURCES for ent
-                   in self.hass.config_entries.flow.async_progress()):
+                   in self.hass.config_entries.flow.async_progress()
+                   if ent['flow_id'] != flow.flow_id):
             self.hass.components.persistent_notification.async_dismiss(
                 DISCOVERY_NOTIFICATION_ID)
 
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
-            return None
+            return result
 
         entry = ConfigEntry(
             version=result['version'],
             domain=result['handler'],
             title=result['title'],
             data=result['data'],
-            source=context['source'],
+            source=flow.context['source'],
         )
         self._entries.append(entry)
         self._async_schedule_save()
@@ -402,11 +403,8 @@ class ConfigEntries:
             await async_setup_component(
                 self.hass, entry.domain, self._hass_config)
 
-        # Return Entry if they not from a discovery request
-        if context['source'] not in DISCOVERY_SOURCES:
-            return entry
-
-        return entry
+        result['result'] = entry
+        return result
 
     async def _async_create_flow(self, handler_key, *, context, data):
         """Create a flow for specified handler.
