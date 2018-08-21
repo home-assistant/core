@@ -2,14 +2,12 @@
 Support to interface with Alexa Devices.
 
 For more details about this platform, please refer to the documentation at
-https://community.home-assistant.io/t/echo-devices-alexa-as-media-player-testers-needed/58639
-VERSION 0.10.0
+https://home-assistant.io/components/alexa_media/
 """
 import logging
 
 from datetime import timedelta
 
-import requests
 import voluptuous as vol
 
 from homeassistant import util
@@ -39,7 +37,7 @@ SUPPORT_ALEXA = (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['alexapy==0.0.3']
+REQUIREMENTS = ['alexapy==0.0.5']
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=15)
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
@@ -80,7 +78,7 @@ def request_configuration(hass, config, setup_platform_callback,
         configurator.request_done(_CONFIGURING.pop('alexa'))
 
     # Get Captcha
-    if (captcha_url is not None):
+    if captcha_url is not None:
         _CONFIGURING['alexa'] = configurator.request_config(
             "Alexa Media Player", configuration_callback,
             description=('Please enter the text for the captcha.'
@@ -116,10 +114,10 @@ def setup_platform(hass, config, add_devices_callback,
     login = alexalogin.AlexaLogin(url, email, password, hass, ALEXA_DATA)
 
     async def setup_platform_callback(callback_data):
-        _LOGGER.debug("Status: {} got captcha: {} securitycode: {}".format(
-            login.status,
-            callback_data.get('captcha'),
-            callback_data.get('securitycode')))
+        _LOGGER.debug("Status: %s got captcha: %s securitycode: %s",
+                      login.status,
+                      callback_data.get('captcha'),
+                      callback_data.get('securitycode'))
         login.login(captcha=callback_data.get('captcha'),
                     securitycode=callback_data.get('securitycode'))
         if ('login_successful' in login.status and
@@ -155,7 +153,7 @@ def setup_platform(hass, config, add_devices_callback,
                            setup_platform_callback,
                            login.status['captcha_image_url'])
     elif ('securitycode_required' in login.status and
-            login.status['securitycode_required']):
+          login.status['securitycode_required']):
         hass.async_add_job(request_configuration, hass, config,
                            setup_platform_callback,
                            None)
@@ -174,8 +172,9 @@ def setup_alexa(hass, config, add_devices_callback, login_obj):
         """Update the devices objects."""
         from alexapy import alexaapi
 
-        devices = alexaapi.AlexaAPI.get_devices(url, login_obj._session)
-        bluetooth = alexaapi.AlexaAPI.get_bluetooth(url, login_obj._session).json()
+        devices = alexaapi.AlexaAPI.get_devices(url, login_obj.session)
+        bluetooth = alexaapi.AlexaAPI.get_bluetooth(url,
+                                                    login_obj.session).json()
 
         new_alexa_clients = []
         available_client_ids = []
@@ -188,7 +187,7 @@ def setup_alexa(hass, config, add_devices_callback, login_obj):
             available_client_ids.append(device['serialNumber'])
 
             if device['serialNumber'] not in alexa_clients:
-                new_client = AlexaClient(config, login_obj._session, device,
+                new_client = AlexaClient(config, login_obj.session, device,
                                          update_devices, url)
                 alexa_clients[device['serialNumber']] = new_client
                 new_alexa_clients.append(new_client)
@@ -243,6 +242,7 @@ class AlexaClient(MediaPlayerDevice):
         self._capabilities = []
         # Media
         self._session = None
+        self._media_player_state = None
         self._media_duration = None
         self._media_image_url = None
         self._media_title = None
@@ -300,7 +300,7 @@ class AlexaClient(MediaPlayerDevice):
                                         if 'muted' in self._session['volume']
                                         else None)
                 self._media_vol_level = (self._session['volume']
-                                                      ['volume'] / 100
+                                         ['volume'] / 100
                                          if 'volume' in self._session['volume']
                                          else None)
                 self._media_title = (self._session['infoText']['title']
@@ -318,7 +318,7 @@ class AlexaClient(MediaPlayerDevice):
                                          if 'url' in self._session['mainArt']
                                          else None)
                 self._media_duration = (self._session['progress']
-                                                     ['mediaLength']
+                                        ['mediaLength']
                                         if 'mediaLength' in
                                         self._session['progress']
                                         else None)
@@ -538,4 +538,3 @@ class AlexaClient(MediaPlayerDevice):
             'available': self._available,
         }
         return attr
-
