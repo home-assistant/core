@@ -7,8 +7,8 @@ import pytest
 
 from homeassistant.core import Context, callback
 from homeassistant.const import (
-    TEMP_FAHRENHEIT, STATE_LOCKED, STATE_UNLOCKED,
-    STATE_UNKNOWN)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_LOCKED,
+    STATE_UNLOCKED, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 from homeassistant.components import alexa
 from homeassistant.components.alexa import smart_home
@@ -707,6 +707,7 @@ def test_unknown_sensor(hass):
 
 async def test_thermostat(hass):
     """Test thermostat discovery."""
+    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
     device = (
         'climate.test_thermostat',
         'cool',
@@ -721,7 +722,6 @@ async def test_thermostat(hass):
             'operation_list': ['heat', 'cool', 'auto', 'off'],
             'min_temp': 50,
             'max_temp': 90,
-            'unit_of_measurement': TEMP_FAHRENHEIT,
         }
     )
     appliance = await discovery_test(device, hass)
@@ -838,6 +838,7 @@ async def test_thermostat(hass):
         payload={'thermostatMode': {'value': 'INVALID'}}
     )
     assert msg['event']['payload']['type'] == 'UNSUPPORTED_THERMOSTAT_MODE'
+    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 @asyncio.coroutine
