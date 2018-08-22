@@ -8,7 +8,6 @@ from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
 
 from .event import async_track_time_interval, async_call_later
-from .entity_registry import async_get_registry
 
 SLOW_SETUP_WARNING = 10
 SLOW_SETUP_MAX_WAIT = 60
@@ -209,11 +208,14 @@ class EntityPlatform:
         hass = self.hass
         component_entities = set(hass.states.async_entity_ids(self.domain))
 
-        registry = await async_get_registry(hass)
-
+        device_registry = await \
+            hass.helpers.device_registry.async_get_registry()
+        entity_registry = await \
+            hass.helpers.entity_registry.async_get_registry()
         tasks = [
             self._async_add_entity(entity, update_before_add,
-                                   component_entities, registry)
+                                   component_entities, entity_registry,
+                                   device_registry)
             for entity in new_entities]
 
         # No entities for processing
@@ -233,7 +235,8 @@ class EntityPlatform:
         )
 
     async def _async_add_entity(self, entity, update_before_add,
-                                component_entities, registry):
+                                component_entities, entity_registry,
+                                device_registry):
         """Helper method to add an entity to the platform."""
         if entity is None:
             raise ValueError('Entity cannot be None')
@@ -269,10 +272,21 @@ class EntityPlatform:
             else:
                 config_entry_id = None
 
-            entry = registry.async_get_or_create(
+            device = entity.device
+            if device is not None:
+                device = device_registry.async_get_or_create(
+                    device['identifiers'], device['manufacturer'],
+                    device['model'], device['connection'],
+                    sw_version=device.get('sw_version'))
+                device_id = device.id
+            else:
+                device_id = None
+
+            entry = entity_registry.async_get_or_create(
                 self.domain, self.platform_name, entity.unique_id,
                 suggested_object_id=suggested_object_id,
-                config_entry_id=config_entry_id)
+                config_entry_id=config_entry_id,
+                device_id=device_id)
 
             if entry.disabled:
                 self.logger.info(
@@ -288,7 +302,7 @@ class EntityPlatform:
         # We won't generate an entity ID if the platform has already set one
         # We will however make sure that platform cannot pick a registered ID
         elif (entity.entity_id is not None and
-              registry.async_is_registered(entity.entity_id)):
+              entity_registry.async_is_registered(entity.entity_id)):
             # If entity already registered, convert entity id to suggestion
             suggested_object_id = split_entity_id(entity.entity_id)[1]
             entity.entity_id = None
@@ -302,7 +316,7 @@ class EntityPlatform:
                 suggested_object_id = '{} {}'.format(self.entity_namespace,
                                                      suggested_object_id)
 
-            entity.entity_id = registry.async_generate_entity_id(
+            entity.entity_id = entity_registry.async_generate_entity_id(
                 self.domain, suggested_object_id)
 
         # Make sure it is valid in case an entity set the value themselves

@@ -140,15 +140,15 @@ class NestBasicSensor(NestSensorDevice):
         self._unit = SENSOR_UNITS.get(self.variable)
 
         if self.variable in VARIABLE_NAME_MAPPING:
-            self._state = getattr(self.device,
+            self._state = getattr(self._device,
                                   VARIABLE_NAME_MAPPING[self.variable])
         elif self.variable in PROTECT_SENSOR_TYPES \
                 and self.variable != 'color_status':
             # keep backward compatibility
-            state = getattr(self.device, self.variable)
+            state = getattr(self._device, self.variable)
             self._state = state.capitalize() if state is not None else None
         else:
-            self._state = getattr(self.device, self.variable)
+            self._state = getattr(self._device, self.variable)
 
 
 class NestTempSensor(NestSensorDevice):
@@ -166,12 +166,12 @@ class NestTempSensor(NestSensorDevice):
 
     def update(self):
         """Retrieve latest state."""
-        if self.device.temperature_scale == 'C':
+        if self._device.temperature_scale == 'C':
             self._unit = TEMP_CELSIUS
         else:
             self._unit = TEMP_FAHRENHEIT
 
-        temp = getattr(self.device, self.variable)
+        temp = getattr(self._device, self.variable)
         if temp is None:
             self._state = None
 
