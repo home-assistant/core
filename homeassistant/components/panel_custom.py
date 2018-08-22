@@ -26,6 +26,8 @@ CONF_MODULE_URL = 'module_url'
 CONF_EMBED_IFRAME = 'embed_iframe'
 CONF_TRUST_EXTERNAL_SCRIPT = 'trust_external_script'
 
+MSG_URL_CONFLICT = 'Pass in only one of module_url or js_url, not both.'
+
 DEFAULT_EMBED_IFRAME = False
 DEFAULT_TRUST_EXTERNAL = False
 
@@ -42,8 +44,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_URL_PATH): cv.string,
         vol.Optional(CONF_CONFIG): dict,
         vol.Optional(CONF_WEBCOMPONENT_PATH): cv.isfile,
-        vol.Optional(CONF_JS_URL): cv.string,
-        vol.Optional(CONF_MODULE_URL): cv.string,
+        vol.Exclusive(CONF_JS_URL, CONF_MODULE_URL,
+                    msg=MSG_URL_CONFLICT): cv.string,
         vol.Optional(CONF_EMBED_IFRAME,
                      default=DEFAULT_EMBED_IFRAME): cv.boolean,
         vol.Optional(CONF_TRUST_EXTERNAL_SCRIPT,
@@ -79,7 +81,7 @@ async def async_register_panel(
     """Register a new custom panel."""
     if js_url is None and html_url is None and module_url is None:
         raise ValueError('Either js_url, module_url or html_url is required.')
-    elif (js_url and html_url) or (js_url and module_url) or (module_url and html_url):
+    elif (js_url and html_url) or (module_url and html_url):
         raise ValueError('Pass in only one of JS url, Module url or HTML url.')
 
     if config is not None and not isinstance(config, dict):
@@ -93,7 +95,7 @@ async def async_register_panel(
 
     if js_url is not None:
         custom_panel_config['js_url'] = js_url
-    
+
     if module_url is not None:
         custom_panel_config['module_url'] = module_url
 
@@ -142,7 +144,7 @@ async def async_setup(hass, config):
 
         if CONF_JS_URL in panel:
             kwargs['js_url'] = panel[CONF_JS_URL]
-        
+
         if CONF_MODULE_URL in panel:
             kwargs['module_url'] = panel[CONF_MODULE_URL]
 
