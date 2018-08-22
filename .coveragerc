@@ -116,7 +116,7 @@ omit =
     homeassistant/components/google.py
     homeassistant/components/*/google.py
 
-    homeassistant/components/hangouts/__init__.py
+    homeassistant/components/hangouts/*.py
     homeassistant/components/*/hangouts.py    
 
     homeassistant/components/hdmi_cec.py
