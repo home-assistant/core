@@ -9,7 +9,7 @@ import time
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_HOST, CONF_NAME)
+from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR_TEMP, SUPPORT_COLOR, PLATFORM_SCHEMA)
@@ -18,6 +18,9 @@ from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
+from homeassistant.exceptions import PlatformNotReady
+
+DOMAIN = 'tplink'
 
 REQUIREMENTS = ['pyHS100==0.3.2']
 
@@ -27,20 +30,26 @@ ATTR_CURRENT_POWER_W = 'current_power_w'
 ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
 ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
-DEFAULT_NAME = 'TP-Link Light'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Initialise pyLB100 SmartBulb."""
-    from pyHS100 import SmartBulb
+    from pyHS100 import SmartBulb, SmartDeviceException
     host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    add_devices([TPLinkSmartBulb(SmartBulb(host), name)], True)
+
+    bulb = SmartBulb(host)
+    # fetch MAC and name already now to avoid I/O inside init
+    try:
+        unique_id = bulb.sys_info['mac']
+        name = bulb.alias
+    except SmartDeviceException as ex:
+        _LOGGER.error("Unable to fetch data from the device: %s", ex)
+        raise PlatformNotReady
+
+    add_devices([TPLinkSmartBulb(bulb, unique_id, name)], True)
 
 
 def brightness_to_percentage(byt):
@@ -56,9 +65,10 @@ def brightness_from_percentage(percent):
 class TPLinkSmartBulb(Light):
     """Representation of a TPLink Smart Bulb."""
 
-    def __init__(self, smartbulb: 'SmartBulb', name) -> None:
+    def __init__(self, smartbulb: 'SmartBulb', unique_id, name) -> None:
         """Initialize the bulb."""
         self.smartbulb = smartbulb
+        self._unique_id = unique_id
         self._name = name
         self._state = None
         self._available = True
@@ -71,8 +81,13 @@ class TPLinkSmartBulb(Light):
         self._emeter_params = {}
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
     def name(self):
-        """Return the name of the Smart Bulb, if any."""
+        """Return the name of the Smart Bulb."""
         return self._name
 
     @property
@@ -145,10 +160,6 @@ class TPLinkSmartBulb(Light):
 
             self._state = (
                 self.smartbulb.state == self.smartbulb.BULB_STATE_ON)
-
-            # Pull the name from the device if a name was not specified
-            if self._name == DEFAULT_NAME:
-                self._name = self.smartbulb.alias
 
             if self._supported_features & SUPPORT_BRIGHTNESS:
                 self._brightness = brightness_from_percentage(

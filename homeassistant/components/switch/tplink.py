@@ -11,8 +11,11 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
-from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
+from homeassistant.const import (CONF_HOST, ATTR_VOLTAGE)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
+
+DOMAIN = 'tplink'
 
 REQUIREMENTS = ['pyHS100==0.3.2']
 
@@ -23,31 +26,49 @@ ATTR_CURRENT_A = 'current_a'
 
 CONF_LEDS = 'enable_leds'
 
-DEFAULT_NAME = 'TP-Link Switch'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_LEDS): cv.boolean,
 })
 
 
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up discovered switches."""
+    devs = []
+    for dev in hass.data[DOMAIN]['switch']:
+        unique_id = dev.sys_info['mac']
+        name = dev.alias
+        devs.append(SmartPlugSwitch(dev, unique_id, name, leds_on=None))
+
+    async_add_devices(devs, True)
+
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the TPLink switch platform."""
-    from pyHS100 import SmartPlug
+    _LOGGER.error("TPLINK setup_platform")
+    from pyHS100 import SmartPlug, SmartDeviceException
     host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
     leds_on = config.get(CONF_LEDS)
 
-    add_devices([SmartPlugSwitch(SmartPlug(host), name, leds_on)], True)
+    plug = SmartPlug(host)
+    # fetch MAC and name already now to avoid I/O inside init
+    try:
+        unique_id = plug.sys_info['mac']
+        name = plug.alias
+    except SmartDeviceException as ex:
+        _LOGGER.error("Unable to fetch data from the device: %s", ex)
+        raise PlatformNotReady
+
+    add_devices([SmartPlugSwitch(plug, unique_id, name, leds_on)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug, name, leds_on):
+    def __init__(self, smartplug, unique_id, name, leds_on):
         """Initialize the switch."""
         self.smartplug = smartplug
+        self._unique_id = unique_id
         self._name = name
         self._leds_on = leds_on
         self._state = None
@@ -56,8 +77,13 @@ class SmartPlugSwitch(SwitchDevice):
         self._emeter_params = {}
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
     def name(self):
-        """Return the name of the Smart Plug, if any."""
+        """Return the name of the Smart Plug."""
         return self._name
 
     @property
@@ -93,10 +119,6 @@ class SmartPlugSwitch(SwitchDevice):
             if self._leds_on is not None:
                 self.smartplug.led = self._leds_on
                 self._leds_on = None
-
-            # Pull the name from the device if a name was not specified
-            if self._name == DEFAULT_NAME:
-                self._name = self.smartplug.alias
 
             if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
