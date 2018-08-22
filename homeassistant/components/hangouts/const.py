@@ -1,11 +1,11 @@
 """Constants for Google Hangouts Component."""
 import logging
+
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.notify import (ATTR_TARGET, ATTR_MESSAGE)
-
+from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import CONF_NAME
+import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger('homeassistant.components.hangouts')
 

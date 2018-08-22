@@ -1,6 +1,6 @@
 """Utils needed for Google Hangouts."""
 
-from hangups import CredentialsPrompt, RefreshTokenCache, GoogleAuthError
+from hangups import CredentialsPrompt, GoogleAuthError, RefreshTokenCache
 
 
 class Google2FAError(GoogleAuthError):

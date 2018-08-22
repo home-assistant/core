@@ -7,18 +7,15 @@ https://home-assistant.io/components/hangouts/
 import logging
 
 from homeassistant import config_entries
-from homeassistant.helpers import dispatcher
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-
-from .const import (DOMAIN,
-                    CONF_REFRESH_TOKEN, CONF_BOT, CONF_COMMANDS,
-                    MESSAGE_SCHEMA,
-                    EVENT_HANGOUTS_CONNECTED,
-                    EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
-                    SERVICE_SEND_MESSAGE,
-                    SERVICE_UPDATE_USERS_AND_CONVERSATIONS)
+from homeassistant.helpers import dispatcher
 
 from .config_flow import configured_hangouts
+from .const import (
+    CONF_BOT, CONF_COMMANDS, CONF_REFRESH_TOKEN, DOMAIN,
+    EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
+    MESSAGE_SCHEMA, SERVICE_SEND_MESSAGE,
+    SERVICE_UPDATE_USERS_AND_CONVERSATIONS)
 
 REQUIREMENTS = ['hangups==0.4.5']
 
