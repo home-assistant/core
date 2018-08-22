@@ -159,7 +159,7 @@ async def test_module_webcomponent(hass):
     assert panel.sidebar_title == 'Sidebar Title'
 
 
-async def test_url_conflict_config(hass):
+async def test_url_option_conflict(hass):
     """Test config with multiple url options."""
     to_try = [
         {'panel_custom': {
