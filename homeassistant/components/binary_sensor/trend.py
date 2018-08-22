@@ -23,7 +23,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import utcnow
 
-REQUIREMENTS = ['numpy==1.15.0']
+REQUIREMENTS = ['numpy==1.15.1']
 
 _LOGGER = logging.getLogger(__name__)
 
