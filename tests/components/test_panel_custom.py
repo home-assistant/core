@@ -157,3 +157,53 @@ async def test_module_webcomponent(hass):
     assert panel.frontend_url_path == 'nice_url'
     assert panel.sidebar_icon == 'mdi:iconicon'
     assert panel.sidebar_title == 'Sidebar Title'
+
+
+def test_url_conflict_config(self):
+    """Test config with multiple url options."""
+    to_try = [
+        {'panel_custom': {
+            'name': 'todo-mvc',
+            'module_url': '/local/bla.js',
+            'js_url': '/local/bla.js',
+            'sidebar_title': 'Sidebar Title',
+            'sidebar_icon': 'mdi:iconicon',
+            'url_path': 'nice_url',
+            'config': {
+                'hello': 'world',
+            },
+            'embed_iframe': True,
+            'trust_external_script': True
+            }
+         }, {'panel_custom': {
+                'name': 'todo-mvc',
+                'webcomponent_path': '/local/bla.html',
+                'js_url': '/local/bla.js',
+                'sidebar_title': 'Sidebar Title',
+                'sidebar_icon': 'mdi:iconicon',
+                'url_path': 'nice_url',
+                'config': {
+                    'hello': 'world',
+                },
+                'embed_iframe': True,
+                'trust_external_script': True
+            }
+         }, {'panel_custom': {
+                'name': 'todo-mvc',
+                'webcomponent_path': '/local/bla.html',
+                'module_url': '/local/bla.js',
+                'js_url': '/local/bla.js',
+                'sidebar_title': 'Sidebar Title',
+                'sidebar_icon': 'mdi:iconicon',
+                'url_path': 'nice_url',
+                'config': {
+                    'hello': 'world',
+                },
+                'embed_iframe': True,
+                'trust_external_script': True
+            }
+         }
+         ]
+
+    for conf in to_try:
+        assert not setup.setup_component(self.hass, 'panel_custom', conf)
