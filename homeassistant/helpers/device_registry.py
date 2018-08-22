@@ -36,7 +36,6 @@ class DeviceRegistry:
         """Initialize the device registry."""
         self.hass = hass
         self.devices = None
-        self._sched_save = None
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
