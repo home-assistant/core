@@ -118,7 +118,7 @@ def async_test_home_assistant(loop):
     hass = ha.HomeAssistant(loop)
     hass.config.async_load = Mock()
     store = auth_store.AuthStore(hass)
-    hass.auth = auth.AuthManager(hass, store, {})
+    hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
@@ -342,7 +342,7 @@ class MockUser(auth_models.User):
             'is_owner': is_owner,
             'is_active': is_active,
             'name': name,
-            'system_generated': system_generated
+            'system_generated': system_generated,
         }
         if id is not None:
             kwargs['id'] = id
