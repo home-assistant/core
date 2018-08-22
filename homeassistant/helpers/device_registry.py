@@ -46,7 +46,7 @@ class DeviceRegistry:
             if any(identifier in device.identifiers
                    for identifier in identifiers) or \
                any(connection in device.connection
-                   for connection in connections):
+                       for connection in connections):
                 return device
         return None
 
