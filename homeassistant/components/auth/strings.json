@@ -1,0 +1,16 @@
+{
+  "mfa_setup":{
+    "totp": {
+      "title": "TOTP",
+      "step": {
+        "init": {
+          "title": "Scan this QR code with your app",
+          "description": "Scan the QR code with your authentication app, such as **Google Authenticator** or **Authy**. \nOr enter {code} instead. \n\n[QR Code]{url}",
+        },
+      },
+      "error": {
+        "invalid_code": "Invalid code, please try again. If you get this error consistently, please make sure the clock on Home Assistant system is accurate."
+      }
+    }
+  }
+}
