@@ -167,16 +167,12 @@ async def test_url_conflict_config(hass):
         {'panel_custom': {
             'name': 'todo-mvc',
             'module_url': '/local/bla.js',
-            'js_url': '/local/bla.js',
         }
         }, {'panel_custom': {
             'name': 'todo-mvc',
             'webcomponent_path': '/local/bla.html',
-            'js_url': '/local/bla.js',
         }}, {'panel_custom': {
             'name': 'todo-mvc',
-            'webcomponent_path': '/local/bla.html',
-            'module_url': '/local/bla.js',
             'js_url': '/local/bla.js',
         }}
     ]
@@ -185,4 +181,4 @@ async def test_url_conflict_config(hass):
         result = await setup.async_setup_component(
             hass, 'panel_custom', config
         )
-        assert not result
+        assert result
