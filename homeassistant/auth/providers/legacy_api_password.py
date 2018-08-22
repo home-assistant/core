@@ -80,8 +80,8 @@ class LegacyLoginFlow(LoginFlow):
         """Handle the step of the form."""
         errors = {}
 
-        if (getattr(self.hass, 'http', None) is None or
-                not self.hass.http.api_password):
+        hass_http = getattr(self.hass, 'http', None)
+        if hass_http is None or not hass_http.api_password:
             return self.async_abort(
                 reason='no_api_password_set'
             )
