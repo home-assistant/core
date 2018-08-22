@@ -17,6 +17,8 @@ CONF_REFRESH_TOKEN = 'refresh_token'
 CONF_BOT = 'bot'
 
 CONF_CONVERSATIONS = 'conversations'
+CONF_DEFAULT_CONVERSATIONS = 'default_conversations'
+
 CONF_COMMANDS = 'commands'
 CONF_WORD = 'word'
 CONF_EXPRESSION = 'expression'

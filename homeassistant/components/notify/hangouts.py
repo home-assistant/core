@@ -13,13 +13,11 @@ from homeassistant.components.notify import (ATTR_TARGET, PLATFORM_SCHEMA,
                                              BaseNotificationService,
                                              ATTR_MESSAGE)
 
-from homeassistant.components.hangouts.const import (DOMAIN,
-                                                     SERVICE_SEND_MESSAGE,
-                                                     TARGETS_SCHEMA)
+from homeassistant.components.hangouts.const \
+    import (DOMAIN, SERVICE_SEND_MESSAGE,
+            TARGETS_SCHEMA, CONF_DEFAULT_CONVERSATIONS)
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_DEFAULT_CONVERSATIONS = 'default_conversations'
 
 DEPENDENCIES = [DOMAIN]
 
