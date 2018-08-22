@@ -122,8 +122,6 @@ class KNXClimate(ClimateDevice):
         self.hass = hass
         self.async_register_callbacks()
 
-        self._unit_of_measurement = TEMP_CELSIUS
-
     @property
     def supported_features(self):
         """Return the list of supported features."""
@@ -157,7 +155,7 @@ class KNXClimate(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._unit_of_measurement
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):
