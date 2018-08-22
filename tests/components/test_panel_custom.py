@@ -222,6 +222,12 @@ def test_url_conflict_config(hass):
         }
     ]
 
-    with assert_setup_component(1):
+    result = await setup.async_setup_component(
+        hass, 'panel_custom', config
+    )
+
+    assert no result
+
+    """ with assert_setup_component(1):
         for config in to_try:
-            setup.setup_component(hass, config)
+            setup.setup_component(hass, config) """
