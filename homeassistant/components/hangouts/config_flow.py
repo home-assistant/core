@@ -6,8 +6,7 @@ from homeassistant.core import callback
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
-from .const import DOMAIN as HANGOUTS_DOMAIN, CONF_2FA, CONF_REFRESH_TOKEN, \
-    _LOGGER
+from .const import DOMAIN as HANGOUTS_DOMAIN, CONF_2FA, CONF_REFRESH_TOKEN
 
 
 @callback
