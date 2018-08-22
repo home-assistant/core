@@ -24,7 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the Hangouts bot component."""
-
     config = config.get(DOMAIN, [])
     hass.data[DOMAIN] = {CONF_COMMANDS: config[CONF_COMMANDS]}
 
@@ -53,7 +52,7 @@ async def async_setup_entry(hass, config):
         return False
 
     hass.bus.async_listen(EVENT_HANGOUTS_CONNECTED,
-        bot.async_handle_update_users_and_conversations)
+                          bot.async_handle_update_users_and_conversations)
 
     dispatcher.async_dispatcher_connect(
         hass,
@@ -61,7 +60,7 @@ async def async_setup_entry(hass, config):
         bot.async_update_conversation_commands)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                   bot.async_handle_hass_stop)
+                               bot.async_handle_hass_stop)
 
     await bot.async_connect()
 
@@ -79,7 +78,6 @@ async def async_setup_entry(hass, config):
 
 async def async_unload_entry(hass, _):
     """Unload a config entry."""
-
     bot = hass.data[DOMAIN].pop(CONF_BOT)
     await bot.async_disconnect()
     return True

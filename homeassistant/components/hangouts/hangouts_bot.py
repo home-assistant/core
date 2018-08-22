@@ -38,9 +38,7 @@ class HangoutsBot:
 
     def async_update_conversation_commands(self, _):
         """Refresh the commands for every conversation."""
-
         self._word_commands = {}
-
         self._expression_commands = {}
 
         for command in self._commands:
@@ -215,7 +213,7 @@ class HangoutsBot:
         self.hass.states.async_set("{}.conversations".format(DOMAIN),
                                    len(self._conversation_list.get_all()),
                                    attributes=conversations)
-        #self.hass.bus.fire(EVENT_HANGOUTS_USERS_CHANGED, users)
+        # self.hass.bus.fire(EVENT_HANGOUTS_USERS_CHANGED, users)
         dispatcher.async_dispatcher_send(self.hass,
                                          EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
                                          conversations)

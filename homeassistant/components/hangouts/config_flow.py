@@ -31,8 +31,8 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow start."""
-
         errors = {}
+
         if configured_hangouts(self.hass) is not None:
             return self.async_abort(reason="already_configured")
 
@@ -92,7 +92,6 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_final(self):
         """Handle the final step, create the config entry."""
-
         return self.async_create_entry(
             title=self._credentials.get_email(),
             data={
