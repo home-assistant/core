@@ -1,10 +1,29 @@
 """Component to embed Google Cast."""
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
+from homeassistant.const import CONF_HOST, CONF_PORT
+import homeassistant.helpers.config_validation as cv
 
+from .const import (
+    DOMAIN, DEFAULT_PORT, CONF_CAST_MEDIA_PLAYER, CONF_IGNORE_CEC)
 
-DOMAIN = 'cast'
 REQUIREMENTS = ['pychromecast==2.1.0']
+
+CAST_MEDIA_PLAYER_SCHEMA = vol.Schema({
+    vol.Required(CONF_HOST): vol.All(cv.string),
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_IGNORE_CEC, default=[]): vol.All(cv.ensure_list,
+                                                       [cv.string])
+})
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_CAST_MEDIA_PLAYER):
+            vol.All(cv.ensure_list, [CAST_MEDIA_PLAYER_SCHEMA]),
+    }),
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
