@@ -163,7 +163,7 @@ async def test_module_webcomponent(hass):
 
 def test_url_conflict_config(hass):
     """Test config with multiple url options."""
-    to_try = [
+    """ to_try = [
         {'panel_custom': {
             'name': 'todo-mvc',
             'module_url': '/local/bla.js',
@@ -205,8 +205,23 @@ def test_url_conflict_config(hass):
                 'trust_external_script': True
             }
          }
-         ]
+         ]"""
+    to_try = [
+        {'panel_custom': {
+            'name': 'todo-mvc',
+            'module_url': '/local/bla.js',
+            'sidebar_title': 'Sidebar Title',
+            'sidebar_icon': 'mdi:iconicon',
+            'url_path': 'nice_url',
+            'config': {
+                'hello': 'world',
+            },
+            'embed_iframe': True,
+            'trust_external_script': True
+        }
+        }
+    ]
 
-    with assert_setup_component(0):
+    with assert_setup_component(1):
         for config in to_try:
             setup.setup_component(hass, config)
