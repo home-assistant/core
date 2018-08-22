@@ -27,8 +27,8 @@ CONF_EMBED_IFRAME = 'embed_iframe'
 CONF_TRUST_EXTERNAL_SCRIPT = 'trust_external_script'
 CONF_URL_EXCLUSIVE_GROUP = 'url_exclusive_group'
 
-MSG_URL_CONFLICT =
-'Pass in only one of webcomponent_path, module_url or js_url'
+MSG_URL_CONFLICT = \
+                'Pass in only one of webcomponent_path, module_url or js_url'
 
 DEFAULT_EMBED_IFRAME = False
 DEFAULT_TRUST_EXTERNAL = False
