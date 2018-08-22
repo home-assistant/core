@@ -11,9 +11,7 @@ from math import pi, cos, sin, radians
 
 from typing import Optional
 
-from homeassistant.components.geo_location import GeoLocationEvent, \
-    ENTITY_ID_FORMAT
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.components.geo_location import GeoLocationEvent
 from homeassistant.helpers.event import track_time_interval
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,18 +41,9 @@ class DemoManager:
         """Initialise the demo geo location event manager."""
         self._hass = hass
         self._add_devices = add_devices
-        self._name = "Geo Location Demo"
         self._managed_devices = []
         self._update(count=NUMBER_OF_DEMO_DEVICES)
         self._init_regular_updates()
-
-    def _generate_entity_id(self, event_name):
-        """Generate device entity id from the manager name and event name."""
-        entity_ids = [device.entity_id for device in self._managed_devices]
-        entity_id = generate_entity_id(ENTITY_ID_FORMAT,
-                                       '{} {}'.format(self._name, event_name),
-                                       entity_ids, hass=self._hass)
-        return entity_id
 
     def _generate_random_event(self):
         """Generate a random event in vicinity of this HA instance."""
@@ -73,10 +62,8 @@ class DemoManager:
             cos(radians(home_latitude))
 
         event_name = random.choice(EVENT_NAMES)
-        entity_id = self._generate_entity_id(event_name)
-        return DemoGeoLocationEvent(entity_id, event_name, radius_in_km,
-                                    latitude, longitude,
-                                    DEFAULT_UNIT_OF_MEASUREMENT)
+        return DemoGeoLocationEvent(event_name, radius_in_km, latitude,
+                                    longitude, DEFAULT_UNIT_OF_MEASUREMENT)
 
     def _init_regular_updates(self):
         """Schedule regular updates based on configured time interval."""
@@ -106,10 +93,9 @@ class DemoManager:
 class DemoGeoLocationEvent(GeoLocationEvent):
     """This represents a demo geo location event."""
 
-    def __init__(self, entity_id, name, distance, latitude, longitude,
+    def __init__(self, name, distance, latitude, longitude,
                  unit_of_measurement):
         """Initialize entity with data provided."""
-        self.entity_id = entity_id
         self._name = name
         self._distance = distance
         self._latitude = latitude
