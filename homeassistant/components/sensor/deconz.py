@@ -138,7 +138,7 @@ class DeconzSensor(Entity):
 
     @property
     def device(self):
-        """"""
+        """Description for device registry."""
         if (self._sensor.uniqueid is not None and
                 self._sensor.uniqueid.count(':') == 7):
             mac = self._sensor.uniqueid.split('-', 1)[0]
