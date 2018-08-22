@@ -7,6 +7,7 @@ https://home-assistant.io/components/binary_sensor.mqtt/
 import asyncio
 import logging
 from typing import Optional
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -21,11 +22,14 @@ from homeassistant.components.mqtt import (
     CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'MQTT Binary sensor'
 CONF_UNIQUE_ID = 'unique_id'
+CONF_EXPIRE_AFTER = 'expire_after'
 DEFAULT_PAYLOAD_OFF = 'OFF'
 DEFAULT_PAYLOAD_ON = 'ON'
 DEFAULT_FORCE_UPDATE = False
@@ -38,6 +42,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
     vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
+    vol.Optional(CONF_EXPIRE_AFTER): cv.positive_int,
     # Integrations shouldn't never expose unique_id through configuration
     # this here is an exception because MQTT is a msg transport, not a protocol
     vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -66,6 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         value_template,
+        config.get(CONF_EXPIRE_AFTER),
         config.get(CONF_UNIQUE_ID),
     )])
 
@@ -75,7 +81,7 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
 
     def __init__(self, name, state_topic, availability_topic, device_class,
                  qos, force_update, payload_on, payload_off, payload_available,
-                 payload_not_available, value_template,
+                 payload_not_available, value_template, expire_after,
                  unique_id: Optional[str]):
         """Initialize the MQTT binary sensor."""
         super().__init__(availability_topic, qos, payload_available,
@@ -89,6 +95,8 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
         self._qos = qos
         self._force_update = force_update
         self._template = value_template
+        self._expire_after = expire_after
+        self._expiration_trigger = None
         self._unique_id = unique_id
 
     @asyncio.coroutine
@@ -97,11 +105,13 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
         yield from super().async_added_to_hass()
 
         @callback
-        def state_message_received(topic, payload, qos):
+        def state_message_received(_topic, payload, _qos):
             """Handle a new received MQTT state message."""
             if self._template is not None:
                 payload = self._template.async_render_with_possible_json_value(
-                    payload)
+                    payload
+                )
+
             if payload == self._payload_on:
                 self._state = True
             elif payload == self._payload_off:
@@ -114,8 +124,32 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
 
             self.async_schedule_update_ha_state()
 
+            # clear expiration trigger if state changed
+            if self._expiration_trigger:
+                self._expiration_trigger()
+                self._expiration_trigger = None
+
+            if self._state is True and \
+                    self._expire_after is not None and self._expire_after > 0:
+                # Set new trigger
+                expiration_at = dt_util.utcnow() + \
+                                timedelta(seconds=self._expire_after)
+
+                self._expiration_trigger = async_track_point_in_utc_time(
+                    self.hass,
+                    self.value_is_expired,
+                    expiration_at
+                )
+
         yield from mqtt.async_subscribe(
             self.hass, self._state_topic, state_message_received, self._qos)
+
+    @callback
+    def value_is_expired(self, *_):
+        """Triggered when value is expired."""
+        self._expiration_trigger = None
+        self._state = False
+        self.async_schedule_update_ha_state()
 
     @property
     def should_poll(self):
