@@ -206,4 +206,4 @@ def test_url_conflict_config(hass):
          ]
 
     for conf in to_try:
-        assert not setup.setup_component(self.hass, 'panel_custom', conf)
+        assert not setup.setup_component(hass, 'panel_custom', conf)
