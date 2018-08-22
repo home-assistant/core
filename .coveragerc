@@ -104,6 +104,9 @@ omit =
     homeassistant/components/fritzbox.py
     homeassistant/components/switch/fritzbox.py
 
+    homeassistant/components/ecovacs.py
+    homeassistant/components/*/ecovacs.py
+
     homeassistant/components/eufy.py
     homeassistant/components/*/eufy.py
 
@@ -136,12 +139,13 @@ omit =
 
     homeassistant/components/ihc/*
     homeassistant/components/*/ihc.py
+    
+    homeassistant/components/insteon/*
+    homeassistant/components/*/insteon.py
 
     homeassistant/components/insteon_local.py
-    homeassistant/components/*/insteon_local.py
-
-    homeassistant/components/insteon_plm/*
-    homeassistant/components/*/insteon_plm.py
+    
+    homeassistant/components/insteon_plm.py
 
     homeassistant/components/ios.py
     homeassistant/components/*/ios.py

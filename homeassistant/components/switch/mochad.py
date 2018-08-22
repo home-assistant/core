@@ -48,7 +48,7 @@ class MochadSwitch(SwitchDevice):
         self._address = dev[CONF_ADDRESS]
         self._name = dev.get(CONF_NAME, 'x10_switch_dev_%s' % self._address)
         self._comm_type = dev.get(mochad.CONF_COMM_TYPE, 'pl')
-        self.device = device.Device(ctrl, self._address,
+        self.switch = device.Device(ctrl, self._address,
                                     comm_type=self._comm_type)
         # Init with false to avoid locking HA for long on CM19A (goes from rf
         # to pl via TM751, but not other way around)
@@ -71,7 +71,7 @@ class MochadSwitch(SwitchDevice):
             try:
                 # Recycle socket on new command to recover mochad connection
                 self._controller.reconnect()
-                self.device.send_cmd('on')
+                self.switch.send_cmd('on')
                 # No read data on CM19A which is rf only
                 if self._comm_type == 'pl':
                     self._controller.read_data()
@@ -88,7 +88,7 @@ class MochadSwitch(SwitchDevice):
             try:
                 # Recycle socket on new command to recover mochad connection
                 self._controller.reconnect()
-                self.device.send_cmd('off')
+                self.switch.send_cmd('off')
                 # No read data on CM19A which is rf only
                 if self._comm_type == 'pl':
                     self._controller.read_data()
@@ -99,7 +99,7 @@ class MochadSwitch(SwitchDevice):
     def _get_device_status(self):
         """Get the status of the switch from mochad."""
         with mochad.REQ_LOCK:
-            status = self.device.get_status().rstrip()
+            status = self.switch.get_status().rstrip()
         return status == 'on'
 
     @property

@@ -31,4 +31,4 @@ class TelldusLiveSensor(TelldusLiveEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.device.is_on
+        return self._device.is_on

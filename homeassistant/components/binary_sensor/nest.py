@@ -130,7 +130,7 @@ class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
 
     def update(self):
         """Retrieve latest state."""
-        value = getattr(self.device, self.variable)
+        value = getattr(self._device, self.variable)
         if self.variable in STRUCTURE_BINARY_TYPES:
             self._state = bool(STRUCTURE_BINARY_STATE_MAP
                                [self.variable].get(value))
@@ -154,4 +154,5 @@ class NestActivityZoneSensor(NestBinarySensor):
 
     def update(self):
         """Retrieve latest state."""
-        self._state = self.device.has_ongoing_motion_in_zone(self.zone.zone_id)
+        self._state = self._device.has_ongoing_motion_in_zone(
+            self.zone.zone_id)

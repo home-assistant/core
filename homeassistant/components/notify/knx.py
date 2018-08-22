@@ -61,13 +61,13 @@ class KNXNotificationService(BaseNotificationService):
 
     def __init__(self, devices):
         """Initialize the service."""
-        self.devices = devices
+        self._devices = devices
 
     @property
     def targets(self):
         """Return a dictionary of registered targets."""
         ret = {}
-        for device in self.devices:
+        for device in self._devices:
             ret[device.name] = device.name
         return ret
 
@@ -80,11 +80,11 @@ class KNXNotificationService(BaseNotificationService):
 
     async def _async_send_to_all_devices(self, message):
         """Send a notification to knx bus to all connected devices."""
-        for device in self.devices:
+        for device in self._devices:
             await device.set(message)
 
     async def _async_send_to_device(self, message, names):
         """Send a notification to knx bus to device with given names."""
-        for device in self.devices:
+        for device in self._devices:
             if device.name in names:
                 await device.set(message)

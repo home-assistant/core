@@ -3,19 +3,18 @@ import base64
 from collections import OrderedDict
 import hashlib
 import hmac
-from typing import Any, Dict, List, Optional  # noqa: F401,E501 pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, cast
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.const import CONF_ID
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from homeassistant.auth.util import generate_secret
-
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
+from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
 from ..models import Credentials, UserMeta
+from ..util import generate_secret
+
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth_provider.homeassistant'
@@ -159,10 +158,10 @@ class HassAuthProvider(AuthProvider):
         self.data = Data(self.hass)
         await self.data.async_load()
 
-    async def async_credential_flow(
-            self, context: Optional[Dict]) -> 'LoginFlow':
+    async def async_login_flow(
+            self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
-        return LoginFlow(self)
+        return HassLoginFlow(self)
 
     async def async_validate_login(self, username: str, password: str) -> None:
         """Helper to validate a username and password."""
@@ -207,12 +206,8 @@ class HassAuthProvider(AuthProvider):
             pass
 
 
-class LoginFlow(data_entry_flow.FlowHandler):
+class HassLoginFlow(LoginFlow):
     """Handler for the login flow."""
-
-    def __init__(self, auth_provider: HassAuthProvider) -> None:
-        """Initialize the login flow."""
-        self._auth_provider = auth_provider
 
     async def async_step_init(
             self, user_input: Optional[Dict[str, str]] = None) \
@@ -222,16 +217,15 @@ class LoginFlow(data_entry_flow.FlowHandler):
 
         if user_input is not None:
             try:
-                await self._auth_provider.async_validate_login(
-                    user_input['username'], user_input['password'])
+                await cast(HassAuthProvider, self._auth_provider)\
+                    .async_validate_login(user_input['username'],
+                                          user_input['password'])
             except InvalidAuth:
                 errors['base'] = 'invalid_auth'
 
             if not errors:
-                return self.async_create_entry(
-                    title=self._auth_provider.name,
-                    data=user_input
-                )
+                user_input.pop('password')
+                return await self.async_finish(user_input)
 
         schema = OrderedDict()  # type: Dict[str, type]
         schema['username'] = str

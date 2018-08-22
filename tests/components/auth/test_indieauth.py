@@ -1,4 +1,5 @@
 """Tests for the client validator."""
+import asyncio
 from unittest.mock import patch
 
 import pytest
@@ -6,6 +7,18 @@ import pytest
 from homeassistant.components.auth import indieauth
 
 from tests.common import mock_coro
+from tests.test_util.aiohttp import AiohttpClientMocker
+
+
+@pytest.fixture
+def mock_session():
+    """Mock aiohttp.ClientSession."""
+    mocker = AiohttpClientMocker()
+
+    with patch('aiohttp.ClientSession',
+               side_effect=lambda *args, **kwargs:
+                   mocker.create_session(asyncio.get_event_loop())):
+        yield mocker
 
 
 def test_client_id_scheme():
@@ -120,9 +133,9 @@ async def test_verify_redirect_uri():
         )
 
 
-async def test_find_link_tag(hass, aioclient_mock):
+async def test_find_link_tag(hass, mock_session):
     """Test finding link tag."""
-    aioclient_mock.get("http://127.0.0.1:8000", text="""
+    mock_session.get("http://127.0.0.1:8000", text="""
 <!doctype html>
 <html>
   <head>
@@ -142,11 +155,15 @@ async def test_find_link_tag(hass, aioclient_mock):
     ]
 
 
-async def test_find_link_tag_max_size(hass, aioclient_mock):
+async def test_find_link_tag_max_size(hass, mock_session):
     """Test finding link tag."""
-    text = ("0" * 1024 * 10) + '<link rel="redirect_uri" href="/beer">'
-    aioclient_mock.get("http://127.0.0.1:8000", text=text)
+    text = ''.join([
+        '<link rel="redirect_uri" href="/wine">',
+        ("0" * 1024 * 10),
+        '<link rel="redirect_uri" href="/beer">',
+    ])
+    mock_session.get("http://127.0.0.1:8000", text=text)
     redirect_uris = await indieauth.fetch_redirect_uris(
         hass, "http://127.0.0.1:8000")
 
-    assert redirect_uris == []
+    assert redirect_uris == ["http://127.0.0.1:8000/wine"]

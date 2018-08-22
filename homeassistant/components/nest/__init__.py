@@ -119,7 +119,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, entry):
-    """Setup Nest from a config entry."""
+    """Set up Nest from a config entry."""
     from nest import Nest
 
     nest = Nest(access_token=entry.data['tokens']['access_token'])
@@ -282,12 +282,12 @@ class NestSensorDevice(Entity):
 
         if device is not None:
             # device specific
-            self.device = device
-            self._name = "{} {}".format(self.device.name_long,
+            self._device = device
+            self._name = "{} {}".format(self._device.name_long,
                                         self.variable.replace('_', ' '))
         else:
             # structure only
-            self.device = structure
+            self._device = structure
             self._name = "{} {}".format(self.structure.name,
                                         self.variable.replace('_', ' '))
 

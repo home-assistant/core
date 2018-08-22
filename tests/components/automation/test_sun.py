@@ -19,7 +19,7 @@ class TestAutomationSun(unittest.TestCase):
     """Test the sun automation."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'group')
         setup_component(self.hass, sun.DOMAIN, {
