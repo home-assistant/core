@@ -27,17 +27,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     ]),
 })
 
-
 def x10_command(command):
     """Execute X10 command and check output."""
-    return check_output(['heyu'] + command.split(' '), stderr=STDOUT)
-
+    return check_output(["heyu", command])
 
 def get_unit_status(code):
     """Get on/off status for given unit."""
     output = check_output('heyu onstate ' + code, shell=True)
+    _LOGGER.debug("unit on/off status %d", int(output))
     return int(output.decode('utf-8')[0])
 
+
+def get_raw_brightness(code):
+    """Get current raw brightness for given unit."""
+    output = check_output('heyu rawlevel ' + code, shell=True).rstrip()
+    _LOGGER.debug("raw brightness value %d", int(output))
+    return (int(output))
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the x10 Light platform."""
@@ -49,7 +54,6 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     add_devices(X10Light(light) for light in config[CONF_DEVICES])
 
-
 class X10Light(Light):
     """Representation of an X10 Light."""
 
@@ -59,6 +63,7 @@ class X10Light(Light):
         self._id = light['id']
         self._brightness = 0
         self._state = False
+        self.update()
 
     @property
     def name(self):
@@ -81,10 +86,30 @@ class X10Light(Light):
         return SUPPORT_X10
 
     def turn_on(self, **kwargs):
-        """Instruct the light to turn on."""
-        x10_command('on ' + self._id)
-        self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-        self._state = True
+        """Instruct the light to change brightness or turn on."""
+        if ATTR_BRIGHTNESS in kwargs:
+            desired_brightness = (kwargs[ATTR_BRIGHTNESS] / 255 * 210)
+            delta_brightness = (
+                desired_brightness - int(get_raw_brightness(self._id)))
+            delta_step = (abs(delta_brightness / 10) + 1)
+            _LOGGER.debug(
+                """Slider Bright %d Desired bright %d,Delta bright %d,
+                Delta Step %d, Raw bright %d""",
+                kwargs[ATTR_BRIGHTNESS], desired_brightness,
+                delta_brightness, delta_step,
+                int(get_raw_brightness(self._id)))
+            if (delta_brightness > 0):
+                x10_command(
+                    'bright ' + self._id.ljust(len(self._id)+1) +
+                    str(int(delta_step)))
+            else:
+                x10_command(
+                    'dim ' + self._id.ljust(len(self._id)+1) +
+                    str(int(delta_step)))
+        else:
+            x10_command('on ' + self._id)
+            self._brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
+            self._state = True
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
@@ -94,3 +119,4 @@ class X10Light(Light):
     def update(self):
         """Fetch update state."""
         self._state = bool(get_unit_status(self._id))
+        self._brightness = (get_raw_brightness(self._id) / 210 * 255)
