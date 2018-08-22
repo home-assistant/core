@@ -136,12 +136,13 @@ omit =
 
     homeassistant/components/ihc/*
     homeassistant/components/*/ihc.py
+    
+    homeassistant/components/insteon/*
+    homeassistant/components/*/insteon.py
 
     homeassistant/components/insteon_local.py
-    homeassistant/components/*/insteon_local.py
-
-    homeassistant/components/insteon_plm/*
-    homeassistant/components/*/insteon_plm.py
+    
+    homeassistant/components/insteon_plm.py
 
     homeassistant/components/ios.py
     homeassistant/components/*/ios.py
