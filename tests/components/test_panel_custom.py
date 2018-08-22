@@ -225,4 +225,4 @@ async def test_url_conflict_config(hass):
 
     result = await setup.async_setup_component(hass, 'panel_custom', to_try[0])
 
-    assert result
+    assert not result
