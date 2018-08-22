@@ -27,7 +27,7 @@ CONF_EMBED_IFRAME = 'embed_iframe'
 CONF_TRUST_EXTERNAL_SCRIPT = 'trust_external_script'
 CONF_URL_EXCLUSIVE_GROUP = 'url_exclusive_group'
 
-MSG_URL_CONFLICT = 'Pass in only one of module_url or js_url, not both.'
+MSG_URL_CONFLICT = 'Pass in only one of webcomponent_path, module_url or js_url'
 
 DEFAULT_EMBED_IFRAME = False
 DEFAULT_TRUST_EXTERNAL = False
@@ -44,7 +44,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SIDEBAR_ICON, default=DEFAULT_ICON): cv.icon,
         vol.Optional(CONF_URL_PATH): cv.string,
         vol.Optional(CONF_CONFIG): dict,
-        vol.Optional(CONF_WEBCOMPONENT_PATH): cv.isfile,
+        vol.Exclusive(CONF_WEBCOMPONENT_PATH, CONF_URL_EXCLUSIVE_GROUP,
+                      msg=MSG_URL_CONFLICT): cv.string,
         vol.Exclusive(CONF_JS_URL, CONF_URL_EXCLUSIVE_GROUP,
                       msg=MSG_URL_CONFLICT): cv.string,
         vol.Exclusive(CONF_MODULE_URL, CONF_URL_EXCLUSIVE_GROUP,
