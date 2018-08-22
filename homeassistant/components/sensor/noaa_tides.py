@@ -1,17 +1,18 @@
 """
-This platform provides HA sensor support for the NOAA Tides and Currents API.
+Support for the NOAA Tides and Currents API.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.noaa_tides/
 """
-import logging
 from datetime import datetime, timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (ATTR_ATTRIBUTION, CONF_NAME, CONF_UNIT_SYSTEM)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_TIME_ZONE, CONF_UNIT_SYSTEM)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['py_noaa==0.3.0']
@@ -19,7 +20,7 @@ REQUIREMENTS = ['py_noaa==0.3.0']
 _LOGGER = logging.getLogger(__name__)
 
 CONF_STATION_ID = 'station_id'
-CONF_TIMEZONE = 'timezone'
+
 DEFAULT_ATTRIBUTION = "Data provided by NOAA"
 DEFAULT_NAME = 'NOAA Tides'
 DEFAULT_TIMEZONE = 'lst_ldt'
@@ -32,16 +33,16 @@ UNIT_SYSTEMS = ['english', 'metric']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_STATION_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_TIMEZONE, default=DEFAULT_TIMEZONE): vol.In(TIMEZONES),
+    vol.Optional(CONF_TIME_ZONE, default=DEFAULT_TIMEZONE): vol.In(TIMEZONES),
     vol.Optional(CONF_UNIT_SYSTEM): vol.In(UNIT_SYSTEMS),
 })
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the NOAATidesAndCurrents sensor."""
+    """Set up the NOAA Tides and Currents sensor."""
     station_id = config[CONF_STATION_ID]
     name = config.get(CONF_NAME)
-    timezone = config.get(CONF_TIMEZONE)
+    timezone = config.get(CONF_TIME_ZONE)
 
     if CONF_UNIT_SYSTEM in config:
         unit_system = config[CONF_UNIT_SYSTEM]
@@ -50,17 +51,18 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         unit_system = UNIT_SYSTEMS[0]
 
-    noaa_sensor = NOAATidesAndCurrentsSensor(name, station_id,
-                                             timezone, unit_system)
+    noaa_sensor = NOAATidesAndCurrentsSensor(
+        name, station_id, timezone, unit_system)
+
     noaa_sensor.update()
     if noaa_sensor.data is None:
-        _LOGGER.error("Unable to setup NOAA Tides Sensor.")
+        _LOGGER.error("Unable to setup NOAA Tides Sensor")
         return
     add_devices([noaa_sensor], True)
 
 
 class NOAATidesAndCurrentsSensor(Entity):
-    """Representation of a NOAATidesAndCurrents sensor."""
+    """Representation of a NOAA Tides and Currents sensor."""
 
     def __init__(self, name, station_id, timezone, unit_system):
         """Initialize the sensor."""
@@ -132,5 +134,5 @@ class NOAATidesAndCurrentsSensor(Entity):
             _LOGGER.debug("Recent Tide data queried with start time set to %s",
                           begin.strftime("%m-%d-%Y %H:%M"))
         except ValueError as err:
-            _LOGGER.error("Check NOAA Tides and Currents %s", err.args)
+            _LOGGER.error("Check NOAA Tides and Currents: %s", err.args)
             self.data = None
