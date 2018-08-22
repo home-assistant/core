@@ -35,6 +35,11 @@ class TrustedNetworksAuthProvider(AuthProvider):
 
     DEFAULT_TITLE = 'Trusted Networks'
 
+    @property
+    def support_mfa(self) -> bool:
+        """Trusted Networks auth provider does not support MFA."""
+        return False
+
     async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
         assert context is not None
