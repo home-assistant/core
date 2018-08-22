@@ -1369,6 +1369,9 @@ temperusb==1.5.3
 # homeassistant.components.tesla
 teslajsonpy==0.0.23
 
+# homeassistant.components.sensor.thermoworks_smoke
+thermoworks_smoke==0.1.5
+
 # homeassistant.components.thingspeak
 thingspeak==0.4.1
 
