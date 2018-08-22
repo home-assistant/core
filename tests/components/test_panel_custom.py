@@ -4,8 +4,6 @@ from unittest.mock import Mock, patch
 from homeassistant import setup
 from homeassistant.components import frontend
 
-from tests.common import assert_setup_component
-
 
 async def test_webcomponent_custom_path_not_found(hass):
     """Test if a web component is found in config panels dir."""
