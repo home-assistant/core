@@ -296,7 +296,7 @@ class TestConfig(unittest.TestCase):
     def test_remove_lib_on_upgrade(self, mock_os, mock_shutil):
         """Test removal of library on upgrade from before 0.50."""
         ha_version = '0.49.0'
-        mock_os.path.isdir = mock.Mock(return_value=True)
+        mock_os.path.isdir = mock.Mock(side_effect=[True, False])
         mock_open = mock.mock_open()
         with mock.patch('homeassistant.config.open', mock_open, create=True):
             opened_file = mock_open.return_value
@@ -306,7 +306,7 @@ class TestConfig(unittest.TestCase):
             config_util.process_ha_config_upgrade(self.hass)
             hass_path = self.hass.config.path.return_value
 
-            self.assertEqual(mock_os.path.isdir.call_count, 1)
+            self.assertEqual(mock_os.path.isdir.call_count, 2)
             self.assertEqual(
                 mock_os.path.isdir.call_args, mock.call(hass_path)
             )
@@ -830,3 +830,35 @@ async def test_disallowed_auth_provider_config(hass):
     }
     with pytest.raises(Invalid):
         await config_util.async_process_ha_core_config(hass, core_config)
+
+
+@mock.patch('homeassistant.config.os')
+@mock.patch.object(config_util, 'FILE_MIGRATION', [])
+@mock.patch('homeassistant.config.open', mock.mock_open(read_data='0.70.0'))
+def test_upgrade_calls_secure_git(mock_os, hass):
+    """Test we secure config stored in git repo's."""
+    mock_os.path.isdir = mock.Mock(return_value=True)
+
+    with mock.patch('homeassistant.config._secure_git') as mock_secure:
+        config_util.process_ha_config_upgrade(hass)
+
+    assert len(mock_secure.mock_calls) == 1
+
+
+def test_secure_git_writes_correct_entries():
+    """Test we write correct entries."""
+    hass = mock.Mock()
+
+    write_mock = mock.mock_open(read_data="""
+secrets.yaml
+""")
+
+    with mock.patch('homeassistant.config.open', write_mock), \
+        mock.patch.object(config_util, 'GIT_IGNORE',
+                          ('secrets.yaml', '.storage')):
+        config_util._secure_git(hass)
+
+    written = write_mock.mock_calls[6][1][0].split('\n')
+
+    assert 'secrets.yaml' not in written
+    assert '.storage' in written
