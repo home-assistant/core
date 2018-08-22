@@ -352,8 +352,17 @@ def process_ha_config_upgrade(hass: HomeAssistant) -> None:
     _LOGGER.info("Upgrading configuration directory from %s to %s",
                  conf_version, __version__)
 
-    if LooseVersion(conf_version) < LooseVersion('0.50'):
-        # 0.50 introduced persistent deps dir.
+    cur_version = LooseVersion(conf_version)
+
+    if (
+            # 0.50 introduced persistent deps dir.
+            cur_version < LooseVersion('0.50')
+            or
+            # 0.75.1 didn't update requirements_all when updating frontend
+            # Resulted in Docker version installing frontend 20180804.0 in deps
+            os.path.isfile('/.dockerenv') and
+            cur_version < LooseVersion('0.77.0')
+    ):
         lib_path = hass.config.path('deps')
         if os.path.isdir(lib_path):
             shutil.rmtree(lib_path)
