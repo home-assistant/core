@@ -5,9 +5,9 @@ from homeassistant.components import geo_location
 from homeassistant.components.geo_location.demo import \
     NUMBER_OF_DEMO_DEVICES, DEFAULT_UNIT_OF_MEASUREMENT, \
     DEFAULT_UPDATE_INTERVAL
-from homeassistant.const import EVENT_TIME_CHANGED, ATTR_NOW
 from homeassistant.setup import setup_component
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import get_test_home_assistant, assert_setup_component, \
+    fire_time_changed
 import homeassistant.util.dt as dt_util
 
 CONFIG = {
@@ -35,7 +35,7 @@ class TestDemoPlatform(unittest.TestCase):
         with assert_setup_component(1, geo_location.DOMAIN):
             self.assertTrue(setup_component(self.hass, geo_location.DOMAIN,
                                             CONFIG))
-        entity_ids = self.hass.states.entity_ids(geo_location.DOMAIN).copy()
+        entity_ids = self.hass.states.entity_ids(geo_location.DOMAIN)
         assert len(entity_ids) == NUMBER_OF_DEMO_DEVICES
         state_first_entry = self.hass.states.get(entity_ids[0])
         state_last_entry = self.hass.states.get(entity_ids[-1])
@@ -49,12 +49,10 @@ class TestDemoPlatform(unittest.TestCase):
         assert state_first_entry.attributes['unit_of_measurement'] == \
             DEFAULT_UNIT_OF_MEASUREMENT
         # Update (replaces 1 device).
-        self.hass.bus.fire(EVENT_TIME_CHANGED,
-                           {ATTR_NOW: dt_util.utcnow() +
-                            DEFAULT_UPDATE_INTERVAL})
+        fire_time_changed(self.hass, dt_util.utcnow() +
+                          DEFAULT_UPDATE_INTERVAL)
         self.hass.block_till_done()
-        entity_ids_updated = self.hass.states.entity_ids(geo_location.DOMAIN)\
-            .copy()
+        entity_ids_updated = self.hass.states.entity_ids(geo_location.DOMAIN)
         states_last_entry_updated = self.hass.states.get(
             entity_ids_updated[-1])
         # New entry was added to the end of the end of the array.
