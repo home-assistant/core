@@ -58,7 +58,6 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def __init__(self, heatmiser, device, name, serport):
         """Initialize the thermostat."""
         self.heatmiser = heatmiser
-        self.device = device
         self.serport = serport
         self._current_temperature = None
         self._name = name

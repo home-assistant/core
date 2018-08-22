@@ -120,7 +120,7 @@ class RadioThermostat(ClimateDevice):
 
     def __init__(self, device, hold_temp, away_temps):
         """Initialize the thermostat."""
-        self.device = device
+        self._device = device
         self._target_temperature = None
         self._current_temperature = None
         self._current_operation = STATE_IDLE
@@ -137,8 +137,8 @@ class RadioThermostat(ClimateDevice):
 
         # Fan circulate mode is only supported by the CT80 models.
         import radiotherm
-        self._is_model_ct80 = isinstance(self.device,
-                                         radiotherm.thermostat.CT80)
+        self._is_model_ct80 = isinstance(
+            self._device, radiotherm.thermostat.CT80)
 
     @property
     def supported_features(self):
@@ -194,7 +194,7 @@ class RadioThermostat(ClimateDevice):
         """Turn fan on/off."""
         code = FAN_MODE_TO_CODE.get(fan_mode, None)
         if code is not None:
-            self.device.fmode = code
+            self._device.fmode = code
 
     @property
     def current_temperature(self):
@@ -234,15 +234,15 @@ class RadioThermostat(ClimateDevice):
         # First time - get the name from the thermostat.  This is
         # normally set in the radio thermostat web app.
         if self._name is None:
-            self._name = self.device.name['raw']
+            self._name = self._device.name['raw']
 
         # Request the current state from the thermostat.
-        data = self.device.tstat['raw']
+        data = self._device.tstat['raw']
 
         current_temp = data['temp']
         if current_temp == -1:
             _LOGGER.error('%s (%s) was busy (temp == -1)', self._name,
-                          self.device.host)
+                          self._device.host)
             return
 
         # Map thermostat values into various STATE_ flags.
@@ -277,30 +277,30 @@ class RadioThermostat(ClimateDevice):
         temperature = round_temp(temperature)
 
         if self._current_operation == STATE_COOL:
-            self.device.t_cool = temperature
+            self._device.t_cool = temperature
         elif self._current_operation == STATE_HEAT:
-            self.device.t_heat = temperature
+            self._device.t_heat = temperature
         elif self._current_operation == STATE_AUTO:
             if self._tstate == STATE_COOL:
-                self.device.t_cool = temperature
+                self._device.t_cool = temperature
             elif self._tstate == STATE_HEAT:
-                self.device.t_heat = temperature
+                self._device.t_heat = temperature
 
         # Only change the hold if requested or if hold mode was turned
         # on and we haven't set it yet.
         if kwargs.get('hold_changed', False) or not self._hold_set:
             if self._hold_temp or self._away:
-                self.device.hold = 1
+                self._device.hold = 1
                 self._hold_set = True
             else:
-                self.device.hold = 0
+                self._device.hold = 0
 
     def set_time(self):
         """Set device time."""
         # Calling this clears any local temperature override and
         # reverts to the scheduled temperature.
         now = datetime.datetime.now()
-        self.device.time = {
+        self._device.time = {
             'day': now.weekday(),
             'hour': now.hour,
             'minute': now.minute
@@ -309,13 +309,13 @@ class RadioThermostat(ClimateDevice):
     def set_operation_mode(self, operation_mode):
         """Set operation mode (auto, cool, heat, off)."""
         if operation_mode in (STATE_OFF, STATE_AUTO):
-            self.device.tmode = TEMP_MODE_TO_CODE[operation_mode]
+            self._device.tmode = TEMP_MODE_TO_CODE[operation_mode]
 
         # Setting t_cool or t_heat automatically changes tmode.
         elif operation_mode == STATE_COOL:
-            self.device.t_cool = self._target_temperature
+            self._device.t_cool = self._target_temperature
         elif operation_mode == STATE_HEAT:
-            self.device.t_heat = self._target_temperature
+            self._device.t_heat = self._target_temperature
 
     def turn_away_mode_on(self):
         """Turn away on.

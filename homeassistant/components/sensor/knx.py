@@ -64,7 +64,7 @@ class KNXSensor(Entity):
 
     def __init__(self, hass, device):
         """Initialize of a KNX sensor."""
-        self.device = device
+        self._device = device
         self.hass = hass
         self.async_register_callbacks()
 
@@ -74,12 +74,12 @@ class KNXSensor(Entity):
         async def after_update_callback(device):
             """Call after device was updated."""
             await self.async_update_ha_state()
-        self.device.register_device_updated_cb(after_update_callback)
+        self._device.register_device_updated_cb(after_update_callback)
 
     @property
     def name(self):
         """Return the name of the KNX device."""
-        return self.device.name
+        return self._device.name
 
     @property
     def available(self):
@@ -94,12 +94,12 @@ class KNXSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.device.resolve_state()
+        return self._device.resolve_state()
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return self.device.unit_of_measurement()
+        return self._device.unit_of_measurement()
 
     @property
     def device_state_attributes(self):
