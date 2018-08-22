@@ -69,8 +69,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SEND_PACKET_SCHEMA = vol.Schema({
     vol.Required('packet'): cv.ensure_list,
-    vol.Optional('repeat'): cv.positive_int,
-    vol.Optional('delay'): cv.small_float
+    vol.Optional('repeat', default=1): cv.positive_int,
+    vol.Optional('delay', default=0): cv.small_float
 })
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -119,28 +119,30 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def _send_packet(call):
         """Send a packet."""
         packets = call.data.get('packet', [])
-        repeat = call.data.get('repeat', 1)
-        delay = call.data.get('delay', 0)
+        repeat = call.data.get('repeat')
+        delay = call.data.get('delay')
         if repeat == 0:
             return
-        else:
-            for i in range(0, repeat):
-                for packet in packets:
-                    for retry in range(DEFAULT_RETRY):
+        for i in range(0, repeat):
+            for packet in packets:
+                for retry in range(DEFAULT_RETRY):
+                    try:
+                        extra = len(packet) % 4
+                        if extra > 0:
+                            packet = packet + ('=' * (4 - extra))
+                        payload = b64decode(packet)
+                        yield from hass.async_add_job(
+                            broadlink_device.send_data, payload)
+                        yield from asyncio.sleep(delay)
+                        break
+                    except (socket.timeout, ValueError):
                         try:
-                            extra = len(packet) % 4
-                            if extra > 0:
-                                packet = packet + ('=' * (4 - extra))
-                            payload = b64decode(packet)
-                            yield from hass.async_add_job(broadlink_device.send_data, payload)
-                            yield from asyncio.sleep(delay)
-                            break
-                        except (socket.timeout, ValueError):
-                            try:
-                                yield from hass.async_add_job(broadlink_device.auth)
-                            except socket.timeout:
-                                if retry == DEFAULT_RETRY-1:
-                                    _LOGGER.error("Failed to send packet to device")
+                            yield from hass.async_add_job(
+                                broadlink_device.auth)
+                        except socket.timeout:
+                            if retry == DEFAULT_RETRY-1:
+                                _LOGGER.error(
+                                    "Failed to send packet to device")
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
         """Get slot name."""
