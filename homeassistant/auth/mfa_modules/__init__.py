@@ -1,13 +1,16 @@
 """Plugable auth modules for Home Assistant."""
+from datetime import timedelta
 import importlib
 import logging
-from datetime import timedelta
+import types
+from typing import Any, Dict, Optional
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import requirements
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.util.decorator import Registry
 
 MULTI_FACTOR_AUTH_MODULES = Registry()
@@ -26,7 +29,70 @@ DATA_REQS = 'mfa_auth_module_reqs_processed'
 _LOGGER = logging.getLogger(__name__)
 
 
-async def auth_mfa_module_from_config(hass, config):
+class MultiFactorAuthModule:
+    """Multi-factor Auth Module of validation function."""
+
+    DEFAULT_TITLE = 'Unnamed auth module'
+
+    def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
+        """Initialize an auth module."""
+        self.hass = hass
+        self.config = config
+
+    @property
+    def id(self) -> str:  # pylint: disable=invalid-name
+        """Return id of the auth module.
+
+        Default is same as type
+        """
+        return self.config.get(CONF_ID, self.type)
+
+    @property
+    def type(self) -> str:
+        """Return type of the module."""
+        return self.config[CONF_TYPE]  # type: ignore
+
+    @property
+    def name(self) -> str:
+        """Return the name of the auth module."""
+        return self.config.get(CONF_NAME, self.DEFAULT_TITLE)
+
+    # Implement by extending class
+
+    @property
+    def input_schema(self) -> vol.Schema:
+        """Return a voluptuous schema to define mfa auth module's input."""
+        raise NotImplementedError
+
+    @property
+    def setup_schema(self) -> Optional[vol.Schema]:
+        """Return a vol schema to validate mfa auth module's setup input.
+
+        Optional
+        """
+        return None
+
+    async def async_setup_user(self, user_id: str, setup_data: Any) -> None:
+        """Set up user for mfa auth module."""
+        raise NotImplementedError
+
+    async def async_depose_user(self, user_id: str) -> None:
+        """Remove user from mfa module."""
+        raise NotImplementedError
+
+    async def async_is_user_setup(self, user_id: str) -> bool:
+        """Return whether user is setup."""
+        raise NotImplementedError
+
+    async def async_validation(
+            self, user_id: str, user_input: Dict[str, Any]) -> bool:
+        """Return True if validation passed."""
+        raise NotImplementedError
+
+
+async def auth_mfa_module_from_config(
+        hass: HomeAssistant, config: Dict[str, Any]) \
+        -> Optional[MultiFactorAuthModule]:
     """Initialize an auth module from a config."""
     module_name = config[CONF_TYPE]
     module = await _load_mfa_module(hass, module_name)
@@ -35,16 +101,17 @@ async def auth_mfa_module_from_config(hass, config):
         return None
 
     try:
-        config = module.CONFIG_SCHEMA(config)
+        config = module.CONFIG_SCHEMA(config)  # type: ignore
     except vol.Invalid as err:
         _LOGGER.error('Invalid configuration for multi-factor module %s: %s',
                       module_name, humanize_error(config, err))
         return None
 
-    return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)
+    return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)  # type: ignore
 
 
-async def _load_mfa_module(hass, module_name):
+async def _load_mfa_module(hass: HomeAssistant, module_name: str) \
+        -> Optional[types.ModuleType]:
     """Load an mfa auth module."""
     module_path = 'homeassistant.auth.mfa_modules.{}'.format(module_name)
 
@@ -61,77 +128,14 @@ async def _load_mfa_module(hass, module_name):
     if processed and module_name in processed:
         return module
 
-    hass.data[DATA_REQS] = set()
+    processed = hass.data[DATA_REQS] = set()
 
+    # https://github.com/python/mypy/issues/1424
     req_success = await requirements.async_process_requirements(
-        hass, module_path, module.REQUIREMENTS)
+        hass, module_path, module.REQUIREMENTS)    # type: ignore
 
     if not req_success:
         return None
 
     processed.add(module_name)
     return module
-
-
-class MultiFactorAuthModule:
-    """Multi-factor Auth Module of validation function."""
-
-    DEFAULT_TITLE = 'Unnamed auth module'
-
-    def __init__(self, hass, config):
-        """Initialize an auth module."""
-        self.hass = hass
-        self.config = config
-        _LOGGER.debug('auth mfa module %s loaded.',
-                      self.type if self.id is None else "{}[{}]".format(
-                          self.type, self.id
-                      ))
-
-    @property
-    def id(self):  # pylint: disable=invalid-name
-        """Return id of the auth module.
-
-        Default is same as type
-        """
-        return self.config.get(CONF_ID, self.type)
-
-    @property
-    def type(self):
-        """Return type of the module."""
-        return self.config[CONF_TYPE]
-
-    @property
-    def name(self):
-        """Return the name of the auth module."""
-        return self.config.get(CONF_NAME, self.DEFAULT_TITLE)
-
-    # Implement by extending class
-
-    @property
-    def input_schema(self):
-        """Return a voluptuous schema to define mfa auth module's input."""
-        raise NotImplementedError
-
-    @property
-    def setup_schema(self):
-        """Return a vol schema to validate mfa auth module's setup input.
-
-        Optional
-        """
-        return None
-
-    async def async_setup_user(self, user_id, setup_data):
-        """Set up user for mfa auth module."""
-        raise NotImplementedError
-
-    async def async_depose_user(self, user_id):
-        """Remove user from mfa module."""
-        raise NotImplementedError
-
-    async def async_is_user_setup(self, user_id):
-        """Return whether user is setup."""
-        raise NotImplementedError
-
-    async def async_validation(self, user_id, user_input):
-        """Return True if validation passed."""
-        raise NotImplementedError

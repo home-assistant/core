@@ -1,7 +1,10 @@
 """Example auth module."""
 import logging
+from typing import Any, Dict, Optional
 
 import voluptuous as vol
+
+from homeassistant.core import HomeAssistant
 
 from . import MultiFactorAuthModule, MULTI_FACTOR_AUTH_MODULES, \
     MULTI_FACTOR_AUTH_MODULE_SCHEMA
@@ -22,22 +25,22 @@ class InsecureExampleModule(MultiFactorAuthModule):
 
     DEFAULT_TITLE = 'Insecure Personal Identify Number'
 
-    def __init__(self, hass, config):
+    def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._data = config['data']
 
     @property
-    def input_schema(self):
+    def input_schema(self) -> vol.Schema:
         """Validate login flow input data."""
         return vol.Schema({'pin': str})
 
     @property
-    def setup_schema(self):
+    def setup_schema(self) -> Optional[vol.Schema]:
         """Validate async_setup_user input data."""
         return vol.Schema({'pin': str})
 
-    async def async_setup_user(self, user_id, setup_data):
+    async def async_setup_user(self, user_id: str, setup_data: Any) -> None:
         """Set up user to use mfa module."""
         # data shall has been validate in caller
         pin = setup_data['pin']
@@ -50,7 +53,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
 
         self._data.append({'user_id': user_id, 'pin': pin})
 
-    async def async_depose_user(self, user_id):
+    async def async_depose_user(self, user_id: str) -> None:
         """Remove user from mfa module."""
         found = None
         for data in self._data:
@@ -60,14 +63,15 @@ class InsecureExampleModule(MultiFactorAuthModule):
         if found:
             self._data.remove(found)
 
-    async def async_is_user_setup(self, user_id):
+    async def async_is_user_setup(self, user_id: str) -> bool:
         """Return whether user is setup."""
         for data in self._data:
             if data['user_id'] == user_id:
                 return True
         return False
 
-    async def async_validation(self, user_id, user_input):
+    async def async_validation(
+            self, user_id: str, user_input: Dict[str, Any]) -> bool:
         """Return True if validation passed."""
         for data in self._data:
             if data['user_id'] == user_id:

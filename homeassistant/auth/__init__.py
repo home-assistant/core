@@ -55,7 +55,7 @@ async def auth_manager_from_config(
             *[auth_mfa_module_from_config(hass, config)
               for config in module_configs])
     else:
-        modules = []
+        modules = ()
     # So returned auth modules are in same order as config
     module_hash = OrderedDict()  # type: _MfaModuleDict
     for module in modules:
@@ -78,7 +78,8 @@ class AuthManager:
     """Manage the authentication for Home Assistant."""
 
     def __init__(self, hass: HomeAssistant, store: auth_store.AuthStore,
-                 providers: _ProviderDict, mfa_modules) -> None:
+                 providers: _ProviderDict, mfa_modules: _MfaModuleDict) \
+            -> None:
         """Initialize the auth manager."""
         self.hass = hass
         self._store = store
@@ -115,7 +116,8 @@ class AuthManager:
         """Return a list of available auth modules."""
         return list(self._mfa_modules.values())
 
-    def get_auth_mfa_module(self, module_id):
+    def get_auth_mfa_module(self, module_id: str) \
+            -> Optional[MultiFactorAuthModule]:
         """Return an multi-factor auth module, None if not found."""
         return self._mfa_modules.get(module_id)
 
@@ -127,7 +129,8 @@ class AuthManager:
         """Retrieve a user."""
         return await self._store.async_get_user(user_id)
 
-    async def async_get_user_by_credentials(self, credentials):
+    async def async_get_user_by_credentials(
+            self, credentials: models.Credentials) -> Optional[models.User]:
         """Get a user by credential, return None if not found."""
         for user in await self.async_get_users():
             for creds in user.credentials:
@@ -220,16 +223,18 @@ class AuthManager:
 
         await self._store.async_remove_credentials(credentials)
 
-    async def async_enable_user_mfa(self, user, mfa_module_id, data):
+    async def async_enable_user_mfa(self, user: models.User,
+                                    mfa_module_id: str, data: Any) -> None:
         """Enable a multi-factor auth module for user."""
-        if mfa_module_id not in self._mfa_modules:
-            raise ValueError('Unable find multi-factor auth module: {}'
-                             .format(mfa_module_id))
         if user.system_generated:
             raise ValueError('System generated users cannot enable '
                              'multi-factor auth module.')
 
         module = self.get_auth_mfa_module(mfa_module_id)
+        if module is None:
+            raise ValueError('Unable find multi-factor auth module: {}'
+                             .format(mfa_module_id))
+
         if module.setup_schema is not None:
             try:
                 # pylint: disable=not-callable
@@ -237,21 +242,23 @@ class AuthManager:
             except vol.Invalid as err:
                 raise ValueError('Data does not match schema: {}'.format(err))
 
-        return await module.async_setup_user(user.id, data)
+        await module.async_setup_user(user.id, data)
 
-    async def async_disable_user_mfa(self, user, mfa_module_id):
+    async def async_disable_user_mfa(self, user: models.User,
+                                     mfa_module_id: str) -> None:
         """Disable a multi-factor auth module for user."""
-        if mfa_module_id not in self._mfa_modules:
-            raise ValueError('Unable find multi-factor auth module: {}'
-                             .format(mfa_module_id))
         if user.system_generated:
             raise ValueError('System generated users cannot disable '
                              'multi-factor auth module.')
 
         module = self.get_auth_mfa_module(mfa_module_id)
+        if module is None:
+            raise ValueError('Unable find multi-factor auth module: {}'
+                             .format(mfa_module_id))
+
         await module.async_depose_user(user.id)
 
-    async def async_get_enabled_mfa(self, user):
+    async def async_get_enabled_mfa(self, user: models.User) -> List[str]:
         """List enabled mfa modules for user."""
         module_ids = []
         for module_id, module in self._mfa_modules.items():

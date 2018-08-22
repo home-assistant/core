@@ -1,5 +1,4 @@
 """Auth providers for Home Assistant."""
-from collections import OrderedDict
 import importlib
 import logging
 import types
@@ -15,7 +14,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from ..auth_store import AuthStore
-from ..models import Credentials, UserMeta
+from ..models import Credentials, User, UserMeta  # noqa: F401
 from ..mfa_modules import SESSION_EXPIRATION
 
 _LOGGER = logging.getLogger(__name__)
@@ -167,11 +166,11 @@ class LoginFlow(data_entry_flow.FlowHandler):
     def __init__(self, auth_provider: AuthProvider) -> None:
         """Initialize the login flow."""
         self._auth_provider = auth_provider
-        self._auth_module_id = None
-        self._auth_manager = auth_provider.hass.auth
-        self.available_mfa_modules = []
+        self._auth_module_id = None  # type: Optional[str]
+        self._auth_manager = auth_provider.hass.auth  # type: ignore
+        self.available_mfa_modules = []  # type: List
         self.created_at = dt_util.utcnow()
-        self.user = None
+        self.user = None  # type: Optional[User]
 
     async def async_step_init(
             self, user_input: Optional[Dict[str, str]] = None) \
@@ -183,7 +182,8 @@ class LoginFlow(data_entry_flow.FlowHandler):
         """
         raise NotImplementedError
 
-    async def async_step_select_mfa_module(self, user_input=None) \
+    async def async_step_select_mfa_module(
+            self, user_input: Optional[Dict[str, str]] = None) \
             -> Dict[str, Any]:
         """Handle the step of select mfa module."""
         errors = {}
@@ -199,16 +199,17 @@ class LoginFlow(data_entry_flow.FlowHandler):
             self._auth_module_id = self.available_mfa_modules[0]
             return await self.async_step_mfa()
 
-        schema = OrderedDict()
-        schema['multi_factor_auth_module'] = vol.In(self.available_mfa_modules)
-
         return self.async_show_form(
             step_id='select_mfa_module',
-            data_schema=vol.Schema(schema),
+            data_schema=vol.Schema({
+                'multi_factor_auth_module': vol.In(self.available_mfa_modules)
+            }),
             errors=errors,
         )
 
-    async def async_step_mfa(self, user_input=None) -> Dict[str, Any]:
+    async def async_step_mfa(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
         """Handle the step of mfa validation."""
         errors = {}
 
@@ -217,8 +218,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
         if auth_module is None:
             # Given an invalid input to async_step_select_mfa_module
             # will show invalid_auth_module error
-            return await self.async_step_select_mfa_module(
-                user_input={'multi_factor_auth_module': None})
+            return await self.async_step_select_mfa_module(user_input={})
 
         if user_input is not None:
             expires = self.created_at + SESSION_EXPIRATION
@@ -226,7 +226,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
                 errors['base'] = 'login_expired'
             else:
                 result = await auth_module.async_validation(
-                    self.user.id, user_input)
+                    self.user.id, user_input)  # type: ignore
                 if not result:
                     errors['base'] = 'invalid_auth'
 
