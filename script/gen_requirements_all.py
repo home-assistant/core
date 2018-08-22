@@ -104,7 +104,8 @@ TEST_REQUIREMENTS = (
 
 IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
-    'homeassistant.components.homekit.*'
+    'homeassistant.components.homekit.*',
+    'homeassistant.components.hangouts.hangups_utils'
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
