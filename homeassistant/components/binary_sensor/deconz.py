@@ -10,6 +10,8 @@ from homeassistant.components.deconz.const import (
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import (
+    CONNECTION_ZIGBEE, IDENTIFIER_MAC)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
@@ -119,14 +121,14 @@ class DeconzBinarySensor(BinarySensorDevice):
         """Description for device registry."""
         if (self._sensor.uniqueid is not None and
                 self._sensor.uniqueid.count(':') == 7):
-            serial = self._sensor.uniqueid.split('-', 1)[0]
+            mac = self._sensor.uniqueid.split('-', 1)[0]
         else:
             return None
         dev = {
-            'identifiers': [['serial', serial]],
+            'connection': [[CONNECTION_ZIGBEE, mac]],
+            'identifiers': [[IDENTIFIER_MAC, mac]],
             'manufacturer': self._sensor.manufacturer,
             'model': self._sensor.modelid,
-            'connection': [['Zigbee', serial]],
             'name': self._sensor.name,
             'sw_version': self._sensor.swversion,
         }

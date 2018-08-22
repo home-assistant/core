@@ -13,6 +13,8 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import (
+    CONNECTION_ZIGBEE, IDENTIFIER_MAC)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
@@ -205,14 +207,14 @@ class DeconzLight(Light):
         """Description for device registry."""
         if (self._light.uniqueid is not None and
                 self._light.uniqueid.count(':') == 7):
-            serial = self._light.uniqueid.split('-', 1)[0]
+            mac = self._light.uniqueid.split('-', 1)[0]
         else:
             return None
         dev = {
-            'identifiers': [['serial', serial]],
+            'connection': [[CONNECTION_ZIGBEE, mac]],
+            'identifiers': [[IDENTIFIER_MAC, mac]],
             'manufacturer': self._light.manufacturer,
             'model': self._light.modelid,
-            'connection': [['Zigbee', serial]],
             'name': self._light.name,
             'sw_version': self._light.swversion,
         }

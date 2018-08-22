@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_MAC
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.util import slugify
@@ -122,8 +123,9 @@ async def async_setup_entry(hass, config_entry):
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
-        [['bridgeid', deconz.config.bridgeid]], 'Dresden Elektronik',
-        deconz.config.modelid, [['Ethernet', deconz.config.mac]],
+        connection=[[CONNECTION_MAC, deconz.config.mac]],
+        identifiers=[[DOMAIN, deconz.config.bridgeid]],
+        manufacturer='Dresden Elektronik', model=deconz.config.modelid,
         name=deconz.config.name, sw_version=deconz.config.swversion)
 
     async def async_configure(call):

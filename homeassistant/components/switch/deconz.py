@@ -9,6 +9,8 @@ from homeassistant.components.deconz.const import (
     POWER_PLUGS, SIRENS)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import (
+    CONNECTION_ZIGBEE, IDENTIFIER_MAC)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
@@ -84,14 +86,14 @@ class DeconzSwitch(SwitchDevice):
         """Description for device registry."""
         if (self._switch.uniqueid is not None and
                 self._switch.uniqueid.count(':') == 7):
-            serial = self._switch.uniqueid.split('-', 1)[0]
+            mac = self._switch.uniqueid.split('-', 1)[0]
         else:
             return None
         dev = {
-            'identifiers': [['serial', serial]],
+            'connection': [[CONNECTION_ZIGBEE, mac]],
+            'identifiers': [[IDENTIFIER_MAC, mac]],
             'manufacturer': self._switch.manufacturer,
             'model': self._switch.modelid,
-            'connection': [['Zigbee', serial]],
             'name': self._switch.name,
             'sw_version': self._switch.swversion,
         }

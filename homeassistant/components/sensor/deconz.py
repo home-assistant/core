@@ -10,6 +10,8 @@ from homeassistant.components.deconz.const import (
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import (
+    CONNECTION_ZIGBEE, IDENTIFIER_MAC)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -139,14 +141,14 @@ class DeconzSensor(Entity):
         """"""
         if (self._sensor.uniqueid is not None and
                 self._sensor.uniqueid.count(':') == 7):
-            serial = self._sensor.uniqueid.split('-', 1)[0]
+            mac = self._sensor.uniqueid.split('-', 1)[0]
         else:
             return None
         dev = {
-            'identifiers': [['serial', serial]],
+            'connection': [[CONNECTION_ZIGBEE, mac]],
+            'identifiers': [[IDENTIFIER_MAC, mac]],
             'manufacturer': self._sensor.manufacturer,
             'model': self._sensor.modelid,
-            'connection': [['Zigbee', serial]],
             'name': self._sensor.name,
             'sw_version': self._sensor.swversion,
         }
@@ -216,14 +218,14 @@ class DeconzBattery(Entity):
         """Description for device registry."""
         if (self._device.uniqueid is not None and
                 self._device.uniqueid.count(':') == 7):
-            serial = self._device.uniqueid.split('-', 1)[0]
+            mac = self._device.uniqueid.split('-', 1)[0]
         else:
             return None
         dev = {
-            'identifiers': [['serial', serial]],
+            'connection': [[CONNECTION_ZIGBEE, mac]],
+            'identifiers': [[IDENTIFIER_MAC, mac]],
             'manufacturer': self._device.manufacturer,
             'model': self._device.modelid,
-            'connection': [['Zigbee', serial]],
             'name': self._device.name,
             'sw_version': self._device.swversion,
         }
