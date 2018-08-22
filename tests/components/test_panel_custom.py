@@ -209,4 +209,4 @@ def test_url_conflict_config(hass):
 
     with assert_setup_component(0):
         for config in to_try:
-            setup_component(hass, config)
+            setup.setup_component(hass, config)
