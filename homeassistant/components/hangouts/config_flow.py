@@ -94,7 +94,6 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
     async def async_step_final(self):
         """Handle the final step, create the config entry."""
 
-        _LOGGER.info("Write config entry")
         return self.async_create_entry(
             title=self._credentials.get_email(),
             data={
