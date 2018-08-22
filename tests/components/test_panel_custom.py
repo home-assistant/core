@@ -161,7 +161,7 @@ async def test_module_webcomponent(hass):
     assert panel.sidebar_title == 'Sidebar Title'
 
 
-def test_url_conflict_config(hass):
+async def test_url_conflict_config(hass):
     """Test config with multiple url options."""
     """ to_try = [
         {'panel_custom': {
@@ -226,8 +226,8 @@ def test_url_conflict_config(hass):
         hass, 'panel_custom', to_try[0]
     )
 
-    assert no result
-
     """ with assert_setup_component(1):
         for config in to_try:
             setup.setup_component(hass, config) """
+
+    assert not result
