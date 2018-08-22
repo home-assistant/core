@@ -125,7 +125,7 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
         if value is None:
             return False
 
-        if value in ['1', '2']:
+        if value in ('1', '2'):
             if self._state:
                 return False
             self._state = True
@@ -299,7 +299,7 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
         if value is None:
             return False
 
-        if value in ['1', '2']:
+        if value in ('1', '2'):
             if self._state:
                 return False
             self._state = True
