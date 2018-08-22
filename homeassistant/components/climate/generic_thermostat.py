@@ -325,7 +325,7 @@ class GenericThermostat(ClimateDevice):
                 # ignore `min_cycle_duration`.
                 # If the `time` argument is not none, we were invoked for
                 # keep-alive purposes, and `min_cycle_duration` is irrelevant.
-                if self.min_cycle_duration:    
+                if self.min_cycle_duration:
                     if self._is_device_active:
                         current_state = STATE_ON
                     else:
