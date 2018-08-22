@@ -145,7 +145,7 @@ async def async_setup(hass, config):
         if CONF_JS_URL in panel:
             kwargs['js_url'] = panel[CONF_JS_URL]
 
-        if CONF_MODULE_URL in panel:
+        elif CONF_MODULE_URL in panel:
             kwargs['module_url'] = panel[CONF_MODULE_URL]
 
         elif not await hass.async_add_job(os.path.isfile, panel_path):
