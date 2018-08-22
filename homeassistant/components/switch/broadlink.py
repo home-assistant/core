@@ -1,6 +1,5 @@
 """
 Support for Broadlink RM devices.
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.broadlink/
 """
@@ -68,6 +67,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int
 })
 
+SEND_PACKET_SCHEMA = vol.Schema({
+    vol.Required('packet'): cv.ensure_list,
+    vol.Optional('repeat'): cv.positive_int,
+    vol.Optional('delay'): cv.small_float
+})
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Broadlink switches."""
@@ -115,23 +119,28 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     def _send_packet(call):
         """Send a packet."""
         packets = call.data.get('packet', [])
-        for packet in packets:
-            for retry in range(DEFAULT_RETRY):
-                try:
-                    extra = len(packet) % 4
-                    if extra > 0:
-                        packet = packet + ('=' * (4 - extra))
-                    payload = b64decode(packet)
-                    yield from hass.async_add_job(
-                        broadlink_device.send_data, payload)
-                    break
-                except (socket.timeout, ValueError):
-                    try:
-                        yield from hass.async_add_job(
-                            broadlink_device.auth)
-                    except socket.timeout:
-                        if retry == DEFAULT_RETRY-1:
-                            _LOGGER.error("Failed to send packet to device")
+        repeat = call.data.get('repeat', 1)
+        delay = call.data.get('delay', 0)
+        if repeat == 0:
+            return
+        else:
+            for i in range(0, repeat):
+                for packet in packets:
+                    for retry in range(DEFAULT_RETRY):
+                        try:
+                            extra = len(packet) % 4
+                            if extra > 0:
+                                packet = packet + ('=' * (4 - extra))
+                            payload = b64decode(packet)
+                            yield from hass.async_add_job(broadlink_device.send_data, payload)
+                            yield from asyncio.sleep(delay)
+                            break
+                        except (socket.timeout, ValueError):
+                            try:
+                                yield from hass.async_add_job(broadlink_device.auth)
+                            except socket.timeout:
+                                if retry == DEFAULT_RETRY-1:
+                                    _LOGGER.error("Failed to send packet to device")
 
     def _get_mp1_slot_name(switch_friendly_name, slot):
         """Get slot name."""
@@ -145,7 +154,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                ip_addr.replace('.', '_'), _learn_command)
         hass.services.register(DOMAIN, SERVICE_SEND + '_' +
                                ip_addr.replace('.', '_'), _send_packet,
-                               vol.Schema({'packet': cv.ensure_list}))
+                               schema=SEND_PACKET_SCHEMA)
         switches = []
         for object_id, device_config in devices.items():
             switches.append(
