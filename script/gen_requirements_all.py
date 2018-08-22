@@ -34,6 +34,7 @@ COMMENT_REQUIREMENTS = (
     'credstash',
     'bme680',
     'homekit',
+    'py_noaa',
 )
 
 TEST_REQUIREMENTS = (
