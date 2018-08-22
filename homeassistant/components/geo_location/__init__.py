@@ -68,10 +68,3 @@ class GeoLocationEvent(Entity):
         if self.longitude is not None:
             data[ATTR_LONGITUDE] = self.longitude
         return data
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        if None in (self.latitude, self.longitude):
-            return None
-        return {ATTR_LATITUDE: self.latitude, ATTR_LONGITUDE: self.longitude}

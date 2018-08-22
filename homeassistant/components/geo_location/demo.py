@@ -30,8 +30,7 @@ EVENT_NAMES = ["Bushfire", "Hazard Reduction", "Grass Fire", "Burn off",
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Demo geo locations."""
-    manager = DemoManager(hass, add_devices)
-    return manager is not None
+    DemoManager(hass, add_devices)
 
 
 class DemoManager:

@@ -2,12 +2,13 @@
 import unittest
 
 from homeassistant.components import geo_location
-from homeassistant.components.geo_location.demo import DemoManager, \
-    NUMBER_OF_DEMO_DEVICES, setup_platform
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
-from homeassistant.core import callback
+from homeassistant.components.geo_location.demo import \
+    NUMBER_OF_DEMO_DEVICES, DEFAULT_UNIT_OF_MEASUREMENT, \
+    DEFAULT_UPDATE_INTERVAL
+from homeassistant.const import EVENT_TIME_CHANGED, ATTR_NOW
 from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant, assert_setup_component
+import homeassistant.util.dt as dt_util
 
 CONFIG = {
     geo_location.DOMAIN: [
@@ -29,59 +30,32 @@ class TestDemoPlatform(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_setup_via_config(self):
+    def test_setup_platform(self):
         """Test setup of demo platform via configuration."""
         with assert_setup_component(1, geo_location.DOMAIN):
             self.assertTrue(setup_component(self.hass, geo_location.DOMAIN,
                                             CONFIG))
-
-    def test_setup_platform(self):
-        """Test setup of demo platform."""
-        devices = []
-
-        @callback
-        def add_devices_callback(events):
-            """Add recorded devices."""
-            devices.extend(events)
-
-        self.assertTrue(setup_platform(self.hass, None, add_devices_callback,
-                                       None))
-        assert len(devices) == NUMBER_OF_DEMO_DEVICES
-
-    def setup_manager(self):
-        """Setup demo manager."""
-        devices = []
-
-        @callback
-        def add_devices_callback(events):
-            """Add recorded devices."""
-            devices.extend(events)
-
-        return DemoManager(self.hass, add_devices_callback)
-
-    def test_demo_manager(self):
-        """Test demo manager setup."""
-        manager = self.setup_manager()
-        devices = manager._managed_devices
-        assert len(devices) == NUMBER_OF_DEMO_DEVICES
+        entity_ids = self.hass.states.entity_ids(geo_location.DOMAIN).copy()
+        assert len(entity_ids) == NUMBER_OF_DEMO_DEVICES
+        state_first_entry = self.hass.states.get(entity_ids[0])
+        state_last_entry = self.hass.states.get(entity_ids[-1])
         # Check a single device's attributes.
-        device = devices[0]
-        self.assertAlmostEqual(device.distance, device.state, places=0)
-        self.assertAlmostEqual(device.latitude, self.hass.config.latitude,
-                               delta=1.0)
-        self.assertAlmostEqual(device.longitude, self.hass.config.longitude,
-                               delta=1.0)
-        assert device.icon is None
-        assert device.device_state_attributes == {
-            ATTR_LATITUDE: device.latitude, ATTR_LONGITUDE: device.longitude}
-
-    def test_demo_manager_update(self):
-        """Test demo manager setup with update."""
-        manager = self.setup_manager()
-        devices1 = manager._managed_devices.copy()
-        self.assertEqual(NUMBER_OF_DEMO_DEVICES, len(devices1))
+        self.assertAlmostEqual(state_first_entry.attributes['distance'],
+                               float(state_first_entry.state), places=0)
+        self.assertAlmostEqual(state_first_entry.attributes['latitude'],
+                               self.hass.config.latitude, delta=1.0)
+        self.assertAlmostEqual(state_first_entry.attributes['longitude'],
+                               self.hass.config.longitude, delta=1.0)
+        assert state_first_entry.attributes['unit_of_measurement'] == \
+            DEFAULT_UNIT_OF_MEASUREMENT
         # Update (replaces 1 device).
-        manager._update()
-        devices2 = manager._managed_devices.copy()
-        self.assertEqual(NUMBER_OF_DEMO_DEVICES, len(devices2))
-        self.assertNotEqual(devices1, devices2)
+        self.hass.bus.fire(EVENT_TIME_CHANGED,
+                           {ATTR_NOW: dt_util.utcnow() +
+                            DEFAULT_UPDATE_INTERVAL})
+        self.hass.block_till_done()
+        entity_ids_updated = self.hass.states.entity_ids(geo_location.DOMAIN)\
+            .copy()
+        states_last_entry_updated = self.hass.states.get(
+            entity_ids_updated[-1])
+        # New entry was added to the end of the end of the array.
+        assert state_last_entry is not states_last_entry_updated
