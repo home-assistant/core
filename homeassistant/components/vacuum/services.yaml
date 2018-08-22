@@ -131,3 +131,49 @@ xiaomi_remote_control_move_step:
     duration:
       description: Duration of the movement.
       example: '1500'
+
+
+xiaomi_clean_zone:
+  description: Clean a zone.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: 'vacuum.xiaomi_vacuum_cleaner'
+    x1:
+      description: X coordinate for the first corner.
+      example: '22500'
+    x2:
+      description: X coordinate for the second corner.
+      example: '28500'
+    y1:
+      description: Y coordinate for the first corner.
+      example: '22500'
+    y2:
+      description: Y coordinate for the second corner.
+      example: '28500'
+    iterations:
+      description: Number of repetitions to clean the zone.
+      example: '1'
+
+xiaomi_clean_zones:
+  description: Clean a list of zones.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: 'vacuum.xiaomi_vacuum_cleaner'
+    zones:
+      description: X coordinate for the first corner.
+      example: '[{"x1":"20000","x2":"21000","y1":"28000","y2":"29000","iterations":"1"},{"x1":"24000","x2":"27000","y1":"21000","y2":"23000","iterations":"2"}]'
+
+xiaomi_goto:
+  description: Send the vacuum to a coordinate.
+  fields:
+    entity_id:
+      description: Name of the vacuum entity.
+      example: 'vacuum.xiaomi_vacuum_cleaner'
+    x:
+      description: X coordinate.
+      example: '25500'
+    y:
+      description: Y coordinate.
+      example: '25500'

@@ -38,6 +38,9 @@ SERVICE_MOVE_REMOTE_CONTROL = 'xiaomi_remote_control_move'
 SERVICE_MOVE_REMOTE_CONTROL_STEP = 'xiaomi_remote_control_move_step'
 SERVICE_START_REMOTE_CONTROL = 'xiaomi_remote_control_start'
 SERVICE_STOP_REMOTE_CONTROL = 'xiaomi_remote_control_stop'
+SERVICE_CLEAN_ZONE = 'xiaomi_clean_zone'
+SERVICE_CLEAN_ZONES = 'xiaomi_clean_zones'
+SERVICE_GOTO = 'xiaomi_goto'
 
 FAN_SPEEDS = {
     'Quiet': 38,
@@ -60,6 +63,14 @@ ATTR_ERROR = 'error'
 ATTR_RC_DURATION = 'duration'
 ATTR_RC_ROTATION = 'rotation'
 ATTR_RC_VELOCITY = 'velocity'
+ATTR_COORD_X = 'x'
+ATTR_COORD_Y = 'y'
+ATTR_COORD_X1 = 'x1'
+ATTR_COORD_X2 = 'x2'
+ATTR_COORD_Y1 = 'y1'
+ATTR_COORD_Y2 = 'y2'
+ATTR_ZONE_ITERATIONS = 'iterations'
+ATTR_ZONE_ZONES = 'zones'
 
 SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_VELOCITY):
@@ -69,7 +80,41 @@ SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_DURATION): cv.positive_int,
 })
 
+SERVICE_SCHEMA_CLEAN_ZONE = VACUUM_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_COORD_X1):
+        vol.All(vol.Coerce(int)),
+    vol.Required(ATTR_COORD_Y1):
+        vol.All(vol.Coerce(int)),
+    vol.Required(ATTR_COORD_X2):
+        vol.All(vol.Coerce(int)),
+    vol.Required(ATTR_COORD_Y2):
+        vol.All(vol.Coerce(int)),
+    vol.Required(ATTR_ZONE_ITERATIONS):
+        vol.All(vol.Coerce(int)),
+})
+
+SERVICE_SCHEMA_CLEAN_ZONES = VACUUM_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_ZONE_ZONES):
+        vol.All(vol.Coerce(list)),
+})
+
+SERVICE_SCHEMA_GOTO = VACUUM_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_COORD_X):
+        vol.All(vol.Coerce(int)),
+    vol.Required(ATTR_COORD_Y):
+        vol.All(vol.Coerce(int)),
+})
+
 SERVICE_TO_METHOD = {
+    SERVICE_CLEAN_ZONE: {
+        'method': 'async_clean_zone',
+        'schema': SERVICE_SCHEMA_CLEAN_ZONE},
+    SERVICE_CLEAN_ZONES: {
+        'method': 'async_clean_zones',
+        'schema': SERVICE_SCHEMA_CLEAN_ZONES},
+    SERVICE_GOTO: {
+        'method': 'async_goto',
+        'schema': SERVICE_SCHEMA_GOTO},
     SERVICE_START_REMOTE_CONTROL: {'method': 'async_remote_control_start'},
     SERVICE_STOP_REMOTE_CONTROL: {'method': 'async_remote_control_stop'},
     SERVICE_MOVE_REMOTE_CONTROL: {
@@ -325,6 +370,38 @@ class MiroboVacuum(StateVacuumDevice):
         yield from self._try_command(
             "Unable to send command to the vacuum: %s",
             self._vacuum.raw_command, command, params)
+
+    @asyncio.coroutine
+    def async_clean_zone(self,
+                            x1: int = 25500,
+                            y1: int = 25500,
+                            x2: int = 25500,
+                            y2: int = 25500,
+                            iterations: int = 1):
+        """Clean a specific zone."""
+        zones = [[x1, y1, x2, y2, iterations]]
+        yield from self._try_command(
+            "Unable to start zoned cleaning: %s",
+            self._vacuum.zoned_clean, zones=zones)
+
+    @asyncio.coroutine
+    def async_clean_zones(self, zones):
+        """Clean a specific zone."""
+        zoneList = []
+        for zone in zones:
+            zoneList.append([int(zone["x1"]), int(zone["y1"]), int(zone["x2"]), int(zone["y2"]), int(zone["iterations"])])
+        yield from self._try_command(
+            "Unable to start zoned cleaning: %s",
+            self._vacuum.zoned_clean, zones=zoneList)
+
+    @asyncio.coroutine
+    def async_goto(self,
+                    x: int = 25500,
+                    y: int = 25500):
+        """Sen the vacuum to a coordinate."""
+        yield from self._try_command(
+            "Unable to start goto: %s",
+            self._vacuum.goto, x_coord=x, y_coord=y)
 
     @asyncio.coroutine
     def async_remote_control_start(self):
