@@ -17,6 +17,7 @@ CONFIG = {
     }
 }
 
+
 async def test_config_with_host_passed_to_config_entry(hass):
     """Test that configured options for a host are loaded via config entry."""
     with patch.object(hass, 'config_entries') as mock_config_entries, \
@@ -133,7 +134,7 @@ async def test_unload_entry(hass):
     entry.add_to_hass(hass)
     with patch('pydeconz.DeconzSession.async_get_state',
                return_value=mock_coro(CONFIG)), \
-         patch('pydeconz.DeconzSession.start', return_value=True):
+            patch('pydeconz.DeconzSession.start', return_value=True):
         assert await deconz.async_setup_entry(hass, entry) is True
     assert deconz.DATA_DECONZ_EVENT in hass.data
     hass.data[deconz.DATA_DECONZ_EVENT].append(Mock())
@@ -166,9 +167,9 @@ async def test_add_new_device(hass):
         }
     }
     with patch.object(deconz, 'async_dispatcher_send') as mock_dispatch_send, \
-         patch('pydeconz.DeconzSession.async_get_state',
-               return_value=mock_coro(CONFIG)), \
-         patch('pydeconz.DeconzSession.start', return_value=True):
+            patch('pydeconz.DeconzSession.async_get_state',
+                  return_value=mock_coro(CONFIG)), \
+            patch('pydeconz.DeconzSession.start', return_value=True):
         assert await deconz.async_setup_entry(hass, entry) is True
         hass.data[deconz.DOMAIN].async_event_handler(new_event)
         await hass.async_block_till_done()
@@ -205,7 +206,7 @@ async def test_do_not_allow_clip_sensor(hass):
     remote.register_async_callback = Mock()
     with patch('pydeconz.DeconzSession.async_get_state',
                return_value=mock_coro(CONFIG)), \
-         patch('pydeconz.DeconzSession.start', return_value=True):
+            patch('pydeconz.DeconzSession.start', return_value=True):
         assert await deconz.async_setup_entry(hass, entry) is True
 
     async_dispatcher_send(hass, 'deconz_new_sensor', [remote])
