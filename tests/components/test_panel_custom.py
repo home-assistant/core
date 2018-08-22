@@ -167,15 +167,6 @@ async def test_url_conflict_config(hass):
         {'panel_custom': {
             'name': 'todo-mvc',
             'module_url': '/local/bla.js',
-            'js_url': '/local/bla.js',
-            'sidebar_title': 'Sidebar Title',
-            'sidebar_icon': 'mdi:iconicon',
-            'url_path': 'nice_url',
-            'config': {
-                'hello': 'world',
-            },
-            'embed_iframe': True,
-            'trust_external_script': True
         }
         }, {'panel_custom': {
             'name': 'todo-mvc',
@@ -189,8 +180,7 @@ async def test_url_conflict_config(hass):
             },
             'embed_iframe': True,
             'trust_external_script': True
-        }
-        }, {'panel_custom': {
+        }}, {'panel_custom': {
             'name': 'todo-mvc',
             'webcomponent_path': '/local/bla.html',
             'module_url': '/local/bla.js',
@@ -203,8 +193,7 @@ async def test_url_conflict_config(hass):
             },
             'embed_iframe': True,
             'trust_external_script': True
-        }
-        }
+        }}
     ]
 
     for config in to_try:
