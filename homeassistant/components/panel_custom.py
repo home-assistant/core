@@ -46,6 +46,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_WEBCOMPONENT_PATH): cv.isfile,
         vol.Exclusive(CONF_JS_URL, CONF_MODULE_URL,
                     msg=MSG_URL_CONFLICT): cv.string,
+        vol.Exclusive(CONF_MODULE_URL, CONF_JS_URL,
+                    msg=MSG_URL_CONFLICT): cv.string,
         vol.Optional(CONF_EMBED_IFRAME,
                      default=DEFAULT_EMBED_IFRAME): cv.boolean,
         vol.Optional(CONF_TRUST_EXTERNAL_SCRIPT,
