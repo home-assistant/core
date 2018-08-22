@@ -32,7 +32,7 @@ def install_package(package: str, upgrade: bool = True,
     """
     # Not using 'import pip; pip.main([])' because it breaks the logger
     with INSTALL_LOCK:
-        if check_package_exists(package):
+        if package_loadable(package):
             return True
 
         _LOGGER.info('Attempting install of %s', package)
@@ -61,8 +61,8 @@ def install_package(package: str, upgrade: bool = True,
         return True
 
 
-def check_package_exists(package: str) -> bool:
-    """Check if a package is installed globally or in lib_dir.
+def package_loadable(package: str) -> bool:
+    """Check if a package is what will be loaded when we import it.
 
     Returns True when the requirement is met.
     Returns False when the package is not installed or doesn't meet req.
@@ -73,8 +73,14 @@ def check_package_exists(package: str) -> bool:
         # This is a zip file
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
 
-    env = pkg_resources.Environment()
-    return any(dist in req for dist in env[req.project_name])
+    for path in sys.path:
+        for dist in pkg_resources.find_distributions(path):
+            # If the project name is the same, it will be the one that is
+            # loaded when we import it.
+            if dist.project_name == req.project_name:
+                return dist in req
+
+    return False
 
 
 async def async_get_user_site(deps_dir: str) -> str:
