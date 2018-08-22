@@ -1260,7 +1260,7 @@ schiene==0.22
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid==5.5.0
+sendgrid==5.6.0
 
 # homeassistant.components.light.sensehat
 # homeassistant.components.sensor.sensehat
