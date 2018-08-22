@@ -163,49 +163,6 @@ async def test_module_webcomponent(hass):
 
 async def test_url_conflict_config(hass):
     """Test config with multiple url options."""
-    """ to_try = [
-        {'panel_custom': {
-            'name': 'todo-mvc',
-            'module_url': '/local/bla.js',
-            'js_url': '/local/bla.js',
-            'sidebar_title': 'Sidebar Title',
-            'sidebar_icon': 'mdi:iconicon',
-            'url_path': 'nice_url',
-            'config': {
-                'hello': 'world',
-            },
-            'embed_iframe': True,
-            'trust_external_script': True
-            }
-         }, {'panel_custom': {
-                'name': 'todo-mvc',
-                'webcomponent_path': '/local/bla.html',
-                'js_url': '/local/bla.js',
-                'sidebar_title': 'Sidebar Title',
-                'sidebar_icon': 'mdi:iconicon',
-                'url_path': 'nice_url',
-                'config': {
-                    'hello': 'world',
-                },
-                'embed_iframe': True,
-                'trust_external_script': True
-            }
-         }, {'panel_custom': {
-                'name': 'todo-mvc',
-                'webcomponent_path': '/local/bla.html',
-                'module_url': '/local/bla.js',
-                'js_url': '/local/bla.js',
-                'sidebar_title': 'Sidebar Title',
-                'sidebar_icon': 'mdi:iconicon',
-                'url_path': 'nice_url',
-                'config': {
-                    'hello': 'world',
-                },
-                'embed_iframe': True,
-                'trust_external_script': True
-            }
-         }
-         ]"""
     to_try = [
         {'panel_custom': {
             'name': 'todo-mvc',
@@ -220,9 +177,38 @@ async def test_url_conflict_config(hass):
             'embed_iframe': True,
             'trust_external_script': True
         }
+        }, {'panel_custom': {
+            'name': 'todo-mvc',
+            'webcomponent_path': '/local/bla.html',
+            'js_url': '/local/bla.js',
+            'sidebar_title': 'Sidebar Title',
+            'sidebar_icon': 'mdi:iconicon',
+            'url_path': 'nice_url',
+            'config': {
+                'hello': 'world',
+            },
+            'embed_iframe': True,
+            'trust_external_script': True
+        }
+        }, {'panel_custom': {
+            'name': 'todo-mvc',
+            'webcomponent_path': '/local/bla.html',
+            'module_url': '/local/bla.js',
+            'js_url': '/local/bla.js',
+            'sidebar_title': 'Sidebar Title',
+            'sidebar_icon': 'mdi:iconicon',
+            'url_path': 'nice_url',
+            'config': {
+                'hello': 'world',
+            },
+            'embed_iframe': True,
+            'trust_external_script': True
+        }
         }
     ]
 
-    result = await setup.async_setup_component(hass, 'panel_custom', to_try[0])
-
-    assert not result
+    for config in to_try:
+        result = await setup.async_setup_component(
+            hass, 'panel_custom', config
+        )
+        assert not result
