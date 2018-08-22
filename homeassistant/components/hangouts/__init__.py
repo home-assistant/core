@@ -78,7 +78,6 @@ async def async_setup_entry(hass, config):
 async def async_unload_entry(hass, _):
     """Unload a config entry."""
 
-    bot = hass.data[DOMAIN][CONF_BOT]
-    del hass.data[DOMAIN][CONF_BOT]
+    bot = hass.data[DOMAIN].pop(CONF_BOT)
     await bot.async_disconnect()
     return True
