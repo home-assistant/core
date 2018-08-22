@@ -3,7 +3,7 @@ from unittest.mock import Mock
 
 import pytest
 
-from homeassistant import auth
+from homeassistant import auth, data_entry_flow
 from homeassistant.auth import auth_store
 from homeassistant.auth.providers import legacy_api_password
 
@@ -51,17 +51,6 @@ async def test_only_one_credentials(manager, provider):
     assert credentials2.is_new is False
 
 
-async def test_verify_not_load(hass, provider):
-    """Test we raise if http module not load."""
-    with pytest.raises(ValueError):
-        provider.async_validate_login('test-password')
-    hass.http = Mock(api_password=None)
-    with pytest.raises(ValueError):
-        provider.async_validate_login('test-password')
-    hass.http = Mock(api_password='test-password')
-    provider.async_validate_login('test-password')
-
-
 async def test_verify_login(hass, provider):
     """Test login using legacy api password auth provider."""
     hass.http = Mock(api_password='test-password')
@@ -69,3 +58,45 @@ async def test_verify_login(hass, provider):
     hass.http = Mock(api_password='test-password')
     with pytest.raises(legacy_api_password.InvalidAuthError):
         provider.async_validate_login('invalid-password')
+
+
+async def test_login_flow_abort(hass, manager):
+    """Test wrong config."""
+    for http in (
+        None,
+        Mock(api_password=None),
+        Mock(api_password=''),
+    ):
+        hass.http = http
+
+        result = await manager.login_flow.async_init(
+            handler=('legacy_api_password', None)
+        )
+        assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result['reason'] == 'no_api_password_set'
+
+
+async def test_login_flow_works(hass, manager):
+    """Test wrong config."""
+    hass.http = Mock(api_password='hello')
+    result = await manager.login_flow.async_init(
+        handler=('legacy_api_password', None)
+    )
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+
+    result = await manager.login_flow.async_configure(
+        flow_id=result['flow_id'],
+        user_input={
+            'password': 'not-hello'
+        }
+    )
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['errors']['base'] == 'invalid_auth'
+
+    result = await manager.login_flow.async_configure(
+        flow_id=result['flow_id'],
+        user_input={
+            'password': 'hello'
+        }
+    )
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
