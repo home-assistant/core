@@ -65,28 +65,12 @@
         </item>
         <!-- Entry with unsupported geometry - Line -->
         <item>
-            <title>Title 7</title>
-            <description>Description 7</description>
-            <category>Category 7</category>
-            <pubDate>Sun, 30 Jul 2017 09:30:00 UTC</pubDate>
-            <guid>GUID 7</guid>
+            <title>Title 1</title>
+            <description>Description 1</description>
+            <category>Category 1</category>
+            <pubDate>Sun, 30 Jul 2017 09:00:00 UTC</pubDate>
+            <guid>GUID 1</guid>
             <georss:line>45.256 -110.45 46.46 -109.48 43.84 -109.86</georss:line>
-        </item>
-        <!-- Entry within vicinity of home coordinates, but without title -->
-        <item>
-            <description>Description 8</description>
-            <category>Category 8</category>
-            <pubDate>Sun, 30 Jul 2017 09:35:00 UTC</pubDate>
-            <guid>GUID 8</guid>
-            <georss:point>-32.916667 151.75</georss:point>
-        </item>
-        <!-- Entry within vicinity of home coordinates, but without category -->
-        <item>
-            <title>Title 9</title>
-            <description>Description 9</description>
-            <pubDate>Sun, 30 Jul 2017 09:40:00 UTC</pubDate>
-            <guid>GUID 9</guid>
-            <georss:point>-32.916667 151.75</georss:point>
         </item>
     </channel>
 </rss>
