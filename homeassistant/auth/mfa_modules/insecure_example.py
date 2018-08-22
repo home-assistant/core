@@ -40,7 +40,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
         """Validate async_setup_user input data."""
         return vol.Schema({'pin': str})
 
-    async def async_setup_user(self, user_id: str, setup_data: Any) -> None:
+    async def async_setup_user(self, user_id: str, setup_data: Any) -> Any:
         """Set up user to use mfa module."""
         # data shall has been validate in caller
         pin = setup_data['pin']
