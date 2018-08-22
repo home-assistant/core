@@ -10,7 +10,7 @@
             "invalid_2fa_method": "Invalig 2FA Method (Verify on Phone)."
         },
         "step": {
-            "init": {
+            "user": {
                 "data": {
                     "email": "E-Mail Address",
                     "password": "Password"

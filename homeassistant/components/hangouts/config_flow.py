@@ -59,7 +59,7 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
                     errors['base'] = 'invalid_login'
 
         return self.async_show_form(
-            step_id='init',
+            step_id='user',
             data_schema=vol.Schema({
                 vol.Required(CONF_EMAIL): str,
                 vol.Required(CONF_PASSWORD): str
@@ -86,7 +86,7 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
         return self.async_show_form(
             step_id=CONF_2FA,
             data_schema=vol.Schema({
-                vol.Required("2fa"): str,
+                vol.Required(CONF_2FA): str,
             }),
             errors=errors
         )

@@ -17,7 +17,7 @@
                 "description": "",
                 "title": "2-Factor-Authorization"
             },
-            "init": {
+            "user": {
                 "data": {
                     "email": "E-Mail Address",
                     "password": "Password"

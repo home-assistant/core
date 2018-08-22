@@ -2,12 +2,13 @@
 import logging
 import re
 
+from homeassistant.helpers import dispatcher
 from .const import (DOMAIN,
                     CONF_NAME, CONF_CONVERSATIONS, CONF_WORD, CONF_EXPRESSION,
                     EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_COMMAND,
                     EVENT_HANGOUTS_USERS_CHANGED,
                     EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
-                    ATTR_MESSAGE, ATTR_TARGET)
+                    ATTR_MESSAGE, ATTR_TARGET, EVENT_HANGOUTS_DISCONNECTED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +37,7 @@ class HangoutsBot:
                 return conv
         return None
 
-    def update_conversaition_commands(self, _):
+    def async_update_conversation_commands(self, _):
         """Refresh the commands for every conversation."""
 
         self._word_commands = {}
@@ -142,13 +143,13 @@ class HangoutsBot:
     def _on_connect(self):
         _LOGGER.info('Connected!')
         self._connected = True
-        self.hass.bus.fire(EVENT_HANGOUTS_CONNECTED)
+        self.hass.bus.async_fire(EVENT_HANGOUTS_CONNECTED)
 
     def _on_disconnect(self):
         """Handle disconnecting."""
         _LOGGER.info('Connection lost!')
         self._connected = False
-        self.hass.bus.fire('hangouts.disconnected')
+        self.hass.bus.async_fire(EVENT_HANGOUTS_DISCONNECTED)
 
     async def async_disconnect(self):
         """Disconnect the client if it is connected."""
@@ -212,11 +213,13 @@ class HangoutsBot:
         self.hass.states.async_set("{}.users".format(DOMAIN),
                                    len(self._user_list.get_all()),
                                    attributes=users)
-        self.hass.bus.fire(EVENT_HANGOUTS_USERS_CHANGED, users)
         self.hass.states.async_set("{}.conversations".format(DOMAIN),
                                    len(self._conversation_list.get_all()),
                                    attributes=conversations)
-        self.hass.bus.fire(EVENT_HANGOUTS_CONVERSATIONS_CHANGED, conversations)
+        #self.hass.bus.fire(EVENT_HANGOUTS_USERS_CHANGED, users)
+        dispatcher.async_dispatcher_send(self.hass,
+                                         EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
+                                         conversations)
 
     async def async_handle_send_message(self, service):
         """Handle the send_message service."""

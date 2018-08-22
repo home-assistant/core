@@ -24,6 +24,7 @@ CONF_EXPRESSION = 'expression'
 EVENT_HANGOUTS_COMMAND = 'hangouts_command'
 
 EVENT_HANGOUTS_CONNECTED = 'hangouts_connected'
+EVENT_HANGOUTS_DISCONNECTED = 'hangouts_disconnected'
 EVENT_HANGOUTS_USERS_CHANGED = 'hangouts_users_changed'
 EVENT_HANGOUTS_CONVERSATIONS_CHANGED = 'hangouts_conversations_changed'
 

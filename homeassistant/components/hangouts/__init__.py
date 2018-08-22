@@ -7,6 +7,7 @@ https://home-assistant.io/components/hangouts/
 import logging
 
 from homeassistant import config_entries
+from homeassistant.helpers import dispatcher
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 from .const import (DOMAIN,
@@ -54,11 +55,15 @@ async def async_setup_entry(hass, config):
         _LOGGER.error("Hangouts failed to log in: %s", str(exception))
         return False
 
-    bot.hass.bus.async_listen(EVENT_HANGOUTS_CONNECTED,
-                              bot.async_handle_update_users_and_conversations)
-    bot.hass.bus.async_listen(EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
-                              bot.update_conversaition_commands)
-    bot.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
+    hass.bus.async_listen(EVENT_HANGOUTS_CONNECTED,
+        bot.async_handle_update_users_and_conversations)
+
+    dispatcher.async_dispatcher_connect(
+        hass,
+        EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
+        bot.async_update_conversation_commands)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                    bot.async_handle_hass_stop)
 
     await bot.async_connect()
