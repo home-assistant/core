@@ -124,7 +124,7 @@ async def test_new_users_populate_values(hass, data):
 
     manager = await auth_manager_from_config(hass, [{
         'type': 'homeassistant'
-    }])
+    }], [])
     provider = manager.auth_providers[0]
     credentials = await provider.async_get_or_create_credentials({
         'username': 'hello'

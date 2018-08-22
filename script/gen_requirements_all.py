@@ -165,8 +165,10 @@ def gather_modules():
 
     errors = []
 
-    for package in sorted(explore_module('homeassistant.components', True) +
-                          explore_module('homeassistant.scripts', True)):
+    for package in sorted(
+            explore_module('homeassistant.components', True) +
+            explore_module('homeassistant.scripts', True) +
+            explore_module('homeassistant.auth', True)):
         try:
             module = importlib.import_module(package)
         except ImportError:

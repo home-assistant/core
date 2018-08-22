@@ -9,12 +9,13 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant import data_entry_flow, requirements
 from homeassistant.core import callback, HomeAssistant
-from homeassistant.const import CONF_TYPE, CONF_NAME, CONF_ID
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from ..auth_store import AuthStore
-from ..models import Credentials, UserMeta
+from ..models import Credentials, User, UserMeta  # noqa: F401
+from ..mfa_modules import SESSION_EXPIRATION
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = 'auth_prov_reqs_processed'
@@ -58,6 +59,11 @@ class AuthProvider:
     def name(self) -> str:
         """Return the name of the auth provider."""
         return self.config.get(CONF_NAME, self.DEFAULT_TITLE)
+
+    @property
+    def support_mfa(self) -> bool:
+        """Return whether multi-factor auth supported by the auth provider."""
+        return True
 
     async def async_credentials(self) -> List[Credentials]:
         """Return all credentials of this provider."""
@@ -160,8 +166,11 @@ class LoginFlow(data_entry_flow.FlowHandler):
     def __init__(self, auth_provider: AuthProvider) -> None:
         """Initialize the login flow."""
         self._auth_provider = auth_provider
+        self._auth_module_id = None  # type: Optional[str]
+        self._auth_manager = auth_provider.hass.auth  # type: ignore
+        self.available_mfa_modules = []  # type: List
         self.created_at = dt_util.utcnow()
-        self.user = None
+        self.user = None  # type: Optional[User]
 
     async def async_step_init(
             self, user_input: Optional[Dict[str, str]] = None) \
@@ -172,6 +181,63 @@ class LoginFlow(data_entry_flow.FlowHandler):
         Return await self.async_finish(flow_result) if login init step pass.
         """
         raise NotImplementedError
+
+    async def async_step_select_mfa_module(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
+        """Handle the step of select mfa module."""
+        errors = {}
+
+        if user_input is not None:
+            auth_module = user_input.get('multi_factor_auth_module')
+            if auth_module in self.available_mfa_modules:
+                self._auth_module_id = auth_module
+                return await self.async_step_mfa()
+            errors['base'] = 'invalid_auth_module'
+
+        if len(self.available_mfa_modules) == 1:
+            self._auth_module_id = self.available_mfa_modules[0]
+            return await self.async_step_mfa()
+
+        return self.async_show_form(
+            step_id='select_mfa_module',
+            data_schema=vol.Schema({
+                'multi_factor_auth_module': vol.In(self.available_mfa_modules)
+            }),
+            errors=errors,
+        )
+
+    async def async_step_mfa(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
+        """Handle the step of mfa validation."""
+        errors = {}
+
+        auth_module = self._auth_manager.get_auth_mfa_module(
+            self._auth_module_id)
+        if auth_module is None:
+            # Given an invalid input to async_step_select_mfa_module
+            # will show invalid_auth_module error
+            return await self.async_step_select_mfa_module(user_input={})
+
+        if user_input is not None:
+            expires = self.created_at + SESSION_EXPIRATION
+            if dt_util.utcnow() > expires:
+                errors['base'] = 'login_expired'
+            else:
+                result = await auth_module.async_validation(
+                    self.user.id, user_input)  # type: ignore
+                if not result:
+                    errors['base'] = 'invalid_auth'
+
+            if not errors:
+                return await self.async_finish(self.user)
+
+        return self.async_show_form(
+            step_id='mfa',
+            data_schema=auth_module.input_schema,
+            errors=errors,
+        )
 
     async def async_finish(self, flow_result: Any) -> Dict:
         """Handle the pass of login flow."""
