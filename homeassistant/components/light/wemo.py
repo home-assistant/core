@@ -76,39 +76,39 @@ class WemoLight(Light):
     def __init__(self, device, update_lights):
         """Initialize the WeMo light."""
         self.light_id = device.name
-        self.device = device
+        self.wemo = device
         self.update_lights = update_lights
 
     @property
     def unique_id(self):
         """Return the ID of this light."""
-        return self.device.uniqueID
+        return self.wemo.uniqueID
 
     @property
     def name(self):
         """Return the name of the light."""
-        return self.device.name
+        return self.wemo.name
 
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self.device.state.get('level', 255)
+        return self.wemo.state.get('level', 255)
 
     @property
     def hs_color(self):
         """Return the hs color values of this light."""
-        xy_color = self.device.state.get('color_xy')
+        xy_color = self.wemo.state.get('color_xy')
         return color_util.color_xy_to_hs(*xy_color) if xy_color else None
 
     @property
     def color_temp(self):
         """Return the color temperature of this light in mireds."""
-        return self.device.state.get('temperature_mireds')
+        return self.wemo.state.get('temperature_mireds')
 
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self.device.state['onoff'] != 0
+        return self.wemo.state['onoff'] != 0
 
     @property
     def supported_features(self):
@@ -118,7 +118,7 @@ class WemoLight(Light):
     @property
     def available(self):
         """Return if light is available."""
-        return self.device.state['available']
+        return self.wemo.state['available']
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
@@ -128,23 +128,23 @@ class WemoLight(Light):
 
         if hs_color is not None:
             xy_color = color_util.color_hs_to_xy(*hs_color)
-            self.device.set_color(xy_color, transition=transitiontime)
+            self.wemo.set_color(xy_color, transition=transitiontime)
 
         if ATTR_COLOR_TEMP in kwargs:
             colortemp = kwargs[ATTR_COLOR_TEMP]
-            self.device.set_temperature(mireds=colortemp,
-                                        transition=transitiontime)
+            self.wemo.set_temperature(mireds=colortemp,
+                                      transition=transitiontime)
 
         if ATTR_BRIGHTNESS in kwargs:
             brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness or 255)
-            self.device.turn_on(level=brightness, transition=transitiontime)
+            self.wemo.turn_on(level=brightness, transition=transitiontime)
         else:
-            self.device.turn_on(transition=transitiontime)
+            self.wemo.turn_on(transition=transitiontime)
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
         transitiontime = int(kwargs.get(ATTR_TRANSITION, 0))
-        self.device.turn_off(transition=transitiontime)
+        self.wemo.turn_off(transition=transitiontime)
 
     def update(self):
         """Synchronize state with bridge."""

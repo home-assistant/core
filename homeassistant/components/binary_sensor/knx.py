@@ -105,7 +105,7 @@ class KNXBinarySensor(BinarySensorDevice):
 
     def __init__(self, hass, device):
         """Initialize of KNX binary sensor."""
-        self.device = device
+        self._device = device
         self.hass = hass
         self.async_register_callbacks()
         self.automations = []
@@ -116,12 +116,12 @@ class KNXBinarySensor(BinarySensorDevice):
         async def after_update_callback(device):
             """Call after device was updated."""
             await self.async_update_ha_state()
-        self.device.register_device_updated_cb(after_update_callback)
+        self._device.register_device_updated_cb(after_update_callback)
 
     @property
     def name(self):
         """Return the name of the KNX device."""
-        return self.device.name
+        return self._device.name
 
     @property
     def available(self):
@@ -136,9 +136,9 @@ class KNXBinarySensor(BinarySensorDevice):
     @property
     def device_class(self):
         """Return the class of this sensor."""
-        return self.device.device_class
+        return self._device.device_class
 
     @property
     def is_on(self):
         """Return true if the binary sensor is on."""
-        return self.device.is_on()
+        return self._device.is_on()

@@ -166,11 +166,6 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Return specific soundtouch configuration."""
         return self._config
 
-    @property
-    def device(self):
-        """Return Soundtouch device."""
-        return self._device
-
     def update(self):
         """Retrieve the latest data."""
         self._status = self._device.status()
@@ -323,8 +318,8 @@ class SoundTouchDevice(MediaPlayerDevice):
             _LOGGER.warning("Unable to create zone without slaves")
         else:
             _LOGGER.info("Creating zone with master %s",
-                         self.device.config.name)
-            self.device.create_zone([slave.device for slave in slaves])
+                         self._device.config.name)
+            self._device.create_zone([slave.device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
         """
@@ -341,8 +336,8 @@ class SoundTouchDevice(MediaPlayerDevice):
             _LOGGER.warning("Unable to find slaves to remove")
         else:
             _LOGGER.info("Removing slaves from zone with master %s",
-                         self.device.config.name)
-            self.device.remove_zone_slave([slave.device for slave in slaves])
+                         self._device.config.name)
+            self._device.remove_zone_slave([slave.device for slave in slaves])
 
     def add_zone_slave(self, slaves):
         """
@@ -357,5 +352,5 @@ class SoundTouchDevice(MediaPlayerDevice):
             _LOGGER.warning("Unable to find slaves to add")
         else:
             _LOGGER.info("Adding slaves to zone with master %s",
-                         self.device.config.name)
-            self.device.add_zone_slave([slave.device for slave in slaves])
+                         self._device.config.name)
+            self._device.add_zone_slave([slave.device for slave in slaves])
