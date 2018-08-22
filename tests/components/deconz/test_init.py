@@ -94,6 +94,8 @@ async def test_setup_entry_successful(hass):
     with patch.object(hass, 'async_create_task') as mock_add_job, \
         patch.object(hass, 'config_entries') as mock_config_entries, \
         patch('pydeconz.DeconzSession.async_load_parameters',
+              return_value=mock_coro(True)), \
+        patch('homeassistant.helpers.device_registry.async_get_registry',
               return_value=mock_coro(True)):
         assert await deconz.async_setup_entry(hass, entry) is True
     assert hass.data[deconz.DOMAIN]
@@ -113,12 +115,14 @@ async def test_setup_entry_successful(hass):
         (entry, 'switch')
 
 
-async def test_unload_entry(hass):
+async def test_unload_entry(hass, aioclient_mock):
     """Test being able to unload an entry."""
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
     with patch('pydeconz.DeconzSession.async_load_parameters',
-               return_value=mock_coro(True)):
+               return_value=mock_coro(True)), \
+        patch('homeassistant.helpers.device_registry.async_get_registry',
+              return_value=mock_coro(True)):
         assert await deconz.async_setup_entry(hass, entry) is True
     assert deconz.DATA_DECONZ_EVENT in hass.data
     hass.data[deconz.DATA_DECONZ_EVENT].append(Mock())
