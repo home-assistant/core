@@ -51,7 +51,7 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
 
                 return await self.async_step_final()
             except GoogleAuthError as err:
-                if err.__class__ is Google2FAError:
+                if isinstance(err, Google2FAError):
                     return await self.async_step_2fa()
                 msg = str(err)
                 if msg == 'Unknown verification code input':

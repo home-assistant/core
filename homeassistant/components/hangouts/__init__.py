@@ -6,6 +6,8 @@ https://home-assistant.io/components/hangouts/
 """
 import logging
 
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import dispatcher
@@ -51,8 +53,10 @@ async def async_setup_entry(hass, config):
         _LOGGER.error("Hangouts failed to log in: %s", str(exception))
         return False
 
-    hass.bus.async_listen(EVENT_HANGOUTS_CONNECTED,
-                          bot.async_handle_update_users_and_conversations)
+    dispatcher.async_dispatcher_connect(
+        hass,
+        EVENT_HANGOUTS_CONNECTED,
+        bot.async_handle_update_users_and_conversations)
 
     dispatcher.async_dispatcher_connect(
         hass,
@@ -71,7 +75,7 @@ async def async_setup_entry(hass, config):
                                  SERVICE_UPDATE,
                                  bot.
                                  async_handle_update_users_and_conversations,
-                                 schema=None)
+                                 schema=vol.Schema({}))
 
     return True
 

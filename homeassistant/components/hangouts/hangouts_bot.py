@@ -139,15 +139,16 @@ class HangoutsBot:
         self.hass.loop.create_task(self._client.connect())
 
     def _on_connect(self):
-        _LOGGER.info('Connected!')
+        _LOGGER.debug('Connected!')
         self._connected = True
-        self.hass.bus.async_fire(EVENT_HANGOUTS_CONNECTED)
+        dispatcher.async_dispatcher_send(self.hass, EVENT_HANGOUTS_CONNECTED)
 
     def _on_disconnect(self):
         """Handle disconnecting."""
-        _LOGGER.info('Connection lost!')
+        _LOGGER.debug('Connection lost!')
         self._connected = False
-        self.hass.bus.async_fire(EVENT_HANGOUTS_DISCONNECTED)
+        dispatcher.async_dispatcher_send(self.hass,
+                                         EVENT_HANGOUTS_DISCONNECTED)
 
     async def async_disconnect(self):
         """Disconnect the client if it is connected."""
@@ -214,7 +215,6 @@ class HangoutsBot:
         self.hass.states.async_set("{}.conversations".format(DOMAIN),
                                    len(self._conversation_list.get_all()),
                                    attributes=conversations)
-        # self.hass.bus.fire(EVENT_HANGOUTS_USERS_CHANGED, users)
         dispatcher.async_dispatcher_send(self.hass,
                                          EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
                                          conversations)
@@ -224,6 +224,6 @@ class HangoutsBot:
         await self._async_send_message(service.data[ATTR_MESSAGE],
                                        service.data[ATTR_TARGET])
 
-    async def async_handle_update_users_and_conversations(self, _):
+    async def async_handle_update_users_and_conversations(self, _=None):
         """Handle the update_users_and_conversations service."""
         await self._async_list_conversations()
