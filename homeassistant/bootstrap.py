@@ -87,7 +87,7 @@ async def async_from_config_dict(config: Dict[str, Any],
                              log_no_color)
 
     core_config = config.get(core.DOMAIN, {})
-    has_api_password = bool(config.get('http', {}).get('api_password'))
+    has_api_password = bool((config.get('http') or {}).get('api_password'))
 
     try:
         await conf_util.async_process_ha_core_config(
