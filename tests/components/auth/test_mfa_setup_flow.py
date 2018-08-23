@@ -81,7 +81,7 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
 
     result = await client.receive_json()
     assert result['success'] is False
-    assert result['error']['code'] == 'disable_failed'
+    assert result['error']['code'] == 'no_module'
 
     await client.send_json({
         'id': 14,
