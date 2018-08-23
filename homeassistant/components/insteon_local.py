@@ -10,12 +10,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup(hass, config):
-    """Setup the insteon_local component.
+    """Set up the insteon_local component.
 
-    This component is depreciated as of release 0.77 and should be removed in
+    This component is deprecated as of release 0.77 and should be removed in
     release 0.90.
     """
-    _LOGGER.warning('The insteon_local comonent has been replaced by '
+    _LOGGER.warning('The insteon_local component has been replaced by '
                     'the insteon component')
     _LOGGER.warning('Please see https://home-assistant.io/components/insteon')
 
