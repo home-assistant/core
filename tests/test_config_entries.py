@@ -1,13 +1,16 @@
 """Test the config manager."""
 import asyncio
-from unittest.mock import MagicMock, patch, mock_open
+from datetime import timedelta
+from unittest.mock import MagicMock, patch
 
 import pytest
 
 from homeassistant import config_entries, loader, data_entry_flow
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt
 
-from tests.common import MockModule, mock_coro, MockConfigEntry
+from tests.common import (
+    MockModule, mock_coro, MockConfigEntry, async_fire_time_changed)
 
 
 @pytest.fixture
@@ -15,6 +18,7 @@ def manager(hass):
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
     manager._entries = []
+    manager._store._async_ensure_stop_listener = lambda: None
     hass.config_entries = manager
     return manager
 
@@ -104,7 +108,7 @@ def test_add_entry_calls_setup_entry(hass, manager):
         VERSION = 1
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='title',
                 data={
@@ -112,7 +116,8 @@ def test_add_entry_calls_setup_entry(hass, manager):
                 })
 
     with patch.dict(config_entries.HANDLERS, {'comp': TestFlow, 'beer': 5}):
-        yield from manager.flow.async_init('comp')
+        yield from manager.flow.async_init(
+            'comp', context={'source': config_entries.SOURCE_USER})
         yield from hass.async_block_till_done()
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -148,16 +153,17 @@ def test_domains_gets_uniques(manager):
     assert manager.async_domains() == ['test', 'test2', 'test3']
 
 
-@asyncio.coroutine
-def test_saving_and_loading(hass):
+async def test_saving_and_loading(hass):
     """Test that we're saving and loading correctly."""
-    loader.set_component(hass, 'test', MockModule('test'))
+    loader.set_component(
+        hass, 'test',
+        MockModule('test', async_setup_entry=lambda *args: mock_coro(True)))
 
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='Test Title',
                 data={
@@ -166,13 +172,14 @@ def test_saving_and_loading(hass):
             )
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
-        yield from hass.config_entries.flow.async_init('test')
+        await hass.config_entries.flow.async_init(
+            'test', context={'source': config_entries.SOURCE_USER})
 
     class Test2Flow(data_entry_flow.FlowHandler):
         VERSION = 3
 
         @asyncio.coroutine
-        def async_step_init(self, user_input=None):
+        def async_step_user(self, user_input=None):
             return self.async_create_entry(
                 title='Test 2 Title',
                 data={
@@ -180,28 +187,19 @@ def test_saving_and_loading(hass):
                 }
             )
 
-    json_path = 'homeassistant.util.json.open'
-
     with patch('homeassistant.config_entries.HANDLERS.get',
-               return_value=Test2Flow), \
-            patch.object(config_entries, 'SAVE_DELAY', 0):
-        yield from hass.config_entries.flow.async_init('test')
+               return_value=Test2Flow):
+        await hass.config_entries.flow.async_init(
+            'test', context={'source': config_entries.SOURCE_USER})
 
-    with patch(json_path, mock_open(), create=True) as mock_write:
-        # To trigger the call_later
-        yield from asyncio.sleep(0, loop=hass.loop)
-        # To execute the save
-        yield from hass.async_block_till_done()
-
-    # Mock open calls are: open file, context enter, write, context leave
-    written = mock_write.mock_calls[2][1][0]
+    # To trigger the call_later
+    async_fire_time_changed(hass, dt.utcnow() + timedelta(seconds=1))
+    # To execute the save
+    await hass.async_block_till_done()
 
     # Now load written data in new config manager
     manager = config_entries.ConfigEntries(hass, {})
-
-    with patch('os.path.isfile', return_value=True), \
-            patch(json_path, mock_open(read_data=written), create=True):
-        yield from manager.async_load()
+    await manager.async_load()
 
     # Ensure same order
     for orig, loaded in zip(hass.config_entries.async_entries(),
@@ -233,7 +231,7 @@ async def test_forward_entry_sets_up_component(hass):
 
 
 async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
-    """Test we do not setup entry if component setup fails."""
+    """Test we do not set up entry if component setup fails."""
     entry = MockConfigEntry(domain='original')
 
     mock_setup = MagicMock(return_value=mock_coro(False))
@@ -271,7 +269,7 @@ async def test_discovery_notification(hass):
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
         result = await hass.config_entries.flow.async_init(
-            'test', source=data_entry_flow.SOURCE_DISCOVERY)
+            'test', context={'source': config_entries.SOURCE_DISCOVERY})
 
     await hass.async_block_till_done()
     state = hass.states.get('persistent_notification.config_entry_discovery')
@@ -299,8 +297,18 @@ async def test_discovery_notification_not_created(hass):
 
     with patch.dict(config_entries.HANDLERS, {'test': TestFlow}):
         await hass.config_entries.flow.async_init(
-            'test', source=data_entry_flow.SOURCE_DISCOVERY)
+            'test', context={'source': config_entries.SOURCE_DISCOVERY})
 
     await hass.async_block_till_done()
     state = hass.states.get('persistent_notification.config_entry_discovery')
     assert state is None
+
+
+async def test_loading_default_config(hass):
+    """Test loading the default config."""
+    manager = config_entries.ConfigEntries(hass, {})
+
+    with patch('homeassistant.util.json.open', side_effect=FileNotFoundError):
+        await manager.async_load()
+
+    assert len(manager.async_entries()) == 0

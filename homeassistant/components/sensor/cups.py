@@ -128,8 +128,8 @@ class CupsSensor(Entity):
         self._printer = self.data.printers.get(self._name)
 
 
-# pylint: disable=import-error, no-name-in-module
-class CupsData(object):
+# pylint: disable=no-name-in-module
+class CupsData:
     """Get the latest data from CUPS and update the state."""
 
     def __init__(self, host, port):

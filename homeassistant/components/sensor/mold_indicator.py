@@ -10,7 +10,7 @@ import math
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.util as util
+from homeassistant import util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_state_change
 from homeassistant.const import (
@@ -41,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up MoldIndicator sensor."""
     name = config.get(CONF_NAME, DEFAULT_NAME)
@@ -108,11 +107,10 @@ class MoldIndicator(Entity):
         # convert to celsius if necessary
         if unit == TEMP_FAHRENHEIT:
             return util.temperature.fahrenheit_to_celsius(temp)
-        elif unit == TEMP_CELSIUS:
+        if unit == TEMP_CELSIUS:
             return temp
-        else:
-            _LOGGER.error("Temp sensor has unsupported unit: %s (allowed: %s, "
-                          "%s)", unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+        _LOGGER.error("Temp sensor has unsupported unit: %s (allowed: %s, "
+                      "%s)", unit, TEMP_CELSIUS, TEMP_FAHRENHEIT)
 
         return None
 

@@ -17,7 +17,7 @@ async def async_setup_platform(
         async_add_devices=async_add_devices)
 
 
-class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
+class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
     """Representation of the value of a MySensors Cover child node."""
 
     @property

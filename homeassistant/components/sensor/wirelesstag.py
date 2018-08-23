@@ -1,5 +1,5 @@
 """
-Sensor support for Wirelss Sensor Tags platform.
+Sensor support for Wireless Sensor Tags platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.wirelesstag/
@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up the sensor platform."""
     platform = hass.data.get(WIRELESSTAG_DOMAIN)
     sensors = []
     tags = platform.tags
@@ -168,7 +168,7 @@ class WirelessTagSensor(WirelessTagBaseSensor):
                 new_value = event.data.get('cap')
             elif self._sensor_type == SENSOR_LIGHT:
                 new_value = event.data.get('lux')
-        except Exception as error:  # pylint: disable=W0703
+        except Exception as error:  # pylint: disable=broad-except
             _LOGGER.info("Unable to update value of entity: \
                         %s error: %s event: %s", self, error, event)
 

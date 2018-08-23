@@ -10,6 +10,7 @@ Component design guidelines:
 import asyncio
 import itertools as it
 import logging
+from typing import Awaitable
 
 import homeassistant.core as ha
 import homeassistant.config as conf_util
@@ -109,7 +110,7 @@ def async_reload_core_config(hass):
 
 
 @asyncio.coroutine
-def async_setup(hass, config):
+def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
     """Set up general services related to Home Assistant."""
     @asyncio.coroutine
     def async_handle_turn_service(service):
@@ -167,7 +168,7 @@ def async_setup(hass, config):
     def async_handle_core_service(call):
         """Service handler for handling core services."""
         if call.service == SERVICE_HOMEASSISTANT_STOP:
-            hass.async_add_job(hass.async_stop())
+            hass.async_create_task(hass.async_stop())
             return
 
         try:
@@ -183,7 +184,7 @@ def async_setup(hass, config):
             return
 
         if call.service == SERVICE_HOMEASSISTANT_RESTART:
-            hass.async_add_job(hass.async_stop(RESTART_EXIT_CODE))
+            hass.async_create_task(hass.async_stop(RESTART_EXIT_CODE))
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_HOMEASSISTANT_STOP, async_handle_core_service)

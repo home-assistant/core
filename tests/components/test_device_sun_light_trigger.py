@@ -18,7 +18,7 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
     """Test the device sun light trigger module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.scanner = loader.get_component(
@@ -79,8 +79,7 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
         self.assertTrue(light.is_on(self.hass))
 
-    def test_lights_turn_off_when_everyone_leaves(self): \
-            # pylint: disable=invalid-name
+    def test_lights_turn_off_when_everyone_leaves(self):
         """Test lights turn off when everyone leaves the house."""
         light.turn_on(self.hass)
 
@@ -97,8 +96,7 @@ class TestDeviceSunLightTrigger(unittest.TestCase):
 
         self.assertFalse(light.is_on(self.hass))
 
-    def test_lights_turn_on_when_coming_home_after_sun_set(self): \
-            # pylint: disable=invalid-name
+    def test_lights_turn_on_when_coming_home_after_sun_set(self):
         """Test lights turn on when coming home after sun set."""
         test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
         with patch('homeassistant.util.dt.utcnow', return_value=test_time):

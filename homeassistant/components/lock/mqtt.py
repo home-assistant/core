@@ -17,7 +17,7 @@ from homeassistant.components.mqtt import (
     MqttAvailability)
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)

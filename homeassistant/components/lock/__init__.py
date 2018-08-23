@@ -101,38 +101,18 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_lock_service(service):
-        """Handle calls to the lock services."""
-        target_locks = component.async_extract_from_service(service)
-
-        code = service.data.get(ATTR_CODE)
-
-        update_tasks = []
-        for entity in target_locks:
-            if service.service == SERVICE_LOCK:
-                yield from entity.async_lock(code=code)
-            elif service.service == SERVICE_OPEN:
-                yield from entity.async_open(code=code)
-            else:
-                yield from entity.async_unlock(code=code)
-
-            if not entity.should_poll:
-                continue
-            update_tasks.append(entity.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_UNLOCK, async_handle_lock_service,
-        schema=LOCK_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_LOCK, async_handle_lock_service,
-        schema=LOCK_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_OPEN, async_handle_lock_service,
-        schema=LOCK_SERVICE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_UNLOCK, LOCK_SERVICE_SCHEMA,
+        'async_unlock'
+    )
+    component.async_register_entity_service(
+        SERVICE_LOCK, LOCK_SERVICE_SCHEMA,
+        'async_lock'
+    )
+    component.async_register_entity_service(
+        SERVICE_OPEN, LOCK_SERVICE_SCHEMA,
+        'async_open'
+    )
 
     return True
 
@@ -145,7 +125,6 @@ class LockDevice(Entity):
         """Last change triggered by."""
         return None
 
-    # pylint: disable=no-self-use
     @property
     def code_format(self):
         """Regex for code format or None if no code is required."""

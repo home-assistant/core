@@ -16,7 +16,7 @@ class TestSensorMQTT(unittest.TestCase):
     """Test the MQTT sensor."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
 
@@ -76,6 +76,25 @@ class TestSensorMQTT(unittest.TestCase):
 
         state = self.hass.states.get('binary_sensor.test')
         self.assertIsNone(state)
+
+    def test_unique_id(self):
+        """Test unique id option only creates one sensor per unique_id."""
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: [{
+                'platform': 'mqtt',
+                'name': 'Test 1',
+                'state_topic': 'test-topic',
+                'unique_id': 'TOTALLY_UNIQUE'
+            }, {
+                'platform': 'mqtt',
+                'name': 'Test 2',
+                'state_topic': 'test-topic',
+                'unique_id': 'TOTALLY_UNIQUE'
+            }]
+        })
+        fire_mqtt_message(self.hass, 'test-topic', 'payload')
+        self.hass.block_till_done()
+        assert len(self.hass.states.all()) == 1
 
     def test_availability_without_topic(self):
         """Test availability without defined availability topic."""

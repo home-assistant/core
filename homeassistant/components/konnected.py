@@ -10,7 +10,7 @@ import json
 import voluptuous as vol
 
 from aiohttp.hdrs import AUTHORIZATION
-from aiohttp.web import Request, Response  # NOQA
+from aiohttp.web import Request, Response
 
 from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.components.discovery import SERVICE_KONNECTED
@@ -31,6 +31,11 @@ REQUIREMENTS = ['konnected==0.1.2']
 DOMAIN = 'konnected'
 
 CONF_ACTIVATION = 'activation'
+CONF_API_HOST = 'api_host'
+CONF_MOMENTARY = 'momentary'
+CONF_PAUSE = 'pause'
+CONF_REPEAT = 'repeat'
+
 STATE_LOW = 'low'
 STATE_HIGH = 'high'
 
@@ -52,14 +57,22 @@ _SWITCH_SCHEMA = vol.All(
         vol.Exclusive(CONF_ZONE, 'a_pin'): vol.Any(*ZONE_TO_PIN),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_ACTIVATION, default=STATE_HIGH):
-            vol.All(vol.Lower, vol.Any(STATE_HIGH, STATE_LOW))
+            vol.All(vol.Lower, vol.Any(STATE_HIGH, STATE_LOW)),
+        vol.Optional(CONF_MOMENTARY):
+            vol.All(vol.Coerce(int), vol.Range(min=10)),
+        vol.Optional(CONF_PAUSE):
+            vol.All(vol.Coerce(int), vol.Range(min=10)),
+        vol.Optional(CONF_REPEAT):
+            vol.All(vol.Coerce(int), vol.Range(min=-1)),
     }), cv.has_at_least_one_key(CONF_PIN, CONF_ZONE)
 )
 
+# pylint: disable=no-value-for-parameter
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema({
             vol.Required(CONF_ACCESS_TOKEN): cv.string,
+            vol.Optional(CONF_API_HOST): vol.Url(),
             vol.Required(CONF_DEVICES): [{
                 vol.Required(CONF_ID): cv.string,
                 vol.Optional(CONF_BINARY_SENSORS): vol.All(
@@ -87,7 +100,10 @@ async def async_setup(hass, config):
 
     access_token = cfg.get(CONF_ACCESS_TOKEN)
     if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {CONF_ACCESS_TOKEN: access_token}
+        hass.data[DOMAIN] = {
+            CONF_ACCESS_TOKEN: access_token,
+            CONF_API_HOST: cfg.get(CONF_API_HOST)
+        }
 
     def device_discovered(service, info):
         """Call when a Konnected device has been discovered."""
@@ -108,7 +124,7 @@ async def async_setup(hass, config):
     return True
 
 
-class KonnectedDevice(object):
+class KonnectedDevice:
     """A representation of a single Konnected device."""
 
     def __init__(self, hass, host, port, config):
@@ -179,7 +195,7 @@ class KonnectedDevice(object):
                           sensors[pin].get('name'),
                           sensors[pin].get(ATTR_STATE))
 
-        actuators = {}
+        actuators = []
         for entity in self.config().get(CONF_SWITCHES) or []:
             if 'zone' in entity:
                 pin = ZONE_TO_PIN[entity['zone']]
@@ -194,16 +210,18 @@ class KonnectedDevice(object):
             else:
                 initial_state = None
 
-            actuators[pin] = {
+            act = {
+                CONF_PIN: pin,
                 CONF_NAME: entity.get(
                     CONF_NAME, 'Konnected {} Actuator {}'.format(
                         self.device_id[6:], PIN_TO_ZONE[pin])),
                 ATTR_STATE: initial_state,
                 CONF_ACTIVATION: entity[CONF_ACTIVATION],
-            }
-            _LOGGER.debug('Set up actuator %s (initial state: %s)',
-                          actuators[pin].get(CONF_NAME),
-                          actuators[pin].get(ATTR_STATE))
+                CONF_MOMENTARY: entity.get(CONF_MOMENTARY),
+                CONF_PAUSE: entity.get(CONF_PAUSE),
+                CONF_REPEAT: entity.get(CONF_REPEAT)}
+            actuators.append(act)
+            _LOGGER.debug('Set up actuator %s', act)
 
         device_data = {
             'client': self.client,
@@ -231,11 +249,10 @@ class KonnectedDevice(object):
 
     def actuator_configuration(self):
         """Return the configuration map for syncing actuators."""
-        return [{'pin': p,
+        return [{'pin': data.get(CONF_PIN),
                  'trigger': (0 if data.get(CONF_ACTIVATION) in [0, STATE_LOW]
                              else 1)}
-                for p, data in
-                self.stored_configuration[CONF_SWITCHES].items()]
+                for data in self.stored_configuration[CONF_SWITCHES]]
 
     def sync_device_config(self):
         """Sync the new pin configuration to the Konnected device."""
@@ -254,14 +271,26 @@ class KonnectedDevice(object):
         _LOGGER.debug('%s: current actuator config: %s', self.device_id,
                       current_actuator_config)
 
+        desired_api_host = \
+            self.hass.data[DOMAIN].get(CONF_API_HOST) or \
+            self.hass.config.api.base_url
+        desired_api_endpoint = desired_api_host + ENDPOINT_ROOT
+        current_api_endpoint = self.status.get('endpoint')
+
+        _LOGGER.debug('%s: desired api endpoint: %s', self.device_id,
+                      desired_api_endpoint)
+        _LOGGER.debug('%s: current api endpoint: %s', self.device_id,
+                      current_api_endpoint)
+
         if (desired_sensor_configuration != current_sensor_configuration) or \
-                (current_actuator_config != desired_actuator_config):
+                (current_actuator_config != desired_actuator_config) or \
+                (current_api_endpoint != desired_api_endpoint):
             _LOGGER.debug('pushing settings to device %s', self.device_id)
             self.client.put_settings(
                 desired_sensor_configuration,
                 desired_actuator_config,
                 self.hass.data[DOMAIN].get(CONF_ACCESS_TOKEN),
-                self.hass.config.api.base_url + ENDPOINT_ROOT
+                desired_api_endpoint
             )
 
 
@@ -302,8 +331,7 @@ class KonnectedView(HomeAssistantView):
         if device is None:
             return self.json_message('unregistered device',
                                      status_code=HTTP_BAD_REQUEST)
-        pin_data = device[CONF_BINARY_SENSORS].get(pin_num) or \
-            device[CONF_SWITCHES].get(pin_num)
+        pin_data = device[CONF_BINARY_SENSORS].get(pin_num)
 
         if pin_data is None:
             return self.json_message('unregistered sensor/actuator',

@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['afsapi==0.0.3']
+REQUIREMENTS = ['afsapi==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,7 +41,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Frontier Silicon platform."""

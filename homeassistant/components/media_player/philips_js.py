@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers.script import Script
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['ha-philipsjs==0.0.4']
+REQUIREMENTS = ['ha-philipsjs==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Philips TV platform."""
     import haphilipsjs

@@ -87,7 +87,7 @@ class WirelessTagPlatform:
             'content': content, 'disabled': False, 'nat': True})
 
     def install_push_notifications(self, binary_sensors):
-        """Setup local push notification from tag manager."""
+        """Set up local push notification from tag manager."""
         _LOGGER.info("Registering local push notifications.")
         configs = []
 
@@ -146,7 +146,7 @@ class WirelessTagPlatform:
                 self.hass,
                 SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type),
                 event)
-        except Exception as ex:  # pylint: disable=W0703
+        except Exception as ex:  # pylint: disable=broad-except
             _LOGGER.error("Unable to handle binary event:\
                           %s error: %s", str(event), str(ex))
 

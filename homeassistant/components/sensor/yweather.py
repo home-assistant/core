@@ -174,7 +174,7 @@ class YahooWeatherSensor(Entity):
                 float(self._data.yahoo.Atmosphere['visibility'])/1.61, 2)
 
 
-class YahooWeatherData(object):
+class YahooWeatherData:
     """Handle Yahoo! API object and limit updates."""
 
     def __init__(self, woeid, temp_unit):

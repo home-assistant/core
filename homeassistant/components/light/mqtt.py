@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
     ATTR_WHITE_VALUE, Light, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
@@ -205,7 +205,7 @@ class MqttLight(MqttAvailability, Light):
             topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None and
             SUPPORT_COLOR_TEMP)
         self._supported_features |= (
-            topic[CONF_EFFECT_STATE_TOPIC] is not None and
+            topic[CONF_EFFECT_COMMAND_TOPIC] is not None and
             SUPPORT_EFFECT)
         self._supported_features |= (
             topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None and
@@ -442,8 +442,15 @@ class MqttLight(MqttAvailability, Light):
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
 
             hs_color = kwargs[ATTR_HS_COLOR]
-            brightness = kwargs.get(
-                ATTR_BRIGHTNESS, self._brightness if self._brightness else 255)
+
+            # If there's a brightness topic set, we don't want to scale the RGB
+            # values given using the brightness.
+            if self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
+                brightness = 255
+            else:
+                brightness = kwargs.get(
+                    ATTR_BRIGHTNESS, self._brightness if self._brightness else
+                    255)
             rgb = color_util.color_hsv_to_RGB(
                 hs_color[0], hs_color[1], brightness / 255 * 100)
             tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]

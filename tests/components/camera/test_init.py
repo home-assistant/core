@@ -30,11 +30,11 @@ def mock_camera(hass):
         yield
 
 
-class TestSetupCamera(object):
+class TestSetupCamera:
     """Test class for setup camera."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self):
@@ -42,7 +42,7 @@ class TestSetupCamera(object):
         self.hass.stop()
 
     def test_setup_component(self):
-        """Setup demo platform on camera component."""
+        """Set up demo platform on camera component."""
         config = {
             camera.DOMAIN: {
                 'platform': 'demo'
@@ -53,11 +53,11 @@ class TestSetupCamera(object):
             setup_component(self.hass, camera.DOMAIN, config)
 
 
-class TestGetImage(object):
+class TestGetImage:
     """Test class for camera."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         setup_component(

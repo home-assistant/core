@@ -45,7 +45,7 @@ NOTIFICATION_AUTH_TITLE = 'Apple TV Authentication'
 NOTIFICATION_SCAN_ID = 'apple_tv_scan_notification'
 NOTIFICATION_SCAN_TITLE = 'Apple TV Scan'
 
-T = TypeVar('T')
+T = TypeVar('T')  # pylint: disable=invalid-name
 
 
 # This version of ensure_list interprets an empty dict as no value
@@ -218,10 +218,10 @@ def _setup_atv(hass, atv_config):
         ATTR_POWER: power
     }
 
-    hass.async_add_job(discovery.async_load_platform(
+    hass.async_create_task(discovery.async_load_platform(
         hass, 'media_player', DOMAIN, atv_config))
 
-    hass.async_add_job(discovery.async_load_platform(
+    hass.async_create_task(discovery.async_load_platform(
         hass, 'remote', DOMAIN, atv_config))
 
 

@@ -47,8 +47,8 @@ def test_auth_required_forward_request(hassio_client):
 @asyncio.coroutine
 @pytest.mark.parametrize(
     'build_type', [
-        'es5/index.html', 'es5/hassio-app.html', 'latest/index.html',
-        'latest/hassio-app.html', 'es5/some-chunk.js', 'es5/app.js',
+        'app/index.html', 'app/hassio-app.html', 'app/index.html',
+        'app/hassio-app.html', 'app/some-chunk.js', 'app/app.js',
     ])
 def test_forward_request_no_auth_for_panel(hassio_client, build_type):
     """Test no auth needed for ."""
@@ -61,7 +61,7 @@ def test_forward_request_no_auth_for_panel(hassio_client, build_type):
                   '_create_response') as mresp:
         mresp.return_value = 'response'
         resp = yield from hassio_client.get(
-            '/api/hassio/app-{}'.format(build_type))
+            '/api/hassio/{}'.format(build_type))
 
     # Check we got right response
     assert resp.status == 200

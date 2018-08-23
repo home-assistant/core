@@ -14,7 +14,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyHS100==0.3.0']
+REQUIREMENTS = ['pyHS100==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,7 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the TPLink switch platform."""
     from pyHS100 import SmartPlug
@@ -88,8 +87,6 @@ class SmartPlugSwitch(SwitchDevice):
         """Update the TP-Link switch's state."""
         from pyHS100 import SmartDeviceException
         try:
-            self._available = True
-
             self._state = self.smartplug.state == \
                 self.smartplug.SWITCH_STATE_ON
 
@@ -122,6 +119,10 @@ class SmartPlugSwitch(SwitchDevice):
                     # Device returned no daily history
                     pass
 
+            self._available = True
+
         except (SmartDeviceException, OSError) as ex:
-            _LOGGER.warning("Could not read state for %s: %s", self.name, ex)
-            self._available = False
+            if self._available:
+                _LOGGER.warning(
+                    "Could not read state for %s: %s", self.name, ex)
+                self._available = False

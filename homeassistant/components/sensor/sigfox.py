@@ -55,7 +55,7 @@ def epoch_to_datetime(epoch_time):
     return datetime.datetime.fromtimestamp(epoch_time).isoformat()
 
 
-class SigfoxAPI(object):
+class SigfoxAPI:
     """Class for interacting with the SigFox API."""
 
     def __init__(self, api_login, api_password):
@@ -77,7 +77,7 @@ class SigfoxAPI(object):
                 _LOGGER.error(
                     "Unable to login to Sigfox API, error code %s", str(
                         response.status_code))
-            raise ValueError('Sigfox component not setup')
+            raise ValueError('Sigfox component not set up')
         return True
 
     def get_device_types(self):

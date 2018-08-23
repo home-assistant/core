@@ -29,7 +29,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up access to Netatmo cameras."""
     netatmo = hass.components.netatmo
@@ -106,6 +105,6 @@ class NetatmoCamera(Camera):
         """Return the camera model."""
         if self._cameratype == "NOC":
             return "Presence"
-        elif self._cameratype == "NACamera":
+        if self._cameratype == "NACamera":
             return "Welcome"
         return None

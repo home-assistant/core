@@ -35,7 +35,7 @@ from .discovery_schemas import DISCOVERY_SCHEMAS
 from .util import (check_node_schema, check_value_schema, node_name,
                    check_has_unique_id, is_node_parsed)
 
-REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.3']
+REQUIREMENTS = ['pydispatcher==2.0.5', 'python_openzwave==0.4.9']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -218,7 +218,6 @@ async def async_setup_platform(hass, config, async_add_devices,
     return True
 
 
-# pylint: disable=R0914
 async def async_setup(hass, config):
     """Set up Z-Wave.
 

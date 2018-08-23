@@ -206,7 +206,7 @@ def setup(hass, config, session=None):
     return True
 
 
-class TelldusLiveClient(object):
+class TelldusLiveClient:
     """Get the latest data and update the states."""
 
     def __init__(self, hass, config, session):
@@ -240,11 +240,11 @@ class TelldusLiveClient(object):
             from tellduslive import (DIM, UP, TURNON)
             if device.methods & DIM:
                 return 'light'
-            elif device.methods & UP:
+            if device.methods & UP:
                 return 'cover'
-            elif device.methods & TURNON:
+            if device.methods & TURNON:
                 return 'switch'
-            elif device.methods == 0:
+            if device.methods == 0:
                 return 'binary_sensor'
             _LOGGER.warning(
                 "Unidentified device type (methods: %d)", device.methods)
@@ -287,13 +287,14 @@ class TelldusLiveEntity(Entity):
         self._id = device_id
         self._client = hass.data[DOMAIN]
         self._client.entities.append(self)
-        self._name = self.device.name
+        self._device = self._client.device(device_id)
+        self._name = self._device.name
         _LOGGER.debug('Created device %s', self)
 
     def changed(self):
         """Return the property of the device might have changed."""
-        if self.device.name:
-            self._name = self.device.name
+        if self._device.name:
+            self._name = self._device.name
         self.schedule_update_ha_state()
 
     @property
@@ -302,14 +303,9 @@ class TelldusLiveEntity(Entity):
         return self._id
 
     @property
-    def device(self):
-        """Return the representation of the device."""
-        return self._client.device(self.device_id)
-
-    @property
     def _state(self):
         """Return the state of the device."""
-        return self.device.state
+        return self._device.state
 
     @property
     def should_poll(self):
@@ -347,16 +343,16 @@ class TelldusLiveEntity(Entity):
         from tellduslive import (BATTERY_LOW,
                                  BATTERY_UNKNOWN,
                                  BATTERY_OK)
-        if self.device.battery == BATTERY_LOW:
+        if self._device.battery == BATTERY_LOW:
             return 1
-        elif self.device.battery == BATTERY_UNKNOWN:
+        if self._device.battery == BATTERY_UNKNOWN:
             return None
-        elif self.device.battery == BATTERY_OK:
+        if self._device.battery == BATTERY_OK:
             return 100
-        return self.device.battery  # Percentage
+        return self._device.battery  # Percentage
 
     @property
     def _last_updated(self):
         """Return the last update of a device."""
-        return str(datetime.fromtimestamp(self.device.lastUpdated)) \
-            if self.device.lastUpdated else None
+        return str(datetime.fromtimestamp(self._device.lastUpdated)) \
+            if self._device.lastUpdated else None

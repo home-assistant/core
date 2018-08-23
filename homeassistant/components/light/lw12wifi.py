@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup LW-12 WiFi LED Controller platform."""
+    """Set up LW-12 WiFi LED Controller platform."""
     import lw12
 
     # Assign configuration variables.

@@ -8,7 +8,7 @@ https://home-assistant.io/components/binary_sensor.isy994/
 import asyncio
 import logging
 from datetime import timedelta
-from typing import Callable  # noqa
+from typing import Callable
 
 from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
@@ -28,7 +28,6 @@ ISY_DEVICE_TYPES = {
 }
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
                    add_devices: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 binary sensor platform."""
@@ -56,7 +55,7 @@ def setup_platform(hass, config: ConfigType,
         else:
             device_type = _detect_device_type(node)
             subnode_id = int(node.nid[-1])
-            if (device_type == 'opening' or device_type == 'moisture'):
+            if device_type in ('opening', 'moisture'):
                 # These sensors use an optional "negative" subnode 2 to snag
                 # all state changes
                 if subnode_id == 2:
@@ -299,7 +298,6 @@ class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorDevice):
             # No heartbeat timer is active
             pass
 
-        # pylint: disable=unused-argument
         @callback
         def timer_elapsed(now) -> None:
             """Heartbeat missed; set state to indicate dead battery."""
@@ -314,7 +312,6 @@ class ISYBinarySensorHeartbeat(ISYDevice, BinarySensorDevice):
         self._heartbeat_timer = async_track_point_in_utc_time(
             self.hass, timer_elapsed, point_in_time)
 
-    # pylint: disable=unused-argument
     def on_update(self, event: object) -> None:
         """Ignore node status updates.
 

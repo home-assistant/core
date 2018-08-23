@@ -35,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the MPC-HC platform."""
     name = config.get(CONF_NAME)
@@ -94,7 +93,7 @@ class MpcHcDevice(MediaPlayerDevice):
             return STATE_OFF
         if state == 'playing':
             return STATE_PLAYING
-        elif state == 'paused':
+        if state == 'paused':
             return STATE_PAUSED
 
         return STATE_IDLE

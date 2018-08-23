@@ -18,9 +18,7 @@ from homeassistant.const import (CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = [
-    'https://github.com/aparraga/braviarc/archive/0.3.7.zip'
-    '#braviarc==0.3.7']
+REQUIREMENTS = ['braviarc-homeassistant==0.3.7.dev0']
 
 BRAVIA_CONFIG_FILE = 'bravia.conf'
 
@@ -60,7 +58,6 @@ def _get_mac_address(ip_address):
     return None
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Sony Bravia TV platform."""
     host = config.get(CONF_HOST)
@@ -91,23 +88,23 @@ def setup_bravia(config, pin, hass, add_devices):
     if pin is None:
         request_configuration(config, hass, add_devices)
         return
-    else:
-        mac = _get_mac_address(host)
-        if mac is not None:
-            mac = mac.decode('utf8')
-        # If we came here and configuring this host, mark as done
-        if host in _CONFIGURING:
-            request_id = _CONFIGURING.pop(host)
-            configurator = hass.components.configurator
-            configurator.request_done(request_id)
-            _LOGGER.info("Discovery configuration done")
 
-        # Save config
-        save_json(
-            hass.config.path(BRAVIA_CONFIG_FILE),
-            {host: {'pin': pin, 'host': host, 'mac': mac}})
+    mac = _get_mac_address(host)
+    if mac is not None:
+        mac = mac.decode('utf8')
+    # If we came here and configuring this host, mark as done
+    if host in _CONFIGURING:
+        request_id = _CONFIGURING.pop(host)
+        configurator = hass.components.configurator
+        configurator.request_done(request_id)
+        _LOGGER.info("Discovery configuration done")
 
-        add_devices([BraviaTVDevice(host, mac, name, pin)])
+    # Save config
+    save_json(
+        hass.config.path(BRAVIA_CONFIG_FILE),
+        {host: {'pin': pin, 'host': host, 'mac': mac}})
+
+    add_devices([BraviaTVDevice(host, mac, name, pin)])
 
 
 def request_configuration(config, hass, add_devices):

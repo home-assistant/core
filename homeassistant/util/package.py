@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 INSTALL_LOCK = threading.Lock()
 
 
-def is_virtual_env():
+def is_virtual_env() -> bool:
     """Return if we run in a virtual environtment."""
     # Check supports venv && virtualenv
     return (getattr(sys, 'base_prefix', sys.prefix) != sys.prefix or
@@ -32,7 +32,7 @@ def install_package(package: str, upgrade: bool = True,
     """
     # Not using 'import pip; pip.main([])' because it breaks the logger
     with INSTALL_LOCK:
-        if check_package_exists(package):
+        if package_loadable(package):
             return True
 
         _LOGGER.info('Attempting install of %s', package)
@@ -61,8 +61,8 @@ def install_package(package: str, upgrade: bool = True,
         return True
 
 
-def check_package_exists(package: str) -> bool:
-    """Check if a package is installed globally or in lib_dir.
+def package_loadable(package: str) -> bool:
+    """Check if a package is what will be loaded when we import it.
 
     Returns True when the requirement is met.
     Returns False when the package is not installed or doesn't meet req.
@@ -73,36 +73,26 @@ def check_package_exists(package: str) -> bool:
         # This is a zip file
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
 
-    env = pkg_resources.Environment()
-    return any(dist in req for dist in env[req.project_name])
+    for path in sys.path:
+        for dist in pkg_resources.find_distributions(path):
+            # If the project name is the same, it will be the one that is
+            # loaded when we import it.
+            if dist.project_name == req.project_name:
+                return dist in req
+
+    return False
 
 
-def _get_user_site(deps_dir: str) -> tuple:
-    """Get arguments and environment for subprocess used in get_user_site."""
-    env = os.environ.copy()
-    env['PYTHONUSERBASE'] = os.path.abspath(deps_dir)
-    args = [sys.executable, '-m', 'site', '--user-site']
-    return args, env
-
-
-def get_user_site(deps_dir: str) -> str:
-    """Return user local library path."""
-    args, env = _get_user_site(deps_dir)
-    process = Popen(args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
-    stdout, _ = process.communicate()
-    lib_dir = stdout.decode().strip()
-    return lib_dir
-
-
-async def async_get_user_site(deps_dir: str,
-                              loop: asyncio.AbstractEventLoop) -> str:
+async def async_get_user_site(deps_dir: str) -> str:
     """Return user local library path.
 
     This function is a coroutine.
     """
-    args, env = _get_user_site(deps_dir)
+    env = os.environ.copy()
+    env['PYTHONUSERBASE'] = os.path.abspath(deps_dir)
+    args = [sys.executable, '-m', 'site', '--user-site']
     process = await asyncio.create_subprocess_exec(
-        *args, loop=loop, stdin=asyncio.subprocess.PIPE,
+        *args, stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
         env=env)
     stdout, _ = await process.communicate()

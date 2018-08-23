@@ -17,7 +17,7 @@ class TestDarkSky(unittest.TestCase):
     """Test the Dark Sky weather component."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
         self.lat = self.hass.config.latitude = 37.8267
@@ -48,4 +48,4 @@ class TestDarkSky(unittest.TestCase):
         self.assertEqual(mock_get_forecast.call_count, 1)
 
         state = self.hass.states.get('weather.test')
-        self.assertEqual(state.state, 'Clear')
+        self.assertEqual(state.state, 'sunny')

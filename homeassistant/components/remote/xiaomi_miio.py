@@ -22,7 +22,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -188,11 +188,6 @@ class XiaomiMiioRemote(RemoteDevice):
         return self._name
 
     @property
-    def device(self):
-        """Return the remote object."""
-        return self._device
-
-    @property
     def hidden(self):
         """Return if we should hide entity."""
         return self._is_hidden
@@ -212,7 +207,7 @@ class XiaomiMiioRemote(RemoteDevice):
         """Return False if device is unreachable, else True."""
         from miio import DeviceException
         try:
-            self.device.info()
+            self._device.info()
             return True
         except DeviceException:
             return False
@@ -229,17 +224,16 @@ class XiaomiMiioRemote(RemoteDevice):
             return {'hidden': 'true'}
         return
 
-    # pylint: disable=R0201
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        _LOGGER.error("Device does not support turn_on, " +
+        _LOGGER.error("Device does not support turn_on, "
                       "please use 'remote.send_command' to send commands.")
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        _LOGGER.error("Device does not support turn_off, " +
+        _LOGGER.error("Device does not support turn_off, "
                       "please use 'remote.send_command' to send commands.")
 
     def _send_command(self, payload):
@@ -248,7 +242,7 @@ class XiaomiMiioRemote(RemoteDevice):
 
         _LOGGER.debug("Sending payload: '%s'", payload)
         try:
-            self.device.play(payload)
+            self._device.play(payload)
         except DeviceException as ex:
             _LOGGER.error(
                 "Transmit of IR command failed, %s, exception: %s",

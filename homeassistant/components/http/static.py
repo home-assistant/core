@@ -18,7 +18,6 @@ class CachingStaticResource(StaticResource):
         filename = URL(request.match_info['filename']).path
         try:
             # PyLint is wrong about resolve not being a member.
-            # pylint: disable=no-member
             filepath = self._directory.joinpath(filename).resolve()
             if not self._follow_symlinks:
                 filepath.relative_to(self._directory)
@@ -32,10 +31,9 @@ class CachingStaticResource(StaticResource):
 
         if filepath.is_dir():
             return await super()._handle(request)
-        elif filepath.is_file():
+        if filepath.is_file():
             return CachingFileResponse(filepath, chunk_size=self._chunk_size)
-        else:
-            raise HTTPNotFound
+        raise HTTPNotFound
 
 
 # pylint: disable=too-many-ancestors

@@ -41,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-class EVSensorConfig(object):
+class EVSensorConfig:
     """The EV sensor configuration."""
 
     def __init__(self, name, attr, unit_of_measurement=None, icon=None):
@@ -52,7 +52,7 @@ class EVSensorConfig(object):
         self.icon = icon
 
 
-class EVBinarySensorConfig(object):
+class EVBinarySensorConfig:
     """The EV binary sensor configuration."""
 
     def __init__(self, name, attr, device_class=None):

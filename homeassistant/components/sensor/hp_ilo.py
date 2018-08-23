@@ -59,7 +59,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the HP ILO sensor."""
     hostname = config.get(CONF_HOST)
@@ -148,7 +147,7 @@ class HpIloSensor(Entity):
         self._state = ilo_data
 
 
-class HpIloData(object):
+class HpIloData:
     """Gets the latest data from HP ILO."""
 
     def __init__(self, host, port, login, password):

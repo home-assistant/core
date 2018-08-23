@@ -1,5 +1,5 @@
 """
-Allow to setup simple automation rules via the config file.
+Allow to set up simple automation rules via the config file.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/automation/
@@ -297,7 +297,7 @@ class AutomationEntity(ToggleEntity):
             return
 
         # HomeAssistant is starting up
-        elif self.hass.state == CoreState.not_running:
+        if self.hass.state == CoreState.not_running:
             @asyncio.coroutine
             def async_enable_automation(event):
                 """Start automation on startup."""

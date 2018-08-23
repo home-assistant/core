@@ -32,16 +32,22 @@ NEST_MODE_HEAT_COOL = 'heat-cool'
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the Nest thermostat."""
-    if discovery_info is None:
-        return
+    """Set up the Nest thermostat.
 
+    No longer in use.
+    """
+
+
+async def async_setup_entry(hass, entry, async_add_devices):
+    """Set up the Nest climate device based on a config entry."""
     temp_unit = hass.config.units.temperature_unit
 
-    all_devices = [NestThermostat(structure, device, temp_unit)
-                   for structure, device in hass.data[DATA_NEST].thermostats()]
+    thermostats = await hass.async_add_job(hass.data[DATA_NEST].thermostats)
 
-    add_devices(all_devices, True)
+    all_devices = [NestThermostat(structure, device, temp_unit)
+                   for structure, device in thermostats]
+
+    async_add_devices(all_devices, True)
 
 
 class NestThermostat(ClimateDevice):
@@ -51,7 +57,7 @@ class NestThermostat(ClimateDevice):
         """Initialize the thermostat."""
         self._unit = temp_unit
         self.structure = structure
-        self.device = device
+        self._device = device
         self._fan_list = [STATE_ON, STATE_AUTO]
 
         # Set the default supported features
@@ -62,13 +68,13 @@ class NestThermostat(ClimateDevice):
         self._operation_list = [STATE_OFF]
 
         # Add supported nest thermostat features
-        if self.device.can_heat:
+        if self._device.can_heat:
             self._operation_list.append(STATE_HEAT)
 
-        if self.device.can_cool:
+        if self._device.can_cool:
             self._operation_list.append(STATE_COOL)
 
-        if self.device.can_heat and self.device.can_cool:
+        if self._device.can_heat and self._device.can_cool:
             self._operation_list.append(STATE_AUTO)
             self._support_flags = (self._support_flags |
                                    SUPPORT_TARGET_TEMPERATURE_HIGH |
@@ -77,7 +83,7 @@ class NestThermostat(ClimateDevice):
         self._operation_list.append(STATE_ECO)
 
         # feature of device
-        self._has_fan = self.device.has_fan
+        self._has_fan = self._device.has_fan
         if self._has_fan:
             self._support_flags = (self._support_flags | SUPPORT_FAN_MODE)
 
@@ -119,7 +125,7 @@ class NestThermostat(ClimateDevice):
     @property
     def unique_id(self):
         """Unique ID for this device."""
-        return self.device.serial
+        return self._device.serial
 
     @property
     def name(self):
@@ -141,7 +147,7 @@ class NestThermostat(ClimateDevice):
         """Return current operation ie. heat, cool, idle."""
         if self._mode in [STATE_HEAT, STATE_COOL, STATE_OFF, STATE_ECO]:
             return self._mode
-        elif self._mode == NEST_MODE_HEAT_COOL:
+        if self._mode == NEST_MODE_HEAT_COOL:
             return STATE_AUTO
         return STATE_UNKNOWN
 
@@ -196,7 +202,7 @@ class NestThermostat(ClimateDevice):
             _LOGGER.debug("Nest set_temperature-output-value=%s", temp)
         try:
             if temp is not None:
-                self.device.target = temp
+                self._device.target = temp
         except nest.nest.APIError as api_error:
             _LOGGER.error("An error occurred while setting temperature: %s",
                           api_error)
@@ -214,7 +220,7 @@ class NestThermostat(ClimateDevice):
             _LOGGER.error(
                 "An error occurred while setting device mode. "
                 "Invalid operation mode: %s", operation_mode)
-        self.device.mode = device_mode
+        self._device.mode = device_mode
 
     @property
     def operation_list(self):
@@ -248,7 +254,7 @@ class NestThermostat(ClimateDevice):
     def set_fan_mode(self, fan_mode):
         """Turn fan on/off."""
         if self._has_fan:
-            self.device.fan = fan_mode.lower()
+            self._device.fan = fan_mode.lower()
 
     @property
     def min_temp(self):
@@ -262,20 +268,20 @@ class NestThermostat(ClimateDevice):
 
     def update(self):
         """Cache value from Python-nest."""
-        self._location = self.device.where
-        self._name = self.device.name
-        self._humidity = self.device.humidity
-        self._temperature = self.device.temperature
-        self._mode = self.device.mode
-        self._target_temperature = self.device.target
-        self._fan = self.device.fan
+        self._location = self._device.where
+        self._name = self._device.name
+        self._humidity = self._device.humidity
+        self._temperature = self._device.temperature
+        self._mode = self._device.mode
+        self._target_temperature = self._device.target
+        self._fan = self._device.fan
         self._away = self.structure.away == 'away'
-        self._eco_temperature = self.device.eco_temperature
-        self._locked_temperature = self.device.locked_temperature
-        self._min_temperature = self.device.min_temperature
-        self._max_temperature = self.device.max_temperature
-        self._is_locked = self.device.is_locked
-        if self.device.temperature_scale == 'C':
+        self._eco_temperature = self._device.eco_temperature
+        self._locked_temperature = self._device.locked_temperature
+        self._min_temperature = self._device.min_temperature
+        self._max_temperature = self._device.max_temperature
+        self._is_locked = self._device.is_locked
+        if self._device.temperature_scale == 'C':
             self._temperature_scale = TEMP_CELSIUS
         else:
             self._temperature_scale = TEMP_FAHRENHEIT

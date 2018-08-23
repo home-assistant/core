@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['python_opendata_transport==0.1.0']
+REQUIREMENTS = ['python_opendata_transport==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

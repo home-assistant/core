@@ -41,7 +41,6 @@ REMOTE_COMMAND_SCHEMA = vol.Schema({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Mopar platform."""
     import motorparts
@@ -71,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                  for index, _ in enumerate(data.vehicles)], True)
 
 
-class MoparData(object):
+class MoparData:
     """Container for Mopar vehicle data.
 
     Prevents session expiry re-login race condition.

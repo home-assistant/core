@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.rainmachine import (
-    BINARY_SENSORS, DATA_RAINMACHINE, DATA_UPDATE_TOPIC, TYPE_FREEZE,
+    BINARY_SENSORS, DATA_RAINMACHINE, SENSOR_UPDATE_TOPIC, TYPE_FREEZE,
     TYPE_FREEZE_PROTECTION, TYPE_HOT_DAYS, TYPE_HOURLY, TYPE_MONTH,
     TYPE_RAINDELAY, TYPE_RAINSENSOR, TYPE_WEEKDAY, RainMachineEntity)
 from homeassistant.const import CONF_MONITORED_CONDITIONS
@@ -20,7 +20,8 @@ DEPENDENCIES = ['rainmachine']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_devices, discovery_info=None):
     """Set up the RainMachine Switch platform."""
     if discovery_info is None:
         return
@@ -33,7 +34,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         binary_sensors.append(
             RainMachineBinarySensor(rainmachine, sensor_type, name, icon))
 
-    add_devices(binary_sensors, True)
+    async_add_devices(binary_sensors, True)
 
 
 class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
@@ -70,16 +71,16 @@ class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):
             self.rainmachine.device_mac.replace(':', ''), self._sensor_type)
 
     @callback
-    def update_data(self):
+    def _update_data(self):
         """Update the state."""
         self.async_schedule_update_ha_state(True)
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, DATA_UPDATE_TOPIC,
-                                 self.update_data)
+        async_dispatcher_connect(
+            self.hass, SENSOR_UPDATE_TOPIC, self._update_data)
 
-    def update(self):
+    async def async_update(self):
         """Update the state."""
         if self._sensor_type == TYPE_FREEZE:
             self._state = self.rainmachine.restrictions['current']['freeze']

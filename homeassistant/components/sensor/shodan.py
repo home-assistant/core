@@ -14,7 +14,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['shodan==1.8.1']
+REQUIREMENTS = ['shodan==1.9.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -96,7 +96,7 @@ class ShodanSensor(Entity):
         self._state = self.data.details['total']
 
 
-class ShodanData(object):
+class ShodanData:
     """Get the latest data and update the states."""
 
     def __init__(self, api, query):

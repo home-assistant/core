@@ -50,7 +50,7 @@ class TestEmulatedHue(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        """Setup the class."""
+        """Set up the class."""
         cls.hass = hass = get_test_home_assistant()
 
         # We need to do this to get access to homeassistant/turn_(on,off)
@@ -89,7 +89,7 @@ class TestEmulatedHue(unittest.TestCase):
         # Make sure the XML is parsable
         try:
             ET.fromstring(result.text)
-        except:  # noqa: E722  # pylint: disable=bare-except
+        except:  # noqa: E722 pylint: disable=bare-except
             self.fail('description.xml is not valid XML!')
 
     def test_create_username(self):

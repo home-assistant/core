@@ -15,7 +15,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.components.discovery import SERVICE_IKEA_TRADFRI
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['pytradfri[async]==5.4.2']
+REQUIREMENTS = ['pytradfri[async]==5.5.1']
 
 DOMAIN = 'tradfri'
 GATEWAY_IDENTITY = 'homeassistant'
@@ -166,8 +166,8 @@ async def _setup_gateway(hass, hass_config, host, identity, key,
         return True
 
     gateways[gateway_id] = gateway
-    hass.async_add_job(discovery.async_load_platform(
+    hass.async_create_task(discovery.async_load_platform(
         hass, 'light', DOMAIN, {'gateway': gateway_id}, hass_config))
-    hass.async_add_job(discovery.async_load_platform(
+    hass.async_create_task(discovery.async_load_platform(
         hass, 'sensor', DOMAIN, {'gateway': gateway_id}, hass_config))
     return True

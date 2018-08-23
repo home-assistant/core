@@ -253,5 +253,3 @@ def async_handle_cloud(hass, cloud, payload):
                       payload['reason'])
     else:
         _LOGGER.warning("Received unknown cloud action: %s", action)
-
-    return None

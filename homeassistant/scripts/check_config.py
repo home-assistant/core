@@ -18,7 +18,7 @@ from homeassistant.config import (
     CONF_PACKAGES, merge_packages_config, _format_config_error,
     find_config_file, load_yaml_config_file,
     extract_domain_configs, config_per_platform)
-import homeassistant.util.yaml as yaml
+from homeassistant.util import yaml
 from homeassistant.exceptions import HomeAssistantError
 
 REQUIREMENTS = ('colorlog==3.1.4',)
@@ -163,13 +163,13 @@ def check(config_dir, secrets=False):
         'secret_cache': None,
     }
 
-    # pylint: disable=unused-variable
+    # pylint: disable=possibly-unused-variable
     def mock_load(filename):
         """Mock hass.util.load_yaml to save config file names."""
         res['yaml_files'][filename] = True
         return MOCKS['load'][1](filename)
 
-    # pylint: disable=unused-variable
+    # pylint: disable=possibly-unused-variable
     def mock_secrets(ldr, node):
         """Mock _get_secrets."""
         try:
@@ -267,7 +267,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
                 print(' ', indent_str, i)
 
 
-CheckConfigError = namedtuple(  # pylint: disable=invalid-name
+CheckConfigError = namedtuple(
     'CheckConfigError', "message domain config")
 
 
@@ -325,7 +325,7 @@ def check_ha_config_file(hass):
     # Merge packages
     merge_packages_config(
         hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
-    del core_config[CONF_PACKAGES]
+    core_config.pop(CONF_PACKAGES, None)
 
     # Ensure we have no None values after merge
     for key, value in config.items():
@@ -378,7 +378,6 @@ def check_ha_config_file(hass):
 
             # Validate platform specific schema
             if hasattr(platform, 'PLATFORM_SCHEMA'):
-                # pylint: disable=no-member
                 try:
                     p_validated = platform.PLATFORM_SCHEMA(p_validated)
                 except vol.Invalid as ex:

@@ -32,7 +32,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Ted5000 sensor."""
     host = config.get(CONF_HOST)
@@ -89,7 +88,7 @@ class Ted5000Sensor(Entity):
         self._gateway.update()
 
 
-class Ted5000Gateway(object):
+class Ted5000Gateway:
     """The class for handling the data retrieval."""
 
     def __init__(self, url):

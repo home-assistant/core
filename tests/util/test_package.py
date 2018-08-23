@@ -30,8 +30,8 @@ def mock_sys():
 
 @pytest.fixture
 def mock_exists():
-    """Mock check_package_exists."""
-    with patch('homeassistant.util.package.check_package_exists') as mock:
+    """Mock package_loadable."""
+    with patch('homeassistant.util.package.package_loadable') as mock:
         mock.return_value = False
         yield mock
 
@@ -193,28 +193,16 @@ def test_install_constraint(
 def test_check_package_global():
     """Test for an installed package."""
     installed_package = list(pkg_resources.working_set)[0].project_name
-    assert package.check_package_exists(installed_package)
+    assert package.package_loadable(installed_package)
 
 
 def test_check_package_zip():
     """Test for an installed zip package."""
-    assert not package.check_package_exists(TEST_ZIP_REQ)
-
-
-def test_get_user_site(deps_dir, lib_dir, mock_popen, mock_env_copy):
-    """Test get user site directory."""
-    env = mock_env_copy()
-    env['PYTHONUSERBASE'] = os.path.abspath(deps_dir)
-    args = [sys.executable, '-m', 'site', '--user-site']
-    ret = package.get_user_site(deps_dir)
-    assert mock_popen.call_count == 1
-    assert mock_popen.call_args == call(
-        args, stdin=PIPE, stdout=PIPE, stderr=PIPE, env=env)
-    assert ret == lib_dir
+    assert not package.package_loadable(TEST_ZIP_REQ)
 
 
 @asyncio.coroutine
-def test_async_get_user_site(hass, mock_env_copy):
+def test_async_get_user_site(mock_env_copy):
     """Test async get user site directory."""
     deps_dir = '/deps_dir'
     env = mock_env_copy()
@@ -222,10 +210,32 @@ def test_async_get_user_site(hass, mock_env_copy):
     args = [sys.executable, '-m', 'site', '--user-site']
     with patch('homeassistant.util.package.asyncio.create_subprocess_exec',
                return_value=mock_async_subprocess()) as popen_mock:
-        ret = yield from package.async_get_user_site(deps_dir, hass.loop)
+        ret = yield from package.async_get_user_site(deps_dir)
     assert popen_mock.call_count == 1
     assert popen_mock.call_args == call(
-        *args, loop=hass.loop, stdin=asyncio.subprocess.PIPE,
+        *args, stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
         env=env)
     assert ret == os.path.join(deps_dir, 'lib_dir')
+
+
+def test_package_loadable_installed_twice():
+    """Test that a package is loadable when installed twice.
+
+    If a package is installed twice, only the first version will be imported.
+    Test that package_loadable will only compare with the first package.
+    """
+    v1 = pkg_resources.Distribution(project_name='hello', version='1.0.0')
+    v2 = pkg_resources.Distribution(project_name='hello', version='2.0.0')
+
+    with patch('pkg_resources.find_distributions', side_effect=[[v1]]):
+        assert not package.package_loadable('hello==2.0.0')
+
+    with patch('pkg_resources.find_distributions', side_effect=[[v1], [v2]]):
+        assert not package.package_loadable('hello==2.0.0')
+
+    with patch('pkg_resources.find_distributions', side_effect=[[v2], [v1]]):
+        assert package.package_loadable('hello==2.0.0')
+
+    with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
+        assert package.package_loadable('hello==2.0.0')

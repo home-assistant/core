@@ -4,8 +4,9 @@ Support for deCONZ light.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.deconz/
 """
-from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
+from homeassistant.components.deconz.const import (
+    CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DATA_DECONZ,
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, SWITCH_TYPES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -31,8 +32,10 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         """Add light from deCONZ."""
         entities = []
         for light in lights:
-            entities.append(DeconzLight(light))
+            if light.type not in SWITCH_TYPES:
+                entities.append(DeconzLight(light))
         async_add_devices(entities, True)
+
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_light))
 
@@ -40,10 +43,12 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
     def async_add_group(groups):
         """Add group from deCONZ."""
         entities = []
+        allow_group = config_entry.data.get(CONF_ALLOW_DECONZ_GROUPS, True)
         for group in groups:
-            if group.lights:
+            if group.lights and allow_group:
                 entities.append(DeconzLight(group))
         async_add_devices(entities, True)
+
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_group', async_add_group))
 
@@ -94,12 +99,17 @@ class DeconzLight(Light):
     @property
     def color_temp(self):
         """Return the CT color value."""
+        if self._light.colormode != 'ct':
+            return None
+
         return self._light.ct
 
     @property
-    def xy_color(self):
-        """Return the XY color value."""
-        return self._light.xy
+    def hs_color(self):
+        """Return the hs color value."""
+        if self._light.colormode in ('xy', 'hs') and self._light.xy:
+            return color_util.color_xy_to_hs(*self._light.xy)
+        return None
 
     @property
     def is_on(self):
@@ -168,7 +178,7 @@ class DeconzLight(Light):
         data = {'on': False}
 
         if ATTR_TRANSITION in kwargs:
-            data = {'bri': 0}
+            data['bri'] = 0
             data['transitiontime'] = int(kwargs[ATTR_TRANSITION]) * 10
 
         if ATTR_FLASH in kwargs:
@@ -180,3 +190,12 @@ class DeconzLight(Light):
                 del data['on']
 
         await self._light.async_set_state(data)
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = {}
+        attributes['is_deconz_group'] = self._light.type == 'LightGroup'
+        if self._light.type == 'LightGroup':
+            attributes['all_on'] = self._light.all_on
+        return attributes

@@ -45,7 +45,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the LIFX platform."""
     server_addr = config.get(CONF_SERVER)
@@ -59,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     lifx_library.probe()
 
 
-class LIFX(object):
+class LIFX:
     """Representation of a LIFX light."""
 
     def __init__(self, add_devices_callback, server_addr=None,
@@ -118,7 +117,6 @@ class LIFX(object):
             bulb.set_power(power)
             bulb.schedule_update_ha_state()
 
-    # pylint: disable=unused-argument
     def poll(self, now):
         """Set up polling for the light."""
         self.probe()

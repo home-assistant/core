@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
 
-REQUIREMENTS = ['librouteros==1.0.5']
+REQUIREMENTS = ['librouteros==2.1.0']
 
 MTK_DEFAULT_API_PORT = '8728'
 
@@ -66,7 +66,6 @@ class MikrotikScanner(DeviceScanner):
 
     def connect_to_device(self):
         """Connect to Mikrotik method."""
-        # pylint: disable=import-error
         import librouteros
         try:
             self.client = librouteros.connect(

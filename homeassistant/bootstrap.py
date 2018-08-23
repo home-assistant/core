@@ -1,5 +1,4 @@
 """Provide methods to bootstrap a Home Assistant instance."""
-import asyncio
 import logging
 import logging.handlers
 import os
@@ -17,7 +16,7 @@ from homeassistant.components import persistent_notification
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
 from homeassistant.setup import async_setup_component
 from homeassistant.util.logging import AsyncHandler
-from homeassistant.util.package import async_get_user_site, get_user_site
+from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.signal import async_register_signal_handling
@@ -29,9 +28,8 @@ ERROR_LOG_FILENAME = 'home-assistant.log'
 # hass.data key for logging information.
 DATA_LOGGING = 'logging'
 
-FIRST_INIT_COMPONENT = set((
-    'system_log', 'recorder', 'mqtt', 'mqtt_eventstream', 'logger',
-    'introduction', 'frontend', 'history'))
+FIRST_INIT_COMPONENT = {'system_log', 'recorder', 'mqtt', 'mqtt_eventstream',
+                        'logger', 'introduction', 'frontend', 'history'}
 
 
 def from_config_dict(config: Dict[str, Any],
@@ -53,8 +51,9 @@ def from_config_dict(config: Dict[str, Any],
         if config_dir is not None:
             config_dir = os.path.abspath(config_dir)
             hass.config.config_dir = config_dir
-            hass.loop.run_until_complete(
-                async_mount_local_lib_path(config_dir, hass.loop))
+            if not is_virtual_env():
+                hass.loop.run_until_complete(
+                    async_mount_local_lib_path(config_dir))
 
     # run task
     hass = hass.loop.run_until_complete(
@@ -88,14 +87,17 @@ async def async_from_config_dict(config: Dict[str, Any],
                              log_no_color)
 
     core_config = config.get(core.DOMAIN, {})
+    has_api_password = bool((config.get('http') or {}).get('api_password'))
 
     try:
-        await conf_util.async_process_ha_core_config(hass, core_config)
+        await conf_util.async_process_ha_core_config(
+            hass, core_config, has_api_password)
     except vol.Invalid as ex:
         conf_util.async_log_exception(ex, 'homeassistant', core_config, hass)
         return None
 
-    await hass.async_add_job(conf_util.process_ha_config_upgrade, hass)
+    await hass.async_add_executor_job(
+        conf_util.process_ha_config_upgrade, hass)
 
     hass.config.skip_pip = skip_pip
     if skip_pip:
@@ -123,7 +125,6 @@ async def async_from_config_dict(config: Dict[str, Any],
     components.update(hass.config_entries.async_domains())
 
     # setup components
-    # pylint: disable=not-an-iterable
     res = await core_components.async_setup(hass, config)
     if not res:
         _LOGGER.error("Home Assistant core failed to initialize. "
@@ -138,7 +139,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     for component in components:
         if component not in FIRST_INIT_COMPONENT:
             continue
-        hass.async_add_job(async_setup_component(hass, component, config))
+        hass.async_create_task(async_setup_component(hass, component, config))
 
     await hass.async_block_till_done()
 
@@ -146,7 +147,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     for component in components:
         if component in FIRST_INIT_COMPONENT:
             continue
-        hass.async_add_job(async_setup_component(hass, component, config))
+        hass.async_create_task(async_setup_component(hass, component, config))
 
     await hass.async_block_till_done()
 
@@ -163,7 +164,8 @@ def from_config_file(config_path: str,
                      skip_pip: bool = True,
                      log_rotate_days: Any = None,
                      log_file: Any = None,
-                     log_no_color: bool = False):
+                     log_no_color: bool = False)\
+        -> Optional[core.HomeAssistant]:
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter if given,
@@ -188,7 +190,8 @@ async def async_from_config_file(config_path: str,
                                  skip_pip: bool = True,
                                  log_rotate_days: Any = None,
                                  log_file: Any = None,
-                                 log_no_color: bool = False):
+                                 log_no_color: bool = False)\
+        -> Optional[core.HomeAssistant]:
     """Read the configuration file and try to start all the functionality.
 
     Will add functionality to 'hass' parameter.
@@ -197,13 +200,15 @@ async def async_from_config_file(config_path: str,
     # Set config dir to directory holding config file
     config_dir = os.path.abspath(os.path.dirname(config_path))
     hass.config.config_dir = config_dir
-    await async_mount_local_lib_path(config_dir, hass.loop)
+
+    if not is_virtual_env():
+        await async_mount_local_lib_path(config_dir)
 
     async_enable_logging(hass, verbose, log_rotate_days, log_file,
                          log_no_color)
 
     try:
-        config_dict = await hass.async_add_job(
+        config_dict = await hass.async_add_executor_job(
             conf_util.load_yaml_config_file, config_path)
     except HomeAssistantError as err:
         _LOGGER.error("Error loading %s: %s", config_path, err)
@@ -211,16 +216,15 @@ async def async_from_config_file(config_path: str,
     finally:
         clear_secret_cache()
 
-    hass = await async_from_config_dict(
+    return await async_from_config_dict(
         config_dict, hass, enable_log=False, skip_pip=skip_pip)
-    return hass
 
 
 @core.callback
 def async_enable_logging(hass: core.HomeAssistant,
                          verbose: bool = False,
-                         log_rotate_days=None,
-                         log_file=None,
+                         log_rotate_days: Optional[int] = None,
+                         log_file: Optional[str] = None,
                          log_no_color: bool = False) -> None:
     """Set up the logging.
 
@@ -289,9 +293,9 @@ def async_enable_logging(hass: core.HomeAssistant,
 
         async_handler = AsyncHandler(hass.loop, err_handler)
 
-        async def async_stop_async_handler(event):
+        async def async_stop_async_handler(_: Any) -> None:
             """Cleanup async handler."""
-            logging.getLogger('').removeHandler(async_handler)
+            logging.getLogger('').removeHandler(async_handler)  # type: ignore
             await async_handler.async_close(blocking=True)
 
         hass.bus.async_listen_once(
@@ -305,26 +309,16 @@ def async_enable_logging(hass: core.HomeAssistant,
         hass.data[DATA_LOGGING] = err_log_path
     else:
         _LOGGER.error(
-            "Unable to setup error log %s (access denied)", err_log_path)
+            "Unable to set up error log %s (access denied)", err_log_path)
 
 
-def mount_local_lib_path(config_dir: str) -> str:
-    """Add local library to Python Path."""
-    deps_dir = os.path.join(config_dir, 'deps')
-    lib_dir = get_user_site(deps_dir)
-    if lib_dir not in sys.path:
-        sys.path.insert(0, lib_dir)
-    return deps_dir
-
-
-async def async_mount_local_lib_path(config_dir: str,
-                                     loop: asyncio.AbstractEventLoop) -> str:
+async def async_mount_local_lib_path(config_dir: str) -> str:
     """Add local library to Python Path.
 
     This function is a coroutine.
     """
     deps_dir = os.path.join(config_dir, 'deps')
-    lib_dir = await async_get_user_site(deps_dir, loop=loop)
+    lib_dir = await async_get_user_site(deps_dir)
     if lib_dir not in sys.path:
         sys.path.insert(0, lib_dir)
     return deps_dir

@@ -11,7 +11,7 @@ COMMENT_REQUIREMENTS = (
     'RPi.GPIO',
     'raspihats',
     'rpi-rf',
-    'Adafruit_Python_DHT',
+    'Adafruit-DHT',
     'Adafruit_BBIO',
     'fritzconnection',
     'pybluez',
@@ -34,6 +34,7 @@ COMMENT_REQUIREMENTS = (
     'credstash',
     'bme680',
     'homekit',
+    'py_noaa',
 )
 
 TEST_REQUIREMENTS = (
@@ -56,6 +57,7 @@ TEST_REQUIREMENTS = (
     'hbmqtt',
     'holidays',
     'home-assistant-frontend',
+    'homematicip',
     'influxdb',
     'libpurecoollink',
     'libsoundtouch',
@@ -76,7 +78,10 @@ TEST_REQUIREMENTS = (
     'pymonoprice',
     'pynx584',
     'pyqwikswitch',
+    'PyRMVtransport',
     'python-forecastio',
+    'python-nest',
+    'pytradfri\[async\]',
     'pyunifi',
     'pyupnp-async',
     'pywebpush',
@@ -161,8 +166,10 @@ def gather_modules():
 
     errors = []
 
-    for package in sorted(explore_module('homeassistant.components', True) +
-                          explore_module('homeassistant.scripts', True)):
+    for package in sorted(
+            explore_module('homeassistant.components', True) +
+            explore_module('homeassistant.scripts', True) +
+            explore_module('homeassistant.auth', True)):
         try:
             module = importlib.import_module(package)
         except ImportError:
@@ -179,6 +186,10 @@ def gather_modules():
         for req in module.REQUIREMENTS:
             if req in IGNORE_REQ:
                 continue
+            if '://' in req:
+                errors.append(
+                    "{}[Only pypi dependencies are allowed: {}]".format(
+                        package, req))
             if req.partition('==')[1] == '' and req not in IGNORE_PIN:
                 errors.append(
                     "{}[Please pin requirement {}, see {}]".format(
@@ -254,7 +265,7 @@ def write_requirements_file(data):
 
 
 def write_test_requirements_file(data):
-    """Write the modules to the requirements_all.txt."""
+    """Write the modules to the requirements_test_all.txt."""
     with open('requirements_test_all.txt', 'w+', newline="\n") as req_file:
         req_file.write(data)
 
@@ -272,7 +283,7 @@ def validate_requirements_file(data):
 
 
 def validate_requirements_test_file(data):
-    """Validate if requirements_all.txt is up to date."""
+    """Validate if requirements_test_all.txt is up to date."""
     with open('requirements_test_all.txt', 'r') as req_file:
         return data == req_file.read()
 

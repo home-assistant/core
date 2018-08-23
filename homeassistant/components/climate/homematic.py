@@ -5,12 +5,13 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.homematic/
 """
 import logging
+
 from homeassistant.components.climate import (
-    ClimateDevice, STATE_AUTO, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_OPERATION_MODE)
+    STATE_AUTO, SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
+    ClimateDevice)
 from homeassistant.components.homematic import (
-    HMDevice, ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT)
-from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN, ATTR_TEMPERATURE
+    ATTR_DISCOVER_DEVICES, HM_ATTRIBUTE_SUPPORT, HMDevice)
+from homeassistant.const import ATTR_TEMPERATURE, STATE_UNKNOWN, TEMP_CELSIUS
 
 DEPENDENCIES = ['homematic']
 
@@ -87,7 +88,7 @@ class HMThermostat(HMDevice, ClimateDevice):
 
         # HM ip etrv 2 uses the set_point_mode to say if its
         # auto or manual
-        elif not set_point_mode == -1:
+        if not set_point_mode == -1:
             code = set_point_mode
         # Other devices use the control_mode
         else:

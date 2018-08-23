@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['amcrest==1.2.2']
+REQUIREMENTS = ['amcrest==1.2.3']
 DEPENDENCIES = ['ffmpeg']
 
 _LOGGER = logging.getLogger(__name__)
@@ -164,7 +164,7 @@ def setup(hass, config):
     return True
 
 
-class AmcrestDevice(object):
+class AmcrestDevice:
     """Representation of a base Amcrest discovery device."""
 
     def __init__(self, camera, name, authentication, ffmpeg_arguments,
