@@ -1,5 +1,6 @@
 """
 Support for Broadlink RM devices.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.broadlink/
 """
@@ -73,6 +74,7 @@ SEND_PACKET_SCHEMA = vol.Schema({
     vol.Optional('delay', default=0): cv.small_float
 })
 
+
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Broadlink switches."""
     import broadlink
@@ -121,9 +123,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         packets = call.data.get('packet', [])
         repeat = call.data.get('repeat')
         delay = call.data.get('delay')
-        if repeat == 0:
-            return
-        for i in range(0, repeat):
+        for x in range(0, repeat):
             for packet in packets:
                 for retry in range(DEFAULT_RETRY):
                     try:
