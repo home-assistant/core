@@ -50,6 +50,7 @@ TEST_REQUIREMENTS = (
     'feedparser',
     'foobot_async',
     'gTTS-token',
+    'hangups',
     'HAP-python',
     'ha-ffmpeg',
     'haversine',
