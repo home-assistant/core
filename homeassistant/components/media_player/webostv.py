@@ -204,6 +204,7 @@ class LgWebOSDevice(MediaPlayerDevice):
 
                 self._source_list = {}
                 self._app_list = {}
+                self._channel_list = list()
                 conf_sources = self._customize.get(CONF_SOURCES, [])
 
                 for app in self._client.get_apps():
@@ -230,10 +231,11 @@ class LgWebOSDevice(MediaPlayerDevice):
                         self._source_list[source['label']] = source
 
                 for channel in self._client.get_channels():
-                    number = channel['channelNumber']
                     name = channel['channelName']
                     if name != '':
-                        self._channel_list[number] = name
+                        self._channel_list.append(name)
+
+                self._channel_list.sort()
 
         except (OSError, ConnectionClosed, TypeError,
                 asyncio.TimeoutError):
@@ -275,7 +277,7 @@ class LgWebOSDevice(MediaPlayerDevice):
     @property
     def channel_list(self):
         """List of available channels."""
-        return sorted(self._channel_list.values())
+        return self._channel_list
 
     @property
     def media_content_type(self):
