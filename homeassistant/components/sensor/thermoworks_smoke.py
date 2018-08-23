@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except HTTPError as error:
         msg = "{}".format(error.strerror)
         if 'EMAIL_NOT_FOUND' in msg or \
-                "INVALID_PASSWORD" in msg:
+                'INVALID_PASSWORD' in msg:
             _LOGGER.error("Invalid email and password combination")
         else:
             _LOGGER.error(msg)
