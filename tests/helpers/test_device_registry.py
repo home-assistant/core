@@ -44,6 +44,28 @@ async def test_get_or_create_returns_same_entry(registry):
     assert entry.identifiers == [['bridgeid', '0123']]
 
 
+async def test_multiple_config_entries(registry):
+    """Make sure we do not get duplicate entries."""
+    entry = registry.async_get_or_create(
+        [['bridgeid', '0123']], 'manufacturer', 'model',
+        [['ethernet', '12:34:56:78:90:AB:CD:EF']])
+    entry2 = registry.async_get_or_create(
+        [['bridgeid', '0123']], 'manufacturer', 'model',
+        [['ethernet', '12:34:56:78:90:AB:CD:EF']], config_entry='123')
+    entry3 = registry.async_get_or_create(
+        [['bridgeid', '0123']], 'manufacturer', 'model',
+        [['ethernet', '12:34:56:78:90:AB:CD:EF']], config_entry='456')
+    entry4 = registry.async_get_or_create(
+        [['bridgeid', '0123']], 'manufacturer', 'model',
+        [['ethernet', '12:34:56:78:90:AB:CD:EF']], config_entry='123')
+
+    assert len(registry.devices) == 1
+    assert entry is entry2
+    assert entry is entry3
+    assert entry is entry4
+    assert entry.config_entries == {'123', '456'}
+
+
 async def test_loading_from_storage(hass, hass_storage):
     """Test loading stored devices on start."""
     hass_storage[device_registry.STORAGE_KEY] = {
@@ -67,7 +89,8 @@ async def test_loading_from_storage(hass, hass_storage):
                     'manufacturer': 'manufacturer',
                     'model': 'model',
                     'name': 'name',
-                    'sw_version': 'version'
+                    'sw_version': 'version',
+                    'config_entries': ['123']
                 }
             ]
         }
@@ -80,3 +103,4 @@ async def test_loading_from_storage(hass, hass_storage):
         identifiers=[['serial', '12:34:56:78:90:AB:CD:EF']],
         manufacturer='manufacturer', model='model')
     assert entry.id == 'abcdefghijklm'
+    assert isinstance(entry.config_entries, set)

@@ -29,6 +29,7 @@ class DeviceEntry:
     model = attr.ib(type=str)
     name = attr.ib(type=str, default=None)
     sw_version = attr.ib(type=str, default=None)
+    config_entries = attr.ib(type=set, default=set(), converter=set)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
 
 
@@ -51,12 +52,13 @@ class DeviceRegistry:
         return None
 
     @callback
-    def async_get_or_create(self, *, connection, identifiers, manufacturer,
-                            model, name=None, sw_version=None):
+    def async_get_or_create(self, *, config_entry, identifiers, manufacturer,
+                            model, connection, *, name=None, sw_version=None):
         """Get device. Create if it doesn't exist."""
         device = self.async_get_device(identifiers, connection)
-
         if device is not None:
+            if config_entry is not None:
+                device.config_entries.add(config_entry)
             return device
 
         device = DeviceEntry(
@@ -65,9 +67,11 @@ class DeviceRegistry:
             manufacturer=manufacturer,
             model=model,
             name=name,
-            sw_version=sw_version
+            sw_version=sw_version,
         )
 
+        if config_entry is not None:
+            device.config_entries.add(config_entry)
         self.devices.append(device)
         self.async_schedule_save()
 
@@ -102,6 +106,7 @@ class DeviceRegistry:
                 'model': entry.model,
                 'name': entry.name,
                 'sw_version': entry.sw_version,
+                'config_entries': list(entry.config_entries),
             } for entry in self.devices
         ]
 
