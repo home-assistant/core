@@ -49,10 +49,6 @@ FILE_MIGRATION = (
     ('ios.conf', '.ios.conf'),
 )
 
-DEFAULT_AUTH_PROVIDERS = [
-    {'type': 'homeassistant'},
-    {'type': 'legacy_api_password'},
-]
 DEFAULT_CORE_CONFIG = (
     # Tuples (attribute, default, auto detect property, description)
     (CONF_NAME, 'Home', None, 'Name of the location where Home Assistant is '
@@ -166,7 +162,7 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
         # pylint: disable=no-value-for-parameter
         vol.All(cv.ensure_list, [vol.IsDir()]),
     vol.Optional(CONF_PACKAGES, default={}): PACKAGES_CONFIG_SCHEMA,
-    vol.Optional(CONF_AUTH_PROVIDERS, default=DEFAULT_AUTH_PROVIDERS):
+    vol.Optional(CONF_AUTH_PROVIDERS):
         vol.All(cv.ensure_list,
                 [auth_providers.AUTH_PROVIDER_SCHEMA.extend({
                     CONF_TYPE: vol.NotIn(['insecure_example'],
@@ -411,7 +407,8 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
 
 
 async def async_process_ha_core_config(
-        hass: HomeAssistant, config: Dict) -> None:
+        hass: HomeAssistant, config: Dict,
+        has_api_password: bool = False) -> None:
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -420,10 +417,19 @@ async def async_process_ha_core_config(
 
     # Only load auth during startup.
     if not hasattr(hass, 'auth'):
-        setattr(hass, 'auth', await auth.auth_manager_from_config(
+        auth_conf = config.get(CONF_AUTH_PROVIDERS)
+
+        if auth_conf is None:
+            auth_conf = [
+                {'type': 'homeassistant'}
+            ]
+            if has_api_password:
+                auth_conf.append({'type': 'legacy_api_password'})
+
+        hass.auth = await auth.auth_manager_from_config(
             hass,
-            config.get(CONF_AUTH_PROVIDERS, []),
-            config.get(CONF_AUTH_MFA_MODULES, [])))
+            auth_conf,
+            config.get(CONF_AUTH_MFA_MODULES, []))
 
     hac = hass.config
 
