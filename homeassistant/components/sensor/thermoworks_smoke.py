@@ -59,21 +59,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     try:
         mgr = thermoworks_smoke.initialize_app(email, password, True, excluded)
-    
+
         # list of sensor devices
         dev = []
-    
+
         # get list of registered devices
         for serial in mgr.serials():
             for variable in monitored_variables:
                 dev.append(ThermoworksSmokeSensor(variable, serial, mgr))
-    
+
         add_devices(dev, True)
     except HTTPError as error:
-        if 'EMAIL_NOT_FOUND' in error.strerror or "INVALID_PASSWORD" in error.strerror:
+        msg = "{}".format(error.strerror)
+        if 'EMAIL_NOT_FOUND' in msg or \
+                "INVALID_PASSWORD" in msg:
             _LOGGER.error("Invalid email and password combination")
         else:
-            _LOGGER.error(error.strerror)
+            _LOGGER.error(msg)
+
 
 class ThermoworksSmokeSensor(Entity):
     """Implementation of a thermoworks smoke sensor."""
