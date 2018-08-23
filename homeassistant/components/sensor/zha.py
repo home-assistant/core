@@ -187,7 +187,7 @@ class MeteringSensor(Sensor):
         if self._state is None:
             return None
 
-        return round(float(self._state))
+        return round(float(self._state) / 10, 1)
 
 
 class ElectricalMeasurementSensor(Sensor):
