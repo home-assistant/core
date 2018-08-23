@@ -74,7 +74,7 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Required(CONF_ACCESS_TOKEN): cv.string,
             vol.Optional(CONF_API_HOST): vol.Url(),
             vol.Required(CONF_DEVICES): [{
-                vol.Required(CONF_ID): cv.string,
+                vol.Required(CONF_ID): cv.matches_regex("[0-9a-f]{12}"),
                 vol.Optional(CONF_BINARY_SENSORS): vol.All(
                     cv.ensure_list, [_BINARY_SENSOR_SCHEMA]),
                 vol.Optional(CONF_SWITCHES): vol.All(
