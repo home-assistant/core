@@ -1,4 +1,4 @@
-update_users_and_conversations:
+update:
   description: Updates the list of users and conversations.
 
 send_message:

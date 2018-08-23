@@ -34,7 +34,7 @@ CONF_CONVERSATION_ID = 'id'
 CONF_CONVERSATION_NAME = 'name'
 
 SERVICE_SEND_MESSAGE = 'send_message'
-SERVICE_UPDATE_USERS_AND_CONVERSATIONS = 'update_users_and_conversations'
+SERVICE_UPDATE = 'update'
 
 
 TARGETS_SCHEMA = vol.All(

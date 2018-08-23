@@ -15,7 +15,7 @@ from .const import (
     CONF_BOT, CONF_COMMANDS, CONF_REFRESH_TOKEN, DOMAIN,
     EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
     MESSAGE_SCHEMA, SERVICE_SEND_MESSAGE,
-    SERVICE_UPDATE_USERS_AND_CONVERSATIONS)
+    SERVICE_UPDATE)
 
 REQUIREMENTS = ['hangups==0.4.5']
 
@@ -68,7 +68,7 @@ async def async_setup_entry(hass, config):
                                  bot.async_handle_send_message,
                                  schema=MESSAGE_SCHEMA)
     hass.services.async_register(DOMAIN,
-                                 SERVICE_UPDATE_USERS_AND_CONVERSATIONS,
+                                 SERVICE_UPDATE,
                                  bot.
                                  async_handle_update_users_and_conversations,
                                  schema=None)
