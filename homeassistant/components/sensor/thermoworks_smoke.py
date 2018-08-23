@@ -50,24 +50,30 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the thermoworks sensor."""
     import thermoworks_smoke
+    from requests.exceptions import HTTPError
 
     email = config.get(CONF_EMAIL)
     password = config.get(CONF_PASSWORD)
     monitored_variables = config.get(CONF_MONITORED_VARIABLES)
     excluded = config.get(CONF_EXCLUDE)
 
-    mgr = thermoworks_smoke.initialize_app(email, password, True, excluded)
-
-    # list of sensor devices
-    dev = []
-
-    # get list of registered devices
-    for serial in mgr.serials():
-        for variable in monitored_variables:
-            dev.append(ThermoworksSmokeSensor(variable, serial, mgr))
-
-    add_devices(dev, True)
-
+    try:
+        mgr = thermoworks_smoke.initialize_app(email, password, True, excluded)
+    
+        # list of sensor devices
+        dev = []
+    
+        # get list of registered devices
+        for serial in mgr.serials():
+            for variable in monitored_variables:
+                dev.append(ThermoworksSmokeSensor(variable, serial, mgr))
+    
+        add_devices(dev, True)
+    except HTTPError as error:
+        if 'EMAIL_NOT_FOUND' in error.strerror or "INVALID_PASSWORD" in error.strerror:
+            _LOGGER.error("Invalid email and password combination")
+        else:
+            _LOGGER.error(error.strerror)
 
 class ThermoworksSmokeSensor(Entity):
     """Implementation of a thermoworks smoke sensor."""
