@@ -69,6 +69,7 @@ def websocket_setup_mfa(
             connection.send_message_outside(
                 websocket_api.result_message(
                     msg['id'], _prepare_result_json(result)))
+            return
 
         mfa_module_id = msg.get('mfa_module_id')
         mfa_module = hass.auth.get_auth_mfa_module(mfa_module_id)
