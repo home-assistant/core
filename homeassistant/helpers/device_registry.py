@@ -15,10 +15,8 @@ STORAGE_KEY = 'core.device_registry'
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
 
-CONNECTION_MAC = 'mac'
+CONNECTION_NETWORK_MAC = 'mac'
 CONNECTION_ZIGBEE = 'zigbee'
-
-IDENTIFIER_MAC = 'mac'
 
 
 @attr.s(slots=True, frozen=True)

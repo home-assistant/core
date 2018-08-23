@@ -7,11 +7,10 @@ https://home-assistant.io/components/binary_sensor.deconz/
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.deconz.const import (
     ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_ZIGBEE, IDENTIFIER_MAC)
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
@@ -124,7 +123,7 @@ class DeconzBinarySensor(BinarySensorDevice):
             serial = self._sensor.uniqueid.split('-', 1)[0]
             return {
                 'connection': [[CONNECTION_ZIGBEE, serial]],
-                'identifiers': [[IDENTIFIER_MAC, serial]],
+                'identifiers': [[DECONZ_DOMAIN, serial]],
                 'manufacturer': self._sensor.manufacturer,
                 'model': self._sensor.modelid,
                 'name': self._sensor.name,

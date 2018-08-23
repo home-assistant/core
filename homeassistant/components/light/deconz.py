@@ -6,15 +6,14 @@ https://home-assistant.io/components/light.deconz/
 """
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, SWITCH_TYPES)
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN, SWITCH_TYPES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_ZIGBEE, IDENTIFIER_MAC)
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
@@ -210,7 +209,7 @@ class DeconzLight(Light):
             serial = self._light.uniqueid.split('-', 1)[0]
             return {
                 'connection': [[CONNECTION_ZIGBEE, serial]],
-                'identifiers': [[IDENTIFIER_MAC, serial]],
+                'identifiers': [[DECONZ_DOMAIN, serial]],
                 'manufacturer': self._light.manufacturer,
                 'model': self._light.modelid,
                 'name': self._light.name,

@@ -6,12 +6,11 @@ https://home-assistant.io/components/sensor.deconz/
 """
 from homeassistant.components.deconz.const import (
     ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_ZIGBEE, IDENTIFIER_MAC)
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -144,7 +143,7 @@ class DeconzSensor(Entity):
             serial = self._sensor.uniqueid.split('-', 1)[0]
             return {
                 'connection': [[CONNECTION_ZIGBEE, serial]],
-                'identifiers': [[IDENTIFIER_MAC, serial]],
+                'identifiers': [[DECONZ_DOMAIN, serial]],
                 'manufacturer': self._sensor.manufacturer,
                 'model': self._sensor.modelid,
                 'name': self._sensor.name,
@@ -219,7 +218,7 @@ class DeconzBattery(Entity):
             serial = self._device.uniqueid.split('-', 1)[0]
             return {
                 'connection': [[CONNECTION_ZIGBEE, serial]],
-                'identifiers': [[IDENTIFIER_MAC, serial]],
+                'identifiers': [[DECONZ_DOMAIN, serial]],
                 'manufacturer': self._device.manufacturer,
                 'model': self._device.modelid,
                 'name': self._device.name,
