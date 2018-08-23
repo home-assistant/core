@@ -5,7 +5,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 from homeassistant.components import deconz
 
-from tests.common import mock_coro, MockConfigEntry
+from tests.common import mock_coro
 
 CONFIG = {
     "config": {
@@ -128,15 +128,17 @@ async def test_setup_entry_successful(hass):
 
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
-    entry = MockConfigEntry(domain=deconz.DOMAIN, data={
-        'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'
-    })
-    entry.add_to_hass(hass)
-    with patch('pydeconz.DeconzSession.async_get_state',
-               return_value=mock_coro(CONFIG)), \
-            patch('pydeconz.DeconzSession.start', return_value=True):
+    entry = Mock()
+    entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
+    entry.async_unload.return_value = mock_coro(True)
+    deconzmock = Mock()
+    deconzmock.async_load_parameters.return_value = mock_coro(True)
+    deconzmock.sensors = {}
+    with patch('pydeconz.DeconzSession', return_value=deconzmock):
         assert await deconz.async_setup_entry(hass, entry) is True
+
     assert deconz.DATA_DECONZ_EVENT in hass.data
+
     hass.data[deconz.DATA_DECONZ_EVENT].append(Mock())
     hass.data[deconz.DATA_DECONZ_ID] = {'id': 'deconzid'}
     assert await deconz.async_unload_entry(hass, entry)
