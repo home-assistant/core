@@ -12,12 +12,12 @@ _LOGGER = logging.getLogger(__name__)
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the insteon_plm component.
+    """Set up the insteon_plm component.
 
-    This component is depreciated as of release 0.77 and should be removed in
+    This component is deprecated as of release 0.77 and should be removed in
     release 0.90.
     """
-    _LOGGER.warning('The insteon_plm comonent has been replaced by '
+    _LOGGER.warning('The insteon_plm component has been replaced by '
                     'the insteon component')
     _LOGGER.warning('Please see https://home-assistant.io/components/insteon')
 
