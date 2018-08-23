@@ -426,10 +426,10 @@ async def async_process_ha_core_config(
             if has_api_password:
                 auth_conf.append({'type': 'legacy_api_password'})
 
-        hass.auth = await auth.auth_manager_from_config(
+        setattr(hass, 'auth', await auth.auth_manager_from_config(
             hass,
             auth_conf,
-            config.get(CONF_AUTH_MFA_MODULES, []))
+            config.get(CONF_AUTH_MFA_MODULES, [])))
 
     hac = hass.config
 
