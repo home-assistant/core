@@ -106,8 +106,7 @@ def _zm_request(method, api_url, data=None):
     # Since the API uses sessions that expire, sometimes we need to re-auth
     # if the call fails.
     for _ in range(LOGIN_RETRIES):
-        req = requests.request(
-            method, urljoin(ZM['url'], api_url),
+        req = requests.request(method, urljoin(ZM['url'], api_url),
             data=data,
             cookies=ZM['cookies'],
             timeout=DEFAULT_TIMEOUT,
