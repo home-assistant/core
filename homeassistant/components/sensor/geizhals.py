@@ -61,11 +61,11 @@ class Geizwatch(Entity):
         # internal
         self._name = name
         self._geizhals = Geizhals(product_id, domain)
+        self._device = Device()
 
         # external
         self.description = description
         self.product_id = product_id
-        self.device = Device()
 
     @property
     def name(self):
@@ -80,24 +80,24 @@ class Geizwatch(Entity):
     @property
     def state(self):
         """Return the best price of the selected product."""
-        return self.device.prices[0]
+        return self._device.prices[0]
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        while len(self.device.prices) < 4:
-            self.device.prices.append('None')
-        attrs = {'device_name': self.device.name,
+        while len(self._device.prices) < 4:
+            self._device.prices.append('None')
+        attrs = {'device_name': self._device.name,
                  'description': self.description,
-                 'unit_of_measurement': self.device.price_currency,
+                 'unit_of_measurement': self._device.price_currency,
                  'product_id': self.product_id,
-                 'price1': self.device.prices[0],
-                 'price2': self.device.prices[1],
-                 'price3': self.device.prices[2],
-                 'price4': self.device.prices[3]}
+                 'price1': self._device.prices[0],
+                 'price2': self._device.prices[1],
+                 'price3': self._device.prices[2],
+                 'price4': self._device.prices[3]}
         return attrs
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest price from geizhals and updates the state."""
-        self.device = self._geizhals.parse()
+        self._device = self._geizhals.parse()
