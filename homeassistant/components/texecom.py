@@ -81,7 +81,7 @@ def async_setup(hass, config):
 
 
 class TexecomBinarySensor(BinarySensorDevice):
-    """Representation of an Texecom Binary Sensor"""
+    """Representation of an Texecom Binary Sensor."""
 
     def __init__(self, name, zone_number, zone_name, zone_type, state):
         """Initialize the device."""
@@ -145,10 +145,10 @@ class TexecomBinarySensor(BinarySensorDevice):
 
 
 class TexecomPanelInterface(Entity):
-    """Representation of a Texecom Panel Interface"""
+    """Representation of a Texecom Panel Interface."""
 
     def __init__(self, name, port):
-        """Initialize the Texecom Panel Interface"""
+        """Initialize the Texecom Panel Interface."""
         self._name = name
         self._state = None
         self._port = port

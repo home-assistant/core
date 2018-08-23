@@ -1,8 +1,8 @@
 """
-Support for texecom panel interface
+Support for texecom panel interface.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/texecom/
+https://home-assistant.io/components/texecom/.
 """
 
 import asyncio
