@@ -35,7 +35,7 @@ async def async_setup(hass):
         WS_TYPE_DEPOSE_MFA, websocket_depose_mfa, SCHEMA_WS_DEPOSE_MFA)
 
     async def _async_create_setup_flow(handler, context, data):
-        """Create a setup flow. hanlder is a mfa module"""
+        """Create a setup flow. hanlder is a mfa module."""
         mfa_module = hass.auth.get_auth_mfa_module(handler)
         if mfa_module is None:
             raise ValueError('Mfa module {} is not found'.format(handler))
@@ -117,7 +117,7 @@ def websocket_depose_mfa(hass, connection, msg):
         mfa_module_id = msg['mfa_module_id']
         try:
             await hass.auth.async_disable_user_mfa(user, msg['mfa_module_id'])
-        except Exception as err:
+        except ValueError as err:
             connection.to_write.put_nowait(websocket_api.error_message(
                 msg['id'], 'disable_failed',
                 'Cannot disable Multi-factor Authentication Module'
@@ -137,7 +137,7 @@ def _prepare_result_json(result):
         data = result.copy()
         return data
 
-    elif result['type'] != data_entry_flow.RESULT_TYPE_FORM:
+    if result['type'] != data_entry_flow.RESULT_TYPE_FORM:
         return result
 
     import voluptuous_serialize

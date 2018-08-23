@@ -330,7 +330,6 @@ def websocket_current_user(hass: HomeAssistant, connection, msg):
 
     async def async_get_current_user(user):
         """Get current user."""
-
         enabled_modules = await hass.auth.async_get_enabled_mfa(user)
 
         connection.to_write.put_nowait(

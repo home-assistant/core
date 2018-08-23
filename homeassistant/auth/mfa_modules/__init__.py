@@ -106,13 +106,15 @@ class SetupFlow(data_entry_flow.FlowHandler):
         self._auth_module = auth_module
         self._user_id = user_id
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
         """Handle the first step of setup flow.
 
         Return self.async_show_form(step_id='init') if user_input == None.
         Return await self.async_finish(flow_result) if finish.
         """
-        errors = {}
+        errors = {}  # type: Dict[str, str]
 
         if user_input:
             result = await self._auth_module.async_setup_user(
