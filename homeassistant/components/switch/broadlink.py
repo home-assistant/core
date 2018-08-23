@@ -123,7 +123,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         packets = call.data.get('packet', [])
         repeat = call.data.get('repeat')
         delay = call.data.get('delay')
-        for times in range(0, repeat):
+        for _ in range(0, repeat):
             for packet in packets:
                 for retry in range(DEFAULT_RETRY):
                     try:
