@@ -42,9 +42,6 @@ scan_device:
 scan_network_for_devices:
   description: Wykrywanie urządzeń w sieci z raportowaniem na bieżąco wyników w aplikacji
 
-silent_scan_network_for_devices:
-  description: Wykrywanie urządzeń w sieci bez raportowania na bieżąco wyników w aplikacji
-
 show_network_devices_info:
   description: Raport wykrytych urządzeń
 

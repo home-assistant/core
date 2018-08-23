@@ -44,10 +44,6 @@ def async_setup(hass, config):
         yield from _scan_network_for_devices(hass, service)
 
     @asyncio.coroutine
-    def silent_scan_network_for_devices(service):
-        yield from _silent_scan_network_for_devices(hass, service)
-
-    @asyncio.coroutine
     def scan_device(service):
         yield from _scan_device(hass, service)
 
@@ -76,9 +72,6 @@ def async_setup(hass, config):
         DOMAIN, 'key_event', key_event)
     hass.services.async_register(
         DOMAIN, 'scan_network_for_devices', scan_network_for_devices)
-    hass.services.async_register(
-        DOMAIN, 'silent_scan_network_for_devices',
-        silent_scan_network_for_devices)
     hass.services.async_register(
         DOMAIN, 'scan_device', scan_device)
     hass.services.async_register(
@@ -223,20 +216,6 @@ def _show_network_devices_info(hass, call):
         'sensor.network_devices_info_value', '', {
             'custom_ui_state_card': 'state-card-robot-disco',
             'text': info
-        })
-
-
-@asyncio.coroutine
-def _silent_scan_network_for_devices(hass, call):
-    # info about start scaning
-    hass.states.async_set('sensor.network_devices_info_value', '', {
-        'custom_ui_state_card': 'state-card-robot-disco',
-        'text': '*wykrywam...'
-    })
-    # send the message to all robots in network
-    yield from hass.services.async_call('mqtt', 'publish', {
-        'topic': 'cmnd/dom/status',
-        'payload': 0
         })
 
 

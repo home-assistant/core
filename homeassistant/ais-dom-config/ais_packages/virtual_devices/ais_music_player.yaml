@@ -14,23 +14,23 @@ input_select:
     options:
      - Podłączony głośnik
     icon: mdi:speaker-wireless
-  ais_music_service:
-    name: 'Serwis muzyczny:'
-    options:
-      - "-"
-      - "YouTube"
-      - "Spotify"
-      - "Deezer"
-      - "Soundcloud"
-    initial: "-"
-    icon: mdi:shopping-music
+#  ais_music_service:
+#    name: 'Serwis muzyczny:'
+#    options:
+#      - "-"
+#      - "YouTube"
+#      - "Spotify"
+#      - "Deezer"
+#      - "Soundcloud"
+#    initial: "-"
+#    icon: mdi:shopping-music
 
 group:
   music_player:
     control: hidden
-    name: Muzyka
+    name: Muzyka z YouTube
     entities:
-      - input_select.ais_music_service
+#      - input_select.ais_music_service
       - input_text.ais_youtube_query
       - input_select.ais_youtube_track_name
       - input_select.ais_music_player

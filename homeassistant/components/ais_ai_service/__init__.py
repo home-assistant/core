@@ -942,6 +942,43 @@ async def async_setup(hass, config):
                 context_key_words = context_key_words.split(',')
                 async_register(hass, INTENT_CHANGE_CONTEXT, context_key_words)
 
+    def on_new_iot_device_selection(service):
+        iot = service.data['iot'].lower()
+        # the name according to the selected model
+        if 'dom_' + ais_global.G_MODEL_SONOFF_S20 in iot:
+            info = "Inteligentne gniazdo"
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_B1 in iot:
+            info = "Żarówka"
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_TH in iot:
+            info = "Przełącznik z czujnikami"
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_SLAMPHER in iot:
+            info = "Oprawka"
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_TOUCH in iot:
+            info = "Przełącznik dotykowy "
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_POW in iot:
+            info = "Przełącznik z pomiarem mocy"
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_DUAL in iot:
+            info = "Przełącznik podwójny"
+        else:
+            info = "Nowe urządzenie"
+        hass.services.call(
+            'input_text',
+            'set_value', {
+                "entity_id": "input_text.ais_iot_device_name",
+                "value": info})
+        # set the WIFI as an current WIFI (only if empty)
+        wifis = hass.states.get('input_select.ais_android_wifi_network')
+        if wifis.state == ais_global.G_EMPTY_OPTION and ais_global.GLOBAL_MY_SSID is not None:
+            options = wifis.attributes.get('options')
+            for o in options:
+                if ais_global.GLOBAL_MY_SSID in o:
+                    hass.services.call(
+                        'input_select',
+                        'select_option', {
+                            "entity_id": "input_select.ais_android_wifi_network",
+                            "option": o})
+        # TODO Set the WIFI password if possible
+
     # register services
     hass.services.async_register(DOMAIN, 'process', process)
     hass.services.async_register(DOMAIN, 'process_code', process_code)
@@ -950,6 +987,7 @@ async def async_setup(hass, config):
     hass.services.async_register(DOMAIN, 'publish_command_to_frame', publish_command_to_frame)
     hass.services.async_register(DOMAIN, 'process_command_from_frame', process_command_from_frame)
     hass.services.async_register(DOMAIN, 'prepare_remote_menu', prepare_remote_menu)
+    hass.services.async_register(DOMAIN, 'on_new_iot_device_selection', on_new_iot_device_selection)
 
     hass.helpers.intent.async_register(GetTimeIntent())
     hass.helpers.intent.async_register(GetDateIntent())
@@ -1216,7 +1254,9 @@ def _process_command_from_frame(hass, service):
             elif item["model"] == ais_global.G_MODEL_SONOFF_B1:
                 info = "Znaleziono nową żarówkę"
             elif item["model"] == ais_global.G_MODEL_SONOFF_POW:
-                info = "Znaleziono nowy przełącznik z monitorem energii"
+                info = "Znaleziono nowy przełącznik z pomiarem mocy"
+            elif item["model"] == ais_global.G_MODEL_SONOFF_DUAL:
+                info = "Znaleziono nowy podwójny przełącznik"
             else:
                 info = "Znaleziono nowe urządzenie, to urządzenie może"
                 info += " nie być w pełni wspierane przez system 'Asystent domowy'"
@@ -1232,6 +1272,7 @@ def _process_command_from_frame(hass, service):
         cci = json.loads(service.data["payload"])
         info = "Połączenie Wifi: "
         if "ssid" in cci:
+            ais_global.set_my_ssid(cci["ssid"])
             if cci["ssid"] == "<unknown ssid>":
                 info += "brak połączenia"
             else:
@@ -1249,18 +1290,23 @@ def _process_command_from_frame(hass, service):
     elif service.data["topic"] == 'ais/wifi_state_change_info':
         # current connection info
         cci = json.loads(service.data["payload"])
+        ais_global.set_my_ssid(cci["ssid"])
         info = "Wifi: "
         if "ssid" in cci:
-            if 'dom_' + ais_global.G_MODEL_SONOFF_S20 in cci["ssid"]:
+            if 'dom_' + ais_global.G_MODEL_SONOFF_S20 in cci["ssid"].lower():
                 info += "gniazdo "
-            elif 'dom_' + ais_global.G_MODEL_SONOFF_B1 in cci["ssid"]:
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_B1 in cci["ssid"].lower():
                 info += "żarówka "
-            elif 'dom_' + ais_global.G_MODEL_SONOFF_TH in cci["ssid"]:
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_TH in cci["ssid"].lower():
                 info += "przełącznik z czujnikami "
-            elif 'dom_' + ais_global.G_MODEL_SONOFF_SLAMPHER in cci["ssid"]:
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_SLAMPHER in cci["ssid"].lower():
                 info += "oprawka "
-            elif 'dom_' + ais_global.G_MODEL_SONOFF_TOUCH in cci["ssid"]:
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_TOUCH in cci["ssid"].lower():
                 info += "przełącznik dotykowy "
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_POW in cci["ssid"].lower():
+                info += "przełącznik z pomiarem mocy"
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_DUAL in cci["ssid"].lower():
+                info += "podwójny przełącznik"
             else:
                 info += cci["ssid"] + " "
         if "state" in cci:

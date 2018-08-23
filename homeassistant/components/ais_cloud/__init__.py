@@ -146,13 +146,34 @@ def async_setup(hass, config):
     hass.services.async_register(
         DOMAIN, 'select_rss_help_item', select_rss_help_item)
     def device_discovered(service):
-        """ Called when a Awesome device has been discovered. """
-        _LOGGER.info("--------------------------------")
-        _LOGGER.info("Discovered a new Awesome device: {}".format(service))
-        _LOGGER.info("--------------------------------")
-        hass.async_add_job(
-            hass.services.async_call('ais_cloud', 'get_players')
-        )
+        """ Called when a device has been discovered. """
+        _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
+        try:
+            d = service.as_dict().get('data')
+            s = d.get('service')
+            p = d.get('platform')
+            if s == 'load_platform.sensor' and p == 'mqtt':
+                i = d.get('discovered')
+                uid = i.get('unique_id')
+                if uid is not None:
+                    # search entity_id for this unique_id
+                    # add sensor to group
+                    hass.async_add_job(
+                        hass.services.async_call(
+                            'group',
+                            'set', {
+                                "object_id": "all_ais_sensors",
+                                "add_entities": ["sensor." + uid]
+                            }
+                        )
+                    )
+            elif s == 'load_platform.media_player':
+                hass.async_add_job(
+                    hass.services.async_call('ais_cloud', 'get_players')
+                )
+        except Exception as e:
+            _LOGGER.error("device_discovered: " + str(e))
+
     hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, device_discovered)
 
     def state_changed(state_event):

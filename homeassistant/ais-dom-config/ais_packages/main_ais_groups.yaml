@@ -7,8 +7,6 @@ group:
       - sensor.time
       - sensor.date_formated
       - sun.sun
-      - sensor.temperatura_si7021
-      - sensor.wilgotnosc_si7021
       - group.ais_wyszukiwarka
       - media_player.wbudowany_glosnik
       - sensor.pogoda_symbol
@@ -66,7 +64,7 @@ group:
         - group.dom_system_version
         - group.ais_rss_help
         # - group.ais_android_certification
-        - group.dom_cloud
+        # - group.dom_cloud
   system:
       name: System
       view: yes

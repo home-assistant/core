@@ -1,7 +1,7 @@
 weblink.cloud:
   friendly_name: Przejdz do konfiguracji usług online
 binary_sensor.ping_binary_sensor:
-  friendly_name: Status serwisu AIS dom
+  friendly_name: Status serwisu Asystent domowy
   icon: mdi:cloud
 weblink.upgrade_log:
   friendly_name: Logi aktualizacji
@@ -264,9 +264,9 @@ group.dom_system_version:
   friendly_name: Wersja systemu
   remote_group_view: Pomoc
   order: 1
-group.dom_cloud:
-  friendly_name: Usługi AIS dom
-  order: 2
+#group.dom_cloud:
+#  friendly_name: Usługi AIS dom
+#  order: 2
 group.system_status:
   context_key_words: system,status systemu
   context_answer: OK, wybrano status systemu. Możesz nawigować pilotem by uzyskać
@@ -294,8 +294,15 @@ group.all_lights:
     nawigować pilotem by sprawdzać status oraz przełączać.
   friendly_name: Wszystkie światła
   remote_group_view: Twój Dom
-group.all_devices:
+group.all_ais_sensors:
   order: 3
+  hidden: false
+  context_key_words: czujniki, wszystkie czujniki
+  context_answer: OK, wybrano wszystkie czujniki.
+  friendly_name: Wszystkie czujniki
+  remote_group_view: Twój Dom
+group.all_devices:
+  order: 4
   hidden: false
   context_key_words: Urządzenia,wszystkie urządzenia
   context_answer: OK, urządzenia
@@ -303,16 +310,16 @@ group.all_devices:
   remote_group_view: Twój Dom
 group.ais_pogoda:
   remote_group_view: Twój Dom
-  order: 4
-group.ais_pogoda_48:
   order: 5
+group.ais_pogoda_48:
+  order: 6
   remote_group_view: Twój Dom
 group.all_automations:
-  order: 6
+  order: 7
   hidden: true
   friendly_name: Wszystkie automatyzacje
 group.ais_wyszukiwarka:
-  order: 7
+  order: 8
   context_key_words: asystent,asystentka
   context_answer: Powiedz proszę jakie informację mam wyszukać?
   context_suffix: Znajdź informacje o

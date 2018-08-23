@@ -10,13 +10,14 @@ sensor:
     name: version_info
 
 group:
-  dom_cloud:
-    control: hidden
-    entities:
-      - binary_sensor.ping_binary_sensor
-      - weblink.cloud
-      - weblink.upgrade_log
   dom_system_version:
     control: hidden
     entities:
       - sensor.version_info
+      - weblink.upgrade_log
+  #  dom_cloud:
+  #    control: hidden
+  #    entities:
+  #      - binary_sensor.ping_binary_sensor
+  #      - weblink.cloud
+  #      - weblink.upgrade_log

@@ -13,7 +13,7 @@ sun:
 
 # ais-dom cloud functionality
 ais_cloud:
-ais_cloud_sync:
+# ais_cloud_sync:
 ais_ai_service:
 ais_knowledge_service:
 ais_shell_command:
@@ -22,8 +22,6 @@ ais_updater:
   include_used_components: false
 ais_drives_service:
 conversation:
-#folder_watcher:
-#  - folder: /sdcard/dom
 
 # for restore_state on input_select (radio stations etc.)
 recorder:

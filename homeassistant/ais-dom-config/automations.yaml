@@ -12,7 +12,11 @@
    - service: mqtt.publish
      data:
        payload: ''
-       topic: cmnd/dom/Power1
+       topic: cmnd/dom/power1
+   - service: mqtt.publish
+     data:
+       payload: ''
+       topic: cmnd/dom/power2
    - delay: '5'
    - service: ais_updater.check_version
    - service: ais_ai_service.publish_command_to_frame
@@ -338,3 +342,30 @@
     - service: ais_drives_service.browse_path
       data_template:
         path: "{{ states('input_select.folder_name') }}"
+
+- id: '201808231519123'
+  alias: 'Search For Sensors'
+  hide_entity: true
+  trigger:
+    platform: event
+    event_type: search_for_sensors
+  action:
+    - delay: '5'
+    - service: mqtt.publish
+      data:
+        payload: 0
+        topic: cmnd/dom/status
+
+- id: '201808231617123'
+  alias: 'Select Device To Add'
+  hide_entity: True
+  trigger:
+    platform: state
+    entity_id: input_select.ais_iot_devices_in_network
+  condition:
+    condition: template
+    value_template: "{{ states.input_select.ais_iot_devices_in_network.state != '-' }}"
+  action:
+    - service: ais_ai_service.on_new_iot_device_selection
+      data_template:
+        iot: "{{ states('input_select.ais_iot_devices_in_network') }}"
