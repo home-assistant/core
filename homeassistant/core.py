@@ -213,7 +213,7 @@ class HomeAssistant:
         target: target to call.
         args: parameters for method to call.
         """
-        if target is None:
+        if not target:
             raise ValueError("Don't call add_job with None")
         self.loop.call_soon_threadsafe(self.async_add_job, target, *args)
 
@@ -733,7 +733,7 @@ class StateMachine:
 
         This method must be run in the event loop.
         """
-        if domain_filter is None:
+        if not domain_filter:
             return list(self._states.keys())
 
         domain_filter = domain_filter.lower()
@@ -788,7 +788,7 @@ class StateMachine:
         entity_id = entity_id.lower()
         old_state = self._states.pop(entity_id, None)
 
-        if old_state is None:
+        if not old_state:
             return False
 
         self._bus.async_fire(EVENT_STATE_CHANGED, {
@@ -833,7 +833,7 @@ class StateMachine:
         new_state = str(new_state)
         attributes = attributes or {}
         old_state = self._states.get(entity_id)
-        if old_state is None:
+        if not old_state:
             same_state = False
             same_attr = False
             last_changed = None
@@ -846,7 +846,7 @@ class StateMachine:
         if same_state and same_attr:
             return
 
-        if context is None:
+        if not context:
             context = Context()
 
         state = State(entity_id, new_state, attributes, last_changed, None,
@@ -960,7 +960,7 @@ class ServiceRegistry:
         else:
             self._services[domain] = {service: service_obj}
 
-        if self._async_unsub_call_event is None:
+        if not self._async_unsub_call_event:
             self._async_unsub_call_event = self._hass.bus.async_listen(
                 EVENT_CALL_SERVICE, self._event_to_service_call)
 
@@ -1167,7 +1167,7 @@ class Config:
 
         Async friendly.
         """
-        if self.config_dir is None:
+        if not self.config_dir:
             raise HomeAssistantError("config_dir is not set")
         return os.path.join(self.config_dir, *path)
 
