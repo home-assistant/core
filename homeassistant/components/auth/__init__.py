@@ -74,9 +74,10 @@ from homeassistant.util import dt as dt_util
 from . import indieauth
 from . import login_flow
 from . import mfa_setup_flow
+from . import util
 
 DOMAIN = 'auth'
-DEPENDENCIES = ['http']
+DEPENDENCIES = ['http', 'websocket_api']
 
 WS_TYPE_CURRENT_USER = 'auth/current_user'
 SCHEMA_WS_CURRENT_USER = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -318,21 +319,16 @@ def _create_auth_code_store():
     return store_result, retrieve_result
 
 
+@util.validate_current_user()
 @callback
-def websocket_current_user(hass: HomeAssistant, connection, msg):
+def websocket_current_user(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return the current user."""
-    user = connection.request.get('hass_user')
-
-    if user is None:
-        connection.to_write.put_nowait(websocket_api.error_message(
-            msg['id'], 'no_user', 'Not authenticated as a user'))
-        return
-
     async def async_get_current_user(user):
         """Get current user."""
         enabled_modules = await hass.auth.async_get_enabled_mfa(user)
 
-        connection.to_write.put_nowait(
+        connection.send_message_outside(
             websocket_api.result_message(msg['id'], {
                 'id': user.id,
                 'name': user.name,
@@ -347,4 +343,4 @@ def websocket_current_user(hass: HomeAssistant, connection, msg):
                 } for module in hass.auth.auth_mfa_modules],
             }))
 
-    hass.async_create_task(async_get_current_user(user))
+    hass.async_create_task(async_get_current_user(connection.user))

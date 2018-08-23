@@ -5,7 +5,9 @@ import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
+
+from . import util
 
 WS_TYPE_SETUP_MFA = 'auth/setup_mfa'
 SCHEMA_WS_SETUP_MFA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -28,12 +30,6 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass):
     """Init mfa setup flow manager."""
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_SETUP_MFA, websocket_setup_mfa, SCHEMA_WS_SETUP_MFA)
-
-    hass.components.websocket_api.async_register_command(
-        WS_TYPE_DEPOSE_MFA, websocket_depose_mfa, SCHEMA_WS_DEPOSE_MFA)
-
     async def _async_create_setup_flow(handler, context, data):
         """Create a setup flow. hanlder is a mfa module."""
         mfa_module = hass.auth.get_auth_mfa_module(handler)
@@ -50,85 +46,71 @@ async def async_setup(hass):
     hass.data[DATA_SETUP_FLOW_MGR] = data_entry_flow.FlowManager(
         hass, _async_create_setup_flow, _async_finish_setup_flow)
 
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_SETUP_MFA, websocket_setup_mfa, SCHEMA_WS_SETUP_MFA)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_DEPOSE_MFA, websocket_depose_mfa, SCHEMA_WS_DEPOSE_MFA)
+
 
 @callback
-def websocket_setup_mfa(hass, connection, msg):
+@util.validate_current_user(allow_system_user=False)
+def websocket_setup_mfa(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return a setup flow for mfa auth module."""
-    user = connection.request.get('hass_user')
-    if user is None:
-        connection.to_write.put_nowait(websocket_api.error_message(
-            msg['id'], 'no_user', 'Not authenticated as a user'))
-        return
-    if user.system_generated:
-        connection.to_write.put_nowait(websocket_api.error_message(
-            msg['id'], 'no_system_user', 'System user cannot enable MFA'))
-        return
-
     async def async_setup_flow(msg):
         """Helper to return a setup flow for mfa auth module."""
-        flow_manager = hass.data.get(DATA_SETUP_FLOW_MGR)
-        if flow_manager is None:
-            connection.to_write.put_nowait(websocket_api.error_message(
-                msg['id'], 'not_init',
-                'Setup flow manager is not initialized.'))
-            return
+        flow_manager = hass.data[DATA_SETUP_FLOW_MGR]
 
         flow_id = msg.get('flow_id')
         if flow_id is not None:
             result = await flow_manager.async_configure(
                 flow_id, msg.get('user_input'))
+            connection.send_message_outside(
+                websocket_api.result_message(
+                    msg['id'], _prepare_result_json(result)))
 
-        else:
-            mfa_module_id = msg.get('mfa_module_id')
-            mfa_module = hass.auth.get_auth_mfa_module(mfa_module_id)
-            if mfa_module is None:
-                connection.to_write.put_nowait(websocket_api.error_message(
-                    msg['id'], 'no_module',
-                    'MFA module {} is not found.'.format(
-                        mfa_module_id
-                    )))
-                return
+        mfa_module_id = msg.get('mfa_module_id')
+        mfa_module = hass.auth.get_auth_mfa_module(mfa_module_id)
+        if mfa_module is None:
+            connection.send_message_outside(websocket_api.error_message(
+                msg['id'], 'no_module',
+                'MFA module {} is not found'.format(mfa_module_id)))
+            return
 
-            result = await flow_manager.async_init(
-                mfa_module_id, data={'user_id': user.id})
+        result = await flow_manager.async_init(
+            mfa_module_id, data={'user_id': connection.user.id})
 
-        connection.to_write.put_nowait(
+        connection.send_message_outside(
             websocket_api.result_message(
                 msg['id'], _prepare_result_json(result)))
 
-    hass.async_add_job(async_setup_flow(msg))
+    hass.async_create_task(async_setup_flow(msg))
 
 
 @callback
-def websocket_depose_mfa(hass, connection, msg):
+@util.validate_current_user(allow_system_user=False)
+def websocket_depose_mfa(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Remove user from mfa module."""
-    user = connection.request.get('hass_user')
-    if user is None:
-        connection.to_write.put_nowait(websocket_api.error_message(
-            msg['id'], 'no_user', 'Not authenticated as a user'))
-        return
-    if user.system_generated:
-        connection.to_write.put_nowait(websocket_api.error_message(
-            msg['id'], 'no_system_user', 'System user cannot enable MFA'))
-        return
-
     async def async_depose(msg):
         """Helper to disable user from mfa auth module."""
         mfa_module_id = msg['mfa_module_id']
         try:
-            await hass.auth.async_disable_user_mfa(user, msg['mfa_module_id'])
+            await hass.auth.async_disable_user_mfa(
+                connection.user, msg['mfa_module_id'])
         except ValueError as err:
-            connection.to_write.put_nowait(websocket_api.error_message(
+            connection.send_message_outside(websocket_api.error_message(
                 msg['id'], 'disable_failed',
-                'Cannot disable Multi-factor Authentication Module'
-                ' {}: {}'.format(mfa_module_id, err)))
+                'Cannot disable MFA Module {}: {}'.format(
+                    mfa_module_id, err)))
             return
 
-        connection.to_write.put_nowait(
+        connection.send_message_outside(
             websocket_api.result_message(
                 msg['id'], 'done'))
 
-    hass.async_add_job(async_depose(msg))
+    hass.async_create_task(async_depose(msg))
 
 
 def _prepare_result_json(result):
