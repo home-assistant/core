@@ -107,10 +107,10 @@ def _zm_request(method, api_url, data=None):
     # if the call fails.
     for _ in range(LOGIN_RETRIES):
         req = requests.request(method, urljoin(ZM['url'], api_url),
-            data=data,
-            cookies=ZM['cookies'],
-            timeout=DEFAULT_TIMEOUT,
-            verify=ZM['ssl_verification'])
+                               data=data,
+                               cookies=ZM['cookies'],
+                               timeout=DEFAULT_TIMEOUT,
+                               verify=ZM['ssl_verification'])
 
         if not req.ok:
             login()
