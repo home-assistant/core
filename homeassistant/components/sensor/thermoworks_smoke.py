@@ -74,7 +74,7 @@ class ThermoworksSmokeSensor(Entity):
 
     def __init__(self, sensor_type, serial, mgr):
         """Initialize the sensor."""
-        self._name = mgr.name(serial) + ' ' + SENSOR_TYPES[sensor_type]
+        self._name = "{name} {sensor}".format(name=mgr.name(serial), sensor=SENSOR_TYPES[sensor_type])
         self.type = sensor_type
         self._state = None
         self._attributes = {}
@@ -116,7 +116,7 @@ class ThermoworksSmokeSensor(Entity):
             values = self.mgr.data(self.serial)
 
             # set state from data based on type of sensor
-            self._state = values.get(self.type, None)
+            self._state = values.get(self.type)
 
             # set units
             self.update_unit()
