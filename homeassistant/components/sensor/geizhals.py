@@ -58,10 +58,13 @@ class Geizwatch(Entity):
         """Initialize the sensor."""
         from geizhals import Device, Geizhals
 
+        # internal
         self._name = name
+        self._geizhals = Geizhals(product_id, domain)
+
+        # external
         self.description = description
         self.product_id = product_id
-        self.geizhals = Geizhals(product_id, domain)
         self.device = Device()
 
     @property
@@ -97,4 +100,4 @@ class Geizwatch(Entity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest price from geizhals and updates the state."""
-        self.device = self.geizhals.parse()
+        self.device = self._geizhals.parse()
