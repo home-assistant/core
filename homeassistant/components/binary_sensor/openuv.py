@@ -7,12 +7,13 @@ https://home-assistant.io/components/binary_sensor.openuv/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.openuv import (
-    BINARY_SENSORS, DATA_PROTECTION_WINDOW, DOMAIN, TOPIC_UPDATE,
-    TYPE_PROTECTION_WINDOW, OpenUvEntity)
+    BINARY_SENSORS, DATA_OPENUV_CLIENT, DATA_OPENUV_DISPATCH,
+    DATA_PROTECTION_WINDOW, DOMAIN, TOPIC_UPDATE, TYPE_PROTECTION_WINDOW,
+    OpenUvEntity)
 from homeassistant.util.dt import as_local, parse_datetime, utcnow
 
 DEPENDENCIES = ['openuv']
@@ -24,30 +25,28 @@ ATTR_PROTECTION_WINDOW_ENDING_TIME = 'end_time'
 ATTR_PROTECTION_WINDOW_ENDING_UV = 'end_uv'
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Set up the OpenUV binary sensor platform."""
-    if discovery_info is None:
-        return
-
-    openuv = hass.data[DOMAIN]
+async def async_setup_entry(hass, entry, async_add_devices):
+    """Set up an OpenUV sensor based on a config entry."""
+    openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.title]
 
     binary_sensors = []
-    for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
+    for sensor_type in entry.data[CONF_BINARY_SENSORS][
+            CONF_MONITORED_CONDITIONS]:
         name, icon = BINARY_SENSORS[sensor_type]
         binary_sensors.append(
-            OpenUvBinarySensor(openuv, sensor_type, name, icon))
+            OpenUvBinarySensor(openuv, sensor_type, name, icon, entry.title))
 
-    async_add_entities(binary_sensors, True)
+    async_add_devices(binary_sensors, True)
 
 
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
     """Define a binary sensor for OpenUV."""
 
-    def __init__(self, openuv, sensor_type, name, icon):
+    def __init__(self, openuv, sensor_type, name, icon, entry_title):
         """Initialize the sensor."""
         super().__init__(openuv)
 
+        self._entry_title = entry_title
         self._icon = icon
         self._latitude = openuv.client.latitude
         self._longitude = openuv.client.longitude
@@ -83,8 +82,9 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(
-            self.hass, TOPIC_UPDATE, self._update_data)
+        self.hass.data[DOMAIN][DATA_OPENUV_DISPATCH][self._entry_title].append(
+            async_dispatcher_connect(
+                self.hass, TOPIC_UPDATE, self._update_data))
 
     async def async_update(self):
         """Update the state."""
@@ -96,8 +96,10 @@ class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
             self._attrs.update({
                 ATTR_PROTECTION_WINDOW_ENDING_TIME:
                     as_local(parse_datetime(data['to_time'])),
-                ATTR_PROTECTION_WINDOW_ENDING_UV: data['to_uv'],
-                ATTR_PROTECTION_WINDOW_STARTING_UV: data['from_uv'],
+                ATTR_PROTECTION_WINDOW_ENDING_UV:
+                    data['to_uv'],
+                ATTR_PROTECTION_WINDOW_STARTING_UV:
+                    data['from_uv'],
                 ATTR_PROTECTION_WINDOW_STARTING_TIME:
                     as_local(parse_datetime(data['from_time'])),
             })

@@ -6,15 +6,16 @@ https://home-assistant.io/components/sensor.openuv/
 """
 import logging
 
-from homeassistant.const import CONF_MONITORED_CONDITIONS
+from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SENSORS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.openuv import (
-    DATA_UV, DOMAIN, SENSORS, TOPIC_UPDATE, TYPE_CURRENT_OZONE_LEVEL,
-    TYPE_CURRENT_UV_INDEX, TYPE_CURRENT_UV_LEVEL, TYPE_MAX_UV_INDEX,
-    TYPE_SAFE_EXPOSURE_TIME_1, TYPE_SAFE_EXPOSURE_TIME_2,
-    TYPE_SAFE_EXPOSURE_TIME_3, TYPE_SAFE_EXPOSURE_TIME_4,
-    TYPE_SAFE_EXPOSURE_TIME_5, TYPE_SAFE_EXPOSURE_TIME_6, OpenUvEntity)
+    DATA_OPENUV_CLIENT, DATA_OPENUV_DISPATCH, DATA_UV, DOMAIN, SENSORS,
+    TOPIC_UPDATE, TYPE_CURRENT_OZONE_LEVEL, TYPE_CURRENT_UV_INDEX,
+    TYPE_CURRENT_UV_LEVEL, TYPE_MAX_UV_INDEX, TYPE_SAFE_EXPOSURE_TIME_1,
+    TYPE_SAFE_EXPOSURE_TIME_2, TYPE_SAFE_EXPOSURE_TIME_3,
+    TYPE_SAFE_EXPOSURE_TIME_4, TYPE_SAFE_EXPOSURE_TIME_5,
+    TYPE_SAFE_EXPOSURE_TIME_6, OpenUvEntity)
 from homeassistant.util.dt import as_local, parse_datetime
 
 DEPENDENCIES = ['openuv']
@@ -38,29 +39,27 @@ UV_LEVEL_MODERATE = "Moderate"
 UV_LEVEL_LOW = "Low"
 
 
-async def async_setup_platform(
-        hass, config, async_add_entities, discovery_info=None):
-    """Set up the OpenUV binary sensor platform."""
-    if discovery_info is None:
-        return
-
-    openuv = hass.data[DOMAIN]
+async def async_setup_entry(hass, entry, async_add_devices):
+    """Set up a Nest sensor based on a config entry."""
+    openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.title]
 
     sensors = []
-    for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
+    for sensor_type in entry.data[CONF_SENSORS][CONF_MONITORED_CONDITIONS]:
         name, icon, unit = SENSORS[sensor_type]
-        sensors.append(OpenUvSensor(openuv, sensor_type, name, icon, unit))
+        sensors.append(
+            OpenUvSensor(openuv, sensor_type, name, icon, unit, entry.title))
 
-    async_add_entities(sensors, True)
+    async_add_devices(sensors, True)
 
 
 class OpenUvSensor(OpenUvEntity):
     """Define a binary sensor for OpenUV."""
 
-    def __init__(self, openuv, sensor_type, name, icon, unit):
+    def __init__(self, openuv, sensor_type, name, icon, unit, entry_title):
         """Initialize the sensor."""
         super().__init__(openuv)
 
+        self._entry_title = entry_title
         self._icon = icon
         self._latitude = openuv.client.latitude
         self._longitude = openuv.client.longitude
@@ -102,7 +101,9 @@ class OpenUvSensor(OpenUvEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, TOPIC_UPDATE, self._update_data)
+        self.hass.data[DOMAIN][DATA_OPENUV_DISPATCH][self._entry_title].append(
+            async_dispatcher_connect(
+                self.hass, TOPIC_UPDATE, self._update_data))
 
     async def async_update(self):
         """Update the state."""

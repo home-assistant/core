@@ -9,21 +9,26 @@ from datetime import timedelta
 
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_API_KEY, CONF_BINARY_SENSORS, CONF_ELEVATION,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_MONITORED_CONDITIONS,
     CONF_SCAN_INTERVAL, CONF_SENSORS)
-from homeassistant.helpers import (
-    aiohttp_client, config_validation as cv, discovery)
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 
+from .config_flow import configured_instances
+from .const import DOMAIN
+
 REQUIREMENTS = ['pyopenuv==1.0.1']
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'openuv'
-
+DATA_OPENUV_CLIENT = 'data_client'
+DATA_OPENUV_CONFIG = 'data_config'
+DATA_OPENUV_DISPATCH = 'data_dispatch'
+DATA_OPENUV_LISTENER = 'data_listener'
 DATA_PROTECTION_WINDOW = 'protection_window'
 DATA_UV = 'uv'
 
@@ -82,39 +87,103 @@ SENSOR_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_ELEVATION): float,
-        vol.Optional(CONF_LATITUDE): cv.latitude,
-        vol.Optional(CONF_LONGITUDE): cv.longitude,
-        vol.Optional(CONF_BINARY_SENSORS, default={}): BINARY_SENSOR_SCHEMA,
-        vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-            cv.time_period,
-    })
+    DOMAIN:
+        vol.Schema({
+            vol.Required(CONF_API_KEY): cv.string,
+            vol.Optional(CONF_ELEVATION): float,
+            vol.Optional(CONF_LATITUDE): cv.latitude,
+            vol.Optional(CONF_LONGITUDE): cv.longitude,
+            vol.Optional(CONF_BINARY_SENSORS, default={}):
+                BINARY_SENSOR_SCHEMA,
+            vol.Optional(CONF_SENSORS, default={}): SENSOR_SCHEMA,
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+                cv.time_period,
+        })
 }, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
     """Set up the OpenUV component."""
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_OPENUV_CLIENT] = {}
+    hass.data[DOMAIN][DATA_OPENUV_DISPATCH] = {}
+    hass.data[DOMAIN][DATA_OPENUV_LISTENER] = {}
+
+    if DOMAIN not in config:
+        return True
+
+    conf = config[DOMAIN]
+    latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
+    longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
+    elevation = conf.get(CONF_ELEVATION, hass.config.elevation)
+
+    identifier = '{0}, {1}'.format(latitude, longitude)
+
+    if identifier not in configured_instances(hass):
+        hass.async_add_job(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={'source': SOURCE_IMPORT},
+                data={
+                    CONF_API_KEY: conf[CONF_API_KEY],
+                    CONF_LATITUDE: latitude,
+                    CONF_LONGITUDE: longitude,
+                    CONF_ELEVATION: elevation
+                }))
+
+    # Store the full OpenUV config for use during entry setup:
+    hass.data[DOMAIN][DATA_OPENUV_CONFIG] = conf
+
+    return True
+
+
+async def async_setup_entry(hass, config_entry):
+    """Set up OpenUV as config entry."""
     from pyopenuv import Client
     from pyopenuv.errors import OpenUvError
 
-    conf = config[DOMAIN]
-    api_key = conf[CONF_API_KEY]
-    elevation = conf.get(CONF_ELEVATION, hass.config.elevation)
-    latitude = conf.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = conf.get(CONF_LONGITUDE, hass.config.longitude)
+    data = hass.data[DOMAIN]
+
+    # Regardless of configuration via config entry or configuration.yaml,
+    # assemble a dict of all config options (with sensible defaults):
+    conf = {
+        **config_entry.data,
+        **data.get(
+            DATA_OPENUV_CONFIG, {
+                CONF_BINARY_SENSORS: {
+                    CONF_MONITORED_CONDITIONS: list(BINARY_SENSORS)
+                },
+                CONF_SENSORS: {
+                    CONF_MONITORED_CONDITIONS: list(SENSORS)
+                }
+            })
+    }
+    conf.setdefault(CONF_ELEVATION, hass.config.elevation)
+    conf.setdefault(CONF_LATITUDE, hass.config.latitude)
+    conf.setdefault(CONF_LONGITUDE, hass.config.longitude)
+
+    # Save the fleshed out config data for use downstream (removing a
+    # user-specified scan interval, since it can't be JSON serialized):
+    config_entry.data = conf
+    if CONF_SCAN_INTERVAL in config_entry.data:
+        del config_entry.data[CONF_SCAN_INTERVAL]
 
     try:
         websession = aiohttp_client.async_get_clientsession(hass)
+
         openuv = OpenUV(
             Client(
-                api_key, latitude, longitude, websession, altitude=elevation),
+                conf[CONF_API_KEY],
+                conf[CONF_LATITUDE],
+                conf[CONF_LONGITUDE],
+                websession,
+                altitude=conf[CONF_ELEVATION]),
             conf[CONF_BINARY_SENSORS][CONF_MONITORED_CONDITIONS] +
             conf[CONF_SENSORS][CONF_MONITORED_CONDITIONS])
         await openuv.async_update()
-        hass.data[DOMAIN] = openuv
+
+        data[DATA_OPENUV_CLIENT][config_entry.title] = openuv
+        data[DATA_OPENUV_DISPATCH][config_entry.title] = []
     except OpenUvError as err:
         _LOGGER.error('An error occurred: %s', str(err))
         hass.components.persistent_notification.create(
@@ -125,13 +194,9 @@ async def async_setup(hass, config):
             notification_id=NOTIFICATION_ID)
         return False
 
-    for component, schema in [
-            ('binary_sensor', conf[CONF_BINARY_SENSORS]),
-            ('sensor', conf[CONF_SENSORS]),
-    ]:
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, component, DOMAIN, schema, config))
+    for component in 'binary_sensor', 'sensor':
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            config_entry, component))
 
     async def refresh_sensors(event_time):
         """Refresh OpenUV data."""
@@ -139,7 +204,25 @@ async def async_setup(hass, config):
         await openuv.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    async_track_time_interval(hass, refresh_sensors, conf[CONF_SCAN_INTERVAL])
+    data[DATA_OPENUV_LISTENER][config_entry.title] = async_track_time_interval(
+        hass, refresh_sensors,
+        conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload an OpenUV config entry."""
+    data = hass.data[DOMAIN]
+
+    data[DATA_OPENUV_CLIENT].pop(config_entry.title)
+
+    remove_listener = data[DATA_OPENUV_LISTENER].pop(config_entry.title)
+    remove_listener()
+
+    for remove_dispatcher in data[DATA_OPENUV_DISPATCH][config_entry.title]:
+        remove_dispatcher()
+    del data[DATA_OPENUV_DISPATCH][config_entry.title]
 
     return True
 
