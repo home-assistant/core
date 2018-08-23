@@ -23,13 +23,13 @@ CONNECTION_ZIGBEE = 'zigbee'
 class DeviceEntry:
     """Device Registry Entry."""
 
-    connection = attr.ib(type=list)
-    identifiers = attr.ib(type=list)
+    config_entries = attr.ib(type=set, converter=set)
+    connections = attr.ib(type=set, converter=set)
+    identifiers = attr.ib(type=set, converter=set)
     manufacturer = attr.ib(type=str)
     model = attr.ib(type=str)
     name = attr.ib(type=str, default=None)
     sw_version = attr.ib(type=str, default=None)
-    config_entries = attr.ib(type=set, default=set(), converter=set)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
 
 
@@ -47,32 +47,34 @@ class DeviceRegistry:
         """Check if device is registered."""
         for device in self.devices:
             if any(iden in device.identifiers for iden in identifiers) or \
-                    any(conn in device.connection for conn in connections):
+                    any(conn in device.connections for conn in connections):
                 return device
         return None
 
     @callback
-    def async_get_or_create(self, *, config_entry, identifiers, manufacturer,
-                            model, connection, *, name=None, sw_version=None):
+    def async_get_or_create(self, *, config_entry, connections, identifiers,
+                            manufacturer, model, name=None, sw_version=None):
         """Get device. Create if it doesn't exist."""
-        device = self.async_get_device(identifiers, connection)
+        device = self.async_get_device(identifiers, connections)
         if device is not None:
             if config_entry is not None:
                 device.config_entries.add(config_entry)
             return device
 
-        device = DeviceEntry(
-            connection=connection,
-            identifiers=identifiers,
-            manufacturer=manufacturer,
-            model=model,
-            name=name,
-            sw_version=sw_version,
-        )
+        if device is None:
+            device = DeviceEntry(
+                connections=connections,
+                identifiers=identifiers,
+                manufacturer=manufacturer,
+                model=model,
+                name=name,
+                sw_version=sw_version,
+            )
+            self.devices.append(device)
 
         if config_entry is not None:
             device.config_entries.add(config_entry)
-        self.devices.append(device)
+
         self.async_schedule_save()
 
         return device
@@ -85,7 +87,16 @@ class DeviceRegistry:
             self.devices = []
             return
 
-        self.devices = [DeviceEntry(**device) for device in devices['devices']]
+        self.devices = [DeviceEntry(
+            config_entries=device['config_entries'],
+            connections={tuple(conn) for conn in device['connections']},
+            identifiers={tuple(iden) for iden in device['identifiers']},
+            manufacturer=device['manufacturer'],
+            model=device['model'],
+            name=device['name'],
+            sw_version=device['sw_version'],
+            id=device['id'],
+        ) for device in devices['devices']]
 
     @callback
     def async_schedule_save(self):
@@ -99,14 +110,14 @@ class DeviceRegistry:
 
         data['devices'] = [
             {
-                'id': entry.id,
-                'connection': entry.connection,
-                'identifiers': entry.identifiers,
+                'config_entries': list(entry.config_entries),
+                'connections': list(entry.connections),
+                'identifiers': list(entry.identifiers),
                 'manufacturer': entry.manufacturer,
                 'model': entry.model,
                 'name': entry.name,
                 'sw_version': entry.sw_version,
-                'config_entries': list(entry.config_entries),
+                'id': entry.id,
             } for entry in self.devices
         ]
 
