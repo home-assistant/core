@@ -40,6 +40,7 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
     })
 
     result = await client.receive_json()
+    assert result['id'] == 10
     assert result['success'] is False
     assert result['error']['code'] == 'no_module'
 
@@ -50,6 +51,7 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
     })
 
     result = await client.receive_json()
+    assert result['id'] == 11
     assert result['success']
 
     flow = result['result']
@@ -66,6 +68,7 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
     })
 
     result = await client.receive_json()
+    assert result['id'] == 12
     assert result['success']
 
     flow = result['result']
@@ -80,8 +83,9 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
     })
 
     result = await client.receive_json()
+    assert result['id'] == 13
     assert result['success'] is False
-    assert result['error']['code'] == 'no_module'
+    assert result['error']['code'] == 'disable_failed'
 
     await client.send_json({
         'id': 14,
@@ -90,5 +94,6 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
     })
 
     result = await client.receive_json()
+    assert result['id'] == 14
     assert result['success']
     assert result['result'] == 'done'
