@@ -126,14 +126,14 @@ class TexecomBinarySensor(BinarySensorDevice):
         """Update the zone's state, if needed."""
         _LOGGER.debug('Attempting to Update Zone %s', self._name)
 
-        if self._number == data._signalledzone:
+        if self._number == data.signalledzone:
             _LOGGER.info('Correct zone found to update %s', self._name)
-            _LOGGER.debug('The new state is %s', data._zonestate)
+            _LOGGER.debug('The new state is %s', data.zonestate)
 
-            if data._zonestate == '0':
+            if data.zonestate == '0':
                 _LOGGER.debug('Setting zone state to false')
                 self._state = False
-            elif data._zonestate == '1':
+            elif data.zonestate == '1':
                 _LOGGER.debug('Setting zone state to true')
                 self._state = True
             else:
@@ -155,8 +155,8 @@ class TexecomPanelInterface(Entity):
         self._baudrate = '19200'
         self._serial_loop_task = None
         self._attributes = []
-        self._signalledzone = '0'
-        self._zonestate = '0'
+        self.signalledzone = '0'
+        self.zonestate = '0'
 
         _LOGGER.info('Setting up Serial: %s', name)
 
@@ -188,8 +188,8 @@ class TexecomPanelInterface(Entity):
                     zonestate = line[5]
                     _LOGGER.info('Signalled Zone: %s', signalledzone)
                     _LOGGER.info('Zone State: %s', zonestate)
-                    self._zonestate = zonestate
-                    self._signalledzone = signalledzone
+                    self.zonestate = zonestate
+                    self.signalledzone = signalledzone
                     async_dispatcher_send(self.hass, SIGNAL_ZONE_UPDATE, self)
 
             except IndexError:
