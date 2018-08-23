@@ -11,7 +11,8 @@ import requests
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL)
+    CONF_PATH, CONF_HOST, CONF_SSL, CONF_PASSWORD, CONF_USERNAME, 
+    CONF_VERIFY_SSL)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +83,9 @@ def login():
     if ZM['password']:
         login_post['password'] = ZM['password']
 
-    req = requests.post(ZM['url'] + '/index.php', data=login_post, verify=ZM['ssl_verification'])
+    req = requests.post(ZM['url'] + '/index.php', 
+                        data=login_post, 
+                        verify=ZM['ssl_verification'])
     ZM['cookies'] = req.cookies
 
     # Login calls returns a 200 response on both failure and success.
@@ -104,8 +107,12 @@ def _zm_request(method, api_url, data=None):
     # if the call fails.
     for _ in range(LOGIN_RETRIES):
         req = requests.request(
-            method, urljoin(ZM['url'], api_url), data=data,
-            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT, verify=ZM['ssl_verification'])
+            method, 
+            urljoin(ZM['url'], api_url),
+            data=data,
+            cookies=ZM['cookies'], 
+            timeout=DEFAULT_TIMEOUT, 
+            verify=ZM['ssl_verification'])
 
         if not req.ok:
             login()
