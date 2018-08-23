@@ -141,18 +141,16 @@ class DeconzSensor(Entity):
         """Description for device registry."""
         if (self._sensor.uniqueid is not None and
                 self._sensor.uniqueid.count(':') == 7):
-            mac = self._sensor.uniqueid.split('-', 1)[0]
-        else:
-            return None
-        dev = {
-            'connection': [[CONNECTION_ZIGBEE, mac]],
-            'identifiers': [[IDENTIFIER_MAC, mac]],
-            'manufacturer': self._sensor.manufacturer,
-            'model': self._sensor.modelid,
-            'name': self._sensor.name,
-            'sw_version': self._sensor.swversion,
-        }
-        return dev
+            serial = self._sensor.uniqueid.split('-', 1)[0]
+            return {
+                'connection': [[CONNECTION_ZIGBEE, serial]],
+                'identifiers': [[IDENTIFIER_MAC, serial]],
+                'manufacturer': self._sensor.manufacturer,
+                'model': self._sensor.modelid,
+                'name': self._sensor.name,
+                'sw_version': self._sensor.swversion,
+            }
+        return None
 
 
 class DeconzBattery(Entity):
@@ -218,15 +216,13 @@ class DeconzBattery(Entity):
         """Description for device registry."""
         if (self._device.uniqueid is not None and
                 self._device.uniqueid.count(':') == 7):
-            mac = self._device.uniqueid.split('-', 1)[0]
-        else:
-            return None
-        dev = {
-            'connection': [[CONNECTION_ZIGBEE, mac]],
-            'identifiers': [[IDENTIFIER_MAC, mac]],
-            'manufacturer': self._device.manufacturer,
-            'model': self._device.modelid,
-            'name': self._device.name,
-            'sw_version': self._device.swversion,
-        }
-        return dev
+            serial = self._device.uniqueid.split('-', 1)[0]
+            return {
+                'connection': [[CONNECTION_ZIGBEE, serial]],
+                'identifiers': [[IDENTIFIER_MAC, serial]],
+                'manufacturer': self._device.manufacturer,
+                'model': self._device.modelid,
+                'name': self._device.name,
+                'sw_version': self._device.swversion,
+            }
+        return None

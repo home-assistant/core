@@ -207,15 +207,13 @@ class DeconzLight(Light):
         """Description for device registry."""
         if (self._light.uniqueid is not None and
                 self._light.uniqueid.count(':') == 7):
-            mac = self._light.uniqueid.split('-', 1)[0]
-        else:
-            return None
-        dev = {
-            'connection': [[CONNECTION_ZIGBEE, mac]],
-            'identifiers': [[IDENTIFIER_MAC, mac]],
-            'manufacturer': self._light.manufacturer,
-            'model': self._light.modelid,
-            'name': self._light.name,
-            'sw_version': self._light.swversion,
-        }
-        return dev
+            serial = self._light.uniqueid.split('-', 1)[0]
+            return {
+                'connection': [[CONNECTION_ZIGBEE, serial]],
+                'identifiers': [[IDENTIFIER_MAC, serial]],
+                'manufacturer': self._light.manufacturer,
+                'model': self._light.modelid,
+                'name': self._light.name,
+                'sw_version': self._light.swversion,
+            }
+        return None
