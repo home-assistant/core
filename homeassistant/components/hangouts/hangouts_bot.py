@@ -128,10 +128,11 @@ class HangoutsBot:
 
         from hangups import Client
         from hangups import get_auth
+        session = await self.hass.async_add_executor_job(
+            get_auth, HangoutsCredentials(None, None, None),
+            HangoutsRefreshToken(self._refresh_token))
 
-        self._client = Client(
-            get_auth(HangoutsCredentials(None, None, None),
-                     HangoutsRefreshToken(self._refresh_token)))
+        self._client = Client(session)
         self._client.on_connect.add_observer(self._on_connect)
         self._client.on_disconnect.add_observer(self._on_disconnect)
 

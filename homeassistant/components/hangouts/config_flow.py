@@ -45,8 +45,10 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
                                                     user_input[CONF_PASSWORD])
             self._refresh_token = HangoutsRefreshToken(None)
             try:
-                get_auth(self._credentials,
-                         self._refresh_token)
+                await self.hass.async_add_executor_job(get_auth,
+                                                       self._credentials,
+                                                       self._refresh_token)
+
                 return await self.async_step_final()
             except GoogleAuthError as err:
                 if err.__class__ is Google2FAError:
@@ -75,8 +77,9 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
             from .hangups_utils import GoogleAuthError
             self._credentials.set_verification_code(user_input[CONF_2FA])
             try:
-                get_auth(self._credentials,
-                         self._refresh_token)
+                await self.hass.async_add_executor_job(get_auth,
+                                                       self._credentials,
+                                                       self._refresh_token)
 
                 return await self.async_step_final()
             except GoogleAuthError:
