@@ -7,14 +7,10 @@ https://home-assistant.io/components/binary_sensor.texecom/
 
 import asyncio
 import logging
-import datetime
 
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.texecom import (
-    DATA_EVL, ZONE_SCHEMA, CONF_ZONENUMBER, CONF_ZONENAME, CONF_PANELUUID,CONF_ZONETYPE, TexecomBinarySensor)
-from homeassistant.const import ATTR_LAST_TRIP_TIME
-from homeassistant.util import dt as dt_util
+    CONF_ZONENAME, CONF_ZONENUMBER, CONF_ZONETYPE,
+    ZONE_SCHEMA, TexecomBinarySensor)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,9 +31,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             device_config_data[CONF_ZONENAME],
             device_config_data[CONF_ZONETYPE],
             False
-          )
+        )
         devices.append(device)
 
     async_add_devices(devices)
-
-
