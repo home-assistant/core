@@ -139,17 +139,17 @@ class DeconzSensor(Entity):
     def device(self):
         """Description for device registry."""
         if (self._sensor.uniqueid is not None and
-                self._sensor.uniqueid.count(':') == 7):
-            serial = self._sensor.uniqueid.split('-', 1)[0]
-            return {
-                'connection': [[CONNECTION_ZIGBEE, serial]],
-                'identifiers': [[DECONZ_DOMAIN, serial]],
-                'manufacturer': self._sensor.manufacturer,
-                'model': self._sensor.modelid,
-                'name': self._sensor.name,
-                'sw_version': self._sensor.swversion,
-            }
-        return None
+                self._sensor.uniqueid.count(':') != 7):
+            return None
+        serial = self._sensor.uniqueid.split('-', 1)[0]
+        return {
+            'connection': [[CONNECTION_ZIGBEE, serial]],
+            'identifiers': [[DECONZ_DOMAIN, serial]],
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'name': self._sensor.name,
+            'sw_version': self._sensor.swversion,
+        }
 
 
 class DeconzBattery(Entity):
@@ -214,14 +214,14 @@ class DeconzBattery(Entity):
     def device(self):
         """Description for device registry."""
         if (self._device.uniqueid is not None and
-                self._device.uniqueid.count(':') == 7):
-            serial = self._device.uniqueid.split('-', 1)[0]
-            return {
-                'connection': [[CONNECTION_ZIGBEE, serial]],
-                'identifiers': [[DECONZ_DOMAIN, serial]],
-                'manufacturer': self._device.manufacturer,
-                'model': self._device.modelid,
-                'name': self._device.name,
-                'sw_version': self._device.swversion,
-            }
-        return None
+                self._device.uniqueid.count(':') != 7):
+            return None
+        serial = self._device.uniqueid.split('-', 1)[0]
+        return {
+            'connection': [[CONNECTION_ZIGBEE, serial]],
+            'identifiers': [[DECONZ_DOMAIN, serial]],
+            'manufacturer': self._device.manufacturer,
+            'model': self._device.modelid,
+            'name': self._device.name,
+            'sw_version': self._device.swversion,
+        }

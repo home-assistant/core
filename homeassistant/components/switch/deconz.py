@@ -84,17 +84,17 @@ class DeconzSwitch(SwitchDevice):
     def device(self):
         """Description for device registry."""
         if (self._switch.uniqueid is not None and
-                self._switch.uniqueid.count(':') == 7):
-            serial = self._switch.uniqueid.split('-', 1)[0]
-            return {
-                'connection': [[CONNECTION_ZIGBEE, serial]],
-                'identifiers': [[DECONZ_DOMAIN, serial]],
-                'manufacturer': self._switch.manufacturer,
-                'model': self._switch.modelid,
-                'name': self._switch.name,
-                'sw_version': self._switch.swversion,
-            }
-        return None
+                self._switch.uniqueid.count(':') != 7):
+            return None
+        serial = self._switch.uniqueid.split('-', 1)[0]
+        return {
+            'connection': [[CONNECTION_ZIGBEE, serial]],
+            'identifiers': [[DECONZ_DOMAIN, serial]],
+            'manufacturer': self._switch.manufacturer,
+            'model': self._switch.modelid,
+            'name': self._switch.name,
+            'sw_version': self._switch.swversion,
+        }
 
 
 class DeconzPowerPlug(DeconzSwitch):

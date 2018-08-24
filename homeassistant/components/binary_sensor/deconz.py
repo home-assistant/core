@@ -119,14 +119,14 @@ class DeconzBinarySensor(BinarySensorDevice):
     def device(self):
         """Description for device registry."""
         if (self._sensor.uniqueid is not None and
-                self._sensor.uniqueid.count(':') == 7):
-            serial = self._sensor.uniqueid.split('-', 1)[0]
-            return {
-                'connection': [[CONNECTION_ZIGBEE, serial]],
-                'identifiers': [[DECONZ_DOMAIN, serial]],
-                'manufacturer': self._sensor.manufacturer,
-                'model': self._sensor.modelid,
-                'name': self._sensor.name,
-                'sw_version': self._sensor.swversion,
-            }
-        return None
+                self._sensor.uniqueid.count(':') != 7):
+            return None
+        serial = self._sensor.uniqueid.split('-', 1)[0]
+        return {
+            'connection': [[CONNECTION_ZIGBEE, serial]],
+            'identifiers': [[DECONZ_DOMAIN, serial]],
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'name': self._sensor.name,
+            'sw_version': self._sensor.swversion,
+        }
