@@ -190,7 +190,7 @@ class LimitlessLEDGroup(Light):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity is about to be added to hass."""
+        """Handle entity about to be added to hass event."""
         last_state = yield from async_get_last_state(self.hass, self.entity_id)
         if last_state:
             self._is_on = (last_state.state == STATE_ON)

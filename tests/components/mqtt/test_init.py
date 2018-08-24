@@ -56,7 +56,7 @@ class TestMQTTComponent(unittest.TestCase):
 
     @callback
     def record_calls(self, *args):
-        """Helper for recording calls."""
+        """Record calls."""
         self.calls.append(args)
 
     def aiohttp_client_stops_on_home_assistant_start(self):
@@ -199,7 +199,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     @callback
     def record_calls(self, *args):
-        """Helper for recording calls."""
+        """Record calls."""
         self.calls.append(args)
 
     def aiohttp_client_starts_on_home_assistant_mqtt_setup(self):

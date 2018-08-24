@@ -79,7 +79,7 @@ class TestFeedreaderComponent(unittest.TestCase):
                                         VALID_CONFIG_3))
 
     def setup_manager(self, feed_data, max_entries=DEFAULT_MAX_ENTRIES):
-        """Generic test setup method."""
+        """Set up feed manager."""
         events = []
 
         @callback

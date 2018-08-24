@@ -52,7 +52,7 @@ class TestSamsungTv(unittest.TestCase):
     @MockDependency('samsungctl')
     @MockDependency('wakeonlan')
     def setUp(self, samsung_mock, wol_mock):
-        """Setting up test environment."""
+        """Set up test environment."""
         self.hass = tests.common.get_test_home_assistant()
         self.hass.start()
         self.hass.block_till_done()

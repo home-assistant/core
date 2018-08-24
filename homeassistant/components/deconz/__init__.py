@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry):
 
     @callback
     def async_add_device_callback(device_type, device):
-        """Called when a new device has been created in deCONZ."""
+        """Handle event of new device creation in deCONZ."""
         async_dispatcher_send(
             hass, 'deconz_new_{}'.format(device_type), [device])
 

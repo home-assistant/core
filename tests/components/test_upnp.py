@@ -47,7 +47,7 @@ class MockResp(MagicMock):
 
 @pytest.fixture
 def mock_msearch_first(*args, **kwargs):
-    """Wrapper to async mock function."""
+    """Wrap async mock msearch_first."""
     async def async_mock_msearch_first(*args, **kwargs):
         """Mock msearch_first."""
         return MockResp(*args, **kwargs)
@@ -58,7 +58,7 @@ def mock_msearch_first(*args, **kwargs):
 
 @pytest.fixture
 def mock_async_exception(*args, **kwargs):
-    """Wrapper to async mock function with exception."""
+    """Wrap async mock exception."""
     async def async_mock_exception(*args, **kwargs):
         return Exception
 

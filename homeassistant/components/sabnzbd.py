@@ -193,7 +193,7 @@ def async_request_configuration(hass, config, host):
             return
 
         def success():
-            """Setup was successful."""
+            """Signal successful setup."""
             conf = load_json(hass.config.path(CONFIG_FILE))
             conf[host] = {CONF_API_KEY: api_key}
             save_json(hass.config.path(CONFIG_FILE), conf)

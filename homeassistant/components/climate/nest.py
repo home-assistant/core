@@ -124,7 +124,7 @@ class NestThermostat(ClimateDevice):
 
     @property
     def unique_id(self):
-        """Unique ID for this device."""
+        """Return unique ID for this device."""
         return self._device.serial
 
     @property

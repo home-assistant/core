@@ -87,7 +87,7 @@ class DeviceRegistry:
 
     @callback
     def _data_to_save(self):
-        """Data of device registry to store in a file."""
+        """Return data of device registry to store in a file."""
         data = {}
 
         data['devices'] = [

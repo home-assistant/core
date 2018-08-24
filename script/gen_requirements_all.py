@@ -156,7 +156,7 @@ def core_requirements():
 
 
 def comment_requirement(req):
-    """Some requirements don't install on all systems."""
+    """Comment out requirement. Some don't install on all systems."""
     return any(ign in req for ign in COMMENT_REQUIREMENTS)
 
 
@@ -295,7 +295,7 @@ def validate_constraints_file(data):
 
 
 def main(validate):
-    """Main section of the script."""
+    """Run the script."""
     if not os.path.isfile('requirements_all.txt'):
         print('Run this from HA root dir')
         return 1
