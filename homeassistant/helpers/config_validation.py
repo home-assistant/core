@@ -92,7 +92,7 @@ def matches_regex(regex):
 
         if not regex.match(value):
             raise vol.Invalid('value {} does not match regular expression {}'
-                              .format(regex.pattern, value))
+                              .format(value, regex.pattern))
 
         return value
     return validator
