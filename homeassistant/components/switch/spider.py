@@ -15,7 +15,7 @@ DEPENDENCIES = ['spider']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Spider thermostat."""
     if discovery_info is None:
         return
@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     devices = [SpiderPowerPlug(hass.data[SPIDER_DOMAIN]['controller'], device)
                for device in hass.data[SPIDER_DOMAIN]['power_plugs']]
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class SpiderPowerPlug(SwitchDevice):

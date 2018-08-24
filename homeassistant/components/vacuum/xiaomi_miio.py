@@ -102,7 +102,8 @@ STATE_CODE_TO_STATE = {
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Xiaomi vacuum cleaner robot platform."""
     from miio import Vacuum
     if DATA_KEY not in hass.data:
@@ -119,7 +120,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     mirobo = MiroboVacuum(name, vacuum)
     hass.data[DATA_KEY][host] = mirobo
 
-    async_add_devices([mirobo], update_before_add=True)
+    async_add_entities([mirobo], update_before_add=True)
 
     @asyncio.coroutine
     def async_service_handler(service):

@@ -25,12 +25,12 @@ ATTR_HUMIDITY = 'humidity'
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud sensors devices."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud sensors from a config entry."""
     from homematicip.device import (
         HeatingThermostat, TemperatureHumiditySensorWithoutDisplay,
@@ -49,7 +49,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             devices.append(HomematicipIlluminanceSensor(home, device))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipAccesspointStatus(HomematicipGenericDevice):

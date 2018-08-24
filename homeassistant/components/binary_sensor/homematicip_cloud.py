@@ -19,12 +19,12 @@ STATE_SMOKE_OFF = 'IDLE_OFF'
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud binary sensor devices."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud binary sensor from a config entry."""
     from homematicip.aio.device import (
         AsyncShutterContact, AsyncMotionDetectorIndoor, AsyncSmokeDetector)
@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             devices.append(HomematicipSmokeDetector(home, device))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipShutterContact(HomematicipGenericDevice, BinarySensorDevice):
