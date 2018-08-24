@@ -71,6 +71,9 @@ gTTS-token==1.1.1
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.9
 
+# homeassistant.components.hangouts
+hangups==0.4.5
+
 # homeassistant.components.sensor.geo_rss_events
 haversine==0.4.5
 
