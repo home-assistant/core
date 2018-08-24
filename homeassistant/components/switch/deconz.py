@@ -6,9 +6,10 @@ https://home-assistant.io/components/switch.deconz/
 """
 from homeassistant.components.deconz.const import (
     DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB,
-    POWER_PLUGS, SIRENS)
+    DECONZ_DOMAIN, POWER_PLUGS, SIRENS)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
@@ -78,6 +79,22 @@ class DeconzSwitch(SwitchDevice):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def device(self):
+        """Return a device description for device registry."""
+        if (self._switch.uniqueid is None or
+                self._switch.uniqueid.count(':') != 7):
+            return None
+        serial = self._switch.uniqueid.split('-', 1)[0]
+        return {
+            'connection': [[CONNECTION_ZIGBEE, serial]],
+            'identifiers': [[DECONZ_DOMAIN, serial]],
+            'manufacturer': self._switch.manufacturer,
+            'model': self._switch.modelid,
+            'name': self._switch.name,
+            'sw_version': self._switch.swversion,
+        }
 
 
 class DeconzPowerPlug(DeconzSwitch):
