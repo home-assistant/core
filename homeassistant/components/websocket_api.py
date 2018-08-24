@@ -18,7 +18,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import (
     MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
     __version__)
-from homeassistant.core import Context, callback
+from homeassistant.core import Context, callback, HomeAssistant
 from homeassistant.loader import bind_hass
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers import config_validation as cv
@@ -576,3 +576,59 @@ def handle_ping(hass, connection, msg):
     Async friendly.
     """
     connection.to_write.put_nowait(pong_message(msg['id']))
+
+
+def ws_require_user(
+        only_owner=False, only_system_user=False, allow_system_user=True,
+        only_active_user=True, only_inactive_user=False):
+    """Decorate function validating login user exist in current WS connection.
+
+    Will write out error message if not authenticated.
+    """
+    def validator(func):
+        """Decorate func."""
+        @wraps(func)
+        def check_current_user(hass: HomeAssistant,
+                               connection: ActiveConnection,
+                               msg):
+            """Check current user."""
+            def output_error(message_id, message):
+                """Output error message."""
+                connection.send_message_outside(error_message(
+                    msg['id'], message_id, message))
+
+            if connection.user is None:
+                output_error('no_user', 'Not authenticated as a user')
+                return
+
+            if only_owner and not connection.user.is_owner:
+                output_error('only_owner', 'Only allowed as owner')
+                return
+
+            if (only_system_user and
+                    not connection.user.system_generated):
+                output_error('only_system_user',
+                             'Only allowed as system user')
+                return
+
+            if (not allow_system_user
+                    and connection.user.system_generated):
+                output_error('not_system_user', 'Not allowed as system user')
+                return
+
+            if (only_active_user and
+                    not connection.user.is_active):
+                output_error('only_active_user',
+                             'Only allowed as active user')
+                return
+
+            if only_inactive_user and connection.user.is_active:
+                output_error('only_inactive_user',
+                             'Not allowed as active user')
+                return
+
+            return func(hass, connection, msg)
+
+        return check_current_user
+
+    return validator
