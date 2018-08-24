@@ -92,7 +92,6 @@ async def test_loading_from_storage(hass, hass_storage):
                     'model': 'model',
                     'name': 'name',
                     'sw_version': 'version',
-                    'config_entries': ['123']
                 }
             ]
         }
