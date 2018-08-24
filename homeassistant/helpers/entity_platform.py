@@ -272,7 +272,7 @@ class EntityPlatform:
             else:
                 config_entry_id = None
 
-            device = entity.device
+            device = entity.device_info
             if device is not None:
                 device = device_registry.async_get_or_create(
                     config_entry=config_entry_id,
