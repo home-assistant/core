@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     data = MoparData(session)
     add_entities([MoparSensor(data, index)
-                 for index, _ in enumerate(data.vehicles)], True)
+                  for index, _ in enumerate(data.vehicles)], True)
 
 
 class MoparData:

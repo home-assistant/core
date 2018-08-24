@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                    camera[identifier],
                                    camera['name'],
                                    password)
-                 for camera in cameras])
+                  for camera in cameras])
     return True
 
 

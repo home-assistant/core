@@ -128,7 +128,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     add_entities([BOMCurrentSensor(bom_data, variable, config.get(CONF_NAME))
-                 for variable in config[CONF_MONITORED_CONDITIONS]])
+                  for variable in config[CONF_MONITORED_CONDITIONS]])
 
 
 class BOMCurrentSensor(Entity):

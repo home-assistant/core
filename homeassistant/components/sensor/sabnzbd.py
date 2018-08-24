@@ -26,7 +26,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     sensors = sab_api_data.sensors
     client_name = sab_api_data.name
     async_add_entities([SabnzbdSensor(sensor, sab_api_data, client_name)
-                       for sensor in sensors])
+                        for sensor in sensors])
 
 
 class SabnzbdSensor(Entity):

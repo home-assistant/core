@@ -92,7 +92,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     add_entities([ZamgSensor(probe, variable, name)
-                 for variable in config[CONF_MONITORED_CONDITIONS]], True)
+                  for variable in config[CONF_MONITORED_CONDITIONS]], True)
 
 
 class ZamgSensor(Entity):
