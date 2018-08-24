@@ -13,14 +13,14 @@ class TestAutomationEvent(unittest.TestCase):
     """Test the event automation."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'group')
         self.calls = []
 
         @callback
         def record_call(service):
-            """Helper for recording the call."""
+            """Record the call."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)

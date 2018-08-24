@@ -39,7 +39,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         self.hass.stop()
 
     def test_setting_up_group(self):
-        """Setup the setting of a group."""
+        """Set up the setting of a group."""
         setup_component(self.hass, 'group', {'group': {}})
         component = EntityComponent(_LOGGER, DOMAIN, self.hass,
                                     group_name='everyone')

@@ -94,7 +94,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
 
     @property
     def volume_level(self):
-        """The volume level of player."""
+        """Return the volume level of player."""
         return self._volume_level
 
     @property
@@ -158,7 +158,7 @@ class TestMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.mock_mp_1 = MockMediaPlayer(self.hass, 'mock1')

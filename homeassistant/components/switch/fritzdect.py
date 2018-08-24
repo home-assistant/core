@@ -105,7 +105,7 @@ class FritzDectSwitch(SwitchDevice):
         return attrs
 
     @property
-    def current_power_watt(self):
+    def current_power_w(self):
         """Return the current power usage in Watt."""
         try:
             return float(self.data.current_consumption)

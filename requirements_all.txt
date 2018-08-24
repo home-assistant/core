@@ -59,7 +59,7 @@ PyXiaomiGateway==0.9.5
 RtmAPI==0.7.0
 
 # homeassistant.components.sonos
-SoCo==0.14
+SoCo==0.16
 
 # homeassistant.components.sensor.travisci
 TravisPy==0.3.5
@@ -77,7 +77,7 @@ YesssSMS==0.1.1b3
 abodepy==0.13.1
 
 # homeassistant.components.media_player.frontier_silicon
-afsapi==0.0.3
+afsapi==0.0.4
 
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
@@ -205,7 +205,7 @@ braviarc-homeassistant==0.3.7.dev0
 broadlink==0.9.0
 
 # homeassistant.components.cover.brunt
-brunt==0.1.2
+brunt==0.1.3
 
 # homeassistant.components.device_tracker.bluetooth_tracker
 bt_proximity==0.1.2
@@ -413,6 +413,9 @@ ha-ffmpeg==1.9
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.5
 
+# homeassistant.components.hangouts
+hangups==0.4.5
+
 # homeassistant.components.sensor.geo_rss_events
 haversine==0.4.5
 
@@ -435,7 +438,7 @@ hole==0.3.0
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180816.0
+home-assistant-frontend==20180820.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -468,11 +471,8 @@ ihcsdk==2.2.0
 # homeassistant.components.sensor.influxdb
 influxdb==5.0.0
 
-# homeassistant.components.insteon_local
-insteonlocal==0.53
-
-# homeassistant.components.insteon_plm
-insteonplm==0.11.7
+# homeassistant.components.insteon
+insteonplm==0.12.3
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
@@ -594,7 +594,7 @@ nad_receiver==0.0.9
 nanoleaf==0.4.1
 
 # homeassistant.components.device_tracker.keenetic_ndms2
-ndms2_client==0.0.3
+ndms2_client==0.0.4
 
 # homeassistant.components.sensor.netdata
 netdata==0.1.2
@@ -616,7 +616,7 @@ nuheat==0.3.0
 
 # homeassistant.components.binary_sensor.trend
 # homeassistant.components.image_processing.opencv
-numpy==1.15.0
+numpy==1.15.1
 
 # homeassistant.components.google
 oauth2client==4.0.0
@@ -740,6 +740,9 @@ pyTibber==0.4.1
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
+
+# homeassistant.components.sensor.noaa_tides
+# py_noaa==0.3.0
 
 # homeassistant.components.cover.ryobi_gdo
 py_ryobi_gdo==0.0.10
@@ -876,7 +879,7 @@ pyhik==0.1.8
 pyhiveapi==0.2.14
 
 # homeassistant.components.homematic
-pyhomematic==0.1.46
+pyhomematic==0.1.47
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.2.2
@@ -1088,7 +1091,7 @@ python-juicenet==0.0.5
 # homeassistant.components.sensor.xiaomi_miio
 # homeassistant.components.switch.xiaomi_miio
 # homeassistant.components.vacuum.xiaomi_miio
-python-miio==0.4.0
+python-miio==0.4.1
 
 # homeassistant.components.media_player.mpd
 python-mpd2==1.0.0
@@ -1167,7 +1170,7 @@ pytradfri[async]==5.5.1
 pyunifi==2.13
 
 # homeassistant.components.upnp
-pyupnp-async==0.1.0.2
+pyupnp-async==0.1.1.0
 
 # homeassistant.components.binary_sensor.uptimerobot
 pyuptimerobot==0.0.5
@@ -1227,7 +1230,7 @@ rflink==0.0.37
 ring_doorbell==0.2.1
 
 # homeassistant.components.device_tracker.ritassist
-ritassist==0.5
+ritassist==0.9.2
 
 # homeassistant.components.notify.rocketchat
 rocketchat-API==0.6.1
@@ -1260,7 +1263,7 @@ schiene==0.22
 scsgate==0.1.0
 
 # homeassistant.components.notify.sendgrid
-sendgrid==5.4.1
+sendgrid==5.6.0
 
 # homeassistant.components.light.sensehat
 # homeassistant.components.sensor.sensehat
@@ -1273,7 +1276,7 @@ sense_energy==0.4.1
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.sensor.shodan
-shodan==1.9.0
+shodan==1.9.1
 
 # homeassistant.components.notify.simplepush
 simplepush==1.1.4
@@ -1339,6 +1342,9 @@ statsd==3.2.1
 # homeassistant.components.sensor.steam_online
 steamodd==4.21
 
+# homeassistant.components.ecovacs
+sucks==0.9.1
+
 # homeassistant.components.camera.onvif
 suds-passworddigest-homeassistant==0.1.2a0.dev0
 
@@ -1392,7 +1398,7 @@ tplink==0.2.1
 transmissionrpc==0.11
 
 # homeassistant.components.tuya
-tuyapy==0.1.2
+tuyapy==0.1.3
 
 # homeassistant.components.twilio
 twilio==5.7.0
@@ -1489,7 +1495,7 @@ yeelight==0.4.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.08.04
+youtube_dl==2018.08.22
 
 # homeassistant.components.light.zengge
 zengge==0.2

@@ -87,9 +87,11 @@ async def async_from_config_dict(config: Dict[str, Any],
                              log_no_color)
 
     core_config = config.get(core.DOMAIN, {})
+    has_api_password = bool((config.get('http') or {}).get('api_password'))
 
     try:
-        await conf_util.async_process_ha_core_config(hass, core_config)
+        await conf_util.async_process_ha_core_config(
+            hass, core_config, has_api_password)
     except vol.Invalid as ex:
         conf_util.async_log_exception(ex, 'homeassistant', core_config, hass)
         return None
@@ -307,7 +309,7 @@ def async_enable_logging(hass: core.HomeAssistant,
         hass.data[DATA_LOGGING] = err_log_path
     else:
         _LOGGER.error(
-            "Unable to setup error log %s (access denied)", err_log_path)
+            "Unable to set up error log %s (access denied)", err_log_path)
 
 
 async def async_mount_local_lib_path(config_dir: str) -> str:

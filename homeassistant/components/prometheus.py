@@ -49,7 +49,9 @@ def setup(hass, config):
     conf = config[DOMAIN]
     entity_filter = conf[CONF_FILTER]
     namespace = conf.get(CONF_PROM_NAMESPACE)
-    metrics = PrometheusMetrics(prometheus_client, entity_filter, namespace)
+    climate_units = hass.config.units.temperature_unit
+    metrics = PrometheusMetrics(prometheus_client, entity_filter, namespace,
+                                climate_units)
 
     hass.bus.listen(EVENT_STATE_CHANGED, metrics.handle_event)
     return True
@@ -58,7 +60,8 @@ def setup(hass, config):
 class PrometheusMetrics:
     """Model all of the metrics which should be exposed to Prometheus."""
 
-    def __init__(self, prometheus_client, entity_filter, namespace):
+    def __init__(self, prometheus_client, entity_filter, namespace,
+                 climate_units):
         """Initialize Prometheus Metrics."""
         self.prometheus_client = prometheus_client
         self._filter = entity_filter
@@ -67,6 +70,7 @@ class PrometheusMetrics:
         else:
             self.metrics_prefix = ""
         self._metrics = {}
+        self._climate_units = climate_units
 
     def handle_event(self, event):
         """Listen for new messages on the bus, and add them to Prometheus."""
@@ -173,8 +177,7 @@ class PrometheusMetrics:
     def _handle_climate(self, state):
         temp = state.attributes.get(ATTR_TEMPERATURE)
         if temp:
-            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-            if unit == TEMP_FAHRENHEIT:
+            if self._climate_units == TEMP_FAHRENHEIT:
                 temp = fahrenheit_to_celsius(temp)
             metric = self._metric(
                 'temperature_c', self.prometheus_client.Gauge,
@@ -183,7 +186,7 @@ class PrometheusMetrics:
 
         current_temp = state.attributes.get(ATTR_CURRENT_TEMPERATURE)
         if current_temp:
-            if unit == TEMP_FAHRENHEIT:
+            if self._climate_units == TEMP_FAHRENHEIT:
                 current_temp = fahrenheit_to_celsius(current_temp)
             metric = self._metric(
                 'current_temperature_c', self.prometheus_client.Gauge,

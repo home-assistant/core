@@ -2,35 +2,35 @@
 Support for INSTEON dimmers via PowerLinc Modem.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.insteon_plm/
+https://home-assistant.io/components/sensor.insteon/
 """
 import asyncio
 import logging
 
-from homeassistant.components.insteon_plm import InsteonPLMEntity
+from homeassistant.components.insteon import InsteonEntity
 from homeassistant.helpers.entity import Entity
 
-DEPENDENCIES = ['insteon_plm']
+DEPENDENCIES = ['insteon']
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
-    """Set up the INSTEON PLM device class for the hass platform."""
-    plm = hass.data['insteon_plm'].get('plm')
+    """Set up the INSTEON device class for the hass platform."""
+    insteon_modem = hass.data['insteon'].get('modem')
 
     address = discovery_info['address']
-    device = plm.devices[address]
+    device = insteon_modem.devices[address]
     state_key = discovery_info['state_key']
 
     _LOGGER.debug('Adding device %s entity %s to Sensor platform',
                   device.address.hex, device.states[state_key].name)
 
-    new_entity = InsteonPLMSensorDevice(device, state_key)
+    new_entity = InsteonSensorDevice(device, state_key)
 
     async_add_devices([new_entity])
 
 
-class InsteonPLMSensorDevice(InsteonPLMEntity, Entity):
+class InsteonSensorDevice(InsteonEntity, Entity):
     """A Class for an Insteon device."""

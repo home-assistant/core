@@ -21,7 +21,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +52,7 @@ ATTR_DO_NOT_DISTURB_END = 'do_not_disturb_end'
 ATTR_MAIN_BRUSH_LEFT = 'main_brush_left'
 ATTR_SIDE_BRUSH_LEFT = 'side_brush_left'
 ATTR_FILTER_LEFT = 'filter_left'
+ATTR_SENSOR_DIRTY_LEFT = 'sensor_dirty_left'
 ATTR_CLEANING_COUNT = 'cleaning_count'
 ATTR_CLEANED_TOTAL_AREA = 'total_cleaned_area'
 ATTR_CLEANING_TOTAL_TIME = 'total_cleaning_time'
@@ -234,7 +235,12 @@ class MiroboVacuum(StateVacuumDevice):
                     / 3600),
                 ATTR_FILTER_LEFT: int(
                     self.consumable_state.filter_left.total_seconds()
-                    / 3600)})
+                    / 3600),
+                ATTR_SENSOR_DIRTY_LEFT: int(
+                    self.consumable_state.sensor_dirty_left.total_seconds()
+                    / 3600)
+                })
+
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
         return attrs

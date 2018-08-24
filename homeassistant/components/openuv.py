@@ -37,6 +37,7 @@ TOPIC_UPDATE = '{0}_data_update'.format(DOMAIN)
 
 TYPE_CURRENT_OZONE_LEVEL = 'current_ozone_level'
 TYPE_CURRENT_UV_INDEX = 'current_uv_index'
+TYPE_CURRENT_UV_LEVEL = 'current_uv_level'
 TYPE_MAX_UV_INDEX = 'max_uv_index'
 TYPE_PROTECTION_WINDOW = 'uv_protection_window'
 TYPE_SAFE_EXPOSURE_TIME_1 = 'safe_exposure_time_type_1'
@@ -59,6 +60,7 @@ SENSORS = {
     TYPE_CURRENT_OZONE_LEVEL: (
         'Current Ozone Level', 'mdi:vector-triangle', 'du'),
     TYPE_CURRENT_UV_INDEX: ('Current UV Index', 'mdi:weather-sunny', 'index'),
+    TYPE_CURRENT_UV_LEVEL: ('Current UV Level', 'mdi:weather-sunny', None),
     TYPE_MAX_UV_INDEX: ('Max UV Index', 'mdi:weather-sunny', 'index'),
     TYPE_SAFE_EXPOSURE_TIME_1: (
         'Skin Type 1 Safe Exposure Time', 'mdi:timer', 'minutes'),

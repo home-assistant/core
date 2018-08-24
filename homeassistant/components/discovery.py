@@ -86,11 +86,11 @@ SERVICE_HANDLERS = {
     'volumio': ('media_player', 'volumio'),
     'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
     'freebox': ('device_tracker', 'freebox'),
-    'dlna_dmr': ('media_player', 'dlna_dmr'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
     SERVICE_HOMEKIT: ('homekit_controller', None),
+    'dlna_dmr': ('media_player', 'dlna_dmr'),
 }
 
 CONF_IGNORE = 'ignore'

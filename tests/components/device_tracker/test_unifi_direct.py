@@ -31,7 +31,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
         'unifi_direct.UnifiDeviceScanner'
 
     def setup_method(self, _):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'zone')
 
