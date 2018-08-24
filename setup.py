@@ -46,6 +46,7 @@ REQUIRES = [
     'pyyaml>=3.13,<4',
     'requests==2.19.1',
     'voluptuous==0.11.5',
+    'jellyfish==0.6.1',
 ]
 
 MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))
