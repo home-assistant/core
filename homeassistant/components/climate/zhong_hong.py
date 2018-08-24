@@ -100,7 +100,7 @@ class ZhongHongClimate(ClimateDevice):
         async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADDED)
 
     def _after_update(self, climate):
-        """Callback to update state."""
+        """Handle state update."""
         _LOGGER.debug("async update ha state")
         if self._device.current_operation:
             self._current_operation = self._device.current_operation.lower()

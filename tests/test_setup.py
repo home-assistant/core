@@ -257,7 +257,7 @@ class TestSetup:
     def test_component_exception_setup(self):
         """Test component that raises exception during setup."""
         def exception_setup(hass, config):
-            """Setup that raises exception."""
+            """Raise exception."""
             raise Exception('fail!')
 
         loader.set_component(
@@ -269,7 +269,7 @@ class TestSetup:
     def test_component_setup_with_validation_and_dependency(self):
         """Test all config is passed to dependencies."""
         def config_check_setup(hass, config):
-            """Setup method that tests config is passed in."""
+            """Test that config is passed in."""
             if config.get('comp_a', {}).get('valid', False):
                 return True
             raise Exception('Config not passed in: {}'.format(config))

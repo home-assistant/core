@@ -336,7 +336,7 @@ def test_raise_error_on_update(hass):
     entity2 = MockEntity(name='test_2')
 
     def _raise():
-        """Helper to raise an exception."""
+        """Raise an exception."""
         raise AssertionError
 
     entity1.update = _raise

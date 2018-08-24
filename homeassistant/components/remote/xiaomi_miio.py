@@ -249,7 +249,7 @@ class XiaomiMiioRemote(RemoteDevice):
                 payload, ex)
 
     def send_command(self, command, **kwargs):
-        """Wrapper for _send_command."""
+        """Send a command."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)
 
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)

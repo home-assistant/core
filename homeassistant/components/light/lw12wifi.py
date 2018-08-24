@@ -53,7 +53,7 @@ class LW12WiFi(Light):
     """LW-12 WiFi LED Controller."""
 
     def __init__(self, name, lw12_light):
-        """Initialisation of LW-12 WiFi LED Controller.
+        """Initialise LW-12 WiFi LED Controller.
 
         Args:
             name: Friendly name for this platform to use.

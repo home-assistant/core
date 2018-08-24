@@ -234,7 +234,7 @@ class EntityRegistry:
 
     @callback
     def _data_to_save(self):
-        """Data of entity registry to store in a file."""
+        """Return data of entity registry to store in a file."""
         data = {}
 
         data['entities'] = [

@@ -18,12 +18,12 @@ _LOGGER = logging.getLogger(__name__)
 async def async_migrator(hass, old_path, store, *,
                          old_conf_load_func=json.load_json,
                          old_conf_migrate_func=None):
-    """Helper function to migrate old data to a store and then load data.
+    """Migrate old data to a store and then load data.
 
     async def old_conf_migrate_func(old_data)
     """
     def load_old_config():
-        """Helper to load old config."""
+        """Load old config."""
         if not os.path.isfile(old_path):
             return None
 
@@ -77,7 +77,7 @@ class Store:
         return await self._load_task
 
     async def _async_load(self):
-        """Helper to load the data."""
+        """Load the data."""
         # Check if we have a pending write
         if self._data is not None:
             data = self._data
@@ -165,7 +165,7 @@ class Store:
         await self._async_handle_write_data()
 
     async def _async_handle_write_data(self, *_args):
-        """Handler to handle writing the config."""
+        """Handle writing the config."""
         data = self._data
 
         if 'data_func' in data:

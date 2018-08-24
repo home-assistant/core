@@ -98,7 +98,7 @@ class WirelessTagSensor(WirelessTagBaseSensor):
             else all_sensors)
 
     def __init__(self, api, tag, sensor_type, config):
-        """Constructor with platform(api), tag and hass sensor type."""
+        """Initialize a WirelessTag sensor."""
         super().__init__(api, tag)
 
         self._sensor_type = sensor_type

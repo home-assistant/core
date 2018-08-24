@@ -341,7 +341,7 @@ class Entity(entity.Entity):
         application_listener.register_entity(ieee, self)
 
     async def async_added_to_hass(self):
-        """Callback once the entity is added to hass.
+        """Handle entity addition to hass.
 
         It is now safe to update the entity state
         """
