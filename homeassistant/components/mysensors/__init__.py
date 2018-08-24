@@ -133,7 +133,7 @@ def setup_mysensors_platform(
         async_add_devices=None):
     """Set up a MySensors platform."""
     # Only act if called via MySensors by discovery event.
-    # Otherwise gateway is not setup.
+    # Otherwise gateway is not set up.
     if not discovery_info:
         return
     if device_args is None:

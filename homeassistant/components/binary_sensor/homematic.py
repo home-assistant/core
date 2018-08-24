@@ -5,27 +5,28 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.homematic/
 """
 import logging
-from homeassistant.const import STATE_UNKNOWN
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
+from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
+from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['homematic']
 
 SENSOR_TYPES_CLASS = {
-    'Remote': None,
-    'ShutterContact': 'opening',
-    'MaxShutterContact': 'opening',
     'IPShutterContact': 'opening',
-    'Smoke': 'smoke',
-    'SmokeV2': 'smoke',
+    'MaxShutterContact': 'opening',
     'Motion': 'motion',
     'MotionV2': 'motion',
-    'RemoteMotion': None,
-    'WeatherSensor': None,
-    'TiltSensor': None,
     'PresenceIP': 'motion',
+    'Remote': None,
+    'RemoteMotion': None,
+    'ShutterContact': 'opening',
+    'Smoke': 'smoke',
+    'SmokeV2': 'smoke',
+    'TiltSensor': None,
+    'WeatherSensor': None,
 }
 
 

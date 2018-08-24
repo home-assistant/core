@@ -77,7 +77,7 @@ class WemoSwitch(SwitchDevice):
             self._async_locked_subscription_callback(not updated))
 
     async def _async_locked_subscription_callback(self, force_update):
-        """Helper to handle an update from a subscription."""
+        """Handle an update from a subscription."""
         # If an update is in progress, we don't do anything
         if self._update_lock.locked():
             return

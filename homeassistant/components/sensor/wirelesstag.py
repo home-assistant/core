@@ -1,5 +1,5 @@
 """
-Sensor support for Wirelss Sensor Tags platform.
+Sensor support for Wireless Sensor Tags platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.wirelesstag/
@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up the sensor platform."""
     platform = hass.data.get(WIRELESSTAG_DOMAIN)
     sensors = []
     tags = platform.tags
@@ -98,7 +98,7 @@ class WirelessTagSensor(WirelessTagBaseSensor):
             else all_sensors)
 
     def __init__(self, api, tag, sensor_type, config):
-        """Constructor with platform(api), tag and hass sensor type."""
+        """Initialize a WirelessTag sensor."""
         super().__init__(api, tag)
 
         self._sensor_type = sensor_type

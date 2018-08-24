@@ -232,7 +232,8 @@ class HomeAssistantHTTP:
         self.is_ban_enabled = is_ban_enabled
         self.ssl_profile = ssl_profile
         self._handler = None
-        self.server = None
+        self.runner = None
+        self.site = None
 
     def register_view(self, view):
         """Register a view with the WSGI server.
@@ -308,7 +309,7 @@ class HomeAssistantHTTP:
         self.app.router.add_route('GET', url_pattern, serve_file)
 
     async def start(self):
-        """Start the WSGI server."""
+        """Start the aiohttp server."""
         # We misunderstood the startup signal. You're not allowed to change
         # anything during startup. Temp workaround.
         # pylint: disable=protected-access
@@ -321,7 +322,9 @@ class HomeAssistantHTTP:
                     context = ssl_util.server_context_intermediate()
                 else:
                     context = ssl_util.server_context_modern()
-                context.load_cert_chain(self.ssl_certificate, self.ssl_key)
+                await self.hass.async_add_executor_job(
+                    context.load_cert_chain, self.ssl_certificate,
+                    self.ssl_key)
             except OSError as error:
                 _LOGGER.error("Could not read SSL certificate from %s: %s",
                               self.ssl_certificate, error)
@@ -329,7 +332,9 @@ class HomeAssistantHTTP:
 
             if self.ssl_peer_certificate:
                 context.verify_mode = ssl.CERT_REQUIRED
-                context.load_verify_locations(cafile=self.ssl_peer_certificate)
+                await self.hass.async_add_executor_job(
+                    context.load_verify_locations,
+                    self.ssl_peer_certificate)
 
         else:
             context = None
@@ -340,21 +345,17 @@ class HomeAssistantHTTP:
         # To work around this we now prevent the router from getting frozen
         self.app._router.freeze = lambda: None
 
-        self._handler = self.app.make_handler(loop=self.hass.loop)
-
+        self.runner = web.AppRunner(self.app)
+        await self.runner.setup()
+        self.site = web.TCPSite(self.runner, self.server_host,
+                                self.server_port, ssl_context=context)
         try:
-            self.server = await self.hass.loop.create_server(
-                self._handler, self.server_host, self.server_port, ssl=context)
+            await self.site.start()
         except OSError as error:
             _LOGGER.error("Failed to create HTTP server at port %d: %s",
                           self.server_port, error)
 
     async def stop(self):
-        """Stop the WSGI server."""
-        if self.server:
-            self.server.close()
-            await self.server.wait_closed()
-        await self.app.shutdown()
-        if self._handler:
-            await self._handler.shutdown(10)
-        await self.app.cleanup()
+        """Stop the aiohttp server."""
+        await self.site.stop()
+        await self.runner.cleanup()

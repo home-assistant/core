@@ -71,7 +71,7 @@ async def ban_middleware(request, handler):
 
 
 def log_invalid_auth(func):
-    """Decorator to handle invalid auth or failed login attempts."""
+    """Decorate function to handle invalid auth or failed login attempts."""
     async def handle_req(view, request, *args, **kwargs):
         """Try to log failed login attempts if response status >= 400."""
         resp = await func(view, request, *args, **kwargs)

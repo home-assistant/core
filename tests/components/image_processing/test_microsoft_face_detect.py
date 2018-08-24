@@ -15,7 +15,7 @@ class TestMicrosoftFaceDetectSetup:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self):
@@ -25,7 +25,7 @@ class TestMicrosoftFaceDetectSetup:
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_platform(self, store_mock):
-        """Setup platform with one entity."""
+        """Set up platform with one entity."""
         config = {
             ip.DOMAIN: {
                 'platform': 'microsoft_face_detect',
@@ -51,7 +51,7 @@ class TestMicrosoftFaceDetectSetup:
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_platform_name(self, store_mock):
-        """Setup platform with one entity and set name."""
+        """Set up platform with one entity and set name."""
         config = {
             ip.DOMAIN: {
                 'platform': 'microsoft_face_detect',
@@ -78,7 +78,7 @@ class TestMicrosoftFaceDetect:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.config = {
@@ -108,7 +108,7 @@ class TestMicrosoftFaceDetect:
            'MicrosoftFaceDetectEntity.should_poll',
            new_callable=PropertyMock(return_value=False))
     def test_ms_detect_process_image(self, poll_mock, aioclient_mock):
-        """Setup and scan a picture and test plates from event."""
+        """Set up and scan a picture and test plates from event."""
         aioclient_mock.get(
             self.endpoint_url.format("persongroups"),
             text=load_fixture('microsoft_face_persongroups.json')

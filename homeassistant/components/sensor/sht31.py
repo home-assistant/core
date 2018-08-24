@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Set up the sensor platform."""
     from Adafruit_SHT31 import SHT31
 
     i2c_address = config.get(CONF_I2C_ADDRESS)
