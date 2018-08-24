@@ -66,7 +66,6 @@ class MqttSensor(MqttAvailability, Entity):
         self.hass = hass
 
     def discover_sensors(self, sensor, topic):
-        _LOGGER.error("discover_sensors: " + str(sensor) + " topic: " + str(topic))
         conf_state_topic = "tele/" + topic + "/SENSOR"
         if sensor == "SI7021":
             configuration_topic = "core_homeassistant/sensor/" + topic + "_9/config"

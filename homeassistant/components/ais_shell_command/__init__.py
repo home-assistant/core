@@ -186,8 +186,28 @@ def _execute_upgrade(hass, call):
     # check the status of the sensor to choide the correct upgrade method
     state = hass.states.get('sensor.version_info')
     reinstall_android_app = state.attributes.get('reinstall_android_app')
+    apt = state.attributes.get('apt')
+    if apt is not None and apt != "":
+        _LOGGER.info("We have apt dependencies " + str(apt))
+        try:
+            apt_script = str(os.path.dirname(__file__))
+            apt_script += '/scripts/apt_install.sh'
+            f = open(str(apt_script), "w")
+            f.write("#!/data/data/pl.sviete.dom/files/usr/bin/sh" + os.linesep)
+            for l in apt.split(","):
+                f.write(l + os.linesep)
+            f.close()
+            import subprocess
+            apt_process = subprocess.Popen(apt_script, shell=True, stdout=None, stderr=None)
+            apt_process.wait()
+            _LOGGER.info("apt_install, return: " + str(apt_process.returncode))
+        except Exception as e:
+            _LOGGER.error("Can't install apt dependencies, error: " + str(e))
+    else:
+        _LOGGER.info("No apt dependencies this time!")
+
     import subprocess
-    if (reinstall_android_app is None or reinstall_android_app is False):
+    if reinstall_android_app is None or reinstall_android_app is False:
         # partial update (without android app)
         script = "/data/data/pl.sviete.dom/.ais/upgrade_ais.sh"
         process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)

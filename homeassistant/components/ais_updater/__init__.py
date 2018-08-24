@@ -50,6 +50,7 @@ RESPONSE_SCHEMA = vol.Schema({
     vol.Required('version'): cv.string,
     vol.Required('release-notes'): cv.string,
     vol.Optional('reinstall-android'): cv.boolean,
+    vol.Optional('apt'): cv.string,
 })
 
 
@@ -91,7 +92,7 @@ async def async_setup(hass, config):
         if result is None:
             return
 
-        newest, releasenotes, android = result
+        newest, releasenotes, android, apt = result
 
         # Load data from supervisor on hass.io
         if hass.components.hassio.is_hassio():
@@ -107,7 +108,8 @@ async def async_setup(hass, config):
                     "icon": "mdi:update",
                     "custom_ui_state_card": "state-card-text",
                     "reinstall_dom_app": True,
-                    "reinstall_android_app": android
+                    "reinstall_android_app": android,
+                    "apt": apt
                 }
             )
             hass.async_add_job(
@@ -125,7 +127,8 @@ async def async_setup(hass, config):
                     "icon": "mdi:update",
                     "custom_ui_state_card": "state-card-text",
                     "reinstall_dom_app": False,
-                    "reinstall_android_app": False
+                    "reinstall_android_app": False,
+                    "apt": apt
                 }
             )
             _LOGGER.info(
@@ -227,7 +230,10 @@ async def get_newest_version(hass, huuid, include_components):
 
     try:
         res = RESPONSE_SCHEMA(res)
-        return res['version'], res['release-notes'], res['reinstall-android']
+        if 'apt' in res:
+            return res['version'], res['release-notes'], res['reinstall-android'], res['apt']
+        else:
+            return res['version'], res['release-notes'], res['reinstall-android'], ''
     except vol.Invalid:
         _LOGGER.error("Got unexpected response: %s", res)
         info = "Wersja. Otrzmyano nieprawidłową odpowiedz z usługi AIS dom "

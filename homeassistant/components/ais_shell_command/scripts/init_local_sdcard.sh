@@ -12,12 +12,6 @@ if [ $# != 0 ]; then
     show_usage
 fi
 
-rm -rf /data/data/pl.sviete.dom/files/usr/var/lib/apt/lists/*
-apt update
-apt install -y rclone
-apt install -y libffi-dev
-apt install -y openssl-dev
-
 
 if [ ! -e "/sdcard/dom" ] ; then
     mkdir -p /sdcard/dom
