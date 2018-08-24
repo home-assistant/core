@@ -20,7 +20,8 @@ DEPENDENCIES = ['lutron_caseta']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Lutron Caseta lights."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
@@ -29,7 +30,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         dev = LutronCasetaLight(light_device, bridge)
         devs.append(dev)
 
-    async_add_devices(devs, True)
+    async_add_entities(devs, True)
 
 
 class LutronCasetaLight(LutronCasetaDevice, Light):

@@ -30,7 +30,7 @@ SENSOR_TYPES_CLASS = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HomeMatic binary sensor platform."""
     if discovery_info is None:
         return
@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         new_device = HMBinarySensor(conf)
         devices.append(new_device)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class HMBinarySensor(HMDevice, BinarySensorDevice):

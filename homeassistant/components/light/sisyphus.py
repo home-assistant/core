@@ -17,10 +17,10 @@ DEPENDENCIES = ['sisyphus']
 SUPPORTED_FEATURES = SUPPORT_BRIGHTNESS
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a single Sisyphus table."""
     name = discovery_info[CONF_NAME]
-    add_devices(
+    add_entities(
         [SisyphusLight(name, hass.data[DATA_SISYPHUS][name])],
         update_before_add=True)
 

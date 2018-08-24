@@ -21,14 +21,14 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=120)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tahoma controller devices."""
     _LOGGER.debug("Setup Tahoma Binary sensor platform")
     controller = hass.data[TAHOMA_DOMAIN]['controller']
     devices = []
     for device in hass.data[TAHOMA_DOMAIN]['devices']['smoke']:
         devices.append(TahomaBinarySensor(device, controller))
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class TahomaBinarySensor(TahomaDevice, BinarySensorDevice):

@@ -80,7 +80,7 @@ def determine_zones(receiver):
     return out
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Onkyo platform."""
     import eiscp
     from eiscp import eISCP
@@ -122,7 +122,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if receiver.host not in KNOWN_HOSTS:
                 hosts.append(OnkyoDevice(receiver, config.get(CONF_SOURCES)))
                 KNOWN_HOSTS.append(receiver.host)
-    add_devices(hosts, True)
+    add_entities(hosts, True)
 
 
 class OnkyoDevice(MediaPlayerDevice):

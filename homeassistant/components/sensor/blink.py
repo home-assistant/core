@@ -21,7 +21,7 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Blink sensor."""
     if discovery_info is None:
         return
@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devs.append(BlinkSensor(name, 'notifications', index, data))
         index += 1
 
-    add_devices(devs, True)
+    add_entities(devs, True)
 
 
 class BlinkSensor(Entity):

@@ -29,12 +29,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Last.fm platform."""
     import pylast as lastfm
     network = lastfm.LastFMNetwork(api_key=config.get(CONF_API_KEY))
 
-    add_devices(
+    add_entities(
         [LastfmSensor(
             username, network) for username in config.get(CONF_USERS)], True)
 

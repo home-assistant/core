@@ -15,13 +15,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old way of setting up deCONZ binary sensors."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
     @callback
     def async_add_sensor(sensors):
@@ -33,7 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             if sensor.type in DECONZ_BINARY_SENSOR and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
                 entities.append(DeconzBinarySensor(sensor))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))

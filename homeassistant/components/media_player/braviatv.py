@@ -58,7 +58,7 @@ def _get_mac_address(ip_address):
     return None
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sony Bravia TV platform."""
     host = config.get(CONF_HOST)
 
@@ -74,19 +74,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             pin = host_config['pin']
             mac = host_config['mac']
             name = config.get(CONF_NAME)
-            add_devices([BraviaTVDevice(host, mac, name, pin)])
+            add_entities([BraviaTVDevice(host, mac, name, pin)])
             return
 
-    setup_bravia(config, pin, hass, add_devices)
+    setup_bravia(config, pin, hass, add_entities)
 
 
-def setup_bravia(config, pin, hass, add_devices):
+def setup_bravia(config, pin, hass, add_entities):
     """Set up a Sony Bravia TV based on host parameter."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
     if pin is None:
-        request_configuration(config, hass, add_devices)
+        request_configuration(config, hass, add_entities)
         return
 
     mac = _get_mac_address(host)
@@ -104,10 +104,10 @@ def setup_bravia(config, pin, hass, add_devices):
         hass.config.path(BRAVIA_CONFIG_FILE),
         {host: {'pin': pin, 'host': host, 'mac': mac}})
 
-    add_devices([BraviaTVDevice(host, mac, name, pin)])
+    add_entities([BraviaTVDevice(host, mac, name, pin)])
 
 
-def request_configuration(config, hass, add_devices):
+def request_configuration(config, hass, add_entities):
     """Request configuration steps from the user."""
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
@@ -128,9 +128,9 @@ def request_configuration(config, hass, add_devices):
         braviarc = braviarc.BraviaRC(host)
         braviarc.connect(pin, CLIENTID_PREFIX, NICKNAME)
         if braviarc.is_connected():
-            setup_bravia(config, pin, hass, add_devices)
+            setup_bravia(config, pin, hass, add_entities)
         else:
-            request_configuration(config, hass, add_devices)
+            request_configuration(config, hass, add_entities)
 
     _CONFIGURING[host] = configurator.request_config(
         name, bravia_configuration_callback,

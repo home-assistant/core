@@ -58,7 +58,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Workday sensor."""
     import holidays
 
@@ -92,7 +92,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for date, name in sorted(obj_holidays.items()):
         _LOGGER.debug("%s %s", date, name)
 
-    add_devices([IsWorkdaySensor(
+    add_entities([IsWorkdaySensor(
         obj_holidays, workdays, excludes, days_offset, sensor_name)], True)
 
 

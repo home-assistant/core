@@ -20,7 +20,7 @@ DEPENDENCIES = ['blink']
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=90)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Blink Camera."""
     if discovery_info is None:
         return
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for name in data.cameras:
         devs.append(BlinkCamera(hass, config, data, name))
 
-    add_devices(devs)
+    add_entities(devs)
 
 
 class BlinkCamera(Camera):

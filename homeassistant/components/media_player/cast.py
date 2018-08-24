@@ -186,7 +186,7 @@ def _async_create_cast_device(hass: HomeAssistantType,
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None):
+                               async_add_entities, discovery_info=None):
     """Set up thet Cast platform.
 
     Deprecated.
@@ -195,22 +195,22 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         'Setting configuration for Cast via platform is deprecated. '
         'Configure via Cast component instead.')
     await _async_setup_platform(
-        hass, config, async_add_devices, discovery_info)
+        hass, config, async_add_entities, discovery_info)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
     config = hass.data[CAST_DOMAIN].get('media_player', {})
     if not isinstance(config, list):
         config = [config]
 
     await asyncio.wait([
-        _async_setup_platform(hass, cfg, async_add_devices, None)
+        _async_setup_platform(hass, cfg, async_add_entities, None)
         for cfg in config])
 
 
 async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                                async_add_devices, discovery_info):
+                                async_add_entities, discovery_info):
     """Set up the cast platform."""
     import pychromecast
 
@@ -236,7 +236,7 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 
         cast_device = _async_create_cast_device(hass, discover)
         if cast_device is not None:
-            async_add_devices([cast_device])
+            async_add_entities([cast_device])
 
     async_dispatcher_connect(hass, SIGNAL_CAST_DISCOVERED,
                              async_cast_discovered)

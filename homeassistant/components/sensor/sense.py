@@ -64,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
     from sense_energy import Senseable
 
@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devices.append(Sense(data, name, sensor_type,
                              is_production, update_call))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class Sense(Entity):
