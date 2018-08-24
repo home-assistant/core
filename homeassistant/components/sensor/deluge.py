@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Deluge sensors."""
     from deluge_client import DelugeRPCClient
 
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_VARIABLES]:
         dev.append(DelugeSensor(variable, deluge_api, name))
 
-    add_devices(dev)
+    add_entities(dev)
 
 
 class DelugeSensor(Entity):

@@ -40,7 +40,7 @@ SUPPORT_EPSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE |\
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Epson media player platform."""
     if DATA_EPSON not in hass.data:
@@ -52,7 +52,7 @@ async def async_setup_platform(hass, config, async_add_devices,
                            name, host,
                            config.get(CONF_PORT), config.get(CONF_SSL))
     hass.data[DATA_EPSON].append(epson)
-    async_add_devices([epson], update_before_add=True)
+    async_add_entities([epson], update_before_add=True)
 
     async def async_service_handler(service):
         """Handle for services."""

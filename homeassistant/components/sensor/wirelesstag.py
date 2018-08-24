@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     platform = hass.data.get(WIRELESSTAG_DOMAIN)
     sensors = []
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensors.append(WirelessTagSensor(
                     platform, tag, sensor_type, hass.config))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class WirelessTagSensor(WirelessTagBaseSensor):

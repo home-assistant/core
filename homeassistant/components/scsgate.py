@@ -125,11 +125,11 @@ class SCSGate:
 
         The list contain already registered ones.
         Beware: this is not what you usually want to do, take a look at
-        `add_devices_to_register`
+        `add_entities_to_register`
         """
         self._devices[device.scs_id] = device
 
-    def add_devices_to_register(self, devices):
+    def add_entities_to_register(self, devices):
         """List of devices to be registered."""
         with self._devices_to_register_lock:
             for device in devices:

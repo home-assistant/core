@@ -55,7 +55,7 @@ CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend({
 REQUIREMENTS = ['pychannels==1.0.0']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Channels platform."""
     device = ChannelsPlayer(
         config.get('name'),
@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if DATA_CHANNELS not in hass.data:
         hass.data[DATA_CHANNELS] = []
 
-    add_devices([device], True)
+    add_entities([device], True)
     hass.data[DATA_CHANNELS].append(device)
 
     def service_handler(service):

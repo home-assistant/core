@@ -104,7 +104,7 @@ def rewrite_legacy(config):
     return {'bridges': new_bridges}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LimitlessLED lights."""
     from limitlessled.bridge import Bridge
 
@@ -126,7 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             lights.append(LimitlessLEDGroup(group, {
                 'fade': group_conf[CONF_FADE]
             }))
-    add_devices(lights)
+    add_entities(lights)
 
 
 def state(new_state):

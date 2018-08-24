@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 NewHost = namedtuple('NewHost', ['host', 'name'])
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
     import denonavr
 
@@ -124,7 +124,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Add all freshly discovered receivers
     if receivers:
-        add_devices(receivers)
+        add_entities(receivers)
 
 
 class DenonDevice(MediaPlayerDevice):
