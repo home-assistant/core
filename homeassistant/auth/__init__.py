@@ -235,13 +235,6 @@ class AuthManager:
             raise ValueError('Unable find multi-factor auth module: {}'
                              .format(mfa_module_id))
 
-        if module.setup_schema is not None:
-            try:
-                # pylint: disable=not-callable
-                data = module.setup_schema(data)
-            except vol.Invalid as err:
-                raise ValueError('Data does not match schema: {}'.format(err))
-
         await module.async_setup_user(user.id, data)
 
     async def async_disable_user_mfa(self, user: models.User,

@@ -64,20 +64,12 @@ class MultiFactorAuthModule:
         """Return a voluptuous schema to define mfa auth module's input."""
         raise NotImplementedError
 
-    @property
-    def setup_schema(self) -> Optional[vol.Schema]:
-        """Return a vol schema to validate mfa auth module's setup input.
-
-        Optional
-        """
-        return None
-
     async def async_setup_flow(self, user_id: str) -> 'SetupFlow':
         """Return a data entry flow handler for setup module.
 
         Mfa module should extend SetupFlow
         """
-        return SetupFlow(self, user_id)
+        raise NotImplementedError
 
     async def async_setup_user(self, user_id: str, setup_data: Any) -> Any:
         """Set up user for mfa auth module."""
@@ -101,9 +93,11 @@ class SetupFlow(data_entry_flow.FlowHandler):
     """Handler for the setup flow."""
 
     def __init__(self, auth_module: MultiFactorAuthModule,
+                 setup_schema: vol.Schema,
                  user_id: str) -> None:
         """Initialize the setup flow."""
         self._auth_module = auth_module
+        self._setup_schema = setup_schema
         self._user_id = user_id
 
     async def async_step_init(
@@ -126,7 +120,7 @@ class SetupFlow(data_entry_flow.FlowHandler):
 
         return self.async_show_form(
             step_id='init',
-            data_schema=self._auth_module.setup_schema,
+            data_schema=self._setup_schema,
             errors=errors
         )
 

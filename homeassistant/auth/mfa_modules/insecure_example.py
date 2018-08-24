@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant
 
 from . import MultiFactorAuthModule, MULTI_FACTOR_AUTH_MODULES, \
-    MULTI_FACTOR_AUTH_MODULE_SCHEMA
+    MULTI_FACTOR_AUTH_MODULE_SCHEMA, SetupFlow
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({
     vol.Required('data'): [vol.Schema({
@@ -36,9 +36,16 @@ class InsecureExampleModule(MultiFactorAuthModule):
         return vol.Schema({'pin': str})
 
     @property
-    def setup_schema(self) -> Optional[vol.Schema]:
+    def setup_schema(self) -> vol.Schema:
         """Validate async_setup_user input data."""
         return vol.Schema({'pin': str})
+
+    async def async_setup_flow(self, user_id: str) -> SetupFlow:
+        """Return a data entry flow handler for setup module.
+
+        Mfa module should extend SetupFlow
+        """
+        return SetupFlow(self, self.setup_schema, user_id)
 
     async def async_setup_user(self, user_id: str, setup_data: Any) -> Any:
         """Set up user to use mfa module."""
