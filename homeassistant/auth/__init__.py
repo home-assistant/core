@@ -6,8 +6,6 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 
 import jwt
 
-import voluptuous as vol
-
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -234,13 +232,6 @@ class AuthManager:
         if module is None:
             raise ValueError('Unable find multi-factor auth module: {}'
                              .format(mfa_module_id))
-
-        if module.setup_schema is not None:
-            try:
-                # pylint: disable=not-callable
-                data = module.setup_schema(data)
-            except vol.Invalid as err:
-                raise ValueError('Data does not match schema: {}'.format(err))
 
         await module.async_setup_user(user.id, data)
 
