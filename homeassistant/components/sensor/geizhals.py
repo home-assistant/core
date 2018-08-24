@@ -15,7 +15,7 @@ from homeassistant.util import Throttle
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_NAME
 
-REQUIREMENTS = ['geizhals==0.0.6']
+REQUIREMENTS = ['geizhals==0.0.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,15 +40,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Geizwatch sensor."""
     name = config.get(CONF_NAME)
     description = config.get(CONF_DESCRIPTION)
     product_id = config.get(CONF_PRODUCT_ID)
     domain = config.get(CONF_LOCALE)
 
-    add_devices([Geizwatch(name, description, product_id, domain)],
-                True)
+    add_entities([Geizwatch(name, description, product_id, domain)],
+                 True)
 
 
 class Geizwatch(Entity):
