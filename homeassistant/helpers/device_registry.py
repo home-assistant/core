@@ -56,10 +56,6 @@ class DeviceRegistry:
                             manufacturer, model, name=None, sw_version=None):
         """Get device. Create if it doesn't exist."""
         device = self.async_get_device(identifiers, connections)
-        if device is not None:
-            if config_entry is not None:
-                device.config_entries.add(config_entry)
-            return device
 
         if device is not None:
             if config_entry not in device.config_entries:

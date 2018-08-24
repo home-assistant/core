@@ -26,18 +26,18 @@ def registry(hass):
 async def test_get_or_create_returns_same_entry(registry):
     """Make sure we do not duplicate entries."""
     entry = registry.async_get_or_create(
-        config_entries='1234',
-        connection={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        config_entry='1234',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
         identifiers={('bridgeid', '0123')},
         manufacturer='manufacturer', model='model')
     entry2 = registry.async_get_or_create(
-        config_entries='1234',
-        connection={('ethernet', '11:22:33:44:55:66:77:88')},
+        config_entry='1234',
+        connections={('ethernet', '11:22:33:44:55:66:77:88')},
         identifiers={('bridgeid', '0123')},
         manufacturer='manufacturer', model='model')
     entry3 = registry.async_get_or_create(
-        config_entries='1234',
-        connection={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        config_entry='1234',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
         identifiers={('bridgeid', '1234')},
         manufacturer='manufacturer', model='model')
 
@@ -50,14 +50,20 @@ async def test_get_or_create_returns_same_entry(registry):
 async def test_multiple_config_entries(registry):
     """Make sure we do not get duplicate entries."""
     entry = registry.async_get_or_create(
-        '123', {('bridgeid', '0123')}, 'manufacturer', 'model',
-        {('ethernet', '12:34:56:78:90:AB:CD:EF')})
+        config_entry='123',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        identifiers={('bridgeid', '0123')},
+        manufacturer='manufacturer', model='model')
     entry2 = registry.async_get_or_create(
-        '456', {('bridgeid', '0123')}, 'manufacturer', 'model',
-        {('ethernet', '12:34:56:78:90:AB:CD:EF')})
+        config_entry='456',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        identifiers={('bridgeid', '0123')},
+        manufacturer='manufacturer', model='model')
     entry3 = registry.async_get_or_create(
-        '123', {('bridgeid', '0123')}, 'manufacturer', 'model',
-        {('ethernet', '12:34:56:78:90:AB:CD:EF')})
+        config_entry='123',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        identifiers={('bridgeid', '0123')},
+        manufacturer='manufacturer', model='model')
 
     assert len(registry.devices) == 1
     assert entry is entry2
@@ -100,8 +106,8 @@ async def test_loading_from_storage(hass, hass_storage):
     registry = await device_registry.async_get_registry(hass)
 
     entry = registry.async_get_or_create(
-        config_entries='1234',
-        connection={('Zigbee', '01.23.45.67.89')},
+        config_entry='1234',
+        connections={('Zigbee', '01.23.45.67.89')},
         identifiers={('serial', '12:34:56:78:90:AB:CD:EF')},
         manufacturer='manufacturer', model='model')
     assert entry.id == 'abcdefghijklm'

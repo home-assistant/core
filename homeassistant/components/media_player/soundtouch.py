@@ -319,7 +319,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         else:
             _LOGGER.info("Creating zone with master %s",
                          self._device.config.name)
-            self._device.create_zone([slave.device for slave in slaves])
+            self._device.create_zone([slave._device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
         """
@@ -337,7 +337,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         else:
             _LOGGER.info("Removing slaves from zone with master %s",
                          self._device.config.name)
-            self._device.remove_zone_slave([slave.device for slave in slaves])
+            self._device.remove_zone_slave([slave._device for slave in slaves])
 
     def add_zone_slave(self, slaves):
         """
@@ -353,4 +353,4 @@ class SoundTouchDevice(MediaPlayerDevice):
         else:
             _LOGGER.info("Adding slaves to zone with master %s",
                          self._device.config.name)
-            self._device.add_zone_slave([slave.device for slave in slaves])
+            self._device.add_zone_slave([slave._device for slave in slaves])
