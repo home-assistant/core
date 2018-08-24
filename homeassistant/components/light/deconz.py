@@ -19,13 +19,13 @@ import homeassistant.util.color as color_util
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old way of setting up deCONZ lights and group."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ lights and groups from a config entry."""
     @callback
     def async_add_light(lights):
@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         for light in lights:
             if light.type not in SWITCH_TYPES:
                 entities.append(DeconzLight(light))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_light))
@@ -47,7 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         for group in groups:
             if group.lights and allow_group:
                 entities.append(DeconzLight(group))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_group', async_add_group))

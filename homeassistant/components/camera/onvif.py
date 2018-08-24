@@ -71,7 +71,7 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a ONVIF camera."""
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
@@ -94,7 +94,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.services.async_register(DOMAIN, SERVICE_PTZ, handle_ptz,
                                  schema=SERVICE_PTZ_SCHEMA)
-    add_devices([ONVIFHassCamera(hass, config)])
+    add_entities([ONVIFHassCamera(hass, config)])
 
 
 class ONVIFHassCamera(Camera):

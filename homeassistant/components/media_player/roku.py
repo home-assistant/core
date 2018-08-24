@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Roku platform."""
     hosts = []
 
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
 
-    add_devices(rokus)
+    add_entities(rokus)
 
 
 class RokuDevice(MediaPlayerDevice):

@@ -40,7 +40,7 @@ ATTR_MODEL = 'model'
 SUCCESS = ['ok']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the sensor from config."""
     from miio import AirQualityMonitor, DeviceException
@@ -68,7 +68,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         raise PlatformNotReady
 
     hass.data[DATA_KEY][host] = device
-    async_add_devices([device], update_before_add=True)
+    async_add_entities([device], update_before_add=True)
 
 
 class XiaomiAirQualityMonitor(Entity):

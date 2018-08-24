@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Geizwatch sensor."""
     name = config.get(CONF_NAME)
     description = config.get(CONF_DESCRIPTION)
@@ -49,8 +49,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     domain = config.get(CONF_DOMAIN)
     regex = config.get(CONF_REGEX)
 
-    add_devices([Geizwatch(name, description, product_id, domain, regex)],
-                True)
+    add_entities([Geizwatch(name, description, product_id, domain, regex)],
+                 True)
 
 
 class Geizwatch(Entity):

@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Waze travel time sensor platform."""
     destination = config.get(CONF_DESTINATION)
     name = config.get(CONF_NAME)
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensor = WazeTravelTime(name, origin, destination, region,
                             incl_filter, excl_filter, realtime)
 
-    add_devices([sensor])
+    add_entities([sensor])
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, sensor.update)

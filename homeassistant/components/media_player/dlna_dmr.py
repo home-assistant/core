@@ -118,7 +118,7 @@ async def async_start_event_handler(hass, server_host, server_port, requester):
 
 async def async_setup_platform(hass: HomeAssistant,
                                config,
-                               async_add_devices,
+                               async_add_entities,
                                discovery_info=None):
     """Set up DLNA DMR platform."""
     if config.get(CONF_URL) is not None:
@@ -165,7 +165,7 @@ async def async_setup_platform(hass: HomeAssistant,
     # create our own device
     device = DlnaDmrDevice(dlna_device, name)
     _LOGGER.debug("Adding device: %s", device)
-    async_add_devices([device], True)
+    async_add_entities([device], True)
 
 
 class DlnaDmrDevice(MediaPlayerDevice):

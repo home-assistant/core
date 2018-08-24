@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Gstreamer platform."""
     from gsp import GstreamerPlayer
     name = config.get(CONF_NAME)
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         player.quit()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _shutdown)
-    add_devices([GstreamerDevice(player, name)])
+    add_entities([GstreamerDevice(player, name)])
 
 
 class GstreamerDevice(MediaPlayerDevice):

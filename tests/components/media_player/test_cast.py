@@ -51,13 +51,13 @@ async def async_setup_cast(hass, config=None, discovery_info=None):
     """Set up the cast platform."""
     if config is None:
         config = {}
-    add_devices = Mock()
+    add_entities = Mock()
 
-    await cast.async_setup_platform(hass, config, add_devices,
+    await cast.async_setup_platform(hass, config, add_entities,
                                     discovery_info=discovery_info)
     await hass.async_block_till_done()
 
-    return add_devices
+    return add_entities
 
 
 async def async_setup_cast_internal_discovery(hass, config=None,
@@ -67,7 +67,7 @@ async def async_setup_cast_internal_discovery(hass, config=None,
 
     with patch('pychromecast.start_discovery',
                return_value=(listener, None)) as start_discovery:
-        add_devices = await async_setup_cast(hass, config, discovery_info)
+        add_entities = await async_setup_cast(hass, config, discovery_info)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
 
@@ -80,7 +80,7 @@ async def async_setup_cast_internal_discovery(hass, config=None,
         listener.services[service_name] = attr.astuple(info)
         discovery_callback(service_name)
 
-    return discover_chromecast, add_devices
+    return discover_chromecast, add_entities
 
 
 async def async_setup_media_player_cast(hass: HomeAssistantType,
@@ -214,30 +214,30 @@ async def test_normal_chromecast_not_starting_discovery(hass):
     with patch('homeassistant.components.media_player.cast.'
                '_setup_internal_discovery') as setup_discovery:
         # normal (non-group) chromecast shouldn't start discovery.
-        add_devices = await async_setup_cast(hass, {'host': 'host1'})
+        add_entities = await async_setup_cast(hass, {'host': 'host1'})
         await hass.async_block_till_done()
-        assert add_devices.call_count == 1
+        assert add_entities.call_count == 1
         assert setup_discovery.call_count == 0
 
         # Same entity twice
-        add_devices = await async_setup_cast(hass, {'host': 'host1'})
+        add_entities = await async_setup_cast(hass, {'host': 'host1'})
         await hass.async_block_till_done()
-        assert add_devices.call_count == 0
+        assert add_entities.call_count == 0
         assert setup_discovery.call_count == 0
 
         hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
-        add_devices = await async_setup_cast(
+        add_entities = await async_setup_cast(
             hass, discovery_info={'host': 'host1', 'port': 8009})
         await hass.async_block_till_done()
-        assert add_devices.call_count == 1
+        assert add_entities.call_count == 1
         assert setup_discovery.call_count == 0
 
         # group should start discovery.
         hass.data[cast.ADDED_CAST_DEVICES_KEY] = set()
-        add_devices = await async_setup_cast(
+        add_entities = await async_setup_cast(
             hass, discovery_info={'host': 'host1', 'port': 42})
         await hass.async_block_till_done()
-        assert add_devices.call_count == 0
+        assert add_entities.call_count == 0
         assert setup_discovery.call_count == 1
 
 
