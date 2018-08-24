@@ -3,13 +3,14 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.auth.models import Credentials
+from homeassistant.components.auth import RESULT_TYPE_USER
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 from homeassistant.components import auth
 
 from . import async_setup_auth
 
-from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
+from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
 
 
 async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
@@ -74,26 +75,26 @@ async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
     assert resp.status == 200
 
 
-def test_credential_store_expiration():
-    """Test that the credential store will not return expired tokens."""
-    store, retrieve = auth._create_cred_store()
+def test_auth_code_store_expiration():
+    """Test that the auth code store will not return expired tokens."""
+    store, retrieve = auth._create_auth_code_store()
     client_id = 'bla'
-    credentials = 'creds'
+    user = MockUser(id='mock_user')
     now = utcnow()
 
     with patch('homeassistant.util.dt.utcnow', return_value=now):
-        code = store(client_id, credentials)
+        code = store(client_id, user)
 
     with patch('homeassistant.util.dt.utcnow',
                return_value=now + timedelta(minutes=10)):
-        assert retrieve(client_id, code) is None
+        assert retrieve(client_id, RESULT_TYPE_USER, code) is None
 
     with patch('homeassistant.util.dt.utcnow', return_value=now):
-        code = store(client_id, credentials)
+        code = store(client_id, user)
 
     with patch('homeassistant.util.dt.utcnow',
                return_value=now + timedelta(minutes=9, seconds=59)):
-        assert retrieve(client_id, code) == credentials
+        assert retrieve(client_id, RESULT_TYPE_USER, code) == user
 
 
 async def test_ws_current_user(hass, hass_ws_client, hass_access_token):
@@ -223,3 +224,46 @@ async def test_refresh_token_different_client_id(hass, aiohttp_client):
         await hass.auth.async_validate_access_token(tokens['access_token'])
         is not None
     )
+
+
+async def test_revoking_refresh_token(hass, aiohttp_client):
+    """Test that we can revoke refresh tokens."""
+    client = await async_setup_auth(hass, aiohttp_client)
+    user = await hass.auth.async_create_user('Test User')
+    refresh_token = await hass.auth.async_create_refresh_token(user, CLIENT_ID)
+
+    # Test that we can create an access token
+    resp = await client.post('/auth/token', data={
+        'client_id': CLIENT_ID,
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token.token,
+    })
+
+    assert resp.status == 200
+    tokens = await resp.json()
+    assert (
+        await hass.auth.async_validate_access_token(tokens['access_token'])
+        is not None
+    )
+
+    # Revoke refresh token
+    resp = await client.post('/auth/token', data={
+        'token': refresh_token.token,
+        'action': 'revoke',
+    })
+    assert resp.status == 200
+
+    # Old access token should be no longer valid
+    assert (
+        await hass.auth.async_validate_access_token(tokens['access_token'])
+        is None
+    )
+
+    # Test that we no longer can create an access token
+    resp = await client.post('/auth/token', data={
+        'client_id': CLIENT_ID,
+        'grant_type': 'refresh_token',
+        'refresh_token': refresh_token.token,
+    })
+
+    assert resp.status == 400

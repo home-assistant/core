@@ -25,7 +25,7 @@ ATTR_PROTECTION_WINDOW_ENDING_UV = 'end_uv'
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the OpenUV binary sensor platform."""
     if discovery_info is None:
         return
@@ -38,7 +38,7 @@ async def async_setup_platform(
         binary_sensors.append(
             OpenUvBinarySensor(openuv, sensor_type, name, icon))
 
-    async_add_devices(binary_sensors, True)
+    async_add_entities(binary_sensors, True)
 
 
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):

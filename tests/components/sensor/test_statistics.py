@@ -17,7 +17,7 @@ class TestStatisticsSensor(unittest.TestCase):
     """Test the Statistics sensor."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.values = [17, 20, 15.2, 5, 3.8, 9.2, 6.7, 14, 6]
         self.count = len(self.values)

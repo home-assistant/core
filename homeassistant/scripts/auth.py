@@ -5,15 +5,15 @@ import logging
 import os
 
 from homeassistant.auth import auth_manager_from_config
+from homeassistant.auth.providers import homeassistant as hass_auth
 from homeassistant.core import HomeAssistant
 from homeassistant.config import get_default_config_dir
-from homeassistant.auth.providers import homeassistant as hass_auth
 
 
 def run(args):
     """Handle Home Assistant auth provider script."""
     parser = argparse.ArgumentParser(
-        description=("Manage Home Assistant users"))
+        description="Manage Home Assistant users")
     parser.add_argument(
         '--script', choices=['auth'])
     parser.add_argument(
@@ -56,7 +56,7 @@ async def run_command(hass, args):
     hass.config.config_dir = os.path.join(os.getcwd(), args.config)
     hass.auth = await auth_manager_from_config(hass, [{
         'type': 'homeassistant',
-    }])
+    }], [])
     provider = hass.auth.auth_providers[0]
     await provider.async_initialize()
     await args.func(hass, provider, args)

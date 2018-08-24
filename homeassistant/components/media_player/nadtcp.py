@@ -40,10 +40,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NAD platform."""
     from nad_receiver import NADReceiverTCP
-    add_devices([NADtcp(
+    add_entities([NADtcp(
         NADReceiverTCP(config.get(CONF_HOST)),
         config.get(CONF_NAME),
         config.get(CONF_MIN_VOLUME),

@@ -39,11 +39,11 @@ SUPPORTED_FEATURES = SUPPORT_VOLUME_MUTE \
 
 
 # pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a media player entity for a Sisyphus table."""
     name = discovery_info[CONF_NAME]
     host = discovery_info[CONF_HOST]
-    add_devices(
+    add_entities(
         [SisyphusPlayer(name, host, hass.data[DATA_SISYPHUS][name])],
         update_before_add=True)
 

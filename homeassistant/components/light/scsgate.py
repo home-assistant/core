@@ -23,7 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SCSGate switches."""
     devices = config.get(CONF_DEVICES)
     lights = []
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             light = SCSGateLight(name=name, scs_id=scs_id, logger=logger)
             lights.append(light)
 
-    add_devices(lights)
+    add_entities(lights)
     scsgate.SCSGATE.add_devices_to_register(lights)
 
 

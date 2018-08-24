@@ -94,7 +94,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
 
     @property
     def volume_level(self):
-        """The volume level of player."""
+        """Return the volume level of player."""
         return self._volume_level
 
     @property
@@ -158,7 +158,7 @@ class TestMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.mock_mp_1 = MockMediaPlayer(self.hass, 'mock1')
@@ -279,7 +279,7 @@ class TestMediaPlayer(unittest.TestCase):
         bad_config = {'platform': 'universal'}
         entities = []
 
-        def add_devices(new_entities):
+        def add_entities(new_entities):
             """Add devices to list."""
             for dev in new_entities:
                 entities.append(dev)
@@ -288,7 +288,7 @@ class TestMediaPlayer(unittest.TestCase):
         try:
             run_coroutine_threadsafe(
                 universal.async_setup_platform(
-                    self.hass, validate_config(bad_config), add_devices),
+                    self.hass, validate_config(bad_config), add_entities),
                 self.hass.loop).result()
         except MultipleInvalid:
             setup_ok = False
@@ -297,7 +297,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         run_coroutine_threadsafe(
             universal.async_setup_platform(
-                self.hass, validate_config(config), add_devices),
+                self.hass, validate_config(config), add_entities),
             self.hass.loop).result()
         self.assertEqual(1, len(entities))
         self.assertEqual('test', entities[0].name)

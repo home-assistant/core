@@ -19,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['konnected']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set switches attached to a Konnected device."""
     if discovery_info is None:
@@ -31,7 +31,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     switches = [
         KonnectedSwitch(device_id, pin_data.get(CONF_PIN), pin_data, client)
         for pin_data in data[CONF_DEVICES][device_id][CONF_SWITCHES]]
-    async_add_devices(switches)
+    async_add_entities(switches)
 
 
 class KonnectedSwitch(ToggleEntity):

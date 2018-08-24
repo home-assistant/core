@@ -52,7 +52,7 @@ class TestIPMA(unittest.TestCase):
     """Test the IPMA weather component."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
         self.lat = self.hass.config.latitude = 40.00

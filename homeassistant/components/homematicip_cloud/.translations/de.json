@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Der Accesspoint ist bereits konfiguriert",
             "conection_aborted": "Keine Verbindung zum HMIP-Server m\u00f6glich",
+            "connection_aborted": "Konnte nicht mit HMIP Server verbinden",
             "unknown": "Ein unbekannter Fehler ist aufgetreten."
         },
         "error": {

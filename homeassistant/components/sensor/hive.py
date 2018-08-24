@@ -16,7 +16,7 @@ DEVICETYPE_ICONS = {'Hub_OnlineStatus': 'mdi:switch',
                     'Hive_OutsideTemperature': 'mdi:thermometer'}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive sensor devices."""
     if discovery_info is None:
         return
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if (discovery_info["HA_DeviceType"] == "Hub_OnlineStatus" or
             discovery_info["HA_DeviceType"] == "Hive_OutsideTemperature"):
-        add_devices([HiveSensorEntity(session, discovery_info)])
+        add_entities([HiveSensorEntity(session, discovery_info)])
 
 
 class HiveSensorEntity(Entity):

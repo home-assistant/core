@@ -41,9 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up a Yi Camera."""
-    async_add_devices([YiCamera(hass, config)], True)
+    async_add_entities([YiCamera(hass, config)], True)
 
 
 class YiCamera(Camera):

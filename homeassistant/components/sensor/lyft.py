@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Lyft sensor."""
     from lyft_rides.auth import ClientCredentialGrant
     from lyft_rides.errors import APIError
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if product.get('estimate') is not None:
             dev.append(LyftSensor(
                 'price', timeandpriceest, product_id, product))
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class LyftSensor(Entity):

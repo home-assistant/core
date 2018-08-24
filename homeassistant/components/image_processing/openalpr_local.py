@@ -56,7 +56,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the OpenALPR local platform."""
     command = [config[CONF_ALPR_BIN], '-c', config[CONF_REGION], '-']
     confidence = config[CONF_CONFIDENCE]
@@ -67,7 +68,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             camera[CONF_ENTITY_ID], command, confidence, camera.get(CONF_NAME)
         ))
 
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 class ImageProcessingAlprEntity(ImageProcessingEntity):

@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sigfox sensor."""
     api_login = config[CONF_API_LOGIN]
     api_password = config[CONF_API_PASSWORD]
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for device in devices:
         sensors.append(SigfoxDevice(device, auth, name))
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 def epoch_to_datetime(epoch_time):
@@ -77,7 +77,7 @@ class SigfoxAPI:
                 _LOGGER.error(
                     "Unable to login to Sigfox API, error code %s", str(
                         response.status_code))
-            raise ValueError('Sigfox component not setup')
+            raise ValueError('Sigfox component not set up')
         return True
 
     def get_device_types(self):

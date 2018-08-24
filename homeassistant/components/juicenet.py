@@ -46,29 +46,29 @@ class JuicenetDevice(Entity):
     def __init__(self, device, sensor_type, hass):
         """Initialise the sensor."""
         self.hass = hass
-        self.device = device
+        self._device = device
         self.type = sensor_type
 
     @property
     def name(self):
         """Return the name of the device."""
-        return self.device.name()
+        return self._device.name()
 
     def update(self):
         """Update state of the device."""
-        self.device.update_state()
+        self._device.update_state()
 
     @property
     def _manufacturer_device_id(self):
         """Return the manufacturer device id."""
-        return self.device.id()
+        return self._device.id()
 
     @property
     def _token(self):
         """Return the device API token."""
-        return self.device.token()
+        return self._device.token()
 
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return "{}-{}".format(self.device.id(), self.type)
+        return "{}-{}".format(self._device.id(), self.type)

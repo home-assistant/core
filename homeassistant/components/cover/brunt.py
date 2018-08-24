@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
 )
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['brunt==0.1.2']
+REQUIREMENTS = ['brunt==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the brunt platform."""
     # pylint: disable=no-name-in-module
     from brunt import BruntAPI
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if not things:
             _LOGGER.error("No things present in account.")
         else:
-            add_devices([BruntDevice(
+            add_entities([BruntDevice(
                 bapi, thing['NAME'],
                 thing['thingUri']) for thing in things], True)
     except (TypeError, KeyError, NameError, ValueError) as ex:
