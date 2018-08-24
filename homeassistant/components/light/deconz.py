@@ -203,7 +203,7 @@ class DeconzLight(Light):
 
     @property
     def device(self):
-        """Description for device registry."""
+        """Return a device description for device registry."""
         if (self._light.uniqueid is None or
                 self._light.uniqueid.count(':') != 7):
             return None

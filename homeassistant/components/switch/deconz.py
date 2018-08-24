@@ -82,7 +82,7 @@ class DeconzSwitch(SwitchDevice):
 
     @property
     def device(self):
-        """Description for device registry."""
+        """Return a device description for device registry."""
         if (self._switch.uniqueid is None or
                 self._switch.uniqueid.count(':') != 7):
             return None

@@ -117,7 +117,7 @@ class DeconzBinarySensor(BinarySensorDevice):
 
     @property
     def device(self):
-        """Description for device registry."""
+        """Return a device description for device registry."""
         if (self._sensor.uniqueid is None or
                 self._sensor.uniqueid.count(':') != 7):
             return None
