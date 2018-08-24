@@ -83,7 +83,7 @@ class DeconzSwitch(SwitchDevice):
     @property
     def device(self):
         """Description for device registry."""
-        if (self._switch.uniqueid is not None and
+        if (self._switch.uniqueid is None or
                 self._switch.uniqueid.count(':') != 7):
             return None
         serial = self._switch.uniqueid.split('-', 1)[0]

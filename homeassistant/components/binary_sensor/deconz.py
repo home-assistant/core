@@ -118,7 +118,7 @@ class DeconzBinarySensor(BinarySensorDevice):
     @property
     def device(self):
         """Description for device registry."""
-        if (self._sensor.uniqueid is not None and
+        if (self._sensor.uniqueid is None or
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]

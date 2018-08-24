@@ -138,7 +138,7 @@ class DeconzSensor(Entity):
     @property
     def device(self):
         """Description for device registry."""
-        if (self._sensor.uniqueid is not None and
+        if (self._sensor.uniqueid is None or
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
@@ -213,7 +213,7 @@ class DeconzBattery(Entity):
     @property
     def device(self):
         """Description for device registry."""
-        if (self._device.uniqueid is not None and
+        if (self._device.uniqueid is None or
                 self._device.uniqueid.count(':') != 7):
             return None
         serial = self._device.uniqueid.split('-', 1)[0]
