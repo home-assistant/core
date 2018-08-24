@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "unknown": "Se ha producido un error desconocido."
+        },
+        "error": {
+            "invalid_pin": "PIN no v\u00e1lido, por favor int\u00e9ntalo de nuevo.",
+            "press_the_button": "Por favor, pulsa el bot\u00f3n azul"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nombre (opcional, utilizado como prefijo para todos los dispositivos)",
+                    "pin": "C\u00f3digo PIN (opcional)"
+                }
+            }
+        }
+    }
+}
