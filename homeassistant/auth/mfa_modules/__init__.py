@@ -106,7 +106,7 @@ class SetupFlow(data_entry_flow.FlowHandler):
         """Handle the first step of setup flow.
 
         Return self.async_show_form(step_id='init') if user_input == None.
-        Return await self.async_finish(flow_result) if finish.
+        Return self.async_create_entry(data={'result': result}) if finish.
         """
         errors = {}  # type: Dict[str, str]
 

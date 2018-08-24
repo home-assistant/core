@@ -6,8 +6,6 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 
 import jwt
 
-import voluptuous as vol
-
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.util import dt as dt_util

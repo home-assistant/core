@@ -74,10 +74,9 @@ from homeassistant.util import dt as dt_util
 from . import indieauth
 from . import login_flow
 from . import mfa_setup_flow
-from . import util
 
 DOMAIN = 'auth'
-DEPENDENCIES = ['http', 'websocket_api']
+DEPENDENCIES = ['http']
 
 WS_TYPE_CURRENT_USER = 'auth/current_user'
 SCHEMA_WS_CURRENT_USER = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
@@ -319,7 +318,7 @@ def _create_auth_code_store():
     return store_result, retrieve_result
 
 
-@util.validate_current_user()
+@websocket_api.ws_require_user()
 @callback
 def websocket_current_user(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):

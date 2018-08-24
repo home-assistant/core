@@ -7,8 +7,6 @@ from homeassistant import data_entry_flow
 from homeassistant.components import websocket_api
 from homeassistant.core import callback, HomeAssistant
 
-from . import util
-
 WS_TYPE_SETUP_MFA = 'auth/setup_mfa'
 SCHEMA_WS_SETUP_MFA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_SETUP_MFA,
@@ -54,12 +52,12 @@ async def async_setup(hass):
 
 
 @callback
-@util.validate_current_user(allow_system_user=False)
+@websocket_api.ws_require_user(allow_system_user=False)
 def websocket_setup_mfa(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return a setup flow for mfa auth module."""
     async def async_setup_flow(msg):
-        """Helper to return a setup flow for mfa auth module."""
+        """Return a setup flow for mfa auth module."""
         flow_manager = hass.data[DATA_SETUP_FLOW_MGR]
 
         flow_id = msg.get('flow_id')
@@ -90,12 +88,12 @@ def websocket_setup_mfa(
 
 
 @callback
-@util.validate_current_user(allow_system_user=False)
+@websocket_api.ws_require_user(allow_system_user=False)
 def websocket_depose_mfa(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Remove user from mfa module."""
     async def async_depose(msg):
-        """Helper to disable user from mfa auth module."""
+        """Remove user from mfa auth module."""
         mfa_module_id = msg['mfa_module_id']
         try:
             await hass.auth.async_disable_user_mfa(
