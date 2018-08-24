@@ -56,7 +56,7 @@ REQUIREMENTS = ['pychannels==1.0.0']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Channels platform."""
+    """Set up the Channels platform."""
     device = ChannelsPlayer(
         config.get('name'),
         config.get(CONF_HOST),
@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     hass.data[DATA_CHANNELS].append(device)
 
     def service_handler(service):
-        """Handler for services."""
+        """Handle service."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
         device = next((device for device in hass.data[DATA_CHANNELS] if

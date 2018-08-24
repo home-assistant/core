@@ -103,7 +103,7 @@ class MediaroomDevice(MediaPlayerDevice):
     """Representation of a Mediaroom set-up-box on the network."""
 
     def set_state(self, mediaroom_state):
-        """Helper method to map pymediaroom states to HA states."""
+        """Map pymediaroom state to HA state."""
         from pymediaroom import State
 
         state_map = {

@@ -166,7 +166,7 @@ class MelissaClimate(ClimateDevice):
         self.send({self._api.STATE: self._api.STATE_OFF})
 
     def send(self, value):
-        """Sending action to service."""
+        """Send action to service."""
         try:
             old_value = self._cur_settings.copy()
             self._cur_settings.update(value)

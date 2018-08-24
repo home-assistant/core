@@ -231,7 +231,7 @@ async def test_forward_entry_sets_up_component(hass):
 
 
 async def test_forward_entry_does_not_setup_entry_if_setup_fails(hass):
-    """Test we do not setup entry if component setup fails."""
+    """Test we do not set up entry if component setup fails."""
     entry = MockConfigEntry(domain='original')
 
     mock_setup = MagicMock(return_value=mock_coro(False))

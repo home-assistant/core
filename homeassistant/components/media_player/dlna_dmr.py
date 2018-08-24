@@ -180,7 +180,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         self._subscription_renew_time = None
 
     async def async_added_to_hass(self):
-        """Callback when added."""
+        """Handle addition."""
         self._device.on_event = self._on_event
 
         # register unsubscribe on stop

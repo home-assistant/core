@@ -3,24 +3,24 @@ import base64
 from collections import OrderedDict
 import hashlib
 import hmac
-from typing import Dict  # noqa: F401 pylint: disable=unused-import
+from typing import Any, Dict, List, Optional, cast
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
 from homeassistant.const import CONF_ID
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from homeassistant.auth.util import generate_secret
+from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
+from ..models import Credentials, UserMeta
+from ..util import generate_secret
 
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth_provider.homeassistant'
 
 
-def _disallow_id(conf):
+def _disallow_id(conf: Dict[str, Any]) -> Dict[str, Any]:
     """Disallow ID in config."""
     if CONF_ID in conf:
         raise vol.Invalid(
@@ -46,13 +46,13 @@ class InvalidUser(HomeAssistantError):
 class Data:
     """Hold the user data."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the user data store."""
         self.hass = hass
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
-        self._data = None
+        self._data = None  # type: Optional[Dict[str, Any]]
 
-    async def async_load(self):
+    async def async_load(self) -> None:
         """Load stored data."""
         data = await self._store.async_load()
 
@@ -65,9 +65,9 @@ class Data:
         self._data = data
 
     @property
-    def users(self):
+    def users(self) -> List[Dict[str, str]]:
         """Return users."""
-        return self._data['users']
+        return self._data['users']  # type: ignore
 
     def validate_login(self, username: str, password: str) -> None:
         """Validate a username and password.
@@ -79,7 +79,7 @@ class Data:
         found = None
 
         # Compare all users to avoid timing attacks.
-        for user in self._data['users']:
+        for user in self.users:
             if username == user['username']:
                 found = user
 
@@ -94,8 +94,8 @@ class Data:
 
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
-        hashed = hashlib.pbkdf2_hmac(
-            'sha512', password.encode(), self._data['salt'].encode(), 100000)
+        salt = self._data['salt'].encode()  # type: ignore
+        hashed = hashlib.pbkdf2_hmac('sha512', password.encode(), salt, 100000)
         if for_storage:
             hashed = base64.b64encode(hashed)
         return hashed
@@ -137,7 +137,7 @@ class Data:
         else:
             raise InvalidUser
 
-    async def async_save(self):
+    async def async_save(self) -> None:
         """Save data."""
         await self._store.async_save(self._data)
 
@@ -150,7 +150,7 @@ class HassAuthProvider(AuthProvider):
 
     data = None
 
-    async def async_initialize(self):
+    async def async_initialize(self) -> None:
         """Initialize the auth provider."""
         if self.data is not None:
             return
@@ -158,19 +158,22 @@ class HassAuthProvider(AuthProvider):
         self.data = Data(self.hass)
         await self.data.async_load()
 
-    async def async_credential_flow(self, context):
+    async def async_login_flow(
+            self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
-        return LoginFlow(self)
+        return HassLoginFlow(self)
 
-    async def async_validate_login(self, username: str, password: str):
-        """Helper to validate a username and password."""
+    async def async_validate_login(self, username: str, password: str) -> None:
+        """Validate a username and password."""
         if self.data is None:
             await self.async_initialize()
+            assert self.data is not None
 
         await self.hass.async_add_executor_job(
             self.data.validate_login, username, password)
 
-    async def async_get_or_create_credentials(self, flow_result):
+    async def async_get_or_create_credentials(
+            self, flow_result: Dict[str, str]) -> Credentials:
         """Get credentials based on the flow result."""
         username = flow_result['username']
 
@@ -183,17 +186,17 @@ class HassAuthProvider(AuthProvider):
             'username': username
         })
 
-    async def async_user_meta_for_credentials(self, credentials):
+    async def async_user_meta_for_credentials(
+            self, credentials: Credentials) -> UserMeta:
         """Get extra info for this credential."""
-        return {
-            'name': credentials.data['username'],
-            'is_active': True,
-        }
+        return UserMeta(name=credentials.data['username'], is_active=True)
 
-    async def async_will_remove_credentials(self, credentials):
+    async def async_will_remove_credentials(
+            self, credentials: Credentials) -> None:
         """When credentials get removed, also remove the auth."""
         if self.data is None:
             await self.async_initialize()
+            assert self.data is not None
 
         try:
             self.data.async_remove_auth(credentials.data['username'])
@@ -203,29 +206,26 @@ class HassAuthProvider(AuthProvider):
             pass
 
 
-class LoginFlow(data_entry_flow.FlowHandler):
+class HassLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
-    def __init__(self, auth_provider):
-        """Initialize the login flow."""
-        self._auth_provider = auth_provider
-
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
         """Handle the step of the form."""
         errors = {}
 
         if user_input is not None:
             try:
-                await self._auth_provider.async_validate_login(
-                    user_input['username'], user_input['password'])
+                await cast(HassAuthProvider, self._auth_provider)\
+                    .async_validate_login(user_input['username'],
+                                          user_input['password'])
             except InvalidAuth:
                 errors['base'] = 'invalid_auth'
 
             if not errors:
-                return self.async_create_entry(
-                    title=self._auth_provider.name,
-                    data=user_input
-                )
+                user_input.pop('password')
+                return await self.async_finish(user_input)
 
         schema = OrderedDict()  # type: Dict[str, type]
         schema['username'] = str

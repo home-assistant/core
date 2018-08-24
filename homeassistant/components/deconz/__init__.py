@@ -82,7 +82,7 @@ async def async_setup_entry(hass, config_entry):
 
     @callback
     def async_add_device_callback(device_type, device):
-        """Called when a new device has been created in deCONZ."""
+        """Handle event of new device creation in deCONZ."""
         async_dispatcher_send(
             hass, 'deconz_new_{}'.format(device_type), [device])
 
@@ -105,7 +105,7 @@ async def async_setup_entry(hass, config_entry):
 
     @callback
     def async_add_remote(sensors):
-        """Setup remote from deCONZ."""
+        """Set up remote from deCONZ."""
         from pydeconz.sensor import SWITCH as DECONZ_REMOTE
         allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
         for sensor in sensors:

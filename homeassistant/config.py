@@ -14,14 +14,16 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from homeassistant import auth
-from homeassistant.auth import providers as auth_providers
+from homeassistant.auth import providers as auth_providers,\
+    mfa_modules as auth_mfa_modules
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_PACKAGES, CONF_UNIT_SYSTEM,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_UNIT_SYSTEM_METRIC,
     CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT, TEMP_CELSIUS,
     __version__, CONF_CUSTOMIZE, CONF_CUSTOMIZE_DOMAIN, CONF_CUSTOMIZE_GLOB,
-    CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS, CONF_TYPE)
+    CONF_WHITELIST_EXTERNAL_DIRS, CONF_AUTH_PROVIDERS, CONF_AUTH_MFA_MODULES,
+    CONF_TYPE)
 from homeassistant.core import callback, DOMAIN as CONF_CORE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.loader import get_component, get_platform
@@ -73,11 +75,9 @@ frontend:
 # Enables configuration UI
 config:
 
-http:
-  # Secrets are defined in the file secrets.yaml
-  # api_password: !secret http_password
-  # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
-  # base_url: example.duckdns.org:8123
+# Uncomment this if you are using SSL/TLS, running in Docker container, etc.
+# http:
+#   base_url: example.duckdns.org:8123
 
 # Checks for available updates
 # Note: This component will send some information about your system to
@@ -124,7 +124,7 @@ script: !include scripts.yaml
 DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
 # Learn more at https://home-assistant.io/docs/configuration/secrets/
-http_password: welcome
+some_password: welcome
 """
 
 
@@ -166,7 +166,10 @@ CORE_CONFIG_SCHEMA = CUSTOMIZE_CONFIG_SCHEMA.extend({
                     CONF_TYPE: vol.NotIn(['insecure_example'],
                                          'The insecure_example auth provider'
                                          ' is for testing only.')
-                })])
+                })]),
+    vol.Optional(CONF_AUTH_MFA_MODULES):
+        vol.All(cv.ensure_list,
+                [auth_mfa_modules.MULTI_FACTOR_AUTH_MODULE_SCHEMA]),
 })
 
 
@@ -402,7 +405,8 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
 
 
 async def async_process_ha_core_config(
-        hass: HomeAssistant, config: Dict) -> None:
+        hass: HomeAssistant, config: Dict,
+        has_api_password: bool = False) -> None:
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -411,8 +415,19 @@ async def async_process_ha_core_config(
 
     # Only load auth during startup.
     if not hasattr(hass, 'auth'):
+        auth_conf = config.get(CONF_AUTH_PROVIDERS)
+
+        if auth_conf is None:
+            auth_conf = [
+                {'type': 'homeassistant'}
+            ]
+            if has_api_password:
+                auth_conf.append({'type': 'legacy_api_password'})
+
         setattr(hass, 'auth', await auth.auth_manager_from_config(
-            hass, config.get(CONF_AUTH_PROVIDERS, [])))
+            hass,
+            auth_conf,
+            config.get(CONF_AUTH_MFA_MODULES, [])))
 
     hac = hass.config
 

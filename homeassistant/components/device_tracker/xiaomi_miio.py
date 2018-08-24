@@ -20,7 +20,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=32, max=32)),
 })
 
-REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 
 def get_scanner(hass, config):
@@ -73,5 +73,8 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
         return devices
 
     async def async_get_device_name(self, device):
-        """The repeater doesn't provide the name of the associated device."""
+        """Return None.
+
+        The repeater doesn't provide the name of the associated device.
+        """
         return None

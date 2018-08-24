@@ -58,7 +58,7 @@ class EgardiaBinarySensor(BinarySensorDevice):
 
     @property
     def name(self):
-        """The name of the device."""
+        """Return the name of the device."""
         return self._name
 
     @property
@@ -74,5 +74,5 @@ class EgardiaBinarySensor(BinarySensorDevice):
 
     @property
     def device_class(self):
-        """The device class."""
+        """Return the device class."""
         return self._device_class

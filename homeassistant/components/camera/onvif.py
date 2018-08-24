@@ -183,7 +183,7 @@ class ONVIFHassCamera(Camera):
             _LOGGER.debug("Camera '%s' doesn't support PTZ.", self._name)
 
     async def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Handle entity addition to hass."""
         if ONVIF_DATA not in self.hass.data:
             self.hass.data[ONVIF_DATA] = {}
             self.hass.data[ONVIF_DATA][ENTITIES] = []

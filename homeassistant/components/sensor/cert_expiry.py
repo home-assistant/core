@@ -1,5 +1,5 @@
 """
-Counter for the days till a HTTPS (TLS) certificate will expire.
+Counter for the days until an HTTPS (TLS) certificate will expire.
 
 For more details about this sensor please refer to the documentation at
 https://home-assistant.io/components/sensor.cert_expiry/
