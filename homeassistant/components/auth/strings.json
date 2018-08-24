@@ -5,7 +5,7 @@
       "step": {
         "init": {
           "title": "Scan this QR code with your app",
-          "description": "Scan the QR code with your authentication app, such as **Google Authenticator** or **Authy**. \nOr enter {code} instead. \n\n[QR Code]{url}",
+          "description": "Scan the QR code with your authentication app, such as **Google Authenticator** or **Authy**. \nOr enter {code} instead. \n\n![url]{qr_code}",
         },
       },
       "error": {

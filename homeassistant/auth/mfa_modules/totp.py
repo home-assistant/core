@@ -1,17 +1,18 @@
 """Time-based One Time Password auth module."""
 import logging
+from base64 import b64encode
+from io import BytesIO
 from typing import Any, Dict, Optional, Tuple  # noqa: F401
 
 import voluptuous as vol
 
 from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant
-from homeassistant.loader import bind_hass
 
 from . import MultiFactorAuthModule, MULTI_FACTOR_AUTH_MODULES, \
     MULTI_FACTOR_AUTH_MODULE_SCHEMA, SetupFlow
 
-REQUIREMENTS = ['pyotp==2.2.6', 'PyQRCode==1.2.1', 'pypng==0.0.18']
+REQUIREMENTS = ['pyotp==2.2.6', 'PyQRCode==1.2.1']
 
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)
@@ -34,25 +35,22 @@ def _generate_qr_code(data: str) -> str:
     import pyqrcode
 
     qr_code = pyqrcode.create(data)
-    return str(qr_code.png_as_base64_str(scale=4))
+
+    with BytesIO() as buffer:
+        qr_code.svg(file=buffer, scale=4)
+        return 'data:image/svg+xml;base64,{}'.format(
+            b64encode(buffer.getvalue()).decode("ascii"))
 
 
-@bind_hass
-async def _async_generate_secret(hass: HomeAssistant, username: str) \
-        -> Tuple[str, str, str]:
+def _generate_secret_and_qr_code(username: str) -> Tuple[str, str, str]:
     """Generate a secret, url, and QR code."""
-    def generate_secret_helper(username: str) -> Tuple[str, str, str]:
-        """Generate a secret, url, and QR code."""
-        import pyotp
+    import pyotp
 
-        ota_secret = pyotp.random_base32()
-        url = pyotp.totp.TOTP(ota_secret).provisioning_uri(
-            username, issuer_name="Home Assistant")
-        image = _generate_qr_code(url)
-        return ota_secret, url, image
-
-    return await hass.async_add_executor_job(
-        generate_secret_helper, username)
+    ota_secret = pyotp.random_base32()
+    url = pyotp.totp.TOTP(ota_secret).provisioning_uri(
+        username, issuer_name="Home Assistant")
+    image = _generate_qr_code(url)
+    return ota_secret, url, image
 
 
 @MULTI_FACTOR_AUTH_MODULES.register('totp')
@@ -196,8 +194,8 @@ class TotpSetupFlow(SetupFlow):
 
         else:
             self._ota_secret, self._url, self._image = (  # type: ignore
-                await _async_generate_secret(
-                    self._auth_module.hass, str(self._user.name)))
+                await self._auth_module.hass.async_add_executor_job(
+                    _generate_secret_and_qr_code, str(self._user.name)))
 
         return self.async_show_form(
             step_id='init',
