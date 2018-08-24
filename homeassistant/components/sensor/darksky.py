@@ -33,10 +33,12 @@ DEFAULT_LANGUAGE = 'en'
 
 DEFAULT_NAME = 'Dark Sky'
 
-DEPRECATED_SENSOR_TYPES = {'apparent_temperature_max',
-                           'apparent_temperature_min',
-                           'temperature_max',
-                           'temperature_min'}
+DEPRECATED_SENSOR_TYPES = {
+    'apparent_temperature_max',
+    'apparent_temperature_min',
+    'temperature_max',
+    'temperature_min',
+}
 
 # Sensor types are defined like so:
 # Name, si unit, us unit, ca unit, uk unit, uk2 unit
@@ -125,6 +127,8 @@ SENSOR_TYPES = {
                  UNIT_UV_INDEX, UNIT_UV_INDEX, UNIT_UV_INDEX,
                  UNIT_UV_INDEX, UNIT_UV_INDEX, 'mdi:weather-sunny',
                  ['currently', 'hourly', 'daily']],
+    'moon_phase': ['Moon Phase', None, None, None, None, None,
+                   'mdi:weather-night', ['daily']],
 }
 
 CONDITION_PICTURES = {
@@ -203,7 +207,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     sensors = []
     for variable in config[CONF_MONITORED_CONDITIONS]:
         if variable in DEPRECATED_SENSOR_TYPES:
-            _LOGGER.warning("Monitored condition %s is deprecated.",
+            _LOGGER.warning("Monitored condition %s is deprecated",
                             variable)
         sensors.append(DarkSkySensor(forecast_data, variable, name))
         if forecast is not None and 'daily' in SENSOR_TYPES[variable][7]:
@@ -316,7 +320,8 @@ class DarkSkySensor(Entity):
                               'apparent_temperature_max',
                               'apparent_temperature_high',
                               'precip_intensity_max',
-                              'precip_accumulation']):
+                              'precip_accumulation',
+                              'moon_phase']):
             self.forecast_data.update_daily()
             daily = self.forecast_data.data_daily
             if self.type == 'daily_summary':
@@ -407,7 +412,7 @@ class DarkSkyData:
                 self._api_key, self.latitude, self.longitude, units=self.units,
                 lang=self.language)
         except (ConnectError, HTTPError, Timeout, ValueError) as error:
-            _LOGGER.error("Unable to connect to Dark Sky. %s", error)
+            _LOGGER.error("Unable to connect to Dark Sky: %s", error)
             self.data = None
         self.unit_system = self.data and self.data.json['flags']['units']
 
