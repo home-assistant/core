@@ -193,9 +193,10 @@ class TotpSetupFlow(SetupFlow):
             errors['base'] = 'invalid_code'
 
         else:
-            self._ota_secret, self._url, self._image = (  # type: ignore
-                await self._auth_module.hass.async_add_executor_job(
-                    _generate_secret_and_qr_code, str(self._user.name)))
+            hass = self._auth_module.hass
+            self._ota_secret, self._url, self._image = \
+                await hass.async_add_executor_job(  # type: ignore
+                    _generate_secret_and_qr_code, str(self._user.name))
 
         return self.async_show_form(
             step_id='init',

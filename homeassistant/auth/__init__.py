@@ -251,7 +251,7 @@ class AuthManager:
 
     async def async_get_enabled_mfa(self, user: models.User) -> Dict[str, str]:
         """List enabled mfa modules for user."""
-        modules = OrderedDict()
+        modules = OrderedDict()  # type: Dict[str, str]
         for module_id, module in self._mfa_modules.items():
             if await module.async_is_user_setup(user.id):
                 modules[module_id] = module.name
