@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     name = config.get(CONF_NAME)
 
     add_entities([AdsLight(ads_hub, ads_var_enable, ads_var_brightness,
-                          name)], True)
+                           name)], True)
 
 
 class AdsLight(Light):

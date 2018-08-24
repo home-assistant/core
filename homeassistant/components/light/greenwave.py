@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         token = None
     bulbs = greenwave.grab_bulbs(host, token)
     add_entities(GreenwaveLight(device, host, token, GatewayData(host, token))
-                for device in bulbs.values())
+                 for device in bulbs.values())
 
 
 class GreenwaveLight(Light):

@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     # Iterate through the list of sensors
     for condition in monitored_conditions:
         add_entities([Envoy(ip_address, condition, SENSORS[condition][0],
-                           SENSORS[condition][1])], True)
+                            SENSORS[condition][1])], True)
 
 
 class Envoy(Entity):

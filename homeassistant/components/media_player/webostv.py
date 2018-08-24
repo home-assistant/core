@@ -123,7 +123,7 @@ def setup_tv(host, name, customize, config, timeout, hass,
         configurator.request_done(request_id)
 
     add_entities([LgWebOSDevice(host, name, customize, config, timeout,
-                               hass, turn_on_action)], True)
+                                hass, turn_on_action)], True)
 
 
 def request_configuration(

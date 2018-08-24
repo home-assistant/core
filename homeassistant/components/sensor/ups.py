@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     add_entities([UPSSensor(session, config.get(CONF_NAME),
-                           config.get(CONF_UPDATE_INTERVAL))], True)
+                            config.get(CONF_UPDATE_INTERVAL))], True)
 
 
 class UPSSensor(Entity):

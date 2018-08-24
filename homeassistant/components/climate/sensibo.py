@@ -59,7 +59,8 @@ FIELD_TO_FLAG = {
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up Sensibo devices."""
     import pysensibo
 

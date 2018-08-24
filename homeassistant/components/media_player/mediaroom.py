@@ -58,9 +58,9 @@ async def async_setup_platform(hass, config, async_add_entities,
     host = config.get(CONF_HOST, None)
     if host:
         async_add_entities([MediaroomDevice(host=host,
-                                           device_id=None,
-                                           optimistic=config[CONF_OPTIMISTIC],
-                                           timeout=config[CONF_TIMEOUT])])
+                                            device_id=None,
+                                            optimistic=config[CONF_OPTIMISTIC],
+                                            timeout=config[CONF_TIMEOUT])])
         hass.data[DATA_MEDIAROOM].append(host)
 
     _LOGGER.debug("Trying to discover Mediaroom STB")

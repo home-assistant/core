@@ -61,8 +61,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     precision = config.get(CONF_PRECISION)
 
     add_entities([ModbusThermostat(name, modbus_slave,
-                                  target_temp_register, current_temp_register,
-                                  data_type, count, precision)], True)
+                                   target_temp_register, current_temp_register,
+                                   data_type, count, precision)], True)
 
 
 class ModbusThermostat(ClimateDevice):

@@ -34,7 +34,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         API_STATE_URL.format(device_id, access_token), timeout=5)
     if response.status_code == 200:
         add_entities([Lockitron(response.json()['state'], access_token,
-                               device_id)])
+                                device_id)])
     else:
         _LOGGER.error(
             "Error retrieving lock status during init: %s", response.text)

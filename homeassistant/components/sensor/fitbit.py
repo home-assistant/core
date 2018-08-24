@@ -368,7 +368,8 @@ class FitbitAuthCallbackView(HomeAssistantView):
             }
         save_json(hass.config.path(FITBIT_CONFIG_FILE), config_contents)
 
-        hass.async_add_job(setup_platform, hass, self.config, self.add_entities)
+        hass.async_add_job(setup_platform, hass, self.config,
+                           self.add_entities)
 
         return html_response
 

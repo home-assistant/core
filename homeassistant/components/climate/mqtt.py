@@ -127,7 +127,8 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the MQTT climate devices."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)

@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         sensor_name = config.get(CONF_NAME)
 
         add_entities([SSLCertificate(sensor_name, server_name, server_port)],
-                    True)
+                     True)
 
     # To allow checking of the HA certificate we must first be running.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)

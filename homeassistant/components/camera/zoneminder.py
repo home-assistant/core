@@ -49,7 +49,8 @@ def _get_image_url(hass, monitor, mode):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the ZoneMinder cameras."""
     cameras = []
     monitors = zoneminder.get_state('api/monitors.json')

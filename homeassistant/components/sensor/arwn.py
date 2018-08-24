@@ -59,7 +59,8 @@ def _slug(name):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the ARWN platform."""
     @callback
     def async_sensor_event_received(topic, payload, qos):

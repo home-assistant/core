@@ -64,9 +64,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         raise PlatformNotReady
 
     add_entities([UnifiVideoCamera(nvrconn,
-                                  camera[identifier],
-                                  camera['name'],
-                                  password)
+                                   camera[identifier],
+                                   camera['name'],
+                                   password)
                  for camera in cameras])
     return True
 

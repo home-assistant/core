@@ -111,7 +111,8 @@ class SpotifyAuthCallbackView(HomeAssistantView):
         """Receive authorization token."""
         hass = request.app['hass']
         self.oauth.get_access_token(request.query['code'])
-        hass.async_add_job(setup_platform, hass, self.config, self.add_entities)
+        hass.async_add_job(
+            setup_platform, hass, self.config, self.add_entities)
 
 
 class SpotifyMediaPlayer(MediaPlayerDevice):

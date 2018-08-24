@@ -104,11 +104,11 @@ def _setup_us(username, password, config, add_entities):
     heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
 
     add_entities([HoneywellUSThermostat(client, device, cool_away_temp,
-                                       heat_away_temp, username, password)
-                 for location in client.locations_by_id.values()
-                 for device in location.devices_by_id.values()
-                 if ((not loc_id or location.locationid == loc_id) and
-                     (not dev_id or device.deviceid == dev_id))])
+                                        heat_away_temp, username, password)
+                  for location in client.locations_by_id.values()
+                  for device in location.devices_by_id.values()
+                  if ((not loc_id or location.locationid == loc_id) and
+                      (not dev_id or device.deviceid == dev_id))])
     return True
 
 

@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                    camera_name not in config[CONF_CAMERAS]:
                     continue
             add_entities([NetatmoCamera(data, camera_name, home,
-                                       camera_type, verify_ssl)])
+                                        camera_type, verify_ssl)])
     except pyatmo.NoDevice:
         return None
 

@@ -62,7 +62,8 @@ async def _async_setup_iaszone(hass, config, async_add_entities,
     async_add_entities([sensor], update_before_add=True)
 
 
-async def _async_setup_remote(hass, config, async_add_entities, discovery_info):
+async def _async_setup_remote(hass, config, async_add_entities,
+                              discovery_info):
 
     async def safe(coro):
         """Run coro, catching ZigBee delivery errors, and ignoring them."""

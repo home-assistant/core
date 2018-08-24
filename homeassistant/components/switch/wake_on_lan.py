@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     off_action = config.get(CONF_OFF_ACTION)
 
     add_entities([WOLSwitch(hass, name, host, mac_address,
-                           off_action, broadcast_address)], True)
+                            off_action, broadcast_address)], True)
 
 
 class WOLSwitch(SwitchDevice):

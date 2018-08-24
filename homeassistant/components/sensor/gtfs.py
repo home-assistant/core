@@ -179,7 +179,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if not gtfs.feeds:
         pygtfs.append_feed(gtfs, os.path.join(gtfs_dir, data))
 
-    add_entities([GTFSDepartureSensor(gtfs, name, origin, destination, offset)])
+    add_entities([
+        GTFSDepartureSensor(gtfs, name, origin, destination, offset)])
 
 
 class GTFSDepartureSensor(Entity):

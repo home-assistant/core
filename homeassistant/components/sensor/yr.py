@@ -67,7 +67,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Yr.no sensor."""
     elevation = config.get(CONF_ELEVATION, hass.config.elevation or 0)
     forecast = config.get(CONF_FORECAST)

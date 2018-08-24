@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the vlc platform."""
     add_entities([VlcDevice(config.get(CONF_NAME, DEFAULT_NAME),
-                           config.get(CONF_ARGUMENTS))])
+                            config.get(CONF_ARGUMENTS))])
 
 
 class VlcDevice(MediaPlayerDevice):

@@ -19,7 +19,8 @@ DEPENDENCIES = ['satel_integra']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up for Satel Integra alarm panels."""
     if not discovery_info:
         return

@@ -94,7 +94,8 @@ DAILY_MAP = (('yesterday_total_consumption', 'consoTotalQuot'),
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the HydroQuebec sensor."""
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.

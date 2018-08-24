@@ -72,7 +72,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         server = PAServer(host, port, buffer_size, tcp_timeout)
         _PULSEAUDIO_SERVERS[server_id] = server
 
-    add_entities([PALoopbackSwitch(hass, name, server, sink_name, source_name)])
+    add_entities([
+        PALoopbackSwitch(hass, name, server, sink_name, source_name)])
 
 
 class PAServer():

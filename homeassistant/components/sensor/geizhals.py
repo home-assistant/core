@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     regex = config.get(CONF_REGEX)
 
     add_entities([Geizwatch(name, description, product_id, domain, regex)],
-                True)
+                 True)
 
 
 class Geizwatch(Entity):

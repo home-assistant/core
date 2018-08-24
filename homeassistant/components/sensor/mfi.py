@@ -69,9 +69,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return False
 
     add_entities(MfiSensor(port, hass)
-                for device in client.get_devices()
-                for port in device.ports.values()
-                if port.model in SENSOR_MODELS)
+                 for device in client.get_devices()
+                 for port in device.ports.values()
+                 if port.model in SENSOR_MODELS)
 
 
 class MfiSensor(Entity):

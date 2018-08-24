@@ -23,7 +23,8 @@ DEPENDENCIES = ['envisalink']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Envisalink binary sensor devices."""
     configured_zones = discovery_info['zones']
 

@@ -65,7 +65,8 @@ SERVICE_TO_METHOD = {
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the squeezebox platform."""
     import socket
 

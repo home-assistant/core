@@ -34,8 +34,8 @@ def setup_platform(
     password = config.get(CONF_PASSWORD)
 
     add_entities([SesameDevice(sesame) for sesame in
-                 pysesame.get_sesames(email, password)],
-                update_before_add=True)
+                  pysesame.get_sesames(email, password)],
+                 update_before_add=True)
 
 
 class SesameDevice(LockDevice):

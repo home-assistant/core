@@ -82,7 +82,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             template.hass = hass
 
     add_entities([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
-                                    duration, sensor_type, name)])
+                                     duration, sensor_type, name)])
 
     return True
 

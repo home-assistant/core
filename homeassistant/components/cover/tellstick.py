@@ -22,9 +22,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         ATTR_DISCOVER_CONFIG, DEFAULT_SIGNAL_REPETITIONS)
 
     add_entities([TellstickCover(hass.data[DATA_TELLSTICK][tellcore_id],
-                                signal_repetitions)
-                 for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES]],
-                True)
+                                 signal_repetitions)
+                  for tellcore_id in discovery_info[ATTR_DISCOVER_DEVICES]],
+                 True)
 
 
 class TellstickCover(TellstickDevice, CoverDevice):

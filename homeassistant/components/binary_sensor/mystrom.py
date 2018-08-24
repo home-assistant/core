@@ -17,7 +17,8 @@ DEPENDENCIES = ['http']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up myStrom Binary Sensor."""
     hass.http.register_view(MyStromView(async_add_entities))
 

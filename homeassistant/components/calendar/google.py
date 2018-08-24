@@ -35,8 +35,8 @@ def setup_platform(hass, config, add_entities, disc_info=None):
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
     add_entities([GoogleCalendarEventDevice(hass, calendar_service,
-                                           disc_info[CONF_CAL_ID], data)
-                 for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
+                                            disc_info[CONF_CAL_ID], data)
+                  for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
 
 
 class GoogleCalendarEventDevice(CalendarEventDevice):

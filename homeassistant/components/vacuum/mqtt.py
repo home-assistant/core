@@ -140,7 +140,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the vacuum."""
     name = config.get(CONF_NAME)
     supported_feature_strings = config.get(CONF_SUPPORTED_FEATURES)
