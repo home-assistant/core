@@ -48,7 +48,7 @@ def get_fake_chromecast_info(host='192.168.178.42', port=8009,
 
 
 async def async_setup_cast(hass, config=None, discovery_info=None):
-    """Helper to set up the cast platform."""
+    """Set up the cast platform."""
     if config is None:
         config = {}
     add_devices = Mock()

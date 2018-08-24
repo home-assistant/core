@@ -154,7 +154,7 @@ def test_api_fire_event_with_no_data(hass, mock_api_client):
 
     @ha.callback
     def listener(event):
-        """Helper method that will verify our event got called."""
+        """Record that our event got called."""
         test_value.append(1)
 
     hass.bus.async_listen_once("test.event_no_data", listener)
@@ -174,7 +174,7 @@ def test_api_fire_event_with_data(hass, mock_api_client):
 
     @ha.callback
     def listener(event):
-        """Helper method that will verify that our event got called.
+        """Record that our event got called.
 
         Also test if our data came through.
         """
@@ -200,7 +200,7 @@ def test_api_fire_event_with_invalid_json(hass, mock_api_client):
 
     @ha.callback
     def listener(event):
-        """Helper method that will verify our event got called."""
+        """Record that our event got called."""
         test_value.append(1)
 
     hass.bus.async_listen_once("test_event_bad_data", listener)
@@ -281,7 +281,7 @@ def test_api_call_service_no_data(hass, mock_api_client):
 
     @ha.callback
     def listener(service_call):
-        """Helper method that will verify that our service got called."""
+        """Record that our service got called."""
         test_value.append(1)
 
     hass.services.async_register("test_domain", "test_service", listener)
@@ -300,7 +300,7 @@ def test_api_call_service_with_data(hass, mock_api_client):
 
     @ha.callback
     def listener(service_call):
-        """Helper method that will verify that our service got called.
+        """Record that our service got called.
 
         Also test if our data came through.
         """
@@ -440,7 +440,7 @@ async def test_api_fire_event_context(hass, mock_api_client,
 
     @ha.callback
     def listener(event):
-        """Helper method that will verify our event got called."""
+        """Record that our event got called."""
         test_value.append(event)
 
     hass.bus.async_listen("test.event", listener)

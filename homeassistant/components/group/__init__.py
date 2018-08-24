@@ -550,12 +550,12 @@ class Group(Entity):
         self._async_update_group_state()
 
     async def async_added_to_hass(self):
-        """Callback when added to HASS."""
+        """Handle addition to HASS."""
         if self.tracking:
             self.async_start()
 
     async def async_will_remove_from_hass(self):
-        """Callback when removed from HASS."""
+        """Handle removal from HASS."""
         if self._async_unsub_state_changed:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None

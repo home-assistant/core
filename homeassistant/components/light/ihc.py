@@ -109,7 +109,7 @@ class IhcLight(IHCDevice, Light):
             self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
-        """Callback from IHC notifications."""
+        """Handle IHC notifications."""
         if isinstance(value, bool):
             self._dimmable = False
             self._state = value != 0
