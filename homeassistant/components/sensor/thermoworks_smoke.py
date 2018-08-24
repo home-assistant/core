@@ -47,15 +47,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the thermoworks sensor."""
     import thermoworks_smoke
     from requests.exceptions import HTTPError
 
-    email = config.get(CONF_EMAIL)
-    password = config.get(CONF_PASSWORD)
-    monitored_variables = config.get(CONF_MONITORED_VARIABLES)
-    excluded = config.get(CONF_EXCLUDE)
+    email = config[CONF_EMAIL]
+    password = config[CONF_PASSWORD]
+    monitored_variables = config[CONF_MONITORED_VARIABLES]
+    excluded = config[CONF_EXCLUDE]
 
     try:
         mgr = thermoworks_smoke.initialize_app(email, password, True, excluded)
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for variable in monitored_variables:
                 dev.append(ThermoworksSmokeSensor(variable, serial, mgr))
 
-        add_devices(dev, True)
+        add_entities(dev, True)
     except HTTPError as error:
         msg = "{}".format(error.strerror)
         if 'EMAIL_NOT_FOUND' in msg or \
