@@ -70,6 +70,6 @@ class IHCSwitch(IHCDevice, SwitchDevice):
         self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
-        """Callback when the IHC resource changes."""
+        """Handle IHC resource change."""
         self._state = value
         self.schedule_update_ha_state()

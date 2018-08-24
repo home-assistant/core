@@ -390,7 +390,7 @@ class AuthManager:
     @callback
     def _async_get_auth_provider(
             self, credentials: models.Credentials) -> Optional[AuthProvider]:
-        """Helper to get auth provider from a set of credentials."""
+        """Get auth provider from a set of credentials."""
         auth_provider_key = (credentials.auth_provider_type,
                              credentials.auth_provider_id)
         return self._providers.get(auth_provider_key)

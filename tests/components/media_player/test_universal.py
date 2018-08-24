@@ -94,7 +94,7 @@ class MockMediaPlayer(media_player.MediaPlayerDevice):
 
     @property
     def volume_level(self):
-        """The volume level of player."""
+        """Return the volume level of player."""
         return self._volume_level
 
     @property

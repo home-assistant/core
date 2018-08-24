@@ -20,7 +20,7 @@ class TestAutomationEvent(unittest.TestCase):
 
         @callback
         def record_call(service):
-            """Helper for recording the call."""
+            """Record the call."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)

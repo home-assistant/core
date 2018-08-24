@@ -72,7 +72,7 @@ class UscisSensor(Entity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Using Request to access USCIS website and fetch data."""
+        """Fetch data from the USCIS website and update state attributes."""
         import uscisstatus
         try:
             status = uscisstatus.get_case_status(self._case_id)
