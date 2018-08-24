@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the RainMachine Switch platform."""
     if discovery_info is None:
         return
@@ -34,7 +34,7 @@ async def async_setup_platform(
         binary_sensors.append(
             RainMachineBinarySensor(rainmachine, sensor_type, name, icon))
 
-    async_add_devices(binary_sensors, True)
+    async_add_entities(binary_sensors, True)
 
 
 class RainMachineBinarySensor(RainMachineEntity, BinarySensorDevice):

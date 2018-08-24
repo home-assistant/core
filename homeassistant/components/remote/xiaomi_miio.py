@@ -62,7 +62,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
     from miio import ChuangmiIr, DeviceException
 
@@ -106,7 +107,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.data[DATA_KEY][host] = xiaomi_miio_remote
 
-    async_add_devices([xiaomi_miio_remote])
+    async_add_entities([xiaomi_miio_remote])
 
     @asyncio.coroutine
     def async_service_handler(service):

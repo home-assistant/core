@@ -33,14 +33,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Rain Bird switches over a Rain Bird controller."""
     controller = hass.data[DATA_RAINBIRD]
 
     devices = []
     for dev_id, switch in config.get(CONF_SWITCHES).items():
         devices.append(RainBirdSwitch(controller, switch, dev_id))
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class RainBirdSwitch(SwitchDevice):

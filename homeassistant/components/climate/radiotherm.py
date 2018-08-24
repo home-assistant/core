@@ -83,7 +83,7 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                  SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Radio Thermostat."""
     import radiotherm
 
@@ -112,7 +112,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
                               host)
 
-    add_devices(tstats, True)
+    add_entities(tstats, True)
 
 
 class RadioThermostat(ClimateDevice):

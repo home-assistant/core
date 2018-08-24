@@ -15,7 +15,7 @@ DEPENDENCIES = ['wemo']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Register discovered WeMo binary sensors."""
     from pywemo import discovery
 
@@ -31,7 +31,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             raise PlatformNotReady
 
         if device:
-            add_devices_callback([WemoBinarySensor(hass, device)])
+            add_entities_callback([WemoBinarySensor(hass, device)])
 
 
 class WemoBinarySensor(BinarySensorDevice):

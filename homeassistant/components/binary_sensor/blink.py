@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 DEPENDENCIES = ['blink']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the blink binary sensors."""
     if discovery_info is None:
         return
@@ -20,7 +20,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for name in data.cameras:
         devs.append(BlinkCameraMotionSensor(name, data))
     devs.append(BlinkSystemSensor(data))
-    add_devices(devs, True)
+    add_entities(devs, True)
 
 
 class BlinkCameraMotionSensor(BinarySensorDevice):

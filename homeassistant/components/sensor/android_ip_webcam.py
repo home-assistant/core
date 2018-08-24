@@ -15,7 +15,8 @@ DEPENDENCIES = ['android_ip_webcam']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the IP Webcam Sensor."""
     if discovery_info is None:
         return
@@ -30,7 +31,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for sensor in sensors:
         all_sensors.append(IPWebcamSensor(name, host, ipcam, sensor))
 
-    async_add_devices(all_sensors, True)
+    async_add_entities(all_sensors, True)
 
 
 class IPWebcamSensor(AndroidIPCamEntity):

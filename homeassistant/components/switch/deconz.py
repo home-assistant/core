@@ -14,13 +14,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old way of setting up deCONZ switches."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches for deCONZ component.
 
     Switches are based same device class as lights in deCONZ.
@@ -34,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                 entities.append(DeconzPowerPlug(light))
             elif light.type in SIRENS:
                 entities.append(DeconzSiren(light))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_switch))

@@ -26,7 +26,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices, action):
+    def add_entities(self, devices, action):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -71,7 +71,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
         for config in self.configs:
             vultr.setup_platform(self.hass,
                                  config,
-                                 self.add_devices,
+                                 self.add_entities,
                                  None)
 
         self.assertEqual(len(self.DEVICES), 3)
@@ -147,7 +147,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
 
         no_subs_setup = vultr.setup_platform(self.hass,
                                              bad_conf,
-                                             self.add_devices,
+                                             self.add_entities,
                                              None)
 
         self.assertFalse(no_subs_setup)
@@ -159,7 +159,7 @@ class TestVultrBinarySensorSetup(unittest.TestCase):
 
         wrong_subs_setup = vultr.setup_platform(self.hass,
                                                 bad_conf,
-                                                self.add_devices,
+                                                self.add_entities,
                                                 None)
 
         self.assertFalse(wrong_subs_setup)

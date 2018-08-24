@@ -15,13 +15,13 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['alarmdecoder']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up for AlarmDecoder sensor devices."""
     _LOGGER.debug("AlarmDecoderSensor: setup_platform")
 
     device = AlarmDecoderSensor(hass)
 
-    add_devices([device])
+    add_entities([device])
 
 
 class AlarmDecoderSensor(Entity):

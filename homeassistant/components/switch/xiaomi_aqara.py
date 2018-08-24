@@ -19,7 +19,7 @@ POWER_CONSUMED = 'power_consumed'
 IN_USE = 'inuse'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif model in ['86plug', 'ctrl_86plug', 'ctrl_86plug.aq1']:
                 devices.append(XiaomiGenericSwitch(device, 'Wall Plug',
                                                    'status', True, gateway))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class XiaomiGenericSwitch(XiaomiDevice, SwitchDevice):

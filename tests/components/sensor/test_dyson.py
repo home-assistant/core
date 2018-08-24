@@ -62,9 +62,9 @@ class DysonTest(unittest.TestCase):
     def test_setup_component_with_no_devices(self):
         """Test setup component with no devices."""
         self.hass.data[dyson.DYSON_DEVICES] = []
-        add_devices = mock.MagicMock()
-        dyson.setup_platform(self.hass, None, add_devices)
-        add_devices.assert_called_with([])
+        add_entities = mock.MagicMock()
+        dyson.setup_platform(self.hass, None, add_entities)
+        add_entities.assert_called_with([])
 
     def test_setup_component(self):
         """Test setup component with devices."""
