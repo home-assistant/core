@@ -18,7 +18,7 @@ from homeassistant.components.cover import (
 )
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['brunt==0.1.2']
+REQUIREMENTS = ['brunt==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 

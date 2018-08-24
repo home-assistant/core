@@ -49,7 +49,7 @@ class TestMfiSwitch(unittest.TestCase):
     """Test for mFi switch platform."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.port = mock.MagicMock()
         self.switch = mfi.MfiSwitch(self.port)

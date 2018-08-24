@@ -47,7 +47,7 @@ class MockResp(MagicMock):
 
 @pytest.fixture
 def mock_msearch_first(*args, **kwargs):
-    """Wrapper to async mock function."""
+    """Wrap async mock msearch_first."""
     async def async_mock_msearch_first(*args, **kwargs):
         """Mock msearch_first."""
         return MockResp(*args, **kwargs)
@@ -58,7 +58,7 @@ def mock_msearch_first(*args, **kwargs):
 
 @pytest.fixture
 def mock_async_exception(*args, **kwargs):
-    """Wrapper to async mock function with exception."""
+    """Wrap async mock exception."""
     async def async_mock_exception(*args, **kwargs):
         return Exception
 
@@ -102,7 +102,8 @@ async def test_setup_succeeds_if_specify_ip(hass, mock_msearch_first):
                return_value='127.0.0.1'):
         result = await async_setup_component(hass, 'upnp', {
             'upnp': {
-                'local_ip': '192.168.0.10'
+                'local_ip': '192.168.0.10',
+                'port_mapping': 'True'
             }
         })
 
@@ -118,7 +119,9 @@ async def test_no_config_maps_hass_local_to_remote_port(hass,
                                                         mock_msearch_first):
     """Test by default we map local to remote port."""
     result = await async_setup_component(hass, 'upnp', {
-        'upnp': {}
+        'upnp': {
+                'port_mapping': 'True'
+        }
     })
 
     assert result
@@ -134,6 +137,7 @@ async def test_map_hass_to_remote_port(hass,
     """Test mapping hass to remote port."""
     result = await async_setup_component(hass, 'upnp', {
         'upnp': {
+            'port_mapping': 'True',
             'ports': {
                 'hass': 1000
             }
@@ -157,6 +161,7 @@ async def test_map_internal_to_remote_ports(hass,
 
     result = await async_setup_component(hass, 'upnp', {
         'upnp': {
+            'port_mapping': 'True',
             'ports': ports
         }
     })

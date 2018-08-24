@@ -130,7 +130,7 @@ class TestHomeAssistant(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -291,7 +291,7 @@ class TestEventBus(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
 
@@ -495,7 +495,7 @@ class TestStateMachine(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
@@ -620,7 +620,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
 
@@ -775,7 +775,7 @@ class TestConfig(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.config = ha.Config()
         self.assertIsNone(self.config.config_dir)
 

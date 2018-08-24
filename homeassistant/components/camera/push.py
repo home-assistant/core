@@ -21,6 +21,8 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['http']
+
 CONF_BUFFER_SIZE = 'buffer'
 CONF_IMAGE_FIELD = 'field'
 
@@ -111,7 +113,7 @@ class PushCamera(Camera):
 
     @property
     def state(self):
-        """Current state of the camera."""
+        """Return current state of the camera."""
         return self._state
 
     async def update_image(self, image, filename):

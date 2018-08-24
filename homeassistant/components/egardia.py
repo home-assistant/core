@@ -101,7 +101,7 @@ def setup(hass, config):
                 server.start()
 
             def handle_stop_event(event):
-                """Callback function for HA stop event."""
+                """Handle HA stop event."""
                 server.stop()
 
             # listen to home assistant stop event
