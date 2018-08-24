@@ -14,7 +14,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import TEMP_FAHRENHEIT, CONF_EMAIL, CONF_PASSWORD,\
-    CONF_MONITORED_VARIABLES, CONF_EXCLUDE
+    CONF_MONITORED_VARIABLES, CONF_EXCLUDE, ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['thermoworks_smoke==0.1.6']
@@ -27,6 +27,7 @@ PROBE_1_MIN = 'probe1Min'
 PROBE_1_MAX = 'probe1Max'
 PROBE_2_MIN = 'probe2Min'
 PROBE_2_MAX = 'probe2Max'
+BATTERY_LEVEL = 'battery'
 
 SENSOR_TYPES = {
     PROBE_1: 'Probe 1',
@@ -83,12 +84,14 @@ class ThermoworksSmokeSensor(Entity):
 
     def __init__(self, sensor_type, serial, mgr):
         """Initialize the sensor."""
-        self._name = "{name} {sensor}".format(name=mgr.name(serial),
-                                              sensor=SENSOR_TYPES[sensor_type])
+        self._name = "{name} {sensor}".format(
+            name=mgr.name(serial), sensor=SENSOR_TYPES[sensor_type])
         self.type = sensor_type
         self._state = None
         self._attributes = {}
         self._unit_of_measurement = TEMP_FAHRENHEIT
+        self._unique_id = "{serial}-{type}".format(
+            serial=serial, type=sensor_type)
         self.serial = serial
         self.mgr = mgr
         self.update_unit()
@@ -97,6 +100,11 @@ class ThermoworksSmokeSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id for the sensor"""
+        return self._unique_id
 
     @property
     def state(self):
@@ -153,6 +161,8 @@ class ThermoworksSmokeSensor(Entity):
                         key = key.replace(self.type, '')
                         # ensure first char is lowercase
                         key = key[:1].lower() + key[1:]
+                        if key == BATTERY_LEVEL:
+                            key = ATTR_BATTERY_LEVEL
                         # add to attrs
                         if key:
                             self._attributes[key] = val
