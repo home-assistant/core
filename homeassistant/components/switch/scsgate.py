@@ -57,7 +57,7 @@ def _setup_traditional_switches(logger, config, add_entities_callback):
             switches.append(switch)
 
     add_entities_callback(switches)
-    scsgate.SCSGATE.add_entities_to_register(switches)
+    scsgate.SCSGATE.add_devices_to_register(switches)
 
 
 def _setup_scenario_switches(logger, config, hass):

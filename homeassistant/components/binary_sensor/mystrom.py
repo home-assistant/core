@@ -63,7 +63,7 @@ class MyStromView(HomeAssistantView):
                          button_id, button_action)
             self.buttons[entity_id] = MyStromBinarySensor(
                 '{}_{}'.format(button_id, button_action))
-            hass.async_add_job(self.add_entities, [self.buttons[entity_id]])
+            self.add_entities([self.buttons[entity_id]])
         else:
             new_state = True if self.buttons[entity_id].state == 'off' \
                 else False

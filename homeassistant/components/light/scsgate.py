@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             lights.append(light)
 
     add_entities(lights)
-    scsgate.SCSGATE.add_entities_to_register(lights)
+    scsgate.SCSGATE.add_devices_to_register(lights)
 
 
 class SCSGateLight(Light):
