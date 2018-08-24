@@ -358,6 +358,8 @@ class IPDB:
 
     def __init__(self):
         """Create the INSTEON Product Database (IPDB)."""
+        from insteonplm.states.cover import Cover
+
         from insteonplm.states.onOff import (OnOffSwitch,
                                              OnOffSwitch_OutletTop,
                                              OnOffSwitch_OutletBottom,
@@ -383,7 +385,9 @@ class IPDB:
                                            X10AllLightsOnSensor,
                                            X10AllLightsOffSensor)
 
-        self.states = [State(OnOffSwitch_OutletTop, 'switch'),
+        self.states = [State(Cover, 'cover'),
+            
+                       State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
                        State(OpenClosedRelay, 'switch'),
                        State(OnOffSwitch, 'switch'),

@@ -6,15 +6,19 @@ https://home-assistant.io/components/light.insteon/
 """
 import asyncio
 import logging
+import math
 
 from homeassistant.components.insteon import InsteonEntity
 from homeassistant.components.cover import (CoverDevice, ATTR_POSITION,
                                             SUPPORT_OPEN, SUPPORT_CLOSE,
                                             SUPPORT_SET_POSITION)
+from homeassistant.const import (
+    STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['insteon']
+
 
 
 @asyncio.coroutine
@@ -29,7 +33,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.debug('Adding device %s entity %s to Light platform',
                   device.address.hex, device.states[state_key].name)
 
-    new_entity = InsteonDimmerDevice(device, state_key)
+    new_entity = InsteonCoverDevice(device, state_key)
 
     async_add_devices([new_entity])
 
@@ -39,16 +43,25 @@ class InsteonCoverDevice(InsteonEntity, CoverDevice):
     """A Class for an Insteon device."""
 
     @property
+    def current_cover_position(self) -> int:
+        """Return the current cover position."""
+        return int(math.ceil(self._insteon_device_state.value*100/255))
+
+    @property
+    def supported_features(self):
+        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+
+    @property
     def is_closed(self):
         """Return the boolean response if the node is on."""
-        return bool(self.brightness)
+        return bool(self.current_cover_position)
 
     @asyncio.coroutine
     def async_open_cover(self, **kwargs):
         """Open device."""
         if ATTR_POSITION in kwargs:
-            brightness = int(kwargs[ATTR_POSITION])
-            self._insteon_device_state.set_level(brightness)
+            position = int(kwargs[ATTR_POSITION]*255/100)
+            self._insteon_device_state.set_position(position)
         else:
             self._insteon_device_state.open()
 
@@ -60,4 +73,4 @@ class InsteonCoverDevice(InsteonEntity, CoverDevice):
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):
         """Set the cover position."""
-        await async_open_cover(**kwargs)
+        yield from self.async_open_cover(**kwargs)
