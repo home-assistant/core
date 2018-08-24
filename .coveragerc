@@ -689,6 +689,7 @@ omit =
     homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/netdata_public.py
     homeassistant/components/sensor/neurio_energy.py
+    homeassistant/components/sensor/noaa_tides.py
     homeassistant/components/sensor/nsw_fuel_station.py
     homeassistant/components/sensor/nut.py
     homeassistant/components/sensor/nzbget.py

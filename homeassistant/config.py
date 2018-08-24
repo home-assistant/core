@@ -75,11 +75,9 @@ frontend:
 # Enables configuration UI
 config:
 
-http:
-  # Secrets are defined in the file secrets.yaml
-  # api_password: !secret http_password
-  # Uncomment this if you are using SSL/TLS, running in Docker container, etc.
-  # base_url: example.duckdns.org:8123
+# Uncomment this if you are using SSL/TLS, running in Docker container, etc.
+# http:
+#   base_url: example.duckdns.org:8123
 
 # Checks for available updates
 # Note: This component will send some information about your system to
@@ -126,7 +124,7 @@ script: !include scripts.yaml
 DEFAULT_SECRETS = """
 # Use this file to store secrets like usernames and passwords.
 # Learn more at https://home-assistant.io/docs/configuration/secrets/
-http_password: welcome
+some_password: welcome
 """
 
 
@@ -407,7 +405,8 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
 
 
 async def async_process_ha_core_config(
-        hass: HomeAssistant, config: Dict) -> None:
+        hass: HomeAssistant, config: Dict,
+        has_api_password: bool = False) -> None:
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -416,9 +415,18 @@ async def async_process_ha_core_config(
 
     # Only load auth during startup.
     if not hasattr(hass, 'auth'):
+        auth_conf = config.get(CONF_AUTH_PROVIDERS)
+
+        if auth_conf is None:
+            auth_conf = [
+                {'type': 'homeassistant'}
+            ]
+            if has_api_password:
+                auth_conf.append({'type': 'legacy_api_password'})
+
         setattr(hass, 'auth', await auth.auth_manager_from_config(
             hass,
-            config.get(CONF_AUTH_PROVIDERS, []),
+            auth_conf,
             config.get(CONF_AUTH_MFA_MODULES, [])))
 
     hac = hass.config

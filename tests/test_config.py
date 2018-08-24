@@ -812,6 +812,47 @@ async def test_auth_provider_config(hass):
     await config_util.async_process_ha_core_config(hass, core_config)
 
     assert len(hass.auth.auth_providers) == 2
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.auth_providers[1].type == 'legacy_api_password'
+    assert hass.auth.active is True
+
+
+async def test_auth_provider_config_default(hass):
+    """Test loading default auth provider config."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config)
+
+    assert len(hass.auth.auth_providers) == 1
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.active is True
+
+
+async def test_auth_provider_config_default_api_password(hass):
+    """Test loading default auth provider config with api password."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config, True)
+
+    assert len(hass.auth.auth_providers) == 2
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.auth_providers[1].type == 'legacy_api_password'
     assert hass.auth.active is True
 
 

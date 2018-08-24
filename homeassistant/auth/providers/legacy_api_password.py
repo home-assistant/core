@@ -46,13 +46,6 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
         """Helper to validate a username and password."""
         hass_http = getattr(self.hass, 'http', None)  # type: HomeAssistantHTTP
 
-        if not hass_http:
-            raise ValueError('http component is not loaded')
-
-        if hass_http.api_password is None:
-            raise ValueError('http component is not configured using'
-                             ' api_password')
-
         if not hmac.compare_digest(hass_http.api_password.encode('utf-8'),
                                    password.encode('utf-8')):
             raise InvalidAuthError
@@ -86,6 +79,12 @@ class LegacyLoginFlow(LoginFlow):
             -> Dict[str, Any]:
         """Handle the step of the form."""
         errors = {}
+
+        hass_http = getattr(self.hass, 'http', None)
+        if hass_http is None or not hass_http.api_password:
+            return self.async_abort(
+                reason='no_api_password_set'
+            )
 
         if user_input is not None:
             try:

@@ -205,7 +205,7 @@ braviarc-homeassistant==0.3.7.dev0
 broadlink==0.9.0
 
 # homeassistant.components.cover.brunt
-brunt==0.1.2
+brunt==0.1.3
 
 # homeassistant.components.device_tracker.bluetooth_tracker
 bt_proximity==0.1.2
@@ -738,6 +738,9 @@ pyTibber==0.4.1
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
 
+# homeassistant.components.sensor.noaa_tides
+# py_noaa==0.3.0
+
 # homeassistant.components.cover.ryobi_gdo
 py_ryobi_gdo==0.0.10
 
@@ -1164,7 +1167,7 @@ pytradfri[async]==5.5.1
 pyunifi==2.13
 
 # homeassistant.components.upnp
-pyupnp-async==0.1.0.2
+pyupnp-async==0.1.1.0
 
 # homeassistant.components.binary_sensor.uptimerobot
 pyuptimerobot==0.0.5
