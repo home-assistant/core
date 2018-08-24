@@ -39,7 +39,13 @@ UV_LEVEL_MODERATE = "Moderate"
 UV_LEVEL_LOW = "Low"
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up an OpenUV sensor based on existing config."""
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest sensor based on a config entry."""
     openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.title]
 
@@ -49,7 +55,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
         sensors.append(
             OpenUvSensor(openuv, sensor_type, name, icon, unit, entry.title))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class OpenUvSensor(OpenUvEntity):

@@ -25,7 +25,13 @@ ATTR_PROTECTION_WINDOW_ENDING_TIME = 'end_time'
 ATTR_PROTECTION_WINDOW_ENDING_UV = 'end_uv'
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up an OpenUV sensor based on existing config."""
+    pass
+
+
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up an OpenUV sensor based on a config entry."""
     openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.title]
 
@@ -36,7 +42,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
         binary_sensors.append(
             OpenUvBinarySensor(openuv, sensor_type, name, icon, entry.title))
 
-    async_add_devices(binary_sensors, True)
+    async_add_entities(binary_sensors, True)
 
 
 class OpenUvBinarySensor(OpenUvEntity, BinarySensorDevice):
