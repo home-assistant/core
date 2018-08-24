@@ -102,7 +102,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         Mfa module should extend SetupFlow
         """
         user = await self.hass.auth.async_get_user(user_id)   # type: ignore
-        return TotpSetupFlow(self, user)
+        return TotpSetupFlow(self, self.input_schema, user)
 
     async def async_setup_user(self, user_id: str, setup_data: Any) -> str:
         """Set up auth module for user."""
@@ -158,9 +158,11 @@ class TotpSetupFlow(SetupFlow):
     """Handler for the setup flow."""
 
     def __init__(self, auth_module: TotpAuthModule,
+                 setup_schema: vol.Schema,
                  user: User) -> None:
         """Initialize the setup flow."""
-        super().__init__(auth_module, user.id)
+        super().__init__(auth_module, setup_schema, user.id)
+        # to fix typing complaint
         self._auth_module = auth_module  # type: TotpAuthModule
         self._user = user
         self._ota_secret = None  # type: Optional[str]
@@ -199,7 +201,7 @@ class TotpSetupFlow(SetupFlow):
 
         return self.async_show_form(
             step_id='init',
-            data_schema=self._auth_module.input_schema,
+            data_schema=self._setup_schema,
             description_placeholders={
                 'code': self._ota_secret,
                 'url': self._url,
