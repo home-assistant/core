@@ -61,19 +61,22 @@ class DeviceRegistry:
                 device.config_entries.add(config_entry)
             return device
 
-        if device is None:
-            device = DeviceEntry(
-                connections=connections,
-                identifiers=identifiers,
-                manufacturer=manufacturer,
-                model=model,
-                name=name,
-                sw_version=sw_version,
-            )
-            self.devices.append(device)
+        if device is not None:
+            if config_entry not in device.config_entries:
+                device.config_entries.add(config_entry)
+                self.async_schedule_save()
+            return device
 
-        if config_entry is not None:
-            device.config_entries.add(config_entry)
+        device = DeviceEntry(
+            config_entries=[config_entry],
+            connections=connections,
+            identifiers=identifiers,
+            manufacturer=manufacturer,
+            model=model,
+            name=name,
+            sw_version=sw_version
+        )
+        self.devices.append(device)
 
         self.async_schedule_save()
 
