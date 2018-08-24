@@ -27,9 +27,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     data = hass.data[KONNECTED_DOMAIN]
     device_id = discovery_info['device_id']
-    client = data[CONF_DEVICES][device_id]['client']
     switches = [
-        KonnectedSwitch(device_id, pin_data.get(CONF_PIN), pin_data, client)
+        KonnectedSwitch(device_id, pin_data.get(CONF_PIN), pin_data)
         for pin_data in data[CONF_DEVICES][device_id][CONF_SWITCHES]]
     async_add_entities(switches)
 
@@ -37,7 +36,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 class KonnectedSwitch(ToggleEntity):
     """Representation of a Konnected switch."""
 
-    def __init__(self, device_id, pin_num, data, client):
+    def __init__(self, device_id, pin_num, data):
         """Initialize the switch."""
         self._data = data
         self._device_id = device_id
@@ -50,7 +49,6 @@ class KonnectedSwitch(ToggleEntity):
         self._name = self._data.get(
             'name', 'Konnected {} Actuator {}'.format(
                 device_id, PIN_TO_ZONE[pin_num]))
-        self._client = client
         _LOGGER.debug('Created new switch: %s', self._name)
 
     @property
@@ -63,9 +61,16 @@ class KonnectedSwitch(ToggleEntity):
         """Return the status of the sensor."""
         return self._state
 
+    @property
+    def client(self):
+        """Return the Konnected HTTP client."""
+        return \
+            self.hass.data[KONNECTED_DOMAIN][CONF_DEVICES][self._device_id].\
+            get('client')
+
     def turn_on(self, **kwargs):
         """Send a command to turn on the switch."""
-        resp = self._client.put_device(
+        resp = self.client.put_device(
             self._pin_num,
             int(self._activation == STATE_HIGH),
             self._momentary,
@@ -82,7 +87,7 @@ class KonnectedSwitch(ToggleEntity):
 
     def turn_off(self, **kwargs):
         """Send a command to turn off the switch."""
-        resp = self._client.put_device(
+        resp = self.client.put_device(
             self._pin_num, int(self._activation == STATE_LOW))
 
         if resp.get(ATTR_STATE) is not None:
