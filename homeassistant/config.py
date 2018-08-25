@@ -406,7 +406,8 @@ def _format_config_error(ex: vol.Invalid, domain: str, config: Dict) -> str:
 
 async def async_process_ha_core_config(
         hass: HomeAssistant, config: Dict,
-        has_api_password: bool = False) -> None:
+        has_api_password: bool = False,
+        has_trusted_networks: bool = False) -> None:
     """Process the [homeassistant] section from the configuration.
 
     This method is a coroutine.
@@ -423,6 +424,8 @@ async def async_process_ha_core_config(
             ]
             if has_api_password:
                 auth_conf.append({'type': 'legacy_api_password'})
+            if has_trusted_networks:
+                auth_conf.append({'type': 'trusted_networks'})
 
         setattr(hass, 'auth', await auth.auth_manager_from_config(
             hass,
