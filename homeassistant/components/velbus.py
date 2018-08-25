@@ -47,7 +47,8 @@ async def async_setup(hass, config):
         modules = controller.get_modules()
         discovery_info = {
             'switch': [],
-            'binary_sensor': []
+            'binary_sensor': [],
+            'temp_sensor': []
         }
         for module in modules:
             for channel in range(1, module.number_of_channels() + 1):
@@ -61,6 +62,8 @@ async def async_setup(hass, config):
                       discovery_info['switch'], config)
         load_platform(hass, 'binary_sensor', DOMAIN,
                       discovery_info['binary_sensor'], config)
+        load_platform(hass, 'sensor', DOMAIN,
+                      discovery_info['temp_sensor'], config)
 
     controller.scan(callback)
 
