@@ -272,15 +272,16 @@ class EntityPlatform:
             else:
                 config_entry_id = None
 
-            device = entity.device
-            if device is not None:
+            device_info = entity.device_info
+            if config_entry_id is not None and device_info is not None:
                 device = device_registry.async_get_or_create(
-                    connection=device['connection'],
-                    identifiers=device['identifiers'],
-                    manufacturer=device['manufacturer'],
-                    model=device['model'],
-                    name=device.get('name'),
-                    sw_version=device.get('sw_version'))
+                    config_entry=config_entry_id,
+                    connections=device_info.get('connections', []),
+                    identifiers=device_info.get('identifiers', []),
+                    manufacturer=device_info.get('manufacturer'),
+                    model=device_info.get('model'),
+                    name=device_info.get('name'),
+                    sw_version=device_info.get('sw_version'))
                 device_id = device.id
             else:
                 device_id = None
