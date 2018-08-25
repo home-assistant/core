@@ -136,15 +136,15 @@ class DeconzSensor(Entity):
         return attr
 
     @property
-    def device(self):
+    def device_info(self):
         """Return a device description for device registry."""
         if (self._sensor.uniqueid is None or
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
         return {
-            'connection': [[CONNECTION_ZIGBEE, serial]],
-            'identifiers': [[DECONZ_DOMAIN, serial]],
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
             'manufacturer': self._sensor.manufacturer,
             'model': self._sensor.modelid,
             'name': self._sensor.name,
@@ -211,15 +211,15 @@ class DeconzBattery(Entity):
         return attr
 
     @property
-    def device(self):
+    def device_info(self):
         """Return a device description for device registry."""
         if (self._device.uniqueid is None or
                 self._device.uniqueid.count(':') != 7):
             return None
         serial = self._device.uniqueid.split('-', 1)[0]
         return {
-            'connection': [[CONNECTION_ZIGBEE, serial]],
-            'identifiers': [[DECONZ_DOMAIN, serial]],
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
             'manufacturer': self._device.manufacturer,
             'model': self._device.modelid,
             'name': self._device.name,

@@ -123,8 +123,9 @@ async def async_setup_entry(hass, config_entry):
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
-        connection=[[CONNECTION_NETWORK_MAC, deconz.config.mac]],
-        identifiers=[[DOMAIN, deconz.config.bridgeid]],
+        config_entry=config_entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, deconz.config.mac)},
+        identifiers={(DOMAIN, deconz.config.bridgeid)},
         manufacturer='Dresden Elektronik', model=deconz.config.modelid,
         name=deconz.config.name, sw_version=deconz.config.swversion)
 
