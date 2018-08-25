@@ -856,6 +856,27 @@ async def test_auth_provider_config_default_api_password(hass):
     assert hass.auth.active is True
 
 
+async def test_auth_provider_config_default_trusted_networks(hass):
+    """Test loading default auth provider config with trusted networks."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config,
+                                                   has_trusted_networks=True)
+
+    assert len(hass.auth.auth_providers) == 2
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.auth_providers[1].type == 'trusted_networks'
+    assert hass.auth.active is True
+
+
 async def test_disallowed_auth_provider_config(hass):
     """Test loading insecure example auth provider is disallowed."""
     core_config = {
