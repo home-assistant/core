@@ -202,15 +202,15 @@ class DeconzLight(Light):
         return attributes
 
     @property
-    def device(self):
+    def device_info(self):
         """Return a device description for device registry."""
         if (self._light.uniqueid is None or
                 self._light.uniqueid.count(':') != 7):
             return None
         serial = self._light.uniqueid.split('-', 1)[0]
         return {
-            'connection': [[CONNECTION_ZIGBEE, serial]],
-            'identifiers': [[DECONZ_DOMAIN, serial]],
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
             'manufacturer': self._light.manufacturer,
             'model': self._light.modelid,
             'name': self._light.name,
