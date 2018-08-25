@@ -11,7 +11,8 @@ from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
+    SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP,
+    DEFAULT_TEMP_STEP)
 from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (get_test_home_assistant, mock_mqtt_component,
                           async_fire_mqtt_message, fire_mqtt_message,
@@ -58,6 +59,8 @@ class TestMQTTClimate(unittest.TestCase):
         self.assertEqual("off", state.attributes.get('operation_mode'))
         self.assertEqual(DEFAULT_MIN_TEMP, state.attributes.get('min_temp'))
         self.assertEqual(DEFAULT_MAX_TEMP, state.attributes.get('max_temp'))
+        self.assertEqual(DEFAULT_TEMP_STEP,
+                         state.attributes.get('target_temp_step'))
 
     def test_supported_features(self):
         """Test the supported_features."""
@@ -652,6 +655,19 @@ class TestMQTTClimate(unittest.TestCase):
 
         self.assertIsInstance(max_temp, float)
         self.assertEqual(60, max_temp)
+
+    def test_temp_step_custom(self):
+        """Test a custom temp step."""
+        config = copy.deepcopy(DEFAULT_CONFIG)
+        config['climate']['temp_step'] = 0.01
+
+        assert setup_component(self.hass, climate.DOMAIN, config)
+
+        state = self.hass.states.get(ENTITY_CLIMATE)
+        temp_step = state.attributes.get('target_temp_step')
+
+        self.assertIsInstance(temp_step, float)
+        self.assertEqual(0.01, temp_step)
 
 
 async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
