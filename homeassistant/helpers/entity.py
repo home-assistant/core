@@ -131,7 +131,7 @@ class Entity:
         return None
 
     @property
-    def device(self):
+    def device_info(self):
         """Return device specific attributes.
 
         Implemented by platform classes.
