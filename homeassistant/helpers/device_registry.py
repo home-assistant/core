@@ -55,6 +55,9 @@ class DeviceRegistry:
     def async_get_or_create(self, *, config_entry, connections, identifiers,
                             manufacturer, model, name=None, sw_version=None):
         """Get device. Create if it doesn't exist."""
+        if not identifiers and not connections:
+            return None
+
         device = self.async_get_device(identifiers, connections)
 
         if device is not None:

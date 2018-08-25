@@ -276,10 +276,10 @@ class EntityPlatform:
             if config_entry_id is not None and device_info is not None:
                 device = device_registry.async_get_or_create(
                     config_entry=config_entry_id,
-                    connections=device_info['connections'],
-                    identifiers=device_info['identifiers'],
-                    manufacturer=device_info['manufacturer'],
-                    model=device_info['model'],
+                    connections=device_info.get('connections', []),
+                    identifiers=device_info.get('identifiers', []),
+                    manufacturer=device_info.get('manufacturer'),
+                    model=device_info.get('model'),
                     name=device_info.get('name'),
                     sw_version=device_info.get('sw_version'))
                 device_id = device.id

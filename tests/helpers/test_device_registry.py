@@ -47,6 +47,30 @@ async def test_get_or_create_returns_same_entry(registry):
     assert entry.identifiers == {('bridgeid', '0123')}
 
 
+async def test_requirement_for_identifier_or_connection(registry):
+    """Make sure we do require some descriptor of device."""
+    entry = registry.async_get_or_create(
+        config_entry='1234',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        identifiers=[],
+        manufacturer='manufacturer', model='model')
+    entry2 = registry.async_get_or_create(
+        config_entry='1234',
+        connections=[],
+        identifiers={('bridgeid', '0123')},
+        manufacturer='manufacturer', model='model')
+    entry3 = registry.async_get_or_create(
+        config_entry='1234',
+        connections=[],
+        identifiers=[],
+        manufacturer='manufacturer', model='model')
+
+    assert len(registry.devices) == 2
+    assert entry
+    assert entry2
+    assert entry3 is None
+
+
 async def test_multiple_config_entries(registry):
     """Make sure we do not get duplicate entries."""
     entry = registry.async_get_or_create(
