@@ -84,7 +84,7 @@ hbmqtt==0.9.2
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180824.0
+home-assistant-frontend==20180825.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
