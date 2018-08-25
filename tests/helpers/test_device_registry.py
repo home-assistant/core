@@ -52,17 +52,17 @@ async def test_requirement_for_identifier_or_connection(registry):
     entry = registry.async_get_or_create(
         config_entry='1234',
         connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
-        identifiers=[],
+        identifiers=set(),
         manufacturer='manufacturer', model='model')
     entry2 = registry.async_get_or_create(
         config_entry='1234',
-        connections=[],
+        connections=set(),
         identifiers={('bridgeid', '0123')},
         manufacturer='manufacturer', model='model')
     entry3 = registry.async_get_or_create(
         config_entry='1234',
-        connections=[],
-        identifiers=[],
+        connections=set(),
+        identifiers=set(),
         manufacturer='manufacturer', model='model')
 
     assert len(registry.devices) == 2
