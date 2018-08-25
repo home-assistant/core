@@ -87,7 +87,7 @@ class RokuDevice(MediaPlayerDevice):
         self.ip_address = host
         self.channels = []
         self.current_app = None
-        self.device_info = {}
+        self._device_info = {}
 
         self.update()
 
@@ -96,7 +96,7 @@ class RokuDevice(MediaPlayerDevice):
         import requests.exceptions
 
         try:
-            self.device_info = self.roku.device_info
+            self._device_info = self.roku.device_info
             self.ip_address = self.roku.host
             self.channels = self.get_source_list()
 
@@ -121,9 +121,9 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        if self.device_info.userdevicename:
-            return self.device_info.userdevicename
-        return "Roku {}".format(self.device_info.sernum)
+        if self._device_info.userdevicename:
+            return self._device_info.userdevicename
+        return "Roku {}".format(self._device_info.sernum)
 
     @property
     def state(self):
@@ -149,7 +149,7 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return self.device_info.sernum
+        return self._device_info.sernum
 
     @property
     def media_content_type(self):

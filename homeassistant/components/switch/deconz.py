@@ -81,15 +81,15 @@ class DeconzSwitch(SwitchDevice):
         return False
 
     @property
-    def device(self):
+    def device_info(self):
         """Return a device description for device registry."""
         if (self._switch.uniqueid is None or
                 self._switch.uniqueid.count(':') != 7):
             return None
         serial = self._switch.uniqueid.split('-', 1)[0]
         return {
-            'connection': [[CONNECTION_ZIGBEE, serial]],
-            'identifiers': [[DECONZ_DOMAIN, serial]],
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
             'manufacturer': self._switch.manufacturer,
             'model': self._switch.modelid,
             'name': self._switch.name,
