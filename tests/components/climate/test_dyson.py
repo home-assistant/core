@@ -103,7 +103,7 @@ class DysonTest(unittest.TestCase):
     """Dyson Climate component test class."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -177,10 +177,6 @@ class DysonTest(unittest.TestCase):
         entity = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertFalse(entity.should_poll)
 
-        def celsius_to_kelvin_str(celsius):
-            """Convert celssius to kelvin in string format."""
-            return str((celsius + 273) * 10)
-
         # Without target temp.
         kwargs = {}
         entity.set_temperature(**kwargs)
@@ -190,18 +186,24 @@ class DysonTest(unittest.TestCase):
         kwargs = {ATTR_TEMPERATURE: 23}
         entity.set_temperature(**kwargs)
         set_config = device.set_configuration
-        set_config.assert_called_with(heat_target=celsius_to_kelvin_str(23))
+        set_config.assert_called_with(
+            heat_mode=HeatMode.HEAT_ON,
+            heat_target=HeatTarget.celsius(23))
 
         # Should clip the target temperature between 1 and 37 inclusive.
         kwargs = {ATTR_TEMPERATURE: 50}
         entity.set_temperature(**kwargs)
         set_config = device.set_configuration
-        set_config.assert_called_with(heat_target=celsius_to_kelvin_str(37))
+        set_config.assert_called_with(
+            heat_mode=HeatMode.HEAT_ON,
+            heat_target=HeatTarget.celsius(37))
 
         kwargs = {ATTR_TEMPERATURE: -5}
         entity.set_temperature(**kwargs)
         set_config = device.set_configuration
-        set_config.assert_called_with(heat_target=celsius_to_kelvin_str(1))
+        set_config.assert_called_with(
+            heat_mode=HeatMode.HEAT_ON,
+            heat_target=HeatTarget.celsius(1))
 
     def test_dyson_set_temperature_when_cooling_mode(self):
         """Test set climate temperature when heating is off."""
@@ -213,8 +215,9 @@ class DysonTest(unittest.TestCase):
         kwargs = {ATTR_TEMPERATURE: 23}
         entity.set_temperature(**kwargs)
         set_config = device.set_configuration
-        set_config.assert_not_called()
-        entity.schedule_update_ha_state.assert_called_once_with()
+        set_config.assert_called_with(
+            heat_mode=HeatMode.HEAT_ON,
+            heat_target=HeatTarget.celsius(23))
 
     def test_dyson_set_fan_mode(self):
         """Test set fan mode."""
@@ -314,17 +317,6 @@ class DysonTest(unittest.TestCase):
         entity.on_message(MockDysonState())
         entity.schedule_update_ha_state.assert_called_with()
 
-    def test_on_message_with_pending_target_temp(self):
-        """Test when message is received with pending target temp."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
-        entity.schedule_update_ha_state = mock.Mock()
-        entity._set_temperature_on_device = mock.Mock()
-        entity._pending_target_temp = 24
-        entity.on_message(MockDysonState())
-        entity.schedule_update_ha_state.assert_called_with()
-        entity._set_temperature_on_device.assert_called_with()
-
     def test_general_properties(self):
         """Test properties of entity."""
         device = _get_device_with_no_state()
@@ -364,10 +356,3 @@ class DysonTest(unittest.TestCase):
         device = _get_device_heat_on()
         entity = dyson.DysonPureHotCoolLinkDevice(device)
         self.assertEqual(entity.target_temperature, 23)
-
-    def test_property_target_temperature_with_pending_value(self):
-        """Test properties of target temperature with pending value."""
-        device = _get_device_heat_on()
-        entity = dyson.DysonPureHotCoolLinkDevice(device)
-        entity._pending_target_temp = 30
-        self.assertEqual(entity.target_temperature, 30)
