@@ -5,8 +5,8 @@
       "step": {
         "init": {
           "title": "Scan this QR code with your app",
-          "description": "Scan the QR code with your authentication app, such as **Google Authenticator** or **Authy**. \nOr enter {code} instead. \n\n![url]{qr_code}",
-        },
+          "description": "Scan the QR code with your authentication app, such as **Google Authenticator** or **Authy**. If you have problem to scan the QR code, using **`{code}`** to manual setup. \n\n![{url}]({qr_code})\n\nEnter the six digi code appeared in your app below to verify the setup:"
+        }
       },
       "error": {
         "invalid_code": "Invalid code, please try again. If you get this error consistently, please make sure the clock on Home Assistant system is accurate."
