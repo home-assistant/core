@@ -31,10 +31,10 @@ DEFAULT_PORT = 80
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 SENSOR_TYPES = {
-    'average': ['Average', 'W', 'mdi:harddisk'],
-    'consumption': ['Consumption', 'Wh', 'mdi:harddisk'],
-    'max': ['Max', 'W', 'mdi:harddisk'],
-    'min': ['Min', 'W', 'mdi:memory'],
+    'average': ['Average', 'W', 'mdi:power-off'],
+    'consumption': ['Consumption', 'Wh', 'mdi:power-plug'],
+    'max': ['Max', 'W', 'mdi:arrow-up'],
+    'min': ['Min', 'W', 'mdi:arrow-down'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
