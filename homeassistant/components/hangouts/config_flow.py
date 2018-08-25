@@ -104,4 +104,4 @@ class HangoutsFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_import(self, _):
         """Handle a flow import."""
-        return self.async_abort(reason='already_configured')
+        return await self.async_step_user()
