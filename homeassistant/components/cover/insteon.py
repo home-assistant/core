@@ -22,7 +22,8 @@ DEPENDENCIES = ['insteon']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Insteon component."""
     insteon_modem = hass.data['insteon'].get('modem')
 
@@ -35,7 +36,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     new_entity = InsteonCoverDevice(device, state_key)
 
-    async_add_devices([new_entity])
+    async_add_entities([new_entity])
 
 
 
