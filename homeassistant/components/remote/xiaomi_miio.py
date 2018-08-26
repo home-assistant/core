@@ -189,6 +189,11 @@ class XiaomiMiioRemote(RemoteDevice):
         return self._name
 
     @property
+    def device(self):
+        """Return the remote object."""
+        return self._device
+
+    @property
     def hidden(self):
         """Return if we should hide entity."""
         return self._is_hidden
@@ -208,7 +213,7 @@ class XiaomiMiioRemote(RemoteDevice):
         """Return False if device is unreachable, else True."""
         from miio import DeviceException
         try:
-            self._device.info()
+            self.device.info()
             return True
         except DeviceException:
             return False
@@ -243,7 +248,7 @@ class XiaomiMiioRemote(RemoteDevice):
 
         _LOGGER.debug("Sending payload: '%s'", payload)
         try:
-            self._device.play(payload)
+            self.device.play(payload)
         except DeviceException as ex:
             _LOGGER.error(
                 "Transmit of IR command failed, %s, exception: %s",

@@ -79,9 +79,14 @@ class TankUtilitySensor(Entity):
         self._token = token
         self._device = device
         self._state = STATE_UNKNOWN
-        self._name = "Tank Utility " + self._device
+        self._name = "Tank Utility " + self.device
         self._unit_of_measurement = SENSOR_UNIT_OF_MEASUREMENT
         self._attributes = {}
+
+    @property
+    def device(self):
+        """Return the device identifier."""
+        return self._device
 
     @property
     def state(self):
@@ -112,14 +117,14 @@ class TankUtilitySensor(Entity):
         from tank_utility import auth, device
         data = {}
         try:
-            data = device.get_device_data(self._token, self._device)
+            data = device.get_device_data(self._token, self.device)
         except requests.exceptions.HTTPError as http_error:
             if (http_error.response.status_code ==
                     requests.codes.unauthorized):  # pylint: disable=no-member
                 _LOGGER.info("Getting new token")
                 self._token = auth.get_token(self._email, self._password,
                                              force=True)
-                data = device.get_device_data(self._token, self._device)
+                data = device.get_device_data(self._token, self.device)
             else:
                 raise http_error
         data.update(data.pop("device", {}))
