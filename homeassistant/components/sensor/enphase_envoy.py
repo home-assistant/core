@@ -30,11 +30,9 @@ SENSORS = {
 
 
 ICON = 'mdi:flash'
-CONF_ENVOY_MODEL = "envoy_model"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_IP_ADDRESS, default="envoy"): cv.string,
-    vol.Optional(CONF_ENVOY_MODEL, default="unknown"): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSORS)):
         vol.All(cv.ensure_list, [vol.In(list(SENSORS))])})
 
@@ -44,24 +42,23 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-    envoy_model = config[CONF_ENVOY_MODEL]
+
 
     # Iterate through the list of sensors
     for condition in monitored_conditions:
         add_devices([Envoy(ip_address, condition, SENSORS[condition][0],
-                           SENSORS[condition][1], envoy_model)], True)
+                           SENSORS[condition][1])], True)
 
 
 class Envoy(Entity):
     """Implementation of the Enphase Envoy sensors."""
 
-    def __init__(self, ip_address, sensor_type, name, unit, envoy_model):
+    def __init__(self, ip_address, sensor_type, name, unit):
         """Initialize the sensor."""
         self._ip_address = ip_address
         self._name = name
         self._unit_of_measurement = unit
         self._type = sensor_type
-        self._envoy_model = envoy_model
         self._state = None
 
     @property
@@ -89,19 +86,19 @@ class Envoy(Entity):
         from envoy_reader import EnvoyReader
 
         if self._type == "production":
-            self._state = EnvoyReader(self._ip_address, self._envoy_model).production()
+            self._state = EnvoyReader(self._ip_address).production()
         elif self._type == "daily_production":
-            self._state = EnvoyReader(self._ip_address, self._envoy_model).daily_production()
+            self._state = EnvoyReader(self._ip_address).daily_production()
         elif self._type == "7_days_production":
-            self._state = EnvoyReader(self._ip_address, self._envoy_model).seven_days_production()
+            self._state = EnvoyReader(self._ip_address).seven_days_production()
         elif self._type == "lifetime_production":
-            self._state = EnvoyReader(self._ip_address, self._envoy_model).lifetime_production()
+            self._state = EnvoyReader(self._ip_address).lifetime_production()
 
         elif self._type == "consumption":
-            self._state = EnvoyReader(self._ip_address, self._envoy_model).consumption()
+            self._state = EnvoyReader(self._ip_address).consumption()
         elif self._type == "daily_consumption":
-            self._state = EnvoyReader(self._ip_address, self._envoy_model).daily_consumption()
+            self._state = EnvoyReader(self._ip_address).daily_consumption()
         elif self._type == "7_days_consumption":
-            self._state = EnvoyReader(self._ip_address, self._envoy_model).seven_days_consumption()
+            self._state = EnvoyReader(self._ip_address).seven_days_consumption()
         elif self._type == "lifetime_consumption":
-            self._state =EnvoyReader(self._ip_address, self._envoy_model).lifetime_consumption()
+            self._state =EnvoyReader(self._ip_address).lifetime_consumption()
