@@ -8,13 +8,13 @@ import logging
 
 from homeassistant.const import (
         TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE)
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.velbus import (
         DOMAIN as VELBUS_DOMAIN, VelbusEntity)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['velbus']
+
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
@@ -45,4 +45,3 @@ class VelbusTempSensor(VelbusEntity):
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return TEMP_CELSIUS
-
