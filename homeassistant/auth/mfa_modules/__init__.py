@@ -8,7 +8,7 @@ from typing import Any, Dict, Optional
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
-from homeassistant import requirements
+from homeassistant import requirements, data_entry_flow
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.util.decorator import Registry
@@ -64,15 +64,14 @@ class MultiFactorAuthModule:
         """Return a voluptuous schema to define mfa auth module's input."""
         raise NotImplementedError
 
-    @property
-    def setup_schema(self) -> Optional[vol.Schema]:
-        """Return a vol schema to validate mfa auth module's setup input.
+    async def async_setup_flow(self, user_id: str) -> 'SetupFlow':
+        """Return a data entry flow handler for setup module.
 
-        Optional
+        Mfa module should extend SetupFlow
         """
-        return None
+        raise NotImplementedError
 
-    async def async_setup_user(self, user_id: str, setup_data: Any) -> None:
+    async def async_setup_user(self, user_id: str, setup_data: Any) -> Any:
         """Set up user for mfa auth module."""
         raise NotImplementedError
 
@@ -88,6 +87,42 @@ class MultiFactorAuthModule:
             self, user_id: str, user_input: Dict[str, Any]) -> bool:
         """Return True if validation passed."""
         raise NotImplementedError
+
+
+class SetupFlow(data_entry_flow.FlowHandler):
+    """Handler for the setup flow."""
+
+    def __init__(self, auth_module: MultiFactorAuthModule,
+                 setup_schema: vol.Schema,
+                 user_id: str) -> None:
+        """Initialize the setup flow."""
+        self._auth_module = auth_module
+        self._setup_schema = setup_schema
+        self._user_id = user_id
+
+    async def async_step_init(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
+        """Handle the first step of setup flow.
+
+        Return self.async_show_form(step_id='init') if user_input == None.
+        Return self.async_create_entry(data={'result': result}) if finish.
+        """
+        errors = {}  # type: Dict[str, str]
+
+        if user_input:
+            result = await self._auth_module.async_setup_user(
+                self._user_id, user_input)
+            return self.async_create_entry(
+                title=self._auth_module.name,
+                data={'result': result}
+            )
+
+        return self.async_show_form(
+            step_id='init',
+            data_schema=self._setup_schema,
+            errors=errors
+        )
 
 
 async def auth_mfa_module_from_config(

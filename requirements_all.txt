@@ -438,7 +438,7 @@ hole==0.3.0
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180824.0
+home-assistant-frontend==20180826.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -810,7 +810,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==43
+pydeconz==44
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -1334,7 +1334,7 @@ spotipy-homeassistant==2.4.4.dev1
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.10
+sqlalchemy==1.2.11
 
 # homeassistant.components.statsd
 statsd==3.2.1

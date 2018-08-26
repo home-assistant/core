@@ -26,8 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the Hangouts bot component."""
-    config = config.get(DOMAIN, [])
-    hass.data[DOMAIN] = {CONF_COMMANDS: config[CONF_COMMANDS]}
+    config = config.get(DOMAIN, {})
+    hass.data[DOMAIN] = {CONF_COMMANDS: config.get(CONF_COMMANDS, [])}
 
     if configured_hangouts(hass) is None:
         hass.async_add_job(hass.config_entries.flow.async_init(
