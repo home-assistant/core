@@ -14,8 +14,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME,
-    STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_API_KEY, CONF_MONITORED_CONDITIONS, CONF_NAME)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -51,14 +50,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Trafikverket sensor platform."""
     from pytrafikverket.trafikverket_weather import TrafikverketWeather
 
-    sensor_name = config.get(CONF_NAME)
-    sensor_api = config.get(CONF_API_KEY)
-    sensor_station = config.get(CONF_STATION)
+    sensor_name = config[CONF_NAME]
+    sensor_api = config[CONF_API_KEY]
+    sensor_station = config[CONF_STATION]
 
     web_session = async_get_clientsession(hass)
 
@@ -70,7 +69,7 @@ async def async_setup_platform(hass, config, async_add_devices,
             weather_api, sensor_name, condition, sensor_station))
 
     if dev:
-        async_add_devices(dev, True)
+        async_add_entities(dev, True)
 
 
 class TrafikverketWeatherStation(Entity):
@@ -81,9 +80,8 @@ class TrafikverketWeatherStation(Entity):
         self._client = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self._type = sensor_type
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._unit = SENSOR_TYPES[sensor_type][1]
-        self._code = None
         self._station = sensor_station
         self._weather_api = weather_api
         self._attributes = {
@@ -110,8 +108,8 @@ class TrafikverketWeatherStation(Entity):
     async def async_update(self):
         """Get the latest data from Trafikverket and updates the states."""
         try:
-            self._weather = await\
-                self._weather_api.async_get_weather(self._station)
+            self._weather = await self._weather_api.async_get_weather(
+                self._station)
             self._state = getattr(
                 self._weather,
                 SENSOR_TYPES[self._type][2])
