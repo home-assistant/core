@@ -17,7 +17,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyTexecom==0.1.4']
+REQUIREMENTS = ['pyTexecom==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
