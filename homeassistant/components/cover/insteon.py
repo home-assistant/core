@@ -12,13 +12,12 @@ from homeassistant.components.insteon import InsteonEntity
 from homeassistant.components.cover import (CoverDevice, ATTR_POSITION,
                                             SUPPORT_OPEN, SUPPORT_CLOSE,
                                             SUPPORT_SET_POSITION)
-from homeassistant.const import (
-    STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, STATE_UNKNOWN)
+# from homeassistant.const import (
+#     STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['insteon']
-
 
 
 @asyncio.coroutine
@@ -39,17 +38,17 @@ def async_setup_platform(hass, config, async_add_entities,
     async_add_entities([new_entity])
 
 
-
 class InsteonCoverDevice(InsteonEntity, CoverDevice):
     """A Class for an Insteon device."""
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self):
         """Return the current cover position."""
         return int(math.ceil(self._insteon_device_state.value*100/255))
 
     @property
     def supported_features(self):
+        """Return the supported features for this entity."""
         return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
     @property
