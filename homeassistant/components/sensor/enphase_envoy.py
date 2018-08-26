@@ -37,12 +37,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(list(SENSORS))])})
 
 
-
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
-
 
     # Iterate through the list of sensors
     for condition in monitored_conditions:
@@ -99,6 +97,7 @@ class Envoy(Entity):
         elif self._type == "daily_consumption":
             self._state = EnvoyReader(self._ip_address).daily_consumption()
         elif self._type == "7_days_consumption":
-            self._state = EnvoyReader(self._ip_address).seven_days_consumption()
+            self._state = EnvoyReader(self._ip_address).
+            seven_days_consumption()
         elif self._type == "lifetime_consumption":
-            self._state =EnvoyReader(self._ip_address).lifetime_consumption()
+            self._state = EnvoyReader(self._ip_address).lifetime_consumption()
