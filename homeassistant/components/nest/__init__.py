@@ -282,12 +282,12 @@ class NestSensorDevice(Entity):
 
         if device is not None:
             # device specific
-            self._device = device
-            self._name = "{} {}".format(self._device.name_long,
+            self.device = device
+            self._name = "{} {}".format(self.device.name_long,
                                         self.variable.replace('_', ' '))
         else:
             # structure only
-            self._device = structure
+            self.device = structure
             self._name = "{} {}".format(self.structure.name,
                                         self.variable.replace('_', ' '))
 
