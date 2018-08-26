@@ -133,7 +133,7 @@ class EmbyDevice(MediaPlayerDevice):
         _LOGGER.debug("New Emby Device initialized with ID: %s", device_id)
         self.emby = emby
         self.device_id = device_id
-        self._device = self.emby.devices[self.device_id]
+        self.device = self.emby.devices[self.device_id]
 
         self._hidden = False
         self._available = True
@@ -151,11 +151,11 @@ class EmbyDevice(MediaPlayerDevice):
     def async_update_callback(self, msg):
         """Handle device updates."""
         # Check if we should update progress
-        if self._device.media_position:
-            if self._device.media_position != self.media_status_last_position:
-                self.media_status_last_position = self._device.media_position
+        if self.device.media_position:
+            if self.device.media_position != self.media_status_last_position:
+                self.media_status_last_position = self.device.media_position
                 self.media_status_received = dt_util.utcnow()
-        elif not self._device.is_nowplaying:
+        elif not self.device.is_nowplaying:
             # No position, but we have an old value and are still playing
             self.media_status_last_position = None
             self.media_status_received = None
@@ -188,12 +188,12 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def supports_remote_control(self):
         """Return control ability."""
-        return self._device.supports_remote_control
+        return self.device.supports_remote_control
 
     @property
     def name(self):
         """Return the name of the device."""
-        return ('Emby - {} - {}'.format(self._device.client, self._device.name)
+        return ('Emby - {} - {}'.format(self.device.client, self.device.name)
                 or DEVICE_DEFAULT_NAME)
 
     @property
@@ -204,7 +204,7 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        state = self._device.state
+        state = self.device.state
         if state == 'Paused':
             return STATE_PAUSED
         if state == 'Playing':
@@ -218,17 +218,17 @@ class EmbyDevice(MediaPlayerDevice):
     def app_name(self):
         """Return current user as app_name."""
         # Ideally the media_player object would have a user property.
-        return self._device.username
+        return self.device.username
 
     @property
     def media_content_id(self):
         """Content ID of current playing media."""
-        return self._device.media_id
+        return self.device.media_id
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
-        media_type = self._device.media_type
+        media_type = self.device.media_type
         if media_type == 'Episode':
             return MEDIA_TYPE_TVSHOW
         if media_type == 'Movie':
@@ -246,7 +246,7 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
-        return self._device.media_runtime
+        return self.device.media_runtime
 
     @property
     def media_position(self):
@@ -265,42 +265,42 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def media_image_url(self):
         """Return the image URL of current playing media."""
-        return self._device.media_image_url
+        return self.device.media_image_url
 
     @property
     def media_title(self):
         """Return the title of current playing media."""
-        return self._device.media_title
+        return self.device.media_title
 
     @property
     def media_season(self):
         """Season of current playing media (TV Show only)."""
-        return self._device.media_season
+        return self.device.media_season
 
     @property
     def media_series_title(self):
         """Return the title of the series of current playing media (TV)."""
-        return self._device.media_series_title
+        return self.device.media_series_title
 
     @property
     def media_episode(self):
         """Return the episode of current playing media (TV only)."""
-        return self._device.media_episode
+        return self.device.media_episode
 
     @property
     def media_album_name(self):
         """Return the album name of current playing media (Music only)."""
-        return self._device.media_album_name
+        return self.device.media_album_name
 
     @property
     def media_artist(self):
         """Return the artist of current playing media (Music track only)."""
-        return self._device.media_artist
+        return self.device.media_artist
 
     @property
     def media_album_artist(self):
         """Return the album artist of current playing media (Music only)."""
-        return self._device.media_album_artist
+        return self.device.media_album_artist
 
     @property
     def supported_features(self):
@@ -314,39 +314,39 @@ class EmbyDevice(MediaPlayerDevice):
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self._device.media_play()
+        return self.device.media_play()
 
     def async_media_pause(self):
         """Pause the media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self._device.media_pause()
+        return self.device.media_pause()
 
     def async_media_stop(self):
         """Stop the media player.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self._device.media_stop()
+        return self.device.media_stop()
 
     def async_media_next_track(self):
         """Send next track command.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self._device.media_next()
+        return self.device.media_next()
 
     def async_media_previous_track(self):
         """Send next track command.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self._device.media_previous()
+        return self.device.media_previous()
 
     def async_media_seek(self, position):
         """Send seek command.
 
         This method must be run in the event loop and returns a coroutine.
         """
-        return self._device.media_seek(position)
+        return self.device.media_seek(position)
