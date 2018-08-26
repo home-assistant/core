@@ -386,7 +386,7 @@ class IPDB:
                                            X10AllLightsOffSensor)
 
         self.states = [State(Cover, 'cover'),
-            
+
                        State(OnOffSwitch_OutletTop, 'switch'),
                        State(OnOffSwitch_OutletBottom, 'switch'),
                        State(OpenClosedRelay, 'switch'),
