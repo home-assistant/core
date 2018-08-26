@@ -11,12 +11,13 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyTexecom==0.1']
+REQUIREMENTS = ['pyTexecom==0.1.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,23 +26,23 @@ DOMAIN = 'texecom'
 DATA_EVL = 'texecom'
 
 CONF_PORT = 'port'
-CONF_PANELUUID = 'uuid'
+CONF_PANELTYPE = 'paneltype'
 CONF_ZONENAME = "name"
 CONF_ZONES = 'zones'
 CONF_ZONETYPE = 'type'
-CONF_ZONENUMBER = 'panelzone'
+CONF_ZONENUMBER = 'zonenumber'
 
 DEFAULT_PORT = '/dev/ttys0'
 DEFAULT_ZONENAME = 'zone'
-DEFAULT_ZONES = 'zones'
-DEFAULT_ZONETYPE = 'motion'
 DEFAULT_ZONENUMBER = '1'
+DEFAULT_ZONETYPE = 'motion'
 
 SIGNAL_ZONE_UPDATE = 'texecom.zones_updated'
 
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONENAME): cv.string,
     vol.Required(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string,
+    vol.Required(CONF_ZONENUMBER, default=DEFAULT_ZONENUMBER): cv.string,
     })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -56,12 +57,14 @@ CONFIG_SCHEMA = vol.Schema({
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up for Texecom devices."""
+    from pyTexecom import TexecomPanelInterface
+
     conf = config.get(DOMAIN)
     port = conf.get(CONF_PORT)
     zones = conf.get(CONF_ZONES)
     paneltype = conf.get(CONF_PANELTYPE)
 
-    controller = TexeconPanelInterface('Panel Interface', port, paneltype)
+    controller = TexecomPanelInterface('Panel Interface', port, paneltype, _LOGGER, hass.loop)
 
     hass.data[DATA_EVL] = controller
 
@@ -140,12 +143,13 @@ class TexecomBinarySensor(BinarySensorDevice):
     def _update_callback(self, data):
         """Update the zone's state, if needed."""
         _LOGGER.debug('Attempting to Update Zone %s', self._name)
-        _LOGGER.debug('The new state is %s', data[self._number])
+        state =  data[int(self._number)]
+        _LOGGER.debug('The new state is %s', state)
 
-        if data[self._number] == '0':
+        if state == '0':
             _LOGGER.debug('Setting zone state to false')
             self._state = False
-        elif data[self._number] == '1':
+        elif state == '1':
             _LOGGER.debug('Setting zone state to true')
             self._state = True
         else:

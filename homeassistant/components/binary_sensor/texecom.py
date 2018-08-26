@@ -20,11 +20,14 @@ DEPENDENCIES = ['texecom']
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Texecom binary sensor devices."""
+    _LOGGER.info('Setting Up Binary Sensors')
     configured_zones = discovery_info['zones']
 
     devices = []
     for zone_num in configured_zones:
         device_config_data = ZONE_SCHEMA(configured_zones[zone_num])
+        _LOGGER.info('Setting Up Binary Sensors %s', hass)
+
         device = TexecomBinarySensor(
             hass,
             device_config_data[CONF_ZONENUMBER],
