@@ -88,10 +88,12 @@ async def async_from_config_dict(config: Dict[str, Any],
 
     core_config = config.get(core.DOMAIN, {})
     has_api_password = bool((config.get('http') or {}).get('api_password'))
+    has_trusted_networks = bool((config.get('http') or {})
+                                .get('trusted_networks'))
 
     try:
         await conf_util.async_process_ha_core_config(
-            hass, core_config, has_api_password)
+            hass, core_config, has_api_password, has_trusted_networks)
     except vol.Invalid as ex:
         conf_util.async_log_exception(ex, 'homeassistant', core_config, hass)
         return None

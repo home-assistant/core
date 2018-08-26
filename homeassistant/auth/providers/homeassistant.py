@@ -164,7 +164,7 @@ class HassAuthProvider(AuthProvider):
         return HassLoginFlow(self)
 
     async def async_validate_login(self, username: str, password: str) -> None:
-        """Helper to validate a username and password."""
+        """Validate a username and password."""
         if self.data is None:
             await self.async_initialize()
             assert self.data is not None

@@ -95,7 +95,7 @@ def set_lights_rgb(hass, lights, rgb, transition):
                     transition=transition)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flux switches."""
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
@@ -113,7 +113,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       start_colortemp, sunset_colortemp, stop_colortemp,
                       brightness, disable_brightness_adjust, mode, interval,
                       transition)
-    add_devices([flux])
+    add_entities([flux])
 
     def update(call=None):
         """Update lights."""

@@ -106,7 +106,7 @@ class EntityPlatform:
         return await self._async_setup_platform(async_create_setup_task)
 
     async def _async_setup_platform(self, async_create_setup_task, tries=0):
-        """Helper to set up a platform via config file or config entry.
+        """Set up a platform via config file or config entry.
 
         async_create_setup_task creates a coroutine that sets up platform.
         """
@@ -168,7 +168,7 @@ class EntityPlatform:
             warn_task.cancel()
 
     def _schedule_add_entities(self, new_entities, update_before_add=False):
-        """Synchronously schedule adding entities for a single platform."""
+        """Schedule adding entities for a single platform, synchronously."""
         run_callback_threadsafe(
             self.hass.loop,
             self._async_schedule_add_entities, list(new_entities),
@@ -237,7 +237,7 @@ class EntityPlatform:
     async def _async_add_entity(self, entity, update_before_add,
                                 component_entities, entity_registry,
                                 device_registry):
-        """Helper method to add an entity to the platform."""
+        """Add an entity to the platform."""
         if entity is None:
             raise ValueError('Entity cannot be None')
 
@@ -272,12 +272,16 @@ class EntityPlatform:
             else:
                 config_entry_id = None
 
-            device = entity.device
-            if device is not None:
+            device_info = entity.device_info
+            if config_entry_id is not None and device_info is not None:
                 device = device_registry.async_get_or_create(
-                    device['identifiers'], device['manufacturer'],
-                    device['model'], device['connection'],
-                    sw_version=device.get('sw_version'))
+                    config_entry=config_entry_id,
+                    connections=device_info.get('connections', []),
+                    identifiers=device_info.get('identifiers', []),
+                    manufacturer=device_info.get('manufacturer'),
+                    model=device_info.get('model'),
+                    name=device_info.get('name'),
+                    sw_version=device_info.get('sw_version'))
                 device_id = device.id
             else:
                 device_id = None

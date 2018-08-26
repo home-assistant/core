@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Discover cameras on a Unifi NVR."""
     addr = config[CONF_NVR]
     key = config[CONF_KEY]
@@ -63,11 +63,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to connect to NVR: %s", str(ex))
         raise PlatformNotReady
 
-    add_devices([UnifiVideoCamera(nvrconn,
-                                  camera[identifier],
-                                  camera['name'],
-                                  password)
-                 for camera in cameras])
+    add_entities([UnifiVideoCamera(nvrconn,
+                                   camera[identifier],
+                                   camera['name'],
+                                   password)
+                  for camera in cameras])
     return True
 
 

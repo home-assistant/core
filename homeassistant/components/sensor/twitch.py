@@ -31,11 +31,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Twitch platform."""
     channels = config.get(CONF_CHANNELS, [])
 
-    add_devices([TwitchSensor(channel) for channel in channels], True)
+    add_entities([TwitchSensor(channel) for channel in channels], True)
 
 
 class TwitchSensor(Entity):

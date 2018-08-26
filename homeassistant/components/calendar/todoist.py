@@ -116,7 +116,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Todoist platform."""
     token = config.get(CONF_TOKEN)
 
@@ -178,7 +178,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         )
 
-    add_devices(project_devices)
+    add_entities(project_devices)
 
     def handle_new_task(call):
         """Call when a user creates a new Todoist Task from HASS."""

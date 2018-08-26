@@ -27,7 +27,7 @@ ATTR_TO_HA = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BMW sensors."""
     accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 devices.append(device)
             device = BMWConnectedDriveSensor(account, vehicle, 'mileage')
             devices.append(device)
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class BMWConnectedDriveSensor(Entity):
@@ -58,7 +58,10 @@ class BMWConnectedDriveSensor(Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Data update is triggered from BMWConnectedDriveEntity."""
+        """Return False.
+
+        Data update is triggered from BMWConnectedDriveEntity.
+        """
         return False
 
     @property

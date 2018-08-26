@@ -35,7 +35,7 @@ WEMO_OFF = 0
 WEMO_STANDBY = 8
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up discovered WeMo switches."""
     from pywemo import discovery
 
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
             raise PlatformNotReady
 
         if device:
-            add_devices_callback([WemoSwitch(device)])
+            add_entities_callback([WemoSwitch(device)])
 
 
 class WemoSwitch(SwitchDevice):
@@ -77,7 +77,7 @@ class WemoSwitch(SwitchDevice):
             self._async_locked_subscription_callback(not updated))
 
     async def _async_locked_subscription_callback(self, force_update):
-        """Helper to handle an update from a subscription."""
+        """Handle an update from a subscription."""
         # If an update is in progress, we don't do anything
         if self._update_lock.locked():
             return

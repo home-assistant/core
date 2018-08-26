@@ -33,13 +33,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the RFXtrx platform."""
     import RFXtrx as rfxtrxmod
 
     # Add switch from config file
     switches = rfxtrx.get_devices_from_config(config, RfxtrxSwitch)
-    add_devices_callback(switches)
+    add_entities_callback(switches)
 
     def switch_update(event):
         """Handle sensor updates from the RFXtrx gateway."""
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
         new_device = rfxtrx.get_new_device(event, config, RfxtrxSwitch)
         if new_device:
-            add_devices_callback([new_device])
+            add_entities_callback([new_device])
 
         rfxtrx.apply_received_command(event)
 

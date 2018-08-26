@@ -155,7 +155,8 @@ def _check_deprecated_turn_off(hass, turn_off_action):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Kodi platform."""
     if DATA_KODI not in hass.data:
         hass.data[DATA_KODI] = dict()
@@ -206,7 +207,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         unique_id=unique_id)
 
     hass.data[DATA_KODI][ip_addr] = entity
-    async_add_devices([entity], update_before_add=True)
+    async_add_entities([entity], update_before_add=True)
 
     @asyncio.coroutine
     def async_service_handler(service):

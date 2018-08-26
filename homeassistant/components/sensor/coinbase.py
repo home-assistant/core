@@ -21,7 +21,7 @@ DEPENDENCIES = ['coinbase']
 ETH_ICON = 'mdi:currency-eth'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Coinbase sensors."""
     if discovery_info is None:
         return
@@ -35,7 +35,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass.data[DATA_COINBASE], discovery_info['exchange_currency'],
             discovery_info['native_currency'])
 
-    add_devices([sensor], True)
+    add_entities([sensor], True)
 
 
 class AccountSensor(Entity):

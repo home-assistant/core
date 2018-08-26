@@ -413,6 +413,9 @@ ha-ffmpeg==1.9
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.5
 
+# homeassistant.components.hangouts
+hangups==0.4.5
+
 # homeassistant.components.sensor.geo_rss_events
 haversine==0.4.5
 
@@ -435,7 +438,7 @@ hole==0.3.0
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180820.0
+home-assistant-frontend==20180825.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -807,7 +810,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==43
+pydeconz==44
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -1131,7 +1134,7 @@ python-telegram-bot==10.1.0
 python-twitch==1.3.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.17
+python-velbus==2.0.18
 
 # homeassistant.components.media_player.vlc
 python-vlc==1.1.2
@@ -1331,7 +1334,7 @@ spotipy-homeassistant==2.4.4.dev1
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.10
+sqlalchemy==1.2.11
 
 # homeassistant.components.statsd
 statsd==3.2.1

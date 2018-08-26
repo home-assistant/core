@@ -49,7 +49,7 @@ TRAITS = []
 
 
 def register_trait(trait):
-    """Decorator to register a trait."""
+    """Decorate a function to register a trait."""
     TRAITS.append(trait)
     return trait
 

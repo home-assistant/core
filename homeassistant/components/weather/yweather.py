@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yahoo! weather platform."""
     from yahooweather import get_woeid, UNIT_C, UNIT_F
 
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for condi in condlst:
                 hass.data[DATA_CONDITION][condi] = cond
 
-    add_devices([YahooWeatherWeather(yahoo_api, name, unit)], True)
+    add_entities([YahooWeatherWeather(yahoo_api, name, unit)], True)
 
 
 class YahooWeatherWeather(WeatherEntity):

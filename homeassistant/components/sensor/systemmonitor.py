@@ -67,7 +67,7 @@ IF_ADDRS = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the system monitor sensors."""
     dev = []
     for resource in config[CONF_RESOURCES]:
@@ -76,7 +76,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(SystemMonitorSensor(
             resource[CONF_TYPE], resource[CONF_ARG]))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class SystemMonitorSensor(Entity):

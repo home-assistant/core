@@ -46,7 +46,7 @@ HM_IP_CONTROL_MODE = 'SET_POINT_MODE'
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Homematic thermostat platform."""
     if discovery_info is None:
         return
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         new_device = HMThermostat(conf)
         devices.append(new_device)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class HMThermostat(HMDevice, ClimateDevice):

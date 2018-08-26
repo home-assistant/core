@@ -6,8 +6,6 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 
 import jwt
 
-import voluptuous as vol
-
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -235,13 +233,6 @@ class AuthManager:
             raise ValueError('Unable find multi-factor auth module: {}'
                              .format(mfa_module_id))
 
-        if module.setup_schema is not None:
-            try:
-                # pylint: disable=not-callable
-                data = module.setup_schema(data)
-            except vol.Invalid as err:
-                raise ValueError('Data does not match schema: {}'.format(err))
-
         await module.async_setup_user(user.id, data)
 
     async def async_disable_user_mfa(self, user: models.User,
@@ -390,7 +381,7 @@ class AuthManager:
     @callback
     def _async_get_auth_provider(
             self, credentials: models.Credentials) -> Optional[AuthProvider]:
-        """Helper to get auth provider from a set of credentials."""
+        """Get auth provider from a set of credentials."""
         auth_provider_key = (credentials.auth_provider_type,
                              credentials.auth_provider_id)
         return self._providers.get(auth_provider_key)
