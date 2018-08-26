@@ -97,7 +97,7 @@ class Envoy(Entity):
         elif self._type == "daily_consumption":
             self._state = EnvoyReader(self._ip_address).daily_consumption()
         elif self._type == "7_days_consumption":
-            self._state = EnvoyReader(self._ip_address).
-            seven_days_consumption()
+            self._state = (EnvoyReader(self._ip_address)
+                           .seven_days_consumption())
         elif self._type == "lifetime_consumption":
             self._state = EnvoyReader(self._ip_address).lifetime_consumption()
