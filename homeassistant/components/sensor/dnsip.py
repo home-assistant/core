@@ -89,7 +89,8 @@ class WanIpSensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Get the current DNS IP address for hostname."""
-        response = yield from self.resolver.query(self.hostname, self.querytype)
+        response = yield from self.resolver.query(self.hostname, 
+                                                  self.querytype)
         if response:
             self._state = response[0].host
         else:
