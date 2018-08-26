@@ -2,7 +2,7 @@
 Velbus sensors.
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/velbus/
+https://home-assistant.io/components/sensor.velbus/
 """
 import logging
 
