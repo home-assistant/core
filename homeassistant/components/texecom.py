@@ -15,7 +15,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
-from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pyTexecom==0.2.0']
 
@@ -64,7 +63,9 @@ def async_setup(hass, config):
     zones = conf.get(CONF_ZONES)
     paneltype = conf.get(CONF_PANELTYPE)
 
-    controller = TexecomPanelInterface('Panel Interface', port, paneltype, _LOGGER, hass.loop)
+    controller = TexecomPanelInterface(
+        'Panel Interface', port, paneltype, _LOGGER, hass.loop
+    )
 
     hass.data[DATA_EVL] = controller
 
@@ -143,7 +144,7 @@ class TexecomBinarySensor(BinarySensorDevice):
     def _update_callback(self, data):
         """Update the zone's state, if needed."""
         _LOGGER.debug('Attempting to Update Zone %s', self._name)
-        state =  data[int(self._number)]
+        state = data[int(self._number)]
         _LOGGER.debug('The new state is %s', state)
 
         if state == '0':
@@ -158,6 +159,3 @@ class TexecomBinarySensor(BinarySensorDevice):
 
         _LOGGER.info('New Zone State is %s', self._state)
         self.async_schedule_update_ha_state()
-
-
-

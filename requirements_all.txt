@@ -732,6 +732,9 @@ pyHS100==0.3.2
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.22.1
 
+# homeassistant.components.texecom
+pyTexecom==0.2.0
+
 # homeassistant.components.sensor.tibber
 pyTibber==0.4.1
 
@@ -1007,7 +1010,6 @@ pysabnzbd==1.0.1
 # homeassistant.components.climate.sensibo
 pysensibo==1.0.3
 
-# homeassistant.components.texecom
 # homeassistant.components.sensor.serial
 pyserial-asyncio==0.4
 
