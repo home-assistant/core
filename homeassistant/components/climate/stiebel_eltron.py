@@ -20,7 +20,8 @@ from homeassistant.const import (
     ATTR_TEMPERATURE, DEVICE_DEFAULT_NAME)
 from homeassistant.components.climate import (
     ClimateDevice, PLATFORM_SCHEMA, SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_FAN_MODE)
+    SUPPORT_FAN_MODE, SUPPORT_OPERATION_MODE,
+    STATE_AUTO, STATE_MANUAL, STATE_IDLE)
 from homeassistant.components import modbus
 import homeassistant.helpers.config_validation as cv
 
@@ -28,6 +29,20 @@ import homeassistant.helpers.config_validation as cv
 # REQUIREMENTS = ['pyflexit==0.3']
 REQUIREMENTS = ['pymodbus==1.3.1']
 # DEPENDENCIES = ['modbus']
+
+STATE_DAYMODE = 'Tagbetrieb'
+STATE_SETBACK = 'Absenkbetrieb'
+STATE_DHW = 'Warmwasserbetrieb'
+STATE_EMERGENCY = 'Notbetrieb'
+STE_TO_HASS_STATE = {'AUTOMATIC': STATE_AUTO, 'MANUAL MODE': STATE_MANUAL,
+                     'STANDBY': STATE_IDLE, 'DAY MODE': STATE_DAYMODE,
+                     'SETBACK MODE': STATE_SETBACK, 'DHW': STATE_DHW,
+                     'EMERGENCY OPERATION': STATE_EMERGENCY}
+
+HASS_TO_STE_STATE = {STATE_AUTO: 'AUTOMATIC', STATE_MANUAL: 'MANUAL MODE',
+                     STATE_IDLE: 'STANDBY', STATE_DAYMODE: 'DAY MODE',
+                     STATE_SETBACK: 'SETBACK MODE', STATE_DHW: 'DHW',
+                     STATE_EMERGENCY: 'EMERGENCY OPERATION'}
 
 DEVICE_DEFAULT_NAME = "Stiebel Eltron Heatpump"
 DEFAULT_PORT = 502
@@ -42,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE 
+SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 # | SUPPORT_FAN_MODE
 
 
@@ -73,6 +88,9 @@ class StiebelEltron(ClimateDevice):
         self._target_temperature = None
         self._current_temperature = None
         # self._current_fan_mode = None
+        self._operation_modes = [STATE_AUTO, STATE_MANUAL, STATE_IDLE,
+                                 STATE_DAYMODE, STATE_SETBACK, STATE_DHW,
+                                 STATE_EMERGENCY]
         self._current_operation = None
         # self._fan_list = ['Off', 'Low', 'Medium', 'High']
         # self._current_operation = None
@@ -104,7 +122,7 @@ class StiebelEltron(ClimateDevice):
         #self._client.close()
 
         self._target_temperature = self.unit.get_target_temp
-        self._current_temperature = self.unit.get_temp
+        self._current_temperature = self.unit.get_current_temp
         #self._current_fan_mode =\
         #    self._fan_list[self.unit.get_fan_speed]
         #self._filter_hours = self.unit.get_filter_hours
@@ -160,9 +178,19 @@ class StiebelEltron(ClimateDevice):
         return self._target_temperature
 
     @property
+    def operation_list(self):
+        """List of the operation modes."""
+        return self._operation_modes
+
+    @property
     def current_operation(self):
         """Return current operation ie. heat, cool, idle."""
-        return self._current_operation
+        return STE_TO_HASS_STATE.get(self._current_operation)
+
+    def set_operation_mode(self, operation_mode):
+        """Set new operation mode."""
+        new_mode = HASS_TO_STE_STATE.get(operation_mode)
+        self.unit.set_operation(new_mode)
 
  #   @property
  #   def current_fan_mode(self):
@@ -185,13 +213,23 @@ class StiebelEltron(ClimateDevice):
 #        self.unit.set_fan_speed(self._fan_list.index(fan_mode))
 
 
+
+
+
+
+
+
+
+
+
+
 # https://www.stiebel-eltron.de/content/dam/ste/de/de/home/services/Downloadlisten/ISG%20Modbus_Stiebel_Bedienungsanleitung.pdf
 
 # Block 1 System values (Read input register) - page 29
 #   Object designation                  Modbus address
 BLOCK_1_START_ADDR = 0
 BLOCK_1_REGMAP_INPUT = {
-    'ACTUAL ROOM T HC1':                {'addr':  0, 'type': 2, 'value': 0},
+    'ACTUAL ROOM TEMP HC1':             {'addr':  0, 'type': 2, 'value': 0},
     'SET ROOM TEMPERATURE HC1':         {'addr':  1, 'type': 2, 'value': 0},
     'RELATIVE HUMIDITY HC1':            {'addr':  2, 'type': 2, 'value': 0},
     'ACTUAL ROOM T HC2':                {'addr':  3, 'type': 2, 'value': 0},
@@ -229,7 +267,7 @@ BLOCK_1_REGMAP_INPUT = {
 # Block 2 System parameters (Read/write holding register) - page 30
 BLOCK_2_START_ADDR = 1000
 
-BLOCK_2_OPERATING_MODE = {
+BLOCK_2_OPERATING_MODE_READ = {
     # AUTOMATIK
     11: 'AUTOMATIC',
     # BEREITSCHAFT
@@ -246,6 +284,16 @@ BLOCK_2_OPERATING_MODE = {
     0: 'EMERGENCY OPERATION'
 }
 
+BLOCK_2_OPERATING_MODE_WRITE = {
+    'AUTOMATIC': 11,
+    'STANDBY': 1,
+    'DAY MODE': 3,
+    'SETBACK MODE': 4,
+    'DHW': 5,
+    'MANUAL MODE': 14,
+    'EMERGENCY OPERATION': 0
+}
+
 BLOCK_2_RESET = {
     'OFF': {'value': 0},
     'ON':  {'value': 1}
@@ -259,11 +307,11 @@ BLOCK_2_RESTART_ISG = {
 
 BLOCK_2_REGMAP_HOLDING = {
     'OPERATING MODE':           {'addr': 1000, 'type': 8, 'value': 0},
-    'ROOM TEMP. DAY HC1':       {'addr': 1001, 'type': 2, 'value': 0},
-    'ROOM TEMP. NIGHT HC1':     {'addr': 1002, 'type': 2, 'value': 0},
+    'ROOM TEMP HEAT DAY HC1':   {'addr': 1001, 'type': 2, 'value': 0},
+    'ROOM TEMP HEAT NIGHT HC1': {'addr': 1002, 'type': 2, 'value': 0},
     'MANUAL SET HC1':           {'addr': 1003, 'type': 2, 'value': 0},
-    'ROOM TEMP. DAY HC2 ':      {'addr': 1004, 'type': 2, 'value': 0},
-    'ROOM TEMP. NIGHT HC2':     {'addr': 1005, 'type': 2, 'value': 0},
+    'ROOM TEMP HEAT DAY HC2':   {'addr': 1004, 'type': 2, 'value': 0},
+    'ROOM TEMP HEAT NIGHT HC2': {'addr': 1005, 'type': 2, 'value': 0},
     'MANUAL SET HC2':           {'addr': 1006, 'type': 2, 'value': 0},
     'GRADIENT HC1':             {'addr': 1007, 'type': 7, 'value': 0},
     'LOW END HC1':              {'addr': 1008, 'type': 2, 'value': 0},
@@ -279,10 +327,10 @@ BLOCK_2_REGMAP_HOLDING = {
     'NIGHT STAGE':              {'addr': 1018, 'type': 6, 'value': 0},
     'PARTY STAGE':              {'addr': 1019, 'type': 6, 'value': 0},
     'MANUAL STAGE':             {'addr': 1020, 'type': 6, 'value': 0},
-    'ROOM TEMP. C. DAY HC1':    {'addr': 1021, 'type': 2, 'value': 0},
-    'ROOM TEMP. C. NIGHT HC1':  {'addr': 1022, 'type': 2, 'value': 0},
-    'ROOM TEMP. c. DAY HC2':    {'addr': 1023, 'type': 2, 'value': 0},
-    'ROOM TEMP. c. NIGHT HC2':  {'addr': 1024, 'type': 2, 'value': 0},
+    'ROOM TEMP COOL DAY HC1':   {'addr': 1021, 'type': 2, 'value': 0},
+    'ROOM TEMP COOL NIGHT HC1': {'addr': 1022, 'type': 2, 'value': 0},
+    'ROOM TEMP COOL DAY HC2':   {'addr': 1023, 'type': 2, 'value': 0},
+    'ROOM TEMP COOL NIGHT HC2': {'addr': 1024, 'type': 2, 'value': 0},
     'RESET':                    {'addr': 1025, 'type': 6, 'value': 0},
     'RESTART ISG':              {'addr': 1026, 'type': 6, 'value': 0}
 }
@@ -290,6 +338,7 @@ BLOCK_2_REGMAP_HOLDING = {
 
 class pystiebeleltron(object):
     def __init__(self, conn, slave, update_on_read=False):
+        """Initialize Stiebel Eltron communication"""
         self._conn = conn
         self._block_1_input_regs = BLOCK_1_REGMAP_INPUT
         self._block_2_holding_regs = BLOCK_2_REGMAP_HOLDING
@@ -308,6 +357,7 @@ class pystiebeleltron(object):
         self._update_on_read = update_on_read
 
     def update(self):
+        """Request current values from heat pump."""
         ret = True
         try:
             block_1_result_input = self._conn.read_input_registers(
@@ -334,7 +384,7 @@ class pystiebeleltron(object):
             (self._block_1_input_regs['SET ROOM TEMPERATURE HC1']['value'] * 0.1)
         # Temperature directly after heat recovery and heater
         self._current_temp = \
-            (self._block_1_input_regs['ACTUAL ROOM T HC1']['value'] * 0.1)
+            (self._block_1_input_regs['ACTUAL ROOM TEMP HC1']['value'] * 0.1)
         #self._current_fan = \
         #    (self._input_regs['ActualSetAirSpeed']['value'])
         # Hours since last filter reset
@@ -356,8 +406,7 @@ class pystiebeleltron(object):
         #self._heater_enabled = \
         #    bool(self._input_regs['HeatingBatteryActive']['value'])
         # Current operation mode
-        op_mode = self._block_2_holding_regs['OPERATING MODE']['value']
-        self._current_operation = BLOCK_2_OPERATING_MODE.get(op_mode, 'Unknown1')
+        self._current_operation = self._block_2_holding_regs['OPERATING MODE']['value']
         #if self._heating:
         #    self._current_operation = 'Heating'
         #elif self._cooling:
@@ -406,7 +455,7 @@ class pystiebeleltron(object):
         #    value=fan)
 
     @property
-    def get_temp(self):
+    def get_current_temp(self):
         """Get the current temperature."""
         if self._update_on_read:
             self.update()
@@ -431,7 +480,15 @@ class pystiebeleltron(object):
         """Return the current mode of operation."""
         if self._update_on_read:
             self.update()
-        return self._current_operation
+        return BLOCK_2_OPERATING_MODE_READ.get(self._current_operation,
+                                               'UNKNOWN')
+
+    def set_operation(self, mode):
+        """Set the operation mode."""
+        self._conn.write_register(
+            unit=self._slave,
+            address=(self._block_2_holding_regs['OPERATING MODE']['addr']),
+            value=BLOCK_2_OPERATING_MODE_WRITE.get(mode))
 
     @property
     def get_fan_speed(self):
