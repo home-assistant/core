@@ -32,7 +32,7 @@ PROJECT_URLS = {
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'aiohttp==3.3.2',
+    'aiohttp==3.4.0',
     'astral==1.6.1',
     'async_timeout==3.0.0',
     'attrs==18.1.0',
