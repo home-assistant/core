@@ -46,6 +46,9 @@ PyMVGLive==1.1.4
 # homeassistant.components.arduino
 PyMata==2.14
 
+# homeassistant.auth.mfa_modules.totp
+PyQRCode==1.2.1
+
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.0.7
 
@@ -985,6 +988,7 @@ pyopenuv==1.0.1
 # homeassistant.components.iota
 pyota==2.0.5
 
+# homeassistant.auth.mfa_modules.totp
 # homeassistant.components.sensor.otp
 pyotp==2.2.6
 

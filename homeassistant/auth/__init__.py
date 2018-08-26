@@ -249,13 +249,13 @@ class AuthManager:
 
         await module.async_depose_user(user.id)
 
-    async def async_get_enabled_mfa(self, user: models.User) -> List[str]:
+    async def async_get_enabled_mfa(self, user: models.User) -> Dict[str, str]:
         """List enabled mfa modules for user."""
-        module_ids = []
+        modules = OrderedDict()  # type: Dict[str, str]
         for module_id, module in self._mfa_modules.items():
             if await module.async_is_user_setup(user.id):
-                module_ids.append(module_id)
-        return module_ids
+                modules[module_id] = module.name
+        return modules
 
     async def async_create_refresh_token(self, user: models.User,
                                          client_id: Optional[str] = None) \
