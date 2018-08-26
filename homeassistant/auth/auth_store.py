@@ -1,7 +1,11 @@
 """Storage for auth models."""
 from collections import OrderedDict
 from datetime import timedelta
+from logging import getLogger
+from typing import Any, Dict, List, Optional  # noqa: F401
+import hmac
 
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
 from . import models
@@ -19,35 +23,41 @@ class AuthStore:
     called that needs it.
     """
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the auth store."""
         self.hass = hass
-        self._users = None
+        self._users = None  # type: Optional[Dict[str, models.User]]
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
-    async def async_get_users(self):
+    async def async_get_users(self) -> List[models.User]:
         """Retrieve all users."""
         if self._users is None:
-            await self.async_load()
+            await self._async_load()
+            assert self._users is not None
 
         return list(self._users.values())
 
-    async def async_get_user(self, user_id):
+    async def async_get_user(self, user_id: str) -> Optional[models.User]:
         """Retrieve a user by id."""
         if self._users is None:
-            await self.async_load()
+            await self._async_load()
+            assert self._users is not None
 
         return self._users.get(user_id)
 
-    async def async_create_user(self, name, is_owner=None, is_active=None,
-                                system_generated=None, credentials=None):
+    async def async_create_user(
+            self, name: Optional[str], is_owner: Optional[bool] = None,
+            is_active: Optional[bool] = None,
+            system_generated: Optional[bool] = None,
+            credentials: Optional[models.Credentials] = None) -> models.User:
         """Create a new user."""
         if self._users is None:
-            await self.async_load()
+            await self._async_load()
+            assert self._users is not None
 
         kwargs = {
             'name': name
-        }
+        }  # type: Dict[str, Any]
 
         if is_owner is not None:
             kwargs['is_owner'] = is_owner
@@ -63,36 +73,46 @@ class AuthStore:
         self._users[new_user.id] = new_user
 
         if credentials is None:
-            await self.async_save()
+            self._async_schedule_save()
             return new_user
 
         # Saving is done inside the link.
         await self.async_link_user(new_user, credentials)
         return new_user
 
-    async def async_link_user(self, user, credentials):
+    async def async_link_user(self, user: models.User,
+                              credentials: models.Credentials) -> None:
         """Add credentials to an existing user."""
         user.credentials.append(credentials)
-        await self.async_save()
+        self._async_schedule_save()
         credentials.is_new = False
 
-    async def async_remove_user(self, user):
+    async def async_remove_user(self, user: models.User) -> None:
         """Remove a user."""
-        self._users.pop(user.id)
-        await self.async_save()
+        if self._users is None:
+            await self._async_load()
+            assert self._users is not None
 
-    async def async_activate_user(self, user):
+        self._users.pop(user.id)
+        self._async_schedule_save()
+
+    async def async_activate_user(self, user: models.User) -> None:
         """Activate a user."""
         user.is_active = True
-        await self.async_save()
+        self._async_schedule_save()
 
-    async def async_deactivate_user(self, user):
+    async def async_deactivate_user(self, user: models.User) -> None:
         """Activate a user."""
         user.is_active = False
-        await self.async_save()
+        self._async_schedule_save()
 
-    async def async_remove_credentials(self, credentials):
+    async def async_remove_credentials(
+            self, credentials: models.Credentials) -> None:
         """Remove credentials."""
+        if self._users is None:
+            await self._async_load()
+            assert self._users is not None
+
         for user in self._users.values():
             found = None
 
@@ -105,28 +125,60 @@ class AuthStore:
                 user.credentials.pop(found)
                 break
 
-        await self.async_save()
+        self._async_schedule_save()
 
-    async def async_create_refresh_token(self, user, client_id=None):
+    async def async_create_refresh_token(
+            self, user: models.User, client_id: Optional[str] = None) \
+            -> models.RefreshToken:
         """Create a new token for a user."""
         refresh_token = models.RefreshToken(user=user, client_id=client_id)
-        user.refresh_tokens[refresh_token.token] = refresh_token
-        await self.async_save()
+        user.refresh_tokens[refresh_token.id] = refresh_token
+        self._async_schedule_save()
         return refresh_token
 
-    async def async_get_refresh_token(self, token):
-        """Get refresh token by token."""
+    async def async_remove_refresh_token(
+            self, refresh_token: models.RefreshToken) -> None:
+        """Remove a refresh token."""
         if self._users is None:
-            await self.async_load()
+            await self._async_load()
+            assert self._users is not None
 
         for user in self._users.values():
-            refresh_token = user.refresh_tokens.get(token)
+            if user.refresh_tokens.pop(refresh_token.id, None):
+                self._async_schedule_save()
+                break
+
+    async def async_get_refresh_token(
+            self, token_id: str) -> Optional[models.RefreshToken]:
+        """Get refresh token by id."""
+        if self._users is None:
+            await self._async_load()
+            assert self._users is not None
+
+        for user in self._users.values():
+            refresh_token = user.refresh_tokens.get(token_id)
             if refresh_token is not None:
                 return refresh_token
 
         return None
 
-    async def async_load(self):
+    async def async_get_refresh_token_by_token(
+            self, token: str) -> Optional[models.RefreshToken]:
+        """Get refresh token by token."""
+        if self._users is None:
+            await self._async_load()
+            assert self._users is not None
+
+        found = None
+
+        for user in self._users.values():
+            for refresh_token in user.refresh_tokens.values():
+                if hmac.compare_digest(refresh_token.token, token):
+                    found = refresh_token
+
+        return found
+
+    async def _async_load(self) -> None:
         """Load the users."""
         data = await self._store.async_load()
 
@@ -135,7 +187,7 @@ class AuthStore:
         if self._users is not None:
             return
 
-        users = OrderedDict()
+        users = OrderedDict()  # type: Dict[str, models.User]
 
         if data is None:
             self._users = users
@@ -153,34 +205,44 @@ class AuthStore:
                 data=cred_dict['data'],
             ))
 
-        refresh_tokens = OrderedDict()
-
         for rt_dict in data['refresh_tokens']:
+            # Filter out the old keys that don't have jwt_key (pre-0.76)
+            if 'jwt_key' not in rt_dict:
+                continue
+
+            created_at = dt_util.parse_datetime(rt_dict['created_at'])
+            if created_at is None:
+                getLogger(__name__).error(
+                    'Ignoring refresh token %(id)s with invalid created_at '
+                    '%(created_at)s for user_id %(user_id)s', rt_dict)
+                continue
             token = models.RefreshToken(
                 id=rt_dict['id'],
                 user=users[rt_dict['user_id']],
                 client_id=rt_dict['client_id'],
-                created_at=dt_util.parse_datetime(rt_dict['created_at']),
+                created_at=created_at,
                 access_token_expiration=timedelta(
                     seconds=rt_dict['access_token_expiration']),
                 token=rt_dict['token'],
+                jwt_key=rt_dict['jwt_key']
             )
-            refresh_tokens[token.id] = token
-            users[rt_dict['user_id']].refresh_tokens[token.token] = token
-
-        for ac_dict in data['access_tokens']:
-            refresh_token = refresh_tokens[ac_dict['refresh_token_id']]
-            token = models.AccessToken(
-                refresh_token=refresh_token,
-                created_at=dt_util.parse_datetime(ac_dict['created_at']),
-                token=ac_dict['token'],
-            )
-            refresh_token.access_tokens.append(token)
+            users[rt_dict['user_id']].refresh_tokens[token.id] = token
 
         self._users = users
 
-    async def async_save(self):
+    @callback
+    def _async_schedule_save(self) -> None:
         """Save users."""
+        if self._users is None:
+            return
+
+        self._store.async_delay_save(self._data_to_save, 1)
+
+    @callback
+    def _data_to_save(self) -> Dict:
+        """Return the data to store."""
+        assert self._users is not None
+
         users = [
             {
                 'id': user.id,
@@ -213,28 +275,14 @@ class AuthStore:
                 'access_token_expiration':
                     refresh_token.access_token_expiration.total_seconds(),
                 'token': refresh_token.token,
+                'jwt_key': refresh_token.jwt_key,
             }
             for user in self._users.values()
             for refresh_token in user.refresh_tokens.values()
         ]
 
-        access_tokens = [
-            {
-                'id': user.id,
-                'refresh_token_id': refresh_token.id,
-                'created_at': access_token.created_at.isoformat(),
-                'token': access_token.token,
-            }
-            for user in self._users.values()
-            for refresh_token in user.refresh_tokens.values()
-            for access_token in refresh_token.access_tokens
-        ]
-
-        data = {
+        return {
             'users': users,
             'credentials': credentials,
-            'access_tokens': access_tokens,
             'refresh_tokens': refresh_tokens,
         }
-
-        await self._store.async_save(data, delay=1)

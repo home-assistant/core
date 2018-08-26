@@ -41,10 +41,11 @@ SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None) -> None:
+                               async_add_entities,
+                               discovery_info=None) -> None:
     """Initialize light.group platform."""
-    async_add_devices([LightGroup(config.get(CONF_NAME),
-                                  config[CONF_ENTITIES])])
+    async_add_entities([LightGroup(config.get(CONF_NAME),
+                                   config[CONF_ENTITIES])])
 
 
 class LightGroup(light.Light):
@@ -80,7 +81,7 @@ class LightGroup(light.Light):
         await self.async_update()
 
     async def async_will_remove_from_hass(self):
-        """Callback when removed from HASS."""
+        """Handle removal from HASS."""
         if self._async_unsub_state_changed is not None:
             self._async_unsub_state_changed()
             self._async_unsub_state_changed = None
@@ -254,8 +255,6 @@ def _mean_tuple(*args):
     return tuple(sum(l) / len(l) for l in zip(*args))
 
 
-# https://github.com/PyCQA/pylint/issues/1831
-# pylint: disable=bad-whitespace
 def _reduce_attribute(states: List[State],
                       key: str,
                       default: Optional[Any] = None,

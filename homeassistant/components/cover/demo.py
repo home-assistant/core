@@ -10,9 +10,9 @@ from homeassistant.components.cover import (
 from homeassistant.helpers.event import track_utc_time_change
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo covers."""
-    add_devices([
+    add_entities([
         DemoCover(hass, 'Kitchen Window'),
         DemoCover(hass, 'Hall Window', 10),
         DemoCover(hass, 'Living Room Window', 70, 50),

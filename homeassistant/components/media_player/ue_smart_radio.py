@@ -53,7 +53,7 @@ def send_request(payload, session):
         return request.json()
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Logitech UE Smart Radio platform."""
     email = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     player_id = player_request["result"]["players_loop"][0]["playerid"]
     player_name = player_request["result"]["players_loop"][0]["name"]
 
-    add_devices([UERadioDevice(session, player_id, player_name)])
+    add_entities([UERadioDevice(session, player_id, player_name)])
 
 
 class UERadioDevice(MediaPlayerDevice):

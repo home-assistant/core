@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Speedtest sensor."""
     data = SpeedtestData(hass, config)
 
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor in config[CONF_MONITORED_CONDITIONS]:
         dev.append(SpeedtestSensor(data, sensor))
 
-    add_devices(dev)
+    add_entities(dev)
 
     def update(call=None):
         """Update service for manual updates."""

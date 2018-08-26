@@ -64,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the EBox sensor."""
     username = config.get(CONF_USERNAME)
@@ -86,7 +86,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(EBoxSensor(ebox_data, variable, name))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class EBoxSensor(Entity):

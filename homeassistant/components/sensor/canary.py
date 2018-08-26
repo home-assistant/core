@@ -30,7 +30,7 @@ STATE_AIR_QUALITY_ABNORMAL = "abnormal"
 STATE_AIR_QUALITY_VERY_ABNORMAL = "very_abnormal"
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Canary sensors."""
     data = hass.data[DATA_CANARY]
     devices = []
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         devices.append(CanarySensor(data, sensor_type,
                                                     location, device))
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class CanarySensor(Entity):

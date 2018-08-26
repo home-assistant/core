@@ -159,7 +159,7 @@ async def async_load_platform(hass, component, platform, discovered=None,
         setup_success = await setup.async_setup_component(
             hass, component, hass_config)
 
-    # No need to fire event if we could not setup component
+    # No need to fire event if we could not set up component
     if not setup_success:
         return
 

@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SimpliSafe platform."""
     from simplipy.api import SimpliSafeApiInterface, SimpliSafeAPIException
     name = config.get(CONF_NAME)
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     try:
         simplisafe = SimpliSafeApiInterface(username, password)
     except SimpliSafeAPIException:
-        _LOGGER.error("Failed to setup SimpliSafe")
+        _LOGGER.error("Failed to set up SimpliSafe")
         return
 
     systems = []
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for system in simplisafe.get_systems():
         systems.append(SimpliSafeAlarm(system, name, code))
 
-    add_devices(systems)
+    add_entities(systems)
 
 
 class SimpliSafeAlarm(AlarmControlPanel):

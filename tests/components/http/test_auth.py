@@ -38,7 +38,7 @@ async def mock_handler(request):
 
 @pytest.fixture
 def app(hass):
-    """Fixture to setup a web.Application."""
+    """Fixture to set up a web.Application."""
     app = web.Application()
     app['hass'] = hass
     app.router.add_get('/', mock_handler)
@@ -48,7 +48,7 @@ def app(hass):
 
 @pytest.fixture
 def app2(hass):
-    """Fixture to setup a web.Application without real_ip middleware."""
+    """Fixture to set up a web.Application without real_ip middleware."""
     app = web.Application()
     app['hass'] = hass
     app.router.add_get('/', mock_handler)
@@ -156,9 +156,9 @@ async def test_access_with_trusted_ip(app2, aiohttp_client):
 
 
 async def test_auth_active_access_with_access_token_in_header(
-        app, aiohttp_client, hass_access_token):
+        hass, app, aiohttp_client, hass_access_token):
     """Test access with access token in header."""
-    token = hass_access_token.token
+    token = hass_access_token
     setup_auth(app, [], True, api_password=None)
     client = await aiohttp_client(app)
 
@@ -182,7 +182,9 @@ async def test_auth_active_access_with_access_token_in_header(
         '/', headers={'Authorization': 'BEARER {}'.format(token)})
     assert req.status == 401
 
-    hass_access_token.refresh_token.user.is_active = False
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_active = False
     req = await client.get(
         '/', headers={'Authorization': 'Bearer {}'.format(token)})
     assert req.status == 401

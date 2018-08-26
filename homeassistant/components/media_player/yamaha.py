@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yamaha platform."""
     import rxv
     # Keep track of configured receivers so that we don't end up
@@ -126,7 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DOMAIN, SERVICE_ENABLE_OUTPUT, service_handler,
         schema=ENABLE_OUTPUT_SCHEMA)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class YamahaDevice(MediaPlayerDevice):

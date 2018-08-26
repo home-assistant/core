@@ -16,7 +16,7 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices):
+    def add_entities(self, devices):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -45,7 +45,7 @@ class TestSleepIQBinarySensorSetup(unittest.TestCase):
 
         sleepiq.setup_platform(self.hass,
                                self.config,
-                               self.add_devices,
+                               self.add_entities,
                                MagicMock())
         self.assertEqual(2, len(self.DEVICES))
 

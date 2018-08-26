@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 DEVICES = []
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Openhome platform."""
     from openhomedevice.Device import Device
 
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     device = OpenhomeDevice(hass, device)
 
-    add_devices([device], True)
+    add_entities([device], True)
     DEVICES.append(device)
 
     return True

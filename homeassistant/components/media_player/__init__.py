@@ -151,42 +151,6 @@ MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_SHUFFLE): cv.boolean,
 })
 
-SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: {'method': 'async_turn_on'},
-    SERVICE_TURN_OFF: {'method': 'async_turn_off'},
-    SERVICE_TOGGLE: {'method': 'async_toggle'},
-    SERVICE_VOLUME_UP: {'method': 'async_volume_up'},
-    SERVICE_VOLUME_DOWN: {'method': 'async_volume_down'},
-    SERVICE_MEDIA_PLAY_PAUSE: {'method': 'async_media_play_pause'},
-    SERVICE_MEDIA_PLAY: {'method': 'async_media_play'},
-    SERVICE_MEDIA_PAUSE: {'method': 'async_media_pause'},
-    SERVICE_MEDIA_STOP: {'method': 'async_media_stop'},
-    SERVICE_MEDIA_NEXT_TRACK: {'method': 'async_media_next_track'},
-    SERVICE_MEDIA_PREVIOUS_TRACK: {'method': 'async_media_previous_track'},
-    SERVICE_CLEAR_PLAYLIST: {'method': 'async_clear_playlist'},
-    SERVICE_VOLUME_SET: {
-        'method': 'async_set_volume_level',
-        'schema': MEDIA_PLAYER_SET_VOLUME_SCHEMA},
-    SERVICE_VOLUME_MUTE: {
-        'method': 'async_mute_volume',
-        'schema': MEDIA_PLAYER_MUTE_VOLUME_SCHEMA},
-    SERVICE_MEDIA_SEEK: {
-        'method': 'async_media_seek',
-        'schema': MEDIA_PLAYER_MEDIA_SEEK_SCHEMA},
-    SERVICE_SELECT_SOURCE: {
-        'method': 'async_select_source',
-        'schema': MEDIA_PLAYER_SELECT_SOURCE_SCHEMA},
-    SERVICE_SELECT_SOUND_MODE: {
-        'method': 'async_select_sound_mode',
-        'schema': MEDIA_PLAYER_SELECT_SOUND_MODE_SCHEMA},
-    SERVICE_PLAY_MEDIA: {
-        'method': 'async_play_media',
-        'schema': MEDIA_PLAYER_PLAY_MEDIA_SCHEMA},
-    SERVICE_SHUFFLE_SET: {
-        'method': 'async_set_shuffle',
-        'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
-}
-
 ATTR_TO_PROPERTY = [
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
@@ -409,56 +373,95 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
 
-    async def async_service_handler(service):
-        """Map services to methods on MediaPlayerDevice."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        if not method:
-            return
-
-        params = {}
-        if service.service == SERVICE_VOLUME_SET:
-            params['volume'] = service.data.get(ATTR_MEDIA_VOLUME_LEVEL)
-        elif service.service == SERVICE_VOLUME_MUTE:
-            params['mute'] = service.data.get(ATTR_MEDIA_VOLUME_MUTED)
-        elif service.service == SERVICE_MEDIA_SEEK:
-            params['position'] = service.data.get(ATTR_MEDIA_SEEK_POSITION)
-        elif service.service == SERVICE_SELECT_SOURCE:
-            params['source'] = service.data.get(ATTR_INPUT_SOURCE)
-        elif service.service == SERVICE_SELECT_SOUND_MODE:
-            params['sound_mode'] = service.data.get(ATTR_SOUND_MODE)
-        elif service.service == SERVICE_PLAY_MEDIA:
-            params['media_type'] = \
-                service.data.get(ATTR_MEDIA_CONTENT_TYPE)
-            params['media_id'] = service.data.get(ATTR_MEDIA_CONTENT_ID)
-            params[ATTR_MEDIA_ENQUEUE] = \
-                service.data.get(ATTR_MEDIA_ENQUEUE)
-        elif service.service == SERVICE_SHUFFLE_SET:
-            params[ATTR_MEDIA_SHUFFLE] = \
-                service.data.get(ATTR_MEDIA_SHUFFLE)
-        target_players = component.async_extract_from_service(service)
-
-        update_tasks = []
-        for player in target_players:
-            await getattr(player, method['method'])(**params)
-            if not player.should_poll:
-                continue
-            update_tasks.append(player.async_update_ha_state(True))
-
-        if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get(
-            'schema', MEDIA_PLAYER_SCHEMA)
-        hass.services.async_register(
-            DOMAIN, service, async_service_handler,
-            schema=schema)
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, MEDIA_PLAYER_SCHEMA,
+        'async_turn_on'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, MEDIA_PLAYER_SCHEMA,
+        'async_turn_off'
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, MEDIA_PLAYER_SCHEMA,
+        'async_toggle'
+    )
+    component.async_register_entity_service(
+        SERVICE_VOLUME_UP, MEDIA_PLAYER_SCHEMA,
+        'async_volume_up'
+    )
+    component.async_register_entity_service(
+        SERVICE_VOLUME_DOWN, MEDIA_PLAYER_SCHEMA,
+        'async_volume_down'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_PLAY_PAUSE, MEDIA_PLAYER_SCHEMA,
+        'async_media_play_pause'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_PLAY, MEDIA_PLAYER_SCHEMA,
+        'async_media_play'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_PAUSE, MEDIA_PLAYER_SCHEMA,
+        'async_media_pause'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_STOP, MEDIA_PLAYER_SCHEMA,
+        'async_media_stop'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_NEXT_TRACK, MEDIA_PLAYER_SCHEMA,
+        'async_media_next_track'
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_PREVIOUS_TRACK, MEDIA_PLAYER_SCHEMA,
+        'async_media_previous_track'
+    )
+    component.async_register_entity_service(
+        SERVICE_CLEAR_PLAYLIST, MEDIA_PLAYER_SCHEMA,
+        'async_clear_playlist'
+    )
+    component.async_register_entity_service(
+        SERVICE_VOLUME_SET, MEDIA_PLAYER_SET_VOLUME_SCHEMA,
+        lambda entity, call: entity.async_set_volume_level(
+            volume=call.data[ATTR_MEDIA_VOLUME_LEVEL])
+    )
+    component.async_register_entity_service(
+        SERVICE_VOLUME_MUTE, MEDIA_PLAYER_MUTE_VOLUME_SCHEMA,
+        lambda entity, call: entity.async_mute_volume(
+            mute=call.data[ATTR_MEDIA_VOLUME_MUTED])
+    )
+    component.async_register_entity_service(
+        SERVICE_MEDIA_SEEK, MEDIA_PLAYER_MEDIA_SEEK_SCHEMA,
+        lambda entity, call: entity.async_media_seek(
+            position=call.data[ATTR_MEDIA_SEEK_POSITION])
+    )
+    component.async_register_entity_service(
+        SERVICE_SELECT_SOURCE, MEDIA_PLAYER_SELECT_SOURCE_SCHEMA,
+        'async_select_source'
+    )
+    component.async_register_entity_service(
+        SERVICE_SELECT_SOUND_MODE, MEDIA_PLAYER_SELECT_SOUND_MODE_SCHEMA,
+        'async_select_sound_mode'
+    )
+    component.async_register_entity_service(
+        SERVICE_PLAY_MEDIA, MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
+        lambda entity, call: entity.async_play_media(
+            media_type=call.data[ATTR_MEDIA_CONTENT_TYPE],
+            media_id=call.data[ATTR_MEDIA_CONTENT_ID],
+            enqueue=call.data.get(ATTR_MEDIA_ENQUEUE)
+        )
+    )
+    component.async_register_entity_service(
+        SERVICE_SHUFFLE_SET, MEDIA_PLAYER_SET_SHUFFLE_SCHEMA,
+        'async_set_shuffle'
+    )
 
     return True
 
 
 async def async_setup_entry(hass, entry):
-    """Setup a config entry."""
+    """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 

@@ -5,7 +5,7 @@ from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 
 
 async def async_get_code(hass, aiohttp_client):
-    """Helper for link user tests that returns authorization code."""
+    """Return authorization code for link user tests."""
     config = [{
         'name': 'Example',
         'type': 'insecure_example',
@@ -34,6 +34,7 @@ async def async_get_code(hass, aiohttp_client):
         'client_id': CLIENT_ID,
         'handler': ['insecure_example', '2nd auth'],
         'redirect_uri': CLIENT_REDIRECT_URI,
+        'type': 'link_user',
     })
     assert resp.status == 200
     step = await resp.json()
@@ -52,7 +53,7 @@ async def async_get_code(hass, aiohttp_client):
         'user': user,
         'code': step['result'],
         'client': client,
-        'access_token': access_token.token,
+        'access_token': access_token,
     }
 
 
