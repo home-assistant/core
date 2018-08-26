@@ -28,19 +28,19 @@ class TelldusLiveCover(TelldusLiveEntity, CoverDevice):
     @property
     def is_closed(self):
         """Return the current position of the cover."""
-        return self._device.is_down
+        return self.device.is_down
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        self._device.down()
+        self.device.down()
         self.changed()
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        self._device.up()
+        self.device.up()
         self.changed()
 
     def stop_cover(self, **kwargs):
         """Stop the cover."""
-        self._device.stop()
+        self.device.stop()
         self.changed()

@@ -67,7 +67,7 @@ class TelldusLiveSensor(TelldusLiveEntity):
     @property
     def _value(self):
         """Return value of the sensor."""
-        return self._device.value(*self._id[1:])
+        return self.device.value(*self._id[1:])
 
     @property
     def _value_as_temperature(self):
