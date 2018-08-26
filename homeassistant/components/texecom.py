@@ -16,7 +16,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyserial-asyncio==0.4']
+REQUIREMENTS = ['pyTexecom==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,12 +42,12 @@ SIGNAL_ZONE_UPDATE = 'texecom.zones_updated'
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_ZONENAME): cv.string,
     vol.Required(CONF_ZONETYPE, default=DEFAULT_ZONETYPE): cv.string,
-    vol.Required(CONF_ZONENUMBER): cv.string})
+    })
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PORT): cv.string,
-        vol.Required(CONF_PANELUUID): cv.string,
+        vol.Required(CONF_PANELTYPE): cv.string,
         vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -59,15 +59,30 @@ def async_setup(hass, config):
     conf = config.get(DOMAIN)
     port = conf.get(CONF_PORT)
     zones = conf.get(CONF_ZONES)
+    paneltype = conf.get(CONF_PANELTYPE)
 
-    _LOGGER.info('Setting up Serial Interface')
-    if zones:
-        hass.async_create_task(async_load_platform(
-            hass, 'alarm_control_panel',
-            'texecominterface', {CONF_PORT: port}, config
-        ))
+    controller = TexeconPanelInterface('Panel Interface', port, paneltype)
 
-    _LOGGER.info('Setting up zones')
+    hass.data[DATA_EVL] = controller
+
+    @callback
+    def zones_updated_callback(data):
+        """Handle zone updates."""
+        _LOGGER.info("Texecom sent a zone update event. Updating zones...")
+        async_dispatcher_send(hass, SIGNAL_ZONE_UPDATE, data)
+
+    @callback
+    def stop_texecom(event):
+        """Shutdown Texecom connection and thread on exit."""
+        _LOGGER.info("Shutting down Texecom")
+        controller.stop()
+
+    controller.callback_zone_state_change = zones_updated_callback
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_texecom)
+
+    _LOGGER.info("Start Texecom.")
+    controller.start()
 
     # Load sub-components for Texecom
     if zones:
@@ -125,98 +140,20 @@ class TexecomBinarySensor(BinarySensorDevice):
     def _update_callback(self, data):
         """Update the zone's state, if needed."""
         _LOGGER.debug('Attempting to Update Zone %s', self._name)
+        _LOGGER.debug('The new state is %s', data[self._number])
 
-        if self._number == data.signalledzone:
-            _LOGGER.info('Correct zone found to update %s', self._name)
-            _LOGGER.debug('The new state is %s', data.zonestate)
+        if data[self._number] == '0':
+            _LOGGER.debug('Setting zone state to false')
+            self._state = False
+        elif data[self._number] == '1':
+            _LOGGER.debug('Setting zone state to true')
+            self._state = True
+        else:
+            _LOGGER.debug('Unknown state assuming tamper')
+            self._state = True
 
-            if data.zonestate == '0':
-                _LOGGER.debug('Setting zone state to false')
-                self._state = False
-            elif data.zonestate == '1':
-                _LOGGER.debug('Setting zone state to true')
-                self._state = True
-            else:
-                _LOGGER.debug('Unknown state assuming tamper')
-                self._state = True
-
-            _LOGGER.info('New Zone State is %s', self._state)
-            self.async_schedule_update_ha_state()
+        _LOGGER.info('New Zone State is %s', self._state)
+        self.async_schedule_update_ha_state()
 
 
-class TexecomPanelInterface(Entity):
-    """Representation of a Texecom Panel Interface."""
 
-    def __init__(self, name, port):
-        """Initialize the Texecom Panel Interface."""
-        self._name = name
-        self._state = None
-        self._port = port
-        self._baudrate = '19200'
-        self._serial_loop_task = None
-        self._attributes = []
-        self.signalledzone = '0'
-        self.zonestate = '0'
-
-        _LOGGER.info('Setting up Serial: %s', name)
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Handle when an entity is about to be added to Home Assistant."""
-        self._serial_loop_task = self.hass.loop.create_task(
-            self.serial_read(self._port, self._baudrate))
-
-    @asyncio.coroutine
-    def serial_read(self, device, rate, **kwargs):
-        """Read the data from the port."""
-        import serial_asyncio
-        _LOGGER.info('Opening Serial Port')
-        reader, _ = yield from serial_asyncio.open_serial_connection(
-            url=device, baudrate=rate, **kwargs)
-        _LOGGER.info('Opened Serial Port')
-        while True:
-            line = yield from reader.readline()
-            _LOGGER.info('Data read: %s', line)
-            line = line.decode('utf-8').strip()
-            _LOGGER.debug('Decoded Data: %s', line)
-
-            try:
-                if line[1] == 'Z':
-                    _LOGGER.debug('Zone Info Found')
-                    signalledzone = line[2:5]
-                    signalledzone = signalledzone.lstrip('0')
-                    zonestate = line[5]
-                    _LOGGER.info('Signalled Zone: %s', signalledzone)
-                    _LOGGER.info('Zone State: %s', zonestate)
-                    self.zonestate = zonestate
-                    self.signalledzone = signalledzone
-                    async_dispatcher_send(self.hass, SIGNAL_ZONE_UPDATE, self)
-
-            except IndexError:
-                _LOGGER.error('Index error malformed string recived')
-
-    @asyncio.coroutine
-    def stop_serial_read(self):
-        """Close resources."""
-        if self._serial_loop_task:
-            self._serial_loop_task.cancel()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def device_state_attributes(self):
-        """Return the attributes of the entity (if any JSON present)."""
-        return self._attributes
-
-    @property
-    def state(self):
-        """Return the state of the sensor."""
-        return self._state
