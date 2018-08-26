@@ -195,23 +195,15 @@ class HangoutsBot:
         import hangups
         self._user_list, self._conversation_list = \
             (await hangups.build_user_conversation_list(self._client))
-        users = {}
         conversations = {}
-        for user in self._user_list.get_all():
-            users[str(user.id_.chat_id)] = {'full_name': user.full_name,
-                                            'is_self': user.is_self}
-
-        for conv in self._conversation_list.get_all():
-            users_in_conversation = {}
+        for i, conv in enumerate(self._conversation_list.get_all()):
+            users_in_conversation = []
             for user in conv.users:
-                users_in_conversation[str(user.id_.chat_id)] = \
-                    {'full_name': user.full_name, 'is_self': user.is_self}
-            conversations[str(conv.id_)] = \
-                {'name': conv.name, 'users': users_in_conversation}
+                users_in_conversation.append(user.full_name)
+            conversations[str(i)] = {'id': str(conv.id_),
+                                     'name': conv.name,
+                                     'users': users_in_conversation}
 
-        self.hass.states.async_set("{}.users".format(DOMAIN),
-                                   len(self._user_list.get_all()),
-                                   attributes=users)
         self.hass.states.async_set("{}.conversations".format(DOMAIN),
                                    len(self._conversation_list.get_all()),
                                    attributes=conversations)
