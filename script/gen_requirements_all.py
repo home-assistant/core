@@ -78,6 +78,7 @@ TEST_REQUIREMENTS = (
     'pylitejet',
     'pymonoprice',
     'pynx584',
+    'pyotp',
     'pyqwikswitch',
     'PyRMVtransport',
     'python-forecastio',
