@@ -1,6 +1,5 @@
 """Time-based One Time Password auth module."""
 import logging
-from base64 import b64encode
 from io import BytesIO
 from typing import Any, Dict, Optional, Tuple  # noqa: F401
 
@@ -38,8 +37,11 @@ def _generate_qr_code(data: str) -> str:
 
     with BytesIO() as buffer:
         qr_code.svg(file=buffer, scale=4)
-        return 'data:image/svg+xml;base64,{}'.format(
-            b64encode(buffer.getvalue()).decode("ascii"))
+        return '{}'.format(
+            buffer.getvalue().decode("ascii").replace('\n', '')
+            .replace('<?xml version="1.0" encoding="UTF-8"?>'
+                     '<svg xmlns="http://www.w3.org/2000/svg"', '<svg')
+        )
 
 
 def _generate_secret_and_qr_code(username: str) -> Tuple[str, str, str]:

@@ -5,7 +5,7 @@
       "step": {
         "init": {
           "title": "Scan this QR code with your app",
-          "description": "Scan the QR code with your authentication app, such as **Google Authenticator** or **Authy**. If you have problem to scan the QR code, using **`{code}`** to manual setup. \n\n![{url}]({qr_code})\n\nEnter the six digi code appeared in your app below to verify the setup:"
+          "description": "Scan the QR code with your authentication app, such as **Google Authenticator** or **Authy**. If you have problem to scan the QR code, using **`{code}`** to manual setup. \n\n{qr_code}\n\nEnter the six digi code appeared in your app below to verify the setup:"
         }
       },
       "error": {
