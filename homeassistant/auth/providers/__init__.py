@@ -168,7 +168,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
         self._auth_provider = auth_provider
         self._auth_module_id = None  # type: Optional[str]
         self._auth_manager = auth_provider.hass.auth  # type: ignore
-        self.available_mfa_modules = []  # type: List
+        self.available_mfa_modules = {}  # type: Dict[str, str]
         self.created_at = dt_util.utcnow()
         self.user = None  # type: Optional[User]
 
@@ -196,7 +196,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             errors['base'] = 'invalid_auth_module'
 
         if len(self.available_mfa_modules) == 1:
-            self._auth_module_id = self.available_mfa_modules[0]
+            self._auth_module_id = list(self.available_mfa_modules.keys())[0]
             return await self.async_step_mfa()
 
         return self.async_show_form(
