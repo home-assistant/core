@@ -12,7 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery, aiohttp_client
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyspcwebgw==0.2.0']
+REQUIREMENTS = ['pyspcwebgw==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 

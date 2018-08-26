@@ -51,6 +51,7 @@ async def test_update_alarm_device(hass):
     area_mock = Mock(spec=pyspcwebgw.area.Area, id='1',
                      mode=AreaMode.FULL_SET, last_changed_by='Sven')
     area_mock.name = 'House'
+    area_mock.verified_alarm = False
 
     with patch('pyspcwebgw.SpcWebGateway.areas',
                new_callable=PropertyMock) as mock_areas:

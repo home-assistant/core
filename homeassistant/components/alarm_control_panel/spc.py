@@ -11,14 +11,17 @@ from homeassistant.components.spc import (
     ATTR_DISCOVER_AREAS, DATA_API, DATA_REGISTRY)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED, STATE_UNKNOWN)
+    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def _get_alarm_state(spc_mode):
+def _get_alarm_state(area):
     """Get the alarm state."""
     from pyspcwebgw.const import AreaMode
+
+    if area.verified_alarm:
+        return STATE_ALARM_TRIGGERED
 
     mode_to_state = {
         AreaMode.UNSET: STATE_ALARM_DISARMED,
@@ -26,7 +29,7 @@ def _get_alarm_state(spc_mode):
         AreaMode.PART_SET_B: STATE_ALARM_ARMED_NIGHT,
         AreaMode.FULL_SET: STATE_ALARM_ARMED_AWAY,
     }
-    return mode_to_state.get(spc_mode, STATE_UNKNOWN)
+    return mode_to_state.get(area.mode, STATE_UNKNOWN)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -70,7 +73,7 @@ class SpcAlarm(alarm.AlarmControlPanel):
     @property
     def state(self):
         """Return the state of the device."""
-        return _get_alarm_state(self._area.mode)
+        return _get_alarm_state(self._area)
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
