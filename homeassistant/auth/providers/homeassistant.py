@@ -5,13 +5,16 @@ import hashlib
 import hmac
 from typing import Any, Dict, List, Optional, cast
 
+import bcrypt
 import voluptuous as vol
 
 from homeassistant.const import CONF_ID
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
+
 from ..models import Credentials, UserMeta
 from ..util import generate_secret
 
@@ -74,8 +77,7 @@ class Data:
 
         Raises InvalidAuth if auth invalid.
         """
-        hashed = self.hash_password(password)
-
+        dummy = b'$2b$12$CiuFGszHx9eNHxPuQcwBWez4CwDTOcLTX5CbOpV6gef2nYuXkY7BO'
         found = None
 
         # Compare all users to avoid timing attacks.
@@ -84,18 +86,51 @@ class Data:
                 found = user
 
         if found is None:
-            # Do one more compare to make timing the same as if user was found.
-            hmac.compare_digest(hashed, hashed)
+            # check a hash to make timing the same as if user was found
+            bcrypt.checkpw(b'foo',
+                           dummy)
             raise InvalidAuth
 
-        if not hmac.compare_digest(hashed,
-                                   base64.b64decode(found['password'])):
+        user_hash = base64.b64decode(found['password'])
+
+        # if the hash is not a bcrypt hash...
+        # provide a transparant upgrade for old pbkdf2 hash format
+        if not (user_hash.startswith(b'$2a$')
+                or user_hash.startswith(b'$2b$')
+                or user_hash.startswith(b'$2x$')
+                or user_hash.startswith(b'$2y$')):
+            # IMPORTANT! validate the login, bail if invalid
+            hashed = self.legacy_hash_password(password)
+            if not hmac.compare_digest(hashed, user_hash):
+                raise InvalidAuth
+            # then re-hash the valid password with bcrypt
+            self.change_password(found['username'], password)
+            run_coroutine_threadsafe(
+                self.async_save(), self.hass.loop
+            ).result()
+            user_hash = base64.b64decode(found['password'])
+
+        # bcrypt.checkpw is timing-safe
+        if not bcrypt.checkpw(password.encode(),
+                              user_hash):
             raise InvalidAuth
 
-    def hash_password(self, password: str, for_storage: bool = False) -> bytes:
-        """Encode a password."""
+    def legacy_hash_password(self, password: str,
+                             for_storage: bool = False) -> bytes:
+        """LEGACY password encoding."""
+        # We're no longer storing salts in data, but if one exists we
+        # should be able to retrieve it.
         salt = self._data['salt'].encode()  # type: ignore
         hashed = hashlib.pbkdf2_hmac('sha512', password.encode(), salt, 100000)
+        if for_storage:
+            hashed = base64.b64encode(hashed)
+        return hashed
+
+    # pylint: disable=no-self-use
+    def hash_password(self, password: str, for_storage: bool = False) -> bytes:
+        """Encode a password."""
+        hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12)) \
+            # type: bytes
         if for_storage:
             hashed = base64.b64encode(hashed)
         return hashed
