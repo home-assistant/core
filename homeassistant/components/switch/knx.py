@@ -63,7 +63,7 @@ class KNXSwitch(SwitchDevice):
 
     def __init__(self, hass, device):
         """Initialize of KNX switch."""
-        self._device = device
+        self.device = device
         self.hass = hass
         self.async_register_callbacks()
 
@@ -73,12 +73,12 @@ class KNXSwitch(SwitchDevice):
         async def after_update_callback(device):
             """Call after device was updated."""
             await self.async_update_ha_state()
-        self._device.register_device_updated_cb(after_update_callback)
+        self.device.register_device_updated_cb(after_update_callback)
 
     @property
     def name(self):
         """Return the name of the KNX device."""
-        return self._device.name
+        return self.device.name
 
     @property
     def available(self):
@@ -93,12 +93,12 @@ class KNXSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if device is on."""
-        return self._device.state
+        return self.device.state
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        await self._device.set_on()
+        await self.device.set_on()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        await self._device.set_off()
+        await self.device.set_off()
