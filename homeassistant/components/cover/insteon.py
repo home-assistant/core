@@ -59,11 +59,7 @@ class InsteonCoverDevice(InsteonEntity, CoverDevice):
     @asyncio.coroutine
     def async_open_cover(self, **kwargs):
         """Open device."""
-        if ATTR_POSITION in kwargs:
-            position = int(kwargs[ATTR_POSITION]*255/100)
-            self._insteon_device_state.set_position(position)
-        else:
-            self._insteon_device_state.open()
+        self._insteon_device_state.open()
 
     @asyncio.coroutine
     def async_close_cover(self, **kwargs):
@@ -73,4 +69,9 @@ class InsteonCoverDevice(InsteonEntity, CoverDevice):
     @asyncio.coroutine
     def async_set_cover_position(self, **kwargs):
         """Set the cover position."""
-        yield from self.async_open_cover(**kwargs)
+        if ATTR_POSITION in kwargs:
+            position = int(kwargs[ATTR_POSITION]*255/100)
+            if position == 0:
+                self._insteon_device_state.close()
+            else:
+                self._insteon_device_state.set_position(position)
