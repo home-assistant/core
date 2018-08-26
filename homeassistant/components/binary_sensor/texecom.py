@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.texecom/
 """
 
-import asyncio
 import logging
 
 from homeassistant.core import callback
@@ -14,7 +13,7 @@ from homeassistant.components.texecom import (
     CONF_ZONE_NAME, CONF_ZONE_NUMBER, CONF_ZONE_TYPE,
     ZONE_SCHEMA, SIGNAL_ZONE_UPDATE)
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+    async_dispatcher_connect)
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,8 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['texecom']
 
 
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Texecom binary sensor devices."""
     _LOGGER.info('Setting Up Binary Sensors')
     configured_zones = discovery_info['zones']
@@ -41,6 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
     async_add_entities(devices)
 
+
 class TexecomBinarySensor(BinarySensorDevice):
     """Representation of an Texecom Binary Sensor."""
 
@@ -50,8 +50,6 @@ class TexecomBinarySensor(BinarySensorDevice):
         self._name = zone_name
         self._sensor_type = zone_type
         self._state = 'false'
-
-
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -97,5 +95,3 @@ class TexecomBinarySensor(BinarySensorDevice):
 
         _LOGGER.debug('New Zone State is %s', self._state)
         self.async_schedule_update_ha_state()
-
-

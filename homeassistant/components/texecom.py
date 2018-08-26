@@ -4,7 +4,7 @@ Support for Texecom Alarm Panels & Devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/texecom/
 """
-import asyncio
+
 import logging
 import voluptuous as vol
 
@@ -12,8 +12,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.dispatcher import (async_dispatcher_send)
 
 REQUIREMENTS = ['pyTexecom==0.2.1']
 
@@ -50,7 +49,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_ZONES): {vol.Coerce(int): ZONE_SCHEMA},
     }),
 }, extra=vol.ALLOW_EXTRA)
-
 
 
 async def async_setup(hass, config):
