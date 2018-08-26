@@ -733,7 +733,7 @@ pyHS100==0.3.2
 pyRFXtrx==0.22.1
 
 # homeassistant.components.texecom
-pyTexecom==0.2.0
+pyTexecom==0.2.1
 
 # homeassistant.components.sensor.tibber
 pyTibber==0.4.1
