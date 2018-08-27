@@ -287,7 +287,6 @@ class TelldusLiveEntity(Entity):
         self._id = device_id
         self._client = hass.data[DOMAIN]
         self._client.entities.append(self)
-        self.device = self._client.device(device_id)
         self._name = self.device.name
         _LOGGER.debug('Created device %s', self)
 
