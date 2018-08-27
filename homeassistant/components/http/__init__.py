@@ -200,18 +200,10 @@ class HomeAssistantHTTP:
         if is_ban_enabled:
             setup_bans(hass, app, login_threshold)
 
-        if hass.auth.active:
-            if hass.auth.support_legacy:
-                _LOGGER.warning("Experimental auth api enabled and "
-                                "legacy_api_password support enabled. Please "
-                                "use access_token instead api_password, "
-                                "although you can still use legacy "
-                                "api_password")
-            else:
-                _LOGGER.warning("Experimental auth api enabled. Please use "
-                                "access_token instead api_password.")
-        elif api_password is None:
-            _LOGGER.warning("You have been advised to set http.api_password.")
+        if hass.auth.active and hass.auth.support_legacy:
+            _LOGGER.warning(
+                "legacy_api_password support has been enabled. If you don't"
+                "require it, remove the 'api_password' from your http config.")
 
         setup_auth(app, trusted_networks, hass.auth.active,
                    support_legacy=hass.auth.support_legacy,
