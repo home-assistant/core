@@ -13,7 +13,6 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import dispatcher
 import homeassistant.helpers.config_validation as cv
 
-from .config_flow import configured_hangouts
 from .const import (
     CONF_BOT, CONF_INTENTS, CONF_REFRESH_TOKEN, DOMAIN,
     EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
