@@ -348,6 +348,7 @@ class EntityPlatform:
 
         This method must be run in the event loop.
         """
+        print('async reset')
         if self._async_cancel_retry_setup is not None:
             self._async_cancel_retry_setup()
             self._async_cancel_retry_setup = None

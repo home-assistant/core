@@ -45,7 +45,7 @@ class DeviceRegistry:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
-    def async_get_device(self, identifiers: str, connections: tuple):
+    def async_get_device(self, identifiers: set, connections: set):
         """Check if device is registered."""
         for device in self.devices.values():
             if any(iden in device.identifiers for iden in identifiers) or \
@@ -126,6 +126,24 @@ class DeviceRegistry:
         ]
 
         return data
+
+    async def async_remove_device(self, device_id):
+        """Remove device from registry."""
+        # om det är entity, gör ett uppslag i entity registry och ta reda på vilka entities som tillhör en viss device id
+        # om det är hub så finns det bara en instans
+        # denna logiken kanske ska skötas av entity platform eller hubben själv, låta metoden bara göra vad den blir tillsagd
+        entity_registry = await \
+            self.hass.helpers.entity_registry.async_get_registry()
+
+        entities = 0
+        for entity in entity_registry.values():
+            if entity.device_id == device_id:
+                entities += 1
+        if entities == 1:
+            for device in self.devices:
+                if device.id == device_id:
+                    self.devices.remove(device)
+                    self.async_schedule_save()
 
 
 @bind_hass
