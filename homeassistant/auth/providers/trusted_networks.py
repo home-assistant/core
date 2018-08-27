@@ -111,7 +111,6 @@ class TrustedNetworksLoginFlow(LoginFlow):
             self, user_input: Optional[Dict[str, str]] = None) \
             -> Dict[str, Any]:
         """Handle the step of the form."""
-        errors = {}
         try:
             cast(TrustedNetworksAuthProvider, self._auth_provider)\
                 .async_validate_access(self._ip_address)
@@ -127,5 +126,4 @@ class TrustedNetworksLoginFlow(LoginFlow):
         return self.async_show_form(
             step_id='init',
             data_schema=vol.Schema({'user': vol.In(self._available_users)}),
-            errors=errors,
         )
