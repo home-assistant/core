@@ -117,25 +117,15 @@ class TrustedNetworksLoginFlow(LoginFlow):
                 .async_validate_access(self._ip_address)
 
         except InvalidAuthError:
-            errors['base'] = 'invalid_auth'
-            return self.async_show_form(
-                step_id='init',
-                data_schema=None,
-                errors=errors,
+            return self.async_abort(
+                reason='not_whitelisted'
             )
 
         if user_input is not None:
-            user_id = user_input['user']
-            if user_id not in self._available_users:
-                errors['base'] = 'invalid_auth'
-
-            if not errors:
-                return await self.async_finish(user_input)
-
-        schema = {'user': vol.In(self._available_users)}
+            return await self.async_finish(user_input)
 
         return self.async_show_form(
             step_id='init',
-            data_schema=vol.Schema(schema),
+            data_schema=vol.Schema({'user': vol.In(self._available_users)}),
             errors=errors,
         )
