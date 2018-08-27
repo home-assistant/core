@@ -52,11 +52,11 @@ async def async_setup_platform(
     """Set up the Volkszaehler sensors."""
     from volkszaehler import Volkszaehler
 
-    host = config.get(CONF_HOST)
-    name = config.get(CONF_NAME)
-    port = config.get(CONF_PORT)
-    uuid = config.get(CONF_UUID)
-    conditions = config.get(CONF_MONITORED_CONDITIONS)
+    host = config[CONF_HOST]
+    name = config[CONF_NAME]
+    port = config[CONF_PORT]
+    uuid = config[CONF_UUID]
+    conditions = config[CONF_MONITORED_CONDITIONS]
 
     session = async_get_clientsession(hass)
     vz_api = VolkszaehlerData(
@@ -83,7 +83,6 @@ class VolkszaehlerSensor(Entity):
         self._name = name
         self.type = sensor_type
         self._state = None
-        self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
     def name(self):
@@ -98,7 +97,7 @@ class VolkszaehlerSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit the value is expressed in."""
-        return self._unit_of_measurement
+        return SENSOR_TYPES[self.type][1]
 
     @property
     def available(self):
@@ -115,14 +114,7 @@ class VolkszaehlerSensor(Entity):
         await self.vz_api.async_update()
 
         if self.vz_api.api.data is not None:
-            if self.type == 'average':
-                self._state = round(self.vz_api.api.average, 2)
-            elif self.type == 'consumption':
-                self._state = round(self.vz_api.api.consumption, 2)
-            elif self.type == 'max':
-                self._state = round(self.vz_api.api.max, 2)
-            elif self.type == 'min':
-                self._state = round(self.vz_api.api.min, 2)
+            self._state = round(getattr(self.vz_api.api, self.type), 2)
 
 
 class VolkszaehlerData:
