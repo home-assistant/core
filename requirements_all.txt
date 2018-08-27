@@ -121,7 +121,7 @@ aladdin_connect==0.3
 alarmdecoder==1.13.2
 
 # homeassistant.components.sensor.alpha_vantage
-alpha_vantage==2.0.0
+alpha_vantage==2.1.0
 
 # homeassistant.components.amcrest
 amcrest==1.2.3
@@ -444,7 +444,7 @@ hole==0.3.0
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180826.0
+home-assistant-frontend==20180827.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -1430,6 +1430,9 @@ uvcclient==0.10.1
 
 # homeassistant.components.climate.venstar
 venstarcolortouch==0.6
+
+# homeassistant.components.sensor.volkszaehler
+volkszaehler==0.1.2
 
 # homeassistant.components.config.config_entries
 voluptuous-serialize==2.0.0
