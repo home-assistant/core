@@ -32,7 +32,7 @@ def setup_auth(app, trusted_networks, use_auth,
             if request.path not in old_auth_warning:
                 _LOGGER.log(
                     logging.INFO if support_legacy else logging.WARNING,
-                    'Please change to use bearer token access %s from %s',
+                    'You need to use a bearer token to access %s from %s',
                     request.path, request[KEY_REAL_IP])
                 old_auth_warning.add(request.path)
 
