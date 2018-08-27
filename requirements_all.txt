@@ -1431,6 +1431,9 @@ uvcclient==0.10.1
 # homeassistant.components.climate.venstar
 venstarcolortouch==0.6
 
+# homeassistant.components.sensor.volkszaehler
+volkszaehler==0.1.2
+
 # homeassistant.components.config.config_entries
 voluptuous-serialize==2.0.0
 
