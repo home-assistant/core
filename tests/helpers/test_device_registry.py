@@ -1,13 +1,15 @@
 """Tests for the Device Registry."""
 import pytest
 
+from collections import OrderedDict
+
 from homeassistant.helpers import device_registry
 
 
 def mock_registry(hass, mock_entries=None):
     """Mock the Device Registry."""
     registry = device_registry.DeviceRegistry(hass)
-    registry.devices = mock_entries or []
+    registry.devices = mock_entries or OrderedDict()
 
     async def _get_reg():
         return registry
