@@ -4,7 +4,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
-from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger('homeassistant.components.hangouts')
@@ -18,17 +17,18 @@ CONF_BOT = 'bot'
 
 CONF_CONVERSATIONS = 'conversations'
 CONF_DEFAULT_CONVERSATIONS = 'default_conversations'
+CONF_ERROR_SUPPRESSED_CONVERSATIONS = 'error_suppressed_conversations'
 
-CONF_COMMANDS = 'commands'
-CONF_WORD = 'word'
-CONF_EXPRESSION = 'expression'
-
-EVENT_HANGOUTS_COMMAND = 'hangouts_command'
+CONF_INTENTS = 'intents'
+CONF_INTENT_TYPE = 'intent_type'
+CONF_SENTENCES = 'sentences'
+CONF_MATCHERS = 'matchers'
 
 EVENT_HANGOUTS_CONNECTED = 'hangouts_connected'
 EVENT_HANGOUTS_DISCONNECTED = 'hangouts_disconnected'
 EVENT_HANGOUTS_USERS_CHANGED = 'hangouts_users_changed'
 EVENT_HANGOUTS_CONVERSATIONS_CHANGED = 'hangouts_conversations_changed'
+EVENT_HANGOUTS_MESSAGE_RECEIVED = 'hangouts_message_received'
 
 CONF_CONVERSATION_ID = 'id'
 CONF_CONVERSATION_NAME = 'name'
@@ -59,20 +59,10 @@ MESSAGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_MESSAGE): [MESSAGE_SEGMENT_SCHEMA]
 })
 
-COMMAND_SCHEMA = vol.All(
+INTENT_SCHEMA = vol.All(
     # Basic Schema
     vol.Schema({
-        vol.Exclusive(CONF_WORD, 'trigger'): cv.string,
-        vol.Exclusive(CONF_EXPRESSION, 'trigger'): cv.is_regex,
-        vol.Required(CONF_NAME): cv.string,
+        vol.Required(CONF_SENTENCES): vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_CONVERSATIONS): [TARGETS_SCHEMA]
     }),
-    # Make sure it's either a word or an expression command
-    cv.has_at_least_one_key(CONF_WORD, CONF_EXPRESSION)
 )
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_COMMANDS, default=[]): [COMMAND_SCHEMA]
-    })
-}, extra=vol.ALLOW_EXTRA)
