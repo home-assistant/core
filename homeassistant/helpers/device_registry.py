@@ -2,6 +2,8 @@
 import logging
 import uuid
 
+from collections import OrderedDict
+
 import attr
 
 from homeassistant.core import callback
@@ -86,7 +88,7 @@ class DeviceRegistry:
         devices = await self._store.async_load()
 
         if devices is None:
-            self.devices = {}
+            self.devices = OrderedDict()
             return
 
         self.devices = {device['id']: DeviceEntry(
