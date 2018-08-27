@@ -40,7 +40,7 @@ class VelbusTempSensor(VelbusEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._module._cur
+        return self._module.getCurTemp()
 
     @property
     def unit_of_measurement(self):
