@@ -27,10 +27,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_INTENTS): vol.Schema({
+        vol.Optional(CONF_INTENTS, default={}): vol.Schema({
             cv.string: INTENT_SCHEMA
         }),
-        vol.Optional(CONF_ERROR_SUPPRESSED_CONVERSATIONS): [TARGETS_SCHEMA]
+        vol.Optional(CONF_ERROR_SUPPRESSED_CONVERSATIONS, default=[]):
+            [TARGETS_SCHEMA]
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -39,16 +40,13 @@ async def async_setup(hass, config):
     """Set up the Hangouts bot component."""
     from homeassistant.components.conversation import create_matcher
 
-    config = config.get(DOMAIN, {})
-    hass.data[DOMAIN] = {CONF_INTENTS: config.get(CONF_INTENTS, []),
-                         CONF_ERROR_SUPPRESSED_CONVERSATIONS:
-                             config.get(CONF_ERROR_SUPPRESSED_CONVERSATIONS,
-                                        [])}
-    if hass.data[DOMAIN][CONF_INTENTS] is None:
-        hass.data[DOMAIN][CONF_INTENTS] = []
+    config = config.get(DOMAIN)
+    if config is None:
+        return True
 
-    if hass.data[DOMAIN][CONF_ERROR_SUPPRESSED_CONVERSATIONS] is None:
-        hass.data[DOMAIN][CONF_ERROR_SUPPRESSED_CONVERSATIONS] = []
+    hass.data[DOMAIN] = {CONF_INTENTS: config.get(CONF_INTENTS),
+                         CONF_ERROR_SUPPRESSED_CONVERSATIONS:
+                             config.get(CONF_ERROR_SUPPRESSED_CONVERSATIONS)}
 
     for data in hass.data[DOMAIN][CONF_INTENTS].values():
         matchers = []
@@ -57,10 +55,9 @@ async def async_setup(hass, config):
 
         data[CONF_MATCHERS] = matchers
 
-    if configured_hangouts(hass) is None:
-        hass.async_add_job(hass.config_entries.flow.async_init(
-            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}
-        ))
+    hass.async_add_job(hass.config_entries.flow.async_init(
+        DOMAIN, context={'source': config_entries.SOURCE_IMPORT}
+    ))
 
     return True
 
