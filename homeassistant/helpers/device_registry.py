@@ -45,7 +45,7 @@ class DeviceRegistry:
     @callback
     def async_get_device(self, identifiers: str, connections: tuple):
         """Check if device is registered."""
-        for device in self.devices:
+        for device in self.devices.values():
             if any(iden in device.identifiers for iden in identifiers) or \
                     any(conn in device.connections for conn in connections):
                 return device
@@ -75,7 +75,7 @@ class DeviceRegistry:
             name=name,
             sw_version=sw_version
         )
-        self.devices.append(device)
+        self.devices[device.id] = device
 
         self.async_schedule_save()
 
@@ -86,10 +86,10 @@ class DeviceRegistry:
         devices = await self._store.async_load()
 
         if devices is None:
-            self.devices = []
+            self.devices = {}
             return
 
-        self.devices = [DeviceEntry(
+        self.devices = {device['id']: DeviceEntry(
             config_entries=device['config_entries'],
             connections={tuple(conn) for conn in device['connections']},
             identifiers={tuple(iden) for iden in device['identifiers']},
@@ -98,7 +98,7 @@ class DeviceRegistry:
             name=device['name'],
             sw_version=device['sw_version'],
             id=device['id'],
-        ) for device in devices['devices']]
+        ) for device in devices['devices']}
 
     @callback
     def async_schedule_save(self):
@@ -120,7 +120,7 @@ class DeviceRegistry:
                 'name': entry.name,
                 'sw_version': entry.sw_version,
                 'id': entry.id,
-            } for entry in self.devices
+            } for entry in self.devices.values()
         ]
 
         return data

@@ -7,7 +7,7 @@ from homeassistant.helpers import device_registry
 def mock_registry(hass, mock_entries=None):
     """Mock the Device Registry."""
     registry = device_registry.DeviceRegistry(hass)
-    registry.devices = mock_entries or []
+    registry.devices = mock_entries or {}
 
     async def _get_reg():
         return registry
