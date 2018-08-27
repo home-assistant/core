@@ -75,11 +75,11 @@ class HangoutsBot:
 
         try:
             self._conversation_list.on_event.remove_observer(
-                self._handle_conversation_event)
+                self._async_handle_conversation_event)
         except ValueError:
             pass
         self._conversation_list.on_event.add_observer(
-            self._handle_conversation_event)
+            self._async_handle_conversation_event)
 
     def async_handle_update_error_suppressed_conversations(self, _):
         """Resolve the list of error suppressed conversations."""
@@ -89,9 +89,9 @@ class HangoutsBot:
             if conv_id is not None:
                 self._error_suppressed_conv_ids.append(conv_id)
 
-    def _handle_conversation_event(self, event):
+    async def _async_handle_conversation_event(self, event):
         from hangups import ChatMessageEvent
-        if event.__class__ is ChatMessageEvent:
+        if isinstance(event, ChatMessageEvent):
             dispatcher.async_dispatcher_send(self.hass,
                                              EVENT_HANGOUTS_MESSAGE_RECEIVED,
                                              event.conversation_id,
@@ -127,12 +127,11 @@ class HangoutsBot:
             message = intent_result.as_dict().get('speech', {})\
                 .get('plain', {}).get('speech')
 
-            if message is not None:
-                if not (is_error and
-                        conv_id in self._error_suppressed_conv_ids):
-                    await self._async_send_message(
-                        [{'text': message, 'parse_str': True}],
-                        [{CONF_CONVERSATION_ID: conv_id}])
+            if (message is not None) and not (
+                    is_error and conv_id in self._error_suppressed_conv_ids):
+                await self._async_send_message(
+                    [{'text': message, 'parse_str': True}],
+                    [{CONF_CONVERSATION_ID: conv_id}])
 
     async def _async_process(self, intents, text):
         """Detect a matching intent."""

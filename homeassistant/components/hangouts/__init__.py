@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.helpers import dispatcher
+import homeassistant.helpers.config_validation as cv
 
 from .config_flow import configured_hangouts
 from .const import (
@@ -18,11 +19,20 @@ from .const import (
     EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
     MESSAGE_SCHEMA, SERVICE_SEND_MESSAGE,
     SERVICE_UPDATE, CONF_SENTENCES, CONF_MATCHERS,
-    CONF_ERROR_SUPPRESSED_CONVERSATIONS)
+    CONF_ERROR_SUPPRESSED_CONVERSATIONS, INTENT_SCHEMA, TARGETS_SCHEMA)
 
 REQUIREMENTS = ['hangups==0.4.5']
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Optional(CONF_INTENTS): vol.Schema({
+            cv.string: INTENT_SCHEMA
+        }),
+        vol.Optional(CONF_ERROR_SUPPRESSED_CONVERSATIONS): [TARGETS_SCHEMA]
+    })
+}, extra=vol.ALLOW_EXTRA)
 
 
 async def async_setup(hass, config):
@@ -40,7 +50,7 @@ async def async_setup(hass, config):
     if hass.data[DOMAIN][CONF_ERROR_SUPPRESSED_CONVERSATIONS] is None:
         hass.data[DOMAIN][CONF_ERROR_SUPPRESSED_CONVERSATIONS] = []
 
-    for _, data in hass.data[DOMAIN][CONF_INTENTS].items():
+    for data in hass.data[DOMAIN][CONF_INTENTS].values():
         matchers = []
         for sentence in data[CONF_SENTENCES]:
             matchers.append(create_matcher(sentence))

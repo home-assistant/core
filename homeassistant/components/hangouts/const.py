@@ -66,12 +66,3 @@ INTENT_SCHEMA = vol.All(
         vol.Optional(CONF_CONVERSATIONS): [TARGETS_SCHEMA]
     }),
 )
-
-CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
-        vol.Optional(CONF_INTENTS): vol.Schema({
-            cv.string: INTENT_SCHEMA
-        }),
-        vol.Optional(CONF_ERROR_SUPPRESSED_CONVERSATIONS): [TARGETS_SCHEMA]
-    })
-}, extra=vol.ALLOW_EXTRA)
