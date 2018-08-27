@@ -14,10 +14,11 @@ from homeassistant.helpers import dispatcher
 
 from .config_flow import configured_hangouts
 from .const import (
-    CONF_BOT, CONF_COMMANDS, CONF_REFRESH_TOKEN, DOMAIN,
+    CONF_BOT, CONF_INTENTS, CONF_REFRESH_TOKEN, DOMAIN,
     EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
     MESSAGE_SCHEMA, SERVICE_SEND_MESSAGE,
-    SERVICE_UPDATE)
+    SERVICE_UPDATE, CONF_SENTENCES, CONF_MATCHERS,
+    CONF_ERROR_SUPPRESSED_CONVERSATIONS)
 
 REQUIREMENTS = ['hangups==0.4.5']
 
@@ -26,8 +27,25 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup(hass, config):
     """Set up the Hangouts bot component."""
+    from homeassistant.components.conversation import create_matcher
+
     config = config.get(DOMAIN, {})
-    hass.data[DOMAIN] = {CONF_COMMANDS: config.get(CONF_COMMANDS, [])}
+    hass.data[DOMAIN] = {CONF_INTENTS: config.get(CONF_INTENTS, []),
+                         CONF_ERROR_SUPPRESSED_CONVERSATIONS:
+                             config.get(CONF_ERROR_SUPPRESSED_CONVERSATIONS,
+                                        [])}
+    if hass.data[DOMAIN][CONF_INTENTS] is None:
+        hass.data[DOMAIN][CONF_INTENTS] = []
+
+    if hass.data[DOMAIN][CONF_ERROR_SUPPRESSED_CONVERSATIONS] is None:
+        hass.data[DOMAIN][CONF_ERROR_SUPPRESSED_CONVERSATIONS] = []
+
+    for _, data in hass.data[DOMAIN][CONF_INTENTS].items():
+        matchers = []
+        for sentence in data[CONF_SENTENCES]:
+            matchers.append(create_matcher(sentence))
+
+        data[CONF_MATCHERS] = matchers
 
     if configured_hangouts(hass) is None:
         hass.async_add_job(hass.config_entries.flow.async_init(
@@ -47,7 +65,8 @@ async def async_setup_entry(hass, config):
         bot = HangoutsBot(
             hass,
             config.data.get(CONF_REFRESH_TOKEN),
-            hass.data[DOMAIN][CONF_COMMANDS])
+            hass.data[DOMAIN][CONF_INTENTS],
+            hass.data[DOMAIN][CONF_ERROR_SUPPRESSED_CONVERSATIONS])
         hass.data[DOMAIN][CONF_BOT] = bot
     except GoogleAuthError as exception:
         _LOGGER.error("Hangouts failed to log in: %s", str(exception))
@@ -62,6 +81,10 @@ async def async_setup_entry(hass, config):
         hass,
         EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
         bot.async_update_conversation_commands)
+    dispatcher.async_dispatcher_connect(
+        hass,
+        EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
+        bot.async_handle_update_error_suppressed_conversations)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                bot.async_handle_hass_stop)
