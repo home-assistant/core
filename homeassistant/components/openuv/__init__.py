@@ -22,12 +22,11 @@ from homeassistant.helpers.event import async_track_time_interval
 from .config_flow import configured_instances
 from .const import DOMAIN
 
-REQUIREMENTS = ['pyopenuv==1.0.1']
+REQUIREMENTS = ['pyopenuv==1.0.3']
 _LOGGER = logging.getLogger(__name__)
 
 DATA_OPENUV_CLIENT = 'data_client'
 DATA_OPENUV_CONFIG = 'data_config'
-DATA_OPENUV_DISPATCH = 'data_dispatch'
 DATA_OPENUV_LISTENER = 'data_listener'
 DATA_PROTECTION_WINDOW = 'protection_window'
 DATA_UV = 'uv'
@@ -106,7 +105,6 @@ async def async_setup(hass, config):
     """Set up the OpenUV component."""
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_OPENUV_CLIENT] = {}
-    hass.data[DOMAIN][DATA_OPENUV_DISPATCH] = {}
     hass.data[DOMAIN][DATA_OPENUV_LISTENER] = {}
 
     if DOMAIN not in config:
@@ -182,8 +180,7 @@ async def async_setup_entry(hass, config_entry):
             conf[CONF_SENSORS][CONF_MONITORED_CONDITIONS])
         await openuv.async_update()
 
-        data[DATA_OPENUV_CLIENT][config_entry.title] = openuv
-        data[DATA_OPENUV_DISPATCH][config_entry.title] = []
+        data[DATA_OPENUV_CLIENT][config_entry.entry_id] = openuv
     except OpenUvError as err:
         _LOGGER.error('An error occurred: %s', str(err))
         hass.components.persistent_notification.create(
@@ -194,7 +191,7 @@ async def async_setup_entry(hass, config_entry):
             notification_id=NOTIFICATION_ID)
         return False
 
-    for component in 'binary_sensor', 'sensor':
+    for component in ('binary_sensor', 'sensor'):
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
 
@@ -204,9 +201,10 @@ async def async_setup_entry(hass, config_entry):
         await openuv.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    data[DATA_OPENUV_LISTENER][config_entry.title] = async_track_time_interval(
-        hass, refresh_sensors,
-        conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+    data[DATA_OPENUV_LISTENER][
+        config_entry.entry_id] = async_track_time_interval(
+            hass, refresh_sensors,
+            conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
 
     return True
 
@@ -215,14 +213,14 @@ async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
     data = hass.data[DOMAIN]
 
-    data[DATA_OPENUV_CLIENT].pop(config_entry.title)
+    for component in ('binary_sensor', 'sensor'):
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, component)
 
-    remove_listener = data[DATA_OPENUV_LISTENER].pop(config_entry.title)
+    data[DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
+
+    remove_listener = data[DATA_OPENUV_LISTENER].pop(config_entry.entry_id)
     remove_listener()
-
-    for remove_dispatcher in data[DATA_OPENUV_DISPATCH][config_entry.title]:
-        remove_dispatcher()
-    del data[DATA_OPENUV_DISPATCH][config_entry.title]
 
     return True
 
