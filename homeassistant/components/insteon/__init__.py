@@ -18,7 +18,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.13.0']
+REQUIREMENTS = ['insteonplm==0.13.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -474,11 +474,10 @@ class InsteonEntity(Entity):
         return attributes
 
     @callback
-    def async_entity_update(self, deviceid, statename, val):
+    def async_entity_update(self, deviceid, group, val):
         """Receive notification from transport that new data exists."""
-        _LOGGER.debug('Received update for device %s group %d statename %s',
-                      self.address, self.group,
-                      self._insteon_device_state.name)
+        _LOGGER.debug('Received update for device %s group %d value %s',
+                      deviceid.human, group, val)
         self.async_schedule_update_ha_state()
 
     @asyncio.coroutine
