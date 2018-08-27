@@ -20,6 +20,10 @@ from .const import (
     SERVICE_UPDATE, CONF_SENTENCES, CONF_MATCHERS,
     CONF_ERROR_SUPPRESSED_CONVERSATIONS, INTENT_SCHEMA, TARGETS_SCHEMA)
 
+# We need an import from .config_flow, without it .config_flow is never loaded.
+from .config_flow import HangoutsFlowHandler  # noqa: F401
+
+
 REQUIREMENTS = ['hangups==0.4.5']
 
 _LOGGER = logging.getLogger(__name__)
