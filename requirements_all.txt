@@ -163,7 +163,6 @@ batinfo==0.4.2
 # beacontools[scan]==1.2.3
 
 # homeassistant.components.device_tracker.linksys_ap
-# homeassistant.components.sensor.geizhals
 # homeassistant.components.sensor.scrape
 # homeassistant.components.sensor.sytadin
 beautifulsoup4==4.6.3
@@ -386,6 +385,9 @@ gTTS-token==1.1.1
 
 # homeassistant.components.sensor.gearbest
 gearbest_parser==1.0.7
+
+# homeassistant.components.sensor.geizhals
+geizhals==0.0.7
 
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.7
