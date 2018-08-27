@@ -81,6 +81,7 @@ TEST_REQUIREMENTS = (
     'pyotp',
     'pyqwikswitch',
     'PyRMVtransport',
+    'pyspcwebgw',
     'python-forecastio',
     'python-nest',
     'pytradfri\[async\]',
