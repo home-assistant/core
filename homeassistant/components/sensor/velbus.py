@@ -7,9 +7,9 @@ https://home-assistant.io/components/sensor.velbus/
 import logging
 
 from homeassistant.const import (
-        TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE)
+    TEMP_CELSIUS, DEVICE_CLASS_TEMPERATURE)
 from homeassistant.components.velbus import (
-        DOMAIN as VELBUS_DOMAIN, VelbusEntity)
+    DOMAIN as VELBUS_DOMAIN, VelbusEntity)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +30,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 class VelbusTempSensor(VelbusEntity):
+    """Representation of a temperature sensor."""
 
     @property
     def device_class(self):
