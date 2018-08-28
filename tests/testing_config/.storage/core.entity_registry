@@ -1,0 +1,16 @@
+{
+    "data": {
+        "entities": [
+            {
+                "config_entry_id": null,
+                "device_id": null,
+                "entity_id": "mock_component.registry_id",
+                "name": null,
+                "platform": "zwave",
+                "unique_id": "567-1000"
+            }
+        ]
+    },
+    "key": "core.entity_registry",
+    "version": 1
+}
