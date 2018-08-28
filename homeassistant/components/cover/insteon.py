@@ -4,7 +4,6 @@ Support for Insteon covers via PowerLinc Modem.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/cover.insteon/
 """
-import asyncio
 import logging
 import math
 
@@ -57,12 +56,10 @@ class InsteonCoverDevice(InsteonEntity, CoverDevice):
         """Return the boolean response if the node is on."""
         return bool(self.current_cover_position)
 
-    
     async def async_open_cover(self, **kwargs):
         """Open device."""
         self._insteon_device_state.open()
 
-    
     async def async_close_cover(self, **kwargs):
         """Close device."""
         self._insteon_device_state.close()
