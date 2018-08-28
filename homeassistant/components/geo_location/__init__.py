@@ -48,12 +48,12 @@ class GeoLocationEvent(Entity):
         return None
 
     @property
-    def latitude(self):
+    def latitude(self) -> Optional[float]:
         """Return latitude value of this external event."""
         return None
 
     @property
-    def longitude(self):
+    def longitude(self) -> Optional[float]:
         """Return longitude value of this external event."""
         return None
 
@@ -62,9 +62,9 @@ class GeoLocationEvent(Entity):
         """Return the state attributes of this external event."""
         data = {}
         if self.distance is not None:
-            data[ATTR_DISTANCE] = self.distance
+            data[ATTR_DISTANCE] = round(self.distance, 1)
         if self.latitude is not None:
-            data[ATTR_LATITUDE] = self.latitude
+            data[ATTR_LATITUDE] = round(self.latitude, 5)
         if self.longitude is not None:
-            data[ATTR_LONGITUDE] = self.longitude
+            data[ATTR_LONGITUDE] = round(self.longitude, 5)
         return data

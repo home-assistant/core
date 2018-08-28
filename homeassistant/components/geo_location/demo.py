@@ -117,12 +117,12 @@ class DemoGeoLocationEvent(GeoLocationEvent):
         return self._distance
 
     @property
-    def latitude(self):
+    def latitude(self) -> Optional[float]:
         """Return latitude value of this external event."""
         return self._latitude
 
     @property
-    def longitude(self):
+    def longitude(self) -> Optional[float]:
         """Return longitude value of this external event."""
         return self._longitude
 
