@@ -1,8 +1,8 @@
 """
-Support for Insteon lights via PowerLinc Modem.
+Support for Insteon covers via PowerLinc Modem.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/light.insteon/
+https://home-assistant.io/components/cover.insteon/
 """
 import asyncio
 import logging
@@ -12,25 +12,26 @@ from homeassistant.components.insteon import InsteonEntity
 from homeassistant.components.cover import (CoverDevice, ATTR_POSITION,
                                             SUPPORT_OPEN, SUPPORT_CLOSE,
                                             SUPPORT_SET_POSITION)
-# from homeassistant.const import (
-#     STATE_OPEN, STATE_CLOSED, STATE_OPENING, STATE_CLOSING, STATE_UNKNOWN)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['insteon']
+SUPPORTED_FEATURES = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
-    """Set up the Insteon component."""
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Set up the Insteon platform."""
+    if not discovery_info:
+        return
+
     insteon_modem = hass.data['insteon'].get('modem')
 
     address = discovery_info['address']
     device = insteon_modem.devices[address]
     state_key = discovery_info['state_key']
 
-    _LOGGER.debug('Adding device %s entity %s to Light platform',
+    _LOGGER.debug('Adding device %s entity %s to Cover platform',
                   device.address.hex, device.states[state_key].name)
 
     new_entity = InsteonCoverDevice(device, state_key)
@@ -49,29 +50,27 @@ class InsteonCoverDevice(InsteonEntity, CoverDevice):
     @property
     def supported_features(self):
         """Return the supported features for this entity."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+        return SUPPORTED_FEATURES
 
     @property
     def is_closed(self):
         """Return the boolean response if the node is on."""
         return bool(self.current_cover_position)
 
-    @asyncio.coroutine
-    def async_open_cover(self, **kwargs):
+    
+    async def async_open_cover(self, **kwargs):
         """Open device."""
         self._insteon_device_state.open()
 
-    @asyncio.coroutine
-    def async_close_cover(self, **kwargs):
+    
+    async def async_close_cover(self, **kwargs):
         """Close device."""
         self._insteon_device_state.close()
 
-    @asyncio.coroutine
-    def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs):
         """Set the cover position."""
-        if ATTR_POSITION in kwargs:
-            position = int(kwargs[ATTR_POSITION]*255/100)
-            if position == 0:
-                self._insteon_device_state.close()
-            else:
-                self._insteon_device_state.set_position(position)
+        position = int(kwargs[ATTR_POSITION]*255/100)
+        if position == 0:
+            self._insteon_device_state.close()
+        else:
+            self._insteon_device_state.set_position(position)
