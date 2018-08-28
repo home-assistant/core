@@ -152,8 +152,8 @@ async def _load_mfa_module(hass: HomeAssistant, module_name: str) \
 
     try:
         module = importlib.import_module(module_path)
-    except ImportError:
-        _LOGGER.warning('Unable to find %s', module_path)
+    except ImportError as err:
+        _LOGGER.error('Unable to load mfa module %s: %s', module_name, err)
         return None
 
     if hass.config.skip_pip or not hasattr(module, 'REQUIREMENTS'):
