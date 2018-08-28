@@ -7,10 +7,10 @@ import sys
 from typing import Any, Dict, List, Optional
 from urllib.parse import urlparse
 
+import pkg_resources
+
 import homeassistant.util.package as pkg_util
 from homeassistant.core import HomeAssistant
-
-import pkg_resources
 
 DATA_PIP_LOCK = 'pip_lock'
 DATA_PKG_CACHE = 'pkg_cache'
