@@ -45,11 +45,17 @@ async def async_setup(hass, config):
 
     config = config.get(DOMAIN)
     if config is None:
+        hass.data[DOMAIN] = {
+            CONF_INTENTS: {},
+            CONF_ERROR_SUPPRESSED_CONVERSATIONS: [],
+        }
         return True
 
-    hass.data[DOMAIN] = {CONF_INTENTS: config.get(CONF_INTENTS),
-                         CONF_ERROR_SUPPRESSED_CONVERSATIONS:
-                             config.get(CONF_ERROR_SUPPRESSED_CONVERSATIONS)}
+    hass.data[DOMAIN] = {
+        CONF_INTENTS: config[CONF_INTENTS],
+        CONF_ERROR_SUPPRESSED_CONVERSATIONS:
+            config[CONF_ERROR_SUPPRESSED_CONVERSATIONS],
+    }
 
     for data in hass.data[DOMAIN][CONF_INTENTS].values():
         matchers = []
@@ -58,7 +64,7 @@ async def async_setup(hass, config):
 
         data[CONF_MATCHERS] = matchers
 
-    hass.async_add_job(hass.config_entries.flow.async_init(
+    hass.async_create_task(hass.config_entries.flow.async_init(
         DOMAIN, context={'source': config_entries.SOURCE_IMPORT}
     ))
 
