@@ -73,11 +73,13 @@ def package_loadable(package: str) -> bool:
         # This is a zip file
         req = pkg_resources.Requirement.parse(urlparse(package).fragment)
 
+    req_proj_name = req.project_name.lower()
+
     for path in sys.path:
         for dist in pkg_resources.find_distributions(path):
             # If the project name is the same, it will be the one that is
             # loaded when we import it.
-            if dist.project_name == req.project_name:
+            if dist.project_name.lower() == req_proj_name:
                 return dist in req
 
     return False
