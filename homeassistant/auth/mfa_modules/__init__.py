@@ -11,6 +11,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant import requirements, data_entry_flow
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.decorator import Registry
 
 MULTI_FACTOR_AUTH_MODULES = Registry()
@@ -127,26 +128,23 @@ class SetupFlow(data_entry_flow.FlowHandler):
 
 async def auth_mfa_module_from_config(
         hass: HomeAssistant, config: Dict[str, Any]) \
-        -> Optional[MultiFactorAuthModule]:
+        -> MultiFactorAuthModule:
     """Initialize an auth module from a config."""
     module_name = config[CONF_TYPE]
     module = await _load_mfa_module(hass, module_name)
-
-    if module is None:
-        return None
 
     try:
         config = module.CONFIG_SCHEMA(config)  # type: ignore
     except vol.Invalid as err:
         _LOGGER.error('Invalid configuration for multi-factor module %s: %s',
                       module_name, humanize_error(config, err))
-        return None
+        raise
 
     return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)  # type: ignore
 
 
 async def _load_mfa_module(hass: HomeAssistant, module_name: str) \
-        -> Optional[types.ModuleType]:
+        -> types.ModuleType:
     """Load an mfa auth module."""
     module_path = 'homeassistant.auth.mfa_modules.{}'.format(module_name)
 
@@ -154,7 +152,8 @@ async def _load_mfa_module(hass: HomeAssistant, module_name: str) \
         module = importlib.import_module(module_path)
     except ImportError as err:
         _LOGGER.error('Unable to load mfa module %s: %s', module_name, err)
-        return None
+        raise HomeAssistantError('Unable to load mfa module {}: {}'.format(
+            module_name, err))
 
     if hass.config.skip_pip or not hasattr(module, 'REQUIREMENTS'):
         return module
@@ -170,7 +169,9 @@ async def _load_mfa_module(hass: HomeAssistant, module_name: str) \
         hass, module_path, module.REQUIREMENTS)    # type: ignore
 
     if not req_success:
-        return None
+        raise HomeAssistantError(
+            'Unable to process requirements of mfa module {}'.format(
+                module_name))
 
     processed.add(module_name)
     return module
