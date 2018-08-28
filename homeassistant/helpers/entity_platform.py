@@ -348,7 +348,6 @@ class EntityPlatform:
 
         This method must be run in the event loop.
         """
-        print('async reset')
         if self._async_cancel_retry_setup is not None:
             self._async_cancel_retry_setup()
             self._async_cancel_retry_setup = None
@@ -379,6 +378,20 @@ class EntityPlatform:
     async def _async_remove_entity(self, entity_id):
         """Remove entity id from platform."""
         entity = self.entities.pop(entity_id)
+
+        if entity.unique_id is not None:
+
+            entity_registry = await \
+                self.hass.helpers.entity_registry.async_get_registry()
+
+            device_id = None
+            if entity_id in entity_registry.entities:
+                device_id = entity_registry.entities[entity_id].device_id
+
+            if device_id is not None:
+                device_registry = await \
+                    self.hass.helpers.device_registry.async_get_registry()
+                device_registry.async_remove_device(device_id)
 
         if hasattr(entity, 'async_will_remove_from_hass'):
             await entity.async_will_remove_from_hass()

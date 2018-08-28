@@ -21,7 +21,7 @@ CONNECTION_NETWORK_MAC = 'mac'
 CONNECTION_ZIGBEE = 'zigbee'
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(slots=True)
 class DeviceEntry:
     """Device Registry Entry."""
 
@@ -33,6 +33,7 @@ class DeviceEntry:
     name = attr.ib(type=str, default=None)
     sw_version = attr.ib(type=str, default=None)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
+    ref_counter = attr.ib(type=int, default=1)  # runtime reference
 
 
 class DeviceRegistry:
@@ -65,6 +66,7 @@ class DeviceRegistry:
         if device is not None:
             if config_entry not in device.config_entries:
                 device.config_entries.add(config_entry)
+                device.ref_counter += 1
                 self.async_schedule_save()
             return device
 
@@ -127,23 +129,14 @@ class DeviceRegistry:
 
         return data
 
-    async def async_remove_device(self, device_id):
+    @callback
+    def async_remove_device(self, device_id):
         """Remove device from registry."""
-        # om det är entity, gör ett uppslag i entity registry och ta reda på vilka entities som tillhör en viss device id
-        # om det är hub så finns det bara en instans
-        # denna logiken kanske ska skötas av entity platform eller hubben själv, låta metoden bara göra vad den blir tillsagd
-        entity_registry = await \
-            self.hass.helpers.entity_registry.async_get_registry()
-
-        entities = 0
-        for entity in entity_registry.values():
-            if entity.device_id == device_id:
-                entities += 1
-        if entities == 1:
-            for device in self.devices:
-                if device.id == device_id:
-                    self.devices.remove(device)
-                    self.async_schedule_save()
+        if device_id in self.devices:
+            self.devices[device_id].ref_counter -= 1
+            if self.devices[device_id].ref_counter == 0:
+                del self.devices[device_id]
+                self.async_schedule_save()
 
 
 @bind_hass
