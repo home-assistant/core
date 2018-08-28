@@ -7,6 +7,9 @@ homeassistant:
   elevation: 134
   customize: !include customize.yaml
   packages: !include_dir_named ais_packages/
+  customize_glob:
+    fan.*:
+      custom_ui_state_card: state-card-custom-fanspeed
 
 # Track the sun
 sun:
@@ -22,6 +25,7 @@ ais_updater:
   include_used_components: false
 ais_drives_service:
 conversation:
+
 
 # for restore_state on input_select (radio stations etc.)
 recorder:
@@ -86,18 +90,20 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-#  development_repo: /home/andrzej/Projects/AIS-home-assistant-polymer
+#  development_repo: /home/andrzej/Projects/home-assistant-polymer
   javascript_version: latest
   extra_html_url:
     - /static/ais_dom/custom_ui/state-card-ais-microphone.html
     - /static/ais_dom/custom_ui/state-card-tiles.html
     - /static/ais_dom/custom_ui/state-card-text.html
     - /static/ais_dom/custom_ui/state-card-robot-disco.html
+    - /static/ais_dom/custom_ui/state-card-custom-fanspeed.html
   extra_html_url_es5:
     - /static/ais_dom/custom_ui/state-card-tiles_es5.html
     - /static/ais_dom/custom_ui/state-card-ais-microphone.html
     - /static/ais_dom/custom_ui/state-card-text.html
     - /static/ais_dom/custom_ui/state-card-robot-disco.html
+    - /static/ais_dom/custom_ui/state-card-custom-fanspeed.html
   themes:
     ais:
       primary-color: "#FF9800"

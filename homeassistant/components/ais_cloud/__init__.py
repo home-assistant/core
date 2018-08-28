@@ -171,6 +171,11 @@ def async_setup(hass, config):
                 hass.async_add_job(
                     hass.services.async_call('ais_cloud', 'get_players')
                 )
+            # prepare menu
+            yield from hass.services.async_call(
+                'ais_ai_service',
+                'prepare_remote_menu'
+            )
         except Exception as e:
             _LOGGER.error("device_discovered: " + str(e))
 

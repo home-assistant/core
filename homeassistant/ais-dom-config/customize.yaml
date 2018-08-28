@@ -301,6 +301,13 @@ group.all_ais_sensors:
   context_answer: OK, wybrano wszystkie czujniki.
   friendly_name: Wszystkie czujniki
   remote_group_view: Twój Dom
+group.all_fans:
+  order: 4
+  hidden: false
+  context_key_words: wentylatory, wszystkie wentylatory
+  context_answer: OK, wybrano wszystkie wentylatory.
+  friendly_name: Wszystkie wentylatory
+  remote_group_view: Twój Dom
 group.all_devices:
   order: 4
   hidden: false

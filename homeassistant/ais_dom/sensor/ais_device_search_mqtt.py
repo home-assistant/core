@@ -258,6 +258,27 @@ class MqttSensor(MqttAvailability, Entity):
                         if 'unique_id' not in j_payload:
                             uid = topic.replace("homeassistant/", "").replace("/config", "")
                             j_payload["unique_id"] = uid
+                        # fix for the ifan
+                        if 'command_topic' in j_payload:
+                            t = j_payload["command_topic"]
+                            if 'dom_SONOFF_IFAN' in t and 'POWER2' in t:
+                                t = t.replace("POWER2", "FanSpeed")
+                                j_payload["command_topic"] = t
+                                j_payload["payload_on"] = 1
+                                j_payload["payload_off"] = 0
+                                j_payload["value_template"] = "{% if value_json.FanSpeed == 1 %}1{% else %}0{% endif %}"
+                            elif 'dom_SONOFF_IFAN' in t and 'POWER3' in t:
+                                t = t.replace("POWER3", "FanSpeed")
+                                j_payload["command_topic"] = t
+                                j_payload["payload_on"] = 2
+                                j_payload["payload_off"] = 0
+                                j_payload["value_template"] = "{% if value_json.FanSpeed == 2 %}2{% else %}0{% endif %}"
+                            elif 'dom_SONOFF_IFAN' in t and 'POWER4' in t:
+                                t = t.replace("POWER4", "FanSpeed")
+                                j_payload["command_topic"] = t
+                                j_payload["payload_on"] = 3
+                                j_payload["payload_off"] = 0
+                                j_payload["value_template"] = "{% if value_json.FanSpeed == 3 %}3{% else %}0{% endif %}"
                         # to discover the device
                         self.hass.async_create_task(
                             self.hass.services.async_call('mqtt', 'publish', {
@@ -267,7 +288,7 @@ class MqttSensor(MqttAvailability, Entity):
                         )
                         if 'command_topic' in j_payload:
                             command_topic = j_payload["command_topic"].replace("/POWER", "/status")
-                            # to discover the sensors in device
+                            # to discover the sensors on device
                             self.hass.bus.fire('search_for_sensors', {
                                 'topic': command_topic
                             })

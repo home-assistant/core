@@ -66,6 +66,7 @@ INTENT_SWITCHES_OFF = 'AisSwitchesOff'
 INTENT_OPEN_COVER = 'AisCoverOpen'
 INTENT_CLOSE_COVER = 'AisCoverClose'
 INTENT_STOP = 'AisStop'
+INTENT_SCENE = 'AisSceneActive'
 
 
 REGEX_TYPE = type(re.compile(''))
@@ -959,6 +960,10 @@ async def async_setup(hass, config):
             info = "Przełącznik z pomiarem mocy"
         elif 'dom_' + ais_global.G_MODEL_SONOFF_DUAL in iot:
             info = "Przełącznik podwójny"
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_BASIC in iot:
+            info = "Przełącznik"
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_IFAN in iot:
+            info = "Wentylator sufitowy"
         else:
             info = "Nowe urządzenie"
         hass.services.call(
@@ -1008,6 +1013,7 @@ async def async_setup(hass, config):
     hass.helpers.intent.async_register(AisOpenCover())
     hass.helpers.intent.async_register(AisCloseCover())
     hass.helpers.intent.async_register(AisStop())
+    hass.helpers.intent.async_register(AisSceneActive())
     async_register(hass, INTENT_GET_WEATHER, [
             'pogoda',
             'pogoda w {location}',
@@ -1108,6 +1114,7 @@ async def async_setup(hass, config):
     async_register(hass, INTENT_OPEN_COVER, ['Otwórz {item}', 'Odsłoń {item}'])
     async_register(hass, INTENT_CLOSE_COVER, ['Zamknij {item}', 'Odsłoń {item}'])
     async_register(hass, INTENT_STOP, ['Stop', 'Zatrzymaj', 'Koniec', 'Pauza', 'Zaniechaj', 'Stój'])
+    async_register(hass, INTENT_SCENE, ['Scena {item}', 'Aktywuj [scenę] {item}'])
 
 
     return True
@@ -1257,6 +1264,10 @@ def _process_command_from_frame(hass, service):
                 info = "Znaleziono nowy przełącznik z pomiarem mocy"
             elif item["model"] == ais_global.G_MODEL_SONOFF_DUAL:
                 info = "Znaleziono nowy podwójny przełącznik"
+            elif item["model"] == ais_global.G_MODEL_SONOFF_BASIC:
+                info = "Znaleziono nowy przełącznik"
+            elif item["model"] == ais_global.G_MODEL_SONOFF_IFAN:
+                info = "Znaleziono nowy wentylator sufitowy"
             else:
                 info = "Znaleziono nowe urządzenie, to urządzenie może"
                 info += " nie być w pełni wspierane przez system 'Asystent domowy'"
@@ -1307,6 +1318,10 @@ def _process_command_from_frame(hass, service):
                 info += "przełącznik z pomiarem mocy"
             elif 'dom_' + ais_global.G_MODEL_SONOFF_DUAL in cci["ssid"].lower():
                 info += "podwójny przełącznik"
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_BASIC in cci["ssid"].lower():
+                info += "przełącznik"
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_IFAN in cci["ssid"].lower():
+                info += "wentylator sufitowy"
             else:
                 info += cci["ssid"] + " "
         if "state" in cci:
@@ -2109,3 +2124,35 @@ class AisStop(intent.IntentHandler):
             'media_player', 'media_stop')
         message = 'ok, stop'
         return message, True
+
+
+class AisSceneActive(intent.IntentHandler):
+    """Handle AisSceneActive intents."""
+    intent_type = INTENT_SCENE
+    slot_schema = {
+        'item': cv.string,
+    }
+
+    @asyncio.coroutine
+    def async_handle(self, intent_obj):
+        """Handle the intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+        name = slots['item']['value']
+        entity = _match_entity(hass, name)
+        success = False
+
+        if not entity:
+            message = 'Nie znajduję sceny, o nazwie: ' + name
+        else:
+            # check if we can open on this device
+            if entity.entity_id.startswith('scene.'):
+                yield from hass.services.async_call(
+                    'scene', 'turn_on', {
+                        ATTR_ENTITY_ID: entity.entity_id,
+                    }, blocking=True)
+                message = 'OK, aktywuję {}'.format(entity.name)
+                success = True
+            else:
+                message = name + ' nie można aktywować'
+        return message, success
