@@ -202,7 +202,7 @@ class HomeAssistantHTTP:
 
         if hass.auth.active and hass.auth.support_legacy:
             _LOGGER.warning(
-                "legacy_api_password support has been enabled. If you don't"
+                "legacy_api_password support has been enabled. If you don't "
                 "require it, remove the 'api_password' from your http config.")
 
         setup_auth(app, trusted_networks, hass.auth.active,
