@@ -61,7 +61,6 @@ def from_config_dict(config: Dict[str, Any],
             config, hass, config_dir, enable_log, verbose, skip_pip,
             log_rotate_days, log_file, log_no_color)
     )
-
     return hass
 
 
@@ -94,8 +93,13 @@ async def async_from_config_dict(config: Dict[str, Any],
     try:
         await conf_util.async_process_ha_core_config(
             hass, core_config, has_api_password, has_trusted_networks)
-    except vol.Invalid as ex:
-        conf_util.async_log_exception(ex, 'homeassistant', core_config, hass)
+    except vol.Invalid as config_err:
+        conf_util.async_log_exception(
+            config_err, 'homeassistant', core_config, hass)
+        return None
+    except HomeAssistantError:
+        _LOGGER.error("Home Assistant core failed to initialize. "
+                      "Further initialization aborted")
         return None
 
     await hass.async_add_executor_job(
@@ -130,7 +134,7 @@ async def async_from_config_dict(config: Dict[str, Any],
     res = await core_components.async_setup(hass, config)
     if not res:
         _LOGGER.error("Home Assistant core failed to initialize. "
-                      "further initialization aborted")
+                      "Further initialization aborted")
         return hass
 
     await persistent_notification.async_setup(hass, config)
