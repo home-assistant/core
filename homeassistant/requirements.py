@@ -63,9 +63,9 @@ def pip_kwargs(config_dir: Optional[str]) -> Dict[str, Any]:
 class PackageLoadable:
     """Class to check if a package is loadable, with built-in cache."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the PackageLoadable class."""
-        self.dist_cache = {}  # type: Dict[str, any]
+        self.dist_cache = {}  # type: Dict[str, pkg_resources.Distribution]
         self.hass = hass
 
     async def loadable(self, package: str) -> bool:
@@ -100,7 +100,7 @@ class PackageLoadable:
 
         return False
 
-    def _fill_cache(self, path):
+    def _fill_cache(self, path: str) -> None:
         """Add packages from a path to the cache."""
         dist_cache = self.dist_cache
         for dist in pkg_resources.find_distributions(path):
