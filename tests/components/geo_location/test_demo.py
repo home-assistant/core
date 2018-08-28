@@ -40,8 +40,6 @@ class TestDemoPlatform(unittest.TestCase):
         state_first_entry = self.hass.states.get(entity_ids[0])
         state_last_entry = self.hass.states.get(entity_ids[-1])
         # Check a single device's attributes.
-        self.assertAlmostEqual(state_first_entry.attributes['distance'],
-                               float(state_first_entry.state), places=0)
         self.assertAlmostEqual(state_first_entry.attributes['latitude'],
                                self.hass.config.latitude, delta=1.0)
         self.assertAlmostEqual(state_first_entry.attributes['longitude'],
