@@ -160,6 +160,7 @@ pynx584==0.4
 # homeassistant.components.openuv
 pyopenuv==1.0.4
 
+# homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.sensor.otp
 pyotp==2.2.6

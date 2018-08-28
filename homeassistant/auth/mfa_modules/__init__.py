@@ -84,10 +84,17 @@ class MultiFactorAuthModule:
         """Return whether user is setup."""
         raise NotImplementedError
 
-    async def async_validation(
+    async def async_validate(
             self, user_id: str, user_input: Dict[str, Any]) -> bool:
         """Return True if validation passed."""
         raise NotImplementedError
+
+    async def async_generate(self, user_id: str) -> Optional[str]:
+        """Generate init code.
+
+        Optional
+        """
+        return None
 
 
 class SetupFlow(data_entry_flow.FlowHandler):

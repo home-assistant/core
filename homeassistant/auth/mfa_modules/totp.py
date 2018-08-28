@@ -130,7 +130,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
         return user_id in self._users   # type: ignore
 
-    async def async_validation(
+    async def async_validate(
             self, user_id: str, user_input: Dict[str, Any]) -> bool:
         """Return True if validation passed."""
         if self._users is None:

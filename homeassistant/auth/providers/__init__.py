@@ -228,7 +228,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
                     reason='login_expired'
                 )
 
-            result = await auth_module.async_validation(
+            result = await auth_module.async_validate(
                 self.user.id, user_input)  # type: ignore
             if not result:
                 errors['base'] = 'invalid_code'
@@ -236,10 +236,15 @@ class LoginFlow(data_entry_flow.FlowHandler):
             if not errors:
                 return await self.async_finish(self.user)
 
+        # MFA module may have init code need generate
+        mfa_init_code = await auth_module.async_generate(
+            self.user.id)  # type: ignore
+
         description_placeholders = {
             'mfa_module_name': auth_module.name,
-            'mfa_module_id': auth_module.id
-        }  # type: Dict[str, str]
+            'mfa_module_id': auth_module.id,
+            'mfa_init_code': mfa_init_code,
+        }  # type: Dict[str, Optional[str]]
 
         return self.async_show_form(
             step_id='mfa',
