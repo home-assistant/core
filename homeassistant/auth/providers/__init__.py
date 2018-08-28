@@ -134,8 +134,8 @@ async def load_auth_provider_module(
     try:
         module = importlib.import_module(
             'homeassistant.auth.providers.{}'.format(provider))
-    except ImportError:
-        _LOGGER.warning('Unable to find auth provider %s', provider)
+    except ImportError as err:
+        _LOGGER.error('Unable to load auth provider %s: %s', provider, err)
         return None
 
     if hass.config.skip_pip or not hasattr(module, 'REQUIREMENTS'):
