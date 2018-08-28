@@ -28,18 +28,18 @@ EVENT_NAMES = ["Bushfire", "Hazard Reduction", "Grass Fire", "Burn off",
                "Earthquake", "Tsunami"]
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo geo locations."""
-    DemoManager(hass, add_devices)
+    DemoManager(hass, add_entities)
 
 
 class DemoManager:
     """Device manager for demo geo location events."""
 
-    def __init__(self, hass, add_devices):
+    def __init__(self, hass, add_entities):
         """Initialise the demo geo location event manager."""
         self._hass = hass
-        self._add_devices = add_devices
+        self._add_entities = add_entities
         self._managed_devices = []
         self._update(count=NUMBER_OF_DEMO_DEVICES)
         self._init_regular_updates()
@@ -86,7 +86,7 @@ class DemoManager:
             _LOGGER.debug("Adding %s", new_device)
             new_devices.append(new_device)
             self._managed_devices.append(new_device)
-        self._add_devices(new_devices)
+        self._add_entities(new_devices)
 
 
 class DemoGeoLocationEvent(GeoLocationEvent):
