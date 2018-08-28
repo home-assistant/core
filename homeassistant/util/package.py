@@ -32,7 +32,7 @@ def install_package(package: str, upgrade: bool = True,
     """
     # Not using 'import pip; pip.main([])' because it breaks the logger
     with INSTALL_LOCK:
-        if package_loadable(package):
+        if PACKAGES.loadable(package):
             return True
 
         _LOGGER.info('Attempting install of %s', package)
@@ -61,30 +61,6 @@ def install_package(package: str, upgrade: bool = True,
         return True
 
 
-def package_loadable(package: str) -> bool:
-    """Check if a package is what will be loaded when we import it.
-
-    Returns True when the requirement is met.
-    Returns False when the package is not installed or doesn't meet req.
-    """
-    try:
-        req = pkg_resources.Requirement.parse(package)
-    except ValueError:
-        # This is a zip file
-        req = pkg_resources.Requirement.parse(urlparse(package).fragment)
-
-    req_proj_name = req.project_name.lower()
-
-    for path in sys.path:
-        for dist in pkg_resources.find_distributions(path):
-            # If the project name is the same, it will be the one that is
-            # loaded when we import it.
-            if dist.project_name.lower() == req_proj_name:
-                return dist in req
-
-    return False
-
-
 async def async_get_user_site(deps_dir: str) -> str:
     """Return user local library path.
 
@@ -100,3 +76,47 @@ async def async_get_user_site(deps_dir: str) -> str:
     stdout, _ = await process.communicate()
     lib_dir = stdout.decode().strip()
     return lib_dir
+
+
+class PackageLoadable:
+    """Class to check if a package is loadable, with built-in cache."""
+
+    def __init__(self):
+        """Initialize the PackageLoadable class."""
+        self.dist_cache = {}  # type: Dict[str, any]
+
+    def loadable(self, package: str) -> bool:
+        """Check if a package is what will be loaded when we import it.
+
+        Returns True when the requirement is met.
+        Returns False when the package is not installed or doesn't meet req.
+        """
+        dist_cache = self.dist_cache
+
+        try:
+            req = pkg_resources.Requirement.parse(package)
+        except ValueError:
+            # This is a zip file. We no longer use this in Home Assistant,
+            # leaving it in for custom components.
+            req = pkg_resources.Requirement.parse(urlparse(package).fragment)
+
+        req_proj_name = req.project_name.lower()
+        dist = dist_cache.get(req_proj_name)
+
+        if dist is not None:
+            return dist in req
+
+        for path in sys.path:
+            # We read the whole mount point as we're already here
+            # Caching it on first call makes subsequent calls a lot faster.
+            for dist in pkg_resources.find_distributions(path):
+                dist_cache.setdefault(dist.project_name.lower(), dist)
+
+            dist = dist_cache.get(req_proj_name)
+            if dist is not None:
+                return dist in req
+
+        return False
+
+
+PACKAGES = PackageLoadable()
