@@ -103,8 +103,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the OpenUV component."""
-    from pyopenuv.util import validate_api_key
-
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_OPENUV_CLIENT] = {}
     hass.data[DOMAIN][DATA_OPENUV_LISTENER] = {}
