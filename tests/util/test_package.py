@@ -239,3 +239,6 @@ def test_package_loadable_installed_twice():
 
     with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
         assert package.package_loadable('hello==2.0.0')
+
+    with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
+        assert package.package_loadable('Hello==2.0.0')
