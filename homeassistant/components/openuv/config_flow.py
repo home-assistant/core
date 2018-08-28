@@ -8,7 +8,7 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.core import callback
 from homeassistant.const import (
     CONF_API_KEY, CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE)
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import aiohttp_client, config_validation as cv
 
 from .const import DOMAIN
 
@@ -38,6 +38,8 @@ class OpenUvFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_user(self, user_input=None):
         """Handle the start of the config flow."""
+        from pyopenuv.util import validate_api_key
+
         errors = {}
 
         if user_input is not None:
@@ -45,12 +47,18 @@ class OpenUvFlowHandler(data_entry_flow.FlowHandler):
                 user_input.get(CONF_LATITUDE, self.hass.config.latitude),
                 user_input.get(CONF_LONGITUDE, self.hass.config.longitude))
 
-            if identifier not in configured_instances(self.hass):
-                return self.async_create_entry(
-                    title=identifier,
-                    data=user_input,
-                )
-            errors['base'] = 'identifier_exists'
+            if identifier in configured_instances(self.hass):
+                errors['base'] = 'identifier_exists'
+            else:
+                websession = aiohttp_client.async_get_clientsession(self.hass)
+                api_key_validation = await validate_api_key(
+                    user_input[CONF_API_KEY], websession)
+                if api_key_validation:
+                    return self.async_create_entry(
+                        title=identifier,
+                        data=user_input,
+                    )
+                errors['base'] = 'invalid_api_key'
 
         data_schema = OrderedDict()
         data_schema[vol.Required(CONF_API_KEY)] = str

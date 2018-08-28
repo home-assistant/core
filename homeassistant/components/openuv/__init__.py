@@ -22,7 +22,7 @@ from homeassistant.helpers.event import async_track_time_interval
 from .config_flow import configured_instances
 from .const import DOMAIN
 
-REQUIREMENTS = ['pyopenuv==1.0.3']
+REQUIREMENTS = ['pyopenuv==1.0.4']
 _LOGGER = logging.getLogger(__name__)
 
 DATA_OPENUV_CLIENT = 'data_client'
@@ -103,6 +103,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def async_setup(hass, config):
     """Set up the OpenUV component."""
+    from pyopenuv.util import validate_api_key
+
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][DATA_OPENUV_CLIENT] = {}
     hass.data[DOMAIN][DATA_OPENUV_LISTENER] = {}
@@ -168,7 +170,6 @@ async def async_setup_entry(hass, config_entry):
 
     try:
         websession = aiohttp_client.async_get_clientsession(hass)
-
         openuv = OpenUV(
             Client(
                 conf[CONF_API_KEY],
@@ -179,7 +180,6 @@ async def async_setup_entry(hass, config_entry):
             conf[CONF_BINARY_SENSORS][CONF_MONITORED_CONDITIONS] +
             conf[CONF_SENSORS][CONF_MONITORED_CONDITIONS])
         await openuv.async_update()
-
         data[DATA_OPENUV_CLIENT][config_entry.entry_id] = openuv
     except OpenUvError as err:
         _LOGGER.error('An error occurred: %s', str(err))

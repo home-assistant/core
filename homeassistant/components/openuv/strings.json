@@ -13,7 +13,8 @@
       }
     },
     "error": {
-      "identifier_exists": "Coordinates already registered"
+      "identifier_exists": "Coordinates already registered",
+      "invalid_api_key": "Invalid API key"
     }
   }
 }
