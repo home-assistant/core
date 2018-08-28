@@ -31,7 +31,7 @@ def mock_sys():
 @pytest.fixture
 def mock_exists():
     """Mock package_loadable."""
-    with patch('homeassistant.util.package.package_loadable') as mock:
+    with patch('homeassistant.util.package.PackageLoadable.loadable') as mock:
         mock.return_value = False
         yield mock
 
@@ -193,12 +193,12 @@ def test_install_constraint(
 def test_check_package_global():
     """Test for an installed package."""
     installed_package = list(pkg_resources.working_set)[0].project_name
-    assert package.package_loadable(installed_package)
+    assert package.PackageLoadable().loadable(installed_package)
 
 
 def test_check_package_zip():
     """Test for an installed zip package."""
-    assert not package.package_loadable(TEST_ZIP_REQ)
+    assert not package.PackageLoadable().loadable(TEST_ZIP_REQ)
 
 
 @asyncio.coroutine
@@ -229,16 +229,16 @@ def test_package_loadable_installed_twice():
     v2 = pkg_resources.Distribution(project_name='hello', version='2.0.0')
 
     with patch('pkg_resources.find_distributions', side_effect=[[v1]]):
-        assert not package.package_loadable('hello==2.0.0')
+        assert not package.PackageLoadable().loadable('hello==2.0.0')
 
     with patch('pkg_resources.find_distributions', side_effect=[[v1], [v2]]):
-        assert not package.package_loadable('hello==2.0.0')
+        assert not package.PackageLoadable().loadable('hello==2.0.0')
 
     with patch('pkg_resources.find_distributions', side_effect=[[v2], [v1]]):
-        assert package.package_loadable('hello==2.0.0')
+        assert package.PackageLoadable().loadable('hello==2.0.0')
 
     with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
-        assert package.package_loadable('hello==2.0.0')
+        assert package.PackageLoadable().loadable('hello==2.0.0')
 
     with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
-        assert package.package_loadable('Hello==2.0.0')
+        assert package.PackageLoadable().loadable('Hello==2.0.0')
