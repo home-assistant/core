@@ -25,7 +25,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 
 
 async def async_setup(hass, config):
-    """Setup this component."""
+    """Set up this component."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_EVENTS)
     await component.async_setup(config)
@@ -61,8 +61,6 @@ class GeoLocationEvent(Entity):
     def state_attributes(self):
         """Return the state attributes of this external event."""
         data = {}
-        if self.distance is not None:
-            data[ATTR_DISTANCE] = round(self.distance, 1)
         if self.latitude is not None:
             data[ATTR_LATITUDE] = round(self.latitude, 5)
         if self.longitude is not None:
