@@ -10,6 +10,7 @@ from voluptuous.humanize import humanize_error
 from homeassistant import data_entry_flow, requirements
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
@@ -110,33 +111,31 @@ class AuthProvider:
 
 async def auth_provider_from_config(
         hass: HomeAssistant, store: AuthStore,
-        config: Dict[str, Any]) -> Optional[AuthProvider]:
+        config: Dict[str, Any]) -> AuthProvider:
     """Initialize an auth provider from a config."""
     provider_name = config[CONF_TYPE]
     module = await load_auth_provider_module(hass, provider_name)
-
-    if module is None:
-        return None
 
     try:
         config = module.CONFIG_SCHEMA(config)  # type: ignore
     except vol.Invalid as err:
         _LOGGER.error('Invalid configuration for auth provider %s: %s',
                       provider_name, humanize_error(config, err))
-        return None
+        raise
 
     return AUTH_PROVIDERS[provider_name](hass, store, config)  # type: ignore
 
 
 async def load_auth_provider_module(
-        hass: HomeAssistant, provider: str) -> Optional[types.ModuleType]:
+        hass: HomeAssistant, provider: str) -> types.ModuleType:
     """Load an auth provider."""
     try:
         module = importlib.import_module(
             'homeassistant.auth.providers.{}'.format(provider))
     except ImportError as err:
         _LOGGER.error('Unable to load auth provider %s: %s', provider, err)
-        return None
+        raise HomeAssistantError('Unable to load auth provider {}: {}'.format(
+            provider, err))
 
     if hass.config.skip_pip or not hasattr(module, 'REQUIREMENTS'):
         return module
@@ -154,7 +153,9 @@ async def load_auth_provider_module(
         hass, 'auth provider {}'.format(provider), reqs)
 
     if not req_success:
-        return None
+        raise HomeAssistantError(
+            'Unable to process requirements of auth provider {}'.format(
+                provider))
 
     processed.add(provider)
     return module
