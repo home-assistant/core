@@ -1,5 +1,5 @@
 """
-Support for data from openuv.io.
+Support for UV data from openuv.io.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/openuv/
