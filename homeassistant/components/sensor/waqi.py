@@ -60,7 +60,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the requested World Air Quality Index locations."""
     import waqiasync
 
@@ -86,7 +87,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             asyncio.TimeoutError):
         _LOGGER.exception('Failed to connect to WAQI servers.')
         raise PlatformNotReady
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class WaqiSensor(Entity):

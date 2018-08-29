@@ -87,6 +87,8 @@ homeassistant/components/*/axis.py @kane610
 homeassistant/components/*/bmw_connected_drive.py @ChristianKuehnel
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/*/deconz.py @kane610
+homeassistant/components/ecovacs.py @OverloadUT
+homeassistant/components/*/ecovacs.py @OverloadUT
 homeassistant/components/eight_sleep.py @mezz64
 homeassistant/components/*/eight_sleep.py @mezz64
 homeassistant/components/hive.py @Rendili @KJonline

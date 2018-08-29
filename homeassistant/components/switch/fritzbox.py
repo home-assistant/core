@@ -25,7 +25,7 @@ ATTR_TOTAL_CONSUMPTION_UNIT_VALUE = 'kWh'
 ATTR_TEMPERATURE_UNIT = 'temperature_unit'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fritzbox smarthome switch platform."""
     devices = []
     fritz_list = hass.data[FRITZBOX_DOMAIN]
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if device.has_switch:
                 devices.append(FritzboxSwitch(device, fritz))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class FritzboxSwitch(SwitchDevice):

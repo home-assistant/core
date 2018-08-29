@@ -30,9 +30,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Pilight Sensor."""
-    add_devices([PilightSensor(
+    add_entities([PilightSensor(
         hass=hass,
         name=config.get(CONF_NAME),
         variable=config.get(CONF_VARIABLE),

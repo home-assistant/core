@@ -118,19 +118,35 @@ def async_test_home_assistant(loop):
     hass = ha.HomeAssistant(loop)
     hass.config.async_load = Mock()
     store = auth_store.AuthStore(hass)
-    hass.auth = auth.AuthManager(hass, store, {})
+    hass.auth = auth.AuthManager(hass, store, {}, {})
     ensure_auth_manager_loaded(hass.auth)
     INSTANCES.append(hass)
 
     orig_async_add_job = hass.async_add_job
+    orig_async_add_executor_job = hass.async_add_executor_job
+    orig_async_create_task = hass.async_create_task
 
     def async_add_job(target, *args):
-        """Add a magic mock."""
+        """Add job."""
         if isinstance(target, Mock):
             return mock_coro(target(*args))
         return orig_async_add_job(target, *args)
 
+    def async_add_executor_job(target, *args):
+        """Add executor job."""
+        if isinstance(target, Mock):
+            return mock_coro(target(*args))
+        return orig_async_add_executor_job(target, *args)
+
+    def async_create_task(coroutine):
+        """Create task."""
+        if isinstance(coroutine, Mock):
+            return mock_coro()
+        return orig_async_create_task(coroutine)
+
     hass.async_add_job = async_add_job
+    hass.async_add_executor_job = async_add_executor_job
+    hass.async_create_task = async_create_task
 
     hass.config.location_name = 'test home'
     hass.config.config_dir = get_test_config_dir()
@@ -307,7 +323,12 @@ def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
     registry.entities = mock_entries or {}
-    hass.data[entity_registry.DATA_REGISTRY] = registry
+
+    async def _get_reg():
+        return registry
+
+    hass.data[entity_registry.DATA_REGISTRY] = \
+        hass.loop.create_task(_get_reg())
     return registry
 
 
@@ -321,7 +342,7 @@ class MockUser(auth_models.User):
             'is_owner': is_owner,
             'is_active': is_active,
             'name': name,
-            'system_generated': system_generated
+            'system_generated': system_generated,
         }
         if id is not None:
             kwargs['id'] = id
@@ -339,7 +360,7 @@ class MockUser(auth_models.User):
 
 
 async def register_auth_provider(hass, config):
-    """Helper to register an auth provider."""
+    """Register an auth provider."""
     provider = await auth_providers.auth_provider_from_config(
         hass, hass.auth._store, config)
     assert provider is not None, 'Invalid config specified'
@@ -728,7 +749,7 @@ class MockEntity(entity.Entity):
         return self._handle('available')
 
     def _handle(self, attr):
-        """Helper for the attributes."""
+        """Return attribute value."""
         if attr in self._values:
             return self._values[attr]
         return getattr(super(), attr)

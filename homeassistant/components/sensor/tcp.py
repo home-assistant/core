@@ -41,9 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TCP Sensor."""
-    add_devices([TcpSensor(hass, config)])
+    add_entities([TcpSensor(hass, config)])
 
 
 class TcpSensor(Entity):

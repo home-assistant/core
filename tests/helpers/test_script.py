@@ -21,7 +21,7 @@ class TestScriptHelper(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -375,8 +375,84 @@ class TestScriptHelper(unittest.TestCase):
         assert script_obj.can_cancel
         assert len(events) == 2
 
-    def test_wait_template_timeout(self):
-        """Test the wait template."""
+    def test_wait_template_timeout_halt(self):
+        """Test the wait template, halt on timeout."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('switch.test', 'on')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {
+                'wait_template': "{{states.switch.test.state == 'off'}}",
+                'continue_on_timeout': False,
+                'timeout': 5
+            },
+            {'event': event}]))
+
+        script_obj.run()
+        self.hass.block_till_done()
+
+        assert script_obj.is_running
+        assert script_obj.can_cancel
+        assert script_obj.last_action == event
+        assert len(events) == 1
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 1
+
+    def test_wait_template_timeout_continue(self):
+        """Test the wait template with continuing the script."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('switch.test', 'on')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {
+                'wait_template': "{{states.switch.test.state == 'off'}}",
+                'timeout': 5,
+                'continue_on_timeout': True
+            },
+            {'event': event}]))
+
+        script_obj.run()
+        self.hass.block_till_done()
+
+        assert script_obj.is_running
+        assert script_obj.can_cancel
+        assert script_obj.last_action == event
+        assert len(events) == 1
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 2
+
+    def test_wait_template_timeout_default(self):
+        """Test the wait template with default contiune."""
         event = 'test_event'
         events = []
 
@@ -410,7 +486,7 @@ class TestScriptHelper(unittest.TestCase):
         self.hass.block_till_done()
 
         assert not script_obj.is_running
-        assert len(events) == 1
+        assert len(events) == 2
 
     def test_wait_template_variables(self):
         """Test the wait template with variables."""

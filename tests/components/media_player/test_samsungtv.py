@@ -52,7 +52,7 @@ class TestSamsungTv(unittest.TestCase):
     @MockDependency('samsungctl')
     @MockDependency('wakeonlan')
     def setUp(self, samsung_mock, wol_mock):
-        """Setting up test environment."""
+        """Set up test environment."""
         self.hass = tests.common.get_test_home_assistant()
         self.hass.start()
         self.hass.block_till_done()
@@ -72,9 +72,9 @@ class TestSamsungTv(unittest.TestCase):
         """Testing setup of platform."""
         with mock.patch(
                 'homeassistant.components.media_player.samsungtv.socket'):
-            add_devices = mock.Mock()
+            add_entities = mock.Mock()
             setup_platform(
-                self.hass, WORKING_CONFIG, add_devices)
+                self.hass, WORKING_CONFIG, add_entities)
 
     @MockDependency('samsungctl')
     @MockDependency('wakeonlan')
@@ -82,8 +82,8 @@ class TestSamsungTv(unittest.TestCase):
         """Testing setup of platform with discovery."""
         with mock.patch(
                 'homeassistant.components.media_player.samsungtv.socket'):
-            add_devices = mock.Mock()
-            setup_platform(self.hass, {}, add_devices,
+            add_entities = mock.Mock()
+            setup_platform(self.hass, {}, add_entities,
                            discovery_info=DISCOVERY_INFO)
 
     @MockDependency('samsungctl')
@@ -94,11 +94,11 @@ class TestSamsungTv(unittest.TestCase):
         """Testing setup of platform with no data."""
         with mock.patch(
                 'homeassistant.components.media_player.samsungtv.socket'):
-            add_devices = mock.Mock()
-            setup_platform(self.hass, {}, add_devices,
+            add_entities = mock.Mock()
+            setup_platform(self.hass, {}, add_entities,
                            discovery_info=None)
             mocked_warn.assert_called_once_with("Cannot determine device")
-            add_devices.assert_not_called()
+            add_entities.assert_not_called()
 
     @mock.patch(
         'homeassistant.components.media_player.samsungtv.subprocess.Popen'

@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CoinMarketCap sensor."""
     currency_id = config.get(CONF_CURRENCY_ID)
     display_currency = config.get(CONF_DISPLAY_CURRENCY).upper()
@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         currency_id = DEFAULT_CURRENCY_ID
         display_currency = DEFAULT_DISPLAY_CURRENCY
 
-    add_devices([CoinMarketCapSensor(
+    add_entities([CoinMarketCapSensor(
         CoinMarketCapData(
             currency_id, display_currency), display_currency_decimals)], True)
 
