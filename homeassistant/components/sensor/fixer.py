@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fixer.io sensor."""
     from fixerio import Fixerio, exceptions
 
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     data = ExchangeData(target, api_key)
-    add_devices([ExchangeRateSensor(data, name, target)], True)
+    add_entities([ExchangeRateSensor(data, name, target)], True)
 
 
 class ExchangeRateSensor(Entity):

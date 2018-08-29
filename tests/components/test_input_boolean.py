@@ -4,7 +4,7 @@ import asyncio
 import unittest
 import logging
 
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, State, Context
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_boolean import (
     DOMAIN, is_on, toggle, turn_off, turn_on, CONF_INITIAL)
@@ -22,7 +22,7 @@ class TestInputBoolean(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -158,3 +158,24 @@ def test_initial_state_overrules_restore_state(hass):
     state = hass.states.get('input_boolean.b2')
     assert state
     assert state.state == 'on'
+
+
+async def test_input_boolean_context(hass):
+    """Test that input_boolean context works."""
+    assert await async_setup_component(hass, 'input_boolean', {
+        'input_boolean': {
+            'ac': {CONF_INITIAL: True},
+        }
+    })
+
+    state = hass.states.get('input_boolean.ac')
+    assert state is not None
+
+    await hass.services.async_call('input_boolean', 'turn_off', {
+        'entity_id': state.entity_id,
+    }, True, Context(user_id='abcd'))
+
+    state2 = hass.states.get('input_boolean.ac')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

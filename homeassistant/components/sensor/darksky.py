@@ -170,7 +170,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dark Sky sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -211,7 +211,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 sensors.append(DarkSkySensor(
                     forecast_data, variable, name, forecast_day))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class DarkSkySensor(Entity):

@@ -75,7 +75,8 @@ def update_probability(prior, prob_true, prob_false):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Bayesian Binary sensor."""
     name = config.get(CONF_NAME)
     observations = config.get(CONF_OBSERVATIONS)
@@ -83,7 +84,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     probability_threshold = config.get(CONF_PROBABILITY_THRESHOLD)
     device_class = config.get(CONF_DEVICE_CLASS)
 
-    async_add_devices([
+    async_add_entities([
         BayesianBinarySensor(
             name, prior, observations, probability_threshold, device_class)
     ], True)

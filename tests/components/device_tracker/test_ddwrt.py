@@ -41,7 +41,7 @@ class TestDdwrt(unittest.TestCase):
             super().run(result)
 
     def setup_method(self, _):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'zone')
 
@@ -220,7 +220,7 @@ class TestDdwrt(unittest.TestCase):
         with requests_mock.Mocker() as mock_request:
             mock_request.register_uri(
                 'GET', r'http://%s/Status_Wireless.live.asp' % TEST_HOST,
-                # First request has to work to setup connection
+                # First request has to work to set up connection
                 [{'text': load_fixture('Ddwrt_Status_Wireless.txt')},
                  # Second request to get active devices fails
                  {'text': None}])

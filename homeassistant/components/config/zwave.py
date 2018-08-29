@@ -212,7 +212,7 @@ class ZWaveProtectionView(HomeAssistantView):
         network = hass.data.get(const.DATA_NETWORK)
 
         def _fetch_protection():
-            """Helper to get protection data."""
+            """Get protection data."""
             node = network.nodes.get(nodeid)
             if node is None:
                 return self.json_message('Node not found', HTTP_NOT_FOUND)
@@ -236,7 +236,7 @@ class ZWaveProtectionView(HomeAssistantView):
         protection_data = await request.json()
 
         def _set_protection():
-            """Helper to get protection data."""
+            """Set protection data."""
             node = network.nodes.get(nodeid)
             selection = protection_data["selection"]
             value_id = int(protection_data[const.ATTR_VALUE_ID])

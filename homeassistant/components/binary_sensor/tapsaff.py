@@ -30,14 +30,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Taps Aff binary sensor."""
     name = config.get(CONF_NAME)
     location = config.get(CONF_LOCATION)
 
     taps_aff_data = TapsAffData(location)
 
-    add_devices([TapsAffSensor(taps_aff_data, name)], True)
+    add_entities([TapsAffSensor(taps_aff_data, name)], True)
 
 
 class TapsAffSensor(BinarySensorDevice):

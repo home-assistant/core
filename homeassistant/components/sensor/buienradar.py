@@ -141,7 +141,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Create the buienradar sensor."""
     from homeassistant.components.weather.buienradar import DEFAULT_TIMEFRAME
 
@@ -163,7 +164,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br'),
                             coordinates))
-    async_add_devices(dev)
+    async_add_entities(dev)
 
     data = BrData(hass, coordinates, timeframe, dev)
     # schedule the first update in 1 minute from now:

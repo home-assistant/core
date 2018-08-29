@@ -32,7 +32,7 @@ DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
     from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
 
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dyson_entity = DysonPureCoolLinkDevice(hass, device)
         hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
-    add_devices(hass.data[DYSON_FAN_DEVICES])
+    add_entities(hass.data[DYSON_FAN_DEVICES])
 
     def service_handle(service):
         """Handle the Dyson services."""

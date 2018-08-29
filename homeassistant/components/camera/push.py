@@ -21,6 +21,8 @@ import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['http']
+
 CONF_BUFFER_SIZE = 'buffer'
 CONF_IMAGE_FIELD = 'field'
 
@@ -40,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Push Camera platform."""
     if PUSH_CAMERA_DATA not in hass.data:
@@ -53,7 +55,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     hass.http.register_view(CameraPushReceiver(hass,
                                                config[CONF_IMAGE_FIELD]))
 
-    async_add_devices(cameras)
+    async_add_entities(cameras)
 
 
 class CameraPushReceiver(HomeAssistantView):
@@ -111,7 +113,7 @@ class PushCamera(Camera):
 
     @property
     def state(self):
-        """Current state of the camera."""
+        """Return current state of the camera."""
         return self._state
 
     async def update_image(self, image, filename):

@@ -30,8 +30,8 @@ def mock_sys():
 
 @pytest.fixture
 def mock_exists():
-    """Mock check_package_exists."""
-    with patch('homeassistant.util.package.check_package_exists') as mock:
+    """Mock package_loadable."""
+    with patch('homeassistant.util.package.package_loadable') as mock:
         mock.return_value = False
         yield mock
 
@@ -193,12 +193,12 @@ def test_install_constraint(
 def test_check_package_global():
     """Test for an installed package."""
     installed_package = list(pkg_resources.working_set)[0].project_name
-    assert package.check_package_exists(installed_package)
+    assert package.package_loadable(installed_package)
 
 
 def test_check_package_zip():
     """Test for an installed zip package."""
-    assert not package.check_package_exists(TEST_ZIP_REQ)
+    assert not package.package_loadable(TEST_ZIP_REQ)
 
 
 @asyncio.coroutine
@@ -217,3 +217,28 @@ def test_async_get_user_site(mock_env_copy):
         stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL,
         env=env)
     assert ret == os.path.join(deps_dir, 'lib_dir')
+
+
+def test_package_loadable_installed_twice():
+    """Test that a package is loadable when installed twice.
+
+    If a package is installed twice, only the first version will be imported.
+    Test that package_loadable will only compare with the first package.
+    """
+    v1 = pkg_resources.Distribution(project_name='hello', version='1.0.0')
+    v2 = pkg_resources.Distribution(project_name='hello', version='2.0.0')
+
+    with patch('pkg_resources.find_distributions', side_effect=[[v1]]):
+        assert not package.package_loadable('hello==2.0.0')
+
+    with patch('pkg_resources.find_distributions', side_effect=[[v1], [v2]]):
+        assert not package.package_loadable('hello==2.0.0')
+
+    with patch('pkg_resources.find_distributions', side_effect=[[v2], [v1]]):
+        assert package.package_loadable('hello==2.0.0')
+
+    with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
+        assert package.package_loadable('hello==2.0.0')
+
+    with patch('pkg_resources.find_distributions', side_effect=[[v2]]):
+        assert package.package_loadable('Hello==2.0.0')
