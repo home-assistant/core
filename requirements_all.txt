@@ -420,6 +420,9 @@ ha-ffmpeg==1.9
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.5
 
+# homeassistant.components.habitica
+habitipy==0.2.0
+
 # homeassistant.components.hangouts
 hangups==0.4.5
 
