@@ -16,7 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the INSTEON device class for the hass platform."""
     insteon_modem = hass.data['insteon'].get('modem')
 
@@ -36,7 +37,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         new_entity = InsteonSwitchDevice(device, state_key)
 
     if new_entity is not None:
-        async_add_devices([new_entity])
+        async_add_entities([new_entity])
 
 
 class InsteonSwitchDevice(InsteonEntity, SwitchDevice):

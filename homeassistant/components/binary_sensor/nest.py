@@ -54,14 +54,14 @@ _VALID_BINARY_SENSOR_TYPES = {**BINARY_TYPES, **CLIMATE_BINARY_TYPES,
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nest binary sensors.
 
     No longer used.
     """
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest binary sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
 
@@ -112,7 +112,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
         return sensors
 
-    async_add_devices(await hass.async_add_job(get_binary_sensors), True)
+    async_add_entities(await hass.async_add_job(get_binary_sensors), True)
 
 
 class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
@@ -130,7 +130,7 @@ class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
 
     def update(self):
         """Retrieve latest state."""
-        value = getattr(self._device, self.variable)
+        value = getattr(self.device, self.variable)
         if self.variable in STRUCTURE_BINARY_TYPES:
             self._state = bool(STRUCTURE_BINARY_STATE_MAP
                                [self.variable].get(value))
@@ -154,5 +154,4 @@ class NestActivityZoneSensor(NestBinarySensor):
 
     def update(self):
         """Retrieve latest state."""
-        self._state = self._device.has_ongoing_motion_in_zone(
-            self.zone.zone_id)
+        self._state = self.device.has_ongoing_motion_in_zone(self.zone.zone_id)

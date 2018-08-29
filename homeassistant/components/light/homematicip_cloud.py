@@ -22,12 +22,12 @@ ATTR_PROFILE_MODE = 'profile_mode'
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Old way of setting up HomematicIP Cloud lights."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP Cloud lights from a config entry."""
     from homematicip.aio.device import AsyncBrandSwitchMeasuring, AsyncDimmer
 
@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             devices.append(HomematicipDimmer(home, device))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipLight(HomematicipGenericDevice, Light):

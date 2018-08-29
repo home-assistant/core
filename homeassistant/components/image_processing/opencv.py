@@ -80,7 +80,7 @@ def _get_default_classifier(dest_path):
                 fil.write(chunk)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenCV image processing platform."""
     try:
         # Verify that the OpenCV python package is pre-installed
@@ -105,7 +105,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass, camera[CONF_ENTITY_ID], camera.get(CONF_NAME),
             config[CONF_CLASSIFIER]))
 
-    add_devices(entities)
+    add_entities(entities)
 
 
 class OpenCVImageProcessor(ImageProcessingEntity):

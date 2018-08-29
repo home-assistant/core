@@ -140,7 +140,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the vacuum."""
     name = config.get(CONF_NAME)
     supported_feature_strings = config.get(CONF_SUPPORTED_FEATURES)
@@ -192,7 +193,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     payload_available = config.get(mqtt.CONF_PAYLOAD_AVAILABLE)
     payload_not_available = config.get(mqtt.CONF_PAYLOAD_NOT_AVAILABLE)
 
-    async_add_devices([
+    async_add_entities([
         MqttVacuum(
             name, supported_features, qos, retain, command_topic,
             payload_turn_on, payload_turn_off, payload_return_to_base,

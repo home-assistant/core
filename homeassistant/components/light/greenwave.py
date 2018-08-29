@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Greenwave Reality Platform."""
     import greenwavereality as greenwave
     import os
@@ -51,8 +51,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         token = None
     bulbs = greenwave.grab_bulbs(host, token)
-    add_devices(GreenwaveLight(device, host, token, GatewayData(host, token))
-                for device in bulbs.values())
+    add_entities(GreenwaveLight(device, host, token, GatewayData(host, token))
+                 for device in bulbs.values())
 
 
 class GreenwaveLight(Light):

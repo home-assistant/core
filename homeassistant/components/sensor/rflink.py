@@ -75,9 +75,10 @@ def devices_from_config(domain_config, hass=None):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Rflink platform."""
-    async_add_devices(devices_from_config(config, hass))
+    async_add_entities(devices_from_config(config, hass))
 
     @asyncio.coroutine
     def add_new_device(event):
@@ -87,7 +88,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         rflinksensor = partial(RflinkSensor, device_id, hass)
         device = rflinksensor(event[EVENT_KEY_SENSOR], event[EVENT_KEY_UNIT])
         # Add device entity
-        async_add_devices([device])
+        async_add_entities([device])
 
         # Register entity to listen to incoming rflink events
         hass.data[DATA_ENTITY_LOOKUP][

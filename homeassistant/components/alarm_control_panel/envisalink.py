@@ -33,7 +33,8 @@ ALARM_KEYPRESS_SCHEMA = vol.Schema({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Perform the setup for Envisalink alarm panels."""
     configured_partitions = discovery_info['partitions']
     code = discovery_info[CONF_CODE]
@@ -53,7 +54,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         )
         devices.append(device)
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
     @callback
     def alarm_keypress_handler(service):

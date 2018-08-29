@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Swiss public transport sensor."""
     from opendata_transport import OpendataTransport, exceptions
 
@@ -67,7 +67,7 @@ async def async_setup_platform(
             "if your station names are valid")
         return
 
-    async_add_devices(
+    async_add_entities(
         [SwissPublicTransportSensor(opendata, start, destination, name)])
 
 

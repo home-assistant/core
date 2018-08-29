@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     device_class = config.get(CONF_DEVICE_CLASS)
 
     ads_sensor = AdsBinarySensor(ads_hub, name, ads_var, device_class)
-    add_devices([ads_sensor])
+    add_entities([ads_sensor])
 
 
 class AdsBinarySensor(BinarySensorDevice):

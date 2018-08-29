@@ -19,7 +19,7 @@ DEFAULT_ICON_LEVEL = 'mdi:battery'
 DEFAULT_ICON_STATE = 'mdi:power-plug'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the iOS sensor."""
     if discovery_info is None:
         return
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for sensor_type in ('level', 'state'):
             dev.append(IOSSensor(sensor_type, device_name, device))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class IOSSensor(Entity):

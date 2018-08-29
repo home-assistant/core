@@ -15,11 +15,11 @@ from homeassistant.components.tellduslive import TelldusLiveEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tellstick Net lights."""
     if discovery_info is None:
         return
-    add_devices(TelldusLiveLight(hass, light) for light in discovery_info)
+    add_entities(TelldusLiveLight(hass, light) for light in discovery_info)
 
 
 class TelldusLiveLight(TelldusLiveEntity, Light):
@@ -38,7 +38,7 @@ class TelldusLiveLight(TelldusLiveEntity, Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._device.dim_level
+        return self.device.dim_level
 
     @property
     def supported_features(self):
@@ -48,15 +48,15 @@ class TelldusLiveLight(TelldusLiveEntity, Light):
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._device.is_on
+        return self.device.is_on
 
     def turn_on(self, **kwargs):
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, self._last_brightness)
-        self._device.dim(level=brightness)
+        self.device.dim(level=brightness)
         self.changed()
 
     def turn_off(self, **kwargs):
         """Turn the light off."""
-        self._device.turn_off()
+        self.device.turn_off()
         self.changed()

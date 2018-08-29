@@ -346,13 +346,13 @@ async def test_service_calls(hass):
 
 async def test_invalid_service_calls(hass):
     """Test invalid service call arguments get discarded."""
-    add_devices = MagicMock()
+    add_entities = MagicMock()
     await group.async_setup_platform(hass, {
         'entities': ['light.test1', 'light.test2']
-    }, add_devices)
+    }, add_entities)
 
-    assert add_devices.call_count == 1
-    grouped_light = add_devices.call_args[0][0][0]
+    assert add_entities.call_count == 1
+    grouped_light = add_entities.call_args[0][0][0]
     grouped_light.hass = hass
 
     with asynctest.patch.object(hass.services, 'async_call') as mock_call:

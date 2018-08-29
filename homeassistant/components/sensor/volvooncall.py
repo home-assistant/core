@@ -14,11 +14,11 @@ from homeassistant.components.volvooncall import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Volvo sensors."""
     if discovery_info is None:
         return
-    add_devices([VolvoSensor(hass, *discovery_info)])
+    add_entities([VolvoSensor(hass, *discovery_info)])
 
 
 class VolvoSensor(VolvoEntity):
