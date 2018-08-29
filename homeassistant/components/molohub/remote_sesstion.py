@@ -19,8 +19,8 @@ class RemoteSession(asyncore.dispatcher):
     tunnel['hostname'] = ''
     tunnel['subdomain'] = ''
     tunnel['rport'] = 0
-    tunnel['lhost'] = MOLO_CONFIGS.config_object['ha']['host']
-    tunnel['lport'] = MOLO_CONFIGS.config_object['ha']['port']
+    tunnel['lhost'] = MOLO_CONFIGS.get_config_object()['ha']['host']
+    tunnel['lport'] = MOLO_CONFIGS.get_config_object()['ha']['port']
 
     def __init__(self, client_id, rhost, rport, lhost, lport):
         """Initialize remote session arguments."""

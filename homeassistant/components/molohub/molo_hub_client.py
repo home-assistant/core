@@ -25,8 +25,8 @@ class MoloHubClient(asyncore.dispatcher):
     tunnel['hostname'] = ''
     tunnel['subdomain'] = ''
     tunnel['rport'] = 0
-    tunnel['lhost'] = MOLO_CONFIGS.config_object['ha']['host']
-    tunnel['lport'] = MOLO_CONFIGS.config_object['ha']['port']
+    tunnel['lhost'] = MOLO_CONFIGS.get_config_object()['ha']['host']
+    tunnel['lport'] = MOLO_CONFIGS.get_config_object()['ha']['port']
 
     client_id = ''
     client_token = ''

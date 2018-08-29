@@ -39,5 +39,11 @@ class MoloConfigs:
         else:
             self.config_object = self.config_release
 
+    def get_config_object(self):
+        """Get config_object, reload if not exist."""
+        if not self.config_object:
+            self.load('release')
+        return self.config_object
+
 
 MOLO_CONFIGS = MoloConfigs()

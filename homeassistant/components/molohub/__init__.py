@@ -26,15 +26,15 @@ async def async_setup(hass, config):
         MOLO_CONFIGS.load(cfg['mode'])
     else:
         MOLO_CONFIGS.load('release')
-    tmp_haweb = MOLO_CONFIGS.config_object['server']['haweb']
+    tmp_haweb = MOLO_CONFIGS.get_config_object()['server']['haweb']
     NOTIFY_STATE.set_context(hass, tmp_haweb)
 
     if 'http' in config and 'server_host' in config['http']:
         tmp_host = config['http']['server_host']
-        MOLO_CONFIGS.config_object['ha']['host'] = tmp_host
+        MOLO_CONFIGS.get_config_object()['ha']['host'] = tmp_host
     if 'http' in config and 'server_port' in config['http']:
         tmp_port = config['http']['server_port']
-        MOLO_CONFIGS.config_object['ha']['port'] = tmp_port
+        MOLO_CONFIGS.get_config_object()['ha']['port'] = tmp_port
 
     def send_notify(notify_str):
         """Update UI."""
