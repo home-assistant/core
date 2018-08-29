@@ -116,6 +116,9 @@ omit =
     homeassistant/components/google.py
     homeassistant/components/*/google.py
 
+    homeassistant/components/habitica/*
+    homeassistant/components/*/habitica.py
+
     homeassistant/components/hangouts/__init__.py
     homeassistant/components/hangouts/const.py
     homeassistant/components/hangouts/hangouts_bot.py
