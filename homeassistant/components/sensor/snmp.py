@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SNMP sensor."""
     from pysnmp.hlapi import (
         getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
@@ -86,7 +86,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     data = SnmpData(
         host, port, community, baseoid, version, accept_errors,
         default_value)
-    add_devices([SnmpSensor(data, name, unit, value_template)], True)
+    add_entities([SnmpSensor(data, name, unit, value_template)], True)
 
 
 class SnmpSensor(Entity):

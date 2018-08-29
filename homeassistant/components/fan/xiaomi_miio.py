@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'zhimi.humidifier.ca1']),
 })
 
-REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 ATTR_MODEL = 'model'
 
@@ -314,7 +314,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the miio fan device from config."""
     from miio import Device, DeviceException
@@ -358,7 +358,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         return False
 
     hass.data[DATA_KEY][host] = device
-    async_add_devices([device], update_before_add=True)
+    async_add_entities([device], update_before_add=True)
 
     async def async_service_handler(service):
         """Map services to methods on XiaomiAirPurifier."""

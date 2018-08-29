@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the WorldTidesInfo sensor."""
     name = config.get(CONF_NAME)
 
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Location not available")
         return
 
-    add_devices([tides])
+    add_entities([tides])
 
 
 class WorldTidesInfoSensor(Entity):

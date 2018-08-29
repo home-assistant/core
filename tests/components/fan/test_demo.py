@@ -15,7 +15,7 @@ class TestDemoFan(unittest.TestCase):
     """Test the fan demo platform."""
 
     def get_entity(self):
-        """Helper method to get the fan entity."""
+        """Get the fan entity."""
         return self.hass.states.get(FAN_ENTITY_ID)
 
     def setUp(self):

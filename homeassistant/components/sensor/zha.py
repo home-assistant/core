@@ -18,14 +18,15 @@ DEPENDENCIES = ['zha']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up Zigbee Home Automation sensors."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
     sensor = yield from make_sensor(discovery_info)
-    async_add_devices([sensor], update_before_add=True)
+    async_add_entities([sensor], update_before_add=True)
 
 
 @asyncio.coroutine

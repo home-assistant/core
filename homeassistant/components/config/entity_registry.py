@@ -101,7 +101,7 @@ def websocket_update_entity(hass, connection, msg):
 
 @callback
 def _entry_dict(entry):
-    """Helper to convert entry to API format."""
+    """Convert entry to API format."""
     return {
         'entity_id': entry.entity_id,
         'name': entry.name

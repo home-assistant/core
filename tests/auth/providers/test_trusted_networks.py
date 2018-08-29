@@ -28,7 +28,7 @@ def manager(hass, store, provider):
     """Mock manager."""
     return auth.AuthManager(hass, store, {
         (provider.type, provider.id): provider
-    })
+    }, {})
 
 
 async def test_trusted_networks_credentials(manager, provider):
@@ -72,21 +72,21 @@ async def test_login_flow(manager, provider):
     user = await manager.async_create_user("test-user")
 
     # trusted network didn't loaded
-    flow = await provider.async_credential_flow({'ip_address': '127.0.0.1'})
+    flow = await provider.async_login_flow({'ip_address': '127.0.0.1'})
     step = await flow.async_step_init()
-    assert step['step_id'] == 'init'
-    assert step['errors']['base'] == 'invalid_auth'
+    assert step['type'] == 'abort'
+    assert step['reason'] == 'not_whitelisted'
 
     provider.hass.http = Mock(trusted_networks=['192.168.0.1'])
 
     # not from trusted network
-    flow = await provider.async_credential_flow({'ip_address': '127.0.0.1'})
+    flow = await provider.async_login_flow({'ip_address': '127.0.0.1'})
     step = await flow.async_step_init()
-    assert step['step_id'] == 'init'
-    assert step['errors']['base'] == 'invalid_auth'
+    assert step['type'] == 'abort'
+    assert step['reason'] == 'not_whitelisted'
 
     # from trusted network, list users
-    flow = await provider.async_credential_flow({'ip_address': '192.168.0.1'})
+    flow = await provider.async_login_flow({'ip_address': '192.168.0.1'})
     step = await flow.async_step_init()
     assert step['step_id'] == 'init'
 
@@ -94,11 +94,6 @@ async def test_login_flow(manager, provider):
     assert schema({'user': owner.id})
     with pytest.raises(vol.Invalid):
         assert schema({'user': 'invalid-user'})
-
-    # login with invalid user
-    step = await flow.async_step_init({'user': 'invalid-user'})
-    assert step['step_id'] == 'init'
-    assert step['errors']['base'] == 'invalid_auth'
 
     # login with valid user
     step = await flow.async_step_init({'user': user.id})

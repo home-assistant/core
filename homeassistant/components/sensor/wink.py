@@ -18,7 +18,7 @@ DEPENDENCIES = ['wink']
 SENSOR_TYPES = ['temperature', 'humidity', 'balance', 'proximity']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
     import pywink
 
@@ -26,24 +26,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _id = sensor.object_id() + sensor.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             if sensor.capability() in SENSOR_TYPES:
-                add_devices([WinkSensorDevice(sensor, hass)])
+                add_entities([WinkSensorDevice(sensor, hass)])
 
     for eggtray in pywink.get_eggtrays():
         _id = eggtray.object_id() + eggtray.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkSensorDevice(eggtray, hass)])
+            add_entities([WinkSensorDevice(eggtray, hass)])
 
     for tank in pywink.get_propane_tanks():
         _id = tank.object_id() + tank.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkSensorDevice(tank, hass)])
+            add_entities([WinkSensorDevice(tank, hass)])
 
     for piggy_bank in pywink.get_piggy_banks():
         _id = piggy_bank.object_id() + piggy_bank.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
             try:
                 if piggy_bank.capability() in SENSOR_TYPES:
-                    add_devices([WinkSensorDevice(piggy_bank, hass)])
+                    add_entities([WinkSensorDevice(piggy_bank, hass)])
             except AttributeError:
                 _LOGGER.info("Device is not a sensor")
 

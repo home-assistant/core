@@ -9,11 +9,14 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant import data_entry_flow, requirements
 from homeassistant.core import callback, HomeAssistant
-from homeassistant.const import CONF_TYPE, CONF_NAME, CONF_ID
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_TYPE
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
-from homeassistant.auth.auth_store import AuthStore
-from homeassistant.auth.models import Credentials, UserMeta
+from ..auth_store import AuthStore
+from ..models import Credentials, User, UserMeta  # noqa: F401
+from ..mfa_modules import SESSION_EXPIRATION
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = 'auth_prov_reqs_processed'
@@ -58,6 +61,11 @@ class AuthProvider:
         """Return the name of the auth provider."""
         return self.config.get(CONF_NAME, self.DEFAULT_TITLE)
 
+    @property
+    def support_mfa(self) -> bool:
+        """Return whether multi-factor auth supported by the auth provider."""
+        return True
+
     async def async_credentials(self) -> List[Credentials]:
         """Return all credentials of this provider."""
         users = await self.store.async_get_users()
@@ -80,9 +88,11 @@ class AuthProvider:
 
     # Implement by extending class
 
-    async def async_credential_flow(
-            self, context: Optional[Dict]) -> data_entry_flow.FlowHandler:
-        """Return the data flow for logging in with auth provider."""
+    async def async_login_flow(self, context: Optional[Dict]) -> 'LoginFlow':
+        """Return the data flow for logging in with auth provider.
+
+        Auth provider should extend LoginFlow and return an instance.
+        """
         raise NotImplementedError
 
     async def async_get_or_create_credentials(
@@ -101,33 +111,31 @@ class AuthProvider:
 
 async def auth_provider_from_config(
         hass: HomeAssistant, store: AuthStore,
-        config: Dict[str, Any]) -> Optional[AuthProvider]:
+        config: Dict[str, Any]) -> AuthProvider:
     """Initialize an auth provider from a config."""
     provider_name = config[CONF_TYPE]
     module = await load_auth_provider_module(hass, provider_name)
-
-    if module is None:
-        return None
 
     try:
         config = module.CONFIG_SCHEMA(config)  # type: ignore
     except vol.Invalid as err:
         _LOGGER.error('Invalid configuration for auth provider %s: %s',
                       provider_name, humanize_error(config, err))
-        return None
+        raise
 
     return AUTH_PROVIDERS[provider_name](hass, store, config)  # type: ignore
 
 
 async def load_auth_provider_module(
-        hass: HomeAssistant, provider: str) -> Optional[types.ModuleType]:
+        hass: HomeAssistant, provider: str) -> types.ModuleType:
     """Load an auth provider."""
     try:
         module = importlib.import_module(
             'homeassistant.auth.providers.{}'.format(provider))
-    except ImportError:
-        _LOGGER.warning('Unable to find auth provider %s', provider)
-        return None
+    except ImportError as err:
+        _LOGGER.error('Unable to load auth provider %s: %s', provider, err)
+        raise HomeAssistantError('Unable to load auth provider {}: {}'.format(
+            provider, err))
 
     if hass.config.skip_pip or not hasattr(module, 'REQUIREMENTS'):
         return module
@@ -145,7 +153,104 @@ async def load_auth_provider_module(
         hass, 'auth provider {}'.format(provider), reqs)
 
     if not req_success:
-        return None
+        raise HomeAssistantError(
+            'Unable to process requirements of auth provider {}'.format(
+                provider))
 
     processed.add(provider)
     return module
+
+
+class LoginFlow(data_entry_flow.FlowHandler):
+    """Handler for the login flow."""
+
+    def __init__(self, auth_provider: AuthProvider) -> None:
+        """Initialize the login flow."""
+        self._auth_provider = auth_provider
+        self._auth_module_id = None  # type: Optional[str]
+        self._auth_manager = auth_provider.hass.auth  # type: ignore
+        self.available_mfa_modules = {}  # type: Dict[str, str]
+        self.created_at = dt_util.utcnow()
+        self.user = None  # type: Optional[User]
+
+    async def async_step_init(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
+        """Handle the first step of login flow.
+
+        Return self.async_show_form(step_id='init') if user_input == None.
+        Return await self.async_finish(flow_result) if login init step pass.
+        """
+        raise NotImplementedError
+
+    async def async_step_select_mfa_module(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
+        """Handle the step of select mfa module."""
+        errors = {}
+
+        if user_input is not None:
+            auth_module = user_input.get('multi_factor_auth_module')
+            if auth_module in self.available_mfa_modules:
+                self._auth_module_id = auth_module
+                return await self.async_step_mfa()
+            errors['base'] = 'invalid_auth_module'
+
+        if len(self.available_mfa_modules) == 1:
+            self._auth_module_id = list(self.available_mfa_modules.keys())[0]
+            return await self.async_step_mfa()
+
+        return self.async_show_form(
+            step_id='select_mfa_module',
+            data_schema=vol.Schema({
+                'multi_factor_auth_module': vol.In(self.available_mfa_modules)
+            }),
+            errors=errors,
+        )
+
+    async def async_step_mfa(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
+        """Handle the step of mfa validation."""
+        errors = {}
+
+        auth_module = self._auth_manager.get_auth_mfa_module(
+            self._auth_module_id)
+        if auth_module is None:
+            # Given an invalid input to async_step_select_mfa_module
+            # will show invalid_auth_module error
+            return await self.async_step_select_mfa_module(user_input={})
+
+        if user_input is not None:
+            expires = self.created_at + SESSION_EXPIRATION
+            if dt_util.utcnow() > expires:
+                return self.async_abort(
+                    reason='login_expired'
+                )
+
+            result = await auth_module.async_validation(
+                self.user.id, user_input)  # type: ignore
+            if not result:
+                errors['base'] = 'invalid_code'
+
+            if not errors:
+                return await self.async_finish(self.user)
+
+        description_placeholders = {
+            'mfa_module_name': auth_module.name,
+            'mfa_module_id': auth_module.id
+        }  # type: Dict[str, str]
+
+        return self.async_show_form(
+            step_id='mfa',
+            data_schema=auth_module.input_schema,
+            description_placeholders=description_placeholders,
+            errors=errors,
+        )
+
+    async def async_finish(self, flow_result: Any) -> Dict:
+        """Handle the pass of login flow."""
+        return self.async_create_entry(
+            title=self._auth_provider.name,
+            data=flow_result
+        )

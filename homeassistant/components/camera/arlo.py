@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an Arlo IP Camera."""
     arlo = hass.data[DATA_ARLO]
 
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for camera in arlo.cameras:
         cameras.append(ArloCam(hass, camera, config))
 
-    add_devices(cameras)
+    add_entities(cameras)
 
 
 class ArloCam(Camera):

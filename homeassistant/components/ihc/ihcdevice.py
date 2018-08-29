@@ -57,7 +57,7 @@ class IHCDevice(Entity):
         }
 
     def on_ihc_change(self, ihc_id, value):
-        """Callback when IHC resource changes.
+        """Handle IHC resource change.
 
         Derived classes must overwrite this to do device specific stuff.
         """

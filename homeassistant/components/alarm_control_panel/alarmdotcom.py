@@ -33,7 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up a Alarm.com control panel."""
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
@@ -42,7 +43,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     alarmdotcom = AlarmDotCom(hass, name, code, username, password)
     yield from alarmdotcom.async_login()
-    async_add_devices([alarmdotcom])
+    async_add_entities([alarmdotcom])
 
 
 class AlarmDotCom(alarm.AlarmControlPanel):

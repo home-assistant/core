@@ -334,7 +334,7 @@ class KNXExposeSensor:
             self.hass, self.entity_id, self._async_entity_changed)
 
     async def _async_entity_changed(self, entity_id, old_state, new_state):
-        """Callback after entity changed."""
+        """Handle entity change."""
         if new_state is None:
             return
         await self.device.set(float(new_state.state))

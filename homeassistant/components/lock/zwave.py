@@ -120,10 +120,11 @@ CLEAR_USERCODE_SCHEMA = vol.Schema({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Z-Wave Lock platform."""
     yield from zwave.async_setup_platform(
-        hass, config, async_add_devices, discovery_info)
+        hass, config, async_add_entities, discovery_info)
 
     network = hass.data[zwave.const.DATA_NETWORK]
 

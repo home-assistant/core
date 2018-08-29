@@ -236,7 +236,7 @@ UOM_TO_STATES = {
 
 
 def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+                   add_entities: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 sensor platform."""
     devices = []
 
@@ -247,7 +247,7 @@ def setup_platform(hass, config: ConfigType,
     for node in hass.data[ISY994_WEATHER]:
         devices.append(ISYWeatherDevice(node))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class ISYSensorDevice(ISYDevice):
