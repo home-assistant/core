@@ -86,7 +86,8 @@ class ShellySwitch(SwitchDevice):
         try:
             req = requests.get('{}'.format(self._url),
                                auth=self._auth, timeout=5)
-            return req.json()['ison'] == True
+            isOn = req.json()['ison']
+            return isOn
         except requests.RequestException as error:
             _LOGGER.error("State query failed: " + error)
 
