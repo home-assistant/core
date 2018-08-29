@@ -276,6 +276,9 @@ omit =
     homeassistant/components/smappee.py
     homeassistant/components/*/smappee.py
 
+    homeassistant/components/smarty.py
+    homeassistant/components/*/smarty.py
+
     homeassistant/components/sonos/__init__.py
     homeassistant/components/*/sonos.py
 
