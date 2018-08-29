@@ -9,7 +9,7 @@ class MoloSocketHelper:
     """Socket helper class for Molohub."""
 
     @classmethod
-    def ngrok_auth(cls, client_version, hass, ha_version):
+    def molo_auth(cls, client_version, hass, ha_version):
         """Construct register authorization packet."""
         payload = dict()
         payload['ClientId'] = ''

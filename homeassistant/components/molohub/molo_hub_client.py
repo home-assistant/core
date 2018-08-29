@@ -52,9 +52,9 @@ class MoloHubClient(asyncore.dispatcher):
         LOGGER.debug("server connected")
         self.append_connect = False
         self.send_dict_pack(
-            MoloSocketHelper.ngrok_auth(CLIENT_VERSION,
-                                        MOLO_CLIENT_APP.hass_context,
-                                        __short_version__))
+            MoloSocketHelper.molo_auth(CLIENT_VERSION,
+                                       MOLO_CLIENT_APP.hass_context,
+                                       __short_version__))
 
     def handle_close(self):
         """When closed, this method will be call. clean itself."""

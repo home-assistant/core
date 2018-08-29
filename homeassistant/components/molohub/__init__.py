@@ -16,8 +16,8 @@ DOMAIN = 'molohub'
 NOTIFYID = 'molouhubnotifyid'
 
 
-async def async_setup(hass, config):
-    """Setup for molohub."""
+def setup(hass, config):
+    """Set up molohub component."""
     LOGGER.info("Begin setup molohub!")
 
     # Load config mode from configuration.yaml.
