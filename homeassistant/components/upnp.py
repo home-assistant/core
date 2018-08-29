@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['pyupnp-async==0.1.1.0']
+REQUIREMENTS = ['pyupnp-async==0.1.1.1']
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)

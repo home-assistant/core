@@ -178,7 +178,7 @@ pytradfri[async]==5.5.1
 pyunifi==2.13
 
 # homeassistant.components.upnp
-pyupnp-async==0.1.1.0
+pyupnp-async==0.1.1.1
 
 # homeassistant.components.notify.html5
 pywebpush==1.6.0
