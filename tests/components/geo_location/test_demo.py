@@ -39,11 +39,14 @@ class TestDemoPlatform(unittest.TestCase):
             with assert_setup_component(1, geo_location.DOMAIN):
                 self.assertTrue(setup_component(self.hass, geo_location.DOMAIN,
                                                 CONFIG))
-            entity_ids = self.hass.states.entity_ids(geo_location.DOMAIN)
-            assert len(entity_ids) == NUMBER_OF_DEMO_DEVICES
-            state_first_entry = self.hass.states.get(entity_ids[0])
-            state_last_entry = self.hass.states.get(entity_ids[-1])
+
+            # In this test, only entities of the geo location domain have been
+            # generated.
+            all_states = self.hass.states.all()
+            assert len(all_states) == NUMBER_OF_DEMO_DEVICES
+
             # Check a single device's attributes.
+            state_first_entry = all_states[0]
             self.assertAlmostEqual(state_first_entry.attributes['latitude'],
                                    self.hass.config.latitude, delta=1.0)
             self.assertAlmostEqual(state_first_entry.attributes['longitude'],
@@ -53,9 +56,8 @@ class TestDemoPlatform(unittest.TestCase):
             # Update (replaces 1 device).
             fire_time_changed(self.hass, utcnow + DEFAULT_UPDATE_INTERVAL)
             self.hass.block_till_done()
-            entity_ids_updated = self.hass.states.entity_ids(
-                geo_location.DOMAIN)
-            states_last_entry_updated = self.hass.states.get(
-                entity_ids_updated[-1])
-            # New entry was added to the end of the end of the array.
-            assert state_last_entry is not states_last_entry_updated
+            # Get all states again, ensure that the number of states is still
+            # the same, but the lists are different.
+            all_states_updated = self.hass.states.all()
+            assert len(all_states_updated) == NUMBER_OF_DEMO_DEVICES
+            self.assertNotEqual(all_states, all_states_updated)
