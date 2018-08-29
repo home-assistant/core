@@ -188,6 +188,7 @@ homeassistant/components/shodan/* @fabaff
 homeassistant/components/simplisafe/* @bachya
 homeassistant/components/sma/* @kellerza
 homeassistant/components/smartthings/* @andrewsayre
+homeassistant/components/smarty/* @z0mbieprocess
 homeassistant/components/smtp/* @fabaff
 homeassistant/components/sonos/* @amelchio
 homeassistant/components/spaceapi/* @fabaff
