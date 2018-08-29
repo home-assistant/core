@@ -389,6 +389,18 @@ class SonosDevice(MediaPlayerDevice):
         return self._name
 
     @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (SONOS_DOMAIN, self._unique_id)
+            },
+            'name': self._name,
+            'model': self._model.replace("Sonos ", ""),
+            'manufacturer': 'Sonos',
+        }
+
+    @property
     @soco_coordinator
     def state(self):
         """Return the state of the device."""
