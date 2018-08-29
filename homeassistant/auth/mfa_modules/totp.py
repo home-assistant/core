@@ -137,8 +137,9 @@ class TotpAuthModule(MultiFactorAuthModule):
             await self._async_load()
 
         # user_input has been validate in caller
+        # set INPUT_FIELD_CODE as vol.Required is not user friendly
         return await self.hass.async_add_executor_job(
-            self._validate_2fa, user_id, user_input[INPUT_FIELD_CODE])
+            self._validate_2fa, user_id, user_input.get(INPUT_FIELD_CODE, ''))
 
     def _validate_2fa(self, user_id: str, code: str) -> bool:
         """Validate two factor authentication code."""
