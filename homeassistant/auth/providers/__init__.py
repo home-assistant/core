@@ -224,19 +224,27 @@ class LoginFlow(data_entry_flow.FlowHandler):
         if user_input is not None:
             expires = self.created_at + SESSION_EXPIRATION
             if dt_util.utcnow() > expires:
-                errors['base'] = 'login_expired'
-            else:
-                result = await auth_module.async_validation(
-                    self.user.id, user_input)  # type: ignore
-                if not result:
-                    errors['base'] = 'invalid_auth'
+                return self.async_abort(
+                    reason='login_expired'
+                )
+
+            result = await auth_module.async_validation(
+                self.user.id, user_input)  # type: ignore
+            if not result:
+                errors['base'] = 'invalid_code'
 
             if not errors:
                 return await self.async_finish(self.user)
 
+        description_placeholders = {
+            'mfa_module_name': auth_module.name,
+            'mfa_module_id': auth_module.id
+        }  # type: Dict[str, str]
+
         return self.async_show_form(
             step_id='mfa',
             data_schema=auth_module.input_schema,
+            description_placeholders=description_placeholders,
             errors=errors,
         )
 
