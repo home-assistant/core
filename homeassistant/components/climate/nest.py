@@ -138,6 +138,7 @@ class NestThermostat(ClimateDevice):
             'name': self.device.name_long,
             'manufacturer': 'Nest Labs',
             'model': "Thermostat",
+            'sw_version': self.device.software_version,
         }
 
     @property
