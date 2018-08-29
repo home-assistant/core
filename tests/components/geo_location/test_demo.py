@@ -51,8 +51,7 @@ class TestDemoPlatform(unittest.TestCase):
             assert state_first_entry.attributes['unit_of_measurement'] == \
                 DEFAULT_UNIT_OF_MEASUREMENT
             # Update (replaces 1 device).
-            fire_time_changed(self.hass, dt_util.utcnow() +
-                              DEFAULT_UPDATE_INTERVAL)
+            fire_time_changed(self.hass, utcnow + DEFAULT_UPDATE_INTERVAL)
             self.hass.block_till_done()
             entity_ids_updated = self.hass.states.entity_ids(
                 geo_location.DOMAIN)
