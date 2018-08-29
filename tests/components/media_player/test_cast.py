@@ -77,7 +77,10 @@ async def async_setup_cast_internal_discovery(hass, config=None,
 
     def discover_chromecast(service_name: str, info: ChromecastInfo) -> None:
         """Discover a chromecast device."""
-        listener.services[service_name] = attr.astuple(info)
+        listener.services[service_name] = (
+            info.host, info.port, info.uuid, info.model_name,
+            info.friendly_name
+        )
         discovery_callback(service_name)
 
     return discover_chromecast, add_entities
@@ -152,8 +155,7 @@ async def test_internal_discovery_callback_only_generates_once(hass):
         discover_cast('the-service', info)
         await hass.async_block_till_done()
         discover = signal.mock_calls[0][1][0]
-        # attr's __eq__ somehow breaks here, use tuples instead
-        assert attr.astuple(discover) == attr.astuple(info)
+        assert discover == info
         signal.reset_mock()
 
         # discovering it a second time shouldn't
@@ -183,8 +185,7 @@ async def test_internal_discovery_callback_fill_out(hass):
 
         # when called with incomplete info, it should use HTTP to get missing
         discover = signal.mock_calls[0][1][0]
-        # attr's __eq__ somehow breaks here, use tuples instead
-        assert attr.astuple(discover) == attr.astuple(full_info)
+        assert discover == full_info
 
 
 async def test_create_cast_device_without_uuid(hass):
