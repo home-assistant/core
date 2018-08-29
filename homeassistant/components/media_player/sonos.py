@@ -121,27 +121,27 @@ class SonosData:
         self.topology_lock = threading.Lock()
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sonos platform.
 
     Deprecated.
     """
     _LOGGER.warning('Loading Sonos via platform config is deprecated.')
-    _setup_platform(hass, config, add_devices, discovery_info)
+    _setup_platform(hass, config, add_entities, discovery_info)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
-    def add_devices(devices, update_before_add=False):
+    def add_entities(devices, update_before_add=False):
         """Sync version of async add devices."""
-        hass.add_job(async_add_devices, devices, update_before_add)
+        hass.add_job(async_add_entities, devices, update_before_add)
 
     hass.add_job(_setup_platform, hass,
                  hass.data[SONOS_DOMAIN].get('media_player', {}),
-                 add_devices, None)
+                 add_entities, None)
 
 
-def _setup_platform(hass, config, add_devices, discovery_info):
+def _setup_platform(hass, config, add_entities, discovery_info):
     """Set up the Sonos platform."""
     import soco
 
@@ -186,7 +186,7 @@ def _setup_platform(hass, config, add_devices, discovery_info):
             return
 
     hass.data[DATA_SONOS].uids.update(p.uid for p in players)
-    add_devices(SonosDevice(p) for p in players)
+    add_entities(SonosDevice(p) for p in players)
     _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):
@@ -387,6 +387,18 @@ class SonosDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._name
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (SONOS_DOMAIN, self._unique_id)
+            },
+            'name': self._name,
+            'model': self._model.replace("Sonos ", ""),
+            'manufacturer': 'Sonos',
+        }
 
     @property
     @soco_coordinator

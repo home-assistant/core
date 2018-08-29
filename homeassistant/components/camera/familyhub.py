@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Family Hub Camera."""
     from pyfamilyhublocal import FamilyHubCam
     address = config.get(CONF_IP_ADDRESS)
@@ -36,7 +36,7 @@ async def async_setup_platform(
     session = async_get_clientsession(hass)
     family_hub_cam = FamilyHubCam(address, hass.loop, session)
 
-    async_add_devices([FamilyHubCamera(name, family_hub_cam)], True)
+    async_add_entities([FamilyHubCamera(name, family_hub_cam)], True)
 
 
 class FamilyHubCamera(Camera):

@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZAMG weather platform."""
     name = config.get(CONF_NAME)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Received error from ZAMG: %s", err)
         return False
 
-    add_devices([ZamgWeather(probe, name)], True)
+    add_entities([ZamgWeather(probe, name)], True)
 
 
 class ZamgWeather(WeatherEntity):

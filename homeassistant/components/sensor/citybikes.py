@@ -126,7 +126,7 @@ def async_citybikes_request(hass, uri, schema):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices,
+def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     """Set up the CityBikes platform."""
     if PLATFORM not in hass.data:
@@ -167,7 +167,7 @@ def async_setup_platform(hass, config, async_add_devices,
                 (station_id, station_uid)):
             devices.append(CityBikesStation(hass, network, station_id, name))
 
-    async_add_devices(devices, True)
+    async_add_entities(devices, True)
 
 
 class CityBikesNetwork:

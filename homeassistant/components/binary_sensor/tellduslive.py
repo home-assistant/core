@@ -15,11 +15,11 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tellstick sensors."""
     if discovery_info is None:
         return
-    add_devices(
+    add_entities(
         TelldusLiveSensor(hass, binary_sensor)
         for binary_sensor in discovery_info
     )
@@ -31,4 +31,4 @@ class TelldusLiveSensor(TelldusLiveEntity, BinarySensorDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._device.is_on
+        return self.device.is_on

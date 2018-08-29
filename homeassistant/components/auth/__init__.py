@@ -68,10 +68,12 @@ from homeassistant.components import websocket_api
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.core import callback
+from homeassistant.core import callback, HomeAssistant
 from homeassistant.util import dt as dt_util
+
 from . import indieauth
 from . import login_flow
+from . import mfa_setup_flow
 
 DOMAIN = 'auth'
 DEPENDENCIES = ['http']
@@ -100,6 +102,7 @@ async def async_setup(hass, config):
     )
 
     await login_flow.async_setup(hass, store_result)
+    await mfa_setup_flow.async_setup(hass)
 
     return True
 
@@ -315,21 +318,28 @@ def _create_auth_code_store():
     return store_result, retrieve_result
 
 
+@websocket_api.ws_require_user()
 @callback
-def websocket_current_user(hass, connection, msg):
+def websocket_current_user(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return the current user."""
-    user = connection.request.get('hass_user')
+    async def async_get_current_user(user):
+        """Get current user."""
+        enabled_modules = await hass.auth.async_get_enabled_mfa(user)
 
-    if user is None:
-        connection.to_write.put_nowait(websocket_api.error_message(
-            msg['id'], 'no_user', 'Not authenticated as a user'))
-        return
+        connection.send_message_outside(
+            websocket_api.result_message(msg['id'], {
+                'id': user.id,
+                'name': user.name,
+                'is_owner': user.is_owner,
+                'credentials': [{'auth_provider_type': c.auth_provider_type,
+                                 'auth_provider_id': c.auth_provider_id}
+                                for c in user.credentials],
+                'mfa_modules': [{
+                    'id': module.id,
+                    'name': module.name,
+                    'enabled': module.id in enabled_modules,
+                } for module in hass.auth.auth_mfa_modules],
+            }))
 
-    connection.to_write.put_nowait(websocket_api.result_message(msg['id'], {
-        'id': user.id,
-        'name': user.name,
-        'is_owner': user.is_owner,
-        'credentials': [{'auth_provider_type': c.auth_provider_type,
-                         'auth_provider_id': c.auth_provider_id}
-                        for c in user.credentials]
-    }))
+    hass.async_create_task(async_get_current_user(connection.user))

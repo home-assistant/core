@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Validate configuration, create devices and start monitoring thread."""
     bt_device_id = config.get("bt_device_id")
 
@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.info("Starting scanner for Eddystone beacons")
             mon.start()
 
-        add_devices(devices)
+        add_entities(devices)
         mon.start()
         hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, monitor_stop)
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, monitor_start)

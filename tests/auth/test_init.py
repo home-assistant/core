@@ -3,6 +3,7 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
@@ -21,33 +22,36 @@ def mock_hass(loop):
     return hass
 
 
-async def test_auth_manager_from_config_validates_config_and_id(mock_hass):
+async def test_auth_manager_from_config_validates_config(mock_hass):
     """Test get auth providers."""
+    with pytest.raises(vol.Invalid):
+        manager = await auth.auth_manager_from_config(mock_hass, [{
+            'name': 'Test Name',
+            'type': 'insecure_example',
+            'users': [],
+        }, {
+            'name': 'Invalid config because no users',
+            'type': 'insecure_example',
+            'id': 'invalid_config',
+        }], [])
+
     manager = await auth.auth_manager_from_config(mock_hass, [{
         'name': 'Test Name',
         'type': 'insecure_example',
         'users': [],
     }, {
-        'name': 'Invalid config because no users',
-        'type': 'insecure_example',
-        'id': 'invalid_config',
-    }, {
         'name': 'Test Name 2',
-        'type': 'insecure_example',
-        'id': 'another',
-        'users': [],
-    }, {
-        'name': 'Wrong because duplicate ID',
         'type': 'insecure_example',
         'id': 'another',
         'users': [],
     }], [])
 
     providers = [{
-            'name': provider.name,
-            'id': provider.id,
-            'type': provider.type,
-        } for provider in manager.auth_providers]
+        'name': provider.name,
+        'id': provider.id,
+        'type': provider.type,
+    } for provider in manager.auth_providers]
+
     assert providers == [{
         'name': 'Test Name',
         'type': 'insecure_example',
@@ -61,6 +65,26 @@ async def test_auth_manager_from_config_validates_config_and_id(mock_hass):
 
 async def test_auth_manager_from_config_auth_modules(mock_hass):
     """Test get auth modules."""
+    with pytest.raises(vol.Invalid):
+        manager = await auth.auth_manager_from_config(mock_hass, [{
+            'name': 'Test Name',
+            'type': 'insecure_example',
+            'users': [],
+        }, {
+            'name': 'Test Name 2',
+            'type': 'insecure_example',
+            'id': 'another',
+            'users': [],
+        }], [{
+            'name': 'Module 1',
+            'type': 'insecure_example',
+            'data': [],
+        }, {
+            'name': 'Invalid config because no data',
+            'type': 'insecure_example',
+            'id': 'another',
+        }])
+
     manager = await auth.auth_manager_from_config(mock_hass, [{
         'name': 'Test Name',
         'type': 'insecure_example',
@@ -79,13 +103,7 @@ async def test_auth_manager_from_config_auth_modules(mock_hass):
         'type': 'insecure_example',
         'id': 'another',
         'data': [],
-    }, {
-        'name': 'Duplicate ID',
-        'type': 'insecure_example',
-        'id': 'another',
-        'data': [],
     }])
-
     providers = [{
             'name': provider.name,
             'type': provider.type,
@@ -410,10 +428,10 @@ async def test_login_with_auth_module(mock_hass):
         'pin': 'invalid-pin',
     })
 
-    # Invalid auth error
+    # Invalid code error
     assert step['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert step['step_id'] == 'mfa'
-    assert step['errors'] == {'base': 'invalid_auth'}
+    assert step['errors'] == {'base': 'invalid_code'}
 
     step = await manager.login_flow.async_configure(step['flow_id'], {
         'pin': 'test-pin',
@@ -553,18 +571,9 @@ async def test_auth_module_expired_session(mock_hass):
         step = await manager.login_flow.async_configure(step['flow_id'], {
             'pin': 'test-pin',
         })
-        # Invalid auth due session timeout
-        assert step['type'] == data_entry_flow.RESULT_TYPE_FORM
-        assert step['step_id'] == 'mfa'
-        assert step['errors']['base'] == 'login_expired'
-
-        # The second try will fail as well
-        step = await manager.login_flow.async_configure(step['flow_id'], {
-            'pin': 'test-pin',
-        })
-        assert step['type'] == data_entry_flow.RESULT_TYPE_FORM
-        assert step['step_id'] == 'mfa'
-        assert step['errors']['base'] == 'login_expired'
+        # login flow abort due session timeout
+        assert step['type'] == data_entry_flow.RESULT_TYPE_ABORT
+        assert step['reason'] == 'login_expired'
 
 
 async def test_enable_mfa_for_user(hass, hass_storage):

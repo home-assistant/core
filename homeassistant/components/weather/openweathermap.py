@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenWeatherMap weather platform."""
     import pyowm
 
@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = WeatherData(owm, latitude, longitude, mode)
 
-    add_devices([OpenWeatherMapWeather(
+    add_entities([OpenWeatherMapWeather(
         name, data, hass.config.units.temperature_unit, mode)], True)
 
 

@@ -49,7 +49,7 @@ SENSOR_TYPES = {
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Smappee sensor."""
     smappee = hass.data[DATA_SMAPPEE]
 
@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         dev.append(SmappeeSensor(smappee, None, sensor,
                                                  SENSOR_TYPES[sensor]))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class SmappeeSensor(Entity):

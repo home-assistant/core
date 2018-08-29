@@ -97,7 +97,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the switch from config."""
     from miio import Device, DeviceException
@@ -158,7 +158,7 @@ async def async_setup_platform(hass, config, async_add_devices,
             'and provide the following data: %s', model)
         return False
 
-    async_add_devices(devices, update_before_add=True)
+    async_add_entities(devices, update_before_add=True)
 
     async def async_service_handler(service):
         """Map services to methods on XiaomiPlugGenericSwitch."""

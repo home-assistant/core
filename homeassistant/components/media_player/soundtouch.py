@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bose Soundtouch platform."""
     if DATA_SOUNDTOUCH not in hass.data:
         hass.data[DATA_SOUNDTOUCH] = []
@@ -92,7 +92,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         }
         soundtouch_device = SoundTouchDevice(None, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
-        add_devices([soundtouch_device])
+        add_entities([soundtouch_device])
     else:
         name = config.get(CONF_NAME)
         remote_config = {
@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         }
         soundtouch_device = SoundTouchDevice(name, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
-        add_devices([soundtouch_device])
+        add_entities([soundtouch_device])
 
     def service_handle(service):
         """Handle the applying of a service."""
@@ -165,6 +165,11 @@ class SoundTouchDevice(MediaPlayerDevice):
     def config(self):
         """Return specific soundtouch configuration."""
         return self._config
+
+    @property
+    def device(self):
+        """Return Soundtouch device."""
+        return self._device
 
     def update(self):
         """Retrieve the latest data."""

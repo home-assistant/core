@@ -119,9 +119,27 @@ async def test_login(hass):
     result = await hass.auth.login_flow.async_configure(
         result['flow_id'], {'pin': 'invalid-code'})
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['errors']['base'] == 'invalid_auth'
+    assert result['errors']['base'] == 'invalid_code'
 
     result = await hass.auth.login_flow.async_configure(
         result['flow_id'], {'pin': '123456'})
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result['data'].id == 'mock-user'
+
+
+async def test_setup_flow(hass):
+    """Test validating pin."""
+    auth_module = await auth_mfa_module_from_config(hass, {
+        'type': 'insecure_example',
+        'data': [{'user_id': 'test-user', 'pin': '123456'}]
+    })
+
+    flow = await auth_module.async_setup_flow('new-user')
+
+    result = await flow.async_step_init()
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+
+    result = await flow.async_step_init({'pin': 'abcdefg'})
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert auth_module._data[1]['user_id'] == 'new-user'
+    assert auth_module._data[1]['pin'] == 'abcdefg'
