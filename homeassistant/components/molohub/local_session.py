@@ -64,10 +64,11 @@ class LocalSession(asyncore.dispatcher):
 
     def sock_connect(self):
         """Connect to host:port."""
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.clear()
         dns_ip = dns_open(self.host)
         if not dns_ip:
             return
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect((dns_ip, self.port))
 
     def send_raw_pack(self, raw_data):

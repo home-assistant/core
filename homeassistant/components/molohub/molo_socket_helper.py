@@ -1,54 +1,12 @@
 """Socket helper class for Molohub."""
-import logging
 import platform
-import socket
 
 from .const import CONFIG_FILE_NAME
-from .utils import (LOGGER, get_local_seed, get_mac_addr, get_rand_char,
-                    save_local_seed)
+from .utils import get_local_seed, get_mac_addr, get_rand_char, save_local_seed
 
 
 class MoloSocketHelper:
     """Socket helper class for Molohub."""
-
-    @classmethod
-    def connect_remote(cls, host, port):
-        """Connect to remote host:port."""
-        try:
-            LOGGER.debug("Connect remote %s:%d", host, port)
-            host = socket.gethostbyname(host)
-            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client.connect((host, port))
-            client.setblocking(0)
-
-            # Future use for ssl connection
-            # ssl_client = ssl.wrap_socket(
-            #     client, ssl_version=ssl.PROTOCOL_SSLv23)
-            # ssl_client.connect((host, port))
-            # ssl_client.setblocking(1)
-            LOGGER.debug("New connection to: %s:%d", host, port)
-        except socket.error as exc:
-            logging.exception(exc)
-            LOGGER.error("Connect failed")
-            return False
-
-        return client
-
-    @classmethod
-    def connect_local(cls, localhost, localport):
-        """Connect to localhost:localport."""
-        try:
-            localhost = socket.gethostbyname(localhost)
-            client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            client.connect((localhost, localport))
-            client.setblocking(0)
-            LOGGER.debug("New connection to: %s:%d", localhost, localport)
-        except socket.error as exc:
-            logging.exception(exc)
-            LOGGER.error("Connect local failed")
-            return False
-
-        return client
 
     @classmethod
     def ngrok_auth(cls, client_version, hass, ha_version):

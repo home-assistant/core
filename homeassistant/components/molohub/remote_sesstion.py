@@ -2,13 +2,13 @@
 import asyncore
 import socket
 
-from .const import BUFFER_SIZE, STAGE_SERVER_CONNECTED
+from .const import BUFFER_SIZE
 from .local_session import LocalSession
 from .molo_client_app import MOLO_CLIENT_APP
 from .molo_client_config import MOLO_CONFIGS
 from .molo_socket_helper import MoloSocketHelper
 from .molo_tcp_pack import MoloTcpPack
-from .utils import LOGGER, dns_open, fire_molohub_event
+from .utils import LOGGER, dns_open
 
 
 class RemoteSession(asyncore.dispatcher):
@@ -83,10 +83,11 @@ class RemoteSession(asyncore.dispatcher):
 
     def sock_connect(self):
         """Connect to host:port."""
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.clear()
         dns_ip = dns_open(self.rhost)
         if not dns_ip:
             return
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect((dns_ip, self.rport))
 
     def on_start_proxy(self, jdata):
@@ -130,20 +131,6 @@ class RemoteSession(asyncore.dispatcher):
         """Handle json packet."""
         if jdata['Type'] in self.protocol_func_bind_map:
             self.protocol_func_bind_map[jdata['Type']](self, jdata)
-
-    def process_new_tunnel(self, jdata):
-        """Handle new tunnel."""
-        jpayload = jdata['Payload']
-        self.client_id = jpayload['clientid']
-        self.client_token = jpayload['token']
-        url = jpayload['Url']
-        LOGGER.debug("Get client id url:%s id:%s token:%s",
-                     url, self.client_id, self.client_token)
-        data = {}
-        data['stage'] = STAGE_SERVER_CONNECTED
-        data['clientid'] = self.client_id
-        data['token'] = self.client_token
-        fire_molohub_event(MOLO_CLIENT_APP.hass_context, data)
 
     def send_raw_pack(self, raw_data):
         """Write raw data pack to write buffer."""

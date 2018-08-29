@@ -50,7 +50,6 @@ def fire_molohub_event(hass, data):
     """Send hass Event message."""
     if not hass:
         return
-    LOGGER.debug("Fire molohub event data: %s", str(data))
     hass.bus.fire('molohub_event', data)
 
 

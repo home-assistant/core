@@ -2,102 +2,90 @@
 import html
 import urllib.parse
 
-from .const import (BIND_AUTH_STR_TEMPLATE_DEFAULT, OPENTYPE_COUNT_DEFAULT,
+from .const import (BIND_AUTH_STR_TEMPLATE_DEFAULT,
                     SERVER_CONNECTING_STR_TEMPLATE_DEFAULT, STAGE_AUTH_BINDED,
                     STAGE_SERVER_CONNECTED, STAGE_SERVER_UNCONNECTED,
                     WAIT_FOR_AUTH_STR_TEMPLATE_DEFAULT)
-from .utils import LOGGER
+from .utils import LOGGER, fire_molohub_event
 
 
 class NotifyState:
     """UI class for Molohub."""
 
+    ha_context = None
     molo_server_host_str = ''
 
-    server_connecting_str_template = SERVER_CONNECTING_STR_TEMPLATE_DEFAULT
-    wait_for_auth_str_template = WAIT_FOR_AUTH_STR_TEMPLATE_DEFAULT
-    bind_auth_str_template = BIND_AUTH_STR_TEMPLATE_DEFAULT
-    opentype_count = OPENTYPE_COUNT_DEFAULT
-
-    cur_notify_str = server_connecting_str_template
-    cur_stage = STAGE_SERVER_UNCONNECTED
-    cur_data = None
-
-    OPENTYPE_LOGO = {
-        'default': '''<img src="/" hegiht="32px" alt="icon_error"/>'''
+    cur_notify_str = SERVER_CONNECTING_STR_TEMPLATE_DEFAULT
+    cur_data = {
+        'stage': STAGE_SERVER_UNCONNECTED,
+        'uncnn_templ': SERVER_CONNECTING_STR_TEMPLATE_DEFAULT,
+        'cnn_templ': BIND_AUTH_STR_TEMPLATE_DEFAULT,
+        'link_templ': WAIT_FOR_AUTH_STR_TEMPLATE_DEFAULT,
+        'platform_icon': {
+            'default': '''<img src="/" hegiht="32px" alt="icon_error"/>'''
+        }
     }
+
+    generate_str_func_bind_map = {}
+
+    def __init__(self):
+        """Initialize NotifyState class."""
+        self.init_func_bind_map()
+
+    def set_context(self, hass, host_str):
+        """Set HA context and server host string."""
+        self.ha_context = hass
+        self.molo_server_host_str = host_str
 
     def update_state(self, data):
         """Update UI state."""
-        stage = data.get('stage')
+        last_stage = self.cur_data.get('stage')
+        last_notify_str = self.get_notify_str()
 
-        # STAGE_AUTH_BINDED possible update
-        if self.cur_stage == stage and self.cur_stage != STAGE_AUTH_BINDED:
-            LOGGER.debug("Stage not changed. ignore update %s ", stage)
-            return
-
-        if stage:
-            self.cur_stage = stage
-            self.cur_data = data
-
-        # Update part of values.
-        for item in data:
-            if item in self.update_func_bind_map:
-                self.update_func_bind_map[item](self, data)
-
+        # Update data
+        self.cur_data.update(data)
+        cur_stage = self.cur_data.get('stage')
         LOGGER.debug("cur_data %s", str(self.cur_data))
 
-        # On stage change.
-        if self.cur_stage in self.on_stage_func_bind_map:
-            self.on_stage_func_bind_map[self.cur_stage](self, data)
+        # Generate notify string according to stage
+        if cur_stage in self.generate_str_func_bind_map:
+            self.generate_str_func_bind_map[cur_stage]()
+
+        # If notify string changed, inform UI to update
+        if last_notify_str == self.get_notify_str():
+            return
+
+        # If stage changed, log new stage
+        if cur_stage != last_stage:
+            LOGGER.info(self.state_log_str[cur_stage])
+
+        # Inform UI to update
+        fire_molohub_event(self.ha_context, None)
 
     def get_notify_str(self):
         """Get current UI state."""
         return self.cur_notify_str
 
-    def update_token(self, data):
-        """Handle update token."""
-        data_copy = data.copy()
-        data_copy.pop('update_token', None)
-        self.cur_data.update(data_copy)
-        LOGGER.debug('update_token %s', str(data_copy))
-
-    def update_ui(self, data):
-        """Handle update UI templetes."""
-        self.OPENTYPE_LOGO.update(data['platform_icon'])
-        self.opentype_count = len(data['platform_icon'])
-        self.server_connecting_str_template = data['uncnn_templ']
-        self.bind_auth_str_template = data['cnn_templ']
-        self.wait_for_auth_str_template = data['link_templ']
-        LOGGER.debug('update_ui %s', str(data))
-
-    update_func_bind_map = {
-        'update_token': update_token,
-        'update_ui': update_ui
-    }
-
-    def on_stage_server_unconnected(self, data):
+    def generate_str_server_unconnected(self):
         """Handle hass event: on_stage_server_unconnected."""
-        LOGGER.info("server offline")
-        self.cur_notify_str = self.server_connecting_str_template
+        self.cur_notify_str = self.cur_data.get('uncnn_templ')
 
-    def on_stage_serverconnected(self, data):
+    def generate_str_serverconnected(self):
         """Handle hass event: on_stage_serverconnected."""
-        LOGGER.info("server online, wait for bind")
         token = urllib.parse.quote(self.cur_data.get('token'))
         token_list = []
+        opentype_count = len(self.cur_data.get('platform_icon'))
         i = 0
-        while i < self.opentype_count:
+        while i < opentype_count:
             token_list.append(self.molo_server_host_str)
             token_list.append(token)
             i += 1
         self.cur_notify_str = (
-            self.wait_for_auth_str_template % tuple(token_list))
+            self.cur_data.get('link_templ') % tuple(token_list))
         LOGGER.debug("Update nofiy str token %s", token)
 
-    def on_stage_auth_binded(self, data):
+    def generate_str_auth_binded(self):
         """Handle hass event: on_stage_auth_binded."""
-        LOGGER.info("server online, successfully bind")
         token = urllib.parse.quote(self.cur_data.get('token'))
         opentype = self.cur_data.get('opentype')
         openid = self.cur_data.get('openid')
@@ -106,14 +94,25 @@ class NotifyState:
         upicture = self.cur_data.get('upicture')
         LOGGER.debug("Update nofiy str opentype: %s, openid: %s, token: %s",
                      opentype, openid, token)
-        if opentype not in self.OPENTYPE_LOGO:
+        if opentype not in self.cur_data.get('platform_icon'):
             opentype = 'default'
-        self.cur_notify_str = (self.bind_auth_str_template % (
-            self.OPENTYPE_LOGO[opentype] % (self.molo_server_host_str),
-            upicture, uname, self.molo_server_host_str, token))
+        self.cur_notify_str = (self.cur_data.get('cnn_templ') %
+                               (self.cur_data.get('platform_icon')[opentype] %
+                                (self.molo_server_host_str), upicture, uname,
+                                self.molo_server_host_str, token))
 
-    on_stage_func_bind_map = {
-        STAGE_SERVER_UNCONNECTED: on_stage_server_unconnected,
-        STAGE_SERVER_CONNECTED: on_stage_serverconnected,
-        STAGE_AUTH_BINDED: on_stage_auth_binded
-    }
+    def init_func_bind_map(self):
+        """Initialize function bind map and state log string map."""
+        self.generate_str_func_bind_map = {
+            STAGE_SERVER_UNCONNECTED: self.generate_str_server_unconnected,
+            STAGE_SERVER_CONNECTED: self.generate_str_serverconnected,
+            STAGE_AUTH_BINDED: self.generate_str_auth_binded
+        }
+        self.state_log_str = {
+            STAGE_SERVER_UNCONNECTED: 'server offline',
+            STAGE_SERVER_CONNECTED: 'server online, wait for authorize',
+            STAGE_AUTH_BINDED: 'server online, successfully authorized'
+        }
+
+
+NOTIFY_STATE = NotifyState()

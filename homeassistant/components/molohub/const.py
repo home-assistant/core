@@ -41,8 +41,6 @@ Content-Type: text/html\r
 Content-Length: %d\r\n\r\n%s
 """
 
-OPENTYPE_COUNT_DEFAULT = 1
-
 PING_INTERVAL_DEFAULT = 10
 
 RECONNECT_INTERVAL = 5
@@ -55,7 +53,6 @@ STAGE_AUTH_BINDED = 'auth_binded'
 TCP_PACK_HEADER_LEN = 16
 TOKEN_KEY_NAME = 'slavertoken'
 
-UNCONNECTED = 0
 CLIENT_STATUS_UNBINDED = "unbinded"
 CLIENT_STATUS_BINDED = "binded"
 
@@ -66,3 +63,5 @@ Choose platform below to connect:
 
 - [google](http://%s/login/google?token=%s)
 """
+
+PROXY_TCP_CONNECTION_ACTIVATE_TIME = 60

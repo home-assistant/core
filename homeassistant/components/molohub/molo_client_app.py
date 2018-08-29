@@ -4,7 +4,8 @@ import logging
 import threading
 import time
 
-from .const import PING_INTERVAL_DEFAULT, RECONNECT_INTERVAL
+from .const import (PING_INTERVAL_DEFAULT, RECONNECT_INTERVAL,
+                    PROXY_TCP_CONNECTION_ACTIVATE_TIME)
 from .utils import LOGGER
 
 
@@ -15,16 +16,17 @@ class MoloClientApp:
     main_thread = None
     is_exited = False
     ping_interval = PING_INTERVAL_DEFAULT
+    last_activate_time = None
 
     def __init__(self):
         """Initialize application arguments."""
         self.molo_client = None
         self.local_session_dict = {}
         self.remote_session_dict = {}
-        self.remote_session_list = []
         self.lock = threading.Lock()
         self.ping_buffer = None
         self.hass_context = None
+        self.reset_activate_time()
 
     def proxy_loop(self):
         """Handle main loop and reconnection."""
@@ -36,10 +38,11 @@ class MoloClientApp:
                 logging.exception(exc)
                 LOGGER.error("asyncore.loop exception")
 
-            asyncore.close_all()
-            self.molo_client.sock_connect()
-            time.sleep(RECONNECT_INTERVAL)
-            LOGGER.info("moloserver reconnecting...")
+            if not self.is_exited:
+                asyncore.close_all()
+                self.molo_client.sock_connect()
+                time.sleep(RECONNECT_INTERVAL)
+                LOGGER.info("moloserver reconnecting...")
         asyncore.close_all()
         LOGGER.debug("proxy exited")
 
@@ -64,6 +67,17 @@ class MoloClientApp:
                 time.sleep(self.ping_interval)
             except EnvironmentError:
                 break
+
+            time_interval = time.time() - self.last_activate_time
+            LOGGER.debug("data interval: %f", time_interval)
+            if time_interval > PROXY_TCP_CONNECTION_ACTIVATE_TIME:
+                LOGGER.info("connection timeout, reconnecting server")
+                self.molo_client.handle_close()
+                self.reset_activate_time()
+
+    def reset_activate_time(self):
+        """Reset last activate time for timeout."""
+        self.last_activate_time = time.time()
 
     def set_ping_buffer(self, buffer):
         """Send ping."""

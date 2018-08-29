@@ -6,14 +6,15 @@ import socket
 from homeassistant.const import __short_version__
 
 from .const import (BUFFER_SIZE, CLIENT_STATUS_BINDED, CLIENT_STATUS_UNBINDED,
-                    CLIENT_VERSION, STAGE_AUTH_BINDED, STAGE_SERVER_CONNECTED,
-                    STAGE_SERVER_UNCONNECTED)
+                    CLIENT_VERSION, CONFIG_FILE_NAME, STAGE_AUTH_BINDED,
+                    STAGE_SERVER_CONNECTED, STAGE_SERVER_UNCONNECTED)
 from .molo_client_app import MOLO_CLIENT_APP
 from .molo_client_config import MOLO_CONFIGS
 from .molo_socket_helper import MoloSocketHelper
 from .molo_tcp_pack import MoloTcpPack
+from .notify_state import NOTIFY_STATE
 from .remote_sesstion import RemoteSession
-from .utils import LOGGER, dns_open, fire_molohub_event
+from .utils import LOGGER, dns_open, get_rand_char, save_local_seed
 
 
 class MoloHubClient(asyncore.dispatcher):
@@ -30,6 +31,8 @@ class MoloHubClient(asyncore.dispatcher):
     client_id = ''
     client_token = ''
 
+    protocol_func_bind_map = {}
+
     def __init__(self, host, port):
         """Initialize protocol arguments."""
         asyncore.dispatcher.__init__(self)
@@ -42,6 +45,7 @@ class MoloHubClient(asyncore.dispatcher):
         self.append_connect = None
         self.client_status = None
         self.clear()
+        self.init_func_bind_map()
 
     def handle_connect(self):
         """When connected, this method will be call."""
@@ -57,8 +61,7 @@ class MoloHubClient(asyncore.dispatcher):
         LOGGER.debug("server closed")
         self.clear()
         data = {}
-        data['stage'] = STAGE_SERVER_UNCONNECTED
-        fire_molohub_event(MOLO_CLIENT_APP.hass_context, data)
+        self.update_notify_state(data, STAGE_SERVER_UNCONNECTED)
         self.close()
 
         # close all and restart
@@ -95,36 +98,34 @@ class MoloHubClient(asyncore.dispatcher):
     def sock_connect(self):
         """Connect to host:port."""
         self.clear()
-        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         dns_ip = dns_open(self.host)
         if not dns_ip:
             return
+        self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
         self.connect((dns_ip, self.port))
 
     def on_start_proxy(self, jdata):
         """Handle on_start_proxy json packet."""
-        LOGGER.debug('on_start_proxy %s, %s', self.client_id, str(jdata))
+        LOGGER.debug("on_start_proxy %s, %s", self.client_id, str(jdata))
 
     def on_bind_status(self, jdata):
         """Handle on_bind_status json packet."""
         LOGGER.debug("on_bind_status %s", str(jdata))
         jpayload = jdata['Payload']
         self.client_status = jpayload['Status']
-        if self.client_status == CLIENT_STATUS_BINDED:
-            jpayload['stage'] = STAGE_AUTH_BINDED
-        elif self.client_status == CLIENT_STATUS_UNBINDED:
-            jpayload['stage'] = STAGE_SERVER_CONNECTED
-
-        # fire molo event
         jpayload['token'] = self.client_token
-        fire_molohub_event(MOLO_CLIENT_APP.hass_context, jpayload)
+        if self.client_status == CLIENT_STATUS_BINDED:
+            self.update_notify_state(jpayload, STAGE_AUTH_BINDED)
+        elif self.client_status == CLIENT_STATUS_UNBINDED:
+            self.update_notify_state(jpayload, STAGE_SERVER_CONNECTED)
 
     def on_req_proxy(self, jdata):
         """Handle on_req_proxy json packet."""
+        LOGGER.debug("on_req_proxy, %s, %s, %s, %s", self.host, self.port,
+                     self.tunnel['lhost'], self.tunnel['lport'])
         remotesession = RemoteSession(self.client_id, self.host, self.port,
                                       self.tunnel['lhost'],
                                       self.tunnel['lport'])
-        MOLO_CLIENT_APP.remote_session_list.append(remotesession)
         remotesession.sock_connect()
 
     def on_auth_resp(self, jdata):
@@ -133,10 +134,10 @@ class MoloHubClient(asyncore.dispatcher):
         self.client_id = jdata['Payload']['ClientId']
 
         self.send_dict_pack(
-            MoloSocketHelper.req_tunnel(
-                self.tunnel['protocol'], self.tunnel['hostname'],
-                self.tunnel['subdomain'], self.tunnel['rport'],
-                self.client_id))
+            MoloSocketHelper.req_tunnel(self.tunnel['protocol'],
+                                        self.tunnel['hostname'],
+                                        self.tunnel['subdomain'],
+                                        self.tunnel['rport'], self.client_id))
 
     def on_new_tunnel(self, jdata):
         """Handle on_new_tunnel json packet."""
@@ -145,8 +146,7 @@ class MoloHubClient(asyncore.dispatcher):
         if 'ping_interval' in jdata['OnlineConfig']:
             MOLO_CLIENT_APP.ping_interval = jdata['OnlineConfig'][
                 'ping_interval']
-        data['update_ui'] = 'true'
-        fire_molohub_event(MOLO_CLIENT_APP.hass_context, data)
+        self.update_notify_state(data)
         if jdata['Payload']['Error'] != '':
             LOGGER.error('Server failed to allocate tunnel: %s',
                          jdata['Payload']['Error'])
@@ -159,9 +159,8 @@ class MoloHubClient(asyncore.dispatcher):
         """Handle on_unbind_auth json packet."""
         LOGGER.debug('on_unbind_auth %s', str(jdata))
         data = jdata['Payload']
-        data['stage'] = STAGE_SERVER_CONNECTED
         data['token'] = self.client_token
-        fire_molohub_event(MOLO_CLIENT_APP.hass_context, data)
+        self.update_notify_state(data, STAGE_SERVER_CONNECTED)
 
     def on_token_expired(self, jdata):
         """Handle on_token_expired json packet."""
@@ -170,8 +169,21 @@ class MoloHubClient(asyncore.dispatcher):
             return
         data = jdata['Payload']
         self.client_token = data['token']
-        data['update_token'] = 'true'
-        fire_molohub_event(MOLO_CLIENT_APP.hass_context, data)
+        self.update_notify_state(data)
+
+    def on_pong(self, jdata):
+        """Handle on_pong json packet."""
+        LOGGER.debug('on_pong %s, self token: %s', str(jdata),
+                     self.client_token)
+
+    def on_reset_clientid(self, jdata):
+        """Handle on_reset_clientid json packet."""
+        local_seed = get_rand_char(32).lower()
+        save_local_seed(
+            MOLO_CLIENT_APP.hass_context.config.path(CONFIG_FILE_NAME),
+            local_seed)
+        LOGGER.debug("reset clientid %s to %s", self.client_id, local_seed)
+        self.handle_close()
 
     def process_molo_tcp_pack(self):
         """Handle received TCP packet."""
@@ -189,20 +201,20 @@ class MoloHubClient(asyncore.dispatcher):
         """Handle received json packet."""
         LOGGER.debug("process_json_pack %s", str(jdata))
         if jdata['Type'] in self.protocol_func_bind_map:
-            self.protocol_func_bind_map[jdata['Type']](self, jdata)
+            MOLO_CLIENT_APP.reset_activate_time()
+            self.protocol_func_bind_map[jdata['Type']](jdata)
 
     def process_new_tunnel(self, jdata):
         """Handle new tunnel."""
         jpayload = jdata['Payload']
         self.client_id = jpayload['clientid']
         self.client_token = jpayload['token']
-        LOGGER.debug(
-            "Get client id:%s token:%s", self.client_id, self.client_token)
+        LOGGER.debug("Get client id:%s token:%s", self.client_id,
+                     self.client_token)
         data = {}
-        data['stage'] = STAGE_SERVER_CONNECTED
         data['clientid'] = self.client_id
         data['token'] = self.client_token
-        fire_molohub_event(MOLO_CLIENT_APP.hass_context, data)
+        self.update_notify_state(data, STAGE_SERVER_CONNECTED)
 
     def send_raw_pack(self, raw_data):
         """Send raw data packet."""
@@ -226,11 +238,22 @@ class MoloHubClient(asyncore.dispatcher):
             MoloSocketHelper.ping(self.client_token, self.client_status))
         return body
 
-    protocol_func_bind_map = {
-        "StartProxy": on_start_proxy,
-        "BindStatus": on_bind_status,
-        "ReqProxy": on_req_proxy,
-        "AuthResp": on_auth_resp,
-        "NewTunnel": on_new_tunnel,
-        "TokenExpired": on_token_expired
-    }
+    def update_notify_state(self, data, stage=None):
+        """Add stage field and inform NOTIFY_STATE to update UI data."""
+        LOGGER.debug("Send update nofity state with %s", self.client_status)
+        if stage:
+            data['stage'] = stage
+        NOTIFY_STATE.update_state(data)
+
+    def init_func_bind_map(self):
+        """Initialize protocol function bind map."""
+        self.protocol_func_bind_map = {
+            "StartProxy": self.on_start_proxy,
+            "BindStatus": self.on_bind_status,
+            "ReqProxy": self.on_req_proxy,
+            "AuthResp": self.on_auth_resp,
+            "NewTunnel": self.on_new_tunnel,
+            "TokenExpired": self.on_token_expired,
+            "Pong": self.on_pong,
+            "ResetClientid": self.on_reset_clientid
+        }
