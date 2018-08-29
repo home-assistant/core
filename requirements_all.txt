@@ -186,6 +186,7 @@ blinkstick==1.1.8
 blockchain==1.4.4
 
 # homeassistant.components.light.decora
+# homeassistant.components.switch.switchmate
 # bluepy==1.1.4
 
 # homeassistant.components.sensor.bme680
