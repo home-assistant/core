@@ -531,7 +531,7 @@ class PlexClient(MediaPlayerDevice):
     @property
     def device(self):
         """Return the device, if any."""
-        return self.device
+        return self._device
 
     @property
     def marked_unavailable(self):
