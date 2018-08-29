@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a Ring device."""
     ring = hass.data[DATA_RING]
 
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
     return True
 
 

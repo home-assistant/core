@@ -28,7 +28,7 @@ ATTR_RF_LOOP4 = 'rf_loop4'
 ATTR_RF_LOOP1 = 'rf_loop1'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the AlarmDecoder binary sensor devices."""
     configured_zones = discovery_info[CONF_ZONES]
 
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             zone_num, zone_name, zone_type, zone_rfid, relay_addr, relay_chan)
         devices.append(device)
 
-    add_devices(devices)
+    add_entities(devices)
 
     return True
 

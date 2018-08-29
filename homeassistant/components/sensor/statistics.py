@@ -54,14 +54,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Statistics sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
     max_age = config.get(CONF_MAX_AGE, None)
 
-    async_add_devices(
+    async_add_entities(
         [StatisticsSensor(hass, entity_id, name, sampling_size, max_age)],
         True)
     return True

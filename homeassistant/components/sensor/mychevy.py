@@ -31,7 +31,7 @@ SENSORS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MyChevy sensors."""
     if discovery_info is None:
         return
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for car in hub.cars:
             sensors.append(EVSensor(hub, sconfig, car.vid))
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class MyChevyStatus(Entity):

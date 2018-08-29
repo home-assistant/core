@@ -45,7 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Orange Livebox Play TV platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -59,7 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     except IOError:
         _LOGGER.error("Failed to connect to Livebox Play TV at %s:%s. "
                       "Please check your configuration", host, port)
-    async_add_devices(livebox_devices, True)
+    async_add_entities(livebox_devices, True)
 
 
 class LiveboxPlayTvDevice(MediaPlayerDevice):

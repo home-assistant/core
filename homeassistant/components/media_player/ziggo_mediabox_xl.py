@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ziggo Mediabox XL platform."""
     from ziggo_mediabox_xl import ZiggoMediaboxXL
 
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Can't connect to %s: %s", host, error)
     else:
         _LOGGER.info("Ignoring duplicate Ziggo Mediabox XL %s", host)
-    add_devices(hosts, True)
+    add_entities(hosts, True)
 
 
 class ZiggoMediaboxXLDevice(MediaPlayerDevice):

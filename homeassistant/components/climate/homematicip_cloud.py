@@ -27,12 +27,12 @@ HMIP_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_HMIP.items()}
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud climate devices."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP climate from a config entry."""
     from homematicip.group import HeatingGroup
 
@@ -43,7 +43,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             devices.append(HomematicipHeatingGroup(home, device))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipHeatingGroup(HomematicipGenericDevice, ClimateDevice):

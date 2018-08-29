@@ -279,7 +279,7 @@ class TestMediaPlayer(unittest.TestCase):
         bad_config = {'platform': 'universal'}
         entities = []
 
-        def add_devices(new_entities):
+        def add_entities(new_entities):
             """Add devices to list."""
             for dev in new_entities:
                 entities.append(dev)
@@ -288,7 +288,7 @@ class TestMediaPlayer(unittest.TestCase):
         try:
             run_coroutine_threadsafe(
                 universal.async_setup_platform(
-                    self.hass, validate_config(bad_config), add_devices),
+                    self.hass, validate_config(bad_config), add_entities),
                 self.hass.loop).result()
         except MultipleInvalid:
             setup_ok = False
@@ -297,7 +297,7 @@ class TestMediaPlayer(unittest.TestCase):
 
         run_coroutine_threadsafe(
             universal.async_setup_platform(
-                self.hass, validate_config(config), add_devices),
+                self.hass, validate_config(config), add_entities),
             self.hass.loop).result()
         self.assertEqual(1, len(entities))
         self.assertEqual('test', entities[0].name)

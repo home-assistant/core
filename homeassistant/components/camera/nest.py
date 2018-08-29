@@ -23,20 +23,20 @@ NEST_BRAND = 'Nest'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({})
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Nest Cam.
 
     No longer in use.
     """
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest sensor based on a config entry."""
     camera_devices = \
         await hass.async_add_job(hass.data[nest.DATA_NEST].cameras)
     cameras = [NestCamera(structure, device)
                for structure, device in camera_devices]
-    async_add_devices(cameras, True)
+    async_add_entities(cameras, True)
 
 
 class NestCamera(Camera):
@@ -46,7 +46,7 @@ class NestCamera(Camera):
         """Initialize a Nest Camera."""
         super(NestCamera, self).__init__()
         self.structure = structure
-        self._device = device
+        self.device = device
         self._location = None
         self._name = None
         self._online = None
@@ -93,7 +93,7 @@ class NestCamera(Camera):
         # Calling Nest API in is_streaming setter.
         # device.is_streaming would not immediately change until the process
         # finished in Nest Cam.
-        self._device.is_streaming = False
+        self.device.is_streaming = False
 
     def turn_on(self):
         """Turn on camera."""
@@ -105,15 +105,15 @@ class NestCamera(Camera):
         # Calling Nest API in is_streaming setter.
         # device.is_streaming would not immediately change until the process
         # finished in Nest Cam.
-        self._device.is_streaming = True
+        self.device.is_streaming = True
 
     def update(self):
         """Cache value from Python-nest."""
-        self._location = self._device.where
-        self._name = self._device.name
-        self._online = self._device.online
-        self._is_streaming = self._device.is_streaming
-        self._is_video_history_enabled = self._device.is_video_history_enabled
+        self._location = self.device.where
+        self._name = self.device.name
+        self._online = self.device.online
+        self._is_streaming = self.device.is_streaming
+        self._is_video_history_enabled = self.device.is_video_history_enabled
 
         if self._is_video_history_enabled:
             # NestAware allowed 10/min
@@ -130,7 +130,7 @@ class NestCamera(Camera):
         """Return a still image response from the camera."""
         now = utcnow()
         if self._ready_for_snapshot(now):
-            url = self._device.snapshot_url
+            url = self.device.snapshot_url
 
             try:
                 response = requests.get(url)

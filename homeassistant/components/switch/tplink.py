@@ -32,14 +32,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TPLink switch platform."""
     from pyHS100 import SmartPlug
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
     leds_on = config.get(CONF_LEDS)
 
-    add_devices([SmartPlugSwitch(SmartPlug(host), name, leds_on)], True)
+    add_entities([SmartPlugSwitch(SmartPlug(host), name, leds_on)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):

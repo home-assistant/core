@@ -73,7 +73,8 @@ class ChromecastInfo:
     port = attr.ib(type=int)
     uuid = attr.ib(type=Optional[str], converter=attr.converters.optional(str),
                    default=None)  # always convert UUID to string if not None
-    model_name = attr.ib(type=str, default='')  # needed for cast type
+    manufacturer = attr.ib(type=str, default='')
+    model_name = attr.ib(type=str, default='')
     friendly_name = attr.ib(type=Optional[str], default=None)
 
     @property
@@ -111,6 +112,7 @@ def _fill_out_missing_chromecast_info(info: ChromecastInfo) -> ChromecastInfo:
         host=info.host, port=info.port,
         uuid=(info.uuid or http_device_status.uuid),
         friendly_name=(info.friendly_name or http_device_status.friendly_name),
+        manufacturer=(info.manufacturer or http_device_status.manufacturer),
         model_name=(info.model_name or http_device_status.model_name)
     )
 
@@ -148,7 +150,13 @@ def _setup_internal_discovery(hass: HomeAssistantType) -> None:
     def internal_callback(name):
         """Handle zeroconf discovery of a new chromecast."""
         mdns = listener.services[name]
-        _discover_chromecast(hass, ChromecastInfo(*mdns))
+        _discover_chromecast(hass, ChromecastInfo(
+            host=mdns[0],
+            port=mdns[1],
+            uuid=mdns[2],
+            model_name=mdns[3],
+            friendly_name=mdns[4],
+        ))
 
     _LOGGER.debug("Starting internal pychromecast discovery.")
     listener, browser = pychromecast.start_discovery(internal_callback)
@@ -186,7 +194,7 @@ def _async_create_cast_device(hass: HomeAssistantType,
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None):
+                               async_add_entities, discovery_info=None):
     """Set up thet Cast platform.
 
     Deprecated.
@@ -195,22 +203,22 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         'Setting configuration for Cast via platform is deprecated. '
         'Configure via Cast component instead.')
     await _async_setup_platform(
-        hass, config, async_add_devices, discovery_info)
+        hass, config, async_add_entities, discovery_info)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
     config = hass.data[CAST_DOMAIN].get('media_player', {})
     if not isinstance(config, list):
         config = [config]
 
     await asyncio.wait([
-        _async_setup_platform(hass, cfg, async_add_devices, None)
+        _async_setup_platform(hass, cfg, async_add_entities, None)
         for cfg in config])
 
 
 async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                                async_add_devices, discovery_info):
+                                async_add_entities, discovery_info):
     """Set up the cast platform."""
     import pychromecast
 
@@ -236,7 +244,7 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 
         cast_device = _async_create_cast_device(hass, discover)
         if cast_device is not None:
-            async_add_devices([cast_device])
+            async_add_entities([cast_device])
 
     async_dispatcher_connect(hass, SIGNAL_CAST_DISCOVERED,
                              async_cast_discovered)
@@ -365,7 +373,10 @@ class CastDevice(MediaPlayerDevice):
         # pylint: disable=protected-access
         _LOGGER.debug("Connecting to cast device %s", cast_info)
         chromecast = await self.hass.async_add_job(
-            pychromecast._get_chromecast_from_host, attr.astuple(cast_info))
+            pychromecast._get_chromecast_from_host, (
+                cast_info.host, cast_info.port, cast_info.uuid,
+                cast_info.model_name, cast_info.friendly_name
+            ))
         self._chromecast = chromecast
         self._status_listener = CastStatusListener(self, chromecast)
         # Initialise connection status as connected because we can only
@@ -493,6 +504,23 @@ class CastDevice(MediaPlayerDevice):
     def name(self):
         """Return the name of the device."""
         return self._cast_info.friendly_name
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        cast_info = self._cast_info
+
+        if cast_info.model_name == "Google Cast Group":
+            return None
+
+        return {
+            'name': cast_info.friendly_name,
+            'identifiers': {
+                (CAST_DOMAIN, cast_info.uuid.replace('-', ''))
+            },
+            'model': cast_info.model_name,
+            'manufacturer': cast_info.manufacturer,
+        }
 
     @property
     def state(self):

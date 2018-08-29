@@ -13,11 +13,11 @@ from homeassistant.components.camera import Camera
 DEPENDENCIES = ['bloomsky']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to BloomSky cameras."""
     bloomsky = hass.components.bloomsky
     for device in bloomsky.BLOOMSKY.devices.values():
-        add_devices([BloomSkyCamera(bloomsky.BLOOMSKY, device)])
+        add_entities([BloomSkyCamera(bloomsky.BLOOMSKY, device)])
 
 
 class BloomSkyCamera(Camera):

@@ -6,8 +6,6 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 
 import jwt
 
-import voluptuous as vol
-
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.util import dt as dt_util
@@ -26,7 +24,11 @@ async def auth_manager_from_config(
         hass: HomeAssistant,
         provider_configs: List[Dict[str, Any]],
         module_configs: List[Dict[str, Any]]) -> 'AuthManager':
-    """Initialize an auth manager from config."""
+    """Initialize an auth manager from config.
+
+    CORE_CONFIG_SCHEMA will make sure do duplicated auth providers or
+    mfa modules exist in configs.
+    """
     store = auth_store.AuthStore(hass)
     if provider_configs:
         providers = await asyncio.gather(
@@ -37,17 +39,7 @@ async def auth_manager_from_config(
     # So returned auth providers are in same order as config
     provider_hash = OrderedDict()  # type: _ProviderDict
     for provider in providers:
-        if provider is None:
-            continue
-
         key = (provider.type, provider.id)
-
-        if key in provider_hash:
-            _LOGGER.error(
-                'Found duplicate provider: %s. Please add unique IDs if you '
-                'want to have the same provider twice.', key)
-            continue
-
         provider_hash[key] = provider
 
     if module_configs:
@@ -59,15 +51,6 @@ async def auth_manager_from_config(
     # So returned auth modules are in same order as config
     module_hash = OrderedDict()  # type: _MfaModuleDict
     for module in modules:
-        if module is None:
-            continue
-
-        if module.id in module_hash:
-            _LOGGER.error(
-                'Found duplicate multi-factor module: %s. Please add unique '
-                'IDs if you want to have the same module twice.', module.id)
-            continue
-
         module_hash[module.id] = module
 
     manager = AuthManager(hass, store, provider_hash, module_hash)
@@ -235,13 +218,6 @@ class AuthManager:
             raise ValueError('Unable find multi-factor auth module: {}'
                              .format(mfa_module_id))
 
-        if module.setup_schema is not None:
-            try:
-                # pylint: disable=not-callable
-                data = module.setup_schema(data)
-            except vol.Invalid as err:
-                raise ValueError('Data does not match schema: {}'.format(err))
-
         await module.async_setup_user(user.id, data)
 
     async def async_disable_user_mfa(self, user: models.User,
@@ -258,13 +234,13 @@ class AuthManager:
 
         await module.async_depose_user(user.id)
 
-    async def async_get_enabled_mfa(self, user: models.User) -> List[str]:
+    async def async_get_enabled_mfa(self, user: models.User) -> Dict[str, str]:
         """List enabled mfa modules for user."""
-        module_ids = []
+        modules = OrderedDict()  # type: Dict[str, str]
         for module_id, module in self._mfa_modules.items():
             if await module.async_is_user_setup(user.id):
-                module_ids.append(module_id)
-        return module_ids
+                modules[module_id] = module.name
+        return modules
 
     async def async_create_refresh_token(self, user: models.User,
                                          client_id: Optional[str] = None) \

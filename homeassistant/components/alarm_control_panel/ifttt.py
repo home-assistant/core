@@ -59,7 +59,7 @@ PUSH_ALARM_STATE_SERVICE_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a control panel managed through IFTTT."""
     if DATA_IFTTT_ALARM not in hass.data:
         hass.data[DATA_IFTTT_ALARM] = []
@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     alarmpanel = IFTTTAlarmPanel(name, code, event_away, event_home,
                                  event_night, event_disarm, optimistic)
     hass.data[DATA_IFTTT_ALARM].append(alarmpanel)
-    add_devices([alarmpanel])
+    add_entities([alarmpanel])
 
     async def push_state_update(service):
         """Set the service state as device state attribute."""
