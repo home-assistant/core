@@ -37,27 +37,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up lights for KNX platform."""
     if discovery_info is not None:
-        async_add_devices_discovery(hass, discovery_info, async_add_devices)
+        async_add_entities_discovery(hass, discovery_info, async_add_entities)
     else:
-        async_add_devices_config(hass, config, async_add_devices)
+        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
-def async_add_devices_discovery(hass, discovery_info, async_add_devices):
+def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     """Set up lights for KNX platform configured via xknx.yaml."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
         entities.append(KNXLight(hass, device))
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 @callback
-def async_add_devices_config(hass, config, async_add_devices):
+def async_add_entities_config(hass, config, async_add_entities):
     """Set up light for KNX platform configured within platform."""
     import xknx
     light = xknx.devices.Light(
@@ -71,7 +71,7 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address_color=config.get(CONF_COLOR_ADDRESS),
         group_address_color_state=config.get(CONF_COLOR_STATE_ADDRESS))
     hass.data[DATA_KNX].xknx.devices.add(light)
-    async_add_devices([KNXLight(hass, light)])
+    async_add_entities([KNXLight(hass, light)])
 
 
 class KNXLight(Light):
@@ -79,7 +79,7 @@ class KNXLight(Light):
 
     def __init__(self, hass, device):
         """Initialize of KNX light."""
-        self._device = device
+        self.device = device
         self.hass = hass
         self.async_register_callbacks()
 
@@ -89,12 +89,12 @@ class KNXLight(Light):
         async def after_update_callback(device):
             """Call after device was updated."""
             await self.async_update_ha_state()
-        self._device.register_device_updated_cb(after_update_callback)
+        self.device.register_device_updated_cb(after_update_callback)
 
     @property
     def name(self):
         """Return the name of the KNX device."""
-        return self._device.name
+        return self.device.name
 
     @property
     def available(self):
@@ -109,15 +109,15 @@ class KNXLight(Light):
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
-        return self._device.current_brightness \
-            if self._device.supports_brightness else \
+        return self.device.current_brightness \
+            if self.device.supports_brightness else \
             None
 
     @property
     def hs_color(self):
         """Return the HS color value."""
-        if self._device.supports_color:
-            return color_util.color_RGB_to_hs(*self._device.current_color)
+        if self.device.supports_color:
+            return color_util.color_RGB_to_hs(*self.device.current_color)
         return None
 
     @property
@@ -143,30 +143,30 @@ class KNXLight(Light):
     @property
     def is_on(self):
         """Return true if light is on."""
-        return self._device.state
+        return self.device.state
 
     @property
     def supported_features(self):
         """Flag supported features."""
         flags = 0
-        if self._device.supports_brightness:
+        if self.device.supports_brightness:
             flags |= SUPPORT_BRIGHTNESS
-        if self._device.supports_color:
+        if self.device.supports_color:
             flags |= SUPPORT_COLOR
         return flags
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
-            if self._device.supports_brightness:
-                await self._device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
+            if self.device.supports_brightness:
+                await self.device.set_brightness(int(kwargs[ATTR_BRIGHTNESS]))
         elif ATTR_HS_COLOR in kwargs:
-            if self._device.supports_color:
-                await self._device.set_color(color_util.color_hs_to_RGB(
+            if self.device.supports_color:
+                await self.device.set_color(color_util.color_hs_to_RGB(
                     *kwargs[ATTR_HS_COLOR]))
         else:
-            await self._device.set_on()
+            await self.device.set_on()
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
-        await self._device.set_off()
+        await self.device.set_off()

@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensors.
 
     Login to the bank and get a list of existing accounts. Create a
@@ -98,7 +98,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug('Creating holdings %s for bank %s',
                       account.accountnumber, fints_name)
 
-    add_devices(accounts, True)
+    add_entities(accounts, True)
 
 
 class FinTsClient:

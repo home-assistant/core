@@ -136,7 +136,7 @@ def aiolifx_effects():
 
 async def async_setup_platform(hass,
                                config,
-                               async_add_devices,
+                               async_add_entities,
                                discovery_info=None):
     """Set up the LIFX platform."""
     if sys.platform == 'win32':
@@ -145,7 +145,7 @@ async def async_setup_platform(hass,
 
     server_addr = config.get(CONF_SERVER)
 
-    lifx_manager = LIFXManager(hass, async_add_devices)
+    lifx_manager = LIFXManager(hass, async_add_entities)
     lifx_discovery = aiolifx().LifxDiscovery(
         hass.loop,
         lifx_manager,
@@ -207,11 +207,11 @@ def merge_hsbk(base, change):
 class LIFXManager:
     """Representation of all known LIFX entities."""
 
-    def __init__(self, hass, async_add_devices):
+    def __init__(self, hass, async_add_entities):
         """Initialize the light."""
         self.entities = {}
         self.hass = hass
-        self.async_add_devices = async_add_devices
+        self.async_add_entities = async_add_entities
         self.effects_conductor = aiolifx_effects().Conductor(loop=hass.loop)
 
         self.register_set_state()
@@ -335,7 +335,7 @@ class LIFXManager:
 
                 _LOGGER.debug("%s register READY", entity.who)
                 self.entities[device.mac_addr] = entity
-                self.async_add_devices([entity], True)
+                self.async_add_entities([entity], True)
 
     @callback
     def unregister(self, device):

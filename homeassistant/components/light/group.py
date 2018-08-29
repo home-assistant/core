@@ -41,10 +41,11 @@ SUPPORT_GROUP_LIGHT = (SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None) -> None:
+                               async_add_entities,
+                               discovery_info=None) -> None:
     """Initialize light.group platform."""
-    async_add_devices([LightGroup(config.get(CONF_NAME),
-                                  config[CONF_ENTITIES])])
+    async_add_entities([LightGroup(config.get(CONF_NAME),
+                                   config[CONF_ENTITIES])])
 
 
 class LightGroup(light.Light):

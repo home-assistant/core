@@ -68,7 +68,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the generic thermostat platform."""
     name = config.get(CONF_NAME)
     heater_entity_id = config.get(CONF_HEATER)
@@ -84,7 +85,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     initial_operation_mode = config.get(CONF_INITIAL_OPERATION_MODE)
     away_temp = config.get(CONF_AWAY_TEMP)
 
-    async_add_devices([GenericThermostat(
+    async_add_entities([GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
         target_temp, ac_mode, min_cycle_duration, cold_tolerance,
         hot_tolerance, keep_alive, initial_operation_mode, away_temp)])

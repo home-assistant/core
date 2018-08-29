@@ -60,7 +60,7 @@ class TestSeason(unittest.TestCase):
     CONFIG_ASTRONOMICAL = {'type': 'astronomical'}
     CONFIG_METEOROLOGICAL = {'type': 'meteorological'}
 
-    def add_devices(self, devices):
+    def add_entities(self, devices):
         """Mock add devices."""
         for device in devices:
             self.DEVICE = device

@@ -59,7 +59,8 @@ FIELD_TO_FLAG = {
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up Sensibo devices."""
     import pysensibo
 
@@ -79,7 +80,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         raise PlatformNotReady
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
         @asyncio.coroutine
         def async_assume_state(service):

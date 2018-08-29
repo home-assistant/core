@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the KIWI lock platform."""
     from kiwiki import KiwiClient, KiwiException
     try:
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         # No locks found; abort setup routine.
         _LOGGER.info("No KIWI locks found in your account.")
         return
-    add_devices([KiwiLock(lock, kiwi) for lock in available_locks], True)
+    add_entities([KiwiLock(lock, kiwi) for lock in available_locks], True)
 
 
 class KiwiLock(LockDevice):

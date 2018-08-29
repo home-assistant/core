@@ -11,14 +11,14 @@ from homeassistant.components.light import SUPPORT_BRIGHTNESS, Light
 DEPENDENCIES = [QWIKSWITCH]
 
 
-async def async_setup_platform(hass, _, add_devices, discovery_info=None):
+async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     """Add lights from the main Qwikswitch component."""
     if discovery_info is None:
         return
 
     qsusb = hass.data[QWIKSWITCH]
     devs = [QSLight(qsid, qsusb) for qsid in discovery_info[QWIKSWITCH]]
-    add_devices(devs)
+    add_entities(devs)
 
 
 class QSLight(QSToggleEntity, Light):
@@ -27,9 +27,9 @@ class QSLight(QSToggleEntity, Light):
     @property
     def brightness(self):
         """Return the brightness of this light (0-255)."""
-        return self._device.value if self._device.is_dimmer else None
+        return self.device.value if self.device.is_dimmer else None
 
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_BRIGHTNESS if self._device.is_dimmer else 0
+        return SUPPORT_BRIGHTNESS if self.device.is_dimmer else 0

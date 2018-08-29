@@ -34,7 +34,7 @@ SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Tibber sensor."""
     import tibber
@@ -50,7 +50,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     except (asyncio.TimeoutError, aiohttp.ClientError):
         raise PlatformNotReady()
 
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class TibberSensor(Entity):

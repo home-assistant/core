@@ -45,13 +45,14 @@ def _create_sensor(hass, zone):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the SPC binary sensor."""
     if (discovery_info is None or
             discovery_info[ATTR_DISCOVER_DEVICES] is None):
         return
 
-    async_add_devices(
+    async_add_entities(
         _create_sensor(hass, zone)
         for zone in discovery_info[ATTR_DISCOVER_DEVICES]
         if _get_device_class(zone['type']))

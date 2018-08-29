@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DHT sensor."""
     # pylint: disable=import-error
     import Adafruit_DHT
@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except KeyError:
         pass
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class DHTSensor(Entity):

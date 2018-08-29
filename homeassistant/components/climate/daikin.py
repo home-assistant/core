@@ -50,7 +50,7 @@ HA_ATTR_TO_DAIKIN = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Daikin HVAC platform."""
     if discovery_info is not None:
         host = discovery_info.get('ip')
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug("Added Daikin AC on %s", host)
 
     api = daikin_api_setup(hass, host, name)
-    add_devices([DaikinClimate(api)], True)
+    add_entities([DaikinClimate(api)], True)
 
 
 class DaikinClimate(ClimateDevice):

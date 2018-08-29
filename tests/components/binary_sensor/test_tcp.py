@@ -38,13 +38,13 @@ class TestTCPBinarySensor(unittest.TestCase):
 
     @patch('homeassistant.components.sensor.tcp.TcpSensor.update')
     def test_setup_platform_devices(self, mock_update):
-        """Check the supplied config and call add_devices with sensor."""
-        add_devices = Mock()
-        ret = bin_tcp.setup_platform(None, test_tcp.TEST_CONFIG, add_devices)
+        """Check the supplied config and call add_entities with sensor."""
+        add_entities = Mock()
+        ret = bin_tcp.setup_platform(None, test_tcp.TEST_CONFIG, add_entities)
         assert ret is None
-        assert add_devices.called
+        assert add_entities.called
         assert isinstance(
-            add_devices.call_args[0][0][0], bin_tcp.TcpBinarySensor)
+            add_entities.call_args[0][0][0], bin_tcp.TcpBinarySensor)
 
     @patch('homeassistant.components.sensor.tcp.TcpSensor.update')
     def test_is_on_true(self, mock_update):

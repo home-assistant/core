@@ -6,21 +6,22 @@ https://home-assistant.io/components/switch.deconz/
 """
 from homeassistant.components.deconz.const import (
     DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB,
-    POWER_PLUGS, SIRENS)
+    DECONZ_DOMAIN, POWER_PLUGS, SIRENS)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old way of setting up deCONZ switches."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up switches for deCONZ component.
 
     Switches are based same device class as lights in deCONZ.
@@ -34,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                 entities.append(DeconzPowerPlug(light))
             elif light.type in SIRENS:
                 entities.append(DeconzSiren(light))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_switch))
@@ -78,6 +79,22 @@ class DeconzSwitch(SwitchDevice):
     def should_poll(self):
         """No polling needed."""
         return False
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if (self._switch.uniqueid is None or
+                self._switch.uniqueid.count(':') != 7):
+            return None
+        serial = self._switch.uniqueid.split('-', 1)[0]
+        return {
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
+            'manufacturer': self._switch.manufacturer,
+            'model': self._switch.modelid,
+            'name': self._switch.name,
+            'sw_version': self._switch.swversion,
+        }
 
 
 class DeconzPowerPlug(DeconzSwitch):

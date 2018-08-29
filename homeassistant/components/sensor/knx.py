@@ -27,27 +27,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up sensor(s) for KNX platform."""
     if discovery_info is not None:
-        async_add_devices_discovery(hass, discovery_info, async_add_devices)
+        async_add_entities_discovery(hass, discovery_info, async_add_entities)
     else:
-        async_add_devices_config(hass, config, async_add_devices)
+        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
-def async_add_devices_discovery(hass, discovery_info, async_add_devices):
+def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     """Set up sensors for KNX platform configured via xknx.yaml."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
         entities.append(KNXSensor(hass, device))
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 @callback
-def async_add_devices_config(hass, config, async_add_devices):
+def async_add_entities_config(hass, config, async_add_entities):
     """Set up sensor for KNX platform configured within platform."""
     import xknx
     sensor = xknx.devices.Sensor(
@@ -56,7 +56,7 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address=config.get(CONF_ADDRESS),
         value_type=config.get(CONF_TYPE))
     hass.data[DATA_KNX].xknx.devices.add(sensor)
-    async_add_devices([KNXSensor(hass, sensor)])
+    async_add_entities([KNXSensor(hass, sensor)])
 
 
 class KNXSensor(Entity):
@@ -64,7 +64,7 @@ class KNXSensor(Entity):
 
     def __init__(self, hass, device):
         """Initialize of a KNX sensor."""
-        self._device = device
+        self.device = device
         self.hass = hass
         self.async_register_callbacks()
 
@@ -74,12 +74,12 @@ class KNXSensor(Entity):
         async def after_update_callback(device):
             """Call after device was updated."""
             await self.async_update_ha_state()
-        self._device.register_device_updated_cb(after_update_callback)
+        self.device.register_device_updated_cb(after_update_callback)
 
     @property
     def name(self):
         """Return the name of the KNX device."""
-        return self._device.name
+        return self.device.name
 
     @property
     def available(self):
@@ -94,12 +94,12 @@ class KNXSensor(Entity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self._device.resolve_state()
+        return self.device.resolve_state()
 
     @property
     def unit_of_measurement(self):
         """Return the unit this state is expressed in."""
-        return self._device.unit_of_measurement()
+        return self.device.unit_of_measurement()
 
     @property
     def device_state_attributes(self):

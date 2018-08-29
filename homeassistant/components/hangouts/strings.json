@@ -6,8 +6,8 @@
         },
         "error": {
             "invalid_login": "Invalid Login, please try again.",
-            "invalid_2fa": "Invalid 2 Factor Authorization, please try again.",
-            "invalid_2fa_method": "Invalig 2FA Method (Verify on Phone)."
+            "invalid_2fa": "Invalid 2 Factor Authentication, please try again.",
+            "invalid_2fa_method": "Invalid 2FA Method (Verify on Phone)."
         },
         "step": {
             "user": {
@@ -23,7 +23,7 @@
                   "2fa": "2FA Pin"
                 },
                 "description": "",
-                "title": "2-Factor-Authorization"
+                "title": "2-Factor-Authentication"
             }
         },
         "title": "Google Hangouts"

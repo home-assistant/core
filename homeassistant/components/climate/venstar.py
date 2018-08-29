@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Venstar thermostat."""
     import venstarcolortouch
 
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         addr=host, timeout=timeout, user=username, password=password,
         proto=proto)
 
-    add_devices([VenstarThermostat(client, humidifier)], True)
+    add_entities([VenstarThermostat(client, humidifier)], True)
 
 
 class VenstarThermostat(ClimateDevice):

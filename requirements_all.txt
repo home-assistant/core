@@ -1,8 +1,9 @@
 # Home Assistant core
-aiohttp==3.3.2
+aiohttp==3.4.0
 astral==1.6.1
 async_timeout==3.0.0
 attrs==18.1.0
+bcrypt==3.1.4
 certifi>=2018.04.16
 jinja2>=2.10
 PyJWT==1.6.4
@@ -45,6 +46,9 @@ PyMVGLive==1.1.4
 
 # homeassistant.components.arduino
 PyMata==2.14
+
+# homeassistant.auth.mfa_modules.totp
+PyQRCode==1.2.1
 
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.0.7
@@ -117,7 +121,7 @@ aladdin_connect==0.3
 alarmdecoder==1.13.2
 
 # homeassistant.components.sensor.alpha_vantage
-alpha_vantage==2.0.0
+alpha_vantage==2.1.0
 
 # homeassistant.components.amcrest
 amcrest==1.2.3
@@ -159,7 +163,6 @@ batinfo==0.4.2
 # beacontools[scan]==1.2.3
 
 # homeassistant.components.device_tracker.linksys_ap
-# homeassistant.components.sensor.geizhals
 # homeassistant.components.sensor.scrape
 # homeassistant.components.sensor.sytadin
 beautifulsoup4==4.6.3
@@ -183,6 +186,7 @@ blinkstick==1.1.8
 blockchain==1.4.4
 
 # homeassistant.components.light.decora
+# homeassistant.components.switch.switchmate
 # bluepy==1.1.4
 
 # homeassistant.components.sensor.bme680
@@ -383,6 +387,9 @@ gTTS-token==1.1.1
 # homeassistant.components.sensor.gearbest
 gearbest_parser==1.0.7
 
+# homeassistant.components.sensor.geizhals
+geizhals==0.0.7
+
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.7
 
@@ -413,6 +420,9 @@ ha-ffmpeg==1.9
 # homeassistant.components.media_player.philips_js
 ha-philipsjs==0.0.5
 
+# homeassistant.components.habitica
+habitipy==0.2.0
+
 # homeassistant.components.hangouts
 hangups==0.4.5
 
@@ -438,7 +448,7 @@ hole==0.3.0
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180820.0
+home-assistant-frontend==20180829.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -810,7 +820,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==43
+pydeconz==44
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -955,7 +965,7 @@ pymonoprice==0.3
 pymusiccast==0.1.6
 
 # homeassistant.components.cover.myq
-pymyq==0.0.11
+pymyq==0.0.15
 
 # homeassistant.components.mysensors
 pymysensors==0.17.0
@@ -985,6 +995,7 @@ pyopenuv==1.0.1
 # homeassistant.components.iota
 pyota==2.0.5
 
+# homeassistant.auth.mfa_modules.totp
 # homeassistant.components.sensor.otp
 pyotp==2.2.6
 
@@ -1134,7 +1145,7 @@ python-telegram-bot==10.1.0
 python-twitch==1.3.0
 
 # homeassistant.components.velbus
-python-velbus==2.0.17
+python-velbus==2.0.19
 
 # homeassistant.components.media_player.vlc
 python-vlc==1.1.2
@@ -1166,11 +1177,14 @@ pytrackr==0.0.5
 # homeassistant.components.tradfri
 pytradfri[async]==5.5.1
 
+# homeassistant.components.sensor.trafikverket_weatherstation
+pytrafikverket==0.1.5.8
+
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
 
 # homeassistant.components.upnp
-pyupnp-async==0.1.1.0
+pyupnp-async==0.1.1.1
 
 # homeassistant.components.binary_sensor.uptimerobot
 pyuptimerobot==0.0.5
@@ -1334,7 +1348,7 @@ spotipy-homeassistant==2.4.4.dev1
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.10
+sqlalchemy==1.2.11
 
 # homeassistant.components.statsd
 statsd==3.2.1
@@ -1420,6 +1434,9 @@ uvcclient==0.10.1
 
 # homeassistant.components.climate.venstar
 venstarcolortouch==0.6
+
+# homeassistant.components.sensor.volkszaehler
+volkszaehler==0.1.2
 
 # homeassistant.components.config.config_entries
 voluptuous-serialize==2.0.0
