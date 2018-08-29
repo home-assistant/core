@@ -790,6 +790,7 @@ omit =
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/snmp.py
+    homeassistant/components/switch/switchmate.py
     homeassistant/components/switch/telnet.py
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py
