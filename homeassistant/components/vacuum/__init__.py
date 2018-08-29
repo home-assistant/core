@@ -62,23 +62,6 @@ VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
 })
 
-SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: {'method': 'async_turn_on'},
-    SERVICE_TURN_OFF: {'method': 'async_turn_off'},
-    SERVICE_TOGGLE: {'method': 'async_toggle'},
-    SERVICE_START_PAUSE: {'method': 'async_start_pause'},
-    SERVICE_START: {'method': 'async_start'},
-    SERVICE_PAUSE: {'method': 'async_pause'},
-    SERVICE_RETURN_TO_BASE: {'method': 'async_return_to_base'},
-    SERVICE_CLEAN_SPOT: {'method': 'async_clean_spot'},
-    SERVICE_LOCATE: {'method': 'async_locate'},
-    SERVICE_STOP: {'method': 'async_stop'},
-    SERVICE_SET_FAN_SPEED: {'method': 'async_set_fan_speed',
-                            'schema': VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA},
-    SERVICE_SEND_COMMAND: {'method': 'async_send_command',
-                           'schema': VACUUM_SEND_COMMAND_SERVICE_SCHEMA},
-}
-
 STATE_CLEANING = 'cleaning'
 STATE_DOCKED = 'docked'
 STATE_IDLE = STATE_IDLE
@@ -207,30 +190,54 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_vacuum_service(service):
-        """Map services to methods on VacuumDevice."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        target_vacuums = component.async_extract_from_service(service)
-        params = service.data.copy()
-        params.pop(ATTR_ENTITY_ID, None)
-
-        update_tasks = []
-        for vacuum in target_vacuums:
-            yield from getattr(vacuum, method['method'])(**params)
-            if not vacuum.should_poll:
-                continue
-            update_tasks.append(vacuum.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get(
-            'schema', VACUUM_SERVICE_SCHEMA)
-        hass.services.async_register(
-            DOMAIN, service, async_handle_vacuum_service,
-            schema=schema)
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, VACUUM_SERVICE_SCHEMA,
+        'async_turn_on'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, VACUUM_SERVICE_SCHEMA,
+        'async_turn_off'
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, VACUUM_SERVICE_SCHEMA,
+        'async_toggle'
+    )
+    component.async_register_entity_service(
+        SERVICE_START_PAUSE, VACUUM_SERVICE_SCHEMA,
+        'async_start_pause'
+    )
+    component.async_register_entity_service(
+        SERVICE_START, VACUUM_SERVICE_SCHEMA,
+        'async_start'
+    )
+    component.async_register_entity_service(
+        SERVICE_PAUSE, VACUUM_SERVICE_SCHEMA,
+        'async_pause'
+    )
+    component.async_register_entity_service(
+        SERVICE_RETURN_TO_BASE, VACUUM_SERVICE_SCHEMA,
+        'async_return_to_base'
+    )
+    component.async_register_entity_service(
+        SERVICE_CLEAN_SPOT, VACUUM_SERVICE_SCHEMA,
+        'async_clean_spot'
+    )
+    component.async_register_entity_service(
+        SERVICE_LOCATE, VACUUM_SERVICE_SCHEMA,
+        'async_locate'
+    )
+    component.async_register_entity_service(
+        SERVICE_STOP, VACUUM_SERVICE_SCHEMA,
+        'async_stop'
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_FAN_SPEED, VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA,
+        'async_set_fan_speed'
+    )
+    component.async_register_entity_service(
+        SERVICE_SEND_COMMAND, VACUUM_SEND_COMMAND_SERVICE_SCHEMA,
+        'async_send_command'
+    )
 
     return True
 

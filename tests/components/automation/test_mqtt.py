@@ -14,7 +14,7 @@ class TestAutomationMQTT(unittest.TestCase):
     """Test the event automation."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'group')
         mock_mqtt_component(self.hass)
@@ -22,7 +22,7 @@ class TestAutomationMQTT(unittest.TestCase):
 
         @callback
         def record_call(service):
-            """Helper to record calls."""
+            """Record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)

@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform to RFXtrx."""
     import RFXtrx as rfxtrxmod
     sensors = []
@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(device)
         rfxtrx.RFX_DEVICES[device_id] = device
 
-    add_devices(sensors)
+    add_entities(sensors)
 
     def binary_sensor_update(event):
         """Call for control updates from the RFXtrx gateway."""
@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensor = RfxtrxBinarySensor(event, pkt_id)
             sensor.hass = hass
             rfxtrx.RFX_DEVICES[device_id] = sensor
-            add_devices([sensor])
+            add_entities([sensor])
             _LOGGER.info(
                 "Added binary sensor %s (Device ID: %s Class: %s Sub: %s)",
                 pkt_id, slugify(event.device.id_string.lower()),

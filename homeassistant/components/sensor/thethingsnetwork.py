@@ -39,7 +39,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up The Things Network Data storage sensors."""
     ttn = hass.data.get(DATA_TTN)
     device_id = config.get(CONF_DEVICE_ID)
@@ -58,7 +59,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for value, unit_of_measurement in values.items():
         devices.append(TtnDataSensor(
             ttn_data_storage, device_id, value, unit_of_measurement))
-    async_add_devices(devices, True)
+    async_add_entities(devices, True)
 
 
 class TtnDataSensor(Entity):

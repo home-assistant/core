@@ -36,14 +36,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Trafikverket sensor platform."""
     sensor_name = config.get(CONF_NAME)
     sensor_api = config.get(CONF_API_KEY)
     sensor_station = config.get(CONF_STATION)
     sensor_type = config.get(CONF_TYPE)
 
-    add_devices([TrafikverketWeatherStation(
+    add_entities([TrafikverketWeatherStation(
         sensor_name, sensor_api, sensor_station, sensor_type)], True)
 
 

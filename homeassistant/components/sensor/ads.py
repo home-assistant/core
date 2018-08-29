@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up an ADS sensor device."""
     ads_hub = hass.data.get(ads.DATA_ADS)
 
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     entity = AdsSensor(
         ads_hub, ads_var, ads_type, name, unit_of_measurement, factor)
 
-    add_devices([entity])
+    add_entities([entity])
 
 
 class AdsSensor(Entity):

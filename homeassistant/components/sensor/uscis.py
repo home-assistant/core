@@ -28,12 +28,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setting the platform in HASS and Case Information."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the platform in HASS and Case Information."""
     uscis = UscisSensor(config['case_id'], config[CONF_FRIENDLY_NAME])
     uscis.update()
     if uscis.valid_case_id:
-        add_devices([uscis])
+        add_entities([uscis])
     else:
         _LOGGER.error("Setup USCIS Sensor Fail"
                       " check if your Case ID is Valid")
@@ -72,7 +72,7 @@ class UscisSensor(Entity):
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        """Using Request to access USCIS website and fetch data."""
+        """Fetch data from the USCIS website and update state attributes."""
         import uscisstatus
         try:
             status = uscisstatus.get_case_status(self._case_id)

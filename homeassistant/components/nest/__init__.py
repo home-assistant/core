@@ -119,7 +119,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, entry):
-    """Setup Nest from a config entry."""
+    """Set up Nest from a config entry."""
     from nest import Nest
 
     nest = Nest(access_token=entry.data['tokens']['access_token'])

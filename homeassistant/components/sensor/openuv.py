@@ -11,10 +11,10 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.openuv import (
     DATA_UV, DOMAIN, SENSORS, TOPIC_UPDATE, TYPE_CURRENT_OZONE_LEVEL,
-    TYPE_CURRENT_UV_INDEX, TYPE_MAX_UV_INDEX, TYPE_SAFE_EXPOSURE_TIME_1,
-    TYPE_SAFE_EXPOSURE_TIME_2, TYPE_SAFE_EXPOSURE_TIME_3,
-    TYPE_SAFE_EXPOSURE_TIME_4, TYPE_SAFE_EXPOSURE_TIME_5,
-    TYPE_SAFE_EXPOSURE_TIME_6, OpenUvEntity)
+    TYPE_CURRENT_UV_INDEX, TYPE_CURRENT_UV_LEVEL, TYPE_MAX_UV_INDEX,
+    TYPE_SAFE_EXPOSURE_TIME_1, TYPE_SAFE_EXPOSURE_TIME_2,
+    TYPE_SAFE_EXPOSURE_TIME_3, TYPE_SAFE_EXPOSURE_TIME_4,
+    TYPE_SAFE_EXPOSURE_TIME_5, TYPE_SAFE_EXPOSURE_TIME_6, OpenUvEntity)
 from homeassistant.util.dt import as_local, parse_datetime
 
 DEPENDENCIES = ['openuv']
@@ -31,9 +31,15 @@ EXPOSURE_TYPE_MAP = {
     TYPE_SAFE_EXPOSURE_TIME_6: 'st6'
 }
 
+UV_LEVEL_EXTREME = "Extreme"
+UV_LEVEL_VHIGH = "Very High"
+UV_LEVEL_HIGH = "High"
+UV_LEVEL_MODERATE = "Moderate"
+UV_LEVEL_LOW = "Low"
+
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the OpenUV binary sensor platform."""
     if discovery_info is None:
         return
@@ -45,7 +51,7 @@ async def async_setup_platform(
         name, icon, unit = SENSORS[sensor_type]
         sensors.append(OpenUvSensor(openuv, sensor_type, name, icon, unit))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class OpenUvSensor(OpenUvEntity):
@@ -105,6 +111,17 @@ class OpenUvSensor(OpenUvEntity):
             self._state = data['ozone']
         elif self._sensor_type == TYPE_CURRENT_UV_INDEX:
             self._state = data['uv']
+        elif self._sensor_type == TYPE_CURRENT_UV_LEVEL:
+            if data['uv'] >= 11:
+                self._state = UV_LEVEL_EXTREME
+            elif data['uv'] >= 8:
+                self._state = UV_LEVEL_VHIGH
+            elif data['uv'] >= 6:
+                self._state = UV_LEVEL_HIGH
+            elif data['uv'] >= 3:
+                self._state = UV_LEVEL_MODERATE
+            else:
+                self._state = UV_LEVEL_LOW
         elif self._sensor_type == TYPE_MAX_UV_INDEX:
             self._state = data['uv_max']
             self._attrs.update({

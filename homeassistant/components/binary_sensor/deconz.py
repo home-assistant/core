@@ -7,21 +7,22 @@ https://home-assistant.io/components/binary_sensor.deconz/
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.deconz.const import (
     ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old way of setting up deCONZ binary sensors."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
     @callback
     def async_add_sensor(sensors):
@@ -33,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             if sensor.type in DECONZ_BINARY_SENSOR and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
                 entities.append(DeconzBinarySensor(sensor))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
@@ -113,3 +114,19 @@ class DeconzBinarySensor(BinarySensorDevice):
         if self._sensor.type in PRESENCE and self._sensor.dark is not None:
             attr[ATTR_DARK] = self._sensor.dark
         return attr
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if (self._sensor.uniqueid is None or
+                self._sensor.uniqueid.count(':') != 7):
+            return None
+        serial = self._sensor.uniqueid.split('-', 1)[0]
+        return {
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'name': self._sensor.name,
+            'sw_version': self._sensor.swversion,
+        }

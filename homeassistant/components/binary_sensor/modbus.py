@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Modbus binary sensors."""
     sensors = []
     for coil in config.get(CONF_COILS):
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             coil.get(CONF_NAME),
             coil.get(CONF_SLAVE),
             coil.get(CONF_COIL)))
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class ModbusCoilSensor(BinarySensorDevice):
