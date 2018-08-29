@@ -82,6 +82,11 @@ class DeconzLight(Light):
         self._light.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._light.deconz_id
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect light object when removed."""
+        self._light.remove_callback(self.async_update_callback)
+        self._light = None
+
     @callback
     def async_update_callback(self, reason):
         """Update the light's state."""
