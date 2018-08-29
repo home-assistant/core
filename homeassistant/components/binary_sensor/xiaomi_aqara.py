@@ -374,11 +374,11 @@ class XiaomiCube(XiaomiBinarySensor):
         self._last_action = None
         self._state = False
         if 'proto' not in device or int(device['proto'][0:1]) == 1:
-            self._data_key = 'status'
+            data_key = 'status'
         else:
-            self._data_key = 'cube_status'
+            data_key = 'cube_status'
         XiaomiBinarySensor.__init__(self, device, 'Cube', xiaomi_hub,
-                                    None, None)
+                                    data_key, None)
 
     @property
     def device_state_attributes(self):
