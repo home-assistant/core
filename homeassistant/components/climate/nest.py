@@ -132,9 +132,9 @@ class NestThermostat(ClimateDevice):
     def device_info(self):
         """Return information about the device."""
         return {
-            'identifiers': [
+            'identifiers': {
                 (NEST_DOMAIN, self.device.device_id),
-            ],
+            },
             'name': self.device.name_long,
             'manufacturer': 'Nest Labs',
             'model': "Thermostat",
