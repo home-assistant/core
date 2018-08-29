@@ -62,12 +62,12 @@ VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
 })
 
-STATE_CLEANING = 'cleaning'
-STATE_DOCKED = 'docked'
+STATE_CLEANING = 'Cleaning'
+STATE_DOCKED = 'Docked'
 STATE_IDLE = STATE_IDLE
 STATE_PAUSED = STATE_PAUSED
-STATE_RETURNING = 'returning'
-STATE_ERROR = 'error'
+STATE_RETURNING = 'Returning to dock'
+STATE_ERROR = 'Error'
 
 DEFAULT_NAME = 'Vacuum cleaner robot'
 
