@@ -392,9 +392,9 @@ class SonosDevice(MediaPlayerDevice):
     def device_info(self):
         """Return information about the device."""
         return {
-            'identifiers': [
+            'identifiers': {
                 (SONOS_DOMAIN, self._unique_id)
-            ],
+            },
             'name': self._name,
             'model': self._model.replace("Sonos ", ""),
             'manufacturer': 'Sonos',
