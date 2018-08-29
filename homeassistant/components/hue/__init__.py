@@ -141,12 +141,12 @@ async def async_setup_entry(hass, entry):
     device_registry = await dr.async_get_registry(hass)
     device_registry.async_get_or_create(
         config_entry=entry.entry_id,
-        connections=[
+        connections={
             (dr.CONNECTION_NETWORK_MAC, config.mac)
-        ],
-        identifiers=[
+        },
+        identifiers={
             (DOMAIN, config.bridgeid)
-        ],
+        },
         manufacturer='Signify',
         name=config.name,
         # Not yet exposed as properties in aiohue

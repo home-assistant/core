@@ -292,9 +292,9 @@ class HueLight(Light):
             return None
 
         return {
-            'identifiers': [
+            'identifiers': {
                 (hue.DOMAIN, self.unique_id)
-            ],
+            },
             'name': self.name,
             'manufacturer': self.light.manufacturername,
             # productname added in Hue Bridge API 1.24
