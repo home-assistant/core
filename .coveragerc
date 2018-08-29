@@ -557,6 +557,18 @@ omit =
     homeassistant/components/media_player/yamaha_musiccast.py
     homeassistant/components/media_player/yamaha.py
     homeassistant/components/media_player/ziggo_mediabox_xl.py
+    homeassistant/components/molohub/__init__.py
+    homeassistant/components/molohub/const.py
+    homeassistant/components/molohub/local_session.py
+    homeassistant/components/molohub/molo_client_app.py
+    homeassistant/components/molohub/molo_client_config.py
+    homeassistant/components/molohub/molo_hub_client.py
+    homeassistant/components/molohub/molo_hub_main.py
+    homeassistant/components/molohub/molo_socket_helper.py
+    homeassistant/components/molohub/molo_tcp_pack.py
+    homeassistant/components/molohub/notify_state.py
+    homeassistant/components/molohub/remote_sesstion.py
+    homeassistant/components/molohub/utils.py
     homeassistant/components/mycroft.py
     homeassistant/components/notify/aws_lambda.py
     homeassistant/components/notify/aws_sns.py
