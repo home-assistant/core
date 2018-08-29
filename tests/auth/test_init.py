@@ -428,10 +428,10 @@ async def test_login_with_auth_module(mock_hass):
         'pin': 'invalid-pin',
     })
 
-    # Invalid auth error
+    # Invalid code error
     assert step['type'] == data_entry_flow.RESULT_TYPE_FORM
     assert step['step_id'] == 'mfa'
-    assert step['errors'] == {'base': 'invalid_auth'}
+    assert step['errors'] == {'base': 'invalid_code'}
 
     step = await manager.login_flow.async_configure(step['flow_id'], {
         'pin': 'test-pin',
@@ -571,18 +571,9 @@ async def test_auth_module_expired_session(mock_hass):
         step = await manager.login_flow.async_configure(step['flow_id'], {
             'pin': 'test-pin',
         })
-        # Invalid auth due session timeout
-        assert step['type'] == data_entry_flow.RESULT_TYPE_FORM
-        assert step['step_id'] == 'mfa'
-        assert step['errors']['base'] == 'login_expired'
-
-        # The second try will fail as well
-        step = await manager.login_flow.async_configure(step['flow_id'], {
-            'pin': 'test-pin',
-        })
-        assert step['type'] == data_entry_flow.RESULT_TYPE_FORM
-        assert step['step_id'] == 'mfa'
-        assert step['errors']['base'] == 'login_expired'
+        # login flow abort due session timeout
+        assert step['type'] == data_entry_flow.RESULT_TYPE_ABORT
+        assert step['reason'] == 'login_expired'
 
 
 async def test_enable_mfa_for_user(hass, hass_storage):
