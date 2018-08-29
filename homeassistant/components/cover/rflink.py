@@ -78,10 +78,10 @@ def devices_from_config(domain_config, hass=None):
     return devices
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Rflink cover platform."""
-    async_add_devices(devices_from_config(config, hass))
+    async_add_entities(devices_from_config(config, hass))
 
 
 class RflinkCover(RflinkCommand, CoverDevice):

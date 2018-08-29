@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the file size sensor."""
     sensors = []
     for path in config.get(CONF_FILE_PATHS):
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensors.append(Filesize(path))
 
     if sensors:
-        add_devices(sensors, True)
+        add_entities(sensors, True)
 
 
 class Filesize(Entity):

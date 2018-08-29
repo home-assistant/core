@@ -1,0 +1,12 @@
+{
+    "state": {
+        "first_quarter": "F\u00f6rsta kvartalet",
+        "full_moon": "Fullm\u00e5ne",
+        "last_quarter": "Sista kvartalet",
+        "new_moon": "Nym\u00e5ne",
+        "waning_crescent": "Avtagande halvm\u00e5ne",
+        "waning_gibbous": "Avtagande halvm\u00e5ne",
+        "waxing_crescent": "Tilltagande halvm\u00e5ne",
+        "waxing_gibbous": "Tilltagande halvm\u00e5ne"
+    }
+}

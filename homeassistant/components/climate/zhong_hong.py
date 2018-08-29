@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZhongHong HVAC platform."""
     from zhong_hong_hvac.hub import ZhongHongGateway
     host = config.get(CONF_HOST)
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     async_dispatcher_connect(hass, SIGNAL_DEVICE_ADDED, startup)
 
     # add devices after SIGNAL_DEVICE_SETTED_UP event is listend
-    add_devices(devices)
+    add_entities(devices)
 
     def stop_listen(event):
         """Stop ZhongHongHub socket."""
@@ -100,7 +100,7 @@ class ZhongHongClimate(ClimateDevice):
         async_dispatcher_send(self.hass, SIGNAL_DEVICE_ADDED)
 
     def _after_update(self, climate):
-        """Callback to update state."""
+        """Handle state update."""
         _LOGGER.debug("async update ha state")
         if self._device.current_operation:
             self._current_operation = self._device.current_operation.lower()

@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a wake on lan switch."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -43,8 +43,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     broadcast_address = config.get(CONF_BROADCAST_ADDRESS)
     off_action = config.get(CONF_OFF_ACTION)
 
-    add_devices([WOLSwitch(hass, name, host, mac_address,
-                           off_action, broadcast_address)], True)
+    add_entities([WOLSwitch(hass, name, host, mac_address,
+                            off_action, broadcast_address)], True)
 
 
 class WOLSwitch(SwitchDevice):

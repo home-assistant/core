@@ -31,7 +31,8 @@ SUPPORT_APPLE_TV = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Apple TV platform."""
     if not discovery_info:
         return
@@ -56,7 +57,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if entity not in hass.data[DATA_ENTITIES]:
         hass.data[DATA_ENTITIES].append(entity)
 
-    async_add_devices([entity])
+    async_add_entities([entity])
 
 
 class AppleTvDevice(MediaPlayerDevice):

@@ -1,4 +1,4 @@
-"""Setup some common test helper things."""
+"""Set up some common test helper things."""
 import asyncio
 import functools
 import logging

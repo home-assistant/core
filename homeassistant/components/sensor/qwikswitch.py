@@ -14,7 +14,7 @@ DEPENDENCIES = [QWIKSWITCH]
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, _, add_devices, discovery_info=None):
+async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     """Add sensor from the main Qwikswitch component."""
     if discovery_info is None:
         return
@@ -22,7 +22,7 @@ async def async_setup_platform(hass, _, add_devices, discovery_info=None):
     qsusb = hass.data[QWIKSWITCH]
     _LOGGER.debug("Setup qwikswitch.sensor %s, %s", qsusb, discovery_info)
     devs = [QSSensor(sensor) for sensor in discovery_info[QWIKSWITCH]]
-    add_devices(devs)
+    add_entities(devs)
 
 
 class QSSensor(QSEntity):

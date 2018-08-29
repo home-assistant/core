@@ -34,7 +34,7 @@ STATES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Egardia platform."""
     if discovery_info is None:
         return
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         discovery_info.get(CONF_REPORT_SERVER_CODES),
         discovery_info[CONF_REPORT_SERVER_PORT])
     # add egardia alarm device
-    add_devices([device], True)
+    add_entities([device], True)
 
 
 class EgardiaAlarm(alarm.AlarmControlPanel):

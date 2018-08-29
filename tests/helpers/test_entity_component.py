@@ -39,7 +39,7 @@ class TestHelpersEntityComponent(unittest.TestCase):
         self.hass.stop()
 
     def test_setting_up_group(self):
-        """Setup the setting of a group."""
+        """Set up the setting of a group."""
         setup_component(self.hass, 'group', {'group': {}})
         component = EntityComponent(_LOGGER, DOMAIN, self.hass,
                                     group_name='everyone')
@@ -143,9 +143,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
            'async_track_time_interval')
     def test_set_scan_interval_via_config(self, mock_track):
         """Test the setting of the scan interval via configuration."""
-        def platform_setup(hass, config, add_devices, discovery_info=None):
+        def platform_setup(hass, config, add_entities, discovery_info=None):
             """Test the platform setup."""
-            add_devices([MockEntity(should_poll=True)])
+            add_entities([MockEntity(should_poll=True)])
 
         loader.set_component(self.hass, 'test_domain.platform',
                              MockPlatform(platform_setup))
@@ -165,9 +165,9 @@ class TestHelpersEntityComponent(unittest.TestCase):
 
     def test_set_entity_namespace_via_config(self):
         """Test setting an entity namespace."""
-        def platform_setup(hass, config, add_devices, discovery_info=None):
+        def platform_setup(hass, config, add_entities, discovery_info=None):
             """Test the platform setup."""
-            add_devices([
+            add_entities([
                 MockEntity(name='beer'),
                 MockEntity(name=None),
             ])

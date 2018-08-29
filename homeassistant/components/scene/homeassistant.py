@@ -36,11 +36,12 @@ SCENECONFIG = namedtuple('SceneConfig', [CONF_NAME, STATES])
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up home assistant scene entries."""
     scene_config = config.get(STATES)
 
-    async_add_devices(HomeAssistantScene(
+    async_add_entities(HomeAssistantScene(
         hass, _process_config(scene)) for scene in scene_config)
     return True
 

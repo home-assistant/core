@@ -41,31 +41,31 @@ class YahooWeatherMock():
 
     @property
     def RawData(self):  # pylint: disable=invalid-name
-        """Raw Data."""
+        """Return raw Data."""
         if self.woeid == '12345':
             return json.loads('[]')
         return self._data
 
     @property
     def Now(self):  # pylint: disable=invalid-name
-        """Current weather data."""
+        """Return current weather data."""
         if self.woeid == '111':
             raise ValueError
         return self._data['query']['results']['channel']['item']['condition']
 
     @property
     def Atmosphere(self):  # pylint: disable=invalid-name
-        """Atmosphere weather data."""
+        """Return atmosphere weather data."""
         return self._data['query']['results']['channel']['atmosphere']
 
     @property
     def Wind(self):  # pylint: disable=invalid-name
-        """Wind weather data."""
+        """Return wind weather data."""
         return self._data['query']['results']['channel']['wind']
 
     @property
     def Forecast(self):  # pylint: disable=invalid-name
-        """Forecast data 0-5 Days."""
+        """Return forecast data 0-5 Days."""
         if self.woeid == '123123':
             raise ValueError
         return self._data['query']['results']['channel']['item']['forecast']
@@ -76,14 +76,14 @@ class TestWeather(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices):
+    def add_entities(self, devices):
         """Mock add devices."""
         for device in devices:
             device.update()
             self.DEVICES.append(device)
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
 

@@ -18,7 +18,8 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ["waterfurnace==0.4.0"]
+
+REQUIREMENTS = ["waterfurnace==0.7.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,6 +27,11 @@ DOMAIN = "waterfurnace"
 UPDATE_TOPIC = DOMAIN + "_update"
 CONF_UNIT = "unit"
 SCAN_INTERVAL = timedelta(seconds=10)
+ERROR_INTERVAL = timedelta(seconds=300)
+MAX_FAILS = 10
+NOTIFICATION_ID = 'waterfurnace_website_notification'
+NOTIFICATION_TITLE = 'WaterFurnace website status'
+
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -37,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, base_config):
-    """Setup waterfurnace platform."""
+    """Set up waterfurnace platform."""
     import waterfurnace.waterfurnace as wf
     config = base_config.get(DOMAIN)
 
@@ -80,6 +86,36 @@ class WaterFurnaceData(threading.Thread):
         self.unit = client.unit
         self.data = None
         self._shutdown = False
+        self._fails = 0
+
+    def _reconnect(self):
+        """Reconnect on a failure."""
+        import waterfurnace.waterfurnace as wf
+        self._fails += 1
+        if self._fails > MAX_FAILS:
+            _LOGGER.error(
+                "Failed to refresh login credentials. Thread stopped.")
+            self.hass.components.persistent_notification.create(
+                "Error:<br/>Connection to waterfurnace website failed "
+                "the maximum number of times. Thread has stopped.",
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID)
+
+            self._shutdown = True
+            return
+
+        # sleep first before the reconnect attempt
+        _LOGGER.debug("Sleeping for fail # %s", self._fails)
+        time.sleep(self._fails * ERROR_INTERVAL.seconds)
+
+        try:
+            self.client.login()
+            self.data = self.client.read()
+        except wf.WFException:
+            _LOGGER.exception("Failed to reconnect attempt %s", self._fails)
+        else:
+            _LOGGER.debug("Reconnected to furnace")
+            self._fails = 0
 
     def run(self):
         """Thread run loop."""
@@ -117,20 +153,7 @@ class WaterFurnaceData(threading.Thread):
                 # that pretty much can all be solved by logging in and
                 # back out again.
                 _LOGGER.exception("Failed to read data, attempting to recover")
-                try:
-                    self.client.login()
-                except Exception:  # pylint: disable=broad-except
-                    # nested exception handling, something really bad
-                    # happened during the login, which means we're not
-                    # in a recoverable state. Stop the thread so we
-                    # don't do just keep poking at the service.
-                    _LOGGER.error(
-                        "Failed to refresh login credentials. Thread stopped.")
-                    return
-                else:
-                    _LOGGER.error(
-                        "Lost our connection to websocket, trying again")
-                    time.sleep(SCAN_INTERVAL.seconds)
+                self._reconnect()
 
             else:
                 self.hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)

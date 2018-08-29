@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_PORT, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['afsapi==0.0.3']
+REQUIREMENTS = ['afsapi==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,12 +42,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Frontier Silicon platform."""
     import requests
 
     if discovery_info is not None:
-        async_add_devices(
+        async_add_entities(
             [AFSAPIDevice(discovery_info['ssdp_description'],
                           DEFAULT_PASSWORD)],
             update_before_add=True)
@@ -58,7 +59,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     try:
-        async_add_devices(
+        async_add_entities(
             [AFSAPIDevice(DEVICE_URL.format(host, port), password)],
             update_before_add=True)
         _LOGGER.debug("FSAPI device %s:%s -> %s", host, port, password)
