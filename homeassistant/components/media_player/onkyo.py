@@ -40,9 +40,9 @@ DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
                    'video1': 'Video 1', 'video2': 'Video 2',
                    'video3': 'Video 3', 'video4': 'Video 4',
                    'video5': 'Video 5', 'video6': 'Video 6',
-                   'video7': 'Video 7', 'fm' : 'Radio'}
+                   'video7': 'Video 7', 'fm': 'Radio'}
 
-DEFAULT_PLAYABLE_SOURCES = ( "fm", "am", "tuner" )
+DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
@@ -271,7 +271,8 @@ class OnkyoDevice(MediaPlayerDevice):
     def play_media(self, media_type, media_id, **kwargs):
         """Play radio station by preset number."""
         source = self._reverse_mapping[self._current_source]
-        if media_type == 'radio' and source in DEFAULT_PLAYABLE_SOURCES:
+        if (media_type.lower() == 'radio' and
+                source in DEFAULT_PLAYABLE_SOURCES):
             self.command('preset {}'.format(media_id))
 
 
