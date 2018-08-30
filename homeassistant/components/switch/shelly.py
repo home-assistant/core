@@ -71,10 +71,7 @@ class ShellySwitch(SwitchDevice):
             req = requests.get('{}?turn={}'.format(self._url, newstate),
                                auth=self._auth, timeout=5)
             result = req.status_code
-            if result == 200:
-                return True
-            else:
-                return False
+            return bool(result == 200)
         except requests.RequestException as error:
             _LOGGER.error("Switching failed: %s", error)
 
