@@ -4,8 +4,8 @@ Support for The Shelly Wifi switch.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/switch.shelly/
 """
-import logging
 
+import logging
 import requests
 import voluptuous as vol
 
@@ -112,4 +112,3 @@ class ShellySwitch(SwitchDevice):
         """Turn the device off."""
         if self._switch('off'):
             self._state = False
-            
