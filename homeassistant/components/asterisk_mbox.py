@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 
-REQUIREMENTS = ['asterisk_mbox==0.4.0']
+REQUIREMENTS = ['asterisk_mbox==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
