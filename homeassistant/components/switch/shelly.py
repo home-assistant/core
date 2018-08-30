@@ -76,7 +76,7 @@ class ShellySwitch(SwitchDevice):
             else:
                 return False
         except requests.RequestException as error:
-            _LOGGER.debug("Switching failed: %s", error)
+            _LOGGER.error("Switching failed: %s", error)
 
     @property
     def should_poll(self):
