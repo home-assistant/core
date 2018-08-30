@@ -400,7 +400,7 @@ class MqttLight(MqttAvailability, Light):
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
-    
+
     @property
     def is_on(self):
         """Return true if device is on."""
