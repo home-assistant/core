@@ -34,10 +34,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices_callback, discovery_info=None):
     """Set up Shelly Wifi switches."""
-    switches = config.get('switches', {})
     devices = []
 
-    for dev_name, properties in switches.items():
+    for dev_name, properties in config[CONF_SWITCHES].items():
         devices.append(
             ShellySwitch(
                 hass,
