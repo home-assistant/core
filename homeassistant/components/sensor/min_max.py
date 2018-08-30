@@ -55,14 +55,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the min/max/mean sensor."""
     entity_ids = config.get(CONF_ENTITY_IDS)
     name = config.get(CONF_NAME)
     sensor_type = config.get(CONF_TYPE)
     round_digits = config.get(CONF_ROUND_DIGITS)
 
-    async_add_devices(
+    async_add_entities(
         [MinMaxSensor(hass, entity_ids, name, sensor_type, round_digits)],
         True)
     return True
@@ -124,7 +125,6 @@ class MinMaxSensor(Entity):
         self.states = {}
 
         @callback
-        # pylint: disable=invalid-name
         def async_min_max_sensor_state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
             if new_state.state is None or new_state.state in STATE_UNKNOWN:

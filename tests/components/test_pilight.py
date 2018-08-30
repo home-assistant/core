@@ -41,11 +41,11 @@ class PilightDaemonSim:
         pass
 
     def send_code(self, call):  # pylint: disable=no-self-use
-        """Called pilight.send service is called."""
+        """Handle pilight.send service callback."""
         _LOGGER.error('PilightDaemonSim payload: ' + str(call))
 
     def start(self):
-        """Called homeassistant.start is called.
+        """Handle homeassistant.start callback.
 
         Also sends one test message after start up
         """
@@ -56,11 +56,11 @@ class PilightDaemonSim:
             self.called = True
 
     def stop(self):  # pylint: disable=no-self-use
-        """Called homeassistant.stop is called."""
+        """Handle homeassistant.stop callback."""
         _LOGGER.error('PilightDaemonSim stop')
 
     def set_callback(self, function):
-        """Callback called  on event pilight.pilight_received."""
+        """Handle pilight.pilight_received event callback."""
         self.callback = function
         _LOGGER.error('PilightDaemonSim callback: ' + str(function))
 
@@ -70,7 +70,7 @@ class TestPilight(unittest.TestCase):
     """Test the Pilight component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.skip_teardown_stop = False
 
@@ -351,7 +351,7 @@ class TestPilightCallrateThrottler(unittest.TestCase):
     """Test the Throttler used to throttle calls to send_code."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):

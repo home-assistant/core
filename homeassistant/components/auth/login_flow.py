@@ -22,10 +22,14 @@ Pass in parameter 'client_id' and 'redirect_url' validate by indieauth.
 Pass in parameter 'handler' to specify the auth provider to use. Auth providers
 are identified by type and id.
 
+And optional parameter 'type' has to set as 'link_user' if login flow used for
+link credential to exist user. Default 'type' is 'authorize'.
+
 {
     "client_id": "https://hassbian.local:8123/",
     "handler": ["local_provider", null],
-    "redirect_url": "https://hassbian.local:8123/"
+    "redirect_url": "https://hassbian.local:8123/",
+    "type': "authorize"
 }
 
 Return value will be a step in a data entry flow. See the docs for data entry
@@ -49,12 +53,14 @@ flow for details.
 Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
 have type "create_entry" and "result" key will contain an authorization code.
+The authorization code associated with an authorized user by default, it will
+associate with an credential if "type" set to "link_user" in
+"/auth/login_flow"
 
 {
     "flow_id": "8f7e42faab604bcab7ac43c44ca34d58",
     "handler": ["insecure_example", null],
     "result": "411ee2f916e648d691e937ae9344681e",
-    "source": "user",
     "title": "Example",
     "type": "create_entry",
     "version": 1
@@ -64,21 +70,20 @@ import aiohttp.web
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.ban import process_wrong_login, \
     log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.helpers.data_entry_flow import (
-    FlowManagerIndexView, FlowManagerResourceView)
 from . import indieauth
 
 
-async def async_setup(hass, store_credentials):
+async def async_setup(hass, store_result):
     """Component to allow users to login."""
     hass.http.register_view(AuthProvidersView)
     hass.http.register_view(LoginFlowIndexView(hass.auth.login_flow))
     hass.http.register_view(
-        LoginFlowResourceView(hass.auth.login_flow, store_credentials))
+        LoginFlowResourceView(hass.auth.login_flow, store_result))
 
 
 class AuthProvidersView(HomeAssistantView):
@@ -97,12 +102,40 @@ class AuthProvidersView(HomeAssistantView):
         } for provider in request.app['hass'].auth.auth_providers])
 
 
-class LoginFlowIndexView(FlowManagerIndexView):
+def _prepare_result_json(result):
+    """Convert result to JSON."""
+    if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+        data = result.copy()
+        data.pop('result')
+        data.pop('data')
+        return data
+
+    if result['type'] != data_entry_flow.RESULT_TYPE_FORM:
+        return result
+
+    import voluptuous_serialize
+
+    data = result.copy()
+
+    schema = data['data_schema']
+    if schema is None:
+        data['data_schema'] = []
+    else:
+        data['data_schema'] = voluptuous_serialize.convert(schema)
+
+    return data
+
+
+class LoginFlowIndexView(HomeAssistantView):
     """View to create a config flow."""
 
     url = '/auth/login_flow'
     name = 'api:auth:login_flow'
     requires_auth = False
+
+    def __init__(self, flow_mgr):
+        """Initialize the flow manager index view."""
+        self._flow_mgr = flow_mgr
 
     async def get(self, request):
         """Do not allow index of flows in progress."""
@@ -112,31 +145,47 @@ class LoginFlowIndexView(FlowManagerIndexView):
         vol.Required('client_id'): str,
         vol.Required('handler'): vol.Any(str, list),
         vol.Required('redirect_uri'): str,
+        vol.Optional('type', default='authorize'): str,
     }))
     @log_invalid_auth
     async def post(self, request, data):
         """Create a new login flow."""
-        if not indieauth.verify_redirect_uri(data['client_id'],
-                                             data['redirect_uri']):
+        if not await indieauth.verify_redirect_uri(
+                request.app['hass'], data['client_id'], data['redirect_uri']):
             return self.json_message('invalid client id or redirect uri', 400)
 
-        # pylint: disable=no-value-for-parameter
-        return await super().post(request)
+        if isinstance(data['handler'], list):
+            handler = tuple(data['handler'])
+        else:
+            handler = data['handler']
+
+        try:
+            result = await self._flow_mgr.async_init(
+                handler, context={
+                    'ip_address': request[KEY_REAL_IP],
+                    'credential_only': data.get('type') == 'link_user',
+                })
+        except data_entry_flow.UnknownHandler:
+            return self.json_message('Invalid handler specified', 404)
+        except data_entry_flow.UnknownStep:
+            return self.json_message('Handler does not support init', 400)
+
+        return self.json(_prepare_result_json(result))
 
 
-class LoginFlowResourceView(FlowManagerResourceView):
+class LoginFlowResourceView(HomeAssistantView):
     """View to interact with the flow manager."""
 
     url = '/auth/login_flow/{flow_id}'
     name = 'api:auth:login_flow:resource'
     requires_auth = False
 
-    def __init__(self, flow_mgr, store_credentials):
+    def __init__(self, flow_mgr, store_result):
         """Initialize the login flow resource view."""
-        super().__init__(flow_mgr)
-        self._store_credentials = store_credentials
+        self._flow_mgr = flow_mgr
+        self._store_result = store_result
 
-    async def get(self, request, flow_id):
+    async def get(self, request):
         """Do not allow getting status of a flow in progress."""
         return self.json_message('Invalid flow specified', 404)
 
@@ -152,6 +201,13 @@ class LoginFlowResourceView(FlowManagerResourceView):
             return self.json_message('Invalid client id', 400)
 
         try:
+            # do not allow change ip during login flow
+            for flow in self._flow_mgr.async_progress():
+                if (flow['flow_id'] == flow_id and
+                        flow['context']['ip_address'] !=
+                        request.get(KEY_REAL_IP)):
+                    return self.json_message('IP address changed', 400)
+
             result = await self._flow_mgr.async_configure(flow_id, data)
         except data_entry_flow.UnknownFlow:
             return self.json_message('Invalid flow specified', 404)
@@ -164,9 +220,18 @@ class LoginFlowResourceView(FlowManagerResourceView):
             if result['errors'] is not None and \
                     result['errors'].get('base') == 'invalid_auth':
                 await process_wrong_login(request)
-            return self.json(self._prepare_result_json(result))
+            return self.json(_prepare_result_json(result))
 
         result.pop('data')
-        result['result'] = self._store_credentials(client_id, result['result'])
+        result['result'] = self._store_result(client_id, result['result'])
 
         return self.json(result)
+
+    async def delete(self, request, flow_id):
+        """Cancel a flow in progress."""
+        try:
+            self._flow_mgr.async_abort(flow_id)
+        except data_entry_flow.UnknownFlow:
+            return self.json_message('Invalid flow specified', 404)
+
+        return self.json_message('Flow aborted')

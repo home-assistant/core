@@ -30,7 +30,7 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
     assert resp.status == 400
 
 
-async def test_posting_url(aioclient_mock, hass, aiohttp_client):
+async def test_posting_url(hass, aiohttp_client):
     """Test that posting to api endpoint works."""
     await async_setup_component(hass, 'camera', {
         'camera': {
@@ -38,7 +38,7 @@ async def test_posting_url(aioclient_mock, hass, aiohttp_client):
             'name': 'config_test',
         }})
 
-    client = await async_setup_auth(hass, aiohttp_client)
+    client = await aiohttp_client(hass.http.app)
     files = {'image': io.BytesIO(b'fake')}
 
     # initial state

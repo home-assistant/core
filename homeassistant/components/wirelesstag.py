@@ -80,14 +80,14 @@ class WirelessTagPlatform:
 
     # pylint: disable=no-self-use
     def make_push_notitication(self, name, url, content):
-        """Factory for notification config."""
+        """Create notification config."""
         from wirelesstagpy import NotificationConfig
         return NotificationConfig(name, {
             'url': url, 'verb': 'POST',
             'content': content, 'disabled': False, 'nat': True})
 
     def install_push_notifications(self, binary_sensors):
-        """Setup local push notification from tag manager."""
+        """Set up local push notification from tag manager."""
         _LOGGER.info("Registering local push notifications.")
         configs = []
 
@@ -129,7 +129,7 @@ class WirelessTagPlatform:
             self.hass.config.api.base_url)
 
     def handle_update_tags_event(self, event):
-        """Main entry to handle push event from wireless tag manager."""
+        """Handle push event from wireless tag manager."""
         _LOGGER.info("push notification for update arrived: %s", event)
         dispatcher_send(
             self.hass,
@@ -215,7 +215,10 @@ class WirelessTagBaseSensor(Entity):
         return 0
 
     def updated_state_value(self):
-        """Default implementation formats princial value."""
+        """Return formatted value.
+
+        The default implementation formats principal value.
+        """
         return self.decorate_value(self.principal_value)
 
     # pylint: disable=no-self-use

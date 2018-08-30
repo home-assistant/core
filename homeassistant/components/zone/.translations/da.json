@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "name_exists": "Navnet findes allerede"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "icon": "Ikon",
+                    "latitude": "Breddegrad",
+                    "longitude": "L\u00e6ngdegrad",
+                    "name": "Navn",
+                    "passive": "Passiv"
+                },
+                "title": "Definer zoneparametre"
+            }
+        },
+        "title": "Zone"
+    }
+}

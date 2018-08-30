@@ -632,7 +632,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None):
+                               async_add_entities, discovery_info=None):
     """Set up the WUnderground sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -656,7 +656,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     if not rest.data:
         raise PlatformNotReady
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class WUndergroundSensor(Entity):

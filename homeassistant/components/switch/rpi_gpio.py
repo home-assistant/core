@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Raspberry PI GPIO devices."""
     invert_logic = config.get(CONF_INVERT_LOGIC)
 
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ports = config.get(CONF_PORTS)
     for port, name in ports.items():
         switches.append(RPiGPIOSwitch(name, port, invert_logic))
-    add_devices(switches)
+    add_entities(switches)
 
 
 class RPiGPIOSwitch(ToggleEntity):

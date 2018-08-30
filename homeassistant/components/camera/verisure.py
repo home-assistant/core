@@ -16,7 +16,7 @@ from homeassistant.components.verisure import CONF_SMARTCAM
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Verisure Camera."""
     if not int(hub.config.get(CONF_SMARTCAM, 1)):
         return False
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         VerisureSmartcam(hass, device_label, directory_path)
         for device_label in hub.get(
             "$.customerImageCameras[*].deviceLabel")])
-    add_devices(smartcams)
+    add_entities(smartcams)
 
 
 class VerisureSmartcam(Camera):

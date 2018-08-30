@@ -1,36 +1,35 @@
 """
-Support for HomematicIP alarm control panel.
+Support for HomematicIP Cloud alarm control panel.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.homematicip_cloud/
 """
 
 import logging
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanel
+from homeassistant.components.homematicip_cloud import (
+    HMIPC_HAPID, HomematicipGenericDevice)
+from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED)
-from homeassistant.components.alarm_control_panel import AlarmControlPanel
-from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HMIPC_DOMAIN,
-    HMIPC_HAPID)
-
-
-DEPENDENCIES = ['homematicip_cloud']
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['homematicip_cloud']
 
 HMIP_ZONE_AWAY = 'EXTERNAL'
 HMIP_ZONE_HOME = 'INTERNAL'
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
-    """Set up the HomematicIP alarm control devices."""
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the HomematicIP Cloud alarm control devices."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP alarm control panel from a config entry."""
     from homematicip.aio.group import AsyncSecurityZoneGroup
 
@@ -41,11 +40,11 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             devices.append(HomematicipSecurityZone(home, group))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):
-    """Representation of an HomematicIP security zone group."""
+    """Representation of an HomematicIP Cloud security zone group."""
 
     def __init__(self, home, device):
         """Initialize the security zone group."""

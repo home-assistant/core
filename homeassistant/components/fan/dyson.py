@@ -18,6 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_NIGHT_MODE = 'night_mode'
 
+ATTR_IS_NIGHT_MODE = 'is_night_mode'
+ATTR_IS_AUTO_MODE = 'is_auto_mode'
+
 DEPENDENCIES = ['dyson']
 DYSON_FAN_DEVICES = 'dyson_fan_devices'
 
@@ -29,7 +32,7 @@ DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
     from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
 
@@ -43,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dyson_entity = DysonPureCoolLinkDevice(hass, device)
         hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
-    add_devices(hass.data[DYSON_FAN_DEVICES])
+    add_entities(hass.data[DYSON_FAN_DEVICES])
 
     def service_handle(service):
         """Handle the Dyson services."""
@@ -158,7 +161,7 @@ class DysonPureCoolLinkDevice(FanEntity):
     def is_on(self):
         """Return true if the entity is on."""
         if self._device.state:
-            return self._device.state.fan_state == "FAN"
+            return self._device.state.fan_mode == "FAN"
         return False
 
     @property
@@ -232,3 +235,11 @@ class DysonPureCoolLinkDevice(FanEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
+
+    @property
+    def device_state_attributes(self) -> dict:
+        """Return optional state attributes."""
+        return {
+            ATTR_IS_NIGHT_MODE: self.is_night_mode,
+            ATTR_IS_AUTO_MODE: self.is_auto_mode
+            }

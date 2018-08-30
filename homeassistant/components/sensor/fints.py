@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensors.
 
     Login to the bank and get a list of existing accounts. Create a
@@ -98,7 +98,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.debug('Creating holdings %s for bank %s',
                       account.accountnumber, fints_name)
 
-    add_devices(accounts, True)
+    add_entities(accounts, True)
 
 
 class FinTsClient:
@@ -108,7 +108,7 @@ class FinTsClient:
     """
 
     def __init__(self, credentials: BankCredentials, name: str):
-        """Constructor for class FinTsClient."""
+        """Initialize a FinTsClient."""
         self._credentials = credentials
         self.name = name
 
@@ -151,14 +151,14 @@ class FinTsClient:
 
 
 class FinTsAccount(Entity):
-    """Sensor for a FinTS balanc account.
+    """Sensor for a FinTS balance account.
 
     A balance account contains an amount of money (=balance). The amount may
     also be negative.
     """
 
     def __init__(self, client: FinTsClient, account, name: str) -> None:
-        """Constructor for class FinTsAccount."""
+        """Initialize a FinTs balance account."""
         self._client = client  # type: FinTsClient
         self._account = account
         self._name = name  # type: str
@@ -167,7 +167,10 @@ class FinTsAccount(Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Data needs to be polled from the bank servers."""
+        """Return True.
+
+        Data needs to be polled from the bank servers.
+        """
         return True
 
     def update(self) -> None:
@@ -218,7 +221,7 @@ class FinTsHoldingsAccount(Entity):
     """
 
     def __init__(self, client: FinTsClient, account, name: str) -> None:
-        """Constructor for class FinTsHoldingsAccount."""
+        """Initialize a FinTs holdings account."""
         self._client = client  # type: FinTsClient
         self._name = name  # type: str
         self._account = account
@@ -227,7 +230,10 @@ class FinTsHoldingsAccount(Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Data needs to be polled from the bank servers."""
+        """Return True.
+
+        Data needs to be polled from the bank servers.
+        """
         return True
 
     def update(self) -> None:

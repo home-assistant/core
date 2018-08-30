@@ -38,7 +38,7 @@ class Host:
         self.dev_id = dev_id
         self._count = config[CONF_PING_COUNT]
         if sys.platform == 'win32':
-            self._ping_cmd = ['ping', '-n 1', '-w', '1000', self.ip_address]
+            self._ping_cmd = ['ping', '-n', '1', '-w', '1000', self.ip_address]
         else:
             self._ping_cmd = ['ping', '-n', '-q', '-c1', '-W1',
                               self.ip_address]

@@ -42,7 +42,7 @@ def get_size(files_list):
     return sum(size_list)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the folder sensor."""
     path = config.get(CONF_FOLDER_PATHS)
 
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("folder %s is not valid or allowed", path)
     else:
         folder = Folder(path, config.get(CONF_FILTER))
-        add_devices([folder], True)
+        add_entities([folder], True)
 
 
 class Folder(Entity):

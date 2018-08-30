@@ -64,7 +64,7 @@ async def _async_process_dependencies(
                    if dep in loader.DEPENDENCY_BLACKLIST]
 
     if blacklisted:
-        _LOGGER.error("Unable to setup dependencies of %s: "
+        _LOGGER.error("Unable to set up dependencies of %s: "
                       "found blacklisted dependencies: %s",
                       name, ', '.join(blacklisted))
         return False
@@ -81,7 +81,7 @@ async def _async_process_dependencies(
               in enumerate(results) if not res]
 
     if failed:
-        _LOGGER.error("Unable to setup dependencies of %s. "
+        _LOGGER.error("Unable to set up dependencies of %s. "
                       "Setup failed for dependencies: %s",
                       name, ', '.join(failed))
 
@@ -238,7 +238,7 @@ async def async_process_deps_reqs(
             hass, config, name, module.DEPENDENCIES)  # type: ignore
 
         if not dep_success:
-            raise HomeAssistantError("Could not setup all dependencies.")
+            raise HomeAssistantError("Could not set up all dependencies.")
 
     if not hass.config.skip_pip and hasattr(module, 'REQUIREMENTS'):
         req_success = await requirements.async_process_requirements(

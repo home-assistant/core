@@ -1,10 +1,10 @@
 """Component to embed Sonos."""
-from homeassistant import data_entry_flow
+from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 
 
 DOMAIN = 'sonos'
-REQUIREMENTS = ['SoCo==0.14']
+REQUIREMENTS = ['SoCo==0.16']
 
 
 async def async_setup(hass, config):
@@ -15,7 +15,7 @@ async def async_setup(hass, config):
 
     if conf is not None:
         hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, source=data_entry_flow.SOURCE_IMPORT))
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
 
     return True
 

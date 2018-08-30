@@ -20,7 +20,8 @@ DEPENDENCIES = ['envisalink']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Perform the setup for Envisalink sensor devices."""
     configured_partitions = discovery_info['partitions']
 
@@ -35,7 +36,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             hass.data[DATA_EVL])
         devices.append(device)
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
 
 class EnvisalinkSensor(EnvisalinkDevice, Entity):

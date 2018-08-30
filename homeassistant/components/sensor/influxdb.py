@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the InfluxDB component."""
     influx_conf = {
         'host': config[CONF_HOST],
@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if sensor.connected:
             dev.append(sensor)
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class InfluxSensor(Entity):

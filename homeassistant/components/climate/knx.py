@@ -60,27 +60,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up climate(s) for KNX platform."""
     if discovery_info is not None:
-        async_add_devices_discovery(hass, discovery_info, async_add_devices)
+        async_add_entities_discovery(hass, discovery_info, async_add_entities)
     else:
-        async_add_devices_config(hass, config, async_add_devices)
+        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
-def async_add_devices_discovery(hass, discovery_info, async_add_devices):
+def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     """Set up climates for KNX platform configured within platform."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
         entities.append(KNXClimate(hass, device))
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 @callback
-def async_add_devices_config(hass, config, async_add_devices):
+def async_add_entities_config(hass, config, async_add_entities):
     """Set up climate for KNX platform configured within platform."""
     import xknx
 
@@ -110,7 +110,7 @@ def async_add_devices_config(hass, config, async_add_devices):
         group_address_operation_mode_comfort=config.get(
             CONF_OPERATION_MODE_COMFORT_ADDRESS))
     hass.data[DATA_KNX].xknx.devices.add(climate)
-    async_add_devices([KNXClimate(hass, climate)])
+    async_add_entities([KNXClimate(hass, climate)])
 
 
 class KNXClimate(ClimateDevice):
@@ -121,8 +121,6 @@ class KNXClimate(ClimateDevice):
         self.device = device
         self.hass = hass
         self.async_register_callbacks()
-
-        self._unit_of_measurement = TEMP_CELSIUS
 
     @property
     def supported_features(self):
@@ -157,7 +155,7 @@ class KNXClimate(ClimateDevice):
     @property
     def temperature_unit(self):
         """Return the unit of measurement."""
-        return self._unit_of_measurement
+        return TEMP_CELSIUS
 
     @property
     def current_temperature(self):

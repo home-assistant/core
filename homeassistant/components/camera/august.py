@@ -16,7 +16,7 @@ DEPENDENCIES = ['august']
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up August cameras."""
     data = hass.data[DATA_AUGUST]
     devices = []
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for doorbell in data.doorbells:
         devices.append(AugustCamera(data, doorbell, DEFAULT_TIMEOUT))
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class AugustCamera(Camera):

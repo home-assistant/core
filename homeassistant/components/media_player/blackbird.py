@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = vol.All(
     }))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Monoprice Blackbird 4k 8x8 HDBaseT Matrix platform."""
     if DATA_BLACKBIRD not in hass.data:
         hass.data[DATA_BLACKBIRD] = {}
@@ -100,7 +100,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[DATA_BLACKBIRD][unique_id] = device
         devices.append(device)
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
     def service_handle(service):
         """Handle for services."""
