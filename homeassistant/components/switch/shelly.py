@@ -118,3 +118,4 @@ class ShellySwitch(SwitchDevice):
         """Turn the device off."""
         if self._switch('off'):
             self._state = False
+            
