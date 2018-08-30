@@ -1,13 +1,14 @@
 """Tests for IGD config flow."""
 
 from homeassistant.components import igd
+from homeassistant.components.igd import config_flow as igd_config_flow
 
 from tests.common import MockConfigEntry
 
 
 async def test_flow_none_discovered(hass):
     """Test no device discovered flow."""
-    flow = igd.config_flow.IgdFlowHandler()
+    flow = igd_config_flow.IgdFlowHandler()
     flow.hass = hass
 
     result = await flow.async_step_user()
@@ -17,7 +18,7 @@ async def test_flow_none_discovered(hass):
 
 async def test_flow_already_configured(hass):
     """Test device already configured flow."""
-    flow = igd.config_flow.IgdFlowHandler()
+    flow = igd_config_flow.IgdFlowHandler()
     flow.hass = hass
 
     # discovered device
@@ -48,7 +49,7 @@ async def test_flow_already_configured(hass):
 
 async def test_flow_no_sensors_no_port_forward(hass):
     """Test single device, no sensors, no port_forward."""
-    flow = igd.config_flow.IgdFlowHandler()
+    flow = igd_config_flow.IgdFlowHandler()
     flow.hass = hass
 
     # discovered device
@@ -79,7 +80,7 @@ async def test_flow_no_sensors_no_port_forward(hass):
 
 async def test_flow_discovered_form(hass):
     """Test single device discovered, show form flow."""
-    flow = igd.config_flow.IgdFlowHandler()
+    flow = igd_config_flow.IgdFlowHandler()
     flow.hass = hass
 
     # discovered device
@@ -100,7 +101,7 @@ async def test_flow_discovered_form(hass):
 
 async def test_flow_two_discovered_form(hass):
     """Test single device discovered, show form flow."""
-    flow = igd.config_flow.IgdFlowHandler()
+    flow = igd_config_flow.IgdFlowHandler()
     flow.hass = hass
 
     # discovered device
@@ -135,18 +136,18 @@ async def test_flow_two_discovered_form(hass):
 
 
 async def test_config_entry_created(hass):
-    flow = igd.config_flow.IgdFlowHandler()
+    """Test config entry is created."""
+    flow = igd_config_flow.IgdFlowHandler()
     flow.hass = hass
 
     # discovered device
-    udn = 'uuid:device_1'
     hass.data[igd.DOMAIN] = {
         'discovered': {
-            udn: {
+            'uuid:device_1': {
                 'name': 'Test device 1',
                 'host': '192.168.1.1',
                 'ssdp_description': 'http://192.168.1.1/desc.xml',
-                'udn': udn,
+                'udn': 'uuid:device_1',
             },
         },
     }
@@ -156,8 +157,73 @@ async def test_config_entry_created(hass):
         'sensors': True,
         'port_forward': False,
     })
+    assert result['type'] == 'create_entry'
     assert result['data'] == {
         'port_forward': False,
+        'sensors': True,
+        'ssdp_description': 'http://192.168.1.1/desc.xml',
+        'udn': 'uuid:device_1',
+    }
+    assert result['title'] == 'Test device 1'
+
+
+async def test_flow_discovery_auto_config_sensors(hass):
+    """Test creation of device with auto_config."""
+    flow = igd_config_flow.IgdFlowHandler()
+    flow.hass = hass
+
+    # auto_config active
+    hass.data[igd.DOMAIN] = {
+        'auto_config': {
+            'active': True,
+            'port_forward': False,
+            'sensors': True,
+        },
+    }
+
+    # discovered device
+    result = await flow.async_step_discovery({
+        'name': 'Test device 1',
+        'host': '192.168.1.1',
+        'ssdp_description': 'http://192.168.1.1/desc.xml',
+        'udn': 'uuid:device_1',
+    })
+
+    assert result['type'] == 'create_entry'
+    assert result['data'] == {
+        'port_forward': False,
+        'sensors': True,
+        'ssdp_description': 'http://192.168.1.1/desc.xml',
+        'udn': 'uuid:device_1',
+    }
+    assert result['title'] == 'Test device 1'
+
+
+async def test_flow_discovery_auto_config_sensors_port_forward(hass):
+    """Test creation of device with auto_config, with port forward."""
+    flow = igd_config_flow.IgdFlowHandler()
+    flow.hass = hass
+
+    # auto_config active, with port_forward
+    hass.data[igd.DOMAIN] = {
+        'auto_config': {
+            'active': True,
+            'port_forward': True,
+            'sensors': True,
+        },
+    }
+
+    # discovered device
+    result = await flow.async_step_discovery({
+        'name': 'Test device 1',
+        'host': '192.168.1.1',
+        'ssdp_description': 'http://192.168.1.1/desc.xml',
+        'udn': 'uuid:device_1',
+    })
+
+    assert result['type'] == 'create_entry'
+    assert result['data'] == {
+        'port_forward': True,
         'sensors': True,
         'ssdp_description': 'http://192.168.1.1/desc.xml',
         'udn': 'uuid:device_1',
