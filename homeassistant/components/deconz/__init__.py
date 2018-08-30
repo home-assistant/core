@@ -24,7 +24,7 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==45']
+REQUIREMENTS = ['pydeconz==46']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -45,6 +45,8 @@ SERVICE_SCHEMA = vol.Schema({
     vol.Exclusive(SERVICE_ENTITY, 'deconz_id'): cv.entity_id,
     vol.Required(SERVICE_DATA): dict,
 })
+
+SERVICE_DEVICE_REFRESH = 'device_refresh'
 
 
 async def async_setup(hass, config):
@@ -84,15 +86,16 @@ async def async_setup_entry(hass, config_entry):
     @callback
     def async_add_device_callback(device_type, device):
         """Handle event of new device creation in deCONZ."""
+        if not isinstance(device, list):
+            device = [device]
         async_dispatcher_send(
-            hass, 'deconz_new_{}'.format(device_type), [device])
+            hass, 'deconz_new_{}'.format(device_type), device)
 
     session = aiohttp_client.async_get_clientsession(hass)
     deconz = DeconzSession(hass.loop, session, **config_entry.data,
                            async_add_device=async_add_device_callback)
     result = await deconz.async_load_parameters()
     if result is False:
-        _LOGGER.error("Failed to communicate with deCONZ")
         return False
 
     hass.data[DOMAIN] = deconz
@@ -149,15 +152,47 @@ async def async_setup_entry(hass, config_entry):
         data = call.data.get(SERVICE_DATA)
         deconz = hass.data[DOMAIN]
         if entity_id:
+
             entities = hass.data.get(DATA_DECONZ_ID)
+
             if entities:
                 field = entities.get(entity_id)
+
             if field is None:
                 _LOGGER.error('Could not find the entity %s', entity_id)
                 return
+
         await deconz.async_put_state(field, data)
+
     hass.services.async_register(
         DOMAIN, SERVICE_DECONZ, async_configure, schema=SERVICE_SCHEMA)
+
+    async def async_refresh_devices(call):
+        """Refresh available devices from deCONZ."""
+        deconz = hass.data[DOMAIN]
+        added_devices = await deconz.async_load_parameters()
+
+        if added_devices is False:
+            return
+
+        for device_type, device_index in added_devices.items():
+
+            if len(device_index) == 0:
+                continue
+
+            elif device_type == 'group':
+                devices = [deconz.groups[idx] for idx in device_index]
+
+            elif device_type == 'light':
+                devices = [deconz.lights[idx] for idx in device_index]
+
+            elif device_type == 'sensor':
+                devices = [deconz.sensors[idx] for idx in device_index]
+
+            async_add_device_callback(device_type, devices)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_DEVICE_REFRESH, async_refresh_devices)
 
     @callback
     def deconz_shutdown(event):
