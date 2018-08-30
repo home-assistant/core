@@ -141,6 +141,7 @@ apns2==0.3.0
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.4.0
 
+# homeassistant.components.igd
 # homeassistant.components.media_player.dlna_dmr
 async-upnp-client==0.12.4
 
@@ -1182,9 +1183,6 @@ pytrafikverket==0.1.5.8
 
 # homeassistant.components.device_tracker.unifi
 pyunifi==2.13
-
-# homeassistant.components.upnp
-pyupnp-async==0.1.1.1
 
 # homeassistant.components.binary_sensor.uptimerobot
 pyuptimerobot==0.0.5
