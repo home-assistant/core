@@ -23,12 +23,12 @@ from homeassistant.setup import async_prepare_setup_platform
 
 _LOGGER = logging.getLogger(__name__)
 
-CONTENT_TYPE_MPEG = 'audio/mpeg'
-
 DEPENDENCIES = ['http']
 DOMAIN = 'mailbox'
 
 EVENT = 'mailbox_updated'
+CONTENT_TYPE_MPEG = 'audio/mpeg'
+CONTENT_TYPE_NONE = 'none'
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -81,7 +81,7 @@ def async_setup(hass, config):
             return
 
         mailboxes.append(mailbox)
-        mailbox_entity = MailboxEntity(hass, mailbox)
+        mailbox_entity = MailboxEntity(mailbox)
         component = EntityComponent(
             logging.getLogger(__name__), DOMAIN, hass, SCAN_INTERVAL)
         yield from component.async_add_entities([mailbox_entity])
@@ -103,19 +103,22 @@ def async_setup(hass, config):
 
 
 class MailboxEntity(Entity):
-    """Entity for each mailbox platform."""
+    """Entity for each mailbox platform to provide a badge display."""
 
-    def __init__(self, hass, mailbox):
+    def __init__(self, mailbox):
         """Initialize mailbox entity."""
         self.mailbox = mailbox
-        self.hass = hass
         self.message_count = 0
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Complete entity initialization."""
         @callback
         def _mailbox_updated(event):
             self.async_schedule_update_ha_state(True)
 
-        hass.bus.async_listen(EVENT, _mailbox_updated)
+        self.hass.bus.async_listen(EVENT, _mailbox_updated)
+        self.async_schedule_update_ha_state(True)
 
     @property
     def state(self):
@@ -150,6 +153,16 @@ class Mailbox:
     def media_type(self):
         """Return the supported media type."""
         raise NotImplementedError()
+
+    @property
+    def can_delete(self):
+        """Return if messages can be deleted."""
+        return False
+
+    @property
+    def has_media(self):
+        """Return if messages have attached media files."""
+        return False
 
     @asyncio.coroutine
     def async_get_media(self, msgid):
@@ -198,7 +211,12 @@ class MailboxPlatformsView(MailboxView):
         """Retrieve list of platforms."""
         platforms = []
         for mailbox in self.mailboxes:
-            platforms.append(mailbox.name)
+            platforms.append(
+                {
+                    'name': mailbox.name,
+                    'has_media': mailbox.has_media,
+                    'can_delete': mailbox.can_delete
+                })
         return self.json(platforms)
 
 
