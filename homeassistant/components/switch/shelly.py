@@ -76,7 +76,7 @@ class ShellySwitch(SwitchDevice):
             else:
                 return False
         except requests.RequestException as error:
-            _LOGGER.error("Switching failed: " + error)
+            _LOGGER.debug("Switching failed: %s", error)
 
     @property
     def should_poll(self):
@@ -95,13 +95,13 @@ class ShellySwitch(SwitchDevice):
 
     def update(self):
         """Update device state."""
-        _LOGGER.info("Querying state from: %s", self._url)
+        _LOGGER.debug("Querying state from: %s", self._url)
         try:
             req = requests.get('{}'.format(self._url),
                                auth=self._auth, timeout=5)
             self._state = req.json()['ison']
         except requests.RequestException as error:
-            _LOGGER.error("State query failed: " + error)
+            _LOGGER.error("State query failed: %s ", error)
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
