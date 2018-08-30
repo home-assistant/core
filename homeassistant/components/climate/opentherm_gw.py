@@ -1,6 +1,5 @@
-"""
-OpenTherm Gateway Climate component for Home Assistant
-"""
+"""OpenTherm Gateway Climate component for Home Assistant."""
+
 import logging
 import voluptuous as vol
 
@@ -31,9 +30,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE)
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Setup the opentherm_gw component."""
+    """Set up the opentherm_gw component."""
     gateway = OpenThermGateway()
     gateway.friendly_name = config.get(CONF_NAME)
     gateway.floor_temp = config.get(CONF_FLOOR_TEMP, False)
@@ -43,6 +43,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     _LOGGER.debug("Connected to %s on %s", gateway.friendly_name,
                   config.get(CONF_DEVICE))
     return True
+
 
 class OpenThermGateway(ClimateDevice):
     """Representation of a climate device."""
@@ -64,14 +65,14 @@ class OpenThermGateway(ClimateDevice):
         self._away_state_b = False
 
     async def connect(self, hass, gw_path):
-        """Connect to the OpenTherm Gateway device at gw_path"""
+        """Connect to the OpenTherm Gateway device at gw_path."""
         self.hass = hass
         await self.gateway.connect(hass.loop, gw_path)
         self.gateway.subscribe(self.receive_report)
         return
 
     async def receive_report(self, status):
-        """Called when a new report has been received from the Gateway"""
+        """Receive and handle a new report from the Gateway."""
         _LOGGER.debug("Received report: %s", status)
         ch_active = status.get(self.pyotgw.DATA_SLAVE_CH_ACTIVE)
         cooling_active = status.get(self.pyotgw.DATA_SLAVE_COOLING_ACTIVE)
@@ -112,6 +113,7 @@ class OpenThermGateway(ClimateDevice):
 
     @property
     def name(self):
+        """Return the friendly name."""
         return self.friendly_name
 
     @property
