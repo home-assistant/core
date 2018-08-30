@@ -1,14 +1,16 @@
 """
-Support for UPnP Sensors (IGD).
+Support for IGD Sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.upnp/
+https://home-assistant.io/components/sensor.igd/
 """
+# pylint: disable=invalid-name
 import logging
 
 from homeassistant.components import history
 from homeassistant.components.igd import DOMAIN, UNITS
 from homeassistant.helpers.entity import Entity
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -98,9 +100,6 @@ class IGDSensor(Entity):
 
         self._handle_new_value(new_value)
 
-        # _LOGGER.debug('Removing self: %s', self)
-        # await self.async_remove()  # XXX TODO: does not remove from the UI
-
     @property
     def _last_state(self):
         """Get the last state reported to hass."""
@@ -126,17 +125,11 @@ class IGDSensor(Entity):
         try:
             state = coercer(float(last_state.state)) * self.unit_factor
         except ValueError:
-            _LOGGER.debug('%s: value error, coercer: %s, state: %s', self.entity_id, coercer, last_state.state)
-            raise
             state = coercer(0.0)
 
         return state
 
     def _handle_new_value(self, new_value):
-        _LOGGER.debug('%s: handle_new_value: state: %s, new_value: %s, last_value: %s',
-                      self.entity_id, self._state, new_value, self._last_value)
-
-        # ❯❯❯ upnp-client --debug --pprint --device http://192.168.178.1/RootDevice.xml call-action WANCIFC/GetTotalBytesReceived
         if self.entity_id is None:
             # don't know our entity ID yet, do nothing but store value
             self._last_value = new_value
@@ -161,7 +154,8 @@ class IGDSensor(Entity):
             if new_value >= 0:
                 diff += new_value
             else:
-                # some devices don't overflow and start at 0, but somewhere to -2**32
+                # some devices don't overflow and start at 0,
+                # but somewhere to -2**32
                 diff += new_value - -OVERFLOW_AT
 
         self._state += diff
