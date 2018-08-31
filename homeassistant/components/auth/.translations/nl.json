@@ -1,0 +1,16 @@
+{
+    "mfa_setup": {
+        "totp": {
+            "error": {
+                "invalid_code": "Ongeldige code, probeer het opnieuw. Als u deze fout blijft krijgen, controleer dan of de klok van uw Home Assistant systeem correct is ingesteld."
+            },
+            "step": {
+                "init": {
+                    "description": "Voor het activeren van twee-factor-authenticatie via tijdgebonden eenmalige wachtwoorden: scan de QR code met uw authenticatie-app. Als u nog geen app heeft, adviseren we [Google Authenticator (https://support.google.com/accounts/answer/1066447) of [Authy](https://authy.com/).\n\n{qr_code}\n\nNa het scannen van de code voert u de zescijferige code uit uw app in om de instelling te controleren. Als u problemen heeft met het scannen van de QR-code, voert u een handmatige configuratie uit met code **`{code}`**.",
+                    "title": "Configureer twee-factor-authenticatie via TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}
