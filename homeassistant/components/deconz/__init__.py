@@ -95,6 +95,7 @@ async def async_setup_entry(hass, config_entry):
     deconz = DeconzSession(hass.loop, session, **config_entry.data,
                            async_add_device=async_add_device_callback)
     result = await deconz.async_load_parameters()
+
     if result is False:
         return False
 
@@ -185,6 +186,9 @@ async def async_setup_entry(hass, config_entry):
 
             elif device_type == 'light':
                 devices = [deconz.lights[idx] for idx in device_index]
+
+            elif device_type == 'scene':
+                devices = [deconz.scenes[idx] for idx in device_index]
 
             elif device_type == 'sensor':
                 devices = [deconz.sensors[idx] for idx in device_index]
