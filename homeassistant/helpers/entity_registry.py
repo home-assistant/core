@@ -257,7 +257,6 @@ class EntityRegistry:
             if config_entry == entry.config_entry_id:
                 entry.config_entry_id = None
                 self.async_schedule_save()
-                print(entry)
 
 
 @bind_hass
