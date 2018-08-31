@@ -5,7 +5,7 @@
             "unknown": "Unknown error occurred."
         },
         "error": {
-            "invalid_2fa": "Invalid 2 Factor Authorization, please try again.",
+            "invalid_2fa": "Invalid 2 Factor Authentication, please try again.",
             "invalid_2fa_method": "Invalid 2FA Method (Verify on Phone).",
             "invalid_login": "Invalid Login, please try again."
         },
@@ -14,7 +14,7 @@
                 "data": {
                     "2fa": "2FA Pin"
                 },
-                "title": "2-Factor-Authorization"
+                "title": "2-Factor-Authentication"
             },
             "user": {
                 "data": {
