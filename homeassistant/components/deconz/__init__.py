@@ -24,7 +24,7 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==46']
+REQUIREMENTS = ['pydeconz==47']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -171,29 +171,38 @@ async def async_setup_entry(hass, config_entry):
     async def async_refresh_devices(call):
         """Refresh available devices from deCONZ."""
         deconz = hass.data[DOMAIN]
-        added_devices = await deconz.async_load_parameters()
 
-        if added_devices is False:
+        groups = list(deconz.groups.keys())
+        lights = list(deconz.lights.keys())
+        scenes = list(deconz.scenes.keys())
+        sensors = list(deconz.sensors.keys())
+
+        if not await deconz.async_load_parameters():
             return
 
-        for device_type, device_index in added_devices.items():
+        async_add_device_callback(
+            'group', [group
+                      for group_id, group in deconz.groups.items()
+                      if group_id not in groups]
+        )
 
-            if not device_index:
-                continue
+        async_add_device_callback(
+            'light', [light
+                      for light_id, light in deconz.lights.items()
+                      if light_id not in lights]
+        )
 
-            elif device_type == 'group':
-                devices = [deconz.groups[idx] for idx in device_index]
+        async_add_device_callback(
+            'scene', [scene
+                      for scene_id, scene in deconz.scenes.items()
+                      if scene_id not in scenes]
+        )
 
-            elif device_type == 'light':
-                devices = [deconz.lights[idx] for idx in device_index]
-
-            elif device_type == 'scene':
-                devices = [deconz.scenes[idx] for idx in device_index]
-
-            elif device_type == 'sensor':
-                devices = [deconz.sensors[idx] for idx in device_index]
-
-            async_add_device_callback(device_type, devices)
+        async_add_device_callback(
+            'sensor', [sensor
+                       for sensor_id, sensor in deconz.sensors.items()
+                       if sensor_id not in sensors]
+        )
 
     hass.services.async_register(
         DOMAIN, SERVICE_DEVICE_REFRESH, async_refresh_devices)
