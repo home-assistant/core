@@ -442,7 +442,7 @@ hole==0.3.0
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180829.1
+home-assistant-frontend==20180831.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
