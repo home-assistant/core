@@ -7,7 +7,6 @@ https://home-assistant.io/components/binary_sensor.openuv/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.const import CONF_BINARY_SENSORS, CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.openuv import (

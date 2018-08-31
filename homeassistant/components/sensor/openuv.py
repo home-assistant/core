@@ -6,7 +6,6 @@ https://home-assistant.io/components/sensor.openuv/
 """
 import logging
 
-from homeassistant.const import CONF_MONITORED_CONDITIONS, CONF_SENSORS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.openuv import (
