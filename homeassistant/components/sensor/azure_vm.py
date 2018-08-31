@@ -1,8 +1,8 @@
 """
-Sensor platform for Azure Virtual Machine.
+Sensor platform representing a Azure Virtual Machine.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/azure/
+https://home-assistant.io/components/sensor.azure_vm/
 """
 
 from datetime import timedelta
@@ -33,13 +33,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Setup sensor"""
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
+    """Add the azure vm sensor."""
     async_add_entities([AzureVmSensor(hass, config)])
 
 
 class AzureVmSensor(Entity):
-    """Representation of an Azure virutal machine"""
+    """Representation of an Azure virutal machine."""
 
     def __init__(self, hass, config):
         """Initialize the sensor."""
@@ -49,7 +50,6 @@ class AzureVmSensor(Entity):
             hass.data[DOMAIN].credentials, hass.data[DOMAIN].subscription_id)
         self._name = config.get(CONF_NAME)
         self._resource_group = config.get(CONG_RESOURCE_GROUP)
-        self._attributes = None
         self._state = None
 
     @property
@@ -68,11 +68,6 @@ class AzureVmSensor(Entity):
         if self._state == "VM running":
             return 'mdi:server'
         return 'mdi:server-off'
-
-    @property
-    def device_state_attributes(self):
-        """Return the attributes of the azure vm."""
-        return self._attributes
 
     @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

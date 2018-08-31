@@ -1,8 +1,8 @@
 """
-Azure component that handles Home Assistant interaction with Microsoft Azure Cloud.
+Azure component that handles interaction with Microsoft Azure Cloud.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/azure/
+https://home-assistant.io/components/azure_cloud/
 """
 import asyncio
 import logging
@@ -50,9 +50,11 @@ class AzureSubscription:
         self._client_id = config.get(CONF_CLIENT_ID)
         self._client_secret = config.get(CONF_CLIENT_SECRET)
         self._credentials = ServicePrincipalCredentials(
-            client_id=self._client_id, secret=self._client_secret, tenant=self._tenant_id)
+            client_id=self._client_id, secret=self._client_secret,
+            tenant=self._tenant_id)
         _LOGGER.debug(
-            "Azure subscription entity initialized for subscription %s.", self._subscription_id)
+            "Azure subscription entity initialized for subscription %s.",
+            self._subscription_id)
 
     @property
     def credentials(self):
