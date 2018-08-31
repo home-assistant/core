@@ -49,7 +49,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.entry_id]
 
     sensors = []
-    for sensor_type in entry.data[CONF_SENSORS][CONF_MONITORED_CONDITIONS]:
+    for sensor_type in openuv.sensor_conditions:
         name, icon, unit = SENSORS[sensor_type]
         sensors.append(
             OpenUvSensor(

@@ -26,7 +26,6 @@ REQUIREMENTS = ['pyopenuv==1.0.4']
 _LOGGER = logging.getLogger(__name__)
 
 DATA_OPENUV_CLIENT = 'data_client'
-DATA_OPENUV_CONFIG = 'data_config'
 DATA_OPENUV_LISTENER = 'data_listener'
 DATA_PROTECTION_WINDOW = 'protection_window'
 DATA_UV = 'uv'
@@ -126,11 +125,12 @@ async def async_setup(hass, config):
                     CONF_API_KEY: conf[CONF_API_KEY],
                     CONF_LATITUDE: latitude,
                     CONF_LONGITUDE: longitude,
-                    CONF_ELEVATION: elevation
+                    CONF_ELEVATION: elevation,
+                    CONF_BINARY_SENSORS: conf[CONF_BINARY_SENSORS],
+                    CONF_SENSORS: conf[CONF_SENSORS],
                 }))
 
-    # Store the full OpenUV config for use during entry setup:
-    hass.data[DOMAIN][DATA_OPENUV_CONFIG] = conf
+    hass.data[DOMAIN][CONF_SCAN_INTERVAL] = conf[CONF_SCAN_INTERVAL]
 
     return True
 
@@ -140,45 +140,22 @@ async def async_setup_entry(hass, config_entry):
     from pyopenuv import Client
     from pyopenuv.errors import OpenUvError
 
-    data = hass.data[DOMAIN]
-
-    # Regardless of configuration via config entry or configuration.yaml,
-    # assemble a dict of all config options (with sensible defaults):
-    conf = {
-        **config_entry.data,
-        **data.get(
-            DATA_OPENUV_CONFIG, {
-                CONF_BINARY_SENSORS: {
-                    CONF_MONITORED_CONDITIONS: list(BINARY_SENSORS)
-                },
-                CONF_SENSORS: {
-                    CONF_MONITORED_CONDITIONS: list(SENSORS)
-                }
-            })
-    }
-    conf.setdefault(CONF_ELEVATION, hass.config.elevation)
-    conf.setdefault(CONF_LATITUDE, hass.config.latitude)
-    conf.setdefault(CONF_LONGITUDE, hass.config.longitude)
-
-    # Save the fleshed out config data for use downstream (removing a
-    # user-specified scan interval, since it can't be JSON serialized):
-    config_entry.data = conf
-    if CONF_SCAN_INTERVAL in config_entry.data:
-        del config_entry.data[CONF_SCAN_INTERVAL]
-
     try:
         websession = aiohttp_client.async_get_clientsession(hass)
         openuv = OpenUV(
             Client(
-                conf[CONF_API_KEY],
-                conf[CONF_LATITUDE],
-                conf[CONF_LONGITUDE],
+                config_entry.data[CONF_API_KEY],
+                config_entry.data.get(CONF_LATITUDE, hass.config.latitude),
+                config_entry.data.get(CONF_LONGITUDE, hass.config.longitude),
                 websession,
-                altitude=conf[CONF_ELEVATION]),
-            conf[CONF_BINARY_SENSORS][CONF_MONITORED_CONDITIONS] +
-            conf[CONF_SENSORS][CONF_MONITORED_CONDITIONS])
+                altitude=config_entry.data.get(
+                    CONF_ELEVATION, hass.config.elevation)),
+            config_entry.data.get(CONF_BINARY_SENSORS, {}).get(
+                CONF_MONITORED_CONDITIONS, list(BINARY_SENSORS)),
+            config_entry.data.get(CONF_SENSORS, {}).get(
+                CONF_MONITORED_CONDITIONS, list(SENSORS)))
         await openuv.async_update()
-        data[DATA_OPENUV_CLIENT][config_entry.entry_id] = openuv
+        hass.data[DOMAIN][DATA_OPENUV_CLIENT][config_entry.entry_id] = openuv
     except OpenUvError as err:
         _LOGGER.error('An error occurred: %s', str(err))
         hass.components.persistent_notification.create(
@@ -199,25 +176,24 @@ async def async_setup_entry(hass, config_entry):
         await openuv.async_update()
         async_dispatcher_send(hass, TOPIC_UPDATE)
 
-    data[DATA_OPENUV_LISTENER][
+    hass.data[DOMAIN][DATA_OPENUV_LISTENER][
         config_entry.entry_id] = async_track_time_interval(
             hass, refresh_sensors,
-            conf.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+            hass.data[DOMAIN][CONF_SCAN_INTERVAL])
 
     return True
 
 
 async def async_unload_entry(hass, config_entry):
     """Unload an OpenUV config entry."""
-    data = hass.data[DOMAIN]
-
     for component in ('binary_sensor', 'sensor'):
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
 
-    data[DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
+    hass.data[DOMAIN][DATA_OPENUV_CLIENT].pop(config_entry.entry_id)
 
-    remove_listener = data[DATA_OPENUV_LISTENER].pop(config_entry.entry_id)
+    remove_listener = hass.data[DOMAIN][DATA_OPENUV_LISTENER].pop(
+        config_entry.entry_id)
     remove_listener()
 
     return True
@@ -226,19 +202,20 @@ async def async_unload_entry(hass, config_entry):
 class OpenUV:
     """Define a generic OpenUV object."""
 
-    def __init__(self, client, monitored_conditions):
+    def __init__(self, client, binary_sensor_conditions, sensor_conditions):
         """Initialize."""
-        self._monitored_conditions = monitored_conditions
+        self.binary_sensor_conditions = binary_sensor_conditions
         self.client = client
         self.data = {}
+        self.sensor_conditions = sensor_conditions
 
     async def async_update(self):
         """Update sensor/binary sensor data."""
-        if TYPE_PROTECTION_WINDOW in self._monitored_conditions:
+        if TYPE_PROTECTION_WINDOW in self.binary_sensor_conditions:
             data = await self.client.uv_protection_window()
             self.data[DATA_PROTECTION_WINDOW] = data
 
-        if any(c in self._monitored_conditions for c in SENSORS):
+        if any(c in self.sensor_conditions for c in SENSORS):
             data = await self.client.uv_index()
             self.data[DATA_UV] = data
 

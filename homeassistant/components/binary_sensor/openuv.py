@@ -35,8 +35,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.entry_id]
 
     binary_sensors = []
-    for sensor_type in entry.data[CONF_BINARY_SENSORS][
-            CONF_MONITORED_CONDITIONS]:
+    for sensor_type in openuv.binary_sensor_conditions:
         name, icon = BINARY_SENSORS[sensor_type]
         binary_sensors.append(
             OpenUvBinarySensor(
