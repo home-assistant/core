@@ -7,7 +7,7 @@ https://home-assistant.io/components/climate.zwave/
 # Because we do not compile openzwave on CI
 import logging
 from homeassistant.components.climate import (
-    DOMAIN, ClimateDevice, STATE_AUTO, STATE_COOL, STATE_HEAT,
+    DOMAIN, ClimateDevice, STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_HEAT_PUMP,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_FAN_MODE,
     SUPPORT_OPERATION_MODE, SUPPORT_SWING_MODE)
 from homeassistant.components.zwave import ZWaveDeviceEntity
@@ -39,6 +39,7 @@ STATE_MAPPINGS = {
     'Heat (Default)': STATE_HEAT,
     'Cool': STATE_COOL,
     'Auto': STATE_AUTO,
+    'Aux Heat': STATE_HEAT_PUMP,
 }
 
 
