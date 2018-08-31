@@ -247,6 +247,14 @@ class ConfigEntry:
                               component.DOMAIN)
                 result = False
 
+            device_registry = await \
+                hass.helpers.device_registry.async_get_registry()
+            device_registry.async_clear_config_entry(self.entry_id)
+
+            entity_registry = await \
+                hass.helpers.entity_registry.async_get_registry()
+            entity_registry.async_clear_config_entry(self.entry_id)
+
             return result
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception('Error unloading entry %s for %s',

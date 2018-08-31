@@ -21,7 +21,7 @@ CONNECTION_NETWORK_MAC = 'mac'
 CONNECTION_ZIGBEE = 'zigbee'
 
 
-@attr.s(slots=True)
+@attr.s(slots=True, frozen=True)
 class DeviceEntry:
     """Device Registry Entry."""
 
@@ -33,7 +33,6 @@ class DeviceEntry:
     name = attr.ib(type=str, default=None)
     sw_version = attr.ib(type=str, default=None)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
-    ref_counter = attr.ib(type=int, default=1)  # runtime reference
 
 
 class DeviceRegistry:
@@ -66,7 +65,6 @@ class DeviceRegistry:
         if device is not None:
             if config_entry not in device.config_entries:
                 device.config_entries.add(config_entry)
-                device.ref_counter += 1
                 self.async_schedule_save()
             return device
 
@@ -130,12 +128,11 @@ class DeviceRegistry:
         return data
 
     @callback
-    def async_remove_device(self, device_id):
-        """Remove device from registry."""
-        if device_id in self.devices:
-            self.devices[device_id].ref_counter -= 1
-            if self.devices[device_id].ref_counter == 0:
-                del self.devices[device_id]
+    def async_clear_config_entry(self, config_entry):
+        """Clear config entry from registry entries."""
+        for device in self.devices.values():
+            if config_entry in device.config_entries:
+                device.config_entries.remove(config_entry)
                 self.async_schedule_save()
 
 
