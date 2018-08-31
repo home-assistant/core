@@ -124,14 +124,14 @@ def setup(hass, config):
             _LOGGER.error(
                 'Unable to get description url for %s',
                 '{}:{}'.format(host, port) if port else host)
-            return False
+            continue
 
         try:
             device = pywemo.discovery.device_from_description(url, None)
         except (requests.exceptions.ConnectionError,
                 requests.exceptions.Timeout) as err:
             _LOGGER.error('Unable to access %s (%s)', url, err)
-            return False
+            continue
 
         devices.append((url, device))
 
