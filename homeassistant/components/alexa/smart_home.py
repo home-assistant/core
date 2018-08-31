@@ -38,14 +38,12 @@ API_TEMP_UNITS = {
 }
 
 API_THERMOSTAT_MODES = {
-    climate.STATE_HEAT: 'HEAT',
-    climate.STATE_COOL: 'COOL',
-    climate.STATE_AUTO: 'AUTO',
-    climate.STATE_ECO: 'ECO',
-    climate.STATE_OFF: 'OFF',
-    climate.STATE_IDLE: 'OFF',
-    climate.STATE_FAN_ONLY: 'OFF',
-    climate.STATE_DRY: 'OFF',
+    'HEAT': [climate.STATE_HEAT],
+    'COOL': [climate.STATE_COOL],
+    'AUTO': [climate.STATE_AUTO],
+    'ECO': [climate.STATE_ECO],
+    'OFF': [climate.STATE_DRY, climate.STATE_FAN_ONLY, climate.STATE_IDLE,
+            climate.STATE_OFF],
 }
 
 SMART_HOME_HTTP_ENDPOINT = '/api/alexa/smart_home'
@@ -495,7 +493,7 @@ class _AlexaThermostatController(_AlexaInterface):
     def get_property(self, name):
         if name == 'thermostatMode':
             ha_mode = self.entity.attributes.get(climate.ATTR_OPERATION_MODE)
-            mode = API_THERMOSTAT_MODES.get(ha_mode)
+            mode = _convert_ha_mode(ha_mode)
             if mode is None:
                 _LOGGER.error("%s (%s) has unsupported %s value '%s'",
                               self.entity.entity_id, type(self.entity),
@@ -1501,6 +1499,39 @@ def temperature_from_object(hass, temp_obj, interval=False):
     return convert_temperature(temp, from_unit, to_unit, interval)
 
 
+def _convert_ha_mode(ha_mode):
+    mode = next(
+        (k for k, v in API_THERMOSTAT_MODES.items() if ha_mode in v),
+        None
+    )
+
+    return mode
+
+
+def _thermostat_context_from_entity(hass, entity, mode=None, temp=None):
+    unit = hass.config.units.temperature_unit
+    ha_mode = mode if mode\
+        else entity.attributes.get(climate.ATTR_OPERATION_MODE)
+    target_temp = temp if temp\
+        else entity.attributes.get(climate.ATTR_TEMPERATURE)
+    ctxt = {
+        "properties": [{
+            "namespace": 'Alexa.ThermostatController',
+            "name": "targetSetPoint",
+            "value": {
+                "value": target_temp,
+                'scale': API_TEMP_UNITS[unit],
+            }
+        }, {
+            "namespace": 'Alexa.ThermostatController',
+            "name": "thermostatMode",
+            "value": _convert_ha_mode(ha_mode)
+        }]
+    }
+
+    return ctxt
+
+
 @HANDLERS.register(('Alexa.ThermostatController', 'SetTargetTemperature'))
 @extract_entity
 async def async_api_set_target_temp(hass, config, request, context, entity):
@@ -1536,7 +1567,8 @@ async def async_api_set_target_temp(hass, config, request, context, entity):
         entity.domain, climate.SERVICE_SET_TEMPERATURE, data, blocking=False,
         context=context)
 
-    return api_message(request)
+    ctxt = _thermostat_context_from_entity(hass, entity, temp=temp)
+    return api_message(request, context=ctxt)
 
 
 @HANDLERS.register(('Alexa.ThermostatController', 'AdjustTargetTemperature'))
@@ -1563,7 +1595,8 @@ async def async_api_adjust_target_temp(hass, config, request, context, entity):
         entity.domain, climate.SERVICE_SET_TEMPERATURE, data, blocking=False,
         context=context)
 
-    return api_message(request)
+    ctxt = _thermostat_context_from_entity(hass, entity)
+    return api_message(request, context=ctxt)
 
 
 @HANDLERS.register(('Alexa.ThermostatController', 'SetThermostatMode'))
@@ -1575,10 +1608,12 @@ async def async_api_set_thermostat_mode(hass, config, request, context,
     mode = mode if isinstance(mode, str) else mode['value']
 
     operation_list = entity.attributes.get(climate.ATTR_OPERATION_LIST)
-    ha_mode = next(
-        (k for k, v in API_THERMOSTAT_MODES.items() if v == mode),
-        None
-    )
+    op_candidates = API_THERMOSTAT_MODES[mode]
+    ha_mode = mode.lower() if mode.lower() in op_candidates else next(
+            (v for v in operation_list if v in op_candidates),
+            None
+        )
+
     if ha_mode not in operation_list:
         msg = 'The requested thermostat mode {} is not supported'.format(mode)
         return api_error(
@@ -1597,7 +1632,8 @@ async def async_api_set_thermostat_mode(hass, config, request, context,
         entity.domain, climate.SERVICE_SET_OPERATION_MODE, data,
         blocking=False, context=context)
 
-    return api_message(request)
+    ctxt = _thermostat_context_from_entity(hass, entity, mode=ha_mode)
+    return api_message(request, context=ctxt)
 
 
 @HANDLERS.register(('Alexa', 'ReportState'))
