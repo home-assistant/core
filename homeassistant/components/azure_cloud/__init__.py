@@ -9,7 +9,6 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from azure.common.credentials import ServicePrincipalCredentials
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +44,7 @@ class AzureSubscription:
 
     def __init__(self, hass, config):
         """Initialize the azure subscription Entity."""
+        from azure.common.credentials import ServicePrincipalCredentials
         self._tenant_id = config.get(CONF_TENANT_ID)
         self._subscription_id = config.get(CONF_SUBSCRIPTION_ID)
         self._client_id = config.get(CONF_CLIENT_ID)

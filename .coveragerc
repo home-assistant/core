@@ -10,6 +10,9 @@ omit =
     homeassistant/helpers/signal.py
 
     # omit pieces of code that rely on external devices being present
+    homeassistant/components/azure_cloud/__init__.py
+    homeassistant/components/*/azure_vm.py
+
     homeassistant/components/abode.py
     homeassistant/components/*/abode.py
 
