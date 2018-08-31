@@ -138,3 +138,30 @@ async def test_loading_from_storage(hass, hass_storage):
         manufacturer='manufacturer', model='model')
     assert entry.id == 'abcdefghijklm'
     assert isinstance(entry.config_entries, set)
+
+
+async def test_removing_config_entries(registry):
+    """Make sure we do not get duplicate entries."""
+    entry = registry.async_get_or_create(
+        config_entry='123',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        identifiers={('bridgeid', '0123')},
+        manufacturer='manufacturer', model='model')
+    entry2 = registry.async_get_or_create(
+        config_entry='456',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        identifiers={('bridgeid', '0123')},
+        manufacturer='manufacturer', model='model')
+    entry3 = registry.async_get_or_create(
+        config_entry='123',
+        connections={('ethernet', '34:56:78:90:AB:CD:EF:12')},
+        identifiers={('bridgeid', '4567')},
+        manufacturer='manufacturer', model='model')
+
+    assert len(registry.devices) == 2
+    assert entry is entry2
+    assert entry is not entry3
+    assert entry.config_entries == {'123', '456'}
+    registry.async_clear_config_entry('123')
+    assert entry.config_entries == {'456'}
+    assert entry3.config_entries == set()
