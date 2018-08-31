@@ -177,7 +177,7 @@ async def async_setup_entry(hass, config_entry):
 
         for device_type, device_index in added_devices.items():
 
-            if len(device_index) == 0:
+            if not device_index:
                 continue
 
             elif device_type == 'group':
