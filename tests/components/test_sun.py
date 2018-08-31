@@ -151,3 +151,78 @@ class TestSun(unittest.TestCase):
         assert dt_util.parse_datetime(
             state.attributes[sun.STATE_ATTR_NEXT_SETTING]) == \
             datetime(2016, 7, 26, 22, 19, 1, tzinfo=dt_util.UTC)
+
+    def test_sunrise_sunset_daylight(self):
+        """Test retrieving sunrise, sunset & daylight attributes."""
+        utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+        with patch('homeassistant.helpers.condition.dt_util.utcnow',
+                   return_value=utc_now):
+            setup_component(self.hass, sun.DOMAIN, {
+                sun.DOMAIN: {sun.CONF_MONITORED_CONDITIONS: [
+                    sun.STATE_ATTR_SUNRISE,
+                    sun.STATE_ATTR_SUNSET,
+                    sun.STATE_ATTR_DAYLIGHT,
+                    sun.STATE_ATTR_PREV_DAYLIGHT,
+                    sun.STATE_ATTR_NEXT_DAYLIGHT]}})
+
+        self.hass.block_till_done()
+        state = self.hass.states.get(sun.ENTITY_ID)
+
+        from astral import Astral
+
+        astral = Astral()
+        utc_today = utc_now.date()
+
+        latitude = self.hass.config.latitude
+        longitude = self.hass.config.longitude
+
+        sunrise = astral.sunrise_utc(utc_today, latitude, longitude)
+        sunset = astral.sunset_utc(utc_today, latitude, longitude)
+        daylight = astral.daylight_utc(utc_today, latitude, longitude)
+        daylight = (daylight[1] - daylight[0]).total_seconds()
+        prev_daylight = astral.daylight_utc(
+            utc_today + timedelta(days=-1), latitude, longitude)
+        prev_daylight = (prev_daylight[1] - prev_daylight[0]).total_seconds()
+        next_daylight = astral.daylight_utc(
+            utc_today + timedelta(days=1), latitude, longitude)
+        next_daylight = (next_daylight[1] - next_daylight[0]).total_seconds()
+
+        self.assertEqual(sunrise, dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_SUNRISE]))
+        self.assertEqual(sunset, dt_util.parse_datetime(
+            state.attributes[sun.STATE_ATTR_SUNSET]))
+        self.assertEqual(daylight, state.attributes[sun.STATE_ATTR_DAYLIGHT])
+        self.assertEqual(
+            prev_daylight, state.attributes[sun.STATE_ATTR_PREV_DAYLIGHT])
+        self.assertEqual(
+            next_daylight, state.attributes[sun.STATE_ATTR_NEXT_DAYLIGHT])
+
+    def test_scan_interval(self):
+        """Test optional scan_interval."""
+        utc_now = datetime(2016, 11, 1, 8, 0, 0, tzinfo=dt_util.UTC)
+        with patch('homeassistant.helpers.condition.dt_util.utcnow',
+                   return_value=utc_now):
+            setup_component(self.hass, sun.DOMAIN, {
+                sun.DOMAIN: {sun.CONF_SCAN_INTERVAL: '00:10:00'}})
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(sun.ENTITY_ID)
+        azimuth = state.attributes[sun.STATE_ATTR_AZIMUTH]
+        elevation = state.attributes[sun.STATE_ATTR_ELEVATION]
+
+        utc_now += timedelta(minutes=9)
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: utc_now})
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(sun.ENTITY_ID)
+        self.assertEqual(azimuth, state.attributes[sun.STATE_ATTR_AZIMUTH])
+        self.assertEqual(elevation, state.attributes[sun.STATE_ATTR_ELEVATION])
+
+        utc_now += timedelta(minutes=1, seconds=5)
+        self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: utc_now})
+        self.hass.block_till_done()
+
+        state = self.hass.states.get(sun.ENTITY_ID)
+        self.assertNotEqual(azimuth, state.attributes[sun.STATE_ATTR_AZIMUTH])
+        self.assertNotEqual(
+            elevation, state.attributes[sun.STATE_ATTR_ELEVATION])
