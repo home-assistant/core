@@ -120,6 +120,11 @@ class MyQDevice(CoverDevice):
         """Flag supported features."""
         return SUPPORT_OPEN | SUPPORT_CLOSE
 
+    @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return self.device_id
+
     def update(self):
         """Update status of cover."""
         self._status = self.myq.get_status(self.device_id)
