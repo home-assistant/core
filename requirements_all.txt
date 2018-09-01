@@ -1206,7 +1206,7 @@ pyvera==0.2.44
 pyvesync==0.1.1
 
 # homeassistant.components.logi
-logi_circle==0.1.1
+logi_circle==0.1.3
 
 # homeassistant.components.media_player.vizio
 pyvizio==0.0.3
