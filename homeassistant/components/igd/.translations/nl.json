@@ -8,11 +8,9 @@
             "user": {
                 "title": "Extra configuratie options voor IGD",
                 "data":{
-                    "sensors": "Verkeer in/out sensors",
-                    "port_forward": "Maak port-forward voor Home Assistant\nZet dit alleen aan wanneer uw Home Assistant een wachtwoord heeft!",
-                    "ssdp_url": "SSDP URL",
-                    "udn": "UDN",
-                    "name": "Naam"
+                    "igd": "IGD",
+                    "sensors": "Verkeer sensors toevoegen",
+                    "port_forward": "Maak port-forward voor Home Assistant<br>Zet dit alleen aan wanneer uw Home Assistant een wachtwoord heeft!"
                 }
             }
         },

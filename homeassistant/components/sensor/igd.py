@@ -5,10 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.igd/
 """
 # pylint: disable=invalid-name
+from datetime import datetime
 import logging
 
-from homeassistant.components import history
-from homeassistant.components.igd import DOMAIN, UNITS
+from homeassistant.components.igd import DOMAIN
 from homeassistant.helpers.entity import Entity
 
 
@@ -21,15 +21,28 @@ BYTES_SENT = 'bytes_sent'
 PACKETS_RECEIVED = 'packets_received'
 PACKETS_SENT = 'packets_sent'
 
-# sensor_type: [friendly_name, convert_unit, icon]
 SENSOR_TYPES = {
-    BYTES_RECEIVED: ['bytes received', True, 'mdi:server-network', float],
-    BYTES_SENT: ['bytes sent', True, 'mdi:server-network', float],
-    PACKETS_RECEIVED: ['packets received', False, 'mdi:server-network', int],
-    PACKETS_SENT: ['packets sent', False, 'mdi:server-network', int],
+    BYTES_RECEIVED: {
+        'name': 'bytes received',
+        'unit': 'bytes',
+    },
+    BYTES_SENT: {
+        'name': 'bytes sent',
+        'unit': 'bytes',
+    },
+    PACKETS_RECEIVED: {
+        'name': 'packets received',
+        'unit': '#',
+    },
+    PACKETS_SENT: {
+        'name': 'packets sent',
+        'unit': '#',
+    },
 }
 
-OVERFLOW_AT = 2**32
+IN = 'received'
+OUT = 'sent'
+KBYTE = 1024
 
 
 async def async_setup_platform(hass, config, async_add_devices,
@@ -39,126 +52,207 @@ async def async_setup_platform(hass, config, async_add_devices,
         return
 
     udn = discovery_info['udn']
-    device = hass.data[DOMAIN]['devices'][udn]
-    unit = discovery_info['unit']
+    igd_device = hass.data[DOMAIN]['devices'][udn]
+
+    # raw sensors
     async_add_devices([
-        IGDSensor(device, t, unit if SENSOR_TYPES[t][1] else '#')
-        for t in SENSOR_TYPES])
+        RawIGDSensor(igd_device, name, sensor_type)
+        for name, sensor_type in SENSOR_TYPES.items()],
+        True
+    )
+
+    # current traffic reporting
+    async_add_devices(
+        [
+            KBytePerSecondIGDSensor(igd_device, IN),
+            KBytePerSecondIGDSensor(igd_device, OUT),
+            PacketsPerSecondIGDSensor(igd_device, IN),
+            PacketsPerSecondIGDSensor(igd_device, OUT),
+        ], True
+    )
 
 
-class IGDSensor(Entity):
+class RawIGDSensor(Entity):
     """Representation of a UPnP IGD sensor."""
 
-    def __init__(self, device, sensor_type, unit=None):
+    def __init__(self, device, sensor_type_name, sensor_type):
         """Initialize the IGD sensor."""
         self._device = device
-        self.type = sensor_type
-        self.unit = unit
-        self.unit_factor = UNITS[unit] if unit in UNITS else 1
-        self._name = 'IGD {}'.format(SENSOR_TYPES[sensor_type][0])
+        self._type_name = sensor_type_name
+        self._type = sensor_type
+        self._name = 'IGD {}'.format(sensor_type['name'])
         self._state = None
-        self._last_value = None
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the sensor."""
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
-        if self._state is None:
-            return None
-
-        coercer = SENSOR_TYPES[self.type][3]
-        if coercer == int:
-            return format(self._state)
-
-        return format(self._state / self.unit_factor, '.1f')
+        return self._state
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend, if any."""
-        return SENSOR_TYPES[self.type][2]
+        return 'mdi:server-network'
 
     @property
-    def unit_of_measurement(self):
+    def unit_of_measurement(self) -> str:
         """Return the unit of measurement of this entity, if any."""
-        return self.unit
+        return self._type['unit']
 
     async def async_update(self):
         """Get the latest information from the IGD."""
-        new_value = 0
-        if self.type == BYTES_RECEIVED:
+        _LOGGER.debug('%s: async_update', self)
+        if self._type_name == BYTES_RECEIVED:
+            self._state = await self._device.async_get_total_bytes_received()
+        elif self._type_name == BYTES_SENT:
+            self._state = await self._device.async_get_total_bytes_sent()
+        elif self._type_name == PACKETS_RECEIVED:
+            self._state = await self._device.async_get_total_packets_received()
+        elif self._type_name == PACKETS_SENT:
+            self._state = await self._device.async_get_total_packets_sent()
+
+
+class KBytePerSecondIGDSensor(Entity):
+    """Representation of a KBytes Sent/Received per second sensor."""
+
+    def __init__(self, device, direction):
+        """Initializer."""
+        self._device = device
+        self._direction = direction
+
+        self._last_value = None
+        self._last_update_time = None
+        self._state = None
+
+    @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        return '{}:kbytes_{}'.format(self._device.udn, self._direction)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return '{} kbytes/sec {}'.format(self._device.name,
+                                             self._direction)
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        return self._state
+
+    @property
+    def icon(self) -> str:
+        """Icon to use in the frontend, if any."""
+        return 'mdi:server-network'
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity, if any."""
+        return 'kbytes/sec'
+
+    def _is_overflowed(self, new_value) -> bool:
+        """Check if value has overflowed."""
+        return new_value < self._last_value
+
+    async def async_update(self):
+        """Get the latest information from the IGD."""
+        _LOGGER.debug('%s: async_update', self)
+
+        if self._direction == IN:
             new_value = await self._device.async_get_total_bytes_received()
-        elif self.type == BYTES_SENT:
+        else:
             new_value = await self._device.async_get_total_bytes_sent()
-        elif self.type == PACKETS_RECEIVED:
-            new_value = await self._device.async_get_total_packets_received()
-        elif self.type == PACKETS_SENT:
-            new_value = await self._device.async_get_total_packets_sent()
-
-        self._handle_new_value(new_value)
-
-    @property
-    def _last_state(self):
-        """Get the last state reported to hass."""
-        states = history.get_last_state_changes(self.hass, 2, self.entity_id)
-        entity_states = [
-            state for state in states[self.entity_id]
-            if state.state != 'unknown']
-        _LOGGER.debug('%s: entity_states: %s', self.entity_id, entity_states)
-        if not entity_states:
-            return None
-
-        return entity_states[0]
-
-    @property
-    def _last_value_from_state(self):
-        """Get the last value reported to hass."""
-        last_state = self._last_state
-        if not last_state:
-            _LOGGER.debug('%s: No last state', self.entity_id)
-            return None
-
-        coercer = SENSOR_TYPES[self.type][3]
-        try:
-            state = coercer(float(last_state.state)) * self.unit_factor
-        except ValueError:
-            state = coercer(0.0)
-
-        return state
-
-    def _handle_new_value(self, new_value):
-        if self.entity_id is None:
-            # don't know our entity ID yet, do nothing but store value
-            self._last_value = new_value
-            return
 
         if self._last_value is None:
             self._last_value = new_value
+            self._last_update_time = datetime.now()
+            return
 
-        if self._state is None:
-            # try to get the state from history
-            self._state = self._last_value_from_state or 0
-
-        _LOGGER.debug('%s: state: %s, last_value: %s',
-                      self.entity_id, self._state, self._last_value)
-
-        # calculate new state
-        if self._last_value <= new_value:
-            diff = new_value - self._last_value
+        now = datetime.now()
+        if self._is_overflowed(new_value):
+            _LOGGER.debug('%s: Overflow: old value: %s, new value: %s',
+                          self, self._last_value, new_value)
+            self._state = None  # temporarily report nothing
         else:
-            # handle overflow
-            diff = OVERFLOW_AT - self._last_value
-            if new_value >= 0:
-                diff += new_value
-            else:
-                # some devices don't overflow and start at 0,
-                # but somewhere to -2**32
-                diff += new_value - -OVERFLOW_AT
+            delta_time = (now - self._last_update_time).seconds
+            delta_value = new_value - self._last_value
+            value = (delta_value / delta_time) / KBYTE
+            self._state = format(float(value), '.1f')
 
-        self._state += diff
         self._last_value = new_value
-        _LOGGER.debug('%s: diff: %s, state: %s, last_value: %s',
-                      self.entity_id, diff, self._state, self._last_value)
+        self._last_update_time = now
+
+
+class PacketsPerSecondIGDSensor(Entity):
+    """Representation of a Packets Sent/Received per second sensor."""
+
+    def __init__(self, device, direction):
+        """Initializer."""
+        self._device = device
+        self._direction = direction
+
+        self._last_value = None
+        self._last_update_time = None
+        self._state = None
+
+    @property
+    def unique_id(self) -> str:
+        """Return an unique ID."""
+        return '{}:packets_{}'.format(self._device.udn, self._direction)
+
+    @property
+    def name(self) -> str:
+        """Return the name of the sensor."""
+        return '{} packets/sec {}'.format(self._device.name,
+                                              self._direction)
+
+    @property
+    def state(self):
+        """Return the state of the device."""
+        return self._state
+
+    @property
+    def icon(self) -> str:
+        """Icon to use in the frontend, if any."""
+        return 'mdi:server-network'
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement of this entity, if any."""
+        return '#/sec'
+
+    def _is_overflowed(self, new_value) -> bool:
+        """Check if value has overflowed."""
+        return new_value < self._last_value
+
+    async def async_update(self):
+        """Get the latest information from the IGD."""
+        _LOGGER.debug('%s: async_update', self)
+
+        if self._direction == IN:
+            new_value = await self._device.async_get_total_bytes_received()
+        else:
+            new_value = await self._device.async_get_total_bytes_sent()
+
+        if self._last_value is None:
+            self._last_value = new_value
+            self._last_update_time = datetime.now()
+            return
+
+        now = datetime.now()
+        if self._is_overflowed(new_value):
+            _LOGGER.debug('%s: Overflow: old value: %s, new value: %s',
+                          self, self._last_value, new_value)
+            self._state = None  # temporarily report nothing
+        else:
+            delta_time = (now - self._last_update_time).seconds
+            delta_value = new_value - self._last_value
+            value = delta_value / delta_time
+            self._state = format(float(value), '.1f')
+
+        self._last_value = new_value
+        self._last_update_time = now
