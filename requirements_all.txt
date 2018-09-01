@@ -321,7 +321,7 @@ enocean==0.40
 # envirophat==0.0.6
 
 # homeassistant.components.sensor.enphase_envoy
-envoy_reader==0.1
+envoy_reader==0.2
 
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
