@@ -2,7 +2,7 @@
 Azure component that handles interaction with Microsoft Azure Cloud.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/azure_cloud/
+https://home-assistant.io/components/azure/
 """
 import asyncio
 import logging
