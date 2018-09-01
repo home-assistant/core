@@ -166,8 +166,7 @@ async-upnp-client==0.13.2
 # homeassistant.components.axis
 axis==16
 
-# homeassistant.components.azure_cloud
-# homeassistant.components.sensor.azure_vm
+# homeassistant.components.azure
 azure-mgmt-compute==2.0.0
 
 # homeassistant.components.tts.baidu
