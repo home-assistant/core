@@ -14,22 +14,20 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.azure_cloud import DOMAIN
+from homeassistant.components.azure import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-DEPENDENCIES = ['azure_cloud']
-REQUIREMENTS = ['azure-mgmt-compute==2.0.0']
+DEPENDENCIES = ['azure']
 
 CONF_NAME = 'name'
 CONG_RESOURCE_GROUP = 'resource_group'
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONG_RESOURCE_GROUP): cv.string,
 })
+
+MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 @asyncio.coroutine

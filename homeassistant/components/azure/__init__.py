@@ -7,14 +7,11 @@ https://home-assistant.io/components/azure_cloud/
 import asyncio
 import logging
 import voluptuous as vol
-
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-
 REQUIREMENTS = ['azure-mgmt-compute==2.0.0']
-DEPENDENCIES = []
-DOMAIN = 'azure_cloud'
+DOMAIN = 'azure'
 
 CONF_TENANT_ID = 'tenant_id'
 CONF_SUBSCRIPTION_ID = 'subscription_id'
