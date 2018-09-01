@@ -10,7 +10,7 @@
                 "data":{
                     "igd": "IGD",
                     "sensors": "Add traffic sensors",
-                    "port_forward": "Enable port forward for Home Assistant<br>Only enable this when your Home Assistant is password protected!"
+                    "port_forward": "Enable port forward for Home Assistant"
                 }
             }
         },
@@ -20,8 +20,7 @@
             "no_devices_discovered": "No IGDs discovered",
             "already_configured": "IGD is already configured",
             "no_sensors_or_port_forward": "Enable at least sensors or Port forward",
-            "no_igds": "No IGDs discovered",
-            "todo": "TODO"
+            "no_igds": "No IGDs discovered"
         }
     }
 }

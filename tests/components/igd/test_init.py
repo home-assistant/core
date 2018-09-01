@@ -93,7 +93,7 @@ async def test_async_setup_entry_default(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
 
-    assert hass.data[igd.DOMAIN]['devices'][udn] is None
+    assert udn not in hass.data[igd.DOMAIN]['devices']
     assert len(mock_igd_device.async_add_port_mapping.mock_calls) == 0
     assert len(mock_igd_device.async_delete_port_mapping.mock_calls) == 0
 
@@ -128,6 +128,6 @@ async def test_async_setup_entry_port_forward(hass):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
         await hass.async_block_till_done()
 
-    assert hass.data[igd.DOMAIN]['devices'][udn] is None
+    assert udn not in hass.data[igd.DOMAIN]['devices']
     assert len(mock_igd_device.async_add_port_mapping.mock_calls) > 0
     assert len(mock_igd_device.async_delete_port_mapping.mock_calls) > 0
