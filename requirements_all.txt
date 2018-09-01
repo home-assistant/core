@@ -18,7 +18,7 @@ voluptuous==0.11.5
 --only-binary=all nuimo==0.1.0
 
 # homeassistant.components.sensor.dht
-# Adafruit-DHT==1.3.3
+# Adafruit-DHT==1.3.4
 
 # homeassistant.components.sensor.sht31
 Adafruit-GPIO==1.0.3
@@ -139,7 +139,7 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.asterisk_mbox
-asterisk_mbox==0.4.0
+asterisk_mbox==0.5.0
 
 # homeassistant.components.igd
 # homeassistant.components.media_player.dlna_dmr
@@ -449,7 +449,7 @@ hole==0.3.0
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180829.0
+home-assistant-frontend==20180831.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -483,7 +483,7 @@ ihcsdk==2.2.0
 influxdb==5.0.0
 
 # homeassistant.components.insteon
-insteonplm==0.12.3
+insteonplm==0.13.1
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
@@ -821,7 +821,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==44
+pydeconz==45
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -1131,7 +1131,7 @@ python-roku==3.1.5
 python-sochain-api==0.0.2
 
 # homeassistant.components.media_player.songpal
-python-songpal==0.0.7
+python-songpal==0.0.8
 
 # homeassistant.components.sensor.synologydsm
 python-synology==0.2.0
