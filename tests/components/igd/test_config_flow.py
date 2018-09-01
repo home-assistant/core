@@ -26,6 +26,7 @@ async def test_flow_already_configured(hass):
     hass.data[igd.DOMAIN] = {
         'discovered': {
             udn: {
+                'friendly_name': '192.168.1.1 (Test device)',
                 'host': '192.168.1.1',
                 'udn': udn,
             },
@@ -39,7 +40,7 @@ async def test_flow_already_configured(hass):
     }).add_to_hass(hass)
 
     result = await flow.async_step_user({
-        'igd_host': '192.168.1.1',
+        'name': '192.168.1.1 (Test device)',
         'sensors': True,
         'port_forward': False,
     })
@@ -57,6 +58,7 @@ async def test_flow_no_sensors_no_port_forward(hass):
     hass.data[igd.DOMAIN] = {
         'discovered': {
             udn: {
+                'friendly_name': '192.168.1.1 (Test device)',
                 'host': '192.168.1.1',
                 'udn': udn,
             },
@@ -70,7 +72,7 @@ async def test_flow_no_sensors_no_port_forward(hass):
     }).add_to_hass(hass)
 
     result = await flow.async_step_user({
-        'igd_host': '192.168.1.1',
+        'name': '192.168.1.1 (Test device)',
         'sensors': False,
         'port_forward': False,
     })
@@ -88,6 +90,7 @@ async def test_flow_discovered_form(hass):
     hass.data[igd.DOMAIN] = {
         'discovered': {
             udn: {
+                'friendly_name': '192.168.1.1 (Test device)',
                 'host': '192.168.1.1',
                 'udn': udn,
             },
@@ -110,10 +113,12 @@ async def test_flow_two_discovered_form(hass):
     hass.data[igd.DOMAIN] = {
         'discovered': {
             udn_1: {
+                'friendly_name': '192.168.1.1 (Test device)',
                 'host': '192.168.1.1',
                 'udn': udn_1,
             },
             udn_2: {
+                'friendly_name': '192.168.2.1 (Test device)',
                 'host': '192.168.2.1',
                 'udn': udn_2,
             },
@@ -124,12 +129,12 @@ async def test_flow_two_discovered_form(hass):
     assert result['type'] == 'form'
     assert result['step_id'] == 'user'
     assert result['data_schema']({
-        'igd_host': '192.168.1.1',
+        'name': '192.168.1.1 (Test device)',
         'sensors': True,
         'port_forward': False,
     })
     assert result['data_schema']({
-        'igd_host': '192.168.2.1',
+        'name': '192.168.1.1 (Test device)',
         'sensors': True,
         'port_forward': False,
     })
@@ -144,6 +149,7 @@ async def test_config_entry_created(hass):
     hass.data[igd.DOMAIN] = {
         'discovered': {
             'uuid:device_1': {
+                'friendly_name': '192.168.1.1 (Test device)',
                 'name': 'Test device 1',
                 'host': '192.168.1.1',
                 'ssdp_description': 'http://192.168.1.1/desc.xml',
@@ -153,7 +159,7 @@ async def test_config_entry_created(hass):
     }
 
     result = await flow.async_step_user({
-        'igd_host': '192.168.1.1',
+        'name': '192.168.1.1 (Test device)',
         'sensors': True,
         'port_forward': False,
     })
