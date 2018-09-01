@@ -317,7 +317,11 @@ class NetAtmoData:
 
         try:
             import pyatmo
-            self.station_data = pyatmo.WeatherStationData(self.auth)
+            try:
+                self.station_data = pyatmo.WeatherStationData(self.auth)
+            except TypeError:
+                _LOGGER.error("Failed to connect to NetAtmo")
+                return  # finally statement will be executed
 
             if self.station is not None:
                 self.data = self.station_data.lastData(
