@@ -103,7 +103,7 @@ class WirelessTagPlatform:
         return configs
 
     def install_push_notifications(self, binary_sensors):
-        """Setup local push notification from tag manager."""
+        """Register local push notification from tag manager."""
         _LOGGER.info("Registering local push notifications.")
         for mac in self.tag_manager_macs:
             configs = self.make_notifications(binary_sensors, mac)
