@@ -414,7 +414,6 @@ class ConfigEntries:
         Handler key is the domain of the component that we want to set up.
         """
         component = getattr(self.hass.components, handler_key)
-        _LOGGER.debug('Handler key: %s', handler_key)
         handler = HANDLERS.get(handler_key)
 
         if handler is None:
