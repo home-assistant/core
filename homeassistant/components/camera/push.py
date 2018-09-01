@@ -43,7 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=timedelta(seconds=5)): vol.All(
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_IMAGE_FIELD, default='image'): cv.string,
-    vol.Required(CONF_TOKEN): vol.All(cv.string, vol.Length(min=8)),
+    vol.Optional(CONF_TOKEN): vol.All(cv.string, vol.Length(min=8)),
 })
 
 
@@ -91,8 +91,9 @@ class CameraPushReceiver(HomeAssistantView):
                          request.query.get('token') == _camera.token)
 
         if not authenticated:
-            return self.json_message('Invalid token for {}'.format(entity_id),
-                                     HTTP_UNAUTHORIZED)
+            return self.json_message(
+                'Invalid authorization credentials for {}'.format(entity_id),
+                HTTP_UNAUTHORIZED)
 
         try:
             data = await request.post()
