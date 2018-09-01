@@ -80,7 +80,6 @@ homeassistant/components/sensor/sma.py @kellerza
 homeassistant/components/sensor/sql.py @dgomes
 homeassistant/components/sensor/sytadin.py @gautric
 homeassistant/components/sensor/tibber.py @danielhiversen
-homeassistant/components/sensor/upnp.py @dgomes
 homeassistant/components/sensor/waqi.py @andrey-git
 homeassistant/components/switch/tplink.py @rytilahti
 homeassistant/components/vacuum/roomba.py @pschmitt
