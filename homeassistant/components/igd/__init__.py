@@ -26,6 +26,7 @@ from homeassistant.components.discovery import DOMAIN as DISCOVERY_DOMAIN
 from .const import CONF_ENABLE_PORT_MAPPING, CONF_ENABLE_SENSORS
 from .const import DOMAIN
 from .const import LOGGER as _LOGGER
+import homeassistant.components.igd.config_flow  # register the handler
 
 
 REQUIREMENTS = ['async-upnp-client==0.12.4']
