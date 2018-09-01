@@ -2,9 +2,8 @@
 Will open a port in your router for Home Assistant and provide statistics.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/upnp/
+https://home-assistant.io/components/igd/
 """
-
 
 import asyncio
 from ipaddress import IPv4Address
@@ -22,19 +21,22 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import get_local_ip
 from homeassistant.components.discovery import DOMAIN as DISCOVERY_DOMAIN
+import homeassistant.components.igd.config_flow  # noqa: 401
 
-from .const import CONF_ENABLE_PORT_MAPPING, CONF_ENABLE_SENSORS
+from .const import (
+    CONF_ENABLE_PORT_MAPPING, CONF_ENABLE_SENSORS,
+    CONF_UDN, CONF_SSDP_DESCRIPTION
+)
 from .const import DOMAIN
 from .const import LOGGER as _LOGGER
-import homeassistant.components.igd.config_flow  # register the handler
+from .const import ensure_domain_data
 
 
 REQUIREMENTS = ['async-upnp-client==0.12.4']
-DEPENDENCIES = ['http']  # ,'discovery']
+DEPENDENCIES = ['http']
 
 CONF_LOCAL_IP = 'local_ip'
 CONF_PORTS = 'ports'
-CONF_HASS = 'hass'
 
 NOTIFICATION_ID = 'igd_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'
@@ -72,16 +74,15 @@ async def _async_create_igd_device(hass: HomeAssistantType,
 
 def _store_device(hass: HomeAssistantType, udn, igd_device):
     """Store an igd_device by udn."""
-    hass.data[DOMAIN] = hass.data.get(DOMAIN, {})
-    hass.data[DOMAIN]['devices'] = hass.data[DOMAIN].get('devices', {})
-    hass.data[DOMAIN]['devices'][udn] = igd_device
+    if igd_device is not None:
+        hass.data[DOMAIN]['devices'][udn] = igd_device
+    elif udn in hass.data[DOMAIN]['devices']:
+        del hass.data[DOMAIN]['devices'][udn]
 
 
 def _get_device(hass: HomeAssistantType, udn):
     """Get an igd_device by udn."""
-    hass.data[DOMAIN] = hass.data.get(DOMAIN, {})
-    hass.data[DOMAIN]['devices'] = hass.data[DOMAIN].get('devices', {})
-    return hass.data[DOMAIN]['devices'][udn]
+    return hass.data[DOMAIN]['devices'].get(udn)
 
 
 async def _async_add_port_mapping(hass: HomeAssistantType,
@@ -123,14 +124,7 @@ async def _async_delete_port_mapping(hass: HomeAssistantType, igd_device):
 # config
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Register a port mapping for Home Assistant via UPnP."""
-    # defaults
-    hass.data[DOMAIN] = hass.data.get(DOMAIN, {})
-    if 'auto_config' not in hass.data[DOMAIN]:
-        hass.data[DOMAIN]['auto_config'] = {
-            'active': False,
-            'port_forward': False,
-            'sensors': False,
-        }
+    ensure_domain_data(hass)
 
     # ensure sane config
     if DOMAIN not in config:
@@ -158,12 +152,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistantType,
                             config_entry: ConfigEntry):
     """Set up a bridge from a config entry."""
-    _LOGGER.debug('async_setup_entry: %s, %s', config_entry, config_entry.entry_id)
-
+    ensure_domain_data(hass)
     data = config_entry.data
-    ssdp_description = data['ssdp_description']
 
     # build IGD device
+    ssdp_description = data[CONF_SSDP_DESCRIPTION]
     try:
         igd_device = await _async_create_igd_device(hass, ssdp_description)
     except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -179,12 +172,11 @@ async def async_setup_entry(hass: HomeAssistantType,
     # sensors
     if data.get(CONF_ENABLE_SENSORS):
         discovery_info = {
-            'udn': data['udn'],
+            'udn': data[CONF_UDN],
         }
         hass_config = config_entry.data
-        hass.async_create_task(
-            discovery.async_load_platform(
-                hass, 'sensor', DOMAIN, discovery_info, hass_config))
+        hass.async_create_task(discovery.async_load_platform(
+            hass, 'sensor', DOMAIN, discovery_info, hass_config))
 
     async def unload_entry(event):
         """Unload entry on quit."""
@@ -197,12 +189,8 @@ async def async_setup_entry(hass: HomeAssistantType,
 async def async_unload_entry(hass: HomeAssistantType,
                              config_entry: ConfigEntry):
     """Unload a config entry."""
-    _LOGGER.debug('async_unload_entry: %s, entry_id: %s, data: %s', config_entry, config_entry.entry_id, config_entry.data)
-    for entry in hass.config_entries._entries:
-        _LOGGER.debug('%s: %s: %s', entry, entry.entry_id, entry.data)
-
     data = config_entry.data
-    udn = data['udn']
+    udn = data[CONF_UDN]
 
     igd_device = _get_device(hass, udn)
     if igd_device is None:
@@ -213,14 +201,10 @@ async def async_unload_entry(hass: HomeAssistantType,
         await _async_delete_port_mapping(hass, igd_device)
 
     # sensors
-    if data.get(CONF_ENABLE_SENSORS):
-        # XXX TODO: remove sensors
-        pass
+    for sensor in hass.data[DOMAIN]['sensors'].get(udn, []):
+        await sensor.async_remove()
 
     # clear stored device
     _store_device(hass, udn, None)
-
-    # XXX TODO: remove config entry
-    #await hass.config_entries.async_remove(config_entry.entry_id)
 
     return True
