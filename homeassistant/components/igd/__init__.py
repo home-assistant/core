@@ -143,7 +143,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 
     # ensure sane config
     if DOMAIN not in config:
-        return False
+        return True
 
     if DISCOVERY_DOMAIN not in config:
         _LOGGER.warning('IGD needs discovery, please enable it')
