@@ -55,6 +55,11 @@ class DeconzSwitch(SwitchDevice):
         self._switch.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._switch.deconz_id
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect switch object when removed."""
+        self._switch.remove_callback(self.async_update_callback)
+        self._switch = None
+
     @callback
     def async_update_callback(self, reason):
         """Update the switch's state."""

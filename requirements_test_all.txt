@@ -84,7 +84,7 @@ hbmqtt==0.9.2
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180829.0
+home-assistant-frontend==20180831.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -139,7 +139,7 @@ py-canary==0.5.0
 pyblackbird==0.5
 
 # homeassistant.components.deconz
-pydeconz==44
+pydeconz==45
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
