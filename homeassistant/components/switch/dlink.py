@@ -14,8 +14,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (ATTR_TEMPERATURE,
-                                 CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME,
-                                 TEMP_CELSIUS)
+                                 CONF_HOST, CONF_NAME, CONF_PASSWORD,
+                                 CONF_USERNAME, TEMP_CELSIUS)
 
 REQUIREMENTS = ['pyW215==0.6.0']
 
