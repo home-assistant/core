@@ -107,7 +107,7 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
         """Parse data received from the server."""
         super()._parse_data(data)
 
-        _LOGGER.debug("Sensor data: " + str(data))
+        _LOGGER.debug("Sensor data: %s", str(data))
 
         for state_var in data["StateVars"]:
             if state_var["Name"] == "ActivePower":

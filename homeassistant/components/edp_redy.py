@@ -5,11 +5,11 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/edp_redy/
 """
 
-import aiohttp
 import asyncio
 import json
 import logging
 
+import aiohttp
 import async_timeout
 from datetime import timedelta
 
@@ -120,14 +120,14 @@ class EdpRedySession:
         if self._session is not None:
             session_life = dt_util.utcnow() - self._session_time
             if session_life.total_seconds() < SESSION_TIME:
-                """ Session valid, nothing to do """
+                # Session valid, nothing to do
                 return True
 
-            """ Session is older than SESSION_TIME: logout """
+            # Session is older than SESSION_TIME: logout
             await self.async_logout()
             self._session = None
 
-        """ not valid, create new session """
+        # not valid, create new session
         self._session = await self.async_init_session()
         self._session_time = dt_util.utcnow()
         return True if self._session is not None else False
@@ -149,7 +149,7 @@ class EdpRedySession:
             return False
 
         active_power_str = await resp.text()
-        _LOGGER.debug("Fetched Active Power:\n" + active_power_str)
+        _LOGGER.debug("Fetched Active Power:\n %s", active_power_str)
 
         if active_power_str is None:
             return False
@@ -194,7 +194,7 @@ class EdpRedySession:
             return False
 
         modules_str = await resp.text()
-        _LOGGER.debug("Fetched Modules:\n" + modules_str)
+        _LOGGER.debug("Fetched Modules:\n %s", modules_str)
 
         if modules_str is None:
             return False
@@ -292,7 +292,7 @@ class EdpRedyDevice(Entity):
         self._device_state_attributes = {}
         self._id = device_id
         self._unique_id = device_id
-        self._name = name if len(name) > 0 else device_id
+        self._name = name if name else device_id
 
     async def async_added_to_hass(self):
         """Subscribe to the data updates topic."""
