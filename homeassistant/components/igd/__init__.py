@@ -34,25 +34,16 @@ DEPENDENCIES = ['http']  # ,'discovery']
 
 CONF_LOCAL_IP = 'local_ip'
 CONF_PORTS = 'ports'
-CONF_UNITS = 'unit'
 CONF_HASS = 'hass'
 
 NOTIFICATION_ID = 'igd_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'
-
-UNITS = {
-    "Bytes": 1,
-    "KBytes": 1024,
-    "MBytes": 1024**2,
-    "GBytes": 1024**3,
-}
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_ENABLE_PORT_MAPPING, default=False): cv.boolean,
         vol.Optional(CONF_ENABLE_SENSORS, default=True): cv.boolean,
         vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
-        vol.Optional(CONF_UNITS, default="MBytes"): vol.In(UNITS),
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -133,13 +124,13 @@ async def _async_delete_port_mapping(hass: HomeAssistantType, igd_device):
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Register a port mapping for Home Assistant via UPnP."""
     # defaults
-    hass.data[DOMAIN] = {
-        'auto_config': {
+    hass.data[DOMAIN] = hass.data.get(DOMAIN, {})
+    if 'auto_config' not in hass.data[DOMAIN]:
+        hass.data[DOMAIN]['auto_config'] = {
             'active': False,
             'port_forward': False,
             'sensors': False,
         }
-    }
 
     # ensure sane config
     if DOMAIN not in config:
@@ -167,6 +158,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistantType,
                             config_entry: ConfigEntry):
     """Set up a bridge from a config entry."""
+    _LOGGER.debug('async_setup_entry: %s, %s', config_entry, config_entry.entry_id)
+
     data = config_entry.data
     ssdp_description = data['ssdp_description']
 
@@ -186,7 +179,6 @@ async def async_setup_entry(hass: HomeAssistantType,
     # sensors
     if data.get(CONF_ENABLE_SENSORS):
         discovery_info = {
-            'unit': 'MBytes',
             'udn': data['udn'],
         }
         hass_config = config_entry.data
@@ -205,6 +197,10 @@ async def async_setup_entry(hass: HomeAssistantType,
 async def async_unload_entry(hass: HomeAssistantType,
                              config_entry: ConfigEntry):
     """Unload a config entry."""
+    _LOGGER.debug('async_unload_entry: %s, entry_id: %s, data: %s', config_entry, config_entry.entry_id, config_entry.data)
+    for entry in hass.config_entries._entries:
+        _LOGGER.debug('%s: %s: %s', entry, entry.entry_id, entry.data)
+
     data = config_entry.data
     udn = data['udn']
 
@@ -221,6 +217,10 @@ async def async_unload_entry(hass: HomeAssistantType,
         # XXX TODO: remove sensors
         pass
 
+    # clear stored device
     _store_device(hass, udn, None)
+
+    # XXX TODO: remove config entry
+    #await hass.config_entries.async_remove(config_entry.entry_id)
 
     return True
