@@ -10,6 +10,9 @@ async def test_flow_none_discovered(hass):
     """Test no device discovered flow."""
     flow = igd_config_flow.IgdFlowHandler()
     flow.hass = hass
+    hass.data[igd.DOMAIN] = {
+        'discovered': {}
+    }
 
     result = await flow.async_step_user()
     assert result['type'] == 'abort'
