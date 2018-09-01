@@ -8,11 +8,9 @@
             "user": {
                 "title": "Configuration options for the IGD",
                 "data":{
-                    "sensors": "Add traffic in/out sensors",
-                    "port_forward": "Enable port forward for Home Assistant\nOnly enable this when your Home Assistant is password protected!",
-                    "ssdp_url": "SSDP URL",
-                    "udn": "UDN",
-                    "name": "Name"
+                    "igd": "IGD",
+                    "sensors": "Add traffic sensors",
+                    "port_forward": "Enable port forward for Home Assistant<br>Only enable this when your Home Assistant is password protected!"
                 }
             }
         },
