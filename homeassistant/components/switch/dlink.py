@@ -14,9 +14,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (ATTR_TEMPERATURE,
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME,
-    TEMP_CELSIUS)
-from homeassistant.exceptions import PlatformNotReady
+                                 CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME,
+                                 TEMP_CELSIUS)
 
 REQUIREMENTS = ['pyW215==0.6.0']
 
@@ -38,6 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SCAN_INTERVAL = timedelta(minutes=2)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a D-Link Smart Plug."""
@@ -124,6 +124,7 @@ class SmartPlugSwitch(SwitchDevice):
         """Return True if entity is available."""
         return self.data.available
 
+
 class SmartPlugData:
     """Get the latest data from smart plug."""
 
@@ -141,8 +142,9 @@ class SmartPlugData:
     def update(self):
         """Get the latest data from the smart plug."""
         if self._last_tried is not None:
-            retry_seconds = min(self._n_tried*2, 10) - (dt_util.now() - self._last_tried).total_seconds()/60
-            if self._n_tried  > 0 and retry_seconds > 0:
+            last_try_s = (dt_util.now() - self._last_tried).total_seconds()/60
+            retry_seconds = min(self._n_tried*2, 10) - last_try_s
+            if self._n_tried > 0 and retry_seconds > 0:
                 _LOGGER.warning("Waiting %s s to retry", retry_seconds)
                 return
 
