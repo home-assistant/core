@@ -7,10 +7,9 @@ https://github.com/domwillcode/yale-smart-alarm-client
 
 import asyncio
 import logging
+import voluptuous as vol
 
 import homeassistant.components.alarm_control_panel as alarm
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -20,11 +19,11 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_DISARMED,
     STATE_UNKNOWN)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['yalesmartalarmclient==0.1.2']
 
 CONF_AREA_ID = 'area_id'
-CONF_ALLOW_DISARM = 'allow_disarm'
 
 YALE_SMART_ALARM_DOMAIN = 'yale_smart_alarm'
 DEFAULT_NAME = 'Yale Smart Alarm'
@@ -38,7 +37,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_AREA_ID, default=DEFAULT_AREA_ID): cv.string,
-    vol.Optional(CONF_ALLOW_DISARM): cv.string,
 })
 
 
