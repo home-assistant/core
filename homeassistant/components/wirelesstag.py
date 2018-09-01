@@ -64,6 +64,7 @@ class WirelessTagPlatform:
 
     @property
     def tag_manager_macs(self):
+        """Return list of tag managers mac addresses in user account."""
         return self.api.mac_addresses
 
     def load_tags(self):
@@ -85,7 +86,7 @@ class WirelessTagPlatform:
         if disarm_func is not None:
             disarm_func(switch.tag_id, switch.tag_manager_mac)
 
-    def make_notifications_for_tag_manager(self, binary_sensors, mac):
+    def make_notifications(self, binary_sensors, mac):
         """Create configurations for push notifications."""
         _LOGGER.info("Creating configurations for push notifications.")
         configs = []
@@ -103,11 +104,11 @@ class WirelessTagPlatform:
 
     def install_push_notifications(self, binary_sensors):
         """Setup local push notification from tag manager."""
-
         _LOGGER.info("Registering local push notifications.")
         for mac in self.tag_manager_macs:
-            configs = self.make_notifications_for_tag_manager(binary_sensors, mac)
-            # install notifications for all tags in tag manager specified by mac
+            configs = self.make_notifications(binary_sensors, mac)
+            # install notifications for all tags in tag manager
+            # specified by mac
             result = self.api.install_push_notification(0, configs, True, mac)
             if not result:
                 self.hass.components.persistent_notification.create(
@@ -115,7 +116,8 @@ class WirelessTagPlatform:
                     title="Wireless Sensor Tag Setup Local Push Notifications",
                     notification_id="wirelesstag_failed_push_notification")
             else:
-                _LOGGER.info("Installed push notifications for all tags in %s.", mac)
+                _LOGGER.info("Installed push notifications for all\
+                             tags in %s.", mac)
 
     @property
     def local_base_url(self):
