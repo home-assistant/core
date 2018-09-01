@@ -6,6 +6,7 @@ from datetime import timedelta
 from homeassistant import core as ha
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.components.http.auth import setup_auth
 
 
 async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
@@ -16,7 +17,6 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
             'name': 'config_test',
             'token': '12345678'
         }})
-
     client = await aiohttp_client(hass.http.app)
 
     # missing file
@@ -28,10 +28,30 @@ async def test_bad_posting(aioclient_mock, hass, aiohttp_client):
     resp = await client.post('/api/camera_push/camera.wrong', data=files)
     assert resp.status == 404
 
-    # wrong token but authenticated user
+
+async def test_cases_with_no_auth(aioclient_mock, hass, aiohttp_client):
+    """Test cases where aiohttp_client is not auth."""
+    await async_setup_component(hass, 'camera', {
+        'camera': {
+            'platform': 'push',
+            'name': 'config_test',
+            'token': '12345678'
+        }})
+
+    setup_auth(hass.http.app, [], True, api_password=None)
+    client = await aiohttp_client(hass.http.app)
+
+    # wrong token
     files = {'image': io.BytesIO(b'fake')}
     resp = await client.post('/api/camera_push/camera.config_test?token=1234',
                              data=files)
+    assert resp.status == 401
+
+    # right token
+    files = {'image': io.BytesIO(b'fake')}
+    resp = await client.post(
+        '/api/camera_push/camera.config_test?token=12345678',
+        data=files)
     assert resp.status == 200
 
 
