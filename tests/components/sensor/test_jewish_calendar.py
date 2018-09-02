@@ -20,6 +20,12 @@ class TestJewishCalenderSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
+    def checkForLoggingErrors(self):
+        """Check whether logger spitted out errors."""
+        errors = [rec for rec in self.cm.records if rec.levelname == "ERROR"]
+        self.assertFalse(errors, (f"Logger reported error(s): ",
+                                  f"{[err.getMessage() for err in errors]}"))
+
     def test_jewish_calendar_min_config(self):
         """Test minimum jewish calendar configuration."""
         config = {
@@ -27,12 +33,9 @@ class TestJewishCalenderSensor(unittest.TestCase):
                 'platform': 'jewish_calendar'
             }
         }
-        with self.assertLogs() as cm:
+        with self.assertLogs() as self.cm:
             assert setup_component(self.hass, 'sensor', config)
-
-        errors = [rec for rec in cm.records if rec.levelname == "ERROR"]
-        self.assertFalse(errors, (f"Logger reported error(s): ",
-                                  f"{[err.getMessage() for err in errors]}"))
+        self.checkForLoggingErrors()
 
     # def test_uptime_sensor_name_change(self):
     #     """Test uptime sensor with different name."""
