@@ -85,6 +85,10 @@ def generate_config(hass, passwd, password):
             'allow-anonymous': password is None
         },
         'plugins': ['auth_anonymous'],
+        'topic-check': {
+            'enabled': True,
+            'plugins': ['topic_taboo'],
+        },
     }
 
     if password:
