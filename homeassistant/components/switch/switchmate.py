@@ -43,7 +43,6 @@ class Switchmate(SwitchDevice):
 
     def __init__(self, mac, name) -> None:
         """Initialize the Switchmate."""
-        # pylint: disable=import-error
         self._state = False
         self._name = name
         self._mac = mac
@@ -52,6 +51,7 @@ class Switchmate(SwitchDevice):
             raise PlatformNotReady()
 
     def _connect(self) -> bool:
+        # pylint: disable=import-error
         import bluepy
         if self._device:
             try:
@@ -67,6 +67,7 @@ class Switchmate(SwitchDevice):
         return True
 
     def _sendpacket(self, key, retry=2) -> bool:
+        # pylint: disable=import-error
         import bluepy
         try:
             self._device.writeCharacteristic(HANDLE, key, True)
@@ -76,7 +77,7 @@ class Switchmate(SwitchDevice):
                 return False
             if not self._connect():
                 return False
-            self._send_packet(retry-1)
+            self._sendpacket(key, retry-1)
         return True
 
     @property
