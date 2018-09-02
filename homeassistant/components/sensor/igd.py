@@ -133,7 +133,7 @@ class PerSecondIGDSensor(Entity):
 
     @property
     def unit(self) -> str:
-        """Unit we are measuring in."""
+        """Get unit we are measuring in."""
         raise NotImplementedError()
 
     @property
@@ -196,11 +196,11 @@ class KBytePerSecondIGDSensor(PerSecondIGDSensor):
 
     @property
     def unit(self) -> str:
-        """Unit we are measuring in."""
+        """Get unit we are measuring in."""
         return 'kbyte'
 
     async def _async_fetch_value(self) -> float:
-        """"""
+        """Fetch value from device."""
         if self._direction == IN:
             return await self._device.async_get_total_bytes_received()
 
@@ -220,11 +220,11 @@ class PacketsPerSecondIGDSensor(PerSecondIGDSensor):
 
     @property
     def unit(self) -> str:
-        """Unit we are measuring in."""
+        """Get unit we are measuring in."""
         return 'packets'
 
     async def _async_fetch_value(self) -> float:
-        """"""
+        """Fetch value from device."""
         if self._direction == IN:
             return await self._device.async_get_total_packets_received()
 
