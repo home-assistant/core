@@ -109,7 +109,7 @@ class RflinkCover(RflinkCommand, CoverDevice):
 
     @property
     def assumed_state(self):
-        """return True because covers can be stopped midway"""
+        """Return True because covers can be stopped midway"""
         return True
 
     def async_close_cover(self, **kwargs):
