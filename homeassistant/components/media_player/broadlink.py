@@ -18,7 +18,7 @@ from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOUND_MODE, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_COMMAND_OFF, CONF_COMMAND_ON, CONF_HOST, CONF_MAC, CONF_NAME,
     CONF_PORT, CONF_TIMEOUT, STATE_OFF, STATE_ON)
@@ -42,6 +42,7 @@ CONF_SOURCES = 'sources'
 CONF_CHANNELS = 'channels'
 CONF_DIGITS = 'digits'
 CONF_DIGITDELAY = 'digitdelay'
+CONF_SOUND_MODES = 'sound_modes'
 
 DIGITS_SCHEMA = vol.Schema({
     vol.Required('0'): cv.string,
@@ -72,6 +73,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NEXT_TRACK): cv.string,
     vol.Optional(CONF_PREVIOUS_TRACK): cv.string,
     vol.Optional(CONF_SOURCES, default={}): dict,
+    vol.Optional(CONF_SOUND_MODES, default={}): dict,
     vol.Optional(CONF_DIGITS): DIGITS_SCHEMA,
 })
 
@@ -124,6 +126,9 @@ def get_supported_by_config(config):
     if config.get(CONF_SOURCES):
         support = support | SUPPORT_SELECT_SOURCE
 
+    if config.get(CONF_SOUND_MODES):
+        support = support | SUPPORT_SELECT_SOUND_MODE
+
     if config.get(CONF_DIGITS):
         support = support | SUPPORT_PLAY_MEDIA
 
@@ -147,6 +152,7 @@ class BroadlinkRM(MediaPlayerDevice):
         self._link = link
         self._state = STATE_OFF
         self._source = None
+        self._sound_mode = None
 
     async def send(self, command):
         """Send b64 encoded command to device."""
@@ -206,6 +212,11 @@ class BroadlinkRM(MediaPlayerDevice):
         await self.send(self._config.get(CONF_SOURCES)[source])
         self._source = source
 
+    async def async_select_sound_mode(self, sound_mode):
+        """Select a specific source."""
+        await self.send(self._config.get(CONF_SOUND_MODES)[sound_mode])
+        self._sound_mode = sound_mode
+
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Switch to a specific channel."""
         if media_type != MEDIA_TYPE_CHANNEL:
@@ -232,3 +243,13 @@ class BroadlinkRM(MediaPlayerDevice):
     def source_list(self):
         """List of available input sources."""
         return list(self._config.get(CONF_SOURCES).keys())
+
+    @property
+    def sound_mode(self):
+        """Name of the current sound mode."""
+        return self._sound_mode
+
+    @property
+    def sound_mode_list(self):
+        """List of available sound modes."""
+        return list(self._config.get(CONF_SOUND_MODES).keys())
