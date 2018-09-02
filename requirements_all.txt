@@ -1139,7 +1139,7 @@ python-synology==0.2.0
 python-tado==0.2.3
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==10.1.0
+python-telegram-bot==11.0.0
 
 # homeassistant.components.sensor.twitch
 python-twitch==1.3.0
