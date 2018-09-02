@@ -131,6 +131,14 @@ class Entity:
         return None
 
     @property
+    def device_info(self):
+        """Return device specific attributes.
+
+        Implemented by platform classes.
+        """
+        return None
+
+    @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return None
@@ -370,7 +378,7 @@ class Entity:
 
     @callback
     def async_registry_updated(self, old, new):
-        """Called when the entity registry has been updated."""
+        """Handle entity registry update."""
         self.registry_name = new.name
 
         if new.entity_id == self.entity_id:

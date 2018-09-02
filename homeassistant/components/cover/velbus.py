@@ -32,7 +32,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 DEPENDENCIES = ['velbus']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up cover controlled by Velbus."""
     devices = config.get(CONF_COVERS, {})
     covers = []
@@ -53,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No covers added")
         return False
 
-    add_devices(covers)
+    add_entities(covers)
 
 
 class VelbusCover(CoverDevice):

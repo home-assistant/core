@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the access to Netatmo binary sensor."""
     netatmo = hass.components.netatmo
 
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                  lon_sw=area_conf.get(CONF_LON_SW),
                                  calculation=area_conf.get(CONF_TYPE))
         sensors.append(NetatmoPublicSensor(area_conf.get(CONF_NAME), data))
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class NetatmoPublicSensor(Entity):

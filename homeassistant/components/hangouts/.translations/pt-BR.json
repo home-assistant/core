@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hangouts do Google j\u00e1 est\u00e1 configurado."
+        },
+        "step": {
+            "2fa": {
+                "title": ""
+            },
+            "user": {
+                "data": {
+                    "password": "Senha"
+                },
+                "title": "Login do Hangouts do Google"
+            }
+        },
+        "title": "Hangouts do Google"
+    }
+}

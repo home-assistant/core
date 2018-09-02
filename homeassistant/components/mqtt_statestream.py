@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.components.mqtt import valid_publish_topic
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 import homeassistant.helpers.config_validation as cv
 
 CONF_BASE_TOPIC = 'base_topic'

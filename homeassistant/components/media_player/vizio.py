@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the VizioTV media player platform."""
     host = config.get(CONF_HOST)
     token = config.get(CONF_ACCESS_TOKEN)
@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.warning("InsecureRequestWarning is disabled "
                         "because of Vizio platform configuration")
         urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-    add_devices([device], True)
+    add_entities([device], True)
 
 
 class VizioDevice(MediaPlayerDevice):

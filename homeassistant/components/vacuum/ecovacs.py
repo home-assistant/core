@@ -27,13 +27,13 @@ ATTR_ERROR = 'error'
 ATTR_COMPONENT_PREFIX = 'component_'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecovacs vacuums."""
     vacuums = []
     for device in hass.data[ECOVACS_DEVICES]:
         vacuums.append(EcovacsVacuum(device))
     _LOGGER.debug("Adding Ecovacs Vacuums to Hass: %s", vacuums)
-    add_devices(vacuums, True)
+    add_entities(vacuums, True)
 
 
 class EcovacsVacuum(VacuumDevice):

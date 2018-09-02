@@ -116,6 +116,15 @@ omit =
     homeassistant/components/google.py
     homeassistant/components/*/google.py
 
+    homeassistant/components/habitica/*
+    homeassistant/components/*/habitica.py
+
+    homeassistant/components/hangouts/__init__.py
+    homeassistant/components/hangouts/const.py
+    homeassistant/components/hangouts/hangouts_bot.py
+    homeassistant/components/hangouts/hangups_utils.py
+    homeassistant/components/*/hangouts.py    
+
     homeassistant/components/hdmi_cec.py
     homeassistant/components/*/hdmi_cec.py
 
@@ -136,12 +145,13 @@ omit =
 
     homeassistant/components/ihc/*
     homeassistant/components/*/ihc.py
+    
+    homeassistant/components/insteon/*
+    homeassistant/components/*/insteon.py
 
     homeassistant/components/insteon_local.py
-    homeassistant/components/*/insteon_local.py
-
-    homeassistant/components/insteon_plm/*
-    homeassistant/components/*/insteon_plm.py
+    
+    homeassistant/components/insteon_plm.py
 
     homeassistant/components/ios.py
     homeassistant/components/*/ios.py
@@ -688,6 +698,7 @@ omit =
     homeassistant/components/sensor/netdata.py
     homeassistant/components/sensor/netdata_public.py
     homeassistant/components/sensor/neurio_energy.py
+    homeassistant/components/sensor/noaa_tides.py
     homeassistant/components/sensor/nsw_fuel_station.py
     homeassistant/components/sensor/nut.py
     homeassistant/components/sensor/nzbget.py
@@ -751,6 +762,7 @@ omit =
     homeassistant/components/sensor/uscis.py
     homeassistant/components/sensor/vasttrafik.py
     homeassistant/components/sensor/viaggiatreno.py
+    homeassistant/components/sensor/volkszaehler.py
     homeassistant/components/sensor/waqi.py
     homeassistant/components/sensor/waze_travel_time.py
     homeassistant/components/sensor/whois.py
@@ -781,6 +793,7 @@ omit =
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/snmp.py
+    homeassistant/components/switch/switchmate.py
     homeassistant/components/switch/telnet.py
     homeassistant/components/switch/tplink.py
     homeassistant/components/switch/transmission.py

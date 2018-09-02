@@ -43,7 +43,7 @@ CURRENT_SONG_PATTERN = re.compile(r'"(.*?)"\s+by\s+"(.*?)"\son\s+"(.*?)"',
 STATION_PATTERN = re.compile(r'Station\s"(.+?)"', re.MULTILINE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pandora media player platform."""
     if not _pianobar_exists():
         return False
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pandora.turn_off()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_pianobar)
-    add_devices([pandora])
+    add_entities([pandora])
 
 
 class PandoraMediaPlayer(MediaPlayerDevice):

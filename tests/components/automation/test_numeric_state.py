@@ -25,7 +25,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
         @callback
         def record_call(service):
-            """Helper to record calls."""
+            """Record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)

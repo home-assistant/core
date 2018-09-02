@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info):
+        hass, config, async_add_entities, discovery_info):
     """Set up Netgear LTE sensor devices."""
     modem_data = hass.data[DATA_KEY].get_modem_data(config)
 
@@ -38,7 +38,7 @@ async def async_setup_platform(
         elif sensor_type == SENSOR_USAGE:
             sensors.append(UsageSensor(modem_data, sensor_type))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 @attr.s

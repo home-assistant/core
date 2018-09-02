@@ -73,7 +73,7 @@ class TestNotifyDemo(unittest.TestCase):
 
     @callback
     def record_calls(self, *args):
-        """Helper for recording calls."""
+        """Record calls."""
         self.calls.append(args)
 
     def test_sending_none_message(self):

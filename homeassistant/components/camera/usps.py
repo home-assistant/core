@@ -17,13 +17,13 @@ DEPENDENCIES = ['usps']
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up USPS mail camera."""
     if discovery_info is None:
         return
 
     usps = hass.data[DATA_USPS]
-    add_devices([USPSCamera(usps)])
+    add_entities([USPSCamera(usps)])
 
 
 class USPSCamera(Camera):

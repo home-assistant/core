@@ -76,9 +76,9 @@ class TestMochadSwitch(unittest.TestCase):
     def test_turn_on(self):
         """Test turn_on."""
         self.switch.turn_on()
-        self.switch.device.send_cmd.assert_called_once_with('on')
+        self.switch.switch.send_cmd.assert_called_once_with('on')
 
     def test_turn_off(self):
         """Test turn_off."""
         self.switch.turn_off()
-        self.switch.device.send_cmd.assert_called_once_with('off')
+        self.switch.switch.send_cmd.assert_called_once_with('off')

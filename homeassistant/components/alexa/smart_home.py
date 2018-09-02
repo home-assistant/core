@@ -13,12 +13,13 @@ import homeassistant.util.color as color_util
 from homeassistant.util.temperature import convert as convert_temperature
 from homeassistant.util.decorator import Registry
 from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE, CONF_NAME,
-    SERVICE_LOCK, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
-    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
+    ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, ATTR_TEMPERATURE,
+    ATTR_UNIT_OF_MEASUREMENT, CONF_NAME, SERVICE_LOCK,
+    SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK, SERVICE_MEDIA_STOP,
     SERVICE_SET_COVER_POSITION, SERVICE_TURN_OFF, SERVICE_TURN_ON,
     SERVICE_UNLOCK, SERVICE_VOLUME_SET, TEMP_FAHRENHEIT, TEMP_CELSIUS,
-    CONF_UNIT_OF_MEASUREMENT, STATE_LOCKED, STATE_UNLOCKED, STATE_ON)
+    STATE_LOCKED, STATE_UNLOCKED, STATE_ON)
 
 from .const import CONF_FILTER, CONF_ENTITY_CONFIG
 
@@ -160,7 +161,8 @@ class _AlexaEntity:
     The API handlers should manipulate entities only through this interface.
     """
 
-    def __init__(self, config, entity):
+    def __init__(self, hass, config, entity):
+        self.hass = hass
         self.config = config
         self.entity = entity
         self.entity_conf = config.entity_config.get(entity.entity_id, {})
@@ -384,6 +386,10 @@ class _AlexaInputController(_AlexaInterface):
 
 
 class _AlexaTemperatureSensor(_AlexaInterface):
+    def __init__(self, hass, entity):
+        _AlexaInterface.__init__(self, entity)
+        self.hass = hass
+
     def name(self):
         return 'Alexa.TemperatureSensor'
 
@@ -397,9 +403,10 @@ class _AlexaTemperatureSensor(_AlexaInterface):
         if name != 'temperature':
             raise _UnsupportedProperty(name)
 
-        unit = self.entity.attributes[CONF_UNIT_OF_MEASUREMENT]
+        unit = self.entity.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         temp = self.entity.state
         if self.entity.domain == climate.DOMAIN:
+            unit = self.hass.config.units.temperature_unit
             temp = self.entity.attributes.get(
                 climate.ATTR_CURRENT_TEMPERATURE)
         return {
@@ -409,6 +416,10 @@ class _AlexaTemperatureSensor(_AlexaInterface):
 
 
 class _AlexaThermostatController(_AlexaInterface):
+    def __init__(self, hass, entity):
+        _AlexaInterface.__init__(self, entity)
+        self.hass = hass
+
     def name(self):
         return 'Alexa.ThermostatController'
 
@@ -439,8 +450,7 @@ class _AlexaThermostatController(_AlexaInterface):
                 raise _UnsupportedProperty(name)
             return mode
 
-        unit = self.entity.attributes[CONF_UNIT_OF_MEASUREMENT]
-        temp = None
+        unit = self.hass.config.units.temperature_unit
         if name == 'targetSetpoint':
             temp = self.entity.attributes.get(climate.ATTR_TEMPERATURE)
         elif name == 'lowerSetpoint':
@@ -491,8 +501,8 @@ class _ClimateCapabilities(_AlexaEntity):
         return [_DisplayCategory.THERMOSTAT]
 
     def interfaces(self):
-        yield _AlexaThermostatController(self.entity)
-        yield _AlexaTemperatureSensor(self.entity)
+        yield _AlexaThermostatController(self.hass, self.entity)
+        yield _AlexaTemperatureSensor(self.hass, self.entity)
 
 
 @ENTITY_ADAPTERS.register(cover.DOMAIN)
@@ -609,11 +619,11 @@ class _SensorCapabilities(_AlexaEntity):
 
     def interfaces(self):
         attrs = self.entity.attributes
-        if attrs.get(CONF_UNIT_OF_MEASUREMENT) in (
+        if attrs.get(ATTR_UNIT_OF_MEASUREMENT) in (
                 TEMP_FAHRENHEIT,
                 TEMP_CELSIUS,
         ):
-            yield _AlexaTemperatureSensor(self.entity)
+            yield _AlexaTemperatureSensor(self.hass, self.entity)
 
 
 class _Cause:
@@ -823,7 +833,7 @@ async def async_api_discovery(hass, config, request, context):
 
         if entity.domain not in ENTITY_ADAPTERS:
             continue
-        alexa_entity = ENTITY_ADAPTERS[entity.domain](config, entity)
+        alexa_entity = ENTITY_ADAPTERS[entity.domain](hass, config, entity)
 
         endpoint = {
             'displayCategories': alexa_entity.display_categories(),
@@ -1364,11 +1374,12 @@ async def async_api_previous(hass, config, request, context, entity):
     return api_message(request)
 
 
-def api_error_temp_range(request, temp, min_temp, max_temp, unit):
+def api_error_temp_range(hass, request, temp, min_temp, max_temp):
     """Create temperature value out of range API error response.
 
     Async friendly.
     """
+    unit = hass.config.units.temperature_unit
     temp_range = {
         'minimumValue': {
             'value': min_temp,
@@ -1389,8 +1400,9 @@ def api_error_temp_range(request, temp, min_temp, max_temp, unit):
     )
 
 
-def temperature_from_object(temp_obj, to_unit, interval=False):
+def temperature_from_object(hass, temp_obj, interval=False):
     """Get temperature from Temperature object in requested unit."""
+    to_unit = hass.config.units.temperature_unit
     from_unit = TEMP_CELSIUS
     temp = float(temp_obj['value'])
 
@@ -1408,7 +1420,6 @@ def temperature_from_object(temp_obj, to_unit, interval=False):
 @extract_entity
 async def async_api_set_target_temp(hass, config, request, context, entity):
     """Process a set target temperature request."""
-    unit = entity.attributes[CONF_UNIT_OF_MEASUREMENT]
     min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
     max_temp = entity.attributes.get(climate.ATTR_MAX_TEMP)
 
@@ -1418,25 +1429,22 @@ async def async_api_set_target_temp(hass, config, request, context, entity):
 
     payload = request[API_PAYLOAD]
     if 'targetSetpoint' in payload:
-        temp = temperature_from_object(
-            payload['targetSetpoint'], unit)
+        temp = temperature_from_object(hass, payload['targetSetpoint'])
         if temp < min_temp or temp > max_temp:
             return api_error_temp_range(
-                request, temp, min_temp, max_temp, unit)
+                hass, request, temp, min_temp, max_temp)
         data[ATTR_TEMPERATURE] = temp
     if 'lowerSetpoint' in payload:
-        temp_low = temperature_from_object(
-            payload['lowerSetpoint'], unit)
+        temp_low = temperature_from_object(hass, payload['lowerSetpoint'])
         if temp_low < min_temp or temp_low > max_temp:
             return api_error_temp_range(
-                request, temp_low, min_temp, max_temp, unit)
+                hass, request, temp_low, min_temp, max_temp)
         data[climate.ATTR_TARGET_TEMP_LOW] = temp_low
     if 'upperSetpoint' in payload:
-        temp_high = temperature_from_object(
-            payload['upperSetpoint'], unit)
+        temp_high = temperature_from_object(hass, payload['upperSetpoint'])
         if temp_high < min_temp or temp_high > max_temp:
             return api_error_temp_range(
-                request, temp_high, min_temp, max_temp, unit)
+                hass, request, temp_high, min_temp, max_temp)
         data[climate.ATTR_TARGET_TEMP_HIGH] = temp_high
 
     await hass.services.async_call(
@@ -1450,17 +1458,16 @@ async def async_api_set_target_temp(hass, config, request, context, entity):
 @extract_entity
 async def async_api_adjust_target_temp(hass, config, request, context, entity):
     """Process an adjust target temperature request."""
-    unit = entity.attributes[CONF_UNIT_OF_MEASUREMENT]
     min_temp = entity.attributes.get(climate.ATTR_MIN_TEMP)
     max_temp = entity.attributes.get(climate.ATTR_MAX_TEMP)
 
     temp_delta = temperature_from_object(
-        request[API_PAYLOAD]['targetSetpointDelta'], unit, interval=True)
+        hass, request[API_PAYLOAD]['targetSetpointDelta'], interval=True)
     target_temp = float(entity.attributes.get(ATTR_TEMPERATURE)) + temp_delta
 
     if target_temp < min_temp or target_temp > max_temp:
         return api_error_temp_range(
-            request, target_temp, min_temp, max_temp, unit)
+            hass, request, target_temp, min_temp, max_temp)
 
     data = {
         ATTR_ENTITY_ID: entity.entity_id,
@@ -1512,7 +1519,7 @@ async def async_api_set_thermostat_mode(hass, config, request, context,
 @extract_entity
 async def async_api_reportstate(hass, config, request, context, entity):
     """Process a ReportState request."""
-    alexa_entity = ENTITY_ADAPTERS[entity.domain](config, entity)
+    alexa_entity = ENTITY_ADAPTERS[entity.domain](hass, config, entity)
     properties = []
     for interface in alexa_entity.interfaces():
         properties.extend(interface.serialize_properties())

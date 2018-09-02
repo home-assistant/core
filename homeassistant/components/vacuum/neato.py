@@ -36,13 +36,13 @@ ATTR_CLEAN_SUSP_COUNT = 'clean_suspension_count'
 ATTR_CLEAN_SUSP_TIME = 'clean_suspension_time'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato vacuum."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         dev.append(NeatoConnectedVacuum(hass, robot))
     _LOGGER.debug("Adding vacuums %s", dev)
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class NeatoConnectedVacuum(StateVacuumDevice):

@@ -41,11 +41,11 @@ class PilightDaemonSim:
         pass
 
     def send_code(self, call):  # pylint: disable=no-self-use
-        """Called pilight.send service is called."""
+        """Handle pilight.send service callback."""
         _LOGGER.error('PilightDaemonSim payload: ' + str(call))
 
     def start(self):
-        """Called homeassistant.start is called.
+        """Handle homeassistant.start callback.
 
         Also sends one test message after start up
         """
@@ -56,11 +56,11 @@ class PilightDaemonSim:
             self.called = True
 
     def stop(self):  # pylint: disable=no-self-use
-        """Called homeassistant.stop is called."""
+        """Handle homeassistant.stop callback."""
         _LOGGER.error('PilightDaemonSim stop')
 
     def set_callback(self, function):
-        """Callback called  on event pilight.pilight_received."""
+        """Handle pilight.pilight_received event callback."""
         self.callback = function
         _LOGGER.error('PilightDaemonSim callback: ' + str(function))
 

@@ -33,7 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up PwrCtrl devices/switches."""
     host = config.get(CONF_HOST, None)
     username = config.get(CONF_USERNAME)
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for switch in device.switches.values()
         )
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class PwrCtrlSwitch(SwitchDevice):

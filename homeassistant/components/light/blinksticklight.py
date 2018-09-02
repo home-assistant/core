@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Blinkstick device specified by serial number."""
     from blinkstick import blinkstick
 
@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     stick = blinkstick.find_by_serial(serial)
 
-    add_devices([BlinkStickLight(stick, name)], True)
+    add_entities([BlinkStickLight(stick, name)], True)
 
 
 class BlinkStickLight(Light):

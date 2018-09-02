@@ -39,7 +39,7 @@ UV_LEVEL_LOW = "Low"
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the OpenUV binary sensor platform."""
     if discovery_info is None:
         return
@@ -51,7 +51,7 @@ async def async_setup_platform(
         name, icon, unit = SENSORS[sensor_type]
         sensors.append(OpenUvSensor(openuv, sensor_type, name, icon, unit))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class OpenUvSensor(OpenUvEntity):

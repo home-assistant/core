@@ -57,6 +57,7 @@ def _create_index(engine, table_name, index_name):
     within the table definition described in the models
     """
     from sqlalchemy import Table
+    from sqlalchemy.exc import OperationalError
     from . import models
 
     table = Table(table_name, models.Base.metadata)
@@ -67,7 +68,15 @@ def _create_index(engine, table_name, index_name):
     _LOGGER.info("Adding index `%s` to database. Note: this can take several "
                  "minutes on large databases and slow computers. Please "
                  "be patient!", index_name)
-    index.create(engine)
+    try:
+        index.create(engine)
+    except OperationalError as err:
+        if 'already exists' not in str(err).lower():
+            raise
+
+        _LOGGER.warning('Index %s already exists on %s, continueing',
+                        index_name, table_name)
+
     _LOGGER.debug("Finished creating %s", index_name)
 
 
@@ -160,7 +169,7 @@ def _add_columns(engine, table_name, columns_def):
             if 'duplicate' not in str(err).lower():
                 raise
 
-            _LOGGER.warning('Column %s already exists on %s, continueing',
+            _LOGGER.warning('Column %s already exists on %s, continuing',
                             column_def.split(' ')[1], table_name)
 
 

@@ -550,6 +550,7 @@ class MQTT:
         This method must be run in the event loop and returns a coroutine.
         """
         async with self._paho_lock:
+            _LOGGER.debug("Transmitting message on %s: %s", topic, payload)
             await self.hass.async_add_job(
                 self._mqttc.publish, topic, payload, qos, retain)
 

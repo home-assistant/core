@@ -52,7 +52,7 @@ class EntityComponent:
                                    in self._platforms.values())
 
     def get_entity(self, entity_id):
-        """Helper method to get an entity."""
+        """Get an entity."""
         for platform in self._platforms.values():
             entity = platform.entities.get(entity_id)
             if entity is not None:
@@ -243,7 +243,7 @@ class EntityComponent:
 
     def _async_init_entity_platform(self, platform_type, platform,
                                     scan_interval=None, entity_namespace=None):
-        """Helper to initialize an entity platform."""
+        """Initialize an entity platform."""
         if scan_interval is None:
             scan_interval = self.scan_interval
 

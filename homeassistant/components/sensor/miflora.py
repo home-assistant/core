@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
     try:
@@ -95,7 +95,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         devs.append(MiFloraSensor(
             poller, parameter, name, unit, force_update, median))
 
-    async_add_devices(devs, update_before_add=True)
+    async_add_entities(devs, update_before_add=True)
 
 
 class MiFloraSensor(Entity):

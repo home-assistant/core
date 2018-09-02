@@ -55,14 +55,14 @@ _SENSOR_TYPES_DEPRECATED = SENSOR_TYPES_DEPRECATED + DEPRECATED_WEATHER_VARS
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nest Sensor.
 
     No longer used.
     """
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
 
@@ -119,7 +119,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
         return all_sensors
 
-    async_add_devices(await hass.async_add_job(get_sensors), True)
+    async_add_entities(await hass.async_add_job(get_sensors), True)
 
 
 class NestBasicSensor(NestSensorDevice):

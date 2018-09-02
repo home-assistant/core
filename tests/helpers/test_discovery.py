@@ -123,7 +123,7 @@ class TestHelpersDiscovery:
             component_calls.append(1)
             return True
 
-        def setup_platform(hass, config, add_devices_callback,
+        def setup_platform(hass, config, add_entities_callback,
                            discovery_info=None):
             """Set up mock platform."""
             platform_calls.append('disc' if discovery_info else 'component')

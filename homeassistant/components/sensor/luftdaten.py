@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Luftdaten sensor."""
     from luftdaten import Luftdaten
 
@@ -84,7 +84,7 @@ async def async_setup_platform(
         devices.append(
             LuftdatenSensor(luftdaten, name, variable, sensor_id, show_on_map))
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
 
 class LuftdatenSensor(Entity):

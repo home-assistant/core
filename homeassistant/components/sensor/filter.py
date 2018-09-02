@@ -114,7 +114,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the template sensors."""
     name = config.get(CONF_NAME)
@@ -124,7 +124,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         entity=entity_id, **_filter)
                for _filter in config[CONF_FILTERS]]
 
-    async_add_devices([SensorFilter(name, entity_id, filters)])
+    async_add_entities([SensorFilter(name, entity_id, filters)])
 
 
 class SensorFilter(Entity):

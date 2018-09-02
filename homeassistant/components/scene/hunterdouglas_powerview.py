@@ -37,7 +37,8 @@ STATE_ATTRIBUTE_ROOM_NAME = 'roomName'
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up home assistant scene entries."""
     # from aiopvapi.hub import Hub
     from aiopvapi.scenes import Scenes
@@ -60,7 +61,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                                PvScene(_raw_scene, hub_address, hass.loop,
                                        websession), _rooms)
                 for _raw_scene in _scenes[SCENE_DATA])
-    async_add_devices(pvscenes)
+    async_add_entities(pvscenes)
 
 
 class PowerViewScene(Scene):
