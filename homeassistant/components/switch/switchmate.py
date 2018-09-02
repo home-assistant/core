@@ -92,6 +92,7 @@ class Switchmate(SwitchDevice):
 
     def update(self) -> None:
         """Synchronize state with switch."""
+        # pylint: disable=import-error
         import bluepy
         try:
             self._state = self._device.readCharacteristic(HANDLE) == ON_KEY
