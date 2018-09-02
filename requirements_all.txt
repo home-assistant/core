@@ -430,7 +430,7 @@ hangups==0.4.5
 haversine==0.4.5
 
 # homeassistant.components.mqtt.server
-hbmqtt==0.9.2
+hbmqtt==0.9.4
 
 # homeassistant.components.climate.heatmiser
 heatmiserV3==0.9.1
