@@ -21,7 +21,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 from homeassistant.util import get_local_ip
 from homeassistant.components.discovery import DOMAIN as DISCOVERY_DOMAIN
-import homeassistant.components.igd.config_flow  # noqa: 401
 
 from .const import (
     CONF_ENABLE_PORT_MAPPING, CONF_ENABLE_SENSORS,
@@ -29,7 +28,7 @@ from .const import (
 )
 from .const import DOMAIN
 from .const import LOGGER as _LOGGER
-from .const import ensure_domain_data
+from .config_flow import ensure_domain_data
 
 
 REQUIREMENTS = ['async-upnp-client==0.12.4']

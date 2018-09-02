@@ -9,7 +9,19 @@ from .const import (
     CONF_SSDP_DESCRIPTION, CONF_UDN
 )
 from .const import DOMAIN
-from .const import ensure_domain_data
+
+
+def ensure_domain_data(hass):
+    """Ensure hass.data is filled properly."""
+    hass.data[DOMAIN] = hass.data.get(DOMAIN, {})
+    hass.data[DOMAIN]['devices'] = hass.data[DOMAIN].get('devices', {})
+    hass.data[DOMAIN]['sensors'] = hass.data[DOMAIN].get('sensors', {})
+    hass.data[DOMAIN]['discovered'] = hass.data[DOMAIN].get('discovered', {})
+    hass.data[DOMAIN]['auto_config'] = hass.data[DOMAIN].get('auto_config', {
+        'active': False,
+        'port_forward': False,
+        'sensors': False,
+    })
 
 
 @config_entries.HANDLERS.register(DOMAIN)
