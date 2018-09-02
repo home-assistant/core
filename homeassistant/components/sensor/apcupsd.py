@@ -49,7 +49,7 @@ SENSOR_TYPES = {
     'linefreq': ['Line Frequency', 'Hz', 'mdi:information-outline'],
     'linev': ['Input Voltage', 'V', 'mdi:flash'],
     'loadpct': ['Load', '%', 'mdi:gauge'],
-    'loadapnt' : ['Load Apparent Power', '%', 'mdi:gauge'],
+    'loadapnt': ['Load Apparent Power', '%', 'mdi:gauge'],
     'lotrans': ['Transfer Low', 'V', 'mdi:flash'],
     'mandate': ['Manufacture Date', '', 'mdi:calendar'],
     'masterupd': ['Master Update', '', 'mdi:information-outline'],
