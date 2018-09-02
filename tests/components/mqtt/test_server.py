@@ -1,8 +1,5 @@
 """The tests for the MQTT component embedded server."""
 from unittest.mock import Mock, MagicMock, patch
-import sys
-
-import pytest
 
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.setup import setup_component
@@ -26,7 +23,7 @@ class TestMQTT:
     @patch('tempfile.NamedTemporaryFile', Mock(return_value=MagicMock()))
     @patch('hbmqtt.broker.Broker', Mock(return_value=MagicMock()))
     @patch('hbmqtt.broker.Broker.start', Mock(return_value=mock_coro()))
-    @patch('homeassistant.components.mqtt.MQTT')
+    @patch('homeassistant.components.mqtt.MQTT
     def test_creating_config_with_http_pass_only(self, mock_mqtt):
         """Test if the MQTT server failed starts.
 
