@@ -92,9 +92,9 @@ class RflinkCover(RflinkCommand, CoverDevice):
         self.cancel_queued_send_commands()
 
         command = event['command']
-        if command in ['on', 'allon', 'down']:
+        if command in ['on', 'allon', 'up']:
             self._state = True
-        elif command in ['off', 'alloff', 'up']:
+        elif command in ['off', 'alloff', 'down']:
             self._state = False
 
     @property
@@ -105,7 +105,7 @@ class RflinkCover(RflinkCommand, CoverDevice):
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._state
+        return not self._state
 
     @property
     def assumed_state(self):
