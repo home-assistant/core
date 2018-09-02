@@ -21,6 +21,7 @@ from homeassistant import loader
 from homeassistant.util.unit_system import METRIC_SYSTEM
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.components import climate, input_boolean, switch
+from homeassistant.components.climate import STATE_HEAT, STATE_COOL
 import homeassistant.components as comps
 from tests.common import (assert_setup_component, get_test_home_assistant,
                           mock_restore_cache)
@@ -892,6 +893,90 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
 
         self.hass.services.register(ha.DOMAIN, SERVICE_TURN_ON, log_call)
         self.hass.services.register(ha.DOMAIN, SERVICE_TURN_OFF, log_call)
+
+
+class TestClimateGenericThermostatTurnOnOff(unittest.TestCase):
+    """Test the Generic Thermostat."""
+
+    HEAT_ENTITY = 'climate.test_heat'
+    COOL_ENTITY = 'climate.test_cool'
+
+    def setUp(self):  # pylint: disable=invalid-name
+        """Set up things to be run when tests are started."""
+        self.hass = get_test_home_assistant()
+        assert setup_component(self.hass, climate.DOMAIN, {'climate': [
+            {
+                'platform': 'generic_thermostat',
+                'name': 'test_heat',
+                'heater': ENT_SWITCH,
+                'target_sensor': ENT_SENSOR
+            },
+            {
+                'platform': 'generic_thermostat',
+                'name': 'test_cool',
+                'heater': ENT_SWITCH,
+                'ac_mode': True,
+                'target_sensor': ENT_SENSOR
+            }
+        ]})
+
+    def tearDown(self):  # pylint: disable=invalid-name
+        """Stop down everything that was started."""
+        self.hass.stop()
+
+    def test_turn_on_when_off(self):
+        """Test if climate.turn_on turns on a turned off device."""
+        climate.set_operation_mode(self.hass, STATE_OFF)
+        self.hass.block_till_done()
+        self.hass.services.call('climate', SERVICE_TURN_ON)
+        self.hass.block_till_done()
+        state_heat = self.hass.states.get(self.HEAT_ENTITY)
+        state_cool = self.hass.states.get(self.COOL_ENTITY)
+        self.assertEqual(STATE_HEAT,
+                         state_heat.attributes.get('operation_mode'))
+        self.assertEqual(STATE_COOL,
+                         state_cool.attributes.get('operation_mode'))
+
+    def test_turn_on_when_on(self):
+        """Test if climate.turn_on does nothing to a turned on device."""
+        climate.set_operation_mode(self.hass, STATE_HEAT, self.HEAT_ENTITY)
+        climate.set_operation_mode(self.hass, STATE_COOL, self.COOL_ENTITY)
+        self.hass.block_till_done()
+        self.hass.services.call('climate', SERVICE_TURN_ON)
+        self.hass.block_till_done()
+        state_heat = self.hass.states.get(self.HEAT_ENTITY)
+        state_cool = self.hass.states.get(self.COOL_ENTITY)
+        self.assertEqual(STATE_HEAT,
+                         state_heat.attributes.get('operation_mode'))
+        self.assertEqual(STATE_COOL,
+                         state_cool.attributes.get('operation_mode'))
+
+    def test_turn_off_when_on(self):
+        """Test if climate.turn_off turns off a turned on device."""
+        climate.set_operation_mode(self.hass, STATE_HEAT, self.HEAT_ENTITY)
+        climate.set_operation_mode(self.hass, STATE_COOL, self.COOL_ENTITY)
+        self.hass.block_till_done()
+        self.hass.services.call('climate', SERVICE_TURN_OFF)
+        self.hass.block_till_done()
+        state_heat = self.hass.states.get(self.HEAT_ENTITY)
+        state_cool = self.hass.states.get(self.COOL_ENTITY)
+        self.assertEqual(STATE_OFF,
+                         state_heat.attributes.get('operation_mode'))
+        self.assertEqual(STATE_OFF,
+                         state_cool.attributes.get('operation_mode'))
+
+    def test_turn_off_when_off(self):
+        """Test if climate.turn_off does nothing to a turned off device."""
+        climate.set_operation_mode(self.hass, STATE_OFF)
+        self.hass.block_till_done()
+        self.hass.services.call('climate', SERVICE_TURN_OFF)
+        self.hass.block_till_done()
+        state_heat = self.hass.states.get(self.HEAT_ENTITY)
+        state_cool = self.hass.states.get(self.COOL_ENTITY)
+        self.assertEqual(STATE_OFF,
+                         state_heat.attributes.get('operation_mode'))
+        self.assertEqual(STATE_OFF,
+                         state_cool.attributes.get('operation_mode'))
 
 
 @asyncio.coroutine
