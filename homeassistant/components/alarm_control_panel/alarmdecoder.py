@@ -26,10 +26,10 @@ ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
     device = AlarmDecoderAlarmPanel()
-    add_devices([device])
+    add_entities([device])
 
     def alarm_toggle_chime_handler(service):
         """Register toggle chime handler."""

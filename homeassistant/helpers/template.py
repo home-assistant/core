@@ -142,7 +142,6 @@ class Template:
             self.hass.loop, self.async_render_with_possible_json_value, value,
             error_value).result()
 
-    # pylint: disable=invalid-name
     def async_render_with_possible_json_value(self, value,
                                               error_value=_SENTINEL):
         """Render template with value exposed.

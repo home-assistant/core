@@ -6,7 +6,7 @@ from homeassistant.setup import setup_component
 import homeassistant.components.mqtt_eventstream as eventstream
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import State, callback
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -22,7 +22,7 @@ class TestMqttEventStream:
     """Test the MQTT eventstream module."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_mqtt = mock_mqtt_component(self.hass)
 

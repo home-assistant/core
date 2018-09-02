@@ -30,7 +30,7 @@ class TestVacuumDemo(unittest.TestCase):
     """Test the Demo vacuum."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.assertTrue(setup_component(
             self.hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: 'demo'}}))
@@ -83,7 +83,7 @@ class TestVacuumDemo(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
-        self.assertEqual(5244, state.attributes.get(ATTR_SUPPORTED_FEATURES))
+        self.assertEqual(13436, state.attributes.get(ATTR_SUPPORTED_FEATURES))
         self.assertEqual(STATE_DOCKED, state.state)
         self.assertEqual(100, state.attributes.get(ATTR_BATTERY_LEVEL))
         self.assertEqual("medium", state.attributes.get(ATTR_FAN_SPEED))
@@ -158,12 +158,12 @@ class TestVacuumDemo(unittest.TestCase):
         self.assertIn("spot", state.attributes.get(ATTR_STATUS))
         self.assertEqual(STATE_ON, state.state)
 
-        vacuum.start_pause(self.hass, ENTITY_VACUUM_STATE)
+        vacuum.start(self.hass, ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertEqual(STATE_CLEANING, state.state)
 
-        vacuum.start_pause(self.hass, ENTITY_VACUUM_STATE)
+        vacuum.pause(self.hass, ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertEqual(STATE_PAUSED, state.state)
@@ -246,6 +246,23 @@ class TestVacuumDemo(unittest.TestCase):
         state = self.hass.states.get(ENTITY_VACUUM_BASIC)
         self.assertNotIn("spot", state.attributes.get(ATTR_STATUS))
         self.assertEqual(STATE_OFF, state.state)
+
+        # VacuumDevice should not support start and pause methods.
+        self.hass.states.set(ENTITY_VACUUM_COMPLETE, STATE_ON)
+        self.hass.block_till_done()
+        self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
+
+        vacuum.pause(self.hass, ENTITY_VACUUM_COMPLETE)
+        self.hass.block_till_done()
+        self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
+
+        self.hass.states.set(ENTITY_VACUUM_COMPLETE, STATE_OFF)
+        self.hass.block_till_done()
+        self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
+
+        vacuum.start(self.hass, ENTITY_VACUUM_COMPLETE)
+        self.hass.block_till_done()
+        self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
         # StateVacuumDevice does not support on/off
         vacuum.turn_on(self.hass, entity_id=ENTITY_VACUUM_STATE)

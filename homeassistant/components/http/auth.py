@@ -30,8 +30,10 @@ def setup_auth(app, trusted_networks, use_auth,
         if use_auth and (HTTP_HEADER_HA_AUTH in request.headers or
                          DATA_API_PASSWORD in request.query):
             if request.path not in old_auth_warning:
-                _LOGGER.warning('Please change to use bearer token access %s',
-                                request.path)
+                _LOGGER.log(
+                    logging.INFO if support_legacy else logging.WARNING,
+                    'You need to use a bearer token to access %s from %s',
+                    request.path, request[KEY_REAL_IP])
                 old_auth_warning.add(request.path)
 
         legacy_auth = (not use_auth or support_legacy) and api_password
@@ -106,11 +108,11 @@ async def async_validate_auth_header(request, api_password=None):
 
     if auth_type == 'Bearer':
         hass = request.app['hass']
-        access_token = hass.auth.async_get_access_token(auth_val)
-        if access_token is None:
+        refresh_token = await hass.auth.async_validate_access_token(auth_val)
+        if refresh_token is None:
             return False
 
-        request['hass_user'] = access_token.refresh_token.user
+        request['hass_user'] = refresh_token.user
         return True
 
     if auth_type == 'Basic' and api_password is not None:

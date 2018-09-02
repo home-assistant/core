@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Loop Energy sensors."""
     import pyloopenergy
 
@@ -84,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if gas_config.get(CONF_GAS_SERIAL):
         sensors.append(LoopEnergyGas(controller))
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class LoopEnergyDevice(Entity):

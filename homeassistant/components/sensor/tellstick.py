@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tellstick sensors."""
     from tellcore import telldus
     import tellcore.constants as tellcore_constants
@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     sensors.append(TellstickSensor(
                         sensor_name, tellcore_sensor, datatype, sensor_info))
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class TellstickSensor(Entity):

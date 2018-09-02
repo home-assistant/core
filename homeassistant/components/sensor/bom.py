@@ -99,7 +99,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BOM sensor."""
     station = config.get(CONF_STATION)
     zone_id, wmo_id = config.get(CONF_ZONE_ID), config.get(CONF_WMO_ID)
@@ -127,8 +127,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Received error from BOM Current: %s", err)
         return
 
-    add_devices([BOMCurrentSensor(bom_data, variable, config.get(CONF_NAME))
-                 for variable in config[CONF_MONITORED_CONDITIONS]])
+    add_entities([BOMCurrentSensor(bom_data, variable, config.get(CONF_NAME))
+                  for variable in config[CONF_MONITORED_CONDITIONS]])
 
 
 class BOMCurrentSensor(Entity):

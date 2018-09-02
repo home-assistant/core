@@ -54,14 +54,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Statistics sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
     sampling_size = config.get(CONF_SAMPLING_SIZE)
     max_age = config.get(CONF_MAX_AGE, None)
 
-    async_add_devices(
+    async_add_entities(
         [StatisticsSensor(hass, entity_id, name, sampling_size, max_age)],
         True)
     return True
@@ -97,7 +98,6 @@ class StatisticsSensor(Entity):
             hass.async_add_job(self._initialize_from_database)
 
         @callback
-        # pylint: disable=invalid-name
         def async_stats_sensor_state_listener(entity, old_state, new_state):
             """Handle the sensor state changes."""
             self._unit_of_measurement = new_state.attributes.get(

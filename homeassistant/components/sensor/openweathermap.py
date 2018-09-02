@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenWeatherMap sensor."""
     from pyowm import OWM
 
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(OpenWeatherMapSensor(
             name, data, 'forecast', SENSOR_TYPES['temperature'][1]))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class OpenWeatherMapSensor(Entity):

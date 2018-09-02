@@ -28,11 +28,12 @@ _TIMEOUT = 10  # seconds
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the DoorBird camera platform."""
     for doorstation in hass.data[DOORBIRD_DOMAIN]:
         device = doorstation.device
-        async_add_devices([
+        async_add_entities([
             DoorBirdCamera(
                 device.live_image_url,
                 _CAMERA_LIVE.format(doorstation.name),

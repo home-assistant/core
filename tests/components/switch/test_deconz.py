@@ -20,6 +20,12 @@ SUPPORTED_SWITCHES = {
         "name": "Switch 2 name",
         "type": "Smart plug",
         "state": {}
+    },
+    "3": {
+        "id": "Switch 3 id",
+        "name": "Switch 3 name",
+        "type": "Warning device",
+        "state": {}
     }
 }
 
@@ -67,8 +73,9 @@ async def test_switch(hass):
     await setup_bridge(hass, {"lights": SUPPORTED_SWITCHES})
     assert "switch.switch_1_name" in hass.data[deconz.DATA_DECONZ_ID]
     assert "switch.switch_2_name" in hass.data[deconz.DATA_DECONZ_ID]
+    assert "switch.switch_3_name" in hass.data[deconz.DATA_DECONZ_ID]
     assert len(SUPPORTED_SWITCHES) == len(SWITCH_TYPES)
-    assert len(hass.states.async_all()) == 3
+    assert len(hass.states.async_all()) == 4
 
 
 async def test_add_new_switch(hass):

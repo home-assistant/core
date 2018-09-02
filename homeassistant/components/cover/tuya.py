@@ -11,7 +11,7 @@ from homeassistant.components.tuya import DATA_TUYA, TuyaDevice
 DEPENDENCIES = ['tuya']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tuya cover devices."""
     if discovery_info is None:
         return
@@ -23,7 +23,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if device is None:
             continue
         devices.append(TuyaCover(device))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class TuyaCover(TuyaDevice, CoverDevice):
