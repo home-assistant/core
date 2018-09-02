@@ -44,14 +44,13 @@ class Switchmate(SwitchDevice):
     def __init__(self, mac, name) -> None:
         """Initialize the Switchmate."""
         # pylint: disable=import-error
-        import bluepy
         self._state = False
         self._name = name
         self._mac = mac
         self._device = None
         if not self._connect():
             raise PlatformNotReady()
-        
+
     def _connect(self) -> bool:
         import bluepy
         if self._device:
