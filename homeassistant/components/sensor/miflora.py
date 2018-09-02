@@ -55,8 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
+async def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     """Set up the MiFlora sensor."""
     from miflora import miflora_poller
@@ -80,7 +79,7 @@ def async_setup_platform(hass, config, async_add_entities,
 
     try:
         with async_timeout.timeout(9):
-            yield from hass.async_add_job(poller.fill_cache)
+            await hass.async_add_executor_job(poller.fill_cache)
     except asyncio.TimeoutError:
         _LOGGER.error('Unable to connect to %s', config.get(CONF_MAC))
         raise PlatformNotReady
@@ -176,8 +175,7 @@ class MiFloraSensor(Entity):
             _LOGGER.debug("Median is: %s", median)
             self._state = median
         elif self._state is None:
-            _LOGGER.debug("State was None, ignore median and show at least "
-                          "something to user")
+            _LOGGER.debug("Set initial state")
             self._state = self.data[0]
         else:
             _LOGGER.debug("Not yet enough data for median calculation")
