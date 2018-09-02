@@ -31,11 +31,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None) -> None:
+def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Perform the setup for Switchmate devices."""
     name = config.get(CONF_NAME)
     mac_addr = config.get(CONF_MAC)
-    add_devices([Switchmate(mac_addr, name)], True)
+    add_entities([Switchmate(mac_addr, name)], True)
 
 
 class Switchmate(SwitchDevice):
