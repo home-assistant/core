@@ -189,7 +189,7 @@ class BroadlinkRM(MediaPlayerDevice):
         """Volume down media player."""
         await self.send(self._config.get(CONF_VOLUME_DOWN))
 
-    async def async_volume_mute(self):
+    async def async_mute_volume(self, mute):
         """Send mute command."""
         await self.send(self._config.get(CONF_VOLUME_MUTE))
 
