@@ -173,5 +173,9 @@ class MiFloraSensor(Entity):
             median = sorted(self.data)[int((self.median_count - 1) / 2)]
             _LOGGER.debug("Median is: %s", median)
             self._state = median
+        elif self._state is None:
+            _LOGGER.debug("State was None, ignore median and show at least "
+                          "something to user")
+            self._state = self.data[0]
         else:
             _LOGGER.debug("Not yet enough data for median calculation")
