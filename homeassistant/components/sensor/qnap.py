@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['qnapstats==0.2.6']
+REQUIREMENTS = ['qnapstats==0.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -173,7 +173,7 @@ class QNAPStatsAPI:
 
         protocol = "https" if config.get(CONF_SSL) else "http"
         self._api = QNAPStats(
-            protocol + "://" + config.get(CONF_HOST),
+            '{}://{}'.format(protocol, config.get(CONF_HOST)),
             config.get(CONF_PORT),
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),

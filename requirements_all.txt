@@ -1217,7 +1217,7 @@ pyxeoma==1.4.0
 pyzabbix==0.7.4
 
 # homeassistant.components.sensor.qnap
-qnapstats==0.2.6
+qnapstats==0.2.7
 
 # homeassistant.components.rachio
 rachiopy==0.1.3
