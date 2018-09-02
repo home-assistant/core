@@ -68,6 +68,11 @@ STATE_IDLE = STATE_IDLE
 STATE_PAUSED = STATE_PAUSED
 STATE_RETURNING = 'returning'
 STATE_ERROR = 'error'
+STATE_REMOTE = 'remote controlled'
+STATE_SPOT_CLEANING = 'spot cleaning'
+STATE_GOING_TO_TARGET = 'going to target'
+STATE_UPDATING = 'updating'
+STATE_ZONED_CLEANING = 'zoned cleaning'
 
 DEFAULT_NAME = 'Vacuum cleaner robot'
 
