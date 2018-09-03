@@ -25,7 +25,8 @@ from homeassistant.helpers import template as template_helper
 
 # pylint: disable=invalid-name
 
-TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM' or 'HH:MM:SS'"
+TIME_PERIOD_ERROR = \
+    "offset {} should be format 'HH:MM' or 'HH:MM:SS' or 'HH:MM:SS:SSS'"
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -267,12 +268,17 @@ def time_period_str(value: str) -> timedelta:
     if len(parsed) == 2:
         hour, minute = parsed
         second = 0
+        millisecond = 0
     elif len(parsed) == 3:
         hour, minute, second = parsed
+        millisecond = 0
+    elif len(parsed) == 4:
+        hour, minute, second, millisecond = parsed
     else:
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
 
-    offset = timedelta(hours=hour, minutes=minute, seconds=second)
+    offset = timedelta(hours=hour, minutes=minute, seconds=second,
+                       milliseconds=millisecond)
 
     if negative_offset:
         offset *= -1
