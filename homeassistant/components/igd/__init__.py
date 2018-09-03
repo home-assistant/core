@@ -51,7 +51,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 async def _async_create_igd_device(hass: HomeAssistantType,
                                    ssdp_description: str):
-    """."""
+    """Create IGD device."""
     # build requester
     from async_upnp_client.aiohttp import AiohttpSessionRequester
     session = async_get_clientsession(hass)
@@ -94,30 +94,36 @@ async def _async_add_port_mapping(hass: HomeAssistantType,
 
     if local_ip == '127.0.0.1':
         _LOGGER.warning('Could not create port mapping, our IP is 127.0.0.1')
-        return False
+        return
     local_ip = IPv4Address(local_ip)
 
     # create port mapping
+    from async_upnp_client import UpnpError
     port = hass.http.server_port
     _LOGGER.debug('Creating port mapping %s:%s:%s (TCP)', port, local_ip, port)
-    await igd_device.async_add_port_mapping(remote_host=None,
-                                            external_port=port,
-                                            protocol='TCP',
-                                            internal_port=port,
-                                            internal_client=local_ip,
-                                            enabled=True,
-                                            description="Home Assistant",
-                                            lease_duration=None)
-
-    return True
+    try:
+        await igd_device.async_add_port_mapping(remote_host=None,
+                                                external_port=port,
+                                                protocol='TCP',
+                                                internal_port=port,
+                                                internal_client=local_ip,
+                                                enabled=True,
+                                                description="Home Assistant",
+                                                lease_duration=None)
+    except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
+        _LOGGER.warning('Could not add port mapping')
 
 
 async def _async_delete_port_mapping(hass: HomeAssistantType, igd_device):
     """Remove a port mapping."""
+    from async_upnp_client import UpnpError
     port = hass.http.server_port
-    await igd_device.async_delete_port_mapping(remote_host=None,
-                                               external_port=port,
-                                               protocol='TCP')
+    try:
+        await igd_device.async_delete_port_mapping(remote_host=None,
+                                                   external_port=port,
+                                                   protocol='TCP')
+    except (asyncio.TimeoutError, aiohttp.ClientError, UpnpError):
+        _LOGGER.warning('Could not delete port mapping')
 
 
 # config
