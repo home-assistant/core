@@ -1,6 +1,6 @@
 """The tests for the Jewish calendar sensor platform."""
 import unittest
-# from datetime import timedelta
+from datetime import datetime as dt
 # from unittest.mock import patch
 
 from homeassistant.util.async_ import run_coroutine_threadsafe
@@ -30,7 +30,8 @@ class TestJewishCalenderSensor(unittest.TestCase):
         """Test minimum jewish calendar configuration."""
         config = {
             'sensor': {
-                'platform': 'jewish_calendar'
+                'platform': 'jewish_calendar',
+                'date': '2018-09-03',
             }
         }
         with self.assertLogs() as self.cm:
@@ -69,7 +70,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
 
     def test_jewish_calendar_sensor_date_output(self):
         """Test Jewish calendar sensor date output."""
-        sensor = JewishCalSensor('test')
+        sensor = JewishCalSensor('test', dt(2018, 9, 3))
         run_coroutine_threadsafe(
             sensor.async_update(),
             self.hass.loop).result()

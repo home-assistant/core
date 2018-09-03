@@ -10,7 +10,7 @@ from datetime import datetime as dt
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_DATE
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -24,6 +24,7 @@ ICON = 'mdi:clock'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_DATE, default=dt.today()): cv.date
 })
 
 
@@ -32,16 +33,18 @@ async def async_setup_platform(
     """Set up the Jewish calendar sensor platform."""
     name = config.get(CONF_NAME)
 
-    async_add_entities([JewishCalSensor(name)], True)
+    async_add_entities([JewishCalSensor(name, CONF_DATE)])
 
 
 class JewishCalSensor(Entity):
     """Representation of an Jewish calendar sensor."""
 
-    def __init__(self, name):
+    def __init__(self, name, date):
         """Initialize the Jewish calendar sensor."""
         self._name = name
         self._state = None
+        self._date = date
+        _LOGGER.debug("Initialized sensor %s for date %s", name, date)
 
     @property
     def name(self):
@@ -62,5 +65,5 @@ class JewishCalSensor(Entity):
         """Update the state of the sensor."""
         import hdate
 
-        self._state = str(hdate.HDate(dt.today(), hebrew=False))
+        self._state = str(hdate.HDate(self._date, hebrew=False))
         _LOGGER.debug("New value: %s", self._state)
