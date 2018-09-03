@@ -2,7 +2,6 @@
 from unittest.mock import patch, PropertyMock, Mock
 
 from homeassistant.bootstrap import async_setup_component
-from homeassistant.components import spc
 from homeassistant.components.spc import DATA_API
 from homeassistant.const import (STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED)
 
@@ -73,19 +72,3 @@ async def test_update_alarm_device(hass):
 
     assert hass.states.get(entity_id).state == STATE_ALARM_DISARMED
     assert hass.states.get(entity_id).attributes['changed_by'] == 'Anna'
-
-
-class TestSpcRegistry:
-    """Test the device mapping registry."""
-
-    def test_sensor_device(self):
-        """Test retrieving device based on ID."""
-        registry = spc.SpcRegistry()
-        registry.register_sensor_device('1', 'dummy')
-        assert registry.get_sensor_device('1') == 'dummy'
-
-    def test_alarm_device(self):
-        """Test retrieving device based on zone name."""
-        registry = spc.SpcRegistry()
-        registry.register_alarm_device('Area 51', 'dummy')
-        assert registry.get_alarm_device('Area 51') == 'dummy'

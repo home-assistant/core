@@ -7,11 +7,12 @@ https://home-assistant.io/components/alarm_control_panel.spc/
 import logging
 
 import homeassistant.components.alarm_control_panel as alarm
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.spc import (
-    ATTR_DISCOVER_AREAS, DATA_API, DATA_REGISTRY)
+    ATTR_DISCOVER_AREAS, DATA_API, SIGNAL_UPDATE_ALARM)
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED, STATE_UNKNOWN)
+    STATE_ALARM_DISARMED, STATE_ALARM_TRIGGERED)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +30,7 @@ def _get_alarm_state(area):
         AreaMode.PART_SET_B: STATE_ALARM_ARMED_NIGHT,
         AreaMode.FULL_SET: STATE_ALARM_ARMED_AWAY,
     }
-    return mode_to_state.get(area.mode, STATE_UNKNOWN)
+    return mode_to_state.get(area.mode, None)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -39,21 +40,27 @@ async def async_setup_platform(hass, config, async_add_entities,
             discovery_info[ATTR_DISCOVER_AREAS] is None):
         return
 
-    async_add_entities([SpcAlarm(area=area)
+    async_add_entities([SpcAlarm(area=area, api=hass.data[DATA_API])
                         for area in discovery_info[ATTR_DISCOVER_AREAS]])
 
 
 class SpcAlarm(alarm.AlarmControlPanel):
     """Representation of the SPC alarm panel."""
 
-    def __init__(self, area):
+    def __init__(self, area, api):
         """Initialize the SPC alarm panel."""
         self._area = area
+        self._api = api
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
-        self.hass.data[DATA_REGISTRY].register_alarm_device(
-            self._area.id, self)
+        async def async_update_callback():
+            """Call update method."""
+            self.async_schedule_update_ha_state(True)
+
+        async_dispatcher_connect(self.hass,
+                                 SIGNAL_UPDATE_ALARM.format(self._area.id),
+                                 async_update_callback)
 
     @property
     def should_poll(self):
@@ -78,23 +85,19 @@ class SpcAlarm(alarm.AlarmControlPanel):
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""
         from pyspcwebgw.const import AreaMode
-        self.hass.data[DATA_API].change_mode(area=self._area,
-                                             new_mode=AreaMode.UNSET)
+        self._api.change_mode(area=self._area, new_mode=AreaMode.UNSET)
 
     async def async_alarm_arm_home(self, code=None):
         """Send arm home command."""
         from pyspcwebgw.const import AreaMode
-        self.hass.data[DATA_API].change_mode(area=self._area,
-                                             new_mode=AreaMode.PART_SET_A)
+        self._api.change_mode(area=self._area, new_mode=AreaMode.PART_SET_A)
 
     async def async_alarm_arm_night(self, code=None):
         """Send arm home command."""
         from pyspcwebgw.const import AreaMode
-        self.hass.data[DATA_API].change_mode(area=self._area,
-                                             new_mode=AreaMode.PART_SET_B)
+        self._api.change_mode(area=self._area, new_mode=AreaMode.PART_SET_B)
 
     async def async_alarm_arm_away(self, code=None):
         """Send arm away command."""
         from pyspcwebgw.const import AreaMode
-        self.hass.data[DATA_API].change_mode(area=self._area,
-                                             new_mode=AreaMode.FULL_SET)
+        self._api.change_mode(area=self._area, new_mode=AreaMode.FULL_SET)

@@ -2,6 +2,7 @@
 from homeassistant.components.alarm_control_panel import spc
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_DISARMED)
+from homeassistant.components.spc import (DATA_API)
 
 
 async def test_setup_platform(hass):
@@ -38,6 +39,8 @@ async def test_setup_platform(hass):
     from pyspcwebgw import Area
 
     areas = [Area(gateway=None, spc_area=a) for a in area_defs]
+
+    hass.data[DATA_API] = None
 
     await spc.async_setup_platform(hass=hass,
                                    config={},

@@ -7,7 +7,9 @@ https://home-assistant.io/components/binary_sensor.spc/
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.spc import ATTR_DISCOVER_DEVICES, DATA_REGISTRY
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.components.spc import (
+    ATTR_DISCOVER_DEVICES, SIGNAL_UPDATE_SENSOR)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,8 +44,13 @@ class SpcBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
-        self.hass.data[DATA_REGISTRY].register_sensor_device(
-            self._zone.id, self)
+        async def async_update_callback():
+            """Call update method."""
+            self.async_schedule_update_ha_state(True)
+
+        async_dispatcher_connect(self.hass,
+                                 SIGNAL_UPDATE_SENSOR.format(self._zone.id),
+                                 async_update_callback)
 
     @property
     def name(self):

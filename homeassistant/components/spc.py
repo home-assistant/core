@@ -8,8 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.helpers import discovery, aiohttp_client
+from homeassistant.helpers.dispatcher import dispatcher_send
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyspcwebgw==0.4.0']
@@ -22,9 +22,11 @@ ATTR_DISCOVER_AREAS = 'areas'
 CONF_WS_URL = 'ws_url'
 CONF_API_URL = 'api_url'
 
-DATA_REGISTRY = 'spc_registry'
-DATA_API = 'spc_api'
 DOMAIN = 'spc'
+DATA_API = 'spc_api'
+
+SIGNAL_UPDATE_ALARM = 'spc_update_alarm_{}'
+SIGNAL_UPDATE_SENSOR = 'spc_update_sensor_{}'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -38,20 +40,14 @@ async def async_setup(hass, config):
     """Set up the SPC component."""
     from pyspcwebgw import SpcWebGateway
 
-    registry = SpcRegistry()
-    hass.data[DATA_REGISTRY] = registry
-
-    @callback
-    async def async_upate_callback(entity):
+    async def async_upate_callback(spc_object):
         from pyspcwebgw.area import Area
         from pyspcwebgw.zone import Zone
 
-        if isinstance(entity, Area):
-            device = registry.get_alarm_device(entity.id)
-        elif isinstance(entity, Zone):
-            device = registry.get_sensor_device(entity.id)
-        if device:
-            device.async_schedule_update_ha_state()
+        if isinstance(spc_object, Area):
+            dispatcher_send(hass, SIGNAL_UPDATE_ALARM.format(spc_object.id))
+        elif isinstance(spc_object, Zone):
+            dispatcher_send(hass, SIGNAL_UPDATE_SENSOR.format(spc_object.id))
 
     session = aiohttp_client.async_get_clientsession(hass)
 
@@ -80,28 +76,3 @@ async def async_setup(hass, config):
     spc.start()
 
     return True
-
-
-class SpcRegistry:
-    """Maintain mappings between SPC zones/areas and HA entities."""
-
-    def __init__(self):
-        """Initialize the registry."""
-        self._zone_id_to_sensor_map = {}
-        self._area_id_to_alarm_map = {}
-
-    def register_sensor_device(self, zone_id, device):
-        """Add a sensor device to the registry."""
-        self._zone_id_to_sensor_map[zone_id] = device
-
-    def get_sensor_device(self, zone_id):
-        """Retrieve a sensor device for a specific zone."""
-        return self._zone_id_to_sensor_map.get(zone_id, None)
-
-    def register_alarm_device(self, area_id, device):
-        """Add an alarm device to the registry."""
-        self._area_id_to_alarm_map[area_id] = device
-
-    def get_alarm_device(self, area_id):
-        """Retrieve an alarm device for a specific area."""
-        return self._area_id_to_alarm_map.get(area_id, None)
