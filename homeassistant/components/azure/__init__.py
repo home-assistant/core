@@ -4,9 +4,11 @@ Azure component that handles interaction with Microsoft Azure Cloud.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/azure/
 """
-import asyncio
+
 import logging
+
 import voluptuous as vol
+
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,27 +30,26 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the azure component."""
-    conf = config.get(DOMAIN, {})
-    hass.data[DOMAIN] = AzureSubscription(hass, conf)
+    from azure.common.credentials import ServicePrincipalCredentials
+
+    conf = config[DOMAIN]
+    subscription_id = conf[CONF_SUBSCRIPTION_ID]
+    credentials = ServicePrincipalCredentials(
+        client_id=conf[CONF_CLIENT_ID], secret=conf[CONF_CLIENT_SECRET],
+        tenant=conf[CONF_TENANT_ID])
+    hass.data[DOMAIN] = AzureSubscription(subscription_id, credentials)
     return True
 
 
 class AzureSubscription:
     """Representation of an azure subscription."""
 
-    def __init__(self, hass, config):
+    def __init__(self, subscription_id, credentials):
         """Initialize the azure subscription Entity."""
-        from azure.common.credentials import ServicePrincipalCredentials
-        self._tenant_id = config.get(CONF_TENANT_ID)
-        self._subscription_id = config.get(CONF_SUBSCRIPTION_ID)
-        self._client_id = config.get(CONF_CLIENT_ID)
-        self._client_secret = config.get(CONF_CLIENT_SECRET)
-        self._credentials = ServicePrincipalCredentials(
-            client_id=self._client_id, secret=self._client_secret,
-            tenant=self._tenant_id)
+        self._subscription_id = subscription_id
+        self._credentials = credentials
         _LOGGER.debug(
             "Azure subscription entity initialized for subscription %s.",
             self._subscription_id)
