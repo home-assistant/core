@@ -49,7 +49,7 @@ async def test_user_no_devices_found(hass, flow_conf):
 
 
 async def test_user_no_confirmation(hass, flow_conf):
-    """Test user requires no confirmation to setup."""
+    """Test user requires no confirmation to set up."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
     flow_conf['discovered'] = True
@@ -118,7 +118,7 @@ async def test_user_init_trumps_discovery(hass, flow_conf):
 
 
 async def test_import_no_confirmation(hass, flow_conf):
-    """Test import requires no confirmation to setup."""
+    """Test import requires no confirmation to set up."""
     flow = config_entries.HANDLERS['test']()
     flow.hass = hass
     flow_conf['discovered'] = True

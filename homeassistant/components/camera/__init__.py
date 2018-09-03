@@ -145,7 +145,7 @@ async def async_get_image(hass, entity_id, timeout=10):
     component = hass.data.get(DOMAIN)
 
     if component is None:
-        raise HomeAssistantError('Camera component not setup')
+        raise HomeAssistantError('Camera component not set up')
 
     camera = component.get_entity(entity_id)
 
@@ -189,80 +189,32 @@ async def async_setup(hass, config):
     hass.helpers.event.async_track_time_interval(
         update_tokens, TOKEN_CHANGE_INTERVAL)
 
-    async def async_handle_camera_service(service):
-        """Handle calls to the camera services."""
-        target_cameras = component.async_extract_from_service(service)
-
-        update_tasks = []
-        for camera in target_cameras:
-            if service.service == SERVICE_ENABLE_MOTION:
-                await camera.async_enable_motion_detection()
-            elif service.service == SERVICE_DISABLE_MOTION:
-                await camera.async_disable_motion_detection()
-            elif service.service == SERVICE_TURN_OFF and \
-                    camera.supported_features & SUPPORT_ON_OFF:
-                await camera.async_turn_off()
-            elif service.service == SERVICE_TURN_ON and \
-                    camera.supported_features & SUPPORT_ON_OFF:
-                await camera.async_turn_on()
-
-            if not camera.should_poll:
-                continue
-            update_tasks.append(camera.async_update_ha_state(True))
-
-        if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
-
-    async def async_handle_snapshot_service(service):
-        """Handle snapshot services calls."""
-        target_cameras = component.async_extract_from_service(service)
-        filename = service.data[ATTR_FILENAME]
-        filename.hass = hass
-
-        for camera in target_cameras:
-            snapshot_file = filename.async_render(
-                variables={ATTR_ENTITY_ID: camera})
-
-            # check if we allow to access to that file
-            if not hass.config.is_allowed_path(snapshot_file):
-                _LOGGER.error(
-                    "Can't write %s, no access to path!", snapshot_file)
-                continue
-
-            image = await camera.async_camera_image()
-
-            def _write_image(to_file, image_data):
-                """Executor helper to write image."""
-                with open(to_file, 'wb') as img_file:
-                    img_file.write(image_data)
-
-            try:
-                await hass.async_add_job(
-                    _write_image, snapshot_file, image)
-            except OSError as err:
-                _LOGGER.error("Can't write image to file: %s", err)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_camera_service,
-        schema=CAMERA_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_camera_service,
-        schema=CAMERA_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE_MOTION, async_handle_camera_service,
-        schema=CAMERA_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE_MOTION, async_handle_camera_service,
-        schema=CAMERA_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_SNAPSHOT, async_handle_snapshot_service,
-        schema=CAMERA_SERVICE_SNAPSHOT)
+    component.async_register_entity_service(
+        SERVICE_ENABLE_MOTION, CAMERA_SERVICE_SCHEMA,
+        'async_enable_motion_detection'
+    )
+    component.async_register_entity_service(
+        SERVICE_DISABLE_MOTION, CAMERA_SERVICE_SCHEMA,
+        'async_disable_motion_detection'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, CAMERA_SERVICE_SCHEMA,
+        'async_turn_off'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, CAMERA_SERVICE_SCHEMA,
+        'async_turn_on'
+    )
+    component.async_register_entity_service(
+        SERVICE_SNAPSHOT, CAMERA_SERVICE_SNAPSHOT,
+        async_handle_snapshot_service
+    )
 
     return True
 
 
 async def async_setup_entry(hass, entry):
-    """Setup a config entry."""
+    """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
@@ -553,3 +505,32 @@ def websocket_camera_thumbnail(hass, connection, msg):
                 msg['id'], 'image_fetch_failed', 'Unable to fetch image'))
 
     hass.async_add_job(send_camera_still())
+
+
+async def async_handle_snapshot_service(camera, service):
+    """Handle snapshot services calls."""
+    hass = camera.hass
+    filename = service.data[ATTR_FILENAME]
+    filename.hass = hass
+
+    snapshot_file = filename.async_render(
+        variables={ATTR_ENTITY_ID: camera})
+
+    # check if we allow to access to that file
+    if not hass.config.is_allowed_path(snapshot_file):
+        _LOGGER.error(
+            "Can't write %s, no access to path!", snapshot_file)
+        return
+
+    image = await camera.async_camera_image()
+
+    def _write_image(to_file, image_data):
+        """Executor helper to write image."""
+        with open(to_file, 'wb') as img_file:
+            img_file.write(image_data)
+
+    try:
+        await hass.async_add_executor_job(
+            _write_image, snapshot_file, image)
+    except OSError as err:
+        _LOGGER.error("Can't write image to file: %s", err)

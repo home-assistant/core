@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Discover and setup Xeoma Cameras."""
     from pyxeoma.xeoma import Xeoma, XeomaError
@@ -78,7 +78,7 @@ async def async_setup_platform(hass, config, async_add_devices,
                     camera[CONF_HIDE] = cam[CONF_HIDE]
 
         cameras = list(filter(lambda c: not c[CONF_HIDE], discovered_cameras))
-        async_add_devices(
+        async_add_entities(
             [XeomaCamera(xeoma, camera[CONF_IMAGE_NAME], camera[CONF_NAME],
                          camera[CONF_VIEWER_USERNAME],
                          camera[CONF_VIEWER_PASSWORD]) for camera in cameras])

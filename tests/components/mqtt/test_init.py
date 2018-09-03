@@ -45,7 +45,7 @@ class TestMQTTComponent(unittest.TestCase):
     """Test the MQTT component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         self.calls = []
@@ -56,7 +56,7 @@ class TestMQTTComponent(unittest.TestCase):
 
     @callback
     def record_calls(self, *args):
-        """Helper for recording calls."""
+        """Record calls."""
         self.calls.append(args)
 
     def aiohttp_client_stops_on_home_assistant_start(self):
@@ -188,7 +188,7 @@ class TestMQTTCallbacks(unittest.TestCase):
     """Test the MQTT callbacks."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_client(self.hass)
         self.calls = []
@@ -199,7 +199,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     @callback
     def record_calls(self, *args):
-        """Helper for recording calls."""
+        """Record calls."""
         self.calls.append(args)
 
     def aiohttp_client_starts_on_home_assistant_mqtt_setup(self):

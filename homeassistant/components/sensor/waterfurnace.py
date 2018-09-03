@@ -46,7 +46,7 @@ SENSORS = [
 ]
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Waterfurnace sensor."""
     if discovery_info is None:
         return
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sconfig in SENSORS:
         sensors.append(WaterFurnaceSensor(client, sconfig))
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class WaterFurnaceSensor(Entity):

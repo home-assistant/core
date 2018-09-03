@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return myStrom switch."""
     from pymystrom.switch import MyStromPlug, exceptions
 
@@ -37,7 +37,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No route to device: %s", host)
         return
 
-    add_devices([MyStromSwitch(name, host)])
+    add_entities([MyStromSwitch(name, host)])
 
 
 class MyStromSwitch(SwitchDevice):

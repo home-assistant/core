@@ -16,9 +16,8 @@ from homeassistant.components.climate import (
     ATTR_OPERATION_MODE, ATTR_AWAY_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_AWAY_MODE, SUPPORT_TARGET_TEMPERATURE, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT, STATE_ON, STATE_OFF, ATTR_TEMPERATURE,
-    CONF_NAME, ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF,
-    STATE_UNKNOWN)
+    STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, ATTR_ENTITY_ID,
+    SERVICE_TURN_ON, SERVICE_TURN_OFF, STATE_UNKNOWN)
 from homeassistant.helpers import condition
 from homeassistant.helpers.event import (
     async_track_state_change, async_track_time_interval)
@@ -69,7 +68,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the generic thermostat platform."""
     name = config.get(CONF_NAME)
     heater_entity_id = config.get(CONF_HEATER)
@@ -85,7 +85,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     initial_operation_mode = config.get(CONF_INITIAL_OPERATION_MODE)
     away_temp = config.get(CONF_AWAY_TEMP)
 
-    async_add_devices([GenericThermostat(
+    async_add_entities([GenericThermostat(
         hass, name, heater_entity_id, sensor_entity_id, min_temp, max_temp,
         target_temp, ac_mode, min_cycle_duration, cold_tolerance,
         hot_tolerance, keep_alive, initial_operation_mode, away_temp)])
@@ -251,6 +251,14 @@ class GenericThermostat(ClimateDevice):
         # Ensure we update the current operation after changing the mode
         self.schedule_update_ha_state()
 
+    async def async_turn_on(self):
+        """Turn thermostat on."""
+        await self.async_set_operation_mode(self.operation_list[0])
+
+    async def async_turn_off(self):
+        """Turn thermostat off."""
+        await self.async_set_operation_mode(STATE_OFF)
+
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -297,11 +305,8 @@ class GenericThermostat(ClimateDevice):
     @callback
     def _async_update_temp(self, state):
         """Update thermostat with latest state from sensor."""
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-
         try:
-            self._cur_temp = self.hass.config.units.temperature(
-                float(state.state), unit)
+            self._cur_temp = float(state.state)
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
 

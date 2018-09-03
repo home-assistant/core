@@ -22,7 +22,7 @@ CLIMATE_SENSOR_TYPES = ['temperature', 'humidity', 'power',
 HOT_WATER_SENSOR_TYPES = ['power', 'link', 'tado mode', 'overlay']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the sensor platform."""
     tado = hass.data[DATA_TADO]
 
@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         me_data['homes'][0]['id'], "tado bridge status"))
 
     if sensor_items:
-        add_devices(sensor_items, True)
+        add_entities(sensor_items, True)
 
 
 def create_zone_sensor(tado, zone, name, zone_id, variable):

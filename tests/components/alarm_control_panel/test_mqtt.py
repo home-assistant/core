@@ -21,7 +21,7 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
     # pylint: disable=invalid-name
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 

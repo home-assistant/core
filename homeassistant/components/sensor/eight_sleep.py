@@ -35,7 +35,7 @@ ATTR_SESSION_START = 'Session Start'
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the eight sleep sensors."""
     if discovery_info is None:
@@ -60,7 +60,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         else:
             all_sensors.append(EightUserSensor(name, eight, sensor, units))
 
-    async_add_devices(all_sensors, True)
+    async_add_entities(all_sensors, True)
 
 
 class EightHeatSensor(EightSleepHeatEntity):

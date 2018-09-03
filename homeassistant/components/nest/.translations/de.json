@@ -2,6 +2,8 @@
     "config": {
         "abort": {
             "already_setup": "Sie k\u00f6nnen nur ein einziges Nest-Konto konfigurieren.",
+            "authorize_url_fail": "Unbekannter Fehler beim Erstellen der Authorisierungs-URL",
+            "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL",
             "no_flows": "Sie m\u00fcssen Nest konfigurieren, bevor Sie sich authentifizieren k\u00f6nnen. [Bitte lesen Sie die Anweisungen] (https://www.home-assistant.io/components/nest/)."
         },
         "error": {
