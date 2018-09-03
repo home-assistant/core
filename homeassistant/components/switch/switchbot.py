@@ -1,5 +1,6 @@
 """
 Support for Switchbot.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.switchbot
 """
@@ -48,7 +49,8 @@ class SwitchBot(SwitchDevice):
     def _sendpacket(self, key, retry=2) -> bool:
         import bluepy
         try:
-            device = bluepy.btle.Peripheral(self._mac,bluepy.btle.ADDR_TYPE_RANDOM)
+            device = bluepy.btle.Peripheral(self._mac,
+                                            bluepy.btle.ADDR_TYPE_RANDOM)
             hand_service = device.getServiceByUUID(UUID)
             hand = hand_service.getCharacteristics(HANDLE)[0]
             hand.write(binascii.a2b_hex(key))
