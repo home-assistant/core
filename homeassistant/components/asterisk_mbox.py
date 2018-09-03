@@ -66,7 +66,7 @@ class AsteriskData:
 
     @callback
     def _discover_platform(self, component):
-        logging.error("Adding mailbox")
+        _LOGGER.debug("Adding mailbox")
         self.hass.async_add_job(discovery.async_load_platform(
             self.hass, "mailbox", component, {}, self.config))
 
