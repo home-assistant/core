@@ -36,7 +36,7 @@ def make_sensor(discovery_info):
         RelativeHumidity, TemperatureMeasurement, PressureMeasurement,
         IlluminanceMeasurement
     )
-    from zigpy.zcl.clusters.general import PowerConfiguration 
+    from zigpy.zcl.clusters.general import PowerConfiguration
     from zigpy.zcl.clusters.smartenergy import Metering
     from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
     in_clusters = discovery_info['in_clusters']
@@ -122,7 +122,7 @@ class BatterySensor(Sensor):
             ['battery_voltage']
         )
         self._state = result.get('battery_voltage', self._state)
-    
+
     @property
     def state(self):
         """Return the state of the entity."""
@@ -130,6 +130,7 @@ class BatterySensor(Sensor):
             return 'unknown'
 
         return self._state
+
 
 class TemperatureSensor(Sensor):
     """ZHA temperature sensor."""
@@ -150,7 +151,8 @@ class TemperatureSensor(Sensor):
         return round(convert_temperature(celsius,
                                          TEMP_CELSIUS,
                                          self.unit_of_measurement),
-                                         1)
+                     1)
+
 
 class RelativeHumiditySensor(Sensor):
     """ZHA relative humidity sensor."""
