@@ -10,7 +10,7 @@ from datetime import datetime as dt
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, CONF_DATE
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -18,38 +18,34 @@ REQUIREMENTS = ['hdate==0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_LANGUAGE = 'english'
+
 DEFAULT_NAME = 'Jewish Calendar'
 
 ICON = 'mdi:clock'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_DATE, default=dt.today()): cv.date
+    vol.Optional(CONF_LANGUAGE, default='english'): cv.string
 })
 
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
     """Set up the Jewish calendar sensor platform."""
-    name = config.get(CONF_NAME)
+    language = config.get(CONF_LANGUAGE)
 
-    async_add_entities([JewishCalSensor(name, CONF_DATE)])
+    async_add_entities([JewishCalSensor(language)])
 
 
 class JewishCalSensor(Entity):
     """Representation of an Jewish calendar sensor."""
 
-    def __init__(self, name, date):
+    def __init__(self, language):
         """Initialize the Jewish calendar sensor."""
-        self._name = name
+        self._date = dt.today()
+        self._language = language
         self._state = None
-        self._date = date
-        _LOGGER.debug("Initialized sensor %s for date %s", name, date)
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        _LOGGER.debug("Sensor initialized with date %s", self._date)
 
     @property
     def icon(self):

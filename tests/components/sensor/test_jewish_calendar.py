@@ -1,7 +1,7 @@
 """The tests for the Jewish calendar sensor platform."""
 import unittest
 from datetime import datetime as dt
-# from unittest.mock import patch
+from unittest.mock import patch
 
 from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.setup import setup_component
@@ -30,93 +30,31 @@ class TestJewishCalenderSensor(unittest.TestCase):
         """Test minimum jewish calendar configuration."""
         config = {
             'sensor': {
-                'platform': 'jewish_calendar',
-                'date': '2018-09-03',
+                'platform': 'jewish_calendar'
             }
         }
         with self.assertLogs() as self.cm:
             assert setup_component(self.hass, 'sensor', config)
         self.checkForLoggingErrors()
 
-    # def test_uptime_sensor_name_change(self):
-    #     """Test uptime sensor with different name."""
+    # def test_jewish_calendar_hebrew(self):
+    #     """Test jewish calendar sensor with language set to hebrew."""
     #     config = {
     #         'sensor': {
-    #             'platform': 'uptime',
-    #             'name': 'foobar',
+    #             'platform': 'jewish_calendar',
+    #             'language': 'hebrew',
     #         }
     #     }
-    #     assert setup_component(self.hass, 'sensor', config)
-
-    # def test_uptime_sensor_config_hours(self):
-    #     """Test uptime sensor with hours defined in config."""
-    #     config = {
-    #         'sensor': {
-    #             'platform': 'uptime',
-    #             'unit_of_measurement': 'hours',
-    #         }
-    #     }
-    #     assert setup_component(self.hass, 'sensor', config)
-
-    # def test_uptime_sensor_config_minutes(self):
-    #     """Test uptime sensor with minutes defined in config."""
-    #     config = {
-    #         'sensor': {
-    #             'platform': 'uptime',
-    #             'unit_of_measurement': 'minutes',
-    #         }
-    #     }
-    #     assert setup_component(self.hass, 'sensor', config)
+    #     with self.assertLogs() as self.cm:
+    #         assert setup_component(self.hass, 'sensor', config)
+    #     self.checkForLoggingErrors()
 
     def test_jewish_calendar_sensor_date_output(self):
         """Test Jewish calendar sensor date output."""
-        sensor = JewishCalSensor('test', dt(2018, 9, 3))
-        run_coroutine_threadsafe(
-            sensor.async_update(),
-            self.hass.loop).result()
-        self.assertEqual(sensor.state, 'Monday 23 Elul 5778')
-    #     new_time = sensor.initial + timedelta(days=111.499)
-    #     with patch('homeassistant.util.dt.now', return_value=new_time):
-    #         run_coroutine_threadsafe(
-    #             sensor.async_update(),
-    #             self.hass.loop
-    #         ).result()
-    #         self.assertEqual(sensor.state, 111.50)
-
-    # def test_uptime_sensor_hours_output(self):
-    #     """Test uptime sensor output data."""
-    #     sensor = UptimeSensor('test', 'hours')
-    #     self.assertEqual(sensor.unit_of_measurement, 'hours')
-    #     new_time = sensor.initial + timedelta(hours=16)
-    #     with patch('homeassistant.util.dt.now', return_value=new_time):
-    #         run_coroutine_threadsafe(
-    #             sensor.async_update(),
-    #             self.hass.loop
-    #         ).result()
-    #         self.assertEqual(sensor.state, 16.00)
-    #     new_time = sensor.initial + timedelta(hours=72.499)
-    #     with patch('homeassistant.util.dt.now', return_value=new_time):
-    #         run_coroutine_threadsafe(
-    #             sensor.async_update(),
-    #             self.hass.loop
-    #         ).result()
-    #         self.assertEqual(sensor.state, 72.50)
-
-    # def test_uptime_sensor_minutes_output(self):
-    #     """Test uptime sensor output data."""
-    #     sensor = UptimeSensor('test', 'minutes')
-    #     self.assertEqual(sensor.unit_of_measurement, 'minutes')
-    #     new_time = sensor.initial + timedelta(minutes=16)
-    #     with patch('homeassistant.util.dt.now', return_value=new_time):
-    #         run_coroutine_threadsafe(
-    #             sensor.async_update(),
-    #             self.hass.loop
-    #         ).result()
-    #         self.assertEqual(sensor.state, 16.00)
-    #     new_time = sensor.initial + timedelta(minutes=12.499)
-    #     with patch('homeassistant.util.dt.now', return_value=new_time):
-    #         run_coroutine_threadsafe(
-    #             sensor.async_update(),
-    #             self.hass.loop
-    #         ).result()
-    #         self.assertEqual(sensor.state, 12.50)
+        test_time = dt(2018, 9, 3)
+        sensor = JewishCalSensor('english')
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(),
+                self.hass.loop).result()
+            self.assertEqual(sensor.state, 'Monday 23 Elul 5778')
