@@ -24,8 +24,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     from zigpy.zcl.clusters.general import OnOff
     in_clusters = discovery_info['in_clusters']
     cluster = in_clusters[OnOff.cluster_id]
-    await cluster.bind()
-    await cluster.configure_reporting(0, 0, 600, 1,)
+    cluster.bind()
+    cluster.configure_reporting(0, 0, 600, 1,)
 
     async_add_entities([Switch(**discovery_info)], update_before_add=True)
 
