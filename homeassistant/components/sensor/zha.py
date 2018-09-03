@@ -126,7 +126,6 @@ class BatterySensor(Sensor):
     @property
     def state(self):
         """Return the state of the entity."""
-        _LOGGER.debug("battery %s", self._state)
         if self._state == 'unknown':
             return 'unknown'
 
