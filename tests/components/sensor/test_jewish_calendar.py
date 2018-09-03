@@ -52,7 +52,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
     def test_jewish_calendar_sensor_date_output(self):
         """Test Jewish calendar sensor date output."""
         test_time = dt(2018, 9, 3)
-        sensor = JewishCalSensor('english')
+        sensor = JewishCalSensor('test', 'english')
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(),
@@ -62,7 +62,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
     def test_jewish_calendar_sensor_date_output_hebrew(self):
         """Test Jewish calendar sensor date output in hebrew."""
         test_time = dt(2018, 9, 3)
-        sensor = JewishCalSensor('hebrew')
+        sensor = JewishCalSensor('test', 'hebrew')
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(),
