@@ -38,6 +38,10 @@ class DeconzScene(Scene):
         """Subscribe to sensors events."""
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._scene.deconz_id
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect scene object when removed."""
+        self._scene = None
+
     async def async_activate(self):
         """Activate the scene."""
         await self._scene.async_set_state({})

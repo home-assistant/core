@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['sqlalchemy==1.2.10']
+REQUIREMENTS = ['sqlalchemy==1.2.11']
 
 CONF_COLUMN_NAME = 'column'
 CONF_QUERIES = 'queries'
@@ -62,7 +62,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         engine = sqlalchemy.create_engine(db_url)
         sessionmaker = scoped_session(sessionmaker(bind=engine))
 
-        # run a dummy query just to test the db_url
+        # Run a dummy query just to test the db_url
         sess = sessionmaker()
         sess.execute("SELECT 1;")
 

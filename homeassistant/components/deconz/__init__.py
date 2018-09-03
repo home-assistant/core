@@ -24,7 +24,7 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==44']
+REQUIREMENTS = ['pydeconz==45']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -179,15 +179,22 @@ async def async_unload_entry(hass, config_entry):
     deconz = hass.data.pop(DOMAIN)
     hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
     deconz.close()
-    for component in ['binary_sensor', 'light', 'scene', 'sensor']:
+
+    for component in ['binary_sensor', 'light', 'scene', 'sensor', 'switch']:
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
+
     dispatchers = hass.data[DATA_DECONZ_UNSUB]
     for unsub_dispatcher in dispatchers:
         unsub_dispatcher()
     hass.data[DATA_DECONZ_UNSUB] = []
-    hass.data[DATA_DECONZ_EVENT] = []
+
+    for event in hass.data[DATA_DECONZ_EVENT]:
+        event.async_will_remove_from_hass()
+        hass.data[DATA_DECONZ_EVENT].remove(event)
+
     hass.data[DATA_DECONZ_ID] = []
+
     return True
 
 
@@ -205,6 +212,12 @@ class DeconzEvent:
         self._device.register_async_callback(self.async_update_callback)
         self._event = 'deconz_{}'.format(CONF_EVENT)
         self._id = slugify(self._device.name)
+
+    @callback
+    def async_will_remove_from_hass(self) -> None:
+        """Disconnect event object when removed."""
+        self._device.remove_callback(self.async_update_callback)
+        self._device = None
 
     @callback
     def async_update_callback(self, reason):

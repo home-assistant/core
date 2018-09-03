@@ -77,7 +77,7 @@ HM_DEVICE_TYPES = {
         'FillingLevel', 'ValveDrive', 'EcoLogic', 'IPThermostatWall',
         'IPSmoke', 'RFSiren', 'PresenceIP', 'IPAreaThermostat',
         'IPWeatherSensor', 'RotaryHandleSensorIP', 'IPPassageSensor',
-        'IPKeySwitchPowermeter'],
+        'IPKeySwitchPowermeter', 'IPThermostatWall230V'],
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',

@@ -15,7 +15,7 @@ from homeassistant.const import ATTR_ID, CONF_PASSWORD, CONF_USERNAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import slugify
+from homeassistant.util import slugify, dt as dt_util
 
 REQUIREMENTS = ['locationsharinglib==2.0.11']
 
@@ -92,7 +92,7 @@ class GoogleMapsScanner:
                 ATTR_ADDRESS: person.address,
                 ATTR_FULL_NAME: person.full_name,
                 ATTR_ID: person.id,
-                ATTR_LAST_SEEN: person.datetime,
+                ATTR_LAST_SEEN: dt_util.as_utc(person.datetime),
                 ATTR_NICKNAME: person.nickname,
             }
             self.see(

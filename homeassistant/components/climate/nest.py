@@ -8,7 +8,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.nest import DATA_NEST, SIGNAL_NEST_UPDATE
+from homeassistant.components.nest import (
+    DATA_NEST, SIGNAL_NEST_UPDATE, DOMAIN as NEST_DOMAIN)
 from homeassistant.components.climate import (
     STATE_AUTO, STATE_COOL, STATE_HEAT, STATE_ECO, ClimateDevice,
     PLATFORM_SCHEMA, ATTR_TARGET_TEMP_HIGH, ATTR_TARGET_TEMP_LOW,
@@ -126,6 +127,19 @@ class NestThermostat(ClimateDevice):
     def unique_id(self):
         """Return unique ID for this device."""
         return self.device.serial
+
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (NEST_DOMAIN, self.device.device_id),
+            },
+            'name': self.device.name_long,
+            'manufacturer': 'Nest Labs',
+            'model': "Thermostat",
+            'sw_version': self.device.software_version,
+        }
 
     @property
     def name(self):
