@@ -2,18 +2,18 @@
 import asyncio
 from unittest.mock import patch
 
-import homeassistant.components.microsoft_face as mf
+from homeassistant.components import camera, microsoft_face as mf
 from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_coro, load_fixture)
 
 
-class TestMicrosoftFaceSetup(object):
+class TestMicrosoftFaceSetup:
     """Test the microsoft face component."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         self.config = {
@@ -31,21 +31,21 @@ class TestMicrosoftFaceSetup(object):
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_component(self, mock_update):
-        """Setup component."""
+        """Set up component."""
         with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_component_wrong_api_key(self, mock_update):
-        """Setup component without api key."""
+        """Set up component without api key."""
         with assert_setup_component(0, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, {mf.DOMAIN: {}})
 
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_setup_component_test_service(self, mock_update):
-        """Setup component."""
+        """Set up component."""
         with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
@@ -57,7 +57,7 @@ class TestMicrosoftFaceSetup(object):
         assert self.hass.services.has_service(mf.DOMAIN, 'face_person')
 
     def test_setup_component_test_entities(self, aioclient_mock):
-        """Setup component."""
+        """Set up component."""
         aioclient_mock.get(
             self.endpoint_url.format("persongroups"),
             text=load_fixture('microsoft_face_persongroups.json')
@@ -95,7 +95,7 @@ class TestMicrosoftFaceSetup(object):
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_service_groups(self, mock_update, aioclient_mock):
-        """Setup component, test groups services."""
+        """Set up component, test groups services."""
         aioclient_mock.put(
             self.endpoint_url.format("persongroups/service_group"),
             status=200, text="{}"
@@ -123,7 +123,7 @@ class TestMicrosoftFaceSetup(object):
         assert len(aioclient_mock.mock_calls) == 2
 
     def test_service_person(self, aioclient_mock):
-        """Setup component, test person services."""
+        """Set up component, test person services."""
         aioclient_mock.get(
             self.endpoint_url.format("persongroups"),
             text=load_fixture('microsoft_face_persongroups.json')
@@ -175,7 +175,7 @@ class TestMicrosoftFaceSetup(object):
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_service_train(self, mock_update, aioclient_mock):
-        """Setup component, test train groups services."""
+        """Set up component, test train groups services."""
         with assert_setup_component(3, mf.DOMAIN):
             setup_component(self.hass, mf.DOMAIN, self.config)
 
@@ -190,9 +190,9 @@ class TestMicrosoftFaceSetup(object):
         assert len(aioclient_mock.mock_calls) == 1
 
     @patch('homeassistant.components.camera.async_get_image',
-           return_value=mock_coro(b'Test'))
+           return_value=mock_coro(camera.Image('image/jpeg', b'Test')))
     def test_service_face(self, camera_mock, aioclient_mock):
-        """Setup component, test person face services."""
+        """Set up component, test person face services."""
         aioclient_mock.get(
             self.endpoint_url.format("persongroups"),
             text=load_fixture('microsoft_face_persongroups.json')
@@ -229,7 +229,7 @@ class TestMicrosoftFaceSetup(object):
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_service_status_400(self, mock_update, aioclient_mock):
-        """Setup component, test groups services with error."""
+        """Set up component, test groups services with error."""
         aioclient_mock.put(
             self.endpoint_url.format("persongroups/service_group"),
             status=400, text="{'error': {'message': 'Error'}}"
@@ -248,7 +248,7 @@ class TestMicrosoftFaceSetup(object):
     @patch('homeassistant.components.microsoft_face.'
            'MicrosoftFace.update_store', return_value=mock_coro())
     def test_service_status_timeout(self, mock_update, aioclient_mock):
-        """Setup component, test groups services with timeout."""
+        """Set up component, test groups services with timeout."""
         aioclient_mock.put(
             self.endpoint_url.format("persongroups/service_group"),
             status=400, exc=asyncio.TimeoutError()

@@ -8,19 +8,19 @@ import subprocess
 import sys
 import threading
 
-from typing import Optional, List
+from typing import List, Dict, Any  # noqa pylint: disable=unused-import
+
 
 from homeassistant import monkey_patch
 from homeassistant.const import (
     __version__,
     EVENT_HOMEASSISTANT_START,
     REQUIRED_PYTHON_VER,
-    REQUIRED_PYTHON_VER_WIN,
     RESTART_EXIT_CODE,
 )
 
 
-def attempt_use_uvloop():
+def attempt_use_uvloop() -> None:
     """Attempt to use uvloop."""
     import asyncio
 
@@ -33,12 +33,7 @@ def attempt_use_uvloop():
 
 def validate_python() -> None:
     """Validate that the right Python version is running."""
-    if sys.platform == "win32" and \
-       sys.version_info[:3] < REQUIRED_PYTHON_VER_WIN:
-        print("Home Assistant requires at least Python {}.{}.{}".format(
-            *REQUIRED_PYTHON_VER_WIN))
-        sys.exit(1)
-    elif sys.version_info[:3] < REQUIRED_PYTHON_VER:
+    if sys.version_info[:3] < REQUIRED_PYTHON_VER:
         print("Home Assistant requires at least Python {}.{}.{}".format(
             *REQUIRED_PYTHON_VER))
         sys.exit(1)
@@ -132,6 +127,10 @@ def get_arguments() -> argparse.Namespace:
         default=None,
         help='Log file to write to.  If not set, CONFIG/home-assistant.log '
              'is used')
+    parser.add_argument(
+        '--log-no-color',
+        action='store_true',
+        help="Disable color logs")
     parser.add_argument(
         '--runner',
         action='store_true',
@@ -242,7 +241,7 @@ def cmdline() -> List[str]:
 
 
 def setup_and_run_hass(config_dir: str,
-                       args: argparse.Namespace) -> Optional[int]:
+                       args: argparse.Namespace) -> int:
     """Set up HASS and run."""
     from homeassistant import bootstrap
 
@@ -261,30 +260,31 @@ def setup_and_run_hass(config_dir: str,
         config = {
             'frontend': {},
             'demo': {}
-        }
+        }  # type: Dict[str, Any]
         hass = bootstrap.from_config_dict(
             config, config_dir=config_dir, verbose=args.verbose,
             skip_pip=args.skip_pip, log_rotate_days=args.log_rotate_days,
-            log_file=args.log_file)
+            log_file=args.log_file, log_no_color=args.log_no_color)
     else:
         config_file = ensure_config_file(config_dir)
         print('Config directory:', config_dir)
         hass = bootstrap.from_config_file(
             config_file, verbose=args.verbose, skip_pip=args.skip_pip,
-            log_rotate_days=args.log_rotate_days, log_file=args.log_file)
+            log_rotate_days=args.log_rotate_days, log_file=args.log_file,
+            log_no_color=args.log_no_color)
 
     if hass is None:
-        return None
+        return -1
 
     if args.open_ui:
         # Imported here to avoid importing asyncio before monkey patch
-        from homeassistant.util.async import run_callback_threadsafe
+        from homeassistant.util.async_ import run_callback_threadsafe
 
-        def open_browser(event):
-            """Open the webinterface in a browser."""
-            if hass.config.api is not None:
+        def open_browser(_: Any) -> None:
+            """Open the web interface in a browser."""
+            if hass.config.api is not None:  # type: ignore
                 import webbrowser
-                webbrowser.open(hass.config.api.base_url)
+                webbrowser.open(hass.config.api.base_url)  # type: ignore
 
         run_callback_threadsafe(
             hass.loop,
@@ -341,7 +341,8 @@ def main() -> int:
     """Start Home Assistant."""
     validate_python()
 
-    if os.environ.get('HASS_NO_MONKEY') != '1':
+    monkey_patch_needed = sys.version_info[:3] < (3, 6, 3)
+    if monkey_patch_needed and os.environ.get('HASS_NO_MONKEY') != '1':
         if sys.version_info[:2] >= (3, 6):
             monkey_patch.disable_c_asyncio()
         monkey_patch.patch_weakref_tasks()

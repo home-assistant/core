@@ -19,13 +19,13 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=10)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tahoma controller devices."""
     controller = hass.data[TAHOMA_DOMAIN]['controller']
     devices = []
     for device in hass.data[TAHOMA_DOMAIN]['devices']['sensor']:
         devices.append(TahomaSensor(device, controller))
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class TahomaSensor(TahomaDevice, Entity):
@@ -46,9 +46,11 @@ class TahomaSensor(TahomaDevice, Entity):
         """Return the unit of measurement of this entity, if any."""
         if self.tahoma_device.type == 'Temperature Sensor':
             return None
-        elif self.tahoma_device.type == 'io:LightIOSystemSensor':
-            return 'lux'
-        elif self.tahoma_device.type == 'Humidity Sensor':
+        if self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
+            return None
+        if self.tahoma_device.type == 'io:LightIOSystemSensor':
+            return 'lx'
+        if self.tahoma_device.type == 'Humidity Sensor':
             return '%'
 
     def update(self):
@@ -57,3 +59,6 @@ class TahomaSensor(TahomaDevice, Entity):
         if self.tahoma_device.type == 'io:LightIOSystemSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:LuminanceState']
+        if self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
+            self.current_value = self.tahoma_device.active_states[
+                'core:ContactState']

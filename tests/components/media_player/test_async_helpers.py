@@ -5,7 +5,7 @@ import asyncio
 import homeassistant.components.media_player as mp
 from homeassistant.const import (
     STATE_PLAYING, STATE_PAUSED, STATE_ON, STATE_OFF, STATE_IDLE)
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import get_test_home_assistant
 
@@ -123,7 +123,7 @@ class TestAsyncMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.player = AsyncMediaPlayer(self.hass)
 
@@ -176,7 +176,7 @@ class TestSyncMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.player = SyncMediaPlayer(self.hass)
 

@@ -4,7 +4,6 @@ Timer component.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/timer/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -122,8 +121,7 @@ def async_finish(hass, entity_id):
         DOMAIN, SERVICE_FINISH, {ATTR_ENTITY_ID: entity_id}))
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up a timer."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -142,42 +140,20 @@ def async_setup(hass, config):
     if not entities:
         return False
 
-    @asyncio.coroutine
-    def async_handler_service(service):
-        """Handle a call to the timer services."""
-        target_timers = component.async_extract_from_service(service)
+    component.async_register_entity_service(
+        SERVICE_START, SERVICE_SCHEMA_DURATION,
+        'async_start')
+    component.async_register_entity_service(
+        SERVICE_PAUSE, SERVICE_SCHEMA,
+        'async_pause')
+    component.async_register_entity_service(
+        SERVICE_CANCEL, SERVICE_SCHEMA,
+        'async_cancel')
+    component.async_register_entity_service(
+        SERVICE_FINISH, SERVICE_SCHEMA,
+        'async_finish')
 
-        attr = None
-        if service.service == SERVICE_PAUSE:
-            attr = 'async_pause'
-        elif service.service == SERVICE_CANCEL:
-            attr = 'async_cancel'
-        elif service.service == SERVICE_FINISH:
-            attr = 'async_finish'
-
-        tasks = [getattr(timer, attr)() for timer in target_timers if attr]
-        if service.service == SERVICE_START:
-            for timer in target_timers:
-                tasks.append(
-                    timer.async_start(service.data.get(ATTR_DURATION))
-                )
-        if tasks:
-            yield from asyncio.wait(tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_START, async_handler_service,
-        schema=SERVICE_SCHEMA_DURATION)
-    hass.services.async_register(
-        DOMAIN, SERVICE_PAUSE, async_handler_service,
-        schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_CANCEL, async_handler_service,
-        schema=SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_FINISH, async_handler_service,
-        schema=SERVICE_SCHEMA)
-
-    yield from component.async_add_entities(entities)
+    await component.async_add_entities(entities)
     return True
 
 
@@ -224,19 +200,17 @@ class Timer(Entity):
             ATTR_REMAINING: str(self._remaining)
         }
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Call when entity is about to be added to Home Assistant."""
         # If not None, we got an initial value.
         if self._state is not None:
             return
 
         restore_state = self._hass.helpers.restore_state
-        state = yield from restore_state.async_get_last_state(self.entity_id)
+        state = await restore_state.async_get_last_state(self.entity_id)
         self._state = state and state.state == state
 
-    @asyncio.coroutine
-    def async_start(self, duration):
+    async def async_start(self, duration):
         """Start a timer."""
         if self._listener:
             self._listener()
@@ -260,10 +234,9 @@ class Timer(Entity):
         self._listener = async_track_point_in_utc_time(self._hass,
                                                        self.async_finished,
                                                        self._end)
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_pause(self):
+    async def async_pause(self):
         """Pause a timer."""
         if self._listener is None:
             return
@@ -273,10 +246,9 @@ class Timer(Entity):
         self._remaining = self._end - dt_util.utcnow()
         self._state = STATUS_PAUSED
         self._end = None
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_cancel(self):
+    async def async_cancel(self):
         """Cancel a timer."""
         if self._listener:
             self._listener()
@@ -286,10 +258,9 @@ class Timer(Entity):
         self._remaining = timedelta()
         self._hass.bus.async_fire(EVENT_TIMER_CANCELLED,
                                   {"entity_id": self.entity_id})
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_finish(self):
+    async def async_finish(self):
         """Reset and updates the states, fire finished event."""
         if self._state != STATUS_ACTIVE:
             return
@@ -299,10 +270,9 @@ class Timer(Entity):
         self._remaining = timedelta()
         self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
                                   {"entity_id": self.entity_id})
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()
 
-    @asyncio.coroutine
-    def async_finished(self, time):
+    async def async_finished(self, time):
         """Reset and updates the states, fire finished event."""
         if self._state != STATUS_ACTIVE:
             return
@@ -312,4 +282,4 @@ class Timer(Entity):
         self._remaining = timedelta()
         self._hass.bus.async_fire(EVENT_TIMER_FINISHED,
                                   {"entity_id": self.entity_id})
-        yield from self.async_update_ha_state()
+        await self.async_update_ha_state()

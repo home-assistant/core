@@ -4,26 +4,27 @@ Demo lock platform that has two fake locks.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/demo/
 """
-from homeassistant.components.lock import LockDevice
+from homeassistant.components.lock import LockDevice, SUPPORT_OPEN
 from homeassistant.const import (STATE_LOCKED, STATE_UNLOCKED)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Demo lock platform."""
-    add_devices([
+    add_entities([
         DemoLock('Front Door', STATE_LOCKED),
-        DemoLock('Kitchen Door', STATE_UNLOCKED)
+        DemoLock('Kitchen Door', STATE_UNLOCKED),
+        DemoLock('Openable Lock', STATE_LOCKED, True)
     ])
 
 
 class DemoLock(LockDevice):
     """Representation of a Demo lock."""
 
-    def __init__(self, name, state):
+    def __init__(self, name, state, openable=False):
         """Initialize the lock."""
         self._name = name
         self._state = state
+        self._openable = openable
 
     @property
     def should_poll(self):
@@ -49,3 +50,14 @@ class DemoLock(LockDevice):
         """Unlock the device."""
         self._state = STATE_UNLOCKED
         self.schedule_update_ha_state()
+
+    def open(self, **kwargs):
+        """Open the door latch."""
+        self._state = STATE_UNLOCKED
+        self.schedule_update_ha_state()
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        if self._openable:
+            return SUPPORT_OPEN

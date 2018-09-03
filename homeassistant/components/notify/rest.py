@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TARGET, ATTR_TITLE, ATTR_TITLE_DEFAULT, BaseNotificationService,
     PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_RESOURCE, CONF_METHOD, CONF_NAME)
+from homeassistant.const import (CONF_RESOURCE, CONF_METHOD, CONF_NAME,
+                                 CONF_HEADERS)
 import homeassistant.helpers.config_validation as cv
 
 CONF_DATA = 'data'
@@ -22,8 +23,6 @@ CONF_TARGET_PARAMETER_NAME = 'target_param_name'
 CONF_TITLE_PARAMETER_NAME = 'title_param_name'
 DEFAULT_MESSAGE_PARAM_NAME = 'message'
 DEFAULT_METHOD = 'GET'
-DEFAULT_TARGET_PARAM_NAME = None
-DEFAULT_TITLE_PARAM_NAME = None
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_RESOURCE): cv.url,
@@ -31,15 +30,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=DEFAULT_MESSAGE_PARAM_NAME): cv.string,
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
         vol.In(['POST', 'GET', 'POST_JSON']),
+    vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
     vol.Optional(CONF_NAME): cv.string,
-    vol.Optional(CONF_TARGET_PARAMETER_NAME,
-                 default=DEFAULT_TARGET_PARAM_NAME): cv.string,
-    vol.Optional(CONF_TITLE_PARAMETER_NAME,
-                 default=DEFAULT_TITLE_PARAM_NAME): cv.string,
-    vol.Optional(CONF_DATA,
-                 default=None): dict,
-    vol.Optional(CONF_DATA_TEMPLATE,
-                 default=None): {cv.match_all: cv.template_complex}
+    vol.Optional(CONF_TARGET_PARAMETER_NAME): cv.string,
+    vol.Optional(CONF_TITLE_PARAMETER_NAME): cv.string,
+    vol.Optional(CONF_DATA): dict,
+    vol.Optional(CONF_DATA_TEMPLATE): {cv.match_all: cv.template_complex}
 })
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,6 +45,7 @@ def get_service(hass, config, discovery_info=None):
     """Get the RESTful notification service."""
     resource = config.get(CONF_RESOURCE)
     method = config.get(CONF_METHOD)
+    headers = config.get(CONF_HEADERS)
     message_param_name = config.get(CONF_MESSAGE_PARAMETER_NAME)
     title_param_name = config.get(CONF_TITLE_PARAMETER_NAME)
     target_param_name = config.get(CONF_TARGET_PARAMETER_NAME)
@@ -56,19 +53,20 @@ def get_service(hass, config, discovery_info=None):
     data_template = config.get(CONF_DATA_TEMPLATE)
 
     return RestNotificationService(
-        hass, resource, method, message_param_name,
+        hass, resource, method, headers, message_param_name,
         title_param_name, target_param_name, data, data_template)
 
 
 class RestNotificationService(BaseNotificationService):
     """Implementation of a notification service for REST."""
 
-    def __init__(self, hass, resource, method, message_param_name,
+    def __init__(self, hass, resource, method, headers, message_param_name,
                  title_param_name, target_param_name, data, data_template):
         """Initialize the service."""
         self._resource = resource
         self._hass = hass
         self._method = method.upper()
+        self._headers = headers
         self._message_param_name = message_param_name
         self._title_param_name = title_param_name
         self._target_param_name = target_param_name
@@ -97,7 +95,7 @@ class RestNotificationService(BaseNotificationService):
                 """Recursive template creator helper function."""
                 if isinstance(value, list):
                     return [_data_template_creator(item) for item in value]
-                elif isinstance(value, dict):
+                if isinstance(value, dict):
                     return {key: _data_template_creator(item)
                             for key, item in value.items()}
                 value.hass = self._hass
@@ -105,11 +103,14 @@ class RestNotificationService(BaseNotificationService):
             data.update(_data_template_creator(self._data_template))
 
         if self._method == 'POST':
-            response = requests.post(self._resource, data=data, timeout=10)
+            response = requests.post(self._resource, headers=self._headers,
+                                     data=data, timeout=10)
         elif self._method == 'POST_JSON':
-            response = requests.post(self._resource, json=data, timeout=10)
+            response = requests.post(self._resource, headers=self._headers,
+                                     json=data, timeout=10)
         else:   # default GET
-            response = requests.get(self._resource, params=data, timeout=10)
+            response = requests.get(self._resource, headers=self._headers,
+                                    params=data, timeout=10)
 
         if response.status_code not in (200, 201):
             _LOGGER.exception(

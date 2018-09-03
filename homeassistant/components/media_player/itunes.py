@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-class Itunes(object):
+class Itunes:
     """The iTunes API client."""
 
     def __init__(self, host, port, use_ssl):
@@ -157,16 +157,16 @@ class Itunes(object):
         return self._request('PUT', path, {'level': level})
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the iTunes platform."""
-    add_devices([
+    add_entities([
         ItunesDevice(
             config.get(CONF_NAME),
             config.get(CONF_HOST),
             config.get(CONF_PORT),
             config.get(CONF_SSL),
 
-            add_devices
+            add_entities
         )
     ])
 
@@ -174,13 +174,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ItunesDevice(MediaPlayerDevice):
     """Representation of an iTunes API instance."""
 
-    def __init__(self, name, host, port, use_ssl, add_devices):
+    def __init__(self, name, host, port, use_ssl, add_entities):
         """Initialize the iTunes device."""
         self._name = name
         self._host = host
         self._port = port
         self._use_ssl = use_ssl
-        self._add_devices = add_devices
+        self._add_entities = add_entities
 
         self.client = Itunes(self._host, self._port, self._use_ssl)
 
@@ -257,7 +257,7 @@ class ItunesDevice(MediaPlayerDevice):
                 new_devices.append(airplay_device)
 
         if new_devices:
-            self._add_devices(new_devices)
+            self._add_entities(new_devices)
 
     @property
     def is_volume_muted(self):

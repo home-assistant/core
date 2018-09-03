@@ -30,12 +30,13 @@ MONITORED_CONDITIONS = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SUBSCRIPTION): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=MONITORED_CONDITIONS):
-        vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)])
+    vol.Optional(CONF_MONITORED_CONDITIONS,
+                 default=list(MONITORED_CONDITIONS)):
+    vol.All(cv.ensure_list, [vol.In(MONITORED_CONDITIONS)])
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vultr subscription (server) sensor."""
     vultr = hass.data[DATA_VULTR]
 
@@ -52,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for condition in monitored_conditions:
         sensors.append(VultrSensor(vultr, subscription, condition, name))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class VultrSensor(Entity):

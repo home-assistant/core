@@ -15,7 +15,7 @@ from homeassistant.core import callback
 from homeassistant.components.mqtt import valid_publish_topic
 from homeassistant.helpers.entityfilter import generate_filter
 from homeassistant.helpers.event import async_track_state_change
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 import homeassistant.helpers.config_validation as cv
 
 CONF_BASE_TOPIC = 'base_topic'
@@ -88,10 +88,9 @@ def async_setup(hass, config):
 
         if publish_attributes:
             for key, val in new_state.attributes.items():
-                if val:
-                    encoded_val = json.dumps(val, cls=JSONEncoder)
-                    hass.components.mqtt.async_publish(mybase + key,
-                                                       encoded_val, 1, True)
+                encoded_val = json.dumps(val, cls=JSONEncoder)
+                hass.components.mqtt.async_publish(mybase + key,
+                                                   encoded_val, 1, True)
 
     async_track_state_change(hass, MATCH_ALL, _state_publisher)
     return True

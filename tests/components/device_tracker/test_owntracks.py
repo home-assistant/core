@@ -11,7 +11,7 @@ import homeassistant.components.device_tracker.owntracks as owntracks
 from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
 from homeassistant.const import CONF_PLATFORM, STATE_NOT_HOME
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 USER = 'greg'
 DEVICE = 'phone'
@@ -327,7 +327,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
     # pylint: disable=invalid-name
     def setup_method(self, _):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         mock_component(self.hass, 'group')
@@ -1316,7 +1316,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         mock_component(self.hass, 'group')

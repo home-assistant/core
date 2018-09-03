@@ -1,5 +1,5 @@
 """
-Provide a mock switch platform.
+Provide a mock light platform.
 
 Call init before using it in your tests to ensure clean test data.
 """
@@ -21,6 +21,7 @@ def init(empty=False):
     ]
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities_callback,
+                               discovery_info=None):
     """Return mock devices."""
-    add_devices_callback(DEVICES)
+    async_add_entities_callback(DEVICES)

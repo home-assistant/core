@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, DEVICE_CLASS_ILLUMINANCE
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['i2csense==0.0.4',
@@ -67,7 +67,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=import-error
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the BH1750 sensor."""
     import smbus
     from i2csense.bh1750 import BH1750
@@ -95,7 +96,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.info("Setup of BH1750 light sensor at %s in mode %s is complete",
                  i2c_address, operation_mode)
 
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class BH1750Sensor(Entity):
@@ -130,7 +131,7 @@ class BH1750Sensor(Entity):
     @property
     def device_class(self) -> str:
         """Return the class of this device, from component DEVICE_CLASSES."""
-        return 'light'
+        return DEVICE_CLASS_ILLUMINANCE
 
     @asyncio.coroutine
     def async_update(self):

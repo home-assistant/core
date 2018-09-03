@@ -35,7 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Russound RIO platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -65,7 +66,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_stop)
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
 
 class RussoundZoneDevice(MediaPlayerDevice):
@@ -100,8 +101,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
             if value in (None, "", "------"):
                 return None
             return value
-        else:
-            return None
+        return None
 
     def _zone_callback_handler(self, zone_id, *args):
         if zone_id == self._zone_id:
@@ -134,7 +134,7 @@ class RussoundZoneDevice(MediaPlayerDevice):
         status = self._zone_var('status', "OFF")
         if status == 'ON':
             return STATE_ON
-        elif status == 'OFF':
+        if status == 'OFF':
             return STATE_OFF
 
     @property

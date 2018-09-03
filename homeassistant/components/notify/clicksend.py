@@ -37,7 +37,8 @@ PLATFORM_SCHEMA = vol.Schema(
     vol.All(PLATFORM_SCHEMA.extend({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_RECIPIENT): cv.string,
+        vol.Required(CONF_RECIPIENT, default=[]):
+            vol.All(cv.ensure_list, [cv.string]),
         vol.Optional(CONF_SENDER): cv.string,
     }), validate_sender))
 
@@ -59,21 +60,19 @@ class ClicksendNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.username = config.get(CONF_USERNAME)
         self.api_key = config.get(CONF_API_KEY)
-        self.recipient = config.get(CONF_RECIPIENT)
+        self.recipients = config.get(CONF_RECIPIENT)
         self.sender = config.get(CONF_SENDER, CONF_RECIPIENT)
 
     def send_message(self, message="", **kwargs):
         """Send a message to a user."""
-        data = ({
-            'messages': [
-                {
-                    'source': 'hass.notify',
-                    'from': self.sender,
-                    'to': self.recipient,
-                    'body': message,
-                }
-            ]
-        })
+        data = {"messages": []}
+        for recipient in self.recipients:
+            data["messages"].append({
+                'source': 'hass.notify',
+                'from': self.sender,
+                'to': recipient,
+                'body': message,
+            })
 
         api_url = "{}/sms/send".format(BASE_API_URL)
 

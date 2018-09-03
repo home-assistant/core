@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
     CONF_VALUE_TEMPLATE)
 
-REQUIREMENTS = ['pysnmp==4.4.4']
+REQUIREMENTS = ['pysnmp==4.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SNMP sensor."""
     from pysnmp.hlapi import (
         getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
@@ -83,11 +83,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if errindication and not accept_errors:
         _LOGGER.error("Please check the details in the configuration file")
         return False
-    else:
-        data = SnmpData(
-            host, port, community, baseoid, version, accept_errors,
-            default_value)
-        add_devices([SnmpSensor(data, name, unit, value_template)], True)
+    data = SnmpData(
+        host, port, community, baseoid, version, accept_errors,
+        default_value)
+    add_entities([SnmpSensor(data, name, unit, value_template)], True)
 
 
 class SnmpSensor(Entity):
@@ -131,7 +130,7 @@ class SnmpSensor(Entity):
         self._state = value
 
 
-class SnmpData(object):
+class SnmpData:
     """Get the latest data and update the states."""
 
     def __init__(self, host, port, community, baseoid, version, accept_errors,

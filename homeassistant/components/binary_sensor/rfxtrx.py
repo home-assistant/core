@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import rfxtrx
 from homeassistant.components.binary_sensor import (
-    PLATFORM_SCHEMA, DEVICE_CLASSES_SCHEMA, BinarySensorDevice)
+    DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA, BinarySensorDevice)
 from homeassistant.components.rfxtrx import (
     ATTR_NAME, CONF_AUTOMATIC_ADD, CONF_DATA_BITS, CONF_DEVICES,
     CONF_FIRE_EVENT, CONF_OFF_DELAY)
@@ -28,51 +28,50 @@ DEPENDENCIES = ['rfxtrx']
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_DEVICES, default={}): {
         cv.string: vol.Schema({
-            vol.Optional(CONF_NAME, default=None): cv.string,
-            vol.Optional(CONF_DEVICE_CLASS, default=None):
-                DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
             vol.Optional(CONF_FIRE_EVENT, default=False): cv.boolean,
-            vol.Optional(CONF_OFF_DELAY, default=None):
+            vol.Optional(CONF_OFF_DELAY):
             vol.Any(cv.time_period, cv.positive_timedelta),
-            vol.Optional(CONF_DATA_BITS, default=None): cv.positive_int,
-            vol.Optional(CONF_COMMAND_ON, default=None): cv.byte,
-            vol.Optional(CONF_COMMAND_OFF, default=None): cv.byte
+            vol.Optional(CONF_DATA_BITS): cv.positive_int,
+            vol.Optional(CONF_COMMAND_ON): cv.byte,
+            vol.Optional(CONF_COMMAND_OFF): cv.byte
         })
     },
     vol.Optional(CONF_AUTOMATIC_ADD, default=False):  cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Binary Sensor platform to RFXtrx."""
     import RFXtrx as rfxtrxmod
     sensors = []
 
-    for packet_id, entity in config['devices'].items():
+    for packet_id, entity in config[CONF_DEVICES].items():
         event = rfxtrx.get_rfx_object(packet_id)
         device_id = slugify(event.device.id_string.lower())
 
         if device_id in rfxtrx.RFX_DEVICES:
             continue
 
-        if entity[CONF_DATA_BITS] is not None:
+        if entity.get(CONF_DATA_BITS) is not None:
             _LOGGER.debug(
                 "Masked device id: %s", rfxtrx.get_pt2262_deviceid(
-                    device_id, entity[CONF_DATA_BITS]))
+                    device_id, entity.get(CONF_DATA_BITS)))
 
         _LOGGER.debug("Add %s rfxtrx.binary_sensor (class %s)",
-                      entity[ATTR_NAME], entity[CONF_DEVICE_CLASS])
+                      entity[ATTR_NAME], entity.get(CONF_DEVICE_CLASS))
 
         device = RfxtrxBinarySensor(
-            event, entity[ATTR_NAME], entity[CONF_DEVICE_CLASS],
-            entity[CONF_FIRE_EVENT], entity[CONF_OFF_DELAY],
-            entity[CONF_DATA_BITS], entity[CONF_COMMAND_ON],
-            entity[CONF_COMMAND_OFF])
+            event, entity.get(CONF_NAME), entity.get(CONF_DEVICE_CLASS),
+            entity[CONF_FIRE_EVENT], entity.get(CONF_OFF_DELAY),
+            entity.get(CONF_DATA_BITS), entity.get(CONF_COMMAND_ON),
+            entity.get(CONF_COMMAND_OFF))
         device.hass = hass
         sensors.append(device)
         rfxtrx.RFX_DEVICES[device_id] = device
 
-    add_devices(sensors)
+    add_entities(sensors)
 
     def binary_sensor_update(event):
         """Call for control updates from the RFXtrx gateway."""
@@ -102,7 +101,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensor = RfxtrxBinarySensor(event, pkt_id)
             sensor.hass = hass
             rfxtrx.RFX_DEVICES[device_id] = sensor
-            add_devices([sensor])
+            add_entities([sensor])
             _LOGGER.info(
                 "Added binary sensor %s (Device ID: %s Class: %s Sub: %s)",
                 pkt_id, slugify(event.device.id_string.lower()),

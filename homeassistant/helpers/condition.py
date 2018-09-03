@@ -13,12 +13,12 @@ from homeassistant.const import (
     CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
     WEEKDAYS, CONF_STATE, CONF_ZONE, CONF_BEFORE,
     CONF_AFTER, CONF_WEEKDAY, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
-    CONF_BELOW, CONF_ABOVE)
+    CONF_BELOW, CONF_ABOVE, STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 FROM_CONFIG_FORMAT = '{}_from_config'
 ASYNC_FROM_CONFIG_FORMAT = 'async_{}_from_config'
@@ -160,10 +160,14 @@ def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
             _LOGGER.error("Template error: %s", ex)
             return False
 
+    if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        return False
+
     try:
         value = float(value)
     except ValueError:
-        _LOGGER.warning("Value cannot be processed as a number: %s", value)
+        _LOGGER.warning("Value cannot be processed as a number: %s "
+                        "(Offending entity: %s)", entity, value)
         return False
 
     if below is not None and value >= below:
@@ -239,41 +243,30 @@ def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-	sunrise_next = get_astral_event_next(hass, 'sunrise')
-	sunset_next = get_astral_event_next(hass, 'sunset')
-	sunrise_last = get_lastral_event_date_last(hass, 'sunrise')
-	sunset_last = get_astral_event_date_last(hass, 'sunset')
+    sunrise = get_astral_event_date(hass, 'sunrise', today)
+    sunset = get_astral_event_date(hass, 'sunset', today)
 
-	before_gate = False;
-	after_gate = False;
-	
-	# define the default before condition if None
-	if (before == None):
-		if (after == SUN_EVENT_SUNRISE):
-			before = SUN_EVENT_SUNSET
-		else:
-			before = SUN_EVENT_SUNRISE
+    if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
+        # There is no sunrise today
+        return False
 
-	# define the default after condition if None
-	if (after == None):
-		if (before == SUN_EVENT_SUNRISE):
-			after = SUN_EVENT_SUNSET
-		else:
-			after = SUN_EVENT_SUNRISE
+    if sunset is None and SUN_EVENT_SUNSET in (before, after):
+        # There is no sunset today
+        return False
 
-	if (before == SUN_EVENT_SUNRISE and utcnow < sunrise_next + before_offset):
-		before_gate = True;
+    if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
+        return False
 
-	elif (before == SUN_EVENT_SUNSET and utcnow < sunset_next + before_offset):
-		before_gate = True;
+    if before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
+        return False
 
-	if (after == SUN_EVENT_SUNRISE and utcnow > sunrise_last + after_offset):
-		after_gate = True;
-	
-	elif (after == SUN_EVENT_SUNSET and utcnow > sunset_last + after_offset):
-		after_gate = True;
+    if after == SUN_EVENT_SUNRISE and utcnow < sunrise + after_offset:
+        return False
 
-	return before_gate and after_gate;
+    if after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
+        return False
+
+    return True
 
 
 def sun_from_config(config, config_validation=True):
@@ -399,8 +392,8 @@ def zone(hass, zone_ent, entity):
     if latitude is None or longitude is None:
         return False
 
-    return zone_cmp.in_zone(zone_ent, latitude, longitude,
-                            entity.attributes.get(ATTR_GPS_ACCURACY, 0))
+    return zone_cmp.zone.in_zone(zone_ent, latitude, longitude,
+                                 entity.attributes.get(ATTR_GPS_ACCURACY, 0))
 
 
 def zone_from_config(config, config_validation=True):

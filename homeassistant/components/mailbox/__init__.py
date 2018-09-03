@@ -132,7 +132,7 @@ class MailboxEntity(Entity):
         self.message_count = len(messages)
 
 
-class Mailbox(object):
+class Mailbox:
     """Represent a mailbox device."""
 
     def __init__(self, hass, name):

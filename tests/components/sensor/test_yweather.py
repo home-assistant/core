@@ -100,7 +100,7 @@ class YahooWeatherMock():
 
     @property
     def Now(self):  # pylint: disable=invalid-name
-        """Current weather data."""
+        """Return current weather data."""
         if self.woeid == '111':
             raise ValueError
         return self._data['query']['results']['channel']['item']['condition']
@@ -129,7 +129,7 @@ class TestWeather(unittest.TestCase):
     """Test the Yahoo weather component."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -162,6 +162,8 @@ class TestWeather(unittest.TestCase):
         state = self.hass.states.get('sensor.yweather_condition')
         assert state is not None
         self.assertEqual(state.state, 'Mostly Cloudy')
+        self.assertEqual(state.attributes.get('condition_code'),
+                         '28')
         self.assertEqual(state.attributes.get('friendly_name'),
                          'Yweather Condition')
 

@@ -8,6 +8,7 @@ import asyncio
 import copy
 import datetime
 import logging
+import re
 
 import voluptuous as vol
 
@@ -18,7 +19,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED,
     CONF_PLATFORM, CONF_NAME, CONF_CODE, CONF_DELAY_TIME, CONF_PENDING_TIME,
     CONF_TRIGGER_TIME, CONF_DISARM_AFTER_TRIGGER)
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.core import callback
@@ -122,9 +123,9 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 }), _state_validator))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the manual MQTT alarm platform."""
-    add_devices([ManualMQTTAlarm(
+    add_entities([ManualMQTTAlarm(
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
@@ -237,8 +238,12 @@ class ManualMQTTAlarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """Return one or more characters."""
-        return None if self._code is None else '.+'
+        """Return one or more digits/characters."""
+        if self._code is None:
+            return None
+        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
+            return 'Number'
+        return 'Any'
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

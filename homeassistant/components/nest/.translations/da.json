@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_setup": "Du kan kun konfigurere en enkelt Nest konto."
+        },
+        "error": {
+            "invalid_code": "Ugyldig kode"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Udbyder"
+                },
+                "title": "Godkendelses udbyder"
+            },
+            "link": {
+                "data": {
+                    "code": "PIN-kode"
+                }
+            }
+        }
+    }
+}

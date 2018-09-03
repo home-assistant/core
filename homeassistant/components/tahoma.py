@@ -14,7 +14,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['tahoma-api==0.0.11']
+REQUIREMENTS = ['tahoma-api==0.0.13']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,17 +32,27 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 TAHOMA_COMPONENTS = [
-    'sensor', 'cover'
+    'scene', 'sensor', 'cover', 'switch', 'binary_sensor'
 ]
 
 TAHOMA_TYPES = {
     'rts:RollerShutterRTSComponent': 'cover',
     'rts:CurtainRTSComponent': 'cover',
+    'rts:BlindRTSComponent': 'cover',
+    'rts:VenetianBlindRTSComponent': 'cover',
+    'rts:DualCurtainRTSComponent': 'cover',
+    'rts:ExteriorVenetianBlindRTSComponent': 'cover',
+    'io:ExteriorVenetianBlindIOComponent': 'cover',
+    'io:RollerShutterUnoIOComponent': 'cover',
     'io:RollerShutterWithLowSpeedManagementIOComponent': 'cover',
     'io:RollerShutterVeluxIOComponent': 'cover',
     'io:RollerShutterGenericIOComponent': 'cover',
     'io:WindowOpenerVeluxIOComponent': 'cover',
     'io:LightIOSystemSensor': 'sensor',
+    'rts:GarageDoor4TRTSComponent': 'switch',
+    'io:VerticalExteriorAwningIOComponent': 'cover',
+    'io:HorizontalAwningIOComponent': 'cover',
+    'rtds:RTDSSmokeSensor': 'smoke',
 }
 
 
@@ -63,13 +73,15 @@ def setup(hass, config):
     try:
         api.get_setup()
         devices = api.get_devices()
+        scenes = api.get_action_groups()
     except RequestException:
         _LOGGER.exception("Error when getting devices from the Tahoma API")
         return False
 
     hass.data[DOMAIN] = {
         'controller': api,
-        'devices': defaultdict(list)
+        'devices': defaultdict(list),
+        'scenes': []
     }
 
     for device in devices:
@@ -81,6 +93,9 @@ def setup(hass, config):
                                 _device.type, _device.label)
                 continue
             hass.data[DOMAIN]['devices'][device_type].append(_device)
+
+    for scene in scenes:
+        hass.data[DOMAIN]['scenes'].append(scene)
 
     for component in TAHOMA_COMPONENTS:
         discovery.load_platform(hass, component, DOMAIN, {}, config)

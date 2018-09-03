@@ -12,7 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
-import homeassistant.components.zoneminder as zoneminder
+from homeassistant.components import zoneminder
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder sensor platform."""
     include_archived = config.get(CONF_INCLUDE_ARCHIVED)
 
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                include_archived, sensor)
             )
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class ZMSensorMonitors(Entity):

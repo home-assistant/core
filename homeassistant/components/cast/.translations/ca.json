@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "no_devices_found": "No s'han trobat dispositius de Google Cast a la xarxa.",
+            "single_instance_allowed": "Nom\u00e9s cal una \u00fanica configuraci\u00f3 de Google Cast."
+        },
+        "step": {
+            "confirm": {
+                "description": "Voleu configurar Google Cast?",
+                "title": "Google Cast"
+            }
+        },
+        "title": "Google Cast"
+    }
+}

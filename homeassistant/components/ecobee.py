@@ -16,7 +16,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.util import Throttle
 from homeassistant.util.json import save_json
 
-REQUIREMENTS = ['python-ecobee-api==0.0.15']
+REQUIREMENTS = ['python-ecobee-api==0.0.18']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -48,7 +48,6 @@ def request_configuration(network, hass, config):
 
         return
 
-    # pylint: disable=unused-argument
     def ecobee_configuration_callback(callback_data):
         """Handle configuration callbacks."""
         network.request_tokens()
@@ -85,7 +84,7 @@ def setup_ecobee(hass, network, config):
     discovery.load_platform(hass, 'weather', DOMAIN, {}, config)
 
 
-class EcobeeData(object):
+class EcobeeData:
     """Get the latest data and update the states."""
 
     def __init__(self, config_file):
@@ -106,7 +105,6 @@ def setup(hass, config):
     Will automatically load thermostat and sensor components to support
     devices discovered on the network.
     """
-    # pylint: disable=global-statement, import-error
     global NETWORK
 
     if 'ecobee' in _CONFIGURING:

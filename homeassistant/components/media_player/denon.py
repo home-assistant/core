@@ -49,12 +49,12 @@ MEDIA_MODES = {'Tuner': 'TUNER', 'Media server': 'SERVER',
 #  'Favorites': 'FVP'}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Denon platform."""
     denon = DenonDevice(config.get(CONF_NAME), config.get(CONF_HOST))
 
     if denon.update():
-        add_devices([denon])
+        add_entities([denon])
 
 
 class DenonDevice(MediaPlayerDevice):

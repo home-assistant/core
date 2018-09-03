@@ -57,14 +57,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the ViaggiaTreno platform."""
     train_id = config.get(CONF_TRAIN_ID)
     station_id = config.get(CONF_STATION_ID)
     name = config.get(CONF_NAME)
     if not name:
         name = DEFAULT_NAME.format(train_id)
-    async_add_devices([ViaggiaTrenoSensor(train_id, station_id, name)])
+    async_add_entities([ViaggiaTrenoSensor(train_id, station_id, name)])
 
 
 @asyncio.coroutine

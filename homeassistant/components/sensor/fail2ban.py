@@ -33,27 +33,27 @@ STATE_CURRENT_BANS = 'current_bans'
 STATE_ALL_BANS = 'total_bans'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_JAILS, default=[]):
-        vol.All(cv.ensure_list, vol.Length(min=1)),
-    vol.Optional(CONF_FILE_PATH, default=DEFAULT_LOG): cv.isfile,
+    vol.Required(CONF_JAILS): vol.All(cv.ensure_list, vol.Length(min=1)),
+    vol.Optional(CONF_FILE_PATH): cv.isfile,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the fail2ban sensor."""
     name = config.get(CONF_NAME)
     jails = config.get(CONF_JAILS)
     scan_interval = config.get(CONF_SCAN_INTERVAL)
-    log_file = config.get(CONF_FILE_PATH)
+    log_file = config.get(CONF_FILE_PATH, DEFAULT_LOG)
 
     device_list = []
     log_parser = BanLogParser(scan_interval, log_file)
     for jail in jails:
         device_list.append(BanSensor(name, jail, log_parser))
 
-    async_add_devices(device_list, True)
+    async_add_entities(device_list, True)
 
 
 class BanSensor(Entity):
@@ -113,7 +113,7 @@ class BanSensor(Entity):
             self.last_ban = 'None'
 
 
-class BanLogParser(object):
+class BanLogParser:
     """Class to parse fail2ban logs."""
 
     def __init__(self, interval, log_file):

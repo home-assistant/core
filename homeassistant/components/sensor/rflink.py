@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = vol.Schema({
         cv.string: {
             vol.Optional(CONF_NAME): cv.string,
             vol.Required(CONF_SENSOR_TYPE): cv.string,
-            vol.Optional(CONF_UNIT_OF_MEASUREMENT, default=None): cv.string,
+            vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
             vol.Optional(CONF_ALIASES, default=[]):
                 vol.All(cv.ensure_list, [cv.string]),
             # deprecated config options
@@ -61,7 +61,7 @@ def devices_from_config(domain_config, hass=None):
     """Parse configuration and add Rflink sensor devices."""
     devices = []
     for device_id, config in domain_config[CONF_DEVICES].items():
-        if not config[ATTR_UNIT_OF_MEASUREMENT]:
+        if ATTR_UNIT_OF_MEASUREMENT not in config:
             config[ATTR_UNIT_OF_MEASUREMENT] = lookup_unit_for_sensor_type(
                 config[CONF_SENSOR_TYPE])
         remove_deprecated(config)
@@ -75,9 +75,10 @@ def devices_from_config(domain_config, hass=None):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Rflink platform."""
-    async_add_devices(devices_from_config(config, hass))
+    async_add_entities(devices_from_config(config, hass))
 
     @asyncio.coroutine
     def add_new_device(event):
@@ -87,7 +88,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         rflinksensor = partial(RflinkSensor, device_id, hass)
         device = rflinksensor(event[EVENT_KEY_SENSOR], event[EVENT_KEY_UNIT])
         # Add device entity
-        async_add_devices([device])
+        async_add_entities([device])
 
         # Register entity to listen to incoming rflink events
         hass.data[DATA_ENTITY_LOOKUP][

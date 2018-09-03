@@ -14,7 +14,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['schiene==0.21']
+REQUIREMENTS = ['schiene==0.22']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,13 +34,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Deutsche Bahn Sensor."""
     start = config.get(CONF_START)
     destination = config.get(CONF_DESTINATION)
     only_direct = config.get(CONF_ONLY_DIRECT)
 
-    add_devices([DeutscheBahnSensor(start, destination, only_direct)], True)
+    add_entities([DeutscheBahnSensor(start, destination, only_direct)], True)
 
 
 class DeutscheBahnSensor(Entity):
@@ -85,7 +85,7 @@ class DeutscheBahnSensor(Entity):
             self._state += " + {}".format(self.data.connections[0]['delay'])
 
 
-class SchieneData(object):
+class SchieneData:
     """Pull data from the bahn.de web page."""
 
     def __init__(self, start, goal, only_direct):

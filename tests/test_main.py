@@ -22,20 +22,20 @@ def test_validate_python(mock_exit):
     mock_exit.reset_mock()
 
     with patch('sys.version_info',
-               new_callable=PropertyMock(return_value=(3, 4, 1))):
+               new_callable=PropertyMock(return_value=(3, 4, 2))):
         main.validate_python()
         assert mock_exit.called is True
 
     mock_exit.reset_mock()
 
     with patch('sys.version_info',
-               new_callable=PropertyMock(return_value=(3, 4, 2))):
+               new_callable=PropertyMock(return_value=(3, 5, 2))):
         main.validate_python()
-        assert mock_exit.called is False
+        assert mock_exit.called is True
 
     mock_exit.reset_mock()
 
     with patch('sys.version_info',
-               new_callable=PropertyMock(return_value=(3, 5, 1))):
+               new_callable=PropertyMock(return_value=(3, 5, 3))):
         main.validate_python()
         assert mock_exit.called is False

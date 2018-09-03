@@ -13,7 +13,6 @@ from homeassistant.components.climate import (
     STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
     SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE)
 from homeassistant.util import Throttle
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['netatmo']
@@ -40,12 +39,12 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                  SUPPORT_AWAY_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
-    netatmo = get_component('netatmo')
+    netatmo = hass.components.netatmo
     device = config.get(CONF_RELAY)
 
-    import lnetatmo
+    import pyatmo
     try:
         data = ThermostatData(netatmo.NETATMO_AUTH, device)
         for module_name in data.get_module_names():
@@ -53,8 +52,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if config[CONF_THERMOSTAT] != [] and \
                    module_name not in config[CONF_THERMOSTAT]:
                     continue
-            add_devices([NetatmoThermostat(data, module_name)], True)
-    except lnetatmo.NoDevice:
+            add_entities([NetatmoThermostat(data, module_name)], True)
+    except pyatmo.NoDevice:
         return None
 
 
@@ -100,7 +99,7 @@ class NetatmoThermostat(ClimateDevice):
         state = self._data.thermostatdata.relay_cmd
         if state == 0:
             return STATE_IDLE
-        elif state == 100:
+        if state == 100:
             return STATE_HEAT
 
     @property
@@ -141,7 +140,7 @@ class NetatmoThermostat(ClimateDevice):
         self._away = self._data.setpoint_mode == 'away'
 
 
-class ThermostatData(object):
+class ThermostatData:
     """Get the latest data from Netatmo."""
 
     def __init__(self, auth, device=None):
@@ -169,8 +168,8 @@ class ThermostatData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the NetAtmo API to update the data."""
-        import lnetatmo
-        self.thermostatdata = lnetatmo.ThermostatData(self.auth)
+        import pyatmo
+        self.thermostatdata = pyatmo.ThermostatData(self.auth)
         self.target_temperature = self.thermostatdata.setpoint_temp
         self.setpoint_mode = self.thermostatdata.setpoint_mode
         self.current_temperature = self.thermostatdata.temp

@@ -58,7 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the sensor platform."""
     websession = async_get_clientsession(hass)
     apikey = config.get(CONF_API_KEY)
@@ -74,7 +75,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(StartcaSensor(ts_data, variable, name))
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class StartcaSensor(Entity):
@@ -118,7 +119,7 @@ class StartcaSensor(Entity):
             self._state = round(self.startcadata.data[self.type], 2)
 
 
-class StartcaData(object):
+class StartcaData:
     """Get data from Start.ca API."""
 
     def __init__(self, loop, websession, api_key, bandwidth_cap):
@@ -140,21 +141,20 @@ class StartcaData(object):
         """
         return float(value) * 10 ** -9
 
-    @asyncio.coroutine
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def async_update(self):
+    async def async_update(self):
         """Get the Start.ca bandwidth data from the web service."""
         import xmltodict
         _LOGGER.debug("Updating Start.ca usage data")
         url = 'https://www.start.ca/support/usage/api?key=' + \
               self.api_key
         with async_timeout.timeout(REQUEST_TIMEOUT, loop=self.loop):
-            req = yield from self.websession.get(url)
+            req = await self.websession.get(url)
         if req.status != 200:
             _LOGGER.error("Request failed with status: %u", req.status)
             return False
 
-        data = yield from req.text()
+        data = await req.text()
         try:
             xml_data = xmltodict.parse(data)
         except ExpatError:
