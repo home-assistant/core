@@ -23,8 +23,8 @@ class TestJewishCalenderSensor(unittest.TestCase):
     def checkForLoggingErrors(self):
         """Check whether logger spitted out errors."""
         errors = [rec for rec in self.cm.records if rec.levelname == "ERROR"]
-        self.assertFalse(errors, (f"Logger reported error(s): ",
-                                  f"{[err.getMessage() for err in errors]}"))
+        self.assertFalse(errors, ("Logger reported error(s): ",
+                                  [err.getMessage() for err in errors]))
 
     def test_jewish_calendar_min_config(self):
         """Test minimum jewish calendar configuration."""
