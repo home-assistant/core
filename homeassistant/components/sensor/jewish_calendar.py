@@ -25,7 +25,8 @@ DEFAULT_NAME = 'Jewish Calendar'
 ICON = 'mdi:clock'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_LANGUAGE, default='english'): cv.string
+    vol.Optional(CONF_LANGUAGE, default='english'): vol.In(
+        ['hebrew', 'english'])
 })
 
 
