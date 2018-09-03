@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Bose Soundtouch platform."""
     if DATA_SOUNDTOUCH not in hass.data:
         hass.data[DATA_SOUNDTOUCH] = []
@@ -92,7 +92,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         }
         soundtouch_device = SoundTouchDevice(None, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
-        add_devices([soundtouch_device])
+        add_entities([soundtouch_device])
     else:
         name = config.get(CONF_NAME)
         remote_config = {
@@ -102,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         }
         soundtouch_device = SoundTouchDevice(name, remote_config)
         hass.data[DATA_SOUNDTOUCH].append(soundtouch_device)
-        add_devices([soundtouch_device])
+        add_entities([soundtouch_device])
 
     def service_handle(service):
         """Handle the applying of a service."""
@@ -269,7 +269,7 @@ class SoundTouchDevice(MediaPlayerDevice):
         """Title of current playing media."""
         if self._status.station_name is not None:
             return self._status.station_name
-        elif self._status.artist is not None:
+        if self._status.artist is not None:
             return self._status.artist + " - " + self._status.track
 
         return None
@@ -323,8 +323,8 @@ class SoundTouchDevice(MediaPlayerDevice):
             _LOGGER.warning("Unable to create zone without slaves")
         else:
             _LOGGER.info("Creating zone with master %s",
-                         self.device.config.name)
-            self.device.create_zone([slave.device for slave in slaves])
+                         self._device.config.name)
+            self._device.create_zone([slave.device for slave in slaves])
 
     def remove_zone_slave(self, slaves):
         """
@@ -341,8 +341,8 @@ class SoundTouchDevice(MediaPlayerDevice):
             _LOGGER.warning("Unable to find slaves to remove")
         else:
             _LOGGER.info("Removing slaves from zone with master %s",
-                         self.device.config.name)
-            self.device.remove_zone_slave([slave.device for slave in slaves])
+                         self._device.config.name)
+            self._device.remove_zone_slave([slave.device for slave in slaves])
 
     def add_zone_slave(self, slaves):
         """
@@ -357,5 +357,5 @@ class SoundTouchDevice(MediaPlayerDevice):
             _LOGGER.warning("Unable to find slaves to add")
         else:
             _LOGGER.info("Adding slaves to zone with master %s",
-                         self.device.config.name)
-            self.device.add_zone_slave([slave.device for slave in slaves])
+                         self._device.config.name)
+            self._device.add_zone_slave([slave.device for slave in slaves])

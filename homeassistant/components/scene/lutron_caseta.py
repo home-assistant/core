@@ -16,7 +16,8 @@ DEPENDENCIES = ['lutron_caseta']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Lutron Caseta lights."""
     devs = []
     bridge = hass.data[LUTRON_CASETA_SMARTBRIDGE]
@@ -25,7 +26,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         dev = LutronCasetaScene(scenes[scene], bridge)
         devs.append(dev)
 
-    async_add_devices(devs, True)
+    async_add_entities(devs, True)
 
 
 class LutronCasetaScene(Scene):
@@ -41,16 +42,6 @@ class LutronCasetaScene(Scene):
     def name(self):
         """Return the name of the scene."""
         return self._scene_name
-
-    @property
-    def should_poll(self):
-        """Return that polling is not necessary."""
-        return False
-
-    @property
-    def is_on(self):
-        """There is no way of detecting if a scene is active (yet)."""
-        return False
 
     @asyncio.coroutine
     def async_activate(self):

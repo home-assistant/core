@@ -15,14 +15,13 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['alpha_vantage==1.9.0']
+REQUIREMENTS = ['alpha_vantage==2.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CLOSE = 'close'
 ATTR_HIGH = 'high'
 ATTR_LOW = 'low'
-ATTR_VOLUME = 'volume'
 
 CONF_ATTRIBUTION = "Stock market information provided by Alpha Vantage"
 CONF_FOREIGN_EXCHANGE = 'foreign_exchange'
@@ -64,14 +63,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Alpha Vantage sensor."""
     from alpha_vantage.timeseries import TimeSeries
     from alpha_vantage.foreignexchange import ForeignExchange
 
     api_key = config.get(CONF_API_KEY)
-    symbols = config.get(CONF_SYMBOLS)
-    conversions = config.get(CONF_FOREIGN_EXCHANGE)
+    symbols = config.get(CONF_SYMBOLS, [])
+    conversions = config.get(CONF_FOREIGN_EXCHANGE, [])
 
     if not symbols and not conversions:
         msg = 'Warning: No symbols or currencies configured.'
@@ -108,7 +107,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.debug(str(error))
         dev.append(AlphaVantageForeignExchange(forex, conversion))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
     _LOGGER.debug("Setup completed")
 
 
@@ -148,7 +147,6 @@ class AlphaVantageSensor(Entity):
                 ATTR_CLOSE: self.values['4. close'],
                 ATTR_HIGH: self.values['2. high'],
                 ATTR_LOW: self.values['3. low'],
-                ATTR_VOLUME: self.values['5. volume'],
             }
 
     @property

@@ -14,7 +14,7 @@ import pytest
 import homeassistant.core as ha
 from homeassistant.exceptions import (InvalidEntityFormatError,
                                       InvalidStateError)
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
@@ -65,6 +65,18 @@ def test_async_add_job_add_threaded_job_to_pool(mock_iscoro):
     assert len(hass.loop.call_soon.mock_calls) == 0
     assert len(hass.loop.create_task.mock_calls) == 0
     assert len(hass.loop.run_in_executor.mock_calls) == 1
+
+
+@patch('asyncio.iscoroutine', return_value=True)
+def test_async_create_task_schedule_coroutine(mock_iscoro):
+    """Test that we schedule coroutines and add jobs to the job pool."""
+    hass = MagicMock()
+    job = MagicMock()
+
+    ha.HomeAssistant.async_create_task(hass, job)
+    assert len(hass.loop.call_soon.mock_calls) == 0
+    assert len(hass.loop.create_task.mock_calls) == 1
+    assert len(hass.add_job.mock_calls) == 0
 
 
 def test_async_run_job_calls_callback():
@@ -118,7 +130,7 @@ class TestHomeAssistant(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -234,8 +246,9 @@ class TestEvent(unittest.TestCase):
         """Test events."""
         now = dt_util.utcnow()
         data = {'some': 'attr'}
+        context = ha.Context()
         event1, event2 = [
-            ha.Event('some_type', data, time_fired=now)
+            ha.Event('some_type', data, time_fired=now, context=context)
             for _ in range(2)
         ]
 
@@ -265,6 +278,10 @@ class TestEvent(unittest.TestCase):
             'data': data,
             'origin': 'LOCAL',
             'time_fired': now,
+            'context': {
+                'id': event.context.id,
+                'user_id': event.context.user_id,
+            },
         }
         self.assertEqual(expected, event.as_dict())
 
@@ -274,7 +291,7 @@ class TestEventBus(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
 
@@ -375,7 +392,7 @@ class TestEventBus(unittest.TestCase):
         self.assertEqual(1, len(runs))
 
     def test_thread_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test thread event listener."""
         thread_calls = []
 
         def thread_listener(event):
@@ -387,7 +404,7 @@ class TestEventBus(unittest.TestCase):
         assert len(thread_calls) == 1
 
     def test_callback_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test callback event listener."""
         callback_calls = []
 
         @ha.callback
@@ -400,7 +417,7 @@ class TestEventBus(unittest.TestCase):
         assert len(callback_calls) == 1
 
     def test_coroutine_event_listener(self):
-        """Test a  event listener listeners."""
+        """Test coroutine event listener."""
         coroutine_calls = []
 
         @asyncio.coroutine
@@ -478,7 +495,7 @@ class TestStateMachine(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
@@ -586,18 +603,16 @@ class TestStateMachine(unittest.TestCase):
         self.assertEqual(1, len(events))
 
 
-class TestServiceCall(unittest.TestCase):
-    """Test ServiceCall class."""
+def test_service_call_repr():
+    """Test ServiceCall repr."""
+    call = ha.ServiceCall('homeassistant', 'start')
+    assert str(call) == \
+        "<ServiceCall homeassistant.start (c:{})>".format(call.context.id)
 
-    def test_repr(self):
-        """Test repr method."""
-        self.assertEqual(
-            "<ServiceCall homeassistant.start>",
-            str(ha.ServiceCall('homeassistant', 'start')))
-
-        self.assertEqual(
-            "<ServiceCall homeassistant.start: fast=yes>",
-            str(ha.ServiceCall('homeassistant', 'start', {"fast": "yes"})))
+    call2 = ha.ServiceCall('homeassistant', 'start', {'fast': 'yes'})
+    assert str(call2) == \
+        "<ServiceCall homeassistant.start (c:{}): fast=yes>".format(
+            call2.context.id)
 
 
 class TestServiceRegistry(unittest.TestCase):
@@ -605,7 +620,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
 
@@ -760,7 +775,7 @@ class TestConfig(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.config = ha.Config()
         self.assertIsNone(self.config.config_dir)
 
@@ -809,6 +824,8 @@ class TestConfig(unittest.TestCase):
 
             valid = [
                 test_file,
+                tmp_dir,
+                os.path.join(tmp_dir, 'notfound321')
             ]
             for path in valid:
                 assert self.config.is_allowed_path(path)

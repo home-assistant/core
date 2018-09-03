@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_TYPE, STATE_CLOSED)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymyq==0.0.8']
+REQUIREMENTS = ['pymyq==0.0.11']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +29,7 @@ COVER_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MyQ component."""
     from pymyq import MyQAPI as pymyq
 
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if not myq.is_login_valid():
             raise ValueError("Username or Password is incorrect")
 
-        add_devices(MyQDevice(myq, door) for door in myq.get_garage_doors())
+        add_entities(MyQDevice(myq, door) for door in myq.get_garage_doors())
         return True
 
     except (TypeError, KeyError, NameError, ValueError) as ex:
@@ -68,6 +68,11 @@ class MyQDevice(CoverDevice):
         self.device_id = device['deviceid']
         self._name = device['name']
         self._status = STATE_CLOSED
+
+    @property
+    def device_class(self):
+        """Define this cover as a garage door."""
+        return 'garage'
 
     @property
     def should_poll(self):

@@ -36,8 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a D-Link Smart Plug."""
     from pyW215.pyW215 import SmartPlug
 
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                    username,
                                    use_legacy_protocol))
 
-    add_devices([SmartPlugSwitch(hass, data, name)], True)
+    add_entities([SmartPlugSwitch(hass, data, name)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
@@ -126,7 +125,7 @@ class SmartPlugSwitch(SwitchDevice):
         self.data.update()
 
 
-class SmartPlugData(object):
+class SmartPlugData:
     """Get the latest data from smart plug."""
 
     def __init__(self, smartplug):

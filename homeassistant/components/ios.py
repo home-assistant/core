@@ -181,7 +181,6 @@ def devices_with_push():
 def enabled_push_ids():
     """Return a list of push enabled target push IDs."""
     push_ids = list()
-    # pylint: disable=unused-variable
     for device in CONFIG_FILE[ATTR_DEVICES].values():
         if device.get(ATTR_PUSH_ID) is not None:
             push_ids.append(device.get(ATTR_PUSH_ID))
@@ -203,7 +202,6 @@ def device_name_for_push_id(push_id):
 
 def setup(hass, config):
     """Set up the iOS component."""
-    # pylint: disable=global-statement, import-error
     global CONFIG_FILE
     global CONFIG_FILE_PATH
 

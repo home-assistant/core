@@ -14,10 +14,10 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW, ATTR_TARGET_TEMP_HIGH, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE, SUPPORT_OPERATION_MODE,
     SUPPORT_TARGET_HUMIDITY_LOW, SUPPORT_TARGET_HUMIDITY_HIGH,
-    SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_HIGH,
-    SUPPORT_TARGET_TEMPERATURE_LOW)
+    SUPPORT_AUX_HEAT, SUPPORT_TARGET_TEMPERATURE_HIGH, SUPPORT_FAN_MODE,
+    SUPPORT_TARGET_TEMPERATURE_LOW, STATE_OFF)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, STATE_OFF, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
+    ATTR_ENTITY_ID, STATE_ON, ATTR_TEMPERATURE, TEMP_FAHRENHEIT)
 import homeassistant.helpers.config_validation as cv
 
 _CONFIGURING = {}
@@ -50,10 +50,10 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
                  SUPPORT_HOLD_MODE | SUPPORT_OPERATION_MODE |
                  SUPPORT_TARGET_HUMIDITY_LOW | SUPPORT_TARGET_HUMIDITY_HIGH |
                  SUPPORT_AUX_HEAT | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                 SUPPORT_TARGET_TEMPERATURE_LOW)
+                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_FAN_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecobee Thermostat Platform."""
     if discovery_info is None:
         return
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hold_temp)
     devices = [Thermostat(data, index, hold_temp)
                for index in range(len(data.ecobee.thermostats))]
-    add_devices(devices)
+    add_entities(devices)
 
     def fan_min_on_time_set_service(service):
         """Set the minimum fan on time on the target thermostats."""
@@ -122,6 +122,7 @@ class Thermostat(ClimateDevice):
         self._climate_list = self.climate_list
         self._operation_list = ['auto', 'auxHeatOnly', 'cool',
                                 'heat', 'off']
+        self._fan_list = ['auto', 'on']
         self.update_without_throttle = False
 
     def update(self):
@@ -176,27 +177,32 @@ class Thermostat(ClimateDevice):
             return None
         if self.current_operation == STATE_HEAT:
             return self.thermostat['runtime']['desiredHeat'] / 10.0
-        elif self.current_operation == STATE_COOL:
+        if self.current_operation == STATE_COOL:
             return self.thermostat['runtime']['desiredCool'] / 10.0
         return None
 
     @property
-    def desired_fan_mode(self):
-        """Return the desired fan mode of operation."""
-        return self.thermostat['runtime']['desiredFanMode']
-
-    @property
     def fan(self):
-        """Return the current fan state."""
+        """Return the current fan status."""
         if 'fan' in self.thermostat['equipmentStatus']:
             return STATE_ON
         return STATE_OFF
+
+    @property
+    def current_fan_mode(self):
+        """Return the fan setting."""
+        return self.thermostat['runtime']['desiredFanMode']
 
     @property
     def current_hold_mode(self):
         """Return current hold mode."""
         mode = self._current_hold_mode
         return None if mode == AWAY_MODE else mode
+
+    @property
+    def fan_list(self):
+        """Return the available fan modes."""
+        return self._fan_list
 
     @property
     def _current_hold_mode(self):
@@ -206,20 +212,20 @@ class Thermostat(ClimateDevice):
                 if event['type'] == 'hold':
                     if event['holdClimateRef'] == 'away':
                         if int(event['endDate'][0:4]) - \
-                           int(event['startDate'][0:4]) <= 1:
+                                int(event['startDate'][0:4]) <= 1:
                             # A temporary hold from away climate is a hold
                             return 'away'
                         # A permanent hold from away climate
                         return AWAY_MODE
-                    elif event['holdClimateRef'] != "":
+                    if event['holdClimateRef'] != "":
                         # Any other hold based on climate
                         return event['holdClimateRef']
                     # Any hold not based on a climate is a temp hold
                     return TEMPERATURE_HOLD
-                elif event['type'].startswith('auto'):
+                if event['type'].startswith('auto'):
                     # All auto modes are treated as holds
                     return event['type'][4:].lower()
-                elif event['type'] == 'vacation':
+                if event['type'] == 'vacation':
                     self.vacation = event['name']
                     return VACATION_HOLD
         return None
@@ -228,7 +234,7 @@ class Thermostat(ClimateDevice):
     def current_operation(self):
         """Return current operation."""
         if self.operation_mode == 'auxHeatOnly' or \
-           self.operation_mode == 'heatPump':
+                self.operation_mode == 'heatPump':
             return STATE_HEAT
         return self.operation_mode
 
@@ -271,10 +277,11 @@ class Thermostat(ClimateDevice):
             operation = STATE_HEAT
         else:
             operation = status
+
         return {
             "actual_humidity": self.thermostat['runtime']['actualHumidity'],
             "fan": self.fan,
-            "mode": self.mode,
+            "climate_mode": self.mode,
             "operation": operation,
             "climate_list": self.climate_list,
             "fan_min_on_time": self.fan_min_on_time
@@ -310,7 +317,7 @@ class Thermostat(ClimateDevice):
         if hold == hold_mode:
             # no change, so no action required
             return
-        elif hold_mode == 'None' or hold_mode is None:
+        if hold_mode == 'None' or hold_mode is None:
             if hold == VACATION_HOLD:
                 self.data.ecobee.delete_vacation(
                     self.thermostat_index, self.vacation)
@@ -342,25 +349,46 @@ class Thermostat(ClimateDevice):
                                        cool_temp_setpoint, heat_temp_setpoint,
                                        self.hold_preference())
         _LOGGER.debug("Setting ecobee hold_temp to: heat=%s, is=%s, "
-                      "cool=%s, is=%s", heat_temp, isinstance(
-                          heat_temp, (int, float)), cool_temp,
+                      "cool=%s, is=%s", heat_temp,
+                      isinstance(heat_temp, (int, float)), cool_temp,
                       isinstance(cool_temp, (int, float)))
 
         self.update_without_throttle = True
 
+    def set_fan_mode(self, fan_mode):
+        """Set the fan mode.  Valid values are "on" or "auto"."""
+        if (fan_mode.lower() != STATE_ON) and (fan_mode.lower() != STATE_AUTO):
+            error = "Invalid fan_mode value:  Valid values are 'on' or 'auto'"
+            _LOGGER.error(error)
+            return
+
+        cool_temp = self.thermostat['runtime']['desiredCool'] / 10.0
+        heat_temp = self.thermostat['runtime']['desiredHeat'] / 10.0
+        self.data.ecobee.set_fan_mode(self.thermostat_index, fan_mode,
+                                      cool_temp, heat_temp,
+                                      self.hold_preference())
+
+        _LOGGER.info("Setting fan mode to: %s", fan_mode)
+
     def set_temp_hold(self, temp):
-        """Set temperature hold in modes other than auto."""
-        # Set arbitrary range when not in auto mode
-        if self.current_operation == STATE_HEAT:
+        """Set temperature hold in modes other than auto.
+
+        Ecobee API: It is good practice to set the heat and cool hold
+        temperatures to be the same, if the thermostat is in either heat, cool,
+        auxHeatOnly, or off mode. If the thermostat is in auto mode, an
+        additional rule is required. The cool hold temperature must be greater
+        than the heat hold temperature by at least the amount in the
+        heatCoolMinDelta property.
+        https://www.ecobee.com/home/developer/api/examples/ex5.shtml
+        """
+        if self.current_operation == STATE_HEAT or self.current_operation == \
+                STATE_COOL:
             heat_temp = temp
-            cool_temp = temp + 20
-        elif self.current_operation == STATE_COOL:
-            heat_temp = temp - 20
             cool_temp = temp
         else:
-            # In auto mode set temperature between
-            heat_temp = temp - 10
-            cool_temp = temp + 10
+            delta = self.thermostat['settings']['heatCoolMinDelta'] / 10
+            heat_temp = temp - delta
+            cool_temp = temp + delta
         self.set_auto_temp_hold(heat_temp, cool_temp)
 
     def set_temperature(self, **kwargs):
@@ -369,8 +397,8 @@ class Thermostat(ClimateDevice):
         high_temp = kwargs.get(ATTR_TARGET_TEMP_HIGH)
         temp = kwargs.get(ATTR_TEMPERATURE)
 
-        if self.current_operation == STATE_AUTO and (low_temp is not None or
-                                                     high_temp is not None):
+        if self.current_operation == STATE_AUTO and \
+                (low_temp is not None or high_temp is not None):
             self.set_auto_temp_hold(low_temp, high_temp)
         elif temp is not None:
             self.set_temp_hold(temp)

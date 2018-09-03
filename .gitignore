@@ -21,6 +21,7 @@ Icon
 *.iml
 
 # pytest
+.pytest_cache
 .cache
 
 # GITHUB Proposed Python stuff:
@@ -103,3 +104,9 @@ desktop.ini
 
 # mypy
 /.mypy_cache/*
+
+# Secrets
+.lokalise_token
+
+# monkeytype
+monkeytype.sqlite3

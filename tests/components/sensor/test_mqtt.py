@@ -5,12 +5,14 @@ from datetime import timedelta, datetime
 from unittest.mock import patch
 
 import homeassistant.core as ha
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 import homeassistant.util.dt as dt_util
 
-from tests.common import mock_mqtt_component, fire_mqtt_message
+from tests.common import mock_mqtt_component, fire_mqtt_message, \
+    assert_setup_component, async_fire_mqtt_message, \
+    async_mock_mqtt_component
 from tests.common import get_test_home_assistant, mock_component
 
 
@@ -18,7 +20,7 @@ class TestSensorMQTT(unittest.TestCase):
     """Test the MQTT sensor."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
 
@@ -329,3 +331,59 @@ class TestSensorMQTT(unittest.TestCase):
         self.assertEqual('100',
                          state.attributes.get('val'))
         self.assertEqual('100', state.state)
+
+    def test_invalid_device_class(self):
+        """Test device_class option with invalid value."""
+        with assert_setup_component(0):
+            assert setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'mqtt',
+                    'name': 'Test 1',
+                    'state_topic': 'test-topic',
+                    'device_class': 'foobarnotreal'
+                }
+            })
+
+    def test_valid_device_class(self):
+        """Test device_class option with valid values."""
+        assert setup_component(self.hass, 'sensor', {
+            'sensor': [{
+                'platform': 'mqtt',
+                'name': 'Test 1',
+                'state_topic': 'test-topic',
+                'device_class': 'temperature'
+            }, {
+                'platform': 'mqtt',
+                'name': 'Test 2',
+                'state_topic': 'test-topic',
+            }]
+        })
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('sensor.test_1')
+        assert state.attributes['device_class'] == 'temperature'
+        state = self.hass.states.get('sensor.test_2')
+        assert 'device_class' not in state.attributes
+
+
+async def test_unique_id(hass):
+    """Test unique id option only creates one sensor per unique_id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, sensor.DOMAIN, {
+        sensor.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'state_topic': 'test-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'state_topic': 'test-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1

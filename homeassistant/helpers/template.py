@@ -13,14 +13,14 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from homeassistant.const import (
     ATTR_LATITUDE, ATTR_LONGITUDE, ATTR_UNIT_OF_MEASUREMENT, MATCH_ALL,
     STATE_UNKNOWN)
-from homeassistant.core import State
+from homeassistant.core import State, valid_entity_id
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import location as loc_helper
-from homeassistant.loader import bind_hass, get_component
+from homeassistant.loader import bind_hass
 from homeassistant.util import convert
 from homeassistant.util import dt as dt_util
 from homeassistant.util import location as loc_util
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 _SENTINEL = object()
@@ -28,7 +28,7 @@ DATE_STR_FORMAT = "%Y-%m-%d %H:%M:%S"
 
 _RE_NONE_ENTITIES = re.compile(r"distance\(|closest\(", re.I | re.M)
 _RE_GET_ENTITIES = re.compile(
-    r"(?:(?:states\.|(?:is_state|is_state_attr|states)"
+    r"(?:(?:states\.|(?:is_state|is_state_attr|state_attr|states)"
     r"\((?:[\ \'\"]?))([\w]+\.[\w]+)|([\w]+))", re.I | re.M
 )
 
@@ -51,7 +51,7 @@ def render_complex(value, variables=None):
     if isinstance(value, list):
         return [render_complex(item, variables)
                 for item in value]
-    elif isinstance(value, dict):
+    if isinstance(value, dict):
         return {key: render_complex(item, variables)
                 for key, item in value.items()}
     return value.async_render(variables)
@@ -73,7 +73,8 @@ def extract_entities(template, variables=None):
             extraction_final.append(result[0])
 
         if variables and result[1] in variables and \
-           isinstance(variables[result[1]], str):
+           isinstance(variables[result[1]], str) and \
+           valid_entity_id(variables[result[1]]):
             extraction_final.append(variables[result[1]])
 
     if extraction_final:
@@ -81,7 +82,7 @@ def extract_entities(template, variables=None):
     return MATCH_ALL
 
 
-class Template(object):
+class Template:
     """Class to hold a template and manage caching and rendering."""
 
     def __init__(self, template, hass=None):
@@ -141,7 +142,6 @@ class Template(object):
             self.hass.loop, self.async_render_with_possible_json_value, value,
             error_value).result()
 
-    # pylint: disable=invalid-name
     def async_render_with_possible_json_value(self, value,
                                               error_value=_SENTINEL):
         """Render template with value exposed.
@@ -181,6 +181,7 @@ class Template(object):
             'distance': template_methods.distance,
             'is_state': self.hass.states.is_state,
             'is_state_attr': template_methods.is_state_attr,
+            'state_attr': template_methods.state_attr,
             'states': AllStates(self.hass),
         })
 
@@ -196,7 +197,7 @@ class Template(object):
                 self.hass == other.hass)
 
 
-class AllStates(object):
+class AllStates:
     """Class to expose all HA states as attributes."""
 
     def __init__(self, hass):
@@ -224,7 +225,7 @@ class AllStates(object):
         return STATE_UNKNOWN if state is None else state.state
 
 
-class DomainStates(object):
+class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
     def __init__(self, hass, domain):
@@ -284,7 +285,7 @@ def _wrap_state(state):
     return None if state is None else TemplateState(state)
 
 
-class TemplateMethods(object):
+class TemplateMethods:
     """Class to expose helpers to templates."""
 
     def __init__(self, hass):
@@ -316,7 +317,7 @@ class TemplateMethods(object):
             if point_state is None:
                 _LOGGER.warning("Closest:Unable to find state %s", args[0])
                 return None
-            elif not loc_helper.has_location(point_state):
+            if not loc_helper.has_location(point_state):
                 _LOGGER.warning(
                     "Closest:State does not contain valid location: %s",
                     point_state)
@@ -347,10 +348,10 @@ class TemplateMethods(object):
             else:
                 gr_entity_id = str(entities)
 
-            group = get_component('group')
+            group = self._hass.components.group
 
             states = [self._hass.states.get(entity_id) for entity_id
-                      in group.expand_entity_ids(self._hass, [gr_entity_id])]
+                      in group.expand_entity_ids([gr_entity_id])]
 
         return _wrap_state(loc_helper.closest(latitude, longitude, states))
 
@@ -404,15 +405,21 @@ class TemplateMethods(object):
 
     def is_state_attr(self, entity_id, name, value):
         """Test if a state is a specific attribute."""
+        state_attr = self.state_attr(entity_id, name)
+        return state_attr is not None and state_attr == value
+
+    def state_attr(self, entity_id, name):
+        """Get a specific attribute from a state."""
         state_obj = self._hass.states.get(entity_id)
-        return state_obj is not None and \
-            state_obj.attributes.get(name) == value
+        if state_obj is not None:
+            return state_obj.attributes.get(name)
+        return None
 
     def _resolve_state(self, entity_id_or_state):
         """Return state or entity_id if given."""
         if isinstance(entity_id_or_state, State):
             return entity_id_or_state
-        elif isinstance(entity_id_or_state, str):
+        if isinstance(entity_id_or_state, str):
             return self._hass.states.get(entity_id_or_state)
         return None
 
@@ -440,6 +447,38 @@ def logarithm(value, base=math.e):
     """Filter to get logarithm of the value with a specific base."""
     try:
         return math.log(float(value), float(base))
+    except (ValueError, TypeError):
+        return value
+
+
+def sine(value):
+    """Filter to get sine of the value."""
+    try:
+        return math.sin(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def cosine(value):
+    """Filter to get cosine of the value."""
+    try:
+        return math.cos(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def tangent(value):
+    """Filter to get tangent of the value."""
+    try:
+        return math.tan(float(value))
+    except (ValueError, TypeError):
+        return value
+
+
+def square_root(value):
+    """Filter to get square root of the value."""
+    try:
+        return math.sqrt(float(value))
     except (ValueError, TypeError):
         return value
 
@@ -508,6 +547,39 @@ def forgiving_float(value):
         return value
 
 
+def regex_match(value, find='', ignorecase=False):
+    """Match value using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return bool(re.match(find, value, flags))
+
+
+def regex_replace(value='', find='', replace='', ignorecase=False):
+    """Replace using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    regex = re.compile(find, flags)
+    return regex.sub(replace, value)
+
+
+def regex_search(value, find='', ignorecase=False):
+    """Search using regex."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return bool(re.search(find, value, flags))
+
+
+def regex_findall_index(value, find='', index=0, ignorecase=False):
+    """Find all matches using regex and then pick specific match index."""
+    if not isinstance(value, str):
+        value = str(value)
+    flags = re.I if ignorecase else 0
+    return re.findall(find, value, flags)[index]
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -530,6 +602,10 @@ ENV = TemplateEnvironment()
 ENV.filters['round'] = forgiving_round
 ENV.filters['multiply'] = multiply
 ENV.filters['log'] = logarithm
+ENV.filters['sin'] = sine
+ENV.filters['cos'] = cosine
+ENV.filters['tan'] = tangent
+ENV.filters['sqrt'] = square_root
 ENV.filters['timestamp_custom'] = timestamp_custom
 ENV.filters['timestamp_local'] = timestamp_local
 ENV.filters['timestamp_utc'] = timestamp_utc
@@ -537,7 +613,18 @@ ENV.filters['is_defined'] = fail_when_undefined
 ENV.filters['max'] = max
 ENV.filters['min'] = min
 ENV.filters['random'] = random_every_time
+ENV.filters['regex_match'] = regex_match
+ENV.filters['regex_replace'] = regex_replace
+ENV.filters['regex_search'] = regex_search
+ENV.filters['regex_findall_index'] = regex_findall_index
 ENV.globals['log'] = logarithm
+ENV.globals['sin'] = sine
+ENV.globals['cos'] = cosine
+ENV.globals['tan'] = tangent
+ENV.globals['sqrt'] = square_root
+ENV.globals['pi'] = math.pi
+ENV.globals['tau'] = math.pi * 2
+ENV.globals['e'] = math.e
 ENV.globals['float'] = forgiving_float
 ENV.globals['now'] = dt_util.now
 ENV.globals['utcnow'] = dt_util.utcnow

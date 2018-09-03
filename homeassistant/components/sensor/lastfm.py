@@ -13,7 +13,7 @@ from homeassistant.const import CONF_API_KEY
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylast==2.1.0']
+REQUIREMENTS = ['pylast==2.4.0']
 
 ATTR_LAST_PLAYED = 'last_played'
 ATTR_PLAY_COUNT = 'play_count'
@@ -29,13 +29,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Last.fm platform."""
     import pylast as lastfm
     network = lastfm.LastFMNetwork(api_key=config.get(CONF_API_KEY))
 
-    add_devices(
+    add_entities(
         [LastfmSensor(
             username, network) for username in config.get(CONF_USERS)], True)
 
@@ -69,7 +68,6 @@ class LastfmSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    # pylint: disable=no-member
     def update(self):
         """Update device state."""
         self._cover = self._user.get_image()

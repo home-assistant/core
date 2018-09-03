@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "all_configured": "Alla Philips Hue-bryggor \u00e4r redan konfigurerade",
+            "already_configured": "Bryggan \u00e4r redan konfigurerad",
+            "cannot_connect": "Det gick inte att ansluta till bryggan",
+            "discover_timeout": "Det gick inte att uppt\u00e4cka n\u00e5gra Hue-bryggor",
+            "no_bridges": "Inga Philips Hue-bryggor uppt\u00e4cktes",
+            "unknown": "Ett ok\u00e4nt fel intr\u00e4ffade"
+        },
+        "error": {
+            "linking": "Ett ok\u00e4nt l\u00e4nkningsfel intr\u00e4ffade.",
+            "register_failed": "Misslyckades med att registrera, v\u00e4nligen f\u00f6rs\u00f6k igen"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "host": "V\u00e4rd"
+                },
+                "title": "V\u00e4lj Hue-brygga"
+            },
+            "link": {
+                "description": "Tryck p\u00e5 knappen p\u00e5 bryggan f\u00f6r att registrera Philips Hue med Home Assistant. \n\n ! [Placering av knapp p\u00e5 brygga] (/ static / images / config_philips_hue.jpg)",
+                "title": "L\u00e4nka hub"
+            }
+        },
+        "title": "Philips Hue Brygga"
+    }
+}

@@ -29,9 +29,9 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 
-# pylint: disable=unused-argument
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the scenes stored in the LIFX Cloud."""
     token = config.get(CONF_TOKEN)
     timeout = config.get(CONF_TIMEOUT)
@@ -57,9 +57,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         devices = []
         for scene in data:
             devices.append(LifxCloudScene(hass, headers, timeout, scene))
-        async_add_devices(devices)
+        async_add_entities(devices)
         return True
-    elif status == 401:
+    if status == 401:
         _LOGGER.error("Unauthorized (bad token?) on %s", url)
         return False
 

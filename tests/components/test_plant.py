@@ -41,7 +41,7 @@ GOOD_CONFIG = {
 }
 
 
-class _MockState(object):
+class _MockState:
 
     def __init__(self, state=None):
         self.state = state

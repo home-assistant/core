@@ -1,8 +1,6 @@
 """Service calling related helpers."""
 import asyncio
 import logging
-# pylint: disable=unused-import
-from typing import Optional  # NOQA
 from os import path
 
 import voluptuous as vol
@@ -14,7 +12,7 @@ from homeassistant.helpers import template
 from homeassistant.loader import get_component, bind_hass
 from homeassistant.util.yaml import load_yaml
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 CONF_SERVICE = 'service'
 CONF_SERVICE_TEMPLATE = 'service_template'
@@ -36,10 +34,9 @@ def call_from_config(hass, config, blocking=False, variables=None,
                                validate_config), hass.loop).result()
 
 
-@asyncio.coroutine
 @bind_hass
-def async_call_from_config(hass, config, blocking=False, variables=None,
-                           validate_config=True):
+async def async_call_from_config(hass, config, blocking=False, variables=None,
+                                 validate_config=True):
     """Call a service based on a config hash."""
     if validate_config:
         try:
@@ -79,7 +76,7 @@ def async_call_from_config(hass, config, blocking=False, variables=None,
     if CONF_SERVICE_ENTITY_ID in config:
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
 
-    yield from hass.services.async_call(
+    await hass.services.async_call(
         domain, service_name, service_data, blocking)
 
 
@@ -94,7 +91,7 @@ def extract_entity_ids(hass, service_call, expand_group=True):
     if not (service_call.data and ATTR_ENTITY_ID in service_call.data):
         return []
 
-    group = get_component('group')
+    group = hass.components.group
 
     # Entity ID attr can be a list or a string
     service_ent_id = service_call.data[ATTR_ENTITY_ID]
@@ -102,22 +99,19 @@ def extract_entity_ids(hass, service_call, expand_group=True):
     if expand_group:
 
         if isinstance(service_ent_id, str):
-            return group.expand_entity_ids(hass, [service_ent_id])
+            return group.expand_entity_ids([service_ent_id])
 
         return [ent_id for ent_id in
-                group.expand_entity_ids(hass, service_ent_id)]
+                group.expand_entity_ids(service_ent_id)]
 
-    else:
+    if isinstance(service_ent_id, str):
+        return [service_ent_id]
 
-        if isinstance(service_ent_id, str):
-            return [service_ent_id]
-
-        return service_ent_id
+    return service_ent_id
 
 
-@asyncio.coroutine
 @bind_hass
-def async_get_all_descriptions(hass):
+async def async_get_all_descriptions(hass):
     """Return descriptions (i.e. user documentation) for all service calls."""
     if SERVICE_DESCRIPTION_CACHE not in hass.data:
         hass.data[SERVICE_DESCRIPTION_CACHE] = {}
@@ -128,10 +122,10 @@ def async_get_all_descriptions(hass):
     def domain_yaml_file(domain):
         """Return the services.yaml location for a domain."""
         if domain == ha.DOMAIN:
-            import homeassistant.components as components
+            from homeassistant import components
             component_path = path.dirname(components.__file__)
         else:
-            component_path = path.dirname(get_component(domain).__file__)
+            component_path = path.dirname(get_component(hass, domain).__file__)
         return path.join(component_path, 'services.yaml')
 
     def load_services_files(yaml_files):
@@ -156,7 +150,7 @@ def async_get_all_descriptions(hass):
                 break
 
     if missing:
-        loaded = yield from hass.async_add_job(load_services_files, missing)
+        loaded = await hass.async_add_job(load_services_files, missing)
 
     # Build response
     catch_all_yaml_file = domain_yaml_file(ha.DOMAIN)
@@ -185,3 +179,54 @@ def async_get_all_descriptions(hass):
             descriptions[domain][service] = description
 
     return descriptions
+
+
+@bind_hass
+async def entity_service_call(hass, platforms, func, call):
+    """Handle an entity service call.
+
+    Calls all platforms simultaneously.
+    """
+    tasks = []
+    all_entities = ATTR_ENTITY_ID not in call.data
+    if not all_entities:
+        entity_ids = set(
+            extract_entity_ids(hass, call, True))
+
+    if isinstance(func, str):
+        data = {key: val for key, val in call.data.items()
+                if key != ATTR_ENTITY_ID}
+    else:
+        data = call
+
+    tasks = [
+        _handle_service_platform_call(func, data, [
+            entity for entity in platform.entities.values()
+            if all_entities or entity.entity_id in entity_ids
+        ], call.context) for platform in platforms
+    ]
+
+    if tasks:
+        await asyncio.wait(tasks)
+
+
+async def _handle_service_platform_call(func, data, entities, context):
+    """Handle a function call."""
+    tasks = []
+
+    for entity in entities:
+        if not entity.available:
+            continue
+
+        entity.async_set_context(context)
+
+        if isinstance(func, str):
+            await getattr(entity, func)(**data)
+        else:
+            await func(entity, data)
+
+        if entity.should_poll:
+            tasks.append(entity.async_update_ha_state(True))
+
+    if tasks:
+        await asyncio.wait(tasks)

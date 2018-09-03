@@ -19,7 +19,7 @@ class TestRestSensorSetup(unittest.TestCase):
     """Tests for setting up the REST sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -121,7 +121,7 @@ class TestRestSensor(unittest.TestCase):
     """Tests for REST sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.initial_state = 'initial_state'
         self.rest = Mock('rest.RestData')
@@ -208,6 +208,18 @@ class TestRestSensor(unittest.TestCase):
                          self.sensor.device_state_attributes['key'])
 
     @patch('homeassistant.components.sensor.rest._LOGGER')
+    def test_update_with_json_attrs_no_data(self, mock_logger):
+        """Test attributes when no JSON result fetched."""
+        self.rest.update = Mock('rest.RestData.update',
+                                side_effect=self.update_side_effect(None))
+        self.sensor = rest.RestSensor(self.hass, self.rest, self.name,
+                                      self.unit_of_measurement, None, ['key'],
+                                      self.force_update)
+        self.sensor.update()
+        self.assertEqual({}, self.sensor.device_state_attributes)
+        self.assertTrue(mock_logger.warning.called)
+
+    @patch('homeassistant.components.sensor.rest._LOGGER')
     def test_update_with_json_attrs_not_dict(self, mock_logger):
         """Test attributes get extracted from a JSON result."""
         self.rest.update = Mock('rest.RestData.update',
@@ -255,7 +267,7 @@ class TestRestData(unittest.TestCase):
     """Tests for RestData."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.method = "GET"
         self.resource = "http://localhost"
         self.verify_ssl = True

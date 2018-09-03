@@ -26,10 +26,10 @@ ALARM_TOGGLE_CHIME_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up for AlarmDecoder alarm panels."""
     device = AlarmDecoderAlarmPanel()
-    add_devices([device])
+    add_entities([device])
 
     def alarm_toggle_chime_handler(service):
         """Register toggle chime handler."""
@@ -100,8 +100,8 @@ class AlarmDecoderAlarmPanel(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """Return the regex for code format or None if no code is required."""
-        return '^\\d{4,6}$'
+        """Return one or more digits/characters."""
+        return 'Number'
 
     @property
     def state(self):

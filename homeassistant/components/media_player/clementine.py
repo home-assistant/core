@@ -37,14 +37,13 @@ SUPPORT_CLEMENTINE = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_ACCESS_TOKEN, default=None): cv.positive_int,
+    vol.Optional(CONF_ACCESS_TOKEN): cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Clementine platform."""
     from clementineremote import ClementineRemote
     host = config.get(CONF_HOST)
@@ -53,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     client = ClementineRemote(host, port, token, reconnect=True)
 
-    add_devices([ClementineDevice(client, config[CONF_NAME])])
+    add_entities([ClementineDevice(client, config[CONF_NAME])])
 
 
 class ClementineDevice(MediaPlayerDevice):

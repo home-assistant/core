@@ -59,6 +59,34 @@ send_photo:
       description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
       example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
 
+send_sticker:
+  description: Send a sticker.
+  fields:
+    url:
+      description: Remote path to an webp sticker.
+      example: 'http://example.org/path/to/the/sticker.webp'
+    file:
+      description: Local path to an webp sticker.
+      example: '/path/to/the/sticker.webp'
+    username:
+      description: Username for a URL which require HTTP basic authentication.
+      example: myuser
+    password:
+      description: Password for a URL which require HTTP basic authentication.
+      example: myuser_pwd
+    target:
+      description: An array of pre-authorized chat_ids to send the document to. If not present, first allowed chat_id is the default.
+      example: '[12345, 67890] or 12345'
+    disable_notification:
+      description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
+      example: true
+    keyboard:
+      description: List of rows of commands, comma-separated, to make a custom keyboard.
+      example: '["/command1, /command2", "/command3"]'
+    inline_keyboard:
+      description: List of rows of commands, comma-separated, to make a custom inline keyboard with buttons with associated callback data.
+      example: '["/button1, /button2", "/button3"] or [[["Text button1", "/button1"], ["Text button2", "/button2"]], [["Text button3", "/button3"]]]'
+
 send_video:
   description: Send a video.
   fields:

@@ -10,14 +10,14 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, ClimateDevice,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA, STATE_AUTO,
     ATTR_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE,
     SUPPORT_SWING_MODE, SUPPORT_FAN_MODE, SUPPORT_AWAY_MODE, SUPPORT_HOLD_MODE,
-    SUPPORT_AUX_HEAT)
+    SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, CONF_VALUE_TEMPLATE)
 from homeassistant.components.mqtt import (
@@ -70,6 +70,9 @@ CONF_SWING_MODE_LIST = 'swing_modes'
 CONF_INITIAL = 'initial'
 CONF_SEND_IF_OFF = 'send_if_off'
 
+CONF_MIN_TEMP = 'min_temp'
+CONF_MAX_TEMP = 'max_temp'
+
 SCHEMA_BASE = CLIMATE_PLATFORM_SCHEMA.extend(MQTT_BASE_PLATFORM_SCHEMA.schema)
 PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_POWER_COMMAND_TOPIC): mqtt.valid_publish_topic,
@@ -116,12 +119,20 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
     vol.Optional(CONF_SEND_IF_OFF, default=True): cv.boolean,
     vol.Optional(CONF_PAYLOAD_ON, default="ON"): cv.string,
     vol.Optional(CONF_PAYLOAD_OFF, default="OFF"): cv.string,
+
+    vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
+    vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float)
+
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the MQTT climate devices."""
+    if discovery_info is not None:
+        config = PLATFORM_SCHEMA(discovery_info)
+
     template_keys = (
         CONF_POWER_STATE_TEMPLATE,
         CONF_MODE_STATE_TEMPLATE,
@@ -142,7 +153,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         value_templates[key] = config.get(key)
         value_templates[key].hass = hass
 
-    async_add_devices([
+    async_add_entities([
         MqttClimate(
             hass,
             config.get(CONF_NAME),
@@ -181,19 +192,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             config.get(CONF_PAYLOAD_OFF),
             config.get(CONF_AVAILABILITY_TOPIC),
             config.get(CONF_PAYLOAD_AVAILABLE),
-            config.get(CONF_PAYLOAD_NOT_AVAILABLE))
+            config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+            config.get(CONF_MIN_TEMP),
+            config.get(CONF_MAX_TEMP))
     ])
 
 
 class MqttClimate(MqttAvailability, ClimateDevice):
-    """Representation of a demo climate device."""
+    """Representation of an MQTT climate device."""
 
     def __init__(self, hass, name, topic, value_templates, qos, retain,
                  mode_list, fan_mode_list, swing_mode_list,
                  target_temperature, away, hold, current_fan_mode,
                  current_swing_mode, current_operation, aux, send_if_off,
                  payload_on, payload_off, availability_topic,
-                 payload_available, payload_not_available):
+                 payload_available, payload_not_available,
+                 min_temp, max_temp):
         """Initialize the climate device."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -219,6 +233,8 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         self._send_if_off = send_if_off
         self._payload_on = payload_on
         self._payload_off = payload_off
+        self._min_temp = min_temp
+        self._max_temp = max_temp
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -619,3 +635,13 @@ class MqttClimate(MqttAvailability, ClimateDevice):
             support |= SUPPORT_AUX_HEAT
 
         return support
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        return self._min_temp
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        return self._max_temp

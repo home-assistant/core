@@ -14,7 +14,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_PORT)
 
-REQUIREMENTS = ['librouteros==1.0.5']
+REQUIREMENTS = ['librouteros==2.1.0']
 
 MTK_DEFAULT_API_PORT = '8728'
 
@@ -66,14 +66,14 @@ class MikrotikScanner(DeviceScanner):
 
     def connect_to_device(self):
         """Connect to Mikrotik method."""
-        # pylint: disable=import-error
         import librouteros
         try:
             self.client = librouteros.connect(
                 self.host,
                 self.username,
                 self.password,
-                port=int(self.port)
+                port=int(self.port),
+                encoding='utf-8'
             )
 
             try:
@@ -175,7 +175,7 @@ class MikrotikScanner(DeviceScanner):
                      for device in device_names
                      if device.get('mac-address')}
 
-        if self.wireless_exist:
+        if self.wireless_exist or self.capsman_exist:
             self.last_results = {
                 device.get('mac-address'):
                     mac_names.get(device.get('mac-address'))

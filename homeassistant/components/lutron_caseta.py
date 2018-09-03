@@ -14,7 +14,7 @@ from homeassistant.const import CONF_HOST
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pylutron-caseta==0.3.0']
+REQUIREMENTS = ['pylutron-caseta==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,8 +63,8 @@ def async_setup(hass, base_config):
     _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])
 
     for component in LUTRON_CASETA_COMPONENTS:
-        hass.async_add_job(discovery.async_load_platform(hass, component,
-                                                         DOMAIN, {}, config))
+        hass.async_create_task(discovery.async_load_platform(
+            hass, component, DOMAIN, {}, config))
 
     return True
 

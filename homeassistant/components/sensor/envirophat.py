@@ -45,17 +45,16 @@ SENSOR_TYPES = {
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_DISPLAY_OPTIONS, default=SENSOR_TYPES):
+    vol.Required(CONF_DISPLAY_OPTIONS, default=list(SENSOR_TYPES)):
         [vol.In(SENSOR_TYPES)],
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_USE_LEDS, default=False): cv.boolean
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense HAT sensor platform."""
     try:
-        # pylint: disable=import-error
         import envirophat
     except OSError:
         _LOGGER.error("No Enviro pHAT was found.")
@@ -67,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_DISPLAY_OPTIONS]:
         dev.append(EnvirophatSensor(data, variable))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class EnvirophatSensor(Entity):
@@ -139,7 +138,7 @@ class EnvirophatSensor(Entity):
             self._state = self.data.voltage_3
 
 
-class EnvirophatData(object):
+class EnvirophatData:
     """Get the latest data and update."""
 
     def __init__(self, envirophat, use_leds):
@@ -175,7 +174,6 @@ class EnvirophatData(object):
         self.light_red, self.light_green, self.light_blue = \
             self.envirophat.light.rgb()
         if self.use_leds:
-            # pylint: disable=no-value-for-parameter
             self.envirophat.leds.off()
 
         # accelerometer readings in G

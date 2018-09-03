@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_TYPE
 from homeassistant.helpers.entity import Entity
-import homeassistant.util as util
+from homeassistant import util
 
 REQUIREMENTS = ['ephem==3.7.6.0']
 
@@ -21,10 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 NORTHERN = 'northern'
 SOUTHERN = 'southern'
 EQUATOR = 'equator'
-STATE_SPRING = 'Spring'
-STATE_SUMMER = 'Summer'
-STATE_AUTUMN = 'Autumn'
-STATE_WINTER = 'Winter'
+STATE_SPRING = 'spring'
+STATE_SUMMER = 'summer'
+STATE_AUTUMN = 'autumn'
+STATE_WINTER = 'winter'
 TYPE_ASTRONOMICAL = 'astronomical'
 TYPE_METEOROLOGICAL = 'meteorological'
 VALID_TYPES = [TYPE_ASTRONOMICAL, TYPE_METEOROLOGICAL]
@@ -40,7 +40,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Display the current season."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -57,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hemisphere = EQUATOR
 
     _LOGGER.debug(_type)
-    add_devices([Season(hass, hemisphere, _type)])
+    add_entities([Season(hass, hemisphere, _type)])
 
     return True
 

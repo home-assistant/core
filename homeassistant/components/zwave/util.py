@@ -1,5 +1,8 @@
 """Zwave util methods."""
+import asyncio
 import logging
+
+import homeassistant.util.dt as dt_util
 
 from . import const
 
@@ -65,5 +68,27 @@ def check_value_schema(value, schema):
 
 def node_name(node):
     """Return the name of the node."""
-    return node.name or '{} {}'.format(
-        node.manufacturer_name, node.product_name)
+    if is_node_parsed(node):
+        return node.name or '{} {}'.format(
+            node.manufacturer_name, node.product_name)
+    return 'Unknown Node {}'.format(node.node_id)
+
+
+async def check_has_unique_id(entity, ready_callback, timeout_callback, loop):
+    """Wait for entity to have unique_id."""
+    start_time = dt_util.utcnow()
+    while True:
+        waited = int((dt_util.utcnow()-start_time).total_seconds())
+        if entity.unique_id:
+            ready_callback(waited)
+            return
+        if waited >= const.NODE_READY_WAIT_SECS:
+            # Wait up to NODE_READY_WAIT_SECS seconds for unique_id to appear.
+            timeout_callback(waited)
+            return
+        await asyncio.sleep(1, loop=loop)
+
+
+def is_node_parsed(node):
+    """Check whether the node has been parsed or still waiting to be parsed."""
+    return bool((node.manufacturer_name and node.product_name) or node.name)

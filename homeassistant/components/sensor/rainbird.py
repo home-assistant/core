@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Rain Bird sensor."""
     controller = hass.data[DATA_RAINBIRD]
 
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(
             RainBirdSensor(controller, sensor_type))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class RainBirdSensor(Entity):

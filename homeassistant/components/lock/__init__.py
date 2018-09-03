@@ -18,7 +18,7 @@ from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_CODE, ATTR_CODE_FORMAT, ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED,
-    STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK)
+    STATE_UNKNOWN, SERVICE_LOCK, SERVICE_UNLOCK, SERVICE_OPEN)
 from homeassistant.components import group
 
 ATTR_CHANGED_BY = 'changed_by'
@@ -38,6 +38,9 @@ LOCK_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_CODE): cv.string,
 })
+
+# Bitfield of features supported by the lock entity
+SUPPORT_OPEN = 1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -78,6 +81,18 @@ def unlock(hass, entity_id=None, code=None):
     hass.services.call(DOMAIN, SERVICE_UNLOCK, data)
 
 
+@bind_hass
+def open_lock(hass, entity_id=None, code=None):
+    """Open all or specified locks."""
+    data = {}
+    if code:
+        data[ATTR_CODE] = code
+    if entity_id:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    hass.services.call(DOMAIN, SERVICE_OPEN, data)
+
+
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for locks."""
@@ -86,33 +101,18 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_lock_service(service):
-        """Handle calls to the lock services."""
-        target_locks = component.async_extract_from_service(service)
-
-        code = service.data.get(ATTR_CODE)
-
-        update_tasks = []
-        for entity in target_locks:
-            if service.service == SERVICE_LOCK:
-                yield from entity.async_lock(code=code)
-            else:
-                yield from entity.async_unlock(code=code)
-
-            if not entity.should_poll:
-                continue
-            update_tasks.append(entity.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_UNLOCK, async_handle_lock_service,
-        schema=LOCK_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_LOCK, async_handle_lock_service,
-        schema=LOCK_SERVICE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_UNLOCK, LOCK_SERVICE_SCHEMA,
+        'async_unlock'
+    )
+    component.async_register_entity_service(
+        SERVICE_LOCK, LOCK_SERVICE_SCHEMA,
+        'async_lock'
+    )
+    component.async_register_entity_service(
+        SERVICE_OPEN, LOCK_SERVICE_SCHEMA,
+        'async_open'
+    )
 
     return True
 
@@ -125,7 +125,6 @@ class LockDevice(Entity):
         """Last change triggered by."""
         return None
 
-    # pylint: disable=no-self-use
     @property
     def code_format(self):
         """Regex for code format or None if no code is required."""
@@ -157,6 +156,17 @@ class LockDevice(Entity):
         This method must be run in the event loop and returns a coroutine.
         """
         return self.hass.async_add_job(ft.partial(self.unlock, **kwargs))
+
+    def open(self, **kwargs):
+        """Open the door latch."""
+        raise NotImplementedError()
+
+    def async_open(self, **kwargs):
+        """Open the door latch.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(ft.partial(self.open, **kwargs))
 
     @property
     def state_attributes(self):

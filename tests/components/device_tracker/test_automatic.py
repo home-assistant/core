@@ -5,10 +5,9 @@ import logging
 from unittest.mock import patch, MagicMock
 import aioautomatic
 
+from homeassistant.setup import async_setup_component
 from homeassistant.components.device_tracker.automatic import (
     async_setup_scanner)
-
-from tests.common import mock_http_component
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,8 +22,7 @@ def test_invalid_credentials(
         mock_open, mock_isfile, mock_makedirs, mock_json_dump, mock_json_load,
         mock_create_session, hass):
     """Test with invalid credentials."""
-    mock_http_component(hass)
-
+    hass.loop.run_until_complete(async_setup_component(hass, 'http', {}))
     mock_json_load.return_value = {'refresh_token': 'bad_token'}
 
     @asyncio.coroutine
@@ -59,8 +57,7 @@ def test_valid_credentials(
         mock_open, mock_isfile, mock_makedirs, mock_json_dump, mock_json_load,
         mock_ws_connect, mock_create_session, hass):
     """Test with valid credentials."""
-    mock_http_component(hass)
-
+    hass.loop.run_until_complete(async_setup_component(hass, 'http', {}))
     mock_json_load.return_value = {'refresh_token': 'good_token'}
 
     session = MagicMock()
@@ -116,8 +113,6 @@ def test_valid_credentials(
     }
     result = hass.loop.run_until_complete(
         async_setup_scanner(hass, config, mock_see))
-
-    hass.async_block_till_done()
 
     assert result
 

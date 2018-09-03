@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Russound RNET platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     if russ.is_connected():
         for zone_id, extra in config[CONF_ZONES].items():
-            add_devices([RussoundRNETDevice(
+            add_entities([RussoundRNETDevice(
                 hass, russ, sources, zone_id, extra)], True)
     else:
         _LOGGER.error('Not connected to %s:%s', host, port)

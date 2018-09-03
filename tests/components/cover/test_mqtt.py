@@ -2,8 +2,8 @@
 import unittest
 
 from homeassistant.setup import setup_component
-from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN,\
-    STATE_UNAVAILABLE
+from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN, \
+    STATE_UNAVAILABLE, ATTR_ASSUMED_STATE
 import homeassistant.components.cover as cover
 from homeassistant.components.cover.mqtt import MqttCover
 
@@ -15,7 +15,7 @@ class TestCoverMQTT(unittest.TestCase):
     """Test the MQTT cover."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
@@ -40,6 +40,7 @@ class TestCoverMQTT(unittest.TestCase):
 
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
 
         fire_mqtt_message(self.hass, 'state-topic', '0')
         self.hass.block_till_done()
@@ -112,6 +113,7 @@ class TestCoverMQTT(unittest.TestCase):
 
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
+        self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         cover.open_cover(self.hass, 'cover.test')
         self.hass.block_till_done()

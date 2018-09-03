@@ -6,7 +6,6 @@ import threading
 import homeassistant.util.logging as logging_util
 
 
-@asyncio.coroutine
 def test_sensitive_data_filter():
     """Test the logging sensitive data filter."""
     log_filter = logging_util.HideSensitiveDataFilter('mock_sensitive')

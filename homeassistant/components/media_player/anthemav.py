@@ -36,7 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up our socket to the AVR."""
     import anthemav
 
@@ -63,7 +64,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.debug("dump_rawdata: %s", avr.protocol.dump_rawdata)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.avr.close)
-    async_add_devices([device])
+    async_add_entities([device])
 
 
 class AnthemAVR(MediaPlayerDevice):
@@ -100,7 +101,7 @@ class AnthemAVR(MediaPlayerDevice):
 
         if pwrstate is True:
             return STATE_ON
-        elif pwrstate is False:
+        if pwrstate is False:
             return STATE_OFF
         return STATE_UNKNOWN
 

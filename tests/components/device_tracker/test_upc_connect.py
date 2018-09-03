@@ -10,7 +10,7 @@ from homeassistant.const import (
     CONF_PLATFORM, CONF_HOST)
 from homeassistant.components.device_tracker import DOMAIN
 import homeassistant.components.device_tracker.upc_connect as platform
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture,
@@ -33,11 +33,11 @@ def mock_load_config():
         yield
 
 
-class TestUPCConnect(object):
+class TestUPCConnect:
     """Tests for the Ddwrt device tracker platform."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'zone')
         mock_component(self.hass, 'group')
@@ -52,7 +52,7 @@ class TestUPCConnect(object):
            'UPCDeviceScanner.async_scan_devices',
            return_value=async_scan_devices_mock)
     def test_setup_platform(self, scan_mock, aioclient_mock):
-        """Setup a platform."""
+        """Set up a platform."""
         aioclient_mock.get(
             "http://{}/common_page/login.html".format(self.host),
             cookies={'sessionToken': '654321'}
@@ -74,7 +74,7 @@ class TestUPCConnect(object):
     @patch('homeassistant.components.device_tracker._LOGGER.error')
     def test_setup_platform_timeout_webservice(self, mock_error,
                                                aioclient_mock):
-        """Setup a platform with api timeout."""
+        """Set up a platform with api timeout."""
         aioclient_mock.get(
             "http://{}/common_page/login.html".format(self.host),
             cookies={'sessionToken': '654321'},
@@ -97,7 +97,7 @@ class TestUPCConnect(object):
     @patch('homeassistant.components.device_tracker._LOGGER.error')
     def test_setup_platform_timeout_loginpage(self, mock_error,
                                               aioclient_mock):
-        """Setup a platform with timeout on loginpage."""
+        """Set up a platform with timeout on loginpage."""
         aioclient_mock.get(
             "http://{}/common_page/login.html".format(self.host),
             exc=asyncio.TimeoutError()
@@ -120,7 +120,7 @@ class TestUPCConnect(object):
             str(mock_error.call_args_list[-1])
 
     def test_scan_devices(self, aioclient_mock):
-        """Setup a upc platform and scan device."""
+        """Set up a upc platform and scan device."""
         aioclient_mock.get(
             "http://{}/common_page/login.html".format(self.host),
             cookies={'sessionToken': '654321'}
@@ -156,7 +156,7 @@ class TestUPCConnect(object):
                             '70:EE:50:27:A1:38']
 
     def test_scan_devices_without_session(self, aioclient_mock):
-        """Setup a upc platform and scan device with no token."""
+        """Set up a upc platform and scan device with no token."""
         aioclient_mock.get(
             "http://{}/common_page/login.html".format(self.host),
             cookies={'sessionToken': '654321'}
@@ -197,7 +197,7 @@ class TestUPCConnect(object):
                             '70:EE:50:27:A1:38']
 
     def test_scan_devices_without_session_wrong_re(self, aioclient_mock):
-        """Setup a upc platform and scan device with no token and wrong."""
+        """Set up a upc platform and scan device with no token and wrong."""
         aioclient_mock.get(
             "http://{}/common_page/login.html".format(self.host),
             cookies={'sessionToken': '654321'}
@@ -237,7 +237,7 @@ class TestUPCConnect(object):
         assert mac_list == []
 
     def test_scan_devices_parse_error(self, aioclient_mock):
-        """Setup a upc platform and scan device with parse error."""
+        """Set up a upc platform and scan device with parse error."""
         aioclient_mock.get(
             "http://{}/common_page/login.html".format(self.host),
             cookies={'sessionToken': '654321'}

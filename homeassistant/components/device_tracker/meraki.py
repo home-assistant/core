@@ -74,17 +74,16 @@ class MerakiView(HomeAssistantView):
             _LOGGER.error("Invalid Secret received from Meraki")
             return self.json_message('Invalid secret',
                                      HTTP_UNPROCESSABLE_ENTITY)
-        elif data['version'] != VERSION:
+        if data['version'] != VERSION:
             _LOGGER.error("Invalid API version: %s", data['version'])
             return self.json_message('Invalid version',
                                      HTTP_UNPROCESSABLE_ENTITY)
-        else:
-            _LOGGER.debug('Valid Secret')
-            if data['type'] not in ('DevicesSeen', 'BluetoothDevicesSeen'):
-                _LOGGER.error("Unknown Device %s", data['type'])
-                return self.json_message('Invalid device type',
-                                         HTTP_UNPROCESSABLE_ENTITY)
-            _LOGGER.debug("Processing %s", data['type'])
+        _LOGGER.debug('Valid Secret')
+        if data['type'] not in ('DevicesSeen', 'BluetoothDevicesSeen'):
+            _LOGGER.error("Unknown Device %s", data['type'])
+            return self.json_message('Invalid device type',
+                                     HTTP_UNPROCESSABLE_ENTITY)
+        _LOGGER.debug("Processing %s", data['type'])
         if not data["data"]["observations"]:
             _LOGGER.debug("No observations found")
             return

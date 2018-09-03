@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LaCrosse sensors."""
     import pylacrosse
     from serial import SerialException
@@ -103,7 +103,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         )
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class LaCrosseSensor(Entity):
@@ -157,7 +157,7 @@ class LaCrosseSensor(Entity):
             self._expiration_trigger = async_track_point_in_utc_time(
                 self.hass, self.value_is_expired, expiration_at)
 
-        self._temperature = round(lacrosse_sensor.temperature * 2) / 2
+        self._temperature = lacrosse_sensor.temperature
         self._humidity = lacrosse_sensor.humidity
         self._low_battery = lacrosse_sensor.low_battery
         self._new_battery = lacrosse_sensor.new_battery

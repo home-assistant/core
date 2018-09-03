@@ -3,6 +3,7 @@ import io
 import unittest
 from unittest.mock import Mock, patch, mock_open
 
+from apns2.errors import Unregistered
 import yaml
 
 import homeassistant.components.notify as notify
@@ -27,7 +28,7 @@ class TestApns(unittest.TestCase):
     """Test the APNS component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -358,8 +359,6 @@ class TestApns(unittest.TestCase):
     @patch('homeassistant.components.notify.apns._write_device')
     def test_disable_when_unregistered(self, mock_write, mock_client):
         """Test disabling a device when it is unregistered."""
-        from apns2.errors import Unregistered
-
         send = mock_client.return_value.send_notification
         send.side_effect = Unregistered()
 

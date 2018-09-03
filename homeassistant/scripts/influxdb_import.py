@@ -137,6 +137,7 @@ def run(script_args: List) -> int:
     override_measurement = args.override_measurement
     default_measurement = args.default_measurement
 
+    # pylint: disable=assignment-from-no-return
     query = session.query(func.count(models.Events.event_type)).filter(
         models.Events.event_type == 'state_changed')
 

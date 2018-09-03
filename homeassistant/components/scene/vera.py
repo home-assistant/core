@@ -16,9 +16,9 @@ DEPENDENCIES = ['vera']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vera scenes."""
-    add_devices(
+    add_entities(
         [VeraScene(scene, hass.data[VERA_CONTROLLER])
          for scene in hass.data[VERA_SCENES]], True)
 
@@ -53,8 +53,3 @@ class VeraScene(Scene):
     def device_state_attributes(self):
         """Return the state attributes of the scene."""
         return {'vera_scene_id': self.vera_scene.vera_scene_id}
-
-    @property
-    def should_poll(self):
-        """Return that polling is not necessary."""
-        return False

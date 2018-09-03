@@ -21,7 +21,7 @@ DEPENDENCIES = ['tesla']
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tesla sensor platform."""
     controller = hass.data[TESLA_DOMAIN]['devices']['controller']
     devices = []
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             devices.append(TeslaSensor(device, controller, 'outside'))
         else:
             devices.append(TeslaSensor(device, controller))
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class TeslaSensor(TeslaDevice, Entity):
@@ -78,6 +78,16 @@ class TeslaSensor(TeslaDevice, Entity):
                 self._unit = TEMP_FAHRENHEIT
             else:
                 self._unit = TEMP_CELSIUS
+        elif (self.tesla_device.bin_type == 0xA or
+              self.tesla_device.bin_type == 0xB):
+            self.current_value = self.tesla_device.get_value()
+            tesla_dist_unit = self.tesla_device.measurement
+            if tesla_dist_unit == 'LENGTH_MILES':
+                self._unit = LENGTH_MILES
+            else:
+                self._unit = LENGTH_KILOMETERS
+                self.current_value /= 0.621371
+                self.current_value = round(self.current_value, 2)
         else:
             self.current_value = self.tesla_device.get_value()
             if self.tesla_device.bin_type == 0x5:
@@ -87,3 +97,5 @@ class TeslaSensor(TeslaDevice, Entity):
                     self._unit = LENGTH_MILES
                 else:
                     self._unit = LENGTH_KILOMETERS
+                    self.current_value /= 0.621371
+                    self.current_value = round(self.current_value, 2)

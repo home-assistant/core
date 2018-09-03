@@ -23,15 +23,15 @@ from homeassistant.util.unit_system import UnitSystem
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS, default=SENSOR_TYPES.keys()):
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Daikin sensors."""
     if discovery_info is not None:
         host = discovery_info.get('ip')
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for monitored_state in monitored_conditions:
         sensors.append(DaikinClimateSensor(api, monitored_state, units, name))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class DaikinClimateSensor(Entity):
@@ -85,7 +85,7 @@ class DaikinClimateSensor(Entity):
         if value is None:
             _LOGGER.warning("Invalid value requested for key %s", key)
         else:
-            if value == "-" or value == "--":
+            if value in ("-", "--"):
                 value = None
             elif cast_to_float:
                 try:

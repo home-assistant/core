@@ -10,7 +10,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.core import callback
 from homeassistant.components.mqtt import CONF_QOS
 from homeassistant.components.device_tracker import PLATFORM_SCHEMA
@@ -26,8 +26,8 @@ _LOGGER = logging.getLogger(__name__)
 GPS_JSON_PAYLOAD_SCHEMA = vol.Schema({
     vol.Required(ATTR_LATITUDE): vol.Coerce(float),
     vol.Required(ATTR_LONGITUDE): vol.Coerce(float),
-    vol.Optional(ATTR_GPS_ACCURACY, default=None): vol.Coerce(int),
-    vol.Optional(ATTR_BATTERY_LEVEL, default=None): vol.Coerce(str),
+    vol.Optional(ATTR_GPS_ACCURACY): vol.Coerce(int),
+    vol.Optional(ATTR_BATTERY_LEVEL): vol.Coerce(str),
 }, extra=vol.ALLOW_EXTRA)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend({

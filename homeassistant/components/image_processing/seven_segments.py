@@ -33,7 +33,7 @@ DEFAULT_BINARY = 'ssocr'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_EXTRA_ARGUMENTS, default=''): cv.string,
-    vol.Optional(CONF_DIGITS, default=-1): cv.positive_int,
+    vol.Optional(CONF_DIGITS): cv.positive_int,
     vol.Optional(CONF_HEIGHT, default=0): cv.positive_int,
     vol.Optional(CONF_SSOCR_BIN, default=DEFAULT_BINARY): cv.string,
     vol.Optional(CONF_THRESHOLD, default=0): cv.positive_int,
@@ -45,7 +45,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Seven segments OCR platform."""
     entities = []
     for camera in config[CONF_SOURCE]:
@@ -53,7 +54,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             hass, camera[CONF_ENTITY_ID], config, camera.get(CONF_NAME)
         ))
 
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 class ImageProcessingSsocr(ImageProcessingEntity):
@@ -73,7 +74,7 @@ class ImageProcessingSsocr(ImageProcessingEntity):
         self.filepath = os.path.join(self.hass.config.config_dir, 'ocr.png')
         crop = ['crop', str(config[CONF_X_POS]), str(config[CONF_Y_POS]),
                 str(config[CONF_WIDTH]), str(config[CONF_HEIGHT])]
-        digits = ['-d', str(config[CONF_DIGITS])]
+        digits = ['-d', str(config.get(CONF_DIGITS, -1))]
         rotate = ['rotate', str(config[CONF_ROTATE])]
         threshold = ['-t', str(config[CONF_THRESHOLD])]
         extra_arguments = config[CONF_EXTRA_ARGUMENTS].split(' ')
