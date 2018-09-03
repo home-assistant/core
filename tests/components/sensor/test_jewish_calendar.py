@@ -37,17 +37,17 @@ class TestJewishCalenderSensor(unittest.TestCase):
             assert setup_component(self.hass, 'sensor', config)
         self.checkForLoggingErrors()
 
-    # def test_jewish_calendar_hebrew(self):
-    #     """Test jewish calendar sensor with language set to hebrew."""
-    #     config = {
-    #         'sensor': {
-    #             'platform': 'jewish_calendar',
-    #             'language': 'hebrew',
-    #         }
-    #     }
-    #     with self.assertLogs() as self.cm:
-    #         assert setup_component(self.hass, 'sensor', config)
-    #     self.checkForLoggingErrors()
+    def test_jewish_calendar_hebrew(self):
+        """Test jewish calendar sensor with language set to hebrew."""
+        config = {
+            'sensor': {
+                'platform': 'jewish_calendar',
+                'language': 'hebrew',
+            }
+        }
+        with self.assertLogs() as self.cm:
+            assert setup_component(self.hass, 'sensor', config)
+        self.checkForLoggingErrors()
 
     def test_jewish_calendar_sensor_date_output(self):
         """Test Jewish calendar sensor date output."""
@@ -58,3 +58,13 @@ class TestJewishCalenderSensor(unittest.TestCase):
                 sensor.async_update(),
                 self.hass.loop).result()
             self.assertEqual(sensor.state, 'Monday 23 Elul 5778')
+
+    def test_jewish_calendar_sensor_date_output_hebrew(self):
+        """Test Jewish calendar sensor date output in hebrew."""
+        test_time = dt(2018, 9, 3)
+        sensor = JewishCalSensor('hebrew')
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(),
+                self.hass.loop).result()
+            self.assertEqual(sensor.state, "יום שני כ\"ג באלול ה\' תשע\"ח")

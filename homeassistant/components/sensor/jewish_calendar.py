@@ -43,7 +43,7 @@ class JewishCalSensor(Entity):
     def __init__(self, language):
         """Initialize the Jewish calendar sensor."""
         self._date = dt.today()
-        self._language = language
+        self._hebrew = (language == 'hebrew')
         self._state = None
         _LOGGER.debug("Sensor initialized with date %s", self._date)
 
@@ -61,5 +61,5 @@ class JewishCalSensor(Entity):
         """Update the state of the sensor."""
         import hdate
 
-        self._state = str(hdate.HDate(self._date, hebrew=False))
+        self._state = str(hdate.HDate(self._date, hebrew=self._hebrew))
         _LOGGER.debug("New value: %s", self._state)
