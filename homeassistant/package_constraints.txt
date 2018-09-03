@@ -1,7 +1,7 @@
 aiohttp==3.4.0
 astral==1.6.1
 async_timeout==3.0.0
-attrs==18.1.0
+attrs==18.2.0
 bcrypt==3.1.4
 certifi>=2018.04.16
 jinja2>=2.10
