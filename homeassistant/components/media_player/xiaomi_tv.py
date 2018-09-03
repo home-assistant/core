@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Xiaomi TV platform."""
     from pymitv import Discover
 
@@ -45,10 +45,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         else:
             # Register TV with Home Assistant.
-            add_devices([XiaomiTV(host, name)])
+            add_entities([XiaomiTV(host, name)])
     else:
         # Otherwise, discover TVs on network.
-        add_devices(XiaomiTV(tv, DEFAULT_NAME) for tv in Discover().scan())
+        add_entities(XiaomiTV(tv, DEFAULT_NAME) for tv in Discover().scan())
 
 
 class XiaomiTV(MediaPlayerDevice):

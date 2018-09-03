@@ -17,11 +17,11 @@ DEPENDENCIES = ['homekit_controller']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit lighting."""
     if discovery_info is not None:
         accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
-        add_devices([HomeKitLight(accessory, discovery_info)], True)
+        add_entities([HomeKitLight(accessory, discovery_info)], True)
 
 
 class HomeKitLight(HomeKitEntity, Light):

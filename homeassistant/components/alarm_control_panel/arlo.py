@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arlo Alarm Control Panels."""
     arlo = hass.data[DATA_ARLO]
 
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for base_station in arlo.base_stations:
         base_stations.append(ArloBaseStation(base_station, home_mode_name,
                                              away_mode_name))
-    add_devices(base_stations, True)
+    add_entities(base_stations, True)
 
 
 class ArloBaseStation(AlarmControlPanel):

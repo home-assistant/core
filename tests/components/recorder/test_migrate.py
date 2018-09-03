@@ -80,3 +80,13 @@ def test_forgiving_add_column():
     migration._add_columns(engine, 'hello', [
         'context_id CHARACTER(36)',
     ])
+
+
+def test_forgiving_add_index():
+    """Test that add index will continue if index exists."""
+    engine = create_engine(
+        'sqlite://',
+        poolclass=StaticPool
+    )
+    models.Base.metadata.create_all(engine)
+    migration._create_index(engine, "states", "ix_states_context_id")

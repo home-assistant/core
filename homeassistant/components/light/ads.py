@@ -26,7 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the light platform for ADS."""
     ads_hub = hass.data.get(DATA_ADS)
 
@@ -34,8 +34,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     ads_var_brightness = config.get(CONF_ADS_VAR_BRIGHTNESS)
     name = config.get(CONF_NAME)
 
-    add_devices([AdsLight(ads_hub, ads_var_enable, ads_var_brightness,
-                          name)], True)
+    add_entities([AdsLight(ads_hub, ads_var_enable, ads_var_brightness,
+                           name)], True)
 
 
 class AdsLight(Light):

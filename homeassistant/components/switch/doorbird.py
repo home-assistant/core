@@ -46,7 +46,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DoorBird switch platform."""
     switches = []
 
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                           SWITCHES[switch]["name"].format(doorstation.name))
             switches.append(DoorBirdSwitch(device, switch, doorstation.name))
 
-    add_devices(switches)
+    add_entities(switches)
 
 
 class DoorBirdSwitch(SwitchDevice):

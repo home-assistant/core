@@ -37,15 +37,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(list(SENSORS))])})
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Enphase Envoy sensor."""
     ip_address = config[CONF_IP_ADDRESS]
     monitored_conditions = config[CONF_MONITORED_CONDITIONS]
 
     # Iterate through the list of sensors
     for condition in monitored_conditions:
-        add_devices([Envoy(ip_address, condition, SENSORS[condition][0],
-                           SENSORS[condition][1])], True)
+        add_entities([Envoy(ip_address, condition, SENSORS[condition][0],
+                            SENSORS[condition][1])], True)
 
 
 class Envoy(Entity):

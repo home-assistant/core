@@ -29,7 +29,7 @@ COVER_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MyQ component."""
     from pymyq import MyQAPI as pymyq
 
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if not myq.is_login_valid():
             raise ValueError("Username or Password is incorrect")
 
-        add_devices(MyQDevice(myq, door) for door in myq.get_garage_doors())
+        add_entities(MyQDevice(myq, door) for door in myq.get_garage_doors())
         return True
 
     except (TypeError, KeyError, NameError, ValueError) as ex:

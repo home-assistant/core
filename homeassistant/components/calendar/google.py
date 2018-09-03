@@ -2,7 +2,7 @@
 Support for Google Calendar Search binary sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.google_calendar/
+https://home-assistant.io/components/calendar.google/
 """
 import logging
 from datetime import timedelta
@@ -25,7 +25,7 @@ DEFAULT_GOOGLE_SEARCH_PARAMS = {
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_devices, disc_info=None):
+def setup_platform(hass, config, add_entities, disc_info=None):
     """Set up the calendar platform for event devices."""
     if disc_info is None:
         return
@@ -34,9 +34,9 @@ def setup_platform(hass, config, add_devices, disc_info=None):
         return
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
-    add_devices([GoogleCalendarEventDevice(hass, calendar_service,
-                                           disc_info[CONF_CAL_ID], data)
-                 for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
+    add_entities([GoogleCalendarEventDevice(hass, calendar_service,
+                                            disc_info[CONF_CAL_ID], data)
+                  for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
 
 
 class GoogleCalendarEventDevice(CalendarEventDevice):

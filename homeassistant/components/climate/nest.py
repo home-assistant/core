@@ -31,14 +31,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 NEST_MODE_HEAT_COOL = 'heat-cool'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nest thermostat.
 
     No longer in use.
     """
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up the Nest climate device based on a config entry."""
     temp_unit = hass.config.units.temperature_unit
 
@@ -47,7 +47,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
     all_devices = [NestThermostat(structure, device, temp_unit)
                    for structure, device in thermostats]
 
-    async_add_devices(all_devices, True)
+    async_add_entities(all_devices, True)
 
 
 class NestThermostat(ClimateDevice):
@@ -124,7 +124,7 @@ class NestThermostat(ClimateDevice):
 
     @property
     def unique_id(self):
-        """Unique ID for this device."""
+        """Return unique ID for this device."""
         return self.device.serial
 
     @property

@@ -52,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SNMP switch."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
 
-    add_devices(
+    add_entities(
         [SnmpSwitch(name, host, port, community, baseoid, command_oid, version,
                     payload_on, payload_off,
                     command_payload_on, command_payload_off)], True)

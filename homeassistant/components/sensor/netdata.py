@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Netdata sensor."""
     from netdata import Netdata
 
@@ -82,7 +82,7 @@ async def async_setup_platform(
         dev.append(NetdataSensor(
             netdata, name, sensor, sensor_name, element, icon, unit))
 
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class NetdataSensor(Entity):

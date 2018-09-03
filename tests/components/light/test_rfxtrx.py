@@ -14,7 +14,7 @@ class TestLightRfxtrx(unittest.TestCase):
     """Test the Rfxtrx light platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'rfxtrx')
 

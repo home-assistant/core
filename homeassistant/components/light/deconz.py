@@ -6,26 +6,27 @@ https://home-assistant.io/components/light.deconz/
 """
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, SWITCH_TYPES)
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN, SWITCH_TYPES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
     SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP, SUPPORT_EFFECT,
     SUPPORT_FLASH, SUPPORT_TRANSITION, Light)
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old way of setting up deCONZ lights and group."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ lights and groups from a config entry."""
     @callback
     def async_add_light(lights):
@@ -34,7 +35,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         for light in lights:
             if light.type not in SWITCH_TYPES:
                 entities.append(DeconzLight(light))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_light', async_add_light))
@@ -47,7 +48,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
         for group in groups:
             if group.lights and allow_group:
                 entities.append(DeconzLight(group))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_group', async_add_group))
@@ -155,7 +156,7 @@ class DeconzLight(Light):
             data['bri'] = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_TRANSITION in kwargs:
-            data['transitiontime'] = int(kwargs[ATTR_TRANSITION]) * 10
+            data['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_FLASH in kwargs:
             if kwargs[ATTR_FLASH] == FLASH_SHORT:
@@ -179,7 +180,7 @@ class DeconzLight(Light):
 
         if ATTR_TRANSITION in kwargs:
             data['bri'] = 0
-            data['transitiontime'] = int(kwargs[ATTR_TRANSITION]) * 10
+            data['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_FLASH in kwargs:
             if kwargs[ATTR_FLASH] == FLASH_SHORT:
@@ -199,3 +200,19 @@ class DeconzLight(Light):
         if self._light.type == 'LightGroup':
             attributes['all_on'] = self._light.all_on
         return attributes
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if (self._light.uniqueid is None or
+                self._light.uniqueid.count(':') != 7):
+            return None
+        serial = self._light.uniqueid.split('-', 1)[0]
+        return {
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
+            'manufacturer': self._light.manufacturer,
+            'model': self._light.modelid,
+            'name': self._light.name,
+            'sw_version': self._light.swversion,
+        }

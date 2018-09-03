@@ -16,7 +16,7 @@ class TestRequirements:
 
     # pylint: disable=invalid-name, no-self-use
     def setup_method(self, method):
-        """Setup the test."""
+        """Set up the test."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):

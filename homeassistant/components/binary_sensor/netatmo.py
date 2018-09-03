@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the access to Netatmo binary sensor."""
     netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
@@ -89,7 +89,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    camera_name not in config[CONF_CAMERAS]:
                     continue
             for variable in welcome_sensors:
-                add_devices([NetatmoBinarySensor(
+                add_entities([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout,
                     camera_type, variable)], True)
         if camera_type == 'NOC':
@@ -98,14 +98,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                    camera_name not in config[CONF_CAMERAS]:
                     continue
             for variable in presence_sensors:
-                add_devices([NetatmoBinarySensor(
+                add_entities([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout,
                     camera_type, variable)], True)
 
         for module_name in data.get_module_names(camera_name):
             for variable in tag_sensors:
                 camera_type = None
-                add_devices([NetatmoBinarySensor(
+                add_entities([NetatmoBinarySensor(
                     data, camera_name, module_name, home, timeout,
                     camera_type, variable)], True)
 

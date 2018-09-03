@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
-REQUIREMENTS = ['python-miio==0.4.0', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_CHARGING = 'charging'
@@ -40,7 +40,7 @@ ATTR_MODEL = 'model'
 SUCCESS = ['ok']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the sensor from config."""
     from miio import AirQualityMonitor, DeviceException
@@ -68,7 +68,7 @@ async def async_setup_platform(hass, config, async_add_devices,
         raise PlatformNotReady
 
     hass.data[DATA_KEY][host] = device
-    async_add_devices([device], update_before_add=True)
+    async_add_entities([device], update_before_add=True)
 
 
 class XiaomiAirQualityMonitor(Entity):

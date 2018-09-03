@@ -18,7 +18,7 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif device['model'] in ['gateway', 'gateway.v3', 'acpartner.v3']:
                 devices.append(XiaomiSensor(device, 'Illumination',
                                             'illumination', gateway))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class XiaomiSensor(XiaomiDevice):

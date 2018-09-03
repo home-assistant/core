@@ -35,7 +35,7 @@ from homeassistant.util import get_local_ip
 DLNA_DMR_DATA = 'dlna_dmr'
 
 REQUIREMENTS = [
-    'async-upnp-client==0.12.3',
+    'async-upnp-client==0.12.4',
 ]
 
 DEFAULT_NAME = 'DLNA Digital Media Renderer'
@@ -118,7 +118,7 @@ async def async_start_event_handler(hass, server_host, server_port, requester):
 
 async def async_setup_platform(hass: HomeAssistant,
                                config,
-                               async_add_devices,
+                               async_add_entities,
                                discovery_info=None):
     """Set up DLNA DMR platform."""
     if config.get(CONF_URL) is not None:
@@ -165,7 +165,7 @@ async def async_setup_platform(hass: HomeAssistant,
     # create our own device
     device = DlnaDmrDevice(dlna_device, name)
     _LOGGER.debug("Adding device: %s", device)
-    async_add_devices([device], True)
+    async_add_entities([device], True)
 
 
 class DlnaDmrDevice(MediaPlayerDevice):
@@ -180,7 +180,7 @@ class DlnaDmrDevice(MediaPlayerDevice):
         self._subscription_renew_time = None
 
     async def async_added_to_hass(self):
-        """Callback when added."""
+        """Handle addition."""
         self._device.on_event = self._on_event
 
         # register unsubscribe on stop

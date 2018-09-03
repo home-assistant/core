@@ -8,7 +8,7 @@ from tests.common import mock_coro, MockConfigEntry
 
 
 async def test_setup_with_no_config(hass):
-    """Test that we do not discover anything or try to setup a bridge."""
+    """Test that we do not discover anything or try to set up a bridge."""
     with patch.object(hass, 'config_entries') as mock_config_entries, \
             patch.object(hue, 'configured_hosts', return_value=[]):
         assert await async_setup_component(hass, hue.DOMAIN, {}) is True

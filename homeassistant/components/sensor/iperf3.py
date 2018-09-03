@@ -64,7 +64,7 @@ SERVICE_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Iperf3 sensor."""
     if hass.data.get(IPERF3_DATA) is None:
         hass.data[IPERF3_DATA] = {}
@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                          sensor))
 
     hass.data[IPERF3_DATA]['sensors'].extend(dev)
-    add_devices(dev)
+    add_entities(dev)
 
     def _service_handler(service):
         """Update service for manual updates."""

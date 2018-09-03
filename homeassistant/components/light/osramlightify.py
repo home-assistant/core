@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Osram Lightify lights."""
     import lightify
 
@@ -65,10 +65,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception(msg)
         return
 
-    setup_bridge(bridge, add_devices, add_nodes, add_groups)
+    setup_bridge(bridge, add_entities, add_nodes, add_groups)
 
 
-def setup_bridge(bridge, add_devices, add_nodes, add_groups):
+def setup_bridge(bridge, add_entities, add_nodes, add_groups):
     """Set up the Lightify bridge."""
     lights = {}
 
@@ -106,7 +106,7 @@ def setup_bridge(bridge, add_devices, add_nodes, add_groups):
                     lights[group_name].group = group
 
         if new_lights:
-            add_devices(new_lights)
+            add_entities(new_lights)
 
     update_lights()
 

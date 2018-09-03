@@ -32,7 +32,7 @@ DUNEHD_PLAYER_SUPPORT = \
     SUPPORT_PLAY
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DuneHD media player platform."""
     from pdunehd import DuneHDPlayer
 
@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
 
-    add_devices([DuneHDPlayerEntity(DuneHDPlayer(host), name, sources)], True)
+    add_entities([DuneHDPlayerEntity(DuneHDPlayer(host), name, sources)], True)
 
 
 class DuneHDPlayerEntity(MediaPlayerDevice):

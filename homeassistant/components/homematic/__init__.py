@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.46']
+REQUIREMENTS = ['pyhomematic==0.1.47']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,6 +47,9 @@ ATTR_ERRORCODE = 'error'
 ATTR_MESSAGE = 'message'
 ATTR_MODE = 'mode'
 ATTR_TIME = 'time'
+ATTR_UNIQUE_ID = 'unique_id'
+ATTR_PARAMSET_KEY = 'paramset_key'
+ATTR_PARAMSET = 'paramset'
 
 EVENT_KEYPRESS = 'homematic.keypress'
 EVENT_IMPULSE = 'homematic.impulse'
@@ -57,6 +60,7 @@ SERVICE_RECONNECT = 'reconnect'
 SERVICE_SET_VARIABLE_VALUE = 'set_variable_value'
 SERVICE_SET_DEVICE_VALUE = 'set_device_value'
 SERVICE_SET_INSTALL_MODE = 'set_install_mode'
+SERVICE_PUT_PARAMSET = 'put_paramset'
 
 HM_DEVICE_TYPES = {
     DISCOVER_SWITCHES: [
@@ -77,7 +81,7 @@ HM_DEVICE_TYPES = {
     DISCOVER_CLIMATE: [
         'Thermostat', 'ThermostatWall', 'MAXThermostat', 'ThermostatWall2',
         'MAXWallThermostat', 'IPThermostat', 'IPThermostatWall',
-        'ThermostatGroup'],
+        'ThermostatGroup', 'IPThermostatWall230V'],
     DISCOVER_BINARY_SENSORS: [
         'ShutterContact', 'Smoke', 'SmokeV2', 'Motion', 'MotionV2',
         'MotionIP', 'RemoteMotion', 'WeatherSensor', 'TiltSensor',
@@ -102,7 +106,7 @@ HM_ATTRIBUTE_SUPPORT = {
     'LOW_BAT': ['battery', {0: 'High', 1: 'Low'}],
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
-    'RSSI_DEVICE': ['rssi', {}],
+    'RSSI_PEER': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
     'BATTERY_STATE': ['battery', {}],
     'CONTROL_MODE': ['mode', {
@@ -173,6 +177,7 @@ DEVICE_SCHEMA = vol.Schema({
     vol.Required(ATTR_INTERFACE): cv.string,
     vol.Optional(ATTR_CHANNEL, default=1): vol.Coerce(int),
     vol.Optional(ATTR_PARAM): cv.string,
+    vol.Optional(ATTR_UNIQUE_ID): cv.string,
 })
 
 CONFIG_SCHEMA = vol.Schema({
@@ -230,6 +235,13 @@ SCHEMA_SERVICE_SET_INSTALL_MODE = vol.Schema({
     vol.Optional(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
 })
 
+SCHEMA_SERVICE_PUT_PARAMSET = vol.Schema({
+    vol.Required(ATTR_INTERFACE): cv.string,
+    vol.Required(ATTR_ADDRESS): vol.All(cv.string, vol.Upper),
+    vol.Required(ATTR_PARAMSET_KEY): vol.All(cv.string, vol.Upper),
+    vol.Required(ATTR_PARAMSET): dict,
+})
+
 
 @bind_hass
 def virtualkey(hass, address, channel, param, interface=None):
@@ -267,6 +279,19 @@ def set_device_value(hass, address, channel, param, value, interface=None):
     }
 
     hass.services.call(DOMAIN, SERVICE_SET_DEVICE_VALUE, data)
+
+
+@bind_hass
+def put_paramset(hass, interface, address, paramset_key, paramset):
+    """Call putParamset XML-RPC method of supplied interface."""
+    data = {
+        ATTR_INTERFACE: interface,
+        ATTR_ADDRESS: address,
+        ATTR_PARAMSET_KEY: paramset_key,
+        ATTR_PARAMSET: paramset,
+    }
+
+    hass.services.call(DOMAIN, SERVICE_PUT_PARAMSET, data)
 
 
 @bind_hass
@@ -437,6 +462,26 @@ def setup(hass, config):
         DOMAIN, SERVICE_SET_INSTALL_MODE, _service_handle_install_mode,
         schema=SCHEMA_SERVICE_SET_INSTALL_MODE)
 
+    def _service_put_paramset(service):
+        """Service to call the putParamset method on a HomeMatic connection."""
+        interface = service.data.get(ATTR_INTERFACE)
+        address = service.data.get(ATTR_ADDRESS)
+        paramset_key = service.data.get(ATTR_PARAMSET_KEY)
+        # When passing in the paramset from a YAML file we get an OrderedDict
+        # here instead of a dict, so add this explicit cast.
+        # The service schema makes sure that this cast works.
+        paramset = dict(service.data.get(ATTR_PARAMSET))
+
+        _LOGGER.debug(
+            "Calling putParamset: %s, %s, %s, %s",
+            interface, address, paramset_key, paramset
+        )
+        homematic.putParamset(interface, address, paramset_key, paramset)
+
+    hass.services.register(
+        DOMAIN, SERVICE_PUT_PARAMSET, _service_put_paramset,
+        schema=SCHEMA_SERVICE_PUT_PARAMSET)
+
     return True
 
 
@@ -530,8 +575,12 @@ def _get_devices(hass, discovery_type, keys, interface):
             _LOGGER.debug("%s: Handling %s: %s: %s",
                           discovery_type, key, param, channels)
             for channel in channels:
-                name = _create_ha_name(
+                name = _create_ha_id(
                     name=device.NAME, channel=channel, param=param,
+                    count=len(channels)
+                )
+                unique_id = _create_ha_id(
+                    name=key, channel=channel, param=param,
                     count=len(channels)
                 )
                 device_dict = {
@@ -539,7 +588,8 @@ def _get_devices(hass, discovery_type, keys, interface):
                     ATTR_ADDRESS: key,
                     ATTR_INTERFACE: interface,
                     ATTR_NAME: name,
-                    ATTR_CHANNEL: channel
+                    ATTR_CHANNEL: channel,
+                    ATTR_UNIQUE_ID: unique_id
                 }
                 if param is not None:
                     device_dict[ATTR_PARAM] = param
@@ -554,7 +604,7 @@ def _get_devices(hass, discovery_type, keys, interface):
     return device_arr
 
 
-def _create_ha_name(name, channel, param, count):
+def _create_ha_id(name, channel, param, count):
     """Generate a unique entity id."""
     # HMDevice is a simple device
     if count == 1 and param is None:
@@ -725,6 +775,7 @@ class HMDevice(Entity):
         self._interface = config.get(ATTR_INTERFACE)
         self._channel = config.get(ATTR_CHANNEL)
         self._state = config.get(ATTR_PARAM)
+        self._unique_id = config.get(ATTR_UNIQUE_ID)
         self._data = {}
         self._homematic = None
         self._hmdevice = None
@@ -739,6 +790,11 @@ class HMDevice(Entity):
     def async_added_to_hass(self):
         """Load data init callbacks."""
         yield from self.hass.async_add_job(self.link_homematic)
+
+    @property
+    def unique_id(self):
+        """Return unique ID. HomeMatic entity IDs are unique by default."""
+        return self._unique_id.replace(" ", "_")
 
     @property
     def should_poll(self):
@@ -813,7 +869,7 @@ class HMDevice(Entity):
 
         # Availability has changed
         if attribute == 'UNREACH':
-            self._available = bool(value)
+            self._available = not bool(value)
             has_changed = True
         elif not self.available:
             self._available = False

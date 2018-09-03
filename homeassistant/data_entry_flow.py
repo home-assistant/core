@@ -49,7 +49,8 @@ class FlowManager:
             'context': flow.context,
         } for flow in self._progress.values()]
 
-    async def async_init(self, handler: Hashable, *, context: Dict = None,
+    async def async_init(self, handler: Hashable, *,
+                         context: Optional[Dict] = None,
                          data: Any = None) -> Any:
         """Start a configuration flow."""
         flow = await self._async_create_flow(
@@ -63,7 +64,7 @@ class FlowManager:
         return await self._async_handle_step(flow, flow.init_step, data)
 
     async def async_configure(
-            self, flow_id: str, user_input: str = None) -> Any:
+            self, flow_id: str, user_input: Optional[Dict] = None) -> Any:
         """Continue a configuration flow."""
         flow = self._progress.get(flow_id)
 
@@ -85,7 +86,7 @@ class FlowManager:
             raise UnknownFlow
 
     async def _async_handle_step(self, flow: Any, step_id: str,
-                                 user_input: Optional[str]) -> Dict:
+                                 user_input: Optional[Dict]) -> Dict:
         """Handle a step of a flow."""
         method = "async_step_{}".format(step_id)
 
@@ -105,14 +106,17 @@ class FlowManager:
             flow.cur_step = (result['step_id'], result['data_schema'])
             return result
 
+        # We pass a copy of the result because we're mutating our version
+        result = await self._async_finish_flow(flow, dict(result))
+
+        # _async_finish_flow may change result type, check it again
+        if result['type'] == RESULT_TYPE_FORM:
+            flow.cur_step = (result['step_id'], result['data_schema'])
+            return result
+
         # Abort and Success results both finish the flow
         self._progress.pop(flow.flow_id)
 
-        # We pass a copy of the result because we're mutating our version
-        entry = await self._async_finish_flow(flow.context, dict(result))
-
-        if result['type'] == RESULT_TYPE_CREATE_ENTRY:
-            result['result'] = entry
         return result
 
 
@@ -134,8 +138,9 @@ class FlowHandler:
 
     @callback
     def async_show_form(self, *, step_id: str, data_schema: vol.Schema = None,
-                        errors: Dict = None,
-                        description_placeholders: Dict = None) -> Dict:
+                        errors: Optional[Dict] = None,
+                        description_placeholders: Optional[Dict] = None) \
+            -> Dict:
         """Return the definition of a form to gather user input."""
         return {
             'type': RESULT_TYPE_FORM,

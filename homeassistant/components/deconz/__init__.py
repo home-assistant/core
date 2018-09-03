@@ -12,6 +12,7 @@ from homeassistant.const import (
     CONF_ID, CONF_PORT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import EventOrigin, callback
 from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 from homeassistant.util import slugify
@@ -23,7 +24,7 @@ from .const import (
     CONF_ALLOW_CLIP_SENSOR, CONFIG_FILE, DATA_DECONZ_EVENT,
     DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DOMAIN, _LOGGER)
 
-REQUIREMENTS = ['pydeconz==43']
+REQUIREMENTS = ['pydeconz==44']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -82,7 +83,7 @@ async def async_setup_entry(hass, config_entry):
 
     @callback
     def async_add_device_callback(device_type, device):
-        """Called when a new device has been created in deCONZ."""
+        """Handle event of new device creation in deCONZ."""
         async_dispatcher_send(
             hass, 'deconz_new_{}'.format(device_type), [device])
 
@@ -105,7 +106,7 @@ async def async_setup_entry(hass, config_entry):
 
     @callback
     def async_add_remote(sensors):
-        """Setup remote from deCONZ."""
+        """Set up remote from deCONZ."""
         from pydeconz.sensor import SWITCH as DECONZ_REMOTE
         allow_clip_sensor = config_entry.data.get(CONF_ALLOW_CLIP_SENSOR, True)
         for sensor in sensors:
@@ -118,6 +119,15 @@ async def async_setup_entry(hass, config_entry):
     async_add_remote(deconz.sensors.values())
 
     deconz.start()
+
+    device_registry = await \
+        hass.helpers.device_registry.async_get_registry()
+    device_registry.async_get_or_create(
+        config_entry=config_entry.entry_id,
+        connections={(CONNECTION_NETWORK_MAC, deconz.config.mac)},
+        identifiers={(DOMAIN, deconz.config.bridgeid)},
+        manufacturer='Dresden Elektronik', model=deconz.config.modelid,
+        name=deconz.config.name, sw_version=deconz.config.swversion)
 
     async def async_configure(call):
         """Set attribute of device in deCONZ.
