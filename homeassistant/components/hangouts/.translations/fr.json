@@ -13,9 +13,12 @@
             },
             "user": {
                 "data": {
+                    "email": "Adresse e-mail",
                     "password": "Mot de passe"
-                }
+                },
+                "title": "Connexion \u00e0 Google Hangouts"
             }
-        }
+        },
+        "title": "Google Hangouts"
     }
 }
