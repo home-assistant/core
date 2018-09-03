@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.jewish_calendar/
 """
 import logging
+from datetime import datetime as dt
 
 import voluptuous as vol
 
@@ -12,6 +13,8 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+
+REQUIREMENTS = ['hdate==0.6.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,10 +32,10 @@ async def async_setup_platform(
     """Set up the Jewish calendar sensor platform."""
     name = config.get(CONF_NAME)
 
-    async_add_entities([JewishCalendarSensor(name)], True)
+    async_add_entities([JewishCalSensor(name)], True)
 
 
-class JewishCalendarSensor(Entity):
+class JewishCalSensor(Entity):
     """Representation of an Jewish calendar sensor."""
 
     def __init__(self, name):
@@ -57,4 +60,7 @@ class JewishCalendarSensor(Entity):
 
     async def async_update(self):
         """Update the state of the sensor."""
-        _LOGGER.debug("New value: bla")
+        import hdate
+
+        self._state = str(hdate.HDate(dt.today(), hebrew=False))
+        _LOGGER.debug("New value: %s", self._state)
