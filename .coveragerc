@@ -42,6 +42,7 @@ omit =
 
     homeassistant/components/asterisk_mbox.py
     homeassistant/components/*/asterisk_mbox.py
+    homeassistant/components/*/asterisk_cdr.py
 
     homeassistant/components/august.py
     homeassistant/components/*/august.py

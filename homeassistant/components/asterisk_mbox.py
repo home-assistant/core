@@ -24,6 +24,8 @@ DOMAIN = 'asterisk_mbox'
 SIGNAL_DISCOVER_PLATFORM = "asterisk_mbox.discover_platform"
 SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
+SIGNAL_CDR_UPDATE = 'asterisk_mbox.message_updated'
+SIGNAL_CDR_REQUEST = 'asterisk_mbox.message_request'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -58,9 +60,12 @@ class AsteriskData:
         self.config = config
         self.client = asteriskClient(host, port, password, self.handle_data)
         self.messages = None
+        self.cdr = None
 
         async_dispatcher_connect(
             self.hass, SIGNAL_MESSAGE_REQUEST, self._request_messages)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_CDR_REQUEST, self._request_cdr)
         async_dispatcher_connect(
              self.hass, SIGNAL_DISCOVER_PLATFORM, self._discover_platform)
 
@@ -73,7 +78,9 @@ class AsteriskData:
     @callback
     def handle_data(self, command, msg):
         """Handle changes to the mailbox."""
-        from asterisk_mbox.commands import CMD_MESSAGE_LIST
+        from asterisk_mbox.commands import (CMD_MESSAGE_LIST,
+                                            CMD_MESSAGE_CDR_AVAILABLE,
+                                            CMD_MESSAGE_CDR)
 
         if command == CMD_MESSAGE_LIST:
             _LOGGER.debug("AsteriskVM sent updated message list")
@@ -84,9 +91,25 @@ class AsteriskData:
                 async_dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
                                 DOMAIN)
             async_dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE, self.messages)
+        elif command == CMD_MESSAGE_CDR:
+            _LOGGER.info("AsteriskVM sent updated CDR list")
+            self.cdr = msg['entries']
+            async_dispatcher_send(self.hass, SIGNAL_CDR_UPDATE, self.cdr)
+        elif command == CMD_MESSAGE_CDR_AVAILABLE:
+            if not isinstance(self.cdr, list):
+                self.cdr = []
+                async_dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
+                                      "asterisk_cdr")
+            async_dispatcher_send(self.hass, SIGNAL_CDR_REQUEST)
 
     @callback
     def _request_messages(self):
         """Handle changes to the mailbox."""
         _LOGGER.debug("Requesting message list")
         self.client.messages()
+
+    @callback
+    def _request_cdr(self):
+        """Handle changes to the CDR."""
+        _LOGGER.info("Requesting CDR list")
+        self.client.get_cdr()
