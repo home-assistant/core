@@ -14,7 +14,8 @@ DEPENDENCIES = ['android_ip_webcam']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the IP Webcam binary sensors."""
     if discovery_info is None:
         return
@@ -23,7 +24,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     name = discovery_info[CONF_NAME]
     ipcam = hass.data[DATA_IP_WEBCAM][host]
 
-    async_add_devices(
+    async_add_entities(
         [IPWebcamBinarySensor(name, host, ipcam, 'motion_active')], True)
 
 

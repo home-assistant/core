@@ -59,7 +59,7 @@ SOURCES = {0: 'TV / Antenna',
            8: 'PC_IN'}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sharp Aquos TV platform."""
     import sharp_aquos_rc
 
@@ -77,13 +77,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
         host = vals[0]
         remote = sharp_aquos_rc.TV(host, port, username, password, timeout=20)
-        add_devices([SharpAquosTVDevice(name, remote, power_on_enabled)])
+        add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
         return True
 
     host = config.get(CONF_HOST)
     remote = sharp_aquos_rc.TV(host, port, username, password, 15, 1)
 
-    add_devices([SharpAquosTVDevice(name, remote, power_on_enabled)])
+    add_entities([SharpAquosTVDevice(name, remote, power_on_enabled)])
     return True
 
 

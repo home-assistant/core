@@ -53,7 +53,7 @@ def utcnow() -> dt.datetime:
     return dt.datetime.now(UTC)
 
 
-def now(time_zone: dt.tzinfo = None) -> dt.datetime:
+def now(time_zone: Optional[dt.tzinfo] = None) -> dt.datetime:
     """Get now in specified time zone."""
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
@@ -97,8 +97,8 @@ def utc_from_timestamp(timestamp: float) -> dt.datetime:
     return UTC.localize(dt.datetime.utcfromtimestamp(timestamp))
 
 
-def start_of_local_day(dt_or_d:
-                       Union[dt.date, dt.datetime] = None) -> dt.datetime:
+def start_of_local_day(
+        dt_or_d: Union[dt.date, dt.datetime, None] = None) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         date = now().date()  # type: dt.date

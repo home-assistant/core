@@ -47,7 +47,7 @@ def netdisco_mock():
 
 
 async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
-    """Helper to mock discoveries."""
+    """Mock discoveries."""
     result = await async_setup_component(hass, 'discovery', config)
     assert result
 

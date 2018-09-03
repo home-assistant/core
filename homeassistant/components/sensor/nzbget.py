@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NZBGet sensors."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             client_name=name)
         devices.append(new_sensor)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class NZBGetSensor(Entity):

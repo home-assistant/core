@@ -57,7 +57,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Setup the HomeKit component."""
+    """Set up the HomeKit component."""
     _LOGGER.debug('Begin setup HomeKit')
 
     conf = config[DOMAIN]
@@ -196,7 +196,7 @@ class HomeKit():
         self.driver = None
 
     def setup(self):
-        """Setup bridge and accessory driver."""
+        """Set up bridge and accessory driver."""
         from .accessories import HomeBridge, HomeDriver
 
         self.hass.bus.async_listen_once(

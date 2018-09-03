@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Transmission sensors."""
     import transmissionrpc
     from transmissionrpc.error import TransmissionError
@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for variable in config[CONF_MONITORED_VARIABLES]:
         dev.append(TransmissionSensor(variable, transmission_api, name))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class TransmissionSensor(Entity):

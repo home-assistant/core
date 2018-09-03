@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ISS sensor."""
     if None in (hass.config.latitude, hass.config.longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     show_on_map = config.get(CONF_SHOW_ON_MAP)
 
-    add_devices([IssBinarySensor(iss_data, name, show_on_map)], True)
+    add_entities([IssBinarySensor(iss_data, name, show_on_map)], True)
 
 
 class IssBinarySensor(BinarySensorDevice):

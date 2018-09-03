@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG TV platform."""
     from pylgnetcast import LgNetCastClient
     host = config.get(CONF_HOST)
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     client = LgNetCastClient(host, access_token)
 
-    add_devices([LgTVDevice(client, name)], True)
+    add_entities([LgTVDevice(client, name)], True)
 
 
 class LgTVDevice(MediaPlayerDevice):

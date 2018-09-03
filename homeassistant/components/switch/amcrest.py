@@ -18,7 +18,8 @@ DEPENDENCIES = ['amcrest']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the IP Amcrest camera switch platform."""
     if discovery_info is None:
         return
@@ -32,7 +33,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for setting in switches:
         all_switches.append(AmcrestSwitch(setting, camera, name))
 
-    async_add_devices(all_switches, True)
+    async_add_entities(all_switches, True)
 
 
 class AmcrestSwitch(ToggleEntity):

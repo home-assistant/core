@@ -123,9 +123,9 @@ PLATFORM_SCHEMA = vol.Schema(vol.All(mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 }), _state_validator))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the manual MQTT alarm platform."""
-    add_devices([ManualMQTTAlarm(
+    add_entities([ManualMQTTAlarm(
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),

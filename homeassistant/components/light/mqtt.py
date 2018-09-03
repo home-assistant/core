@@ -100,7 +100,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up a MQTT Light."""
     if discovery_info is not None:
@@ -109,7 +109,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     config.setdefault(
         CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
 
-    async_add_devices([MqttLight(
+    async_add_entities([MqttLight(
         config.get(CONF_NAME),
         config.get(CONF_EFFECT_LIST),
         {

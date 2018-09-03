@@ -32,7 +32,7 @@ SUPPORTED_GROUP_FEATURES = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
 
 
 async def async_setup_platform(hass, config,
-                               async_add_devices, discovery_info=None):
+                               async_add_entities, discovery_info=None):
     """Set up the IKEA Tradfri Light platform."""
     if discovery_info is None:
         return
@@ -46,7 +46,7 @@ async def async_setup_platform(hass, config,
     devices = await api(devices_commands)
     lights = [dev for dev in devices if dev.has_light_control]
     if lights:
-        async_add_devices(
+        async_add_entities(
             TradfriLight(light, api, gateway_id) for light in lights)
 
     allow_tradfri_groups = hass.data[KEY_TRADFRI_GROUPS][gateway_id]
@@ -55,7 +55,7 @@ async def async_setup_platform(hass, config,
         groups_commands = await api(groups_command)
         groups = await api(groups_commands)
         if groups:
-            async_add_devices(
+            async_add_entities(
                 TradfriGroup(group, api, gateway_id) for group in groups)
 
 

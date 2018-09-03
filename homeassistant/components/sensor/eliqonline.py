@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ELIQ Online sensor."""
     import eliqonline
 
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Could not access the ELIQ Online API: %s", error)
         return False
 
-    add_devices([EliqSensor(api, channel_id, name)], True)
+    add_entities([EliqSensor(api, channel_id, name)], True)
 
 
 class EliqSensor(Entity):

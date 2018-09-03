@@ -4,7 +4,6 @@ Component to count within automations.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/counter/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -114,27 +113,15 @@ async def async_setup(hass, config):
     if not entities:
         return False
 
-    async def async_handler_service(service):
-        """Handle a call to the counter services."""
-        target_counters = component.async_extract_from_service(service)
-
-        if service.service == SERVICE_INCREMENT:
-            attr = 'async_increment'
-        elif service.service == SERVICE_DECREMENT:
-            attr = 'async_decrement'
-        elif service.service == SERVICE_RESET:
-            attr = 'async_reset'
-
-        tasks = [getattr(counter, attr)() for counter in target_counters]
-        if tasks:
-            await asyncio.wait(tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_INCREMENT, async_handler_service)
-    hass.services.async_register(
-        DOMAIN, SERVICE_DECREMENT, async_handler_service)
-    hass.services.async_register(
-        DOMAIN, SERVICE_RESET, async_handler_service)
+    component.async_register_entity_service(
+        SERVICE_INCREMENT, SERVICE_SCHEMA,
+        'async_increment')
+    component.async_register_entity_service(
+        SERVICE_DECREMENT, SERVICE_SCHEMA,
+        'async_decrement')
+    component.async_register_entity_service(
+        SERVICE_RESET, SERVICE_SCHEMA,
+        'async_reset')
 
     await component.async_add_entities(entities)
     return True

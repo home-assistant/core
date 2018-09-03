@@ -26,7 +26,7 @@ class TestComponentLogbook(unittest.TestCase):
     EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)  # Force an in memory DB
         assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)

@@ -33,7 +33,7 @@ class TestShellCommand(unittest.TestCase):
     """Test the shell_command component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started.
+        """Set up things to be run when tests are started.
 
         Also seems to require a child watcher attached to the loop when run
         from pytest.

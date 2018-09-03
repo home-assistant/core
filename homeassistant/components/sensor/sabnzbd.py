@@ -16,7 +16,7 @@ DEPENDENCIES = ['sabnzbd']
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the SABnzbd sensors."""
     if discovery_info is None:
@@ -25,8 +25,8 @@ async def async_setup_platform(hass, config, async_add_devices,
     sab_api_data = hass.data[DATA_SABNZBD]
     sensors = sab_api_data.sensors
     client_name = sab_api_data.name
-    async_add_devices([SabnzbdSensor(sensor, sab_api_data, client_name)
-                       for sensor in sensors])
+    async_add_entities([SabnzbdSensor(sensor, sab_api_data, client_name)
+                        for sensor in sensors])
 
 
 class SabnzbdSensor(Entity):

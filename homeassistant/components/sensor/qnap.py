@@ -102,7 +102,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the QNAP NAS sensor."""
     api = QNAPStatsAPI(config)
     api.update()
@@ -151,7 +151,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     for variable in config[CONF_MONITORED_CONDITIONS]
                     if variable in _VOLUME_MON_COND]
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 def round_nicely(number):
