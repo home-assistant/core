@@ -6,8 +6,10 @@
         },
         "step": {
             "confirm": {
-                "description": "Voulez-vous configurer Google Cast?"
+                "description": "Voulez-vous configurer Google Cast?",
+                "title": "Google Cast"
             }
-        }
+        },
+        "title": "Google Cast"
     }
 }
