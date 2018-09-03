@@ -151,7 +151,7 @@ class TibberSensor(Entity):
             if now.date() == price_time.date():
                 max_price = max(max_price, price_total)
                 min_price = min(min_price, price_total)
-            self._state = state
-            self._device_state_attributes['max_price'] = max_price
-            self._device_state_attributes['min_price'] = min_price
+        self._state = state
+        self._device_state_attributes['max_price'] = max_price
+        self._device_state_attributes['min_price'] = min_price
         return state is not None
