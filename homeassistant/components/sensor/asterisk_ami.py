@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-
-"""Asterisk Sensors"""
+"""Asterisk Sensors."""
 import logging
 
 from homeassistant.components import asterisk_ami as ami_platform
@@ -11,8 +10,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sensor setup
-       Loads configuration and creates devices for extensions and mailboxes
+    """Sensor setup.
+
+    Loads configuration and creates devices for extensions and mailboxes.
     """
     add_devices([AsteriskSensor(hass)])
     for mailbox in hass.data[ami_platform.DATA_MAILBOX]:
@@ -39,10 +39,11 @@ class AsteriskSensor(Entity):
 
     @property
     def should_poll(self):
+        """This sensor needs polling."""
         return True
 
     def update(self):
-        """Check the connection status and update the internal state"""
+        """Check the connection status and update the internal state."""
         if self._hass.data[ami_platform.DATA_ASTERISK].connected():
             self._state = 'connected'
         else:
@@ -53,25 +54,30 @@ class AsteriskSensor(Entity):
 
 class AsteriskMailbox(Entity):
     """Voicemail Mailbox Sensor."""
+
     def __init__(self, hass, mailbox):
+        """Sensor Setup."""
         self._hass = hass
         self._mailbox = mailbox
         self._state = STATE_UNKNOWN
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return "Asterisk Mailbox " + self._mailbox
 
     @property
     def state(self):
+        """Return the state of the sensor."""
         return self._state
 
     @property
     def should_poll(self):
+        """This sensor needs polling."""
         return True
 
     def update(self):
-        """Check the mailbox status and update the state"""
+        """Check the mailbox status and update the state."""
         cdict = {'Action': 'MailboxStatus'}
         cdict['Peer'] = self._mailbox
         response = self._hass.data[ami_platform.DATA_ASTERISK] \

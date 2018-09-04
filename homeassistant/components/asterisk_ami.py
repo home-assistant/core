@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Asterisk Phone System"""
+"""Asterisk Phone System."""
 import logging
 
 from homeassistant.const import (
@@ -33,7 +33,6 @@ _LOGGER = logging.getLogger(__name__)
 
 def setup(hass, config):
     """Your controller/hub specific code."""
-
     import asterisk.manager
     manager = asterisk.manager.Manager()
 
@@ -57,26 +56,26 @@ def setup(hass, config):
     hass.data[DATA_MONITOR] = config[DOMAIN].get(CONF_MONITOR, [])
 
     def handle_peer_status_message(event, manager):
-        """Handle PeerStatus events from Asterisk"""
+        """Handle PeerStatus events from Asterisk."""
         hass.states.set(DOMAIN+'.PeerStatus_'+event['Peer'],
                         event['PeerStatus'])
 
     def handle_extension_status_message(event, manager):
-        """Handle ExtensionStatus events from Asterisk"""
+        """Handle ExtensionStatus events from Asterisk."""
         hass.states.set(DOMAIN + '.ExtensionStatus_' + event['Exten'],
                         event['StatusText'])
 
     def handle_device_state_change_message(event, manager):
-        """Handle DeviceState events from Asterisk"""
+        """Handle DeviceState events from Asterisk."""
         hass.states.set(DOMAIN + '.DeviceStateChange_' + event['Device'],
                         event['State'])
 
     def handle_newstate_message(event, manager):
-        """Handle NewState events from Asterisk"""
+        """Handle NewState events from Asterisk."""
         hass.bus.fire('asterisk.new_call_state', event)
 
     def handle_hangup_message(event, manager):
-        """Handle Hangup events from Asterisk"""
+        """Handle Hangup events from Asterisk."""
         hass.bus.fire('asterisk.hangup', event)
 
     manager.register_event('PeerStatus', handle_peer_status_message)
