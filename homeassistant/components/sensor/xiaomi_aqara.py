@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 devices.append(XiaomiSensor(device, 'Tilt Angle',
                                             'final_tilt_angle', gateway))
                 devices.append(XiaomiSensor(device, 'Coordination',
-                                            'coordination', gateway))                
+                                            'coordination', gateway))
             else:
                 _LOGGER.warn("Unmapped Device Model ")
                 _LOGGER.warn(device)
