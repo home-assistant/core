@@ -36,8 +36,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Twitch platform."""
-    channels = config.get(CONF_CHANNELS, [])
     from twitch import TwitchClient as TwitchClient
+
+    channels = config.get(CONF_CHANNELS, [])
     client=TwitchClient(client_id=config.get(CONF_CLIENTID))
     users = client.users.translate_usernames_to_ids(channels)
 
@@ -81,7 +82,6 @@ class TwitchSensor(Entity):
     # pylint: disable=no-member
     def update(self):
         """Update device state."""
-        id = self._client.users.translate_usernames_to_ids([self._channel])[0].id
         stream = self._client.streams.get_stream_by_user(self._id)
         if stream:
             self._game = stream.get('channel').get('game')
