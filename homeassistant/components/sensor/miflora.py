@@ -30,8 +30,8 @@ DEFAULT_ADAPTER = 'hci0'
 DEFAULT_FORCE_UPDATE = False
 DEFAULT_MEDIAN = 3
 DEFAULT_NAME = 'Mi Flora'
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=1200)
 
+SCAN_INTERVAL = timedelta(seconds=1200)
 
 # Sensor types are defined like: Name, units
 SENSOR_TYPES = {
@@ -50,8 +50,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MEDIAN, default=DEFAULT_MEDIAN): cv.positive_int,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,
     vol.Optional(CONF_ADAPTER, default=DEFAULT_ADAPTER): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        cv.time_period,
 })
 
 
@@ -68,7 +66,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         backend = GatttoolBackend
     _LOGGER.debug('Miflora is using %s backend.', backend.__name__)
 
-    cache = config.get(CONF_SCAN_INTERVAL).total_seconds()
+    cache = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL).total_seconds()
     poller = miflora_poller.MiFloraPoller(
         config.get(CONF_MAC), cache_timeout=cache,
         adapter=config.get(CONF_ADAPTER), backend=backend)
