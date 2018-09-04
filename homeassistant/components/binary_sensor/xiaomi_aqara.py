@@ -65,6 +65,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                             'dual_channel', hass, gateway))
             elif model in ['cube', 'sensor_cube', 'sensor_cube.aqgl01']:
                 devices.append(XiaomiCube(device, hass, gateway))
+            elif model in ['vibration']:
+                devices.append(XiaomiVibration(device, 'Vibration',
+                                               'status', hass, gateway))
     add_entities(devices)
 
 
@@ -309,6 +312,48 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
                 self._state = False
                 return True
             return False
+
+
+class XiaomiVibration(XiaomiBinarySensor):
+    """Representation of a Xiaomi Vibration Sensor."""
+
+    def __init__(self, device, name, data_key, hass, xiaomi_hub):
+        """Initialize the XiaomiVibration."""
+        self._hass = hass
+        self._last_action = None
+        XiaomiBinarySensor.__init__(self, device, name, xiaomi_hub,
+                                    data_key, None)
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {ATTR_LAST_ACTION: self._last_action}
+        attrs.update(super().device_state_attributes)
+        return attrs
+
+    def parse_data(self, data, raw_data):
+        """Parse data sent by gateway."""
+        value = data.get(self._data_key)
+        if value is None:
+            return False
+
+        if value == 'vibrate':
+            movement_type = 'vibrate'
+        elif value == 'tilt':
+            movement_type = 'tilt'
+        elif value == "free_fall":
+            movement_type = 'free_fall'
+        else:
+            _LOGGER.warning("Unsupported movement_type detected: %s", value)
+            return False
+
+        self._hass.bus.fire('movement', {
+            'entity_id': self.entity_id,
+            'movement_type': movement_type
+        })
+        self._last_action = movement_type
+
+        return True
 
 
 class XiaomiButton(XiaomiBinarySensor):
