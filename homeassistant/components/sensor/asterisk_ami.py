@@ -3,10 +3,9 @@
 """Asterisk Sensors"""
 import logging
 
+from homeassistant.components import asterisk_ami as ami_platform
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
-
-from .. import asterisk_ami as ami_platform
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,7 +74,8 @@ class AsteriskMailbox(Entity):
         """Check the mailbox status and update the state"""
         cdict = {'Action': 'MailboxStatus'}
         cdict['Peer'] = self._mailbox
-        response = self._hass.data[DATA_ASTERISK].send_action(cdict)
+        response = self._hass.data[ami_platform.DATA_ASTERISK] \
+                             .send_action(cdict)
         _LOGGER.info(response)
         _LOGGER.info(response.headers)
         if response.get_header('Response') == 'Error':

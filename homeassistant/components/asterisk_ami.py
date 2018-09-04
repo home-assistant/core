@@ -2,10 +2,11 @@
 """Asterisk Phone System"""
 import logging
 
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_USERNAME, CONF_PASSWORD
 from homeassistant.helpers.discovery import load_platform
+import voluptuous as vol
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 5038
@@ -33,7 +34,6 @@ _LOGGER = logging.getLogger(__name__)
 def setup(hass, config):
     """Your controller/hub specific code."""
 
-    # Needs to be done here because hass needs to load the file to know that the library needs installing
     import asterisk.manager
     manager = asterisk.manager.Manager()
 
@@ -44,7 +44,8 @@ def setup(hass, config):
 
     try:
         manager.connect(host, port)
-        login_status = manager.login(username=username, secret=password).get_header("Response")
+        login_status = manager.login(username=username, secret=password) \
+                              .get_header("Response")
     except asterisk.manager.ManagerException as e:
         _LOGGER.error("Error connecting to Asterisk: %s", e.args[1])
         return False
@@ -57,15 +58,18 @@ def setup(hass, config):
 
     def handle_peer_status_message(event, manager):
         """Handle PeerStatus events from Asterisk"""
-        hass.states.set(DOMAIN+'.PeerStatus_'+event['Peer'], event['PeerStatus'])
+        hass.states.set(DOMAIN+'.PeerStatus_'+event['Peer'],
+                        event['PeerStatus'])
 
     def handle_extension_status_message(event, manager):
         """Handle ExtensionStatus events from Asterisk"""
-        hass.states.set(DOMAIN + '.ExtensionStatus_' + event['Exten'], event['StatusText'])
+        hass.states.set(DOMAIN + '.ExtensionStatus_' + event['Exten'],
+                        event['StatusText'])
 
     def handle_device_state_change_message(event, manager):
         """Handle DeviceState events from Asterisk"""
-        hass.states.set(DOMAIN + '.DeviceStateChange_' + event['Device'], event['State'])
+        hass.states.set(DOMAIN + '.DeviceStateChange_' + event['Device'],
+                        event['State'])
 
     def handle_newstate_message(event, manager):
         """Handle NewState events from Asterisk"""
@@ -77,7 +81,8 @@ def setup(hass, config):
 
     manager.register_event('PeerStatus', handle_peer_status_message)
     manager.register_event('ExtensionStatus', handle_extension_status_message)
-    manager.register_event('DeviceStateChange', handle_device_state_change_message)
+    manager.register_event('DeviceStateChange',
+                           handle_device_state_change_message)
 
     manager.register_event('Newstate', handle_newstate_message)
     manager.register_event('Hangup', handle_hangup_message)
