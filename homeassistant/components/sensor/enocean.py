@@ -25,12 +25,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup an EnOcean sensor device."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up an EnOcean sensor device."""
     dev_id = config.get(CONF_ID)
     devname = config.get(CONF_NAME)
 
-    add_devices([EnOceanSensor(dev_id, devname)])
+    add_entities([EnOceanSensor(dev_id, devname)])
 
 
 class EnOceanSensor(enocean.EnOceanDevice, Entity):
@@ -54,7 +54,7 @@ class EnOceanSensor(enocean.EnOceanDevice, Entity):
     def value_changed(self, value):
         """Update the internal state of the device."""
         self.power = value
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def state(self):
@@ -64,4 +64,4 @@ class EnOceanSensor(enocean.EnOceanDevice, Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement."""
-        return "W"
+        return 'W'

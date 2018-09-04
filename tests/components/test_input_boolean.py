@@ -1,15 +1,18 @@
 """The tests for the input_boolean component."""
 # pylint: disable=protected-access
+import asyncio
 import unittest
 import logging
 
-from tests.common import get_test_home_assistant
-
-from homeassistant.bootstrap import setup_component
+from homeassistant.core import CoreState, State, Context
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_boolean import (
-    DOMAIN, is_on, toggle, turn_off, turn_on)
+    DOMAIN, is_on, toggle, turn_off, turn_on, CONF_INITIAL)
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_ICON, ATTR_FRIENDLY_NAME)
+
+from tests.common import (
+    get_test_home_assistant, mock_component, mock_restore_cache)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +22,7 @@ class TestInputBoolean(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -103,3 +106,76 @@ class TestInputBoolean(unittest.TestCase):
         self.assertEqual('Hello World',
                          state_2.attributes.get(ATTR_FRIENDLY_NAME))
         self.assertEqual('mdi:work', state_2.attributes.get(ATTR_ICON))
+
+
+@asyncio.coroutine
+def test_restore_state(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(hass, (
+        State('input_boolean.b1', 'on'),
+        State('input_boolean.b2', 'off'),
+        State('input_boolean.b3', 'on'),
+    ))
+
+    hass.state = CoreState.starting
+    mock_component(hass, 'recorder')
+
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'b1': None,
+            'b2': None,
+        }})
+
+    state = hass.states.get('input_boolean.b1')
+    assert state
+    assert state.state == 'on'
+
+    state = hass.states.get('input_boolean.b2')
+    assert state
+    assert state.state == 'off'
+
+
+@asyncio.coroutine
+def test_initial_state_overrules_restore_state(hass):
+    """Ensure states are restored on startup."""
+    mock_restore_cache(hass, (
+        State('input_boolean.b1', 'on'),
+        State('input_boolean.b2', 'off'),
+    ))
+
+    hass.state = CoreState.starting
+
+    yield from async_setup_component(hass, DOMAIN, {
+        DOMAIN: {
+            'b1': {CONF_INITIAL: False},
+            'b2': {CONF_INITIAL: True},
+        }})
+
+    state = hass.states.get('input_boolean.b1')
+    assert state
+    assert state.state == 'off'
+
+    state = hass.states.get('input_boolean.b2')
+    assert state
+    assert state.state == 'on'
+
+
+async def test_input_boolean_context(hass):
+    """Test that input_boolean context works."""
+    assert await async_setup_component(hass, 'input_boolean', {
+        'input_boolean': {
+            'ac': {CONF_INITIAL: True},
+        }
+    })
+
+    state = hass.states.get('input_boolean.ac')
+    assert state is not None
+
+    await hass.services.async_call('input_boolean', 'turn_off', {
+        'entity_id': state.entity_id,
+    }, True, Context(user_id='abcd'))
+
+    state2 = hass.states.get('input_boolean.ac')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

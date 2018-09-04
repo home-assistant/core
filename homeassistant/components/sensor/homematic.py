@@ -1,72 +1,94 @@
 """
-The homematic sensor platform.
+The HomeMatic sensor platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.homematic/
-
-Important: For this platform to work the homematic component has to be
-properly configured.
 """
-
 import logging
+
+from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.components.homematic import HMDevice
-from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['homematic']
 
 HM_STATE_HA_CAST = {
-    "RotaryHandleSensor": {0: "closed", 1: "tilted", 2: "open"},
-    "WaterSensor": {0: "dry", 1: "wet", 2: "water"},
-    "CO2Sensor": {0: "normal", 1: "added", 2: "strong"},
+    'RotaryHandleSensor': {0: 'closed',
+                           1: 'tilted',
+                           2: 'open'},
+    'RotaryHandleSensorIP': {0: 'closed',
+                             1: 'tilted',
+                             2: 'open'},
+    'WaterSensor': {0: 'dry',
+                    1: 'wet',
+                    2: 'water'},
+    'CO2Sensor': {0: 'normal',
+                  1: 'added',
+                  2: 'strong'},
+    'IPSmoke': {0: 'off',
+                1: 'primary',
+                2: 'intrusion',
+                3: 'secondary'},
+    'RFSiren': {0: 'disarmed',
+                1: 'extsens_armed',
+                2: 'allsens_armed',
+                3: 'alarm_blocked'},
 }
 
 HM_UNIT_HA_CAST = {
-    "HUMIDITY": "%",
-    "TEMPERATURE": "°C",
-    "BRIGHTNESS": "#",
-    "POWER": "W",
-    "CURRENT": "mA",
-    "VOLTAGE": "V",
-    "ENERGY_COUNTER": "Wh",
-    "GAS_POWER": "m3",
-    "GAS_ENERGY_COUNTER": "m3",
-    "LUX": "lux",
-    "RAIN_COUNTER": "mm",
-    "WIND_SPEED": "km/h",
-    "WIND_DIRECTION": "°",
-    "WIND_DIRECTION_RANGE": "°",
-    "SUNSHINEDURATION": "#",
-    "AIR_PRESSURE": "hPa",
-    "FREQUENCY": "Hz",
+    'HUMIDITY': '%',
+    'TEMPERATURE': '°C',
+    'ACTUAL_TEMPERATURE': '°C',
+    'BRIGHTNESS': '#',
+    'POWER': 'W',
+    'CURRENT': 'mA',
+    'VOLTAGE': 'V',
+    'ENERGY_COUNTER': 'Wh',
+    'GAS_POWER': 'm3',
+    'GAS_ENERGY_COUNTER': 'm3',
+    'LUX': 'lx',
+    'RAIN_COUNTER': 'mm',
+    'WIND_SPEED': 'km/h',
+    'WIND_DIRECTION': '°',
+    'WIND_DIRECTION_RANGE': '°',
+    'SUNSHINEDURATION': '#',
+    'AIR_PRESSURE': 'hPa',
+    'FREQUENCY': 'Hz',
+    'VALUE': '#',
+}
+
+HM_ICON_HA_CAST = {
+    'WIND_SPEED': 'mdi:weather-windy',
+    'HUMIDITY': 'mdi:water-percent',
+    'TEMPERATURE': 'mdi:thermometer',
+    'ACTUAL_TEMPERATURE': 'mdi:thermometer',
+    'LUX': 'mdi:weather-sunny',
+    'BRIGHTNESS': 'mdi:invert-colors',
+    'POWER': 'mdi:flash-red-eye',
+    'CURRENT': 'mdi:flash-red-eye',
 }
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Setup the platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the HomeMatic sensor platform."""
     if discovery_info is None:
         return
 
-    homematic = get_component("homematic")
-    return homematic.setup_hmdevice_discovery_helper(
-        hass,
-        HMSensor,
-        discovery_info,
-        add_callback_devices
-    )
+    devices = []
+    for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMSensor(conf)
+        devices.append(new_device)
+
+    add_entities(devices)
 
 
 class HMSensor(HMDevice):
-    """Represents various Homematic sensors in Home Assistant."""
+    """Representation of a HomeMatic sensor."""
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        if not self.available:
-            return STATE_UNKNOWN
-
         # Does a cast exist for this class?
         name = self._hmdevice.__class__.__name__
         if name in HM_STATE_HA_CAST:
@@ -78,17 +100,16 @@ class HMSensor(HMDevice):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
-        if not self.available:
-            return None
-
         return HM_UNIT_HA_CAST.get(self._state, None)
 
+    @property
+    def icon(self):
+        """Return the icon to use in the frontend, if any."""
+        return HM_ICON_HA_CAST.get(self._state, None)
+
     def _init_data_struct(self):
-        """Generate a data dict (self._data) from hm metadata."""
-        # Add state to data dict
+        """Generate a data dictionary (self._data) from metadata."""
         if self._state:
-            _LOGGER.debug("%s init datadict with main node '%s'", self._name,
-                          self._state)
             self._data.update({self._state: STATE_UNKNOWN})
         else:
-            _LOGGER.critical("Can't correctly init sensor %s.", self._name)
+            _LOGGER.critical("Unable to initialize sensor: %s", self._name)

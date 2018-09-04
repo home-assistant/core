@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.scsgate as scsgate
+from homeassistant.components import scsgate
 from homeassistant.components.light import (Light, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_STATE, CONF_DEVICES, CONF_NAME)
@@ -23,8 +23,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the SCSGate switches."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the SCSGate switches."""
     devices = config.get(CONF_DEVICES)
     lights = []
     logger = logging.getLogger(__name__)
@@ -42,12 +42,12 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             light = SCSGateLight(name=name, scs_id=scs_id, logger=logger)
             lights.append(light)
 
-    add_devices(lights)
+    add_entities(lights)
     scsgate.SCSGATE.add_devices_to_register(lights)
 
 
 class SCSGateLight(Light):
-    """representation of a SCSGate light."""
+    """Representation of a SCSGate light."""
 
     def __init__(self, scs_id, name, logger):
         """Initialize the light."""
@@ -106,7 +106,7 @@ class SCSGateLight(Light):
             return
 
         self._toggled = message.toggled
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
         command = "off"
         if self._toggled:

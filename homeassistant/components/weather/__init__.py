@@ -6,11 +6,10 @@ https://home-assistant.io/components/weather/
 """
 import asyncio
 import logging
-from numbers import Number
 
-from homeassistant.const import TEMP_CELSIUS
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.helpers.temperature import display_temp as show_temp
+from homeassistant.const import PRECISION_WHOLE, PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 
@@ -22,27 +21,33 @@ DOMAIN = 'weather'
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 ATTR_CONDITION_CLASS = 'condition_class'
+ATTR_FORECAST = 'forecast'
+ATTR_FORECAST_CONDITION = 'condition'
+ATTR_FORECAST_PRECIPITATION = 'precipitation'
+ATTR_FORECAST_TEMP = 'temperature'
+ATTR_FORECAST_TEMP_LOW = 'templow'
+ATTR_FORECAST_TIME = 'datetime'
 ATTR_WEATHER_ATTRIBUTION = 'attribution'
 ATTR_WEATHER_HUMIDITY = 'humidity'
 ATTR_WEATHER_OZONE = 'ozone'
 ATTR_WEATHER_PRESSURE = 'pressure'
 ATTR_WEATHER_TEMPERATURE = 'temperature'
+ATTR_WEATHER_VISIBILITY = 'visibility'
 ATTR_WEATHER_WIND_BEARING = 'wind_bearing'
 ATTR_WEATHER_WIND_SPEED = 'wind_speed'
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
-    """Setup the weather component."""
+    """Set up the weather component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
     yield from component.async_setup(config)
     return True
 
 
-# pylint: disable=no-member, no-self-use
 class WeatherEntity(Entity):
-    """ABC for a weather data."""
+    """ABC for weather data."""
 
     @property
     def temperature(self):
@@ -85,12 +90,33 @@ class WeatherEntity(Entity):
         return None
 
     @property
+    def visibility(self):
+        """Return the visibility."""
+        return None
+
+    @property
+    def forecast(self):
+        """Return the forecast."""
+        return None
+
+    @property
+    def precision(self):
+        """Return the forecast."""
+        return PRECISION_TENTHS if self.temperature_unit == TEMP_CELSIUS \
+            else PRECISION_WHOLE
+
+    @property
     def state_attributes(self):
         """Return the state attributes."""
         data = {
-            ATTR_WEATHER_TEMPERATURE: self._temp_for_display,
-            ATTR_WEATHER_HUMIDITY: self.humidity,
+            ATTR_WEATHER_TEMPERATURE: show_temp(
+                self.hass, self.temperature, self.temperature_unit,
+                self.precision),
         }
+
+        humidity = self.humidity
+        if humidity is not None:
+            data[ATTR_WEATHER_HUMIDITY] = round(humidity)
 
         ozone = self.ozone
         if ozone is not None:
@@ -108,9 +134,28 @@ class WeatherEntity(Entity):
         if wind_speed is not None:
             data[ATTR_WEATHER_WIND_SPEED] = wind_speed
 
+        visibility = self.visibility
+        if visibility is not None:
+            data[ATTR_WEATHER_VISIBILITY] = visibility
+
         attribution = self.attribution
         if attribution is not None:
             data[ATTR_WEATHER_ATTRIBUTION] = attribution
+
+        if self.forecast is not None:
+            forecast = []
+            for forecast_entry in self.forecast:
+                forecast_entry = dict(forecast_entry)
+                forecast_entry[ATTR_FORECAST_TEMP] = show_temp(
+                    self.hass, forecast_entry[ATTR_FORECAST_TEMP],
+                    self.temperature_unit, self.precision)
+                if ATTR_FORECAST_TEMP_LOW in forecast_entry:
+                    forecast_entry[ATTR_FORECAST_TEMP_LOW] = show_temp(
+                        self.hass, forecast_entry[ATTR_FORECAST_TEMP_LOW],
+                        self.temperature_unit, self.precision)
+                forecast.append(forecast_entry)
+
+            data[ATTR_FORECAST] = forecast
 
         return data
 
@@ -123,22 +168,3 @@ class WeatherEntity(Entity):
     def condition(self):
         """Return the current condition."""
         raise NotImplementedError()
-
-    @property
-    def _temp_for_display(self):
-        """Convert temperature into preferred units for display purposes."""
-        temp = self.temperature
-        unit = self.temperature_unit
-        hass_unit = self.hass.config.units.temperature_unit
-
-        if (temp is None or not isinstance(temp, Number) or
-                unit == hass_unit):
-            return temp
-
-        value = convert_temperature(temp, unit, hass_unit)
-
-        if hass_unit == TEMP_CELSIUS:
-            return round(value, 1)
-        else:
-            # Users of fahrenheit generally expect integer units.
-            return round(value)

@@ -3,10 +3,10 @@ import unittest
 
 import pytest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
 
 @pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
@@ -14,9 +14,9 @@ class TestLightRfxtrx(unittest.TestCase):
     """Test the Rfxtrx light platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components = ['rfxtrx']
+        mock_component(self.hass, 'rfxtrx')
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -248,7 +248,7 @@ class TestLightRfxtrx(unittest.TestCase):
         rfxtrx_core.RECEIVED_EVT_SUBSCRIBERS[0](event)
         self.assertEqual(2, len(rfxtrx_core.RFX_DEVICES))
 
-        # trying to add a swicth
+        # trying to add a switch
         event = rfxtrx_core.get_rfx_object('0b1100100118cdea02010f70')
         event.data = bytearray([0x0b, 0x11, 0x00, 0x10, 0x01, 0x18,
                                 0xcd, 0xea, 0x01, 0x01, 0x0f, 0x70])

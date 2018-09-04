@@ -12,7 +12,7 @@ class TestScripts(unittest.TestCase):
            return_value='/default')
     def test_config_per_platform(self, mock_def):
         """Test config per platform method."""
-        self.assertEquals(scripts.get_default_config_dir(), '/default')
+        self.assertEqual(scripts.get_default_config_dir(), '/default')
         self.assertEqual(scripts.extract_config_dir(), '/default')
         self.assertEqual(scripts.extract_config_dir(['']), '/default')
         self.assertEqual(scripts.extract_config_dir(['-c', '/arg']), '/arg')

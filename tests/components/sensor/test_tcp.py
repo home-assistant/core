@@ -6,9 +6,10 @@ from uuid import uuid4
 from unittest.mock import patch, Mock
 
 from tests.common import (get_test_home_assistant, assert_setup_component)
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components.sensor import tcp
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.template import Template
 
 TEST_CONFIG = {
     'sensor': {
@@ -19,7 +20,7 @@ TEST_CONFIG = {
         tcp.CONF_TIMEOUT: tcp.DEFAULT_TIMEOUT + 1,
         tcp.CONF_PAYLOAD: 'test_payload',
         tcp.CONF_UNIT_OF_MEASUREMENT: 'test_unit',
-        tcp.CONF_VALUE_TEMPLATE: 'test_template',
+        tcp.CONF_VALUE_TEMPLATE: Template('test_template'),
         tcp.CONF_VALUE_ON: 'test_on',
         tcp.CONF_BUFFER_SIZE: tcp.DEFAULT_BUFFER_SIZE + 1
     },
@@ -38,7 +39,7 @@ class TestTCPSensor(unittest.TestCase):
     """Test the TCP Sensor."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self, method):
@@ -47,14 +48,14 @@ class TestTCPSensor(unittest.TestCase):
 
     @patch('homeassistant.components.sensor.tcp.TcpSensor.update')
     def test_setup_platform_valid_config(self, mock_update):
-        """Check a valid configuration and call add_devices with sensor."""
+        """Check a valid configuration and call add_entities with sensor."""
         with assert_setup_component(0, 'sensor'):
             assert setup_component(self.hass, 'sensor', TEST_CONFIG)
 
-        add_devices = Mock()
-        tcp.setup_platform(None, TEST_CONFIG['sensor'], add_devices)
-        assert add_devices.called
-        assert isinstance(add_devices.call_args[0][0][0], tcp.TcpSensor)
+        add_entities = Mock()
+        tcp.setup_platform(None, TEST_CONFIG['sensor'], add_entities)
+        assert add_entities.called
+        assert isinstance(add_entities.call_args[0][0][0], tcp.TcpSensor)
 
     def test_setup_platform_invalid_config(self):
         """Check an invalid configuration."""
@@ -252,7 +253,7 @@ class TestTCPSensor(unittest.TestCase):
         mock_socket = mock_socket().__enter__()
         mock_socket.recv.return_value = test_value.encode()
         config = copy(TEST_CONFIG['sensor'])
-        config[tcp.CONF_VALUE_TEMPLATE] = '{{ value }} {{ 1+1 }}'
+        config[tcp.CONF_VALUE_TEMPLATE] = Template('{{ value }} {{ 1+1 }}')
         sensor = tcp.TcpSensor(self.hass, config)
         assert sensor._state == '%s 2' % test_value
 
@@ -265,6 +266,6 @@ class TestTCPSensor(unittest.TestCase):
         mock_socket = mock_socket().__enter__()
         mock_socket.recv.return_value = test_value.encode()
         config = copy(TEST_CONFIG['sensor'])
-        config[tcp.CONF_VALUE_TEMPLATE] = "{{ this won't work"
+        config[tcp.CONF_VALUE_TEMPLATE] = Template("{{ this won't work")
         sensor = tcp.TcpSensor(self.hass, config)
         assert sensor.update() is None

@@ -4,19 +4,20 @@ Support for monitoring NZBGet NZB client.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.nzbget/
 """
-import logging
 from datetime import timedelta
+import logging
 
+from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_NAME, CONF_PORT,
+    CONF_SSL, CONF_HOST, CONF_NAME, CONF_PORT, CONF_PASSWORD, CONF_USERNAME,
     CONTENT_TYPE_JSON, CONF_MONITORED_VARIABLES)
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,21 +45,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=False): cv.boolean,
     vol.Optional(CONF_USERNAME): cv.string,
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the NZBGet sensors."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the NZBGet sensors."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
+    ssl = 's' if config.get(CONF_SSL) else ''
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     monitored_types = config.get(CONF_MONITORED_VARIABLES)
 
-    url = "http://{}:{}/jsonrpc".format(host, port)
+    url = "http{}://{}:{}/jsonrpc".format(ssl, host, port)
 
     try:
         nzbgetapi = NZBGetAPI(
@@ -76,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             client_name=name)
         devices.append(new_sensor)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class NZBGetSensor(Entity):
@@ -105,7 +107,7 @@ class NZBGetSensor(Entity):
 
     @property
     def unit_of_measurement(self):
-        """Unit of measurement of this entity, if any."""
+        """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
@@ -136,14 +138,14 @@ class NZBGetSensor(Entity):
             self._state = value
 
 
-class NZBGetAPI(object):
+class NZBGetAPI:
     """Simple JSON-RPC wrapper for NZBGet's API."""
 
     def __init__(self, api_url, username=None, password=None):
         """Initialize NZBGet API and set headers needed later."""
         self.api_url = api_url
         self.status = None
-        self.headers = {'content-type': CONTENT_TYPE_JSON}
+        self.headers = {CONTENT_TYPE: CONTENT_TYPE_JSON}
 
         if username is not None and password is not None:
             self.auth = (username, password)
@@ -153,7 +155,7 @@ class NZBGetAPI(object):
 
     def post(self, method, params=None):
         """Send a POST request and return the response as a dict."""
-        payload = {"method": method}
+        payload = {'method': method}
 
         if params:
             payload['params'] = params
@@ -171,8 +173,4 @@ class NZBGetAPI(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Update cached response."""
-        try:
-            self.status = self.post('status')['result']
-        except requests.exceptions.ConnectionError:
-            # failed to update status - exception already logged in self.post
-            raise
+        self.status = self.post('status')['result']

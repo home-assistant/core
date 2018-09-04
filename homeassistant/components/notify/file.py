@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the file notification service."""
     filename = config[CONF_FILENAME]
     timestamp = config[CONF_TIMESTAMP]

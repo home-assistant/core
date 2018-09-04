@@ -8,13 +8,13 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.components.digital_ocean import (
     CONF_DROPLETS, ATTR_CREATED_AT, ATTR_DROPLET_ID, ATTR_DROPLET_NAME,
     ATTR_FEATURES, ATTR_IPV4_ADDRESS, ATTR_IPV6_ADDRESS, ATTR_MEMORY,
-    ATTR_REGION, ATTR_VCPUS)
-from homeassistant.loader import get_component
-import homeassistant.helpers.config_validation as cv
+    ATTR_REGION, ATTR_VCPUS, CONF_ATTRIBUTION, DATA_DIGITAL_OCEAN)
+from homeassistant.const import ATTR_ATTRIBUTION
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,18 +27,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Digital Ocean droplet switch."""
-    digital_ocean = get_component('digital_ocean')
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Digital Ocean droplet switch."""
+    digital = hass.data.get(DATA_DIGITAL_OCEAN)
+    if not digital:
+        return False
+
     droplets = config.get(CONF_DROPLETS)
 
     dev = []
     for droplet in droplets:
-        droplet_id = digital_ocean.DIGITAL_OCEAN.get_droplet_id(droplet)
-        dev.append(DigitalOceanSwitch(
-            digital_ocean.DIGITAL_OCEAN, droplet_id))
+        droplet_id = digital.get_droplet_id(droplet)
+        if droplet_id is None:
+            _LOGGER.error("Droplet %s is not available", droplet)
+            return False
+        dev.append(DigitalOceanSwitch(digital, droplet_id))
 
-    add_devices(dev)
+    add_entities(dev, True)
 
 
 class DigitalOceanSwitch(SwitchDevice):
@@ -51,8 +56,6 @@ class DigitalOceanSwitch(SwitchDevice):
         self.data = None
         self._state = None
 
-        self.update()
-
     @property
     def name(self):
         """Return the name of the switch."""
@@ -64,9 +67,10 @@ class DigitalOceanSwitch(SwitchDevice):
         return self.data.status == 'active'
 
     @property
-    def state_attributes(self):
+    def device_state_attributes(self):
         """Return the state attributes of the Digital Ocean droplet."""
         return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
             ATTR_CREATED_AT: self.data.created_at,
             ATTR_DROPLET_ID: self.data.id,
             ATTR_DROPLET_NAME: self.data.name,

@@ -2,10 +2,11 @@
 import unittest
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.automation as automation
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import (
+    get_test_home_assistant, assert_setup_component, mock_component)
 
 
 # pylint: disable=invalid-name
@@ -13,15 +14,15 @@ class TestAutomationTemplate(unittest.TestCase):
     """Test the event automation."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.append('group')
+        mock_component(self.hass, 'group')
         self.hass.states.set('test.entity', 'hello')
         self.calls = []
 
         @callback
         def record_call(service):
-            """Helper to record calls."""
+            """Record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
@@ -369,7 +370,7 @@ class TestAutomationTemplate(unittest.TestCase):
     def test_if_fires_on_change_with_bad_template(self):
         """Test for firing on change with bad template."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'template',
@@ -398,3 +399,38 @@ class TestAutomationTemplate(unittest.TestCase):
         self.hass.states.set('test.entity', 'world')
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
+
+    def test_wait_template_with_trigger(self):
+        """Test using wait template with 'trigger.entity_id'."""
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'template',
+                    'value_template':
+                        "{{ states.test.entity.state == 'world' }}",
+                },
+                'action': [
+                    {'wait_template':
+                        "{{ is_state(trigger.entity_id, 'hello') }}"},
+                    {'service': 'test.automation',
+                     'data_template': {
+                        'some':
+                        '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                            'platform', 'entity_id', 'from_state.state',
+                            'to_state.state'))
+                     }}
+                ],
+            }
+        })
+
+        self.hass.block_till_done()
+        self.calls = []
+
+        self.hass.states.set('test.entity', 'world')
+        self.hass.block_till_done()
+        self.hass.states.set('test.entity', 'hello')
+        self.hass.block_till_done()
+        self.assertEqual(1, len(self.calls))
+        self.assertEqual(
+            'template - test.entity - hello - world',
+            self.calls[0].data['some'])

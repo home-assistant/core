@@ -16,6 +16,7 @@ from homeassistant.helpers.entity import ToggleEntity
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['hikvision==0.4']
+# This is the last working version, please test before updating
 
 _LOGGING = logging.getLogger(__name__)
 
@@ -33,8 +34,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Hikvision camera."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up Hikvision camera."""
     import hikvision.api
     from hikvision.error import HikvisionError, MissingParamError
 
@@ -55,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGING.error("Unable to connect: %s", conn_err)
         return False
 
-    add_devices([HikvisionMotionSwitch(name, hikvision_cam)])
+    add_entities([HikvisionMotionSwitch(name, hikvision_cam)])
 
 
 class HikvisionMotionSwitch(ToggleEntity):

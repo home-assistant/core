@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT, CONF_VALUE_TEMPLATE)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.template import Template
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,9 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the TCP Sensor."""
-    add_devices([TcpSensor(hass, config)])
+    add_entities([TcpSensor(hass, config)])
 
 
 class TcpSensor(Entity):
@@ -57,7 +56,7 @@ class TcpSensor(Entity):
         value_template = config.get(CONF_VALUE_TEMPLATE)
 
         if value_template is not None:
-            value_template = Template(value_template, hass)
+            value_template.hass = hass
 
         self._hass = hass
         self._config = {

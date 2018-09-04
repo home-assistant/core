@@ -10,8 +10,8 @@ from homeassistant.components.binary_sensor import BinarySensorDevice
 DEPENDENCIES = ['sleepiq']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the SleepIQ sensors."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the SleepIQ sensors."""
     if discovery_info is None:
         return
 
@@ -22,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for bed_id, _ in data.beds.items():
         for side in sleepiq.SIDES:
             dev.append(IsInBedBinarySensor(data, bed_id, side))
-    add_devices(dev)
+    add_entities(dev)
 
 
 class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
@@ -42,7 +42,7 @@ class IsInBedBinarySensor(sleepiq.SleepIQSensor, BinarySensorDevice):
         return self._state is True
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the class of this sensor."""
         return "occupancy"
 

@@ -12,8 +12,8 @@ DEPENDENCIES = ['ecobee']
 ECOBEE_CONFIG_FILE = 'ecobee.conf'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Ecobee sensors."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Ecobee sensors."""
     if discovery_info is None:
         return
     data = ecobee.NETWORK
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
                 dev.append(EcobeeBinarySensor(sensor['name'], index))
 
-    add_devices(dev)
+    add_entities(dev, True)
 
 
 class EcobeeBinarySensor(BinarySensorDevice):
@@ -38,8 +38,7 @@ class EcobeeBinarySensor(BinarySensorDevice):
         self.sensor_name = sensor_name
         self.index = sensor_index
         self._state = None
-        self._sensor_class = 'occupancy'
-        self.update()
+        self._device_class = 'occupancy'
 
     @property
     def name(self):
@@ -52,14 +51,9 @@ class EcobeeBinarySensor(BinarySensorDevice):
         return self._state == 'true'
 
     @property
-    def unique_id(self):
-        """Return the unique ID of this sensor."""
-        return "binary_sensor_ecobee_{}_{}".format(self._name, self.index)
-
-    @property
-    def sensor_class(self):
-        """Return the class of this sensor, from SENSOR_CLASSES."""
-        return self._sensor_class
+    def device_class(self):
+        """Return the class of this sensor, from DEVICE_CLASSES."""
+        return self._device_class
 
     def update(self):
         """Get the latest state of the sensor."""

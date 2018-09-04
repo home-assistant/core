@@ -1,12 +1,11 @@
 """The tests for the  Template switch platform."""
 from homeassistant.core import callback
-import homeassistant.bootstrap as bootstrap
+from homeassistant import setup
 import homeassistant.components as core
-from homeassistant.const import (
-    STATE_ON,
-    STATE_OFF)
+from homeassistant.const import STATE_ON, STATE_OFF
 
-from tests.common import get_test_home_assistant, assert_setup_component
+from tests.common import (
+    get_test_home_assistant, assert_setup_component)
 
 
 class TestTemplateSwitch:
@@ -17,7 +16,7 @@ class TestTemplateSwitch:
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.calls = []
 
@@ -33,9 +32,9 @@ class TestTemplateSwitch:
         self.hass.stop()
 
     def test_template_state_text(self):
-        """"Test the state text of a template."""
-        with assert_setup_component(1):
-            assert bootstrap.setup_component(self.hass, 'switch', {
+        """Test the state text of a template."""
+        with assert_setup_component(1, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template',
                     'switches': {
@@ -55,6 +54,9 @@ class TestTemplateSwitch:
                 }
             })
 
+        self.hass.start()
+        self.hass.block_till_done()
+
         state = self.hass.states.set('switch.test_state', STATE_ON)
         self.hass.block_till_done()
 
@@ -69,8 +71,8 @@ class TestTemplateSwitch:
 
     def test_template_state_boolean_on(self):
         """Test the setting of the state with boolean on."""
-        with assert_setup_component(1):
-            assert bootstrap.setup_component(self.hass, 'switch', {
+        with assert_setup_component(1, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template',
                     'switches': {
@@ -90,13 +92,16 @@ class TestTemplateSwitch:
                 }
             })
 
+        self.hass.start()
+        self.hass.block_till_done()
+
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_ON
 
     def test_template_state_boolean_off(self):
         """Test the setting of the state with off."""
-        with assert_setup_component(1):
-            assert bootstrap.setup_component(self.hass, 'switch', {
+        with assert_setup_component(1, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template',
                     'switches': {
@@ -116,13 +121,94 @@ class TestTemplateSwitch:
                 }
             })
 
+        self.hass.start()
+        self.hass.block_till_done()
+
         state = self.hass.states.get('switch.test_template_switch')
         assert state.state == STATE_OFF
 
+    def test_icon_template(self):
+        """Test icon template."""
+        with assert_setup_component(1, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'template',
+                    'switches': {
+                        'test_template_switch': {
+                            'value_template':
+                                "{{ states.switch.test_state.state }}",
+                            'turn_on': {
+                                'service': 'switch.turn_on',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'switch.turn_off',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'icon_template':
+                                "{% if states.switch.test_state.state %}"
+                                "mdi:check"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes.get('icon') == ''
+
+        state = self.hass.states.set('switch.test_state', STATE_ON)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes['icon'] == 'mdi:check'
+
+    def test_entity_picture_template(self):
+        """Test entity_picture template."""
+        with assert_setup_component(1, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
+                'switch': {
+                    'platform': 'template',
+                    'switches': {
+                        'test_template_switch': {
+                            'value_template':
+                                "{{ states.switch.test_state.state }}",
+                            'turn_on': {
+                                'service': 'switch.turn_on',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'turn_off': {
+                                'service': 'switch.turn_off',
+                                'entity_id': 'switch.test_state'
+                            },
+                            'entity_picture_template':
+                                "{% if states.switch.test_state.state %}"
+                                "/local/switch.png"
+                                "{% endif %}"
+                        }
+                    }
+                }
+            })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes.get('entity_picture') == ''
+
+        state = self.hass.states.set('switch.test_state', STATE_ON)
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test_template_switch')
+        assert state.attributes['entity_picture'] == '/local/switch.png'
+
     def test_template_syntax_error(self):
         """Test templating syntax error."""
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'switch', {
+        with assert_setup_component(0, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template',
                     'switches': {
@@ -141,12 +227,16 @@ class TestTemplateSwitch:
                     }
                 }
             })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_invalid_name_does_not_create(self):
         """Test invalid name."""
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'switch', {
+        with assert_setup_component(0, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template',
                     'switches': {
@@ -165,12 +255,16 @@ class TestTemplateSwitch:
                     }
                 }
             })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_invalid_switch_does_not_create(self):
         """Test invalid switch."""
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'switch', {
+        with assert_setup_component(0, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template',
                     'switches': {
@@ -178,22 +272,30 @@ class TestTemplateSwitch:
                     }
                 }
             })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_no_switches_does_not_create(self):
         """Test if there are no switches no creation."""
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'switch', {
+        with assert_setup_component(0, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template'
                 }
             })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_missing_template_does_not_create(self):
         """Test missing template."""
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'switch', {
+        with assert_setup_component(0, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template',
                     'switches': {
@@ -212,12 +314,16 @@ class TestTemplateSwitch:
                     }
                 }
             })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_missing_on_does_not_create(self):
         """Test missing on."""
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'switch', {
+        with assert_setup_component(0, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template',
                     'switches': {
@@ -236,12 +342,16 @@ class TestTemplateSwitch:
                     }
                 }
             })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_missing_off_does_not_create(self):
         """Test missing off."""
-        with assert_setup_component(0):
-            assert bootstrap.setup_component(self.hass, 'switch', {
+        with assert_setup_component(0, 'switch'):
+            assert setup.setup_component(self.hass, 'switch', {
                 'switch': {
                     'platform': 'template',
                     'switches': {
@@ -260,11 +370,15 @@ class TestTemplateSwitch:
                     }
                 }
             })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         assert self.hass.states.all() == []
 
     def test_on_action(self):
         """Test on action."""
-        assert bootstrap.setup_component(self.hass, 'switch', {
+        assert setup.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -282,6 +396,10 @@ class TestTemplateSwitch:
                 }
             }
         })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         self.hass.states.set('switch.test_state', STATE_OFF)
         self.hass.block_till_done()
 
@@ -295,7 +413,7 @@ class TestTemplateSwitch:
 
     def test_off_action(self):
         """Test off action."""
-        assert bootstrap.setup_component(self.hass, 'switch', {
+        assert setup.setup_component(self.hass, 'switch', {
             'switch': {
                 'platform': 'template',
                 'switches': {
@@ -314,6 +432,10 @@ class TestTemplateSwitch:
                 }
             }
         })
+
+        self.hass.start()
+        self.hass.block_till_done()
+
         self.hass.states.set('switch.test_state', STATE_ON)
         self.hass.block_till_done()
 

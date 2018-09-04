@@ -1,15 +1,17 @@
 """
-Support for ISY994 binary sensors.
+Support for ISY994 sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.isy994/
+https://home-assistant.io/components/sensor.isy994/
 """
 import logging
-from typing import Callable  # noqa
+from typing import Callable
 
-import homeassistant.components.isy994 as isy
-from homeassistant.const import (TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_OFF,
-                                 STATE_ON)
+from homeassistant.components.sensor import DOMAIN
+from homeassistant.components.isy994 import (ISY994_NODES, ISY994_WEATHER,
+                                             ISYDevice)
+from homeassistant.const import (
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, UNIT_UV_INDEX)
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,7 +49,7 @@ UOM_FRIENDLY_NAME = {
     '33': 'kWH',
     '34': 'liedu',
     '35': 'l',
-    '36': 'lux',
+    '36': 'lx',
     '37': 'mercalli',
     '38': 'm',
     '39': 'm³/hr',
@@ -77,7 +79,7 @@ UOM_FRIENDLY_NAME = {
     '64': 'shindo',
     '65': 'SML',
     '69': 'gal',
-    '71': 'UV index',
+    '71': UNIT_UV_INDEX,
     '72': 'V',
     '73': 'W',
     '74': 'W/m²',
@@ -232,34 +234,24 @@ UOM_TO_STATES = {
     }
 }
 
-BINARY_UOM = ['2', '78']
 
-
-# pylint: disable=unused-argument
 def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
-    """Setup the ISY994 sensor platform."""
-    if isy.ISY is None or not isy.ISY.connected:
-        _LOGGER.error('A connection has not been made to the ISY controller.')
-        return False
-
+                   add_entities: Callable[[list], None], discovery_info=None):
+    """Set up the ISY994 sensor platform."""
     devices = []
 
-    for node in isy.SENSOR_NODES:
-        if (len(node.uom) == 0 or node.uom[0] not in BINARY_UOM) and \
-                STATE_OFF not in node.uom and STATE_ON not in node.uom:
-            _LOGGER.debug('LOADING %s', node.name)
-            devices.append(ISYSensorDevice(node))
+    for node in hass.data[ISY994_NODES][DOMAIN]:
+        _LOGGER.debug("Loading %s", node.name)
+        devices.append(ISYSensorDevice(node))
 
-    add_devices(devices)
+    for node in hass.data[ISY994_WEATHER]:
+        devices.append(ISYWeatherDevice(node))
+
+    add_entities(devices)
 
 
-class ISYSensorDevice(isy.ISYDevice):
+class ISYSensorDevice(ISYDevice):
     """Representation of an ISY994 sensor device."""
-
-    def __init__(self, node) -> None:
-        """Initialize the ISY994 sensor device."""
-        isy.ISYDevice.__init__(self, node)
 
     @property
     def raw_unit_of_measurement(self) -> str:
@@ -267,18 +259,18 @@ class ISYSensorDevice(isy.ISYDevice):
         if len(self._node.uom) == 1:
             if self._node.uom[0] in UOM_FRIENDLY_NAME:
                 friendly_name = UOM_FRIENDLY_NAME.get(self._node.uom[0])
-                if friendly_name == TEMP_CELSIUS or \
-                        friendly_name == TEMP_FAHRENHEIT:
+                if friendly_name in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
                     friendly_name = self.hass.config.units.temperature_unit
                 return friendly_name
-            else:
-                return self._node.uom[0]
-        else:
-            return None
+            return self._node.uom[0]
+        return None
 
     @property
     def state(self) -> str:
         """Get the state of the ISY994 sensor device."""
+        if self.is_unknown():
+            return None
+
         if len(self._node.uom) == 1:
             if self._node.uom[0] in UOM_TO_STATES:
                 states = UOM_TO_STATES.get(self._node.uom[0])
@@ -307,5 +299,37 @@ class ISYSensorDevice(isy.ISYDevice):
         raw_units = self.raw_unit_of_measurement
         if raw_units in (TEMP_FAHRENHEIT, TEMP_CELSIUS):
             return self.hass.config.units.temperature_unit
-        else:
-            return raw_units
+        return raw_units
+
+
+class ISYWeatherDevice(ISYDevice):
+    """Representation of an ISY994 weather device."""
+
+    @property
+    def raw_units(self) -> str:
+        """Return the raw unit of measurement."""
+        if self._node.uom == 'F':
+            return TEMP_FAHRENHEIT
+        if self._node.uom == 'C':
+            return TEMP_CELSIUS
+        return self._node.uom
+
+    @property
+    def state(self) -> object:
+        """Return the value of the node."""
+        # pylint: disable=protected-access
+        val = self._node.status._val
+        raw_units = self._node.uom
+
+        if raw_units in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
+            return self.hass.config.units.temperature(val, raw_units)
+        return val
+
+    @property
+    def unit_of_measurement(self) -> str:
+        """Return the unit of measurement for the node."""
+        raw_units = self.raw_units
+
+        if raw_units in [TEMP_CELSIUS, TEMP_FAHRENHEIT]:
+            return self.hass.config.units.temperature_unit
+        return raw_units

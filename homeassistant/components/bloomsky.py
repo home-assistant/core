@@ -4,16 +4,17 @@ Support for BloomSky weather station.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/bloomsky/
 """
-import logging
 from datetime import timedelta
+import logging
 
+from aiohttp.hdrs import AUTHORIZATION
 import requests
 import voluptuous as vol
 
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers import discovery
-from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
+from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,9 +34,8 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-# pylint: disable=unused-argument
 def setup(hass, config):
-    """Setup BloomSky component."""
+    """Set up the BloomSky component."""
     api_key = config[DOMAIN][CONF_API_KEY]
 
     global BLOOMSKY
@@ -50,7 +50,7 @@ def setup(hass, config):
     return True
 
 
-class BloomSky(object):
+class BloomSky:
     """Handle all communication with the BloomSky API."""
 
     # API documentation at http://weatherlution.com/bloomsky-api/
@@ -67,9 +67,8 @@ class BloomSky(object):
     def refresh_devices(self):
         """Use the API to retrieve a list of devices."""
         _LOGGER.debug("Fetching BloomSky update")
-        response = requests.get(self.API_URL,
-                                headers={"Authorization": self._api_key},
-                                timeout=10)
+        response = requests.get(
+            self.API_URL, headers={AUTHORIZATION: self._api_key}, timeout=10)
         if response.status_code == 401:
             raise RuntimeError("Invalid API_KEY")
         elif response.status_code != 200:

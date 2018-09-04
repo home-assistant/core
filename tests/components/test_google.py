@@ -4,7 +4,7 @@ import unittest
 from unittest.mock import patch
 
 import homeassistant.components.google as google
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from tests.common import get_test_home_assistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ class TestGoogle(unittest.TestCase):
     """Test the Google component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -52,12 +52,13 @@ class TestGoogle(unittest.TestCase):
         }
 
         calendar_info = google.get_calendar_info(self.hass, calendar)
-        self.assertEquals(calendar_info, {
+        self.assertEqual(calendar_info, {
             'cal_id': 'qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com',
             'entities': [{
                 'device_id': 'we_are_we_are_a_test_calendar',
                 'name': 'We are, we are, a... Test Calendar',
                 'track': True,
+                'ignore_availability': True,
             }]
         })
 
@@ -80,7 +81,7 @@ class TestGoogle(unittest.TestCase):
         # }
 
         # self.assertIsInstance(self.hass.data[google.DATA_INDEX], dict)
-        # self.assertEquals(self.hass.data[google.DATA_INDEX], {})
+        # self.assertEqual(self.hass.data[google.DATA_INDEX], {})
 
         calendar_service = google.GoogleCalendarService(
             self.hass.config.path(google.TOKEN_FILE))

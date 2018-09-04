@@ -5,7 +5,7 @@ import unittest
 import pytest
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import rfxtrx as rfxtrx
 from tests.common import get_test_home_assistant
 
@@ -15,7 +15,7 @@ class TestRFXTRX(unittest.TestCase):
     """Test the Rfxtrx component."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -50,8 +50,8 @@ class TestRFXTRX(unittest.TestCase):
                           '-RFXCOM_RFXtrx433_A1Y0NJGR-if00-port0',
                 'dummy': True}}))
 
-        self.hass.config.components.remove('rfxtrx')
-
+    def test_valid_config2(self):
+        """Test configuration."""
         self.assertTrue(setup_component(self.hass, 'rfxtrx', {
             'rfxtrx': {
                 'device': '/dev/serial/by-id/usb' +

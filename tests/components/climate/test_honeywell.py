@@ -8,6 +8,9 @@ import somecomfort
 
 from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.components.climate import (
+    ATTR_FAN_MODE, ATTR_OPERATION_MODE, ATTR_FAN_LIST, ATTR_OPERATION_LIST)
+
 import homeassistant.components.climate.honeywell as honeywell
 
 
@@ -22,15 +25,21 @@ class TestHoneywell(unittest.TestCase):
         config = {
             CONF_USERNAME: 'user',
             CONF_PASSWORD: 'pass',
+            honeywell.CONF_COOL_AWAY_TEMPERATURE: 18,
+            honeywell.CONF_HEAT_AWAY_TEMPERATURE: 28,
             honeywell.CONF_REGION: 'us',
         }
         bad_pass_config = {
             CONF_USERNAME: 'user',
+            honeywell.CONF_COOL_AWAY_TEMPERATURE: 18,
+            honeywell.CONF_HEAT_AWAY_TEMPERATURE: 28,
             honeywell.CONF_REGION: 'us',
         }
         bad_region_config = {
             CONF_USERNAME: 'user',
             CONF_PASSWORD: 'pass',
+            honeywell.CONF_COOL_AWAY_TEMPERATURE: 18,
+            honeywell.CONF_HEAT_AWAY_TEMPERATURE: 28,
             honeywell.CONF_REGION: 'un',
         }
 
@@ -47,7 +56,7 @@ class TestHoneywell(unittest.TestCase):
             honeywell.PLATFORM_SCHEMA(bad_region_config)
 
         hass = mock.MagicMock()
-        add_devices = mock.MagicMock()
+        add_entities = mock.MagicMock()
 
         locations = [
             mock.MagicMock(),
@@ -60,21 +69,24 @@ class TestHoneywell(unittest.TestCase):
         locations[0].devices_by_id.values.return_value = devices_1
         locations[1].devices_by_id.values.return_value = devices_2
 
-        result = honeywell.setup_platform(hass, config, add_devices)
+        result = honeywell.setup_platform(hass, config, add_entities)
         self.assertTrue(result)
         self.assertEqual(mock_sc.call_count, 1)
         self.assertEqual(mock_sc.call_args, mock.call('user', 'pass'))
         mock_ht.assert_has_calls([
-            mock.call(mock_sc.return_value, devices_1[0]),
-            mock.call(mock_sc.return_value, devices_2[0]),
-            mock.call(mock_sc.return_value, devices_2[1]),
+            mock.call(mock_sc.return_value, devices_1[0], 18, 28,
+                      'user', 'pass'),
+            mock.call(mock_sc.return_value, devices_2[0], 18, 28,
+                      'user', 'pass'),
+            mock.call(mock_sc.return_value, devices_2[1], 18, 28,
+                      'user', 'pass'),
         ])
 
     @mock.patch('somecomfort.SomeComfort')
     def test_setup_us_failures(self, mock_sc):
         """Test the US setup."""
         hass = mock.MagicMock()
-        add_devices = mock.MagicMock()
+        add_entities = mock.MagicMock()
         config = {
             CONF_USERNAME: 'user',
             CONF_PASSWORD: 'pass',
@@ -82,14 +94,14 @@ class TestHoneywell(unittest.TestCase):
         }
 
         mock_sc.side_effect = somecomfort.AuthError
-        result = honeywell.setup_platform(hass, config, add_devices)
+        result = honeywell.setup_platform(hass, config, add_entities)
         self.assertFalse(result)
-        self.assertFalse(add_devices.called)
+        self.assertFalse(add_entities.called)
 
         mock_sc.side_effect = somecomfort.SomeComfortError
-        result = honeywell.setup_platform(hass, config, add_devices)
+        result = honeywell.setup_platform(hass, config, add_entities)
         self.assertFalse(result)
-        self.assertFalse(add_devices.called)
+        self.assertFalse(add_entities.called)
 
     @mock.patch('somecomfort.SomeComfort')
     @mock.patch('homeassistant.components.climate.'
@@ -124,9 +136,9 @@ class TestHoneywell(unittest.TestCase):
         }
         mock_sc.return_value = mock.MagicMock(locations_by_id=locations)
         hass = mock.MagicMock()
-        add_devices = mock.MagicMock()
+        add_entities = mock.MagicMock()
         self.assertEqual(True,
-                         honeywell.setup_platform(hass, config, add_devices))
+                         honeywell.setup_platform(hass, config, add_entities))
 
         return mock_ht.call_args_list, mock_sc
 
@@ -173,8 +185,8 @@ class TestHoneywell(unittest.TestCase):
         mock_evo.return_value.temperatures.return_value = [
             {'id': 'foo'}, {'id': 'bar'}]
         hass = mock.MagicMock()
-        add_devices = mock.MagicMock()
-        self.assertTrue(honeywell.setup_platform(hass, config, add_devices))
+        add_entities = mock.MagicMock()
+        self.assertTrue(honeywell.setup_platform(hass, config, add_entities))
         self.assertEqual(mock_evo.call_count, 1)
         self.assertEqual(mock_evo.call_args, mock.call('user', 'pass'))
         self.assertEqual(mock_evo.return_value.temperatures.call_count, 1)
@@ -186,7 +198,7 @@ class TestHoneywell(unittest.TestCase):
             mock.call(mock_evo.return_value, 'foo', True, 20.0),
             mock.call(mock_evo.return_value, 'bar', False, 20.0),
         ])
-        self.assertEqual(2, add_devices.call_count)
+        self.assertEqual(2, add_entities.call_count)
 
     @mock.patch('evohomeclient.EvohomeClient')
     @mock.patch('homeassistant.components.climate.honeywell.'
@@ -205,8 +217,8 @@ class TestHoneywell(unittest.TestCase):
             honeywell.DEFAULT_AWAY_TEMPERATURE
 
         hass = mock.MagicMock()
-        add_devices = mock.MagicMock()
-        self.assertTrue(honeywell.setup_platform(hass, config, add_devices))
+        add_entities = mock.MagicMock()
+        self.assertTrue(honeywell.setup_platform(hass, config, add_entities))
         mock_round.assert_has_calls([
             mock.call(mock_evo.return_value, 'foo', True, 16),
             mock.call(mock_evo.return_value, 'bar', False, 16),
@@ -239,9 +251,9 @@ class TestHoneywell(unittest.TestCase):
             honeywell.CONF_REGION: 'eu',
         }
         mock_evo.return_value.temperatures.side_effect = socket.error
-        add_devices = mock.MagicMock()
+        add_entities = mock.MagicMock()
         hass = mock.MagicMock()
-        self.assertFalse(honeywell.setup_platform(hass, config, add_devices))
+        self.assertFalse(honeywell.setup_platform(hass, config, add_entities))
 
 
 class TestHoneywellRound(unittest.TestCase):
@@ -263,8 +275,10 @@ class TestHoneywellRound(unittest.TestCase):
         self.device.temperatures.side_effect = fake_temperatures
         self.round1 = honeywell.RoundThermostat(self.device, '1',
                                                 True, 16)
+        self.round1.update()
         self.round2 = honeywell.RoundThermostat(self.device, '2',
                                                 False, 17)
+        self.round2.update()
 
     def test_attributes(self):
         """Test the attributes."""
@@ -306,7 +320,7 @@ class TestHoneywellRound(unittest.TestCase):
             self.device.set_temperature.call_args, mock.call('House', 25)
         )
 
-    def test_set_operation_mode(self: unittest.TestCase) -> None:
+    def test_set_operation_mode(self) -> None:
         """Test setting the system operation."""
         self.round1.set_operation_mode('cool')
         self.assertEqual('cool', self.round1.current_operation)
@@ -324,8 +338,12 @@ class TestHoneywellUS(unittest.TestCase):
         """Test the setup method."""
         self.client = mock.MagicMock()
         self.device = mock.MagicMock()
+        self.cool_away_temp = 18
+        self.heat_away_temp = 28
         self.honeywell = honeywell.HoneywellUSThermostat(
-            self.client, self.device)
+            self.client, self.device,
+            self.cool_away_temp, self.heat_away_temp,
+            'user', 'password')
 
         self.device.fan_running = True
         self.device.name = 'test'
@@ -366,14 +384,12 @@ class TestHoneywellUS(unittest.TestCase):
         self.assertEqual(74, self.device.setpoint_cool)
         self.assertEqual(74, self.honeywell.target_temperature)
 
-    def test_set_operation_mode(self: unittest.TestCase) -> None:
+    def test_set_operation_mode(self) -> None:
         """Test setting the operation mode."""
         self.honeywell.set_operation_mode('cool')
-        self.assertEqual('cool', self.honeywell.current_operation)
         self.assertEqual('cool', self.device.system_mode)
 
         self.honeywell.set_operation_mode('heat')
-        self.assertEqual('heat', self.honeywell.current_operation)
         self.assertEqual('heat', self.device.system_mode)
 
     def test_set_temp_fail(self):
@@ -386,8 +402,10 @@ class TestHoneywellUS(unittest.TestCase):
         """Test the attributes."""
         expected = {
             honeywell.ATTR_FAN: 'running',
-            honeywell.ATTR_FANMODE: 'auto',
-            honeywell.ATTR_SYSTEM_MODE: 'heat',
+            ATTR_FAN_MODE: 'auto',
+            ATTR_OPERATION_MODE: 'heat',
+            ATTR_FAN_LIST: somecomfort.FAN_MODES,
+            ATTR_OPERATION_LIST: somecomfort.SYSTEM_MODES,
         }
         self.assertEqual(expected, self.honeywell.device_state_attributes)
         expected['fan'] = 'idle'
@@ -400,7 +418,29 @@ class TestHoneywellUS(unittest.TestCase):
         self.device.fan_mode = None
         expected = {
             honeywell.ATTR_FAN: 'idle',
-            honeywell.ATTR_FANMODE: None,
-            honeywell.ATTR_SYSTEM_MODE: 'heat',
+            ATTR_FAN_MODE: None,
+            ATTR_OPERATION_MODE: 'heat',
+            ATTR_FAN_LIST: somecomfort.FAN_MODES,
+            ATTR_OPERATION_LIST: somecomfort.SYSTEM_MODES,
         }
         self.assertEqual(expected, self.honeywell.device_state_attributes)
+
+    def test_heat_away_mode(self):
+        """Test setting the heat away mode."""
+        self.honeywell.set_operation_mode('heat')
+        self.assertFalse(self.honeywell.is_away_mode_on)
+        self.honeywell.turn_away_mode_on()
+        self.assertTrue(self.honeywell.is_away_mode_on)
+        self.assertEqual(self.device.setpoint_heat, self.heat_away_temp)
+        self.assertEqual(self.device.hold_heat, True)
+
+        self.honeywell.turn_away_mode_off()
+        self.assertFalse(self.honeywell.is_away_mode_on)
+        self.assertEqual(self.device.hold_heat, False)
+
+    @mock.patch('somecomfort.SomeComfort')
+    def test_retry(self, test_somecomfort):
+        """Test retry connection."""
+        old_device = self.honeywell._device
+        self.honeywell._retry()
+        self.assertEqual(self.honeywell._device, old_device)

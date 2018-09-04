@@ -11,7 +11,7 @@ DEVICES = []
 
 
 def init(empty=False):
-    """Initalize the platform with devices."""
+    """Initialize the platform with devices."""
     global DEVICES
 
     DEVICES = [] if empty else [
@@ -21,6 +21,7 @@ def init(empty=False):
     ]
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities_callback,
+                               discovery_info=None):
     """Find and return test switches."""
-    add_devices_callback(DEVICES)
+    async_add_entities_callback(DEVICES)

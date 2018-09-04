@@ -8,7 +8,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.scsgate as scsgate
+from homeassistant.components import scsgate
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_STATE, CONF_NAME, CONF_DEVICES)
@@ -23,24 +23,22 @@ CONF_SCENARIO = 'scenario'
 
 CONF_SCS_ID = 'scs_id'
 
-DOMAIN = 'scsgate'
-
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICES): vol.Schema({cv.slug: scsgate.SCSGATE_SCHEMA}),
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the SCSGate switches."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the SCSGate switches."""
     logger = logging.getLogger(__name__)
 
     _setup_traditional_switches(
-        logger=logger, config=config, add_devices_callback=add_devices)
+        logger=logger, config=config, add_entities_callback=add_entities)
 
     _setup_scenario_switches(logger=logger, config=config, hass=hass)
 
 
-def _setup_traditional_switches(logger, config, add_devices_callback):
+def _setup_traditional_switches(logger, config, add_entities_callback):
     """Add traditional SCSGate switches."""
     traditional = config.get(CONF_TRADITIONAL)
     switches = []
@@ -58,7 +56,7 @@ def _setup_traditional_switches(logger, config, add_devices_callback):
             switch = SCSGateSwitch(name=name, scs_id=scs_id, logger=logger)
             switches.append(switch)
 
-    add_devices_callback(switches)
+    add_entities_callback(switches)
     scsgate.SCSGATE.add_devices_to_register(switches)
 
 
@@ -141,7 +139,7 @@ class SCSGateSwitch(SwitchDevice):
             return
 
         self._toggled = message.toggled
-        self.update_ha_state()
+        self.schedule_update_ha_state()
 
         command = "off"
         if self._toggled:
@@ -154,10 +152,10 @@ class SCSGateSwitch(SwitchDevice):
         )
 
 
-class SCSGateScenarioSwitch(object):
+class SCSGateScenarioSwitch:
     """Provides a SCSGate scenario switch.
 
-    This switch is always in a 'off" state, when toggled it's used to trigger
+    This switch is always in an 'off" state, when toggled it's used to trigger
     events.
     """
 

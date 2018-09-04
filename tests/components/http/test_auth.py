@@ -1,169 +1,250 @@
 """The tests for the Home Assistant HTTP component."""
 # pylint: disable=protected-access
-import logging
-from ipaddress import ip_address, ip_network
+from ipaddress import ip_network
 from unittest.mock import patch
 
-import requests
+import pytest
+from aiohttp import BasicAuth, web
+from aiohttp.web_exceptions import HTTPUnauthorized
 
-from homeassistant import bootstrap, const
-import homeassistant.components.http as http
-from homeassistant.components.http.const import (
-    KEY_TRUSTED_NETWORKS, KEY_USE_X_FORWARDED_FOR, HTTP_HEADER_X_FORWARDED_FOR)
+from homeassistant.components.http.auth import setup_auth
+from homeassistant.components.http.const import KEY_AUTHENTICATED
+from homeassistant.components.http.real_ip import setup_real_ip
+from homeassistant.const import HTTP_HEADER_HA_AUTH
+from homeassistant.setup import async_setup_component
+from . import mock_real_ip
 
-from tests.common import get_test_instance_port, get_test_home_assistant
 
 API_PASSWORD = 'test1234'
-SERVER_PORT = get_test_instance_port()
-HTTP_BASE = '127.0.0.1:{}'.format(SERVER_PORT)
-HTTP_BASE_URL = 'http://{}'.format(HTTP_BASE)
-HA_HEADERS = {
-    const.HTTP_HEADER_HA_AUTH: API_PASSWORD,
-    const.HTTP_HEADER_CONTENT_TYPE: const.CONTENT_TYPE_JSON,
-}
+
 # Don't add 127.0.0.1/::1 as trusted, as it may interfere with other test cases
-TRUSTED_NETWORKS = ['192.0.2.0/24', '2001:DB8:ABCD::/48', '100.64.0.1',
-                    'FD01:DB8::1']
+TRUSTED_NETWORKS = [
+    ip_network('192.0.2.0/24'),
+    ip_network('2001:DB8:ABCD::/48'),
+    ip_network('100.64.0.1'),
+    ip_network('FD01:DB8::1'),
+]
 TRUSTED_ADDRESSES = ['100.64.0.1', '192.0.2.100', 'FD01:DB8::1',
                      '2001:DB8:ABCD::1']
 UNTRUSTED_ADDRESSES = ['198.51.100.1', '2001:DB8:FA1::1', '127.0.0.1', '::1']
 
-hass = None
+
+async def mock_handler(request):
+    """Return if request was authenticated."""
+    if not request[KEY_AUTHENTICATED]:
+        raise HTTPUnauthorized
+    return web.Response(status=200)
 
 
-def _url(path=''):
-    """Helper method to generate URLs."""
-    return HTTP_BASE_URL + path
+@pytest.fixture
+def app(hass):
+    """Fixture to set up a web.Application."""
+    app = web.Application()
+    app['hass'] = hass
+    app.router.add_get('/', mock_handler)
+    setup_real_ip(app, False, [])
+    return app
 
 
-# pylint: disable=invalid-name
-def setUpModule():
-    """Initialize a Home Assistant server."""
-    global hass
-
-    hass = get_test_home_assistant()
-
-    bootstrap.setup_component(
-        hass, http.DOMAIN, {
-            http.DOMAIN: {
-                http.CONF_API_PASSWORD: API_PASSWORD,
-                http.CONF_SERVER_PORT: SERVER_PORT,
-            }
-        }
-    )
-
-    bootstrap.setup_component(hass, 'api')
-
-    hass.http.app[KEY_TRUSTED_NETWORKS] = [
-        ip_network(trusted_network)
-        for trusted_network in TRUSTED_NETWORKS]
-
-    hass.start()
+@pytest.fixture
+def app2(hass):
+    """Fixture to set up a web.Application without real_ip middleware."""
+    app = web.Application()
+    app['hass'] = hass
+    app.router.add_get('/', mock_handler)
+    return app
 
 
-# pylint: disable=invalid-name
-def tearDownModule():
-    """Stop the Home Assistant server."""
-    hass.stop()
+async def test_auth_middleware_loaded_by_default(hass):
+    """Test accessing to server from banned IP when feature is off."""
+    with patch('homeassistant.components.http.setup_auth') as mock_setup:
+        await async_setup_component(hass, 'http', {
+            'http': {}
+        })
+
+    assert len(mock_setup.mock_calls) == 1
 
 
-class TestHttp:
-    """Test HTTP component."""
+async def test_access_without_password(app, aiohttp_client):
+    """Test access without password."""
+    setup_auth(app, [], False, api_password=None)
+    client = await aiohttp_client(app)
 
-    def test_access_denied_without_password(self):
-        """Test access without password."""
-        req = requests.get(_url(const.URL_API))
+    resp = await client.get('/')
+    assert resp.status == 200
 
-        assert req.status_code == 401
 
-    def test_access_denied_with_wrong_password_in_header(self):
-        """Test access with wrong password."""
-        req = requests.get(
-            _url(const.URL_API),
-            headers={const.HTTP_HEADER_HA_AUTH: 'wrongpassword'})
+async def test_access_with_password_in_header(app, aiohttp_client):
+    """Test access with password in header."""
+    setup_auth(app, [], False, api_password=API_PASSWORD)
+    client = await aiohttp_client(app)
 
-        assert req.status_code == 401
+    req = await client.get(
+        '/', headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
+    assert req.status == 200
 
-    def test_access_denied_with_x_forwarded_for(self, caplog):
-        """Test access denied through the X-Forwarded-For http header."""
-        hass.http.use_x_forwarded_for = True
-        for remote_addr in UNTRUSTED_ADDRESSES:
-            req = requests.get(_url(const.URL_API), headers={
-                HTTP_HEADER_X_FORWARDED_FOR: remote_addr})
+    req = await client.get(
+        '/', headers={HTTP_HEADER_HA_AUTH: 'wrong-pass'})
+    assert req.status == 401
 
-            assert req.status_code == 401, \
-                "{} shouldn't be trusted".format(remote_addr)
 
-    def test_access_denied_with_untrusted_ip(self, caplog):
-        """Test access with an untrusted ip address."""
-        for remote_addr in UNTRUSTED_ADDRESSES:
-            with patch('homeassistant.components.http.'
-                       'util.get_real_ip',
-                       return_value=ip_address(remote_addr)):
-                req = requests.get(
-                    _url(const.URL_API), params={'api_password': ''})
+async def test_access_with_password_in_query(app, aiohttp_client):
+    """Test access with password in URL."""
+    setup_auth(app, [], False, api_password=API_PASSWORD)
+    client = await aiohttp_client(app)
 
-                assert req.status_code == 401, \
-                    "{} shouldn't be trusted".format(remote_addr)
+    resp = await client.get('/', params={
+        'api_password': API_PASSWORD
+    })
+    assert resp.status == 200
 
-    def test_access_with_password_in_header(self, caplog):
-        """Test access with password in URL."""
-        # Hide logging from requests package that we use to test logging
-        caplog.set_level(
-            logging.WARNING, logger='requests.packages.urllib3.connectionpool')
+    resp = await client.get('/')
+    assert resp.status == 401
 
-        req = requests.get(
-            _url(const.URL_API),
-            headers={const.HTTP_HEADER_HA_AUTH: API_PASSWORD})
+    resp = await client.get('/', params={
+        'api_password': 'wrong-password'
+    })
+    assert resp.status == 401
 
-        assert req.status_code == 200
 
-        logs = caplog.text
+async def test_basic_auth_works(app, aiohttp_client):
+    """Test access with basic authentication."""
+    setup_auth(app, [], False, api_password=API_PASSWORD)
+    client = await aiohttp_client(app)
 
-        assert const.URL_API in logs
-        assert API_PASSWORD not in logs
+    req = await client.get(
+        '/',
+        auth=BasicAuth('homeassistant', API_PASSWORD))
+    assert req.status == 200
 
-    def test_access_denied_with_wrong_password_in_url(self):
-        """Test access with wrong password."""
-        req = requests.get(
-            _url(const.URL_API), params={'api_password': 'wrongpassword'})
+    req = await client.get(
+        '/',
+        auth=BasicAuth('wrong_username', API_PASSWORD))
+    assert req.status == 401
 
-        assert req.status_code == 401
+    req = await client.get(
+        '/',
+        auth=BasicAuth('homeassistant', 'wrong password'))
+    assert req.status == 401
 
-    def test_access_with_password_in_url(self, caplog):
-        """Test access with password in URL."""
-        # Hide logging from requests package that we use to test logging
-        caplog.set_level(
-            logging.WARNING, logger='requests.packages.urllib3.connectionpool')
+    req = await client.get(
+        '/',
+        headers={
+            'authorization': 'NotBasic abcdefg'
+        })
+    assert req.status == 401
 
-        req = requests.get(
-            _url(const.URL_API), params={'api_password': API_PASSWORD})
 
-        assert req.status_code == 200
+async def test_access_with_trusted_ip(app2, aiohttp_client):
+    """Test access with an untrusted ip address."""
+    setup_auth(app2, TRUSTED_NETWORKS, False, api_password='some-pass')
 
-        logs = caplog.text
+    set_mock_ip = mock_real_ip(app2)
+    client = await aiohttp_client(app2)
 
-        assert const.URL_API in logs
-        assert API_PASSWORD not in logs
+    for remote_addr in UNTRUSTED_ADDRESSES:
+        set_mock_ip(remote_addr)
+        resp = await client.get('/')
+        assert resp.status == 401, \
+            "{} shouldn't be trusted".format(remote_addr)
 
-    def test_access_granted_with_x_forwarded_for(self, caplog):
-        """Test access denied through the X-Forwarded-For http header."""
-        hass.http.app[KEY_USE_X_FORWARDED_FOR] = True
-        for remote_addr in TRUSTED_ADDRESSES:
-            req = requests.get(_url(const.URL_API), headers={
-                HTTP_HEADER_X_FORWARDED_FOR: remote_addr})
+    for remote_addr in TRUSTED_ADDRESSES:
+        set_mock_ip(remote_addr)
+        resp = await client.get('/')
+        assert resp.status == 200, \
+            "{} should be trusted".format(remote_addr)
 
-            assert req.status_code == 200, \
-                "{} should be trusted".format(remote_addr)
 
-    def test_access_granted_with_trusted_ip(self, caplog):
-        """Test access with trusted addresses."""
-        for remote_addr in TRUSTED_ADDRESSES:
-            with patch('homeassistant.components.http.'
-                       'auth.get_real_ip',
-                       return_value=ip_address(remote_addr)):
-                req = requests.get(
-                    _url(const.URL_API), params={'api_password': ''})
+async def test_auth_active_access_with_access_token_in_header(
+        hass, app, aiohttp_client, hass_access_token):
+    """Test access with access token in header."""
+    token = hass_access_token
+    setup_auth(app, [], True, api_password=None)
+    client = await aiohttp_client(app)
 
-                assert req.status_code == 200, \
-                    '{} should be trusted'.format(remote_addr)
+    req = await client.get(
+        '/', headers={'Authorization': 'Bearer {}'.format(token)})
+    assert req.status == 200
+
+    req = await client.get(
+        '/', headers={'AUTHORIZATION': 'Bearer {}'.format(token)})
+    assert req.status == 200
+
+    req = await client.get(
+        '/', headers={'authorization': 'Bearer {}'.format(token)})
+    assert req.status == 200
+
+    req = await client.get(
+        '/', headers={'Authorization': token})
+    assert req.status == 401
+
+    req = await client.get(
+        '/', headers={'Authorization': 'BEARER {}'.format(token)})
+    assert req.status == 401
+
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_active = False
+    req = await client.get(
+        '/', headers={'Authorization': 'Bearer {}'.format(token)})
+    assert req.status == 401
+
+
+async def test_auth_active_access_with_trusted_ip(app2, aiohttp_client):
+    """Test access with an untrusted ip address."""
+    setup_auth(app2, TRUSTED_NETWORKS, True, api_password=None)
+
+    set_mock_ip = mock_real_ip(app2)
+    client = await aiohttp_client(app2)
+
+    for remote_addr in UNTRUSTED_ADDRESSES:
+        set_mock_ip(remote_addr)
+        resp = await client.get('/')
+        assert resp.status == 401, \
+            "{} shouldn't be trusted".format(remote_addr)
+
+    for remote_addr in TRUSTED_ADDRESSES:
+        set_mock_ip(remote_addr)
+        resp = await client.get('/')
+        assert resp.status == 200, \
+            "{} should be trusted".format(remote_addr)
+
+
+async def test_auth_active_blocked_api_password_access(app, aiohttp_client):
+    """Test access using api_password should be blocked when auth.active."""
+    setup_auth(app, [], True, api_password=API_PASSWORD)
+    client = await aiohttp_client(app)
+
+    req = await client.get(
+        '/', headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
+    assert req.status == 401
+
+    resp = await client.get('/', params={
+        'api_password': API_PASSWORD
+    })
+    assert resp.status == 401
+
+    req = await client.get(
+        '/',
+        auth=BasicAuth('homeassistant', API_PASSWORD))
+    assert req.status == 401
+
+
+async def test_auth_legacy_support_api_password_access(app, aiohttp_client):
+    """Test access using api_password if auth.support_legacy."""
+    setup_auth(app, [], True, support_legacy=True, api_password=API_PASSWORD)
+    client = await aiohttp_client(app)
+
+    req = await client.get(
+        '/', headers={HTTP_HEADER_HA_AUTH: API_PASSWORD})
+    assert req.status == 200
+
+    resp = await client.get('/', params={
+        'api_password': API_PASSWORD
+    })
+    assert resp.status == 200
+
+    req = await client.get(
+        '/',
+        auth=BasicAuth('homeassistant', API_PASSWORD))
+    assert req.status == 200

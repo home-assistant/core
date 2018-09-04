@@ -11,7 +11,7 @@ class TestDateUtil(unittest.TestCase):
     """Test util date methods."""
 
     def setUp(self):
-        """Setup the tests."""
+        """Set up the tests."""
         self.orig_default_time_zone = dt_util.DEFAULT_TIME_ZONE
 
     def tearDown(self):
@@ -117,7 +117,7 @@ class TestDateUtil(unittest.TestCase):
         # confirm the ability to handle a string passed in
         delta = dt_util.as_timestamp("2016-01-01 12:12:12")
         delta -= dt_util.as_timestamp("2016-01-01 12:12:11")
-        self.assertEquals(1, delta)
+        self.assertEqual(1, delta)
 
     def test_parse_datetime_converts_correctly(self):
         """Test parse_datetime converts strings."""

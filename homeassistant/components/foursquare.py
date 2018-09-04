@@ -1,19 +1,17 @@
 """
-Allows utilizing the Foursquare (Swarm) API.
+Support for the Foursquare (Swarm) API.
 
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/foursquare/
 """
 import asyncio
 import logging
-import os
 
 import requests
 import voluptuous as vol
 
-from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_BAD_REQUEST
-from homeassistant.config import load_yaml_config_file
 import homeassistant.helpers.config_validation as cv
+from homeassistant.const import CONF_ACCESS_TOKEN, HTTP_BAD_REQUEST
 from homeassistant.components.http import HomeAssistantView
 
 _LOGGER = logging.getLogger(__name__)
@@ -49,10 +47,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the Foursquare component."""
-    descriptions = load_yaml_config_file(
-        os.path.join(os.path.dirname(__file__), 'services.yaml'))
-
+    """Set up the Foursquare component."""
     config = config[DOMAIN]
 
     def checkin_user(call):
@@ -72,7 +67,6 @@ def setup(hass, config):
 
     # Register our service with Home Assistant.
     hass.services.register(DOMAIN, 'checkin', checkin_user,
-                           descriptions[DOMAIN][SERVICE_CHECKIN],
                            schema=CHECKIN_SERVICE_SCHEMA)
 
     hass.http.register_view(FoursquarePushReceiver(config[CONF_PUSH_SECRET]))

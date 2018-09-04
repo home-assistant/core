@@ -6,7 +6,6 @@ https://home-assistant.io/components/camera.foscam/
 """
 import logging
 
-import requests
 import voluptuous as vol
 
 from homeassistant.components.camera import (Camera, PLATFORM_SCHEMA)
@@ -16,10 +15,14 @@ from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['libpyfoscam==1.0']
+
 CONF_IP = 'ip'
 
 DEFAULT_NAME = 'Foscam Camera'
 DEFAULT_PORT = 88
+
+FOSCAM_COMM_ERROR = -8
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_IP): cv.string,
@@ -30,39 +33,62 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup a Foscam IP Camera."""
-    add_devices([FoscamCamera(config)])
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up a Foscam IP Camera."""
+    add_entities([FoscamCam(config)])
 
 
-class FoscamCamera(Camera):
+class FoscamCam(Camera):
     """An implementation of a Foscam IP camera."""
 
     def __init__(self, device_info):
         """Initialize a Foscam camera."""
-        super(FoscamCamera, self).__init__()
+        from libpyfoscam import FoscamCamera
+
+        super(FoscamCam, self).__init__()
 
         ip_address = device_info.get(CONF_IP)
         port = device_info.get(CONF_PORT)
-
-        self._base_url = 'http://{}:{}/'.format(ip_address, port)
         self._username = device_info.get(CONF_USERNAME)
         self._password = device_info.get(CONF_PASSWORD)
-        self._snap_picture_url = self._base_url \
-            + 'cgi-bin/CGIProxy.fcgi?cmd=snapPicture2&usr=' \
-            + self._username + '&pwd=' + self._password
         self._name = device_info.get(CONF_NAME)
+        self._motion_status = False
 
-        _LOGGER.info('Using the following URL for %s: %s',
-                     self._name, self._snap_picture_url)
+        self._foscam_session = FoscamCamera(
+            ip_address, port, self._username, self._password, verbose=False)
 
     def camera_image(self):
-        """Return a still image reponse from the camera."""
+        """Return a still image response from the camera."""
         # Send the request to snap a picture and return raw jpg data
-        response = requests.get(self._snap_picture_url, timeout=10)
+        # Handle exception if host is not reachable or url failed
+        result, response = self._foscam_session.snap_picture_2()
+        if result == FOSCAM_COMM_ERROR:
+            return None
 
-        return response.content
+        return response
+
+    @property
+    def motion_detection_enabled(self):
+        """Camera Motion Detection Status."""
+        return self._motion_status
+
+    def enable_motion_detection(self):
+        """Enable motion detection in camera."""
+        try:
+            ret = self._foscam_session.enable_motion_detection()
+            self._motion_status = ret == FOSCAM_COMM_ERROR
+        except TypeError:
+            _LOGGER.debug("Communication problem")
+            self._motion_status = False
+
+    def disable_motion_detection(self):
+        """Disable motion detection."""
+        try:
+            ret = self._foscam_session.disable_motion_detection()
+            self._motion_status = ret == FOSCAM_COMM_ERROR
+        except TypeError:
+            _LOGGER.debug("Communication problem")
+            self._motion_status = False
 
     @property
     def name(self):

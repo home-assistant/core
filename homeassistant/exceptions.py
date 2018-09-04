@@ -1,14 +1,9 @@
-"""Exceptions used by Home Assistant."""
+"""The exceptions used by Home Assistant."""
+import jinja2
 
 
 class HomeAssistantError(Exception):
     """General Home Assistant exception occurred."""
-
-    pass
-
-
-class ShuttingDown(HomeAssistantError):
-    """When trying to change something during shutdown."""
 
     pass
 
@@ -28,7 +23,19 @@ class NoEntitySpecifiedError(HomeAssistantError):
 class TemplateError(HomeAssistantError):
     """Error during template rendering."""
 
-    def __init__(self, exception):
-        """Initalize the error."""
+    def __init__(self, exception: jinja2.TemplateError) -> None:
+        """Init the error."""
         super().__init__('{}: {}'.format(exception.__class__.__name__,
                                          exception))
+
+
+class PlatformNotReady(HomeAssistantError):
+    """Error to indicate that platform is not ready."""
+
+    pass
+
+
+class InvalidStateError(HomeAssistantError):
+    """When an invalid state is encountered."""
+
+    pass

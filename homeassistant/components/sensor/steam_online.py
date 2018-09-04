@@ -4,6 +4,8 @@ Sensor for Steam account status.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.steam_online/
 """
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -13,9 +15,19 @@ import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['steamodd==4.21']
 
+_LOGGER = logging.getLogger(__name__)
+
 CONF_ACCOUNTS = 'accounts'
 
 ICON = 'mdi:steam'
+
+STATE_OFFLINE = 'offline'
+STATE_ONLINE = 'online'
+STATE_BUSY = 'busy'
+STATE_AWAY = 'away'
+STATE_SNOOZE = 'snooze'
+STATE_LOOKING_TO_TRADE = 'looking_to_trade'
+STATE_LOOKING_TO_PLAY = 'looking_to_play'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -24,29 +36,35 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Steam platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Steam platform."""
     import steam as steamod
     steamod.api.key.set(config.get(CONF_API_KEY))
-    add_devices(
+    # Initialize steammods app list before creating sensors
+    # to benefit from internal caching of the list.
+    steam_app_list = steamod.apps.app_list()
+    add_entities(
         [SteamSensor(account,
-                     steamod) for account in config.get(CONF_ACCOUNTS)])
+                     steamod,
+                     steam_app_list)
+         for account in config.get(CONF_ACCOUNTS)], True)
 
 
 class SteamSensor(Entity):
     """A class for the Steam account."""
 
-    def __init__(self, account, steamod):
+    def __init__(self, account, steamod, steam_app_list):
         """Initialize the sensor."""
         self._steamod = steamod
+        self._steam_app_list = steam_app_list
         self._account = account
-        self.update()
+        self._profile = None
+        self._game = self._state = self._name = self._avatar = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return self._profile.persona
+        return self._name
 
     @property
     def entity_id(self):
@@ -58,32 +76,48 @@ class SteamSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    # pylint: disable=no-member
     def update(self):
         """Update device state."""
-        self._profile = self._steamod.user.profile(self._account)
-        if self._profile.current_game[2] is None:
-            self._game = 'None'
-        else:
-            self._game = self._profile.current_game[2]
-        self._state = {
-            1: 'Online',
-            2: 'Busy',
-            3: 'Away',
-            4: 'Snooze',
-            5: 'Trade',
-            6: 'Play',
-        }.get(self._profile.status, 'Offline')
+        try:
+            self._profile = self._steamod.user.profile(self._account)
+            self._game = self._get_current_game()
+            self._state = {
+                1: STATE_ONLINE,
+                2: STATE_BUSY,
+                3: STATE_AWAY,
+                4: STATE_SNOOZE,
+                5: STATE_LOOKING_TO_TRADE,
+                6: STATE_LOOKING_TO_PLAY,
+            }.get(self._profile.status, STATE_OFFLINE)
+            self._name = self._profile.persona
+            self._avatar = self._profile.avatar_medium
+        except self._steamod.api.HTTPTimeoutError as error:
+            _LOGGER.warning(error)
+            self._game = self._state = self._name = self._avatar = None
+
+    def _get_current_game(self):
+        game_id = self._profile.current_game[0]
+        game_extra_info = self._profile.current_game[2]
+
+        if game_extra_info:
+            return game_extra_info
+
+        if game_id and game_id in self._steam_app_list:
+            # The app list always returns a tuple
+            # with the game id and the game name
+            return self._steam_app_list[game_id][1]
+
+        return None
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {'Game': self._game}
+        return {'game': self._game} if self._game else None
 
     @property
     def entity_picture(self):
         """Avatar of the account."""
-        return self._profile.avatar_medium
+        return self._avatar
 
     @property
     def icon(self):

@@ -49,6 +49,7 @@ SENSOR_TYPES = {
     'linefreq': ['Line Frequency', 'Hz', 'mdi:information-outline'],
     'linev': ['Input Voltage', 'V', 'mdi:flash'],
     'loadpct': ['Load', '%', 'mdi:gauge'],
+    'loadapnt': ['Load Apparent Power', '%', 'mdi:gauge'],
     'lotrans': ['Transfer Low', 'V', 'mdi:flash'],
     'mandate': ['Manufacture Date', '', 'mdi:calendar'],
     'masterupd': ['Master Update', '', 'mdi:information-outline'],
@@ -62,7 +63,9 @@ SENSOR_TYPES = {
     'nominv': ['Nominal Input Voltage', 'V', 'mdi:flash'],
     'nomoutv': ['Nominal Output Voltage', 'V', 'mdi:flash'],
     'nompower': ['Nominal Output Power', 'W', 'mdi:flash'],
+    'nomapnt': ['Nominal Apparent Power', 'VA', 'mdi:flash'],
     'numxfers': ['Transfer Count', '', 'mdi:counter'],
+    'outcurnt': ['Output Current', 'A', 'mdi:flash'],
     'outputv': ['Output Voltage', 'V', 'mdi:flash'],
     'reg1': ['Register 1 Fault', '', 'mdi:information-outline'],
     'reg2': ['Register 2 Fault', '', 'mdi:information-outline'],
@@ -93,9 +96,12 @@ INFERRED_UNITS = {
     ' Seconds': 'sec',
     ' Percent': '%',
     ' Volts': 'V',
+    ' Ampere': 'A',
+    ' Volt-Ampere': 'VA',
     ' Watts': 'W',
     ' Hz': 'Hz',
     ' C': TEMP_CELSIUS,
+    ' Percent Load Capacity': '%',
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -105,7 +111,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup the APCUPSd sensors."""
+    """Set up the APCUPSd sensors."""
     entities = []
 
     for resource in config[CONF_RESOURCES]:
@@ -117,12 +123,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         if sensor_type.upper() not in apcupsd.DATA.status:
             _LOGGER.warning(
-                'Sensor type: "%s" does not appear in the APCUPSd status '
-                'output', sensor_type)
+                "Sensor type: %s does not appear in the APCUPSd status output",
+                sensor_type)
 
         entities.append(APCUPSdSensor(apcupsd.DATA, sensor_type))
 
-    add_entities(entities)
+    add_entities(entities, True)
 
 
 def infer_unit(value):
@@ -148,7 +154,7 @@ class APCUPSdSensor(Entity):
         self._name = SENSOR_PREFIX + SENSOR_TYPES[sensor_type][0]
         self._unit = SENSOR_TYPES[sensor_type][1]
         self._inferred_unit = None
-        self.update()
+        self._state = None
 
     @property
     def name(self):

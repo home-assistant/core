@@ -6,15 +6,21 @@ This will return a request id that has to be used for future calls.
 A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
+import asyncio
+import functools as ft
 import logging
 
+from homeassistant.core import callback as async_callback
 from homeassistant.const import EVENT_TIME_CHANGED, ATTR_FRIENDLY_NAME, \
     ATTR_ENTITY_PICTURE
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.loader import bind_hass
+from homeassistant.helpers.entity import async_generate_entity_id
+from homeassistant.util.async_ import run_callback_threadsafe
 
-_INSTANCES = {}
 _LOGGER = logging.getLogger(__name__)
-_REQUESTS = {}
+_KEY_INSTANCE = 'configurator'
+
+DATA_REQUESTS = 'configurator_requests'
 
 ATTR_CONFIGURE_ID = 'configure_id'
 ATTR_DESCRIPTION = 'description'
@@ -34,63 +40,95 @@ STATE_CONFIGURE = 'configure'
 STATE_CONFIGURED = 'configured'
 
 
-def request_config(
-        hass, name, callback, description=None, description_image=None,
+@bind_hass
+@async_callback
+def async_request_config(
+        hass, name, callback=None, description=None, description_image=None,
         submit_caption=None, fields=None, link_name=None, link_url=None,
         entity_picture=None):
     """Create a new request for configuration.
 
     Will return an ID to be used for sequent calls.
     """
-    instance = _get_instance(hass)
+    if link_name is not None and link_url is not None:
+        description += '\n\n[{}]({})'.format(link_name, link_url)
 
-    request_id = instance.request_config(
-        name, callback,
-        description, description_image, submit_caption,
-        fields, link_name, link_url, entity_picture)
+    if description_image is not None:
+        description += '\n\n![Description image]({})'.format(description_image)
 
-    _REQUESTS[request_id] = instance
+    instance = hass.data.get(_KEY_INSTANCE)
+
+    if instance is None:
+        instance = hass.data[_KEY_INSTANCE] = Configurator(hass)
+
+    request_id = instance.async_request_config(
+        name, callback, description, submit_caption, fields, entity_picture)
+
+    if DATA_REQUESTS not in hass.data:
+        hass.data[DATA_REQUESTS] = {}
+
+    hass.data[DATA_REQUESTS][request_id] = instance
 
     return request_id
 
 
-def notify_errors(request_id, error):
+@bind_hass
+def request_config(hass, *args, **kwargs):
+    """Create a new request for configuration.
+
+    Will return an ID to be used for sequent calls.
+    """
+    return run_callback_threadsafe(
+        hass.loop, ft.partial(async_request_config, hass, *args, **kwargs)
+    ).result()
+
+
+@bind_hass
+@async_callback
+def async_notify_errors(hass, request_id, error):
     """Add errors to a config request."""
     try:
-        _REQUESTS[request_id].notify_errors(request_id, error)
+        hass.data[DATA_REQUESTS][request_id].async_notify_errors(
+            request_id, error)
     except KeyError:
         # If request_id does not exist
         pass
 
 
-def request_done(request_id):
+@bind_hass
+def notify_errors(hass, request_id, error):
+    """Add errors to a config request."""
+    return run_callback_threadsafe(
+        hass.loop, async_notify_errors, hass, request_id, error
+    ).result()
+
+
+@bind_hass
+@async_callback
+def async_request_done(hass, request_id):
     """Mark a configuration request as done."""
     try:
-        _REQUESTS.pop(request_id).request_done(request_id)
+        hass.data[DATA_REQUESTS].pop(request_id).async_request_done(request_id)
     except KeyError:
         # If request_id does not exist
         pass
 
 
-def setup(hass, config):
-    """Setup the configurator component."""
+@bind_hass
+def request_done(hass, request_id):
+    """Mark a configuration request as done."""
+    return run_callback_threadsafe(
+        hass.loop, async_request_done, hass, request_id
+    ).result()
+
+
+@asyncio.coroutine
+def async_setup(hass, config):
+    """Set up the configurator component."""
     return True
 
 
-def _get_instance(hass):
-    """Get an instance per hass object."""
-    try:
-        return _INSTANCES[hass]
-    except KeyError:
-        _INSTANCES[hass] = Configurator(hass)
-
-        if DOMAIN not in hass.config.components:
-            hass.config.components.append(DOMAIN)
-
-        return _INSTANCES[hass]
-
-
-class Configurator(object):
+class Configurator:
     """The class to keep track of current configuration requests."""
 
     def __init__(self, hass):
@@ -98,15 +136,16 @@ class Configurator(object):
         self.hass = hass
         self._cur_id = 0
         self._requests = {}
-        hass.services.register(
-            DOMAIN, SERVICE_CONFIGURE, self.handle_service_call)
+        hass.services.async_register(
+            DOMAIN, SERVICE_CONFIGURE, self.async_handle_service_call)
 
-    def request_config(
-            self, name, callback,
-            description, description_image, submit_caption,
-            fields, link_name, link_url, entity_picture):
-        """Setup a request for configuration."""
-        entity_id = generate_entity_id(ENTITY_ID_FORMAT, name, hass=self.hass)
+    @async_callback
+    def async_request_config(
+            self, name, callback, description, submit_caption, fields,
+            entity_picture):
+        """Set up a request for configuration."""
+        entity_id = async_generate_entity_id(
+            ENTITY_ID_FORMAT, name, hass=self.hass)
 
         if fields is None:
             fields = []
@@ -125,18 +164,16 @@ class Configurator(object):
         data.update({
             key: value for key, value in [
                 (ATTR_DESCRIPTION, description),
-                (ATTR_DESCRIPTION_IMAGE, description_image),
                 (ATTR_SUBMIT_CAPTION, submit_caption),
-                (ATTR_LINK_NAME, link_name),
-                (ATTR_LINK_URL, link_url),
             ] if value is not None
         })
 
-        self.hass.states.set(entity_id, STATE_CONFIGURE, data)
+        self.hass.states.async_set(entity_id, STATE_CONFIGURE, data)
 
         return request_id
 
-    def notify_errors(self, request_id, error):
+    @async_callback
+    def async_notify_errors(self, request_id, error):
         """Update the state with errors."""
         if not self._validate_request_id(request_id):
             return
@@ -148,9 +185,10 @@ class Configurator(object):
         new_data = dict(state.attributes)
         new_data[ATTR_ERRORS] = error
 
-        self.hass.states.set(entity_id, STATE_CONFIGURE, new_data)
+        self.hass.states.async_set(entity_id, STATE_CONFIGURE, new_data)
 
-    def request_done(self, request_id):
+    @async_callback
+    def async_request_done(self, request_id):
         """Remove the configuration request."""
         if not self._validate_request_id(request_id):
             return
@@ -161,15 +199,16 @@ class Configurator(object):
         # the result fo the service call (current design limitation).
         # Instead, we will set it to configured to give as feedback but delete
         # it shortly after so that it is deleted when the client updates.
-        self.hass.states.set(entity_id, STATE_CONFIGURED)
+        self.hass.states.async_set(entity_id, STATE_CONFIGURED)
 
         def deferred_remove(event):
             """Remove the request state."""
-            self.hass.states.remove(entity_id)
+            self.hass.states.async_remove(entity_id)
 
-        self.hass.bus.listen_once(EVENT_TIME_CHANGED, deferred_remove)
+        self.hass.bus.async_listen_once(EVENT_TIME_CHANGED, deferred_remove)
 
-    def handle_service_call(self, call):
+    @asyncio.coroutine
+    def async_handle_service_call(self, call):
         """Handle a configure service call."""
         request_id = call.data.get(ATTR_CONFIGURE_ID)
 
@@ -180,8 +219,9 @@ class Configurator(object):
         entity_id, fields, callback = self._requests[request_id]
 
         # field validation goes here?
-
-        callback(call.data.get(ATTR_FIELDS, {}))
+        if callback:
+            yield from self.hass.async_add_job(callback,
+                                               call.data.get(ATTR_FIELDS, {}))
 
     def _generate_unique_id(self):
         """Generate a unique configurator ID."""

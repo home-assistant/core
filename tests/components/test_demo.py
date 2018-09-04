@@ -1,52 +1,68 @@
 """The tests for the Demo component."""
+import asyncio
 import json
 import os
-import unittest
 
-from homeassistant.bootstrap import setup_component
+import pytest
+
+from homeassistant.setup import async_setup_component
 from homeassistant.components import demo, device_tracker
-from homeassistant.remote import JSONEncoder
-
-from tests.common import mock_http_component, get_test_home_assistant
+from homeassistant.helpers.json import JSONEncoder
 
 
-class TestDemo(unittest.TestCase):
-    """Test the Demo component."""
+@pytest.fixture(autouse=True)
+def mock_history(hass):
+    """Mock history component loaded."""
+    hass.config.components.add('history')
 
-    def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
-        mock_http_component(self.hass)
 
-    def tearDown(self):  # pylint: disable=invalid-name
-        """Stop everything that was started."""
-        self.hass.stop()
+@pytest.fixture
+def minimize_demo_platforms(hass):
+    """Cleanup demo component for tests."""
+    orig = demo.COMPONENTS_WITH_DEMO_PLATFORM
+    demo.COMPONENTS_WITH_DEMO_PLATFORM = [
+        'switch', 'light', 'media_player']
 
-        try:
-            os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
-        except FileNotFoundError:
-            pass
+    yield
 
-    def test_if_demo_state_shows_by_default(self):
-        """Test if demo state shows if we give no configuration."""
-        setup_component(self.hass, demo.DOMAIN, {demo.DOMAIN: {}})
+    demo.COMPONENTS_WITH_DEMO_PLATFORM = orig
 
-        self.assertIsNotNone(self.hass.states.get('a.Demo_Mode'))
 
-    def test_hiding_demo_state(self):
-        """Test if you can hide the demo card."""
-        setup_component(self.hass, demo.DOMAIN, {
-            demo.DOMAIN: {'hide_demo_state': 1}})
+@pytest.fixture(autouse=True)
+def demo_cleanup(hass):
+    """Clean up device tracker demo file."""
+    yield
+    try:
+        os.remove(hass.config.path(device_tracker.YAML_DEVICES))
+    except FileNotFoundError:
+        pass
 
-        self.assertIsNone(self.hass.states.get('a.Demo_Mode'))
 
-    def test_all_entities_can_be_loaded_over_json(self):
-        """Test if you can hide the demo card."""
-        setup_component(self.hass, demo.DOMAIN, {
-            demo.DOMAIN: {'hide_demo_state': 1}})
+@asyncio.coroutine
+def test_if_demo_state_shows_by_default(hass, minimize_demo_platforms):
+    """Test if demo state shows if we give no configuration."""
+    yield from async_setup_component(hass, demo.DOMAIN, {demo.DOMAIN: {}})
 
-        try:
-            json.dumps(self.hass.states.all(), cls=JSONEncoder)
-        except Exception:
-            self.fail('Unable to convert all demo entities to JSON. '
-                      'Wrong data in state machine!')
+    assert hass.states.get('a.Demo_Mode') is not None
+
+
+@asyncio.coroutine
+def test_hiding_demo_state(hass, minimize_demo_platforms):
+    """Test if you can hide the demo card."""
+    yield from async_setup_component(hass, demo.DOMAIN, {
+        demo.DOMAIN: {'hide_demo_state': 1}})
+
+    assert hass.states.get('a.Demo_Mode') is None
+
+
+@asyncio.coroutine
+def test_all_entities_can_be_loaded_over_json(hass):
+    """Test if you can hide the demo card."""
+    yield from async_setup_component(hass, demo.DOMAIN, {
+        demo.DOMAIN: {'hide_demo_state': 1}})
+
+    try:
+        json.dumps(hass.states.async_all(), cls=JSONEncoder)
+    except Exception:
+        pytest.fail('Unable to convert all demo entities to JSON. '
+                    'Wrong data in state machine!')

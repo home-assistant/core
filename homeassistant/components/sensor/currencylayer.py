@@ -10,12 +10,11 @@ import logging
 import requests
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_API_KEY, CONF_NAME, CONF_BASE, CONF_QUOTE, ATTR_ATTRIBUTION)
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'http://apilayer.net/api/live'
@@ -27,7 +26,7 @@ DEFAULT_NAME = 'CurrencyLayer Sensor'
 
 ICON = 'mdi:currency'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(hours=2)
+SCAN_INTERVAL = timedelta(hours=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -37,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Currencylayer sensor."""
     base = config.get(CONF_BASE)
     api_key = config.get(CONF_API_KEY)
@@ -55,9 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(CurrencylayerSensor(rest, base, variable))
     if 'error' in response.json():
         return False
-    else:
-        add_devices(sensors)
-        rest.update()
+    add_entities(sensors, True)
 
 
 class CurrencylayerSensor(Entity):
@@ -68,12 +65,17 @@ class CurrencylayerSensor(Entity):
         self.rest = rest
         self._quote = quote
         self._base = base
-        self.update()
+        self._state = None
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity, if any."""
+        return self._quote
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._base, self._quote)
+        return self._base
 
     @property
     def icon(self):
@@ -101,7 +103,7 @@ class CurrencylayerSensor(Entity):
                 value['{}{}'.format(self._base, self._quote)], 4)
 
 
-class CurrencylayerData(object):
+class CurrencylayerData:
     """Get data from Currencylayer.org."""
 
     def __init__(self, resource, parameters):
@@ -110,7 +112,6 @@ class CurrencylayerData(object):
         self._parameters = parameters
         self.data = None
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Currencylayer."""
         try:

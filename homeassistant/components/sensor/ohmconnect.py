@@ -31,13 +31,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the OhmConnect sensor."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the OhmConnect sensor."""
     name = config.get(CONF_NAME)
     ohmid = config.get(CONF_ID)
 
-    add_devices([OhmconnectSensor(name, ohmid)])
+    add_entities([OhmconnectSensor(name, ohmid)], True)
 
 
 class OhmconnectSensor(Entity):
@@ -48,11 +47,10 @@ class OhmconnectSensor(Entity):
         self._name = name
         self._ohmid = ohmid
         self._data = {}
-        self.update()
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
@@ -60,8 +58,7 @@ class OhmconnectSensor(Entity):
         """Return the state of the sensor."""
         if self._data.get("active") == "True":
             return "Active"
-        else:
-            return "Inactive"
+        return "Inactive"
 
     @property
     def device_state_attributes(self):
@@ -81,4 +78,4 @@ class OhmconnectSensor(Entity):
                 self._data[child.tag] = child.text
         except requests.exceptions.ConnectionError:
             _LOGGER.error("No route to host/endpoint: %s", url)
-            self.data = {}
+            self._data = {}

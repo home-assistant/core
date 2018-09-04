@@ -10,9 +10,9 @@ import voluptuous as vol
 
 from homeassistant.const import TEMP_CELSIUS, ATTR_TEMPERATURE
 from homeassistant.components.climate import (
-    STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA)
+    STATE_HEAT, STATE_IDLE, ClimateDevice, PLATFORM_SCHEMA,
+    SUPPORT_TARGET_TEMPERATURE, SUPPORT_OPERATION_MODE, SUPPORT_AWAY_MODE)
 from homeassistant.util import Throttle
-from homeassistant.loader import get_component
 import homeassistant.helpers.config_validation as cv
 
 DEPENDENCIES = ['netatmo']
@@ -23,7 +23,7 @@ CONF_RELAY = 'relay'
 CONF_THERMOSTAT = 'thermostat'
 
 DEFAULT_AWAY_TEMPERATURE = 14
-# # The default offeset is 2 hours (when you use the thermostat itself)
+# # The default offset is 2 hours (when you use the thermostat itself)
 DEFAULT_TIME_OFFSET = 7200
 # # Return cached results if last scan was less then this time ago
 # # NetAtmo Data is uploaded to server every hour
@@ -35,13 +35,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
 })
 
+SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
+                 SUPPORT_AWAY_MODE)
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Setup the NetAtmo Thermostat."""
-    netatmo = get_component('netatmo')
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the NetAtmo Thermostat."""
+    netatmo = hass.components.netatmo
     device = config.get(CONF_RELAY)
 
-    import lnetatmo
+    import pyatmo
     try:
         data = ThermostatData(netatmo.NETATMO_AUTH, device)
         for module_name in data.get_module_names():
@@ -49,8 +52,8 @@ def setup_platform(hass, config, add_callback_devices, discovery_info=None):
                 if config[CONF_THERMOSTAT] != [] and \
                    module_name not in config[CONF_THERMOSTAT]:
                     continue
-            add_callback_devices([NetatmoThermostat(data, module_name)])
-    except lnetatmo.NoDevice:
+            add_entities([NetatmoThermostat(data, module_name)], True)
+    except pyatmo.NoDevice:
         return None
 
 
@@ -64,17 +67,16 @@ class NetatmoThermostat(ClimateDevice):
         self._name = module_name
         self._target_temperature = None
         self._away = None
-        self.update()
+
+    @property
+    def supported_features(self):
+        """Return the list of supported features."""
+        return SUPPORT_FLAGS
 
     @property
     def name(self):
         """Return the name of the sensor."""
         return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._target_temperature
 
     @property
     def temperature_unit(self):
@@ -97,7 +99,7 @@ class NetatmoThermostat(ClimateDevice):
         state = self._data.thermostatdata.relay_cmd
         if state == 0:
             return STATE_IDLE
-        elif state == 100:
+        if state == 100:
             return STATE_HEAT
 
     @property
@@ -111,7 +113,6 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = True
-        self.update_ha_state()
 
     def turn_away_mode_off(self):
         """Turn away off."""
@@ -119,19 +120,17 @@ class NetatmoThermostat(ClimateDevice):
         temp = None
         self._data.thermostatdata.setthermpoint(mode, temp, endTimeOffset=None)
         self._away = False
-        self.update_ha_state()
 
-    def set_temperature(self, endTimeOffset=DEFAULT_TIME_OFFSET, **kwargs):
+    def set_temperature(self, **kwargs):
         """Set new target temperature for 2 hours."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             return
         mode = "manual"
         self._data.thermostatdata.setthermpoint(
-            mode, temperature, endTimeOffset)
+            mode, temperature, DEFAULT_TIME_OFFSET)
         self._target_temperature = temperature
         self._away = False
-        self.update_ha_state()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
@@ -141,7 +140,7 @@ class NetatmoThermostat(ClimateDevice):
         self._away = self._data.setpoint_mode == 'away'
 
 
-class ThermostatData(object):
+class ThermostatData:
     """Get the latest data from Netatmo."""
 
     def __init__(self, auth, device=None):
@@ -153,7 +152,6 @@ class ThermostatData(object):
         self.current_temperature = None
         self.target_temperature = None
         self.setpoint_mode = None
-        # self.operation =
 
     def get_module_names(self):
         """Return all module available on the API as a list."""
@@ -170,8 +168,8 @@ class ThermostatData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the NetAtmo API to update the data."""
-        import lnetatmo
-        self.thermostatdata = lnetatmo.ThermostatData(self.auth)
+        import pyatmo
+        self.thermostatdata = pyatmo.ThermostatData(self.auth)
         self.target_temperature = self.thermostatdata.setpoint_temp
         self.setpoint_mode = self.thermostatdata.setpoint_mode
         self.current_temperature = self.thermostatdata.temp

@@ -1,0 +1,125 @@
+# People marked here will be automatically requested for a review
+# when the code that they own is touched.
+# https://github.com/blog/2392-introducing-code-owners
+
+setup.py @home-assistant/core
+homeassistant/*.py @home-assistant/core
+homeassistant/helpers/* @home-assistant/core
+homeassistant/util/* @home-assistant/core
+homeassistant/components/api.py @home-assistant/core
+homeassistant/components/automation/* @home-assistant/core
+homeassistant/components/configurator.py @home-assistant/core
+homeassistant/components/group.py @home-assistant/core
+homeassistant/components/history.py @home-assistant/core
+homeassistant/components/http/* @home-assistant/core
+homeassistant/components/input_*.py @home-assistant/core
+homeassistant/components/introduction.py @home-assistant/core
+homeassistant/components/logger.py @home-assistant/core
+homeassistant/components/mqtt/* @home-assistant/core
+homeassistant/components/panel_custom.py @home-assistant/core
+homeassistant/components/panel_iframe.py @home-assistant/core
+homeassistant/components/persistent_notification.py @home-assistant/core
+homeassistant/components/scene/__init__.py @home-assistant/core
+homeassistant/components/scene/hass.py @home-assistant/core
+homeassistant/components/script.py @home-assistant/core
+homeassistant/components/shell_command.py @home-assistant/core
+homeassistant/components/sun.py @home-assistant/core
+homeassistant/components/updater.py @home-assistant/core
+homeassistant/components/weblink.py @home-assistant/core
+homeassistant/components/websocket_api.py @home-assistant/core
+homeassistant/components/zone.py @home-assistant/core
+
+# HomeAssistant developer Teams
+Dockerfile @home-assistant/docker
+virtualization/Docker/* @home-assistant/docker
+
+homeassistant/components/zwave/* @home-assistant/z-wave
+homeassistant/components/*/zwave.py @home-assistant/z-wave
+
+homeassistant/components/hassio.py @home-assistant/hassio
+
+# Individual components
+homeassistant/components/alarm_control_panel/egardia.py @jeroenterheerdt
+homeassistant/components/alarm_control_panel/manual_mqtt.py @colinodell
+homeassistant/components/binary_sensor/hikvision.py @mezz64
+homeassistant/components/bmw_connected_drive.py @ChristianKuehnel
+homeassistant/components/camera/yi.py @bachya
+homeassistant/components/climate/ephember.py @ttroy50
+homeassistant/components/climate/eq3btsmart.py @rytilahti
+homeassistant/components/climate/sensibo.py @andrey-git
+homeassistant/components/cover/group.py @cdce8p
+homeassistant/components/cover/template.py @PhracturedBlue
+homeassistant/components/device_tracker/automatic.py @armills
+homeassistant/components/device_tracker/tile.py @bachya
+homeassistant/components/history_graph.py @andrey-git
+homeassistant/components/light/lifx.py @amelchio
+homeassistant/components/light/lifx_legacy.py @amelchio
+homeassistant/components/light/tplink.py @rytilahti
+homeassistant/components/light/yeelight.py @rytilahti
+homeassistant/components/lock/nello.py @pschmitt
+homeassistant/components/lock/nuki.py @pschmitt
+homeassistant/components/media_player/emby.py @mezz64
+homeassistant/components/media_player/kodi.py @armills
+homeassistant/components/media_player/liveboxplaytv.py @pschmitt
+homeassistant/components/media_player/mediaroom.py @dgomes
+homeassistant/components/media_player/monoprice.py @etsinko
+homeassistant/components/media_player/sonos.py @amelchio
+homeassistant/components/media_player/xiaomi_tv.py @fattdev
+homeassistant/components/media_player/yamaha_musiccast.py @jalmeroth
+homeassistant/components/plant.py @ChristianKuehnel
+homeassistant/components/scene/lifx_cloud.py @amelchio
+homeassistant/components/sensor/airvisual.py @bachya
+homeassistant/components/sensor/filter.py @dgomes
+homeassistant/components/sensor/gearbest.py @HerrHofrat
+homeassistant/components/sensor/irish_rail_transport.py @ttroy50
+homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
+homeassistant/components/sensor/nsw_fuel_station.py @nickw444
+homeassistant/components/sensor/pollen.py @bachya
+homeassistant/components/sensor/qnap.py @colinodell
+homeassistant/components/sensor/sma.py @kellerza
+homeassistant/components/sensor/sql.py @dgomes
+homeassistant/components/sensor/sytadin.py @gautric
+homeassistant/components/sensor/tibber.py @danielhiversen
+homeassistant/components/sensor/upnp.py @dgomes
+homeassistant/components/sensor/waqi.py @andrey-git
+homeassistant/components/switch/tplink.py @rytilahti
+homeassistant/components/vacuum/roomba.py @pschmitt
+homeassistant/components/xiaomi_aqara.py @danielhiversen @syssi
+
+homeassistant/components/*/axis.py @kane610
+homeassistant/components/*/bmw_connected_drive.py @ChristianKuehnel
+homeassistant/components/*/broadlink.py @danielhiversen
+homeassistant/components/*/deconz.py @kane610
+homeassistant/components/ecovacs.py @OverloadUT
+homeassistant/components/*/ecovacs.py @OverloadUT
+homeassistant/components/eight_sleep.py @mezz64
+homeassistant/components/*/eight_sleep.py @mezz64
+homeassistant/components/hive.py @Rendili @KJonline
+homeassistant/components/*/hive.py @Rendili @KJonline
+homeassistant/components/homekit/* @cdce8p
+homeassistant/components/knx.py @Julius2342
+homeassistant/components/*/knx.py @Julius2342
+homeassistant/components/konnected.py @heythisisnate
+homeassistant/components/*/konnected.py @heythisisnate
+homeassistant/components/matrix.py @tinloaf
+homeassistant/components/*/matrix.py @tinloaf
+homeassistant/components/openuv.py @bachya
+homeassistant/components/*/openuv.py @bachya
+homeassistant/components/qwikswitch.py @kellerza
+homeassistant/components/*/qwikswitch.py @kellerza
+homeassistant/components/rainmachine/* @bachya
+homeassistant/components/*/rainmachine.py @bachya
+homeassistant/components/*/rfxtrx.py @danielhiversen
+homeassistant/components/tahoma.py @philklei
+homeassistant/components/*/tahoma.py @philklei
+homeassistant/components/tesla.py @zabuldon
+homeassistant/components/*/tesla.py @zabuldon
+homeassistant/components/tellduslive.py @molobrakos @fredrike
+homeassistant/components/*/tellduslive.py @molobrakos @fredrike
+homeassistant/components/*/tradfri.py @ggravlingen
+homeassistant/components/velux.py @Julius2342
+homeassistant/components/*/velux.py @Julius2342
+homeassistant/components/*/xiaomi_aqara.py @danielhiversen @syssi
+homeassistant/components/*/xiaomi_miio.py @rytilahti @syssi
+
+homeassistant/scripts/check_config.py @kellerza

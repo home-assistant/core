@@ -6,6 +6,7 @@ https://home-assistant.io/components/sensor.pvoutput/
 """
 import logging
 from collections import namedtuple
+from datetime import timedelta
 
 import voluptuous as vol
 
@@ -14,24 +15,24 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import (
-    ATTR_TEMPERATURE, CONF_API_KEY, CONF_NAME, STATE_UNKNOWN)
+    ATTR_TEMPERATURE, CONF_API_KEY, CONF_NAME, ATTR_DATE, ATTR_TIME,
+    ATTR_VOLTAGE)
 
 _LOGGER = logging.getLogger(__name__)
 _ENDPOINT = 'http://pvoutput.org/service/r2/getstatus.jsp'
 
-ATTR_DATE = 'date'
-ATTR_TIME = 'time'
 ATTR_ENERGY_GENERATION = 'energy_generation'
 ATTR_POWER_GENERATION = 'power_generation'
 ATTR_ENERGY_CONSUMPTION = 'energy_consumption'
 ATTR_POWER_CONSUMPTION = 'power_consumption'
 ATTR_EFFICIENCY = 'efficiency'
-ATTR_VOLTAGE = 'voltage'
 
 CONF_SYSTEM_ID = 'system_id'
 
 DEFAULT_NAME = 'PVOutput'
 DEFAULT_VERIFY_SSL = True
+
+SCAN_INTERVAL = timedelta(minutes=2)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_API_KEY): cv.string,
@@ -40,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PVOutput sensor."""
     name = config.get(CONF_NAME)
     api_key = config.get(CONF_API_KEY)
@@ -60,10 +61,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to fetch data from PVOutput")
         return False
 
-    add_devices([PvoutputSensor(rest, name)])
+    add_entities([PvoutputSensor(rest, name)], True)
 
 
-# pylint: disable=no-member
 class PvoutputSensor(Entity):
     """Representation of a PVOutput sensor."""
 
@@ -71,14 +71,12 @@ class PvoutputSensor(Entity):
         """Initialize a PVOutput sensor."""
         self.rest = rest
         self._name = name
-        self.pvcoutput = False
+        self.pvcoutput = None
         self.status = namedtuple(
             'status', [ATTR_DATE, ATTR_TIME, ATTR_ENERGY_GENERATION,
                        ATTR_POWER_GENERATION, ATTR_ENERGY_CONSUMPTION,
                        ATTR_POWER_CONSUMPTION, ATTR_EFFICIENCY,
                        ATTR_TEMPERATURE, ATTR_VOLTAGE])
-
-        self.update()
 
     @property
     def name(self):
@@ -90,8 +88,7 @@ class PvoutputSensor(Entity):
         """Return the state of the device."""
         if self.pvcoutput is not None:
             return self.pvcoutput.energy_generation
-        else:
-            return STATE_UNKNOWN
+        return None
 
     @property
     def device_state_attributes(self):

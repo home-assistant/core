@@ -9,41 +9,44 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
+    MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA)
+    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_HOST, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, STATE_HOME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = [
-    'https://github.com/bah2830/python-roku/archive/3.1.2.zip'
-    '#roku==3.1.2']
+REQUIREMENTS = ['python-roku==3.1.5']
 
 KNOWN_HOSTS = []
 DEFAULT_PORT = 8060
+
+NOTIFICATION_ID = 'roku_notification'
+NOTIFICATION_TITLE = 'Roku Media Player Setup'
 
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORT_ROKU = SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK |\
     SUPPORT_PLAY_MEDIA | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
-    SUPPORT_SELECT_SOURCE
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Roku platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Roku platform."""
     hosts = []
 
-    if discovery_info and discovery_info in KNOWN_HOSTS:
-        return
+    if discovery_info:
+        host = discovery_info.get("host")
 
-    if discovery_info is not None:
-        _LOGGER.debug('Discovered Roku: %s', discovery_info[0])
-        hosts.append(discovery_info[0])
+        if host in KNOWN_HOSTS:
+            return
+
+        _LOGGER.debug("Discovered Roku: %s", host)
+        hosts.append(discovery_info.get("host"))
 
     elif CONF_HOST in config:
         hosts.append(config.get(CONF_HOST))
@@ -52,13 +55,25 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for host in hosts:
         new_roku = RokuDevice(host)
 
-        if new_roku.name is None:
-            _LOGGER.error("Unable to initialize roku at %s", host)
-        else:
-            rokus.append(RokuDevice(host))
-            KNOWN_HOSTS.append(host)
+        try:
+            if new_roku.name is not None:
+                rokus.append(RokuDevice(host))
+                KNOWN_HOSTS.append(host)
+            else:
+                _LOGGER.error("Unable to initialize roku at %s", host)
 
-    add_devices(rokus)
+        except AttributeError:
+            _LOGGER.error("Unable to initialize roku at %s", host)
+            hass.components.persistent_notification.create(
+                'Error: Unable to initialize roku at {}<br />'
+                'Check its network connection or consider '
+                'using auto discovery.<br />'
+                'You will need to restart hass after fixing.'
+                ''.format(config.get(CONF_HOST)),
+                title=NOTIFICATION_TITLE,
+                notification_id=NOTIFICATION_ID)
+
+    add_entities(rokus)
 
 
 class RokuDevice(MediaPlayerDevice):
@@ -69,10 +84,10 @@ class RokuDevice(MediaPlayerDevice):
         from roku import Roku
 
         self.roku = Roku(host)
-        self.roku_name = None
         self.ip_address = host
         self.channels = []
         self.current_app = None
+        self._device_info = {}
 
         self.update()
 
@@ -81,7 +96,7 @@ class RokuDevice(MediaPlayerDevice):
         import requests.exceptions
 
         try:
-            self.roku_name = "roku_" + self.roku.device_info.sernum
+            self._device_info = self.roku.device_info
             self.ip_address = self.roku.host
             self.channels = self.get_source_list()
 
@@ -106,7 +121,9 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return self.roku_name
+        if self._device_info.userdevicename:
+            return self._device_info.userdevicename
+        return "Roku {}".format(self._device_info.sernum)
 
     @property
     def state(self):
@@ -114,47 +131,51 @@ class RokuDevice(MediaPlayerDevice):
         if self.current_app is None:
             return STATE_UNKNOWN
 
-        if self.current_app.name in ["Power Saver", "Default screensaver"]:
+        if (self.current_app.name == "Power Saver" or
+                self.current_app.is_screensaver):
             return STATE_IDLE
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return STATE_HOME
-        elif self.current_app.name is not None:
+        if self.current_app.name is not None:
             return STATE_PLAYING
 
         return STATE_UNKNOWN
 
     @property
-    def supported_media_commands(self):
-        """Flag of media commands that are supported."""
+    def supported_features(self):
+        """Flag media player features that are supported."""
         return SUPPORT_ROKU
+
+    @property
+    def unique_id(self):
+        """Return a unique, HASS-friendly identifier for this entity."""
+        return self._device_info.sernum
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
         if self.current_app is None:
             return None
-        elif self.current_app.name == "Power Saver":
+        if self.current_app.name == "Power Saver":
             return None
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return None
-        else:
-            return MEDIA_TYPE_VIDEO
+        return MEDIA_TYPE_MOVIE
 
     @property
     def media_image_url(self):
         """Image url of current playing media."""
         if self.current_app is None:
             return None
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return None
-        elif self.current_app.name == "Power Saver":
+        if self.current_app.name == "Power Saver":
             return None
-        elif self.current_app.id is None:
+        if self.current_app.id is None:
             return None
 
-        return 'http://{0}:{1}/query/icon/{2}'.format(self.ip_address,
-                                                      DEFAULT_PORT,
-                                                      self.current_app.id)
+        return 'http://{0}:{1}/query/icon/{2}'.format(
+            self.ip_address, DEFAULT_PORT, self.current_app.id)
 
     @property
     def app_name(self):

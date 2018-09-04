@@ -52,7 +52,7 @@ def trigger(hass, event, value1=None, value2=None, value3=None):
 
 
 def setup(hass, config):
-    """Setup the IFTTT service component."""
+    """Set up the IFTTT service component."""
     key = config[DOMAIN][CONF_KEY]
 
     def trigger_service(call):
@@ -63,7 +63,7 @@ def setup(hass, config):
         value3 = call.data.get(ATTR_VALUE3)
 
         try:
-            import pyfttt as pyfttt
+            import pyfttt
             pyfttt.send_event(key, event, value1, value2, value3)
         except requests.exceptions.RequestException:
             _LOGGER.exception("Error communicating with IFTTT")

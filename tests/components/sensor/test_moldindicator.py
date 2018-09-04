@@ -1,7 +1,7 @@
 """The tests for the MoldIndicator sensor."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 from homeassistant.components.sensor.mold_indicator import (ATTR_DEWPOINT,
                                                             ATTR_CRITICAL_TEMP)
@@ -15,7 +15,7 @@ class TestSensorMoldIndicator(unittest.TestCase):
     """Test the MoldIndicator sensor."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.states.set('test.indoortemp', '20',
                              {ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS})

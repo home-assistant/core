@@ -1,4 +1,4 @@
-"""Test fan component plaforms."""
+"""Tests for fan platforms."""
 
 import unittest
 
@@ -17,7 +17,7 @@ class TestFanEntity(unittest.TestCase):
     """Test coverage for base fan entity class."""
 
     def setUp(self):
-        """Setup test data."""
+        """Set up test data."""
         self.fan = BaseFan()
 
     def tearDown(self):

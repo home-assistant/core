@@ -4,12 +4,13 @@ import unittest
 from unittest.mock import patch
 
 from homeassistant.core import callback
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
 
 from tests.common import (
-    fire_time_changed, get_test_home_assistant, assert_setup_component)
+    fire_time_changed, get_test_home_assistant, assert_setup_component,
+    mock_component)
 
 
 # pylint: disable=invalid-name
@@ -17,14 +18,14 @@ class TestAutomationTime(unittest.TestCase):
     """Test the event automation."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components.append('group')
+        mock_component(self.hass, 'group')
         self.calls = []
 
         @callback
         def record_call(service):
-            """Helper to record calls."""
+            """Record calls."""
             self.calls.append(service)
 
         self.hass.services.register('test', 'automation', record_call)
@@ -178,13 +179,13 @@ class TestAutomationTime(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
-    def test_if_fires_using_after(self):
-        """Test for firing after."""
+    def test_if_fires_using_at(self):
+        """Test for firing at."""
         assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'time',
-                    'after': '5:00:00',
+                    'at': '5:00:00',
                 },
                 'action': {
                     'service': 'test.automation',
@@ -206,7 +207,7 @@ class TestAutomationTime(unittest.TestCase):
     def test_if_not_working_if_no_values_in_conf_provided(self):
         """Test for failure if no configuration."""
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'time',
@@ -223,17 +224,17 @@ class TestAutomationTime(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
-    def test_if_not_fires_using_wrong_after(self):
+    def test_if_not_fires_using_wrong_at(self):
         """YAML translates time values to total seconds.
 
         This should break the before rule.
         """
         with assert_setup_component(0):
-            assert not setup_component(self.hass, automation.DOMAIN, {
+            assert setup_component(self.hass, automation.DOMAIN, {
                 automation.DOMAIN: {
                     'trigger': {
                         'platform': 'time',
-                        'after': 3605,
+                        'at': 3605,
                         # Total seconds. Hour = 3600 second
                     },
                     'action': {

@@ -1,86 +1,186 @@
 """The tests for the panel_custom component."""
-import os
-import shutil
-import unittest
 from unittest.mock import Mock, patch
 
-from homeassistant import bootstrap
-from homeassistant.components import panel_custom
-
-from tests.common import get_test_home_assistant
+from homeassistant import setup
+from homeassistant.components import frontend
 
 
-@patch('homeassistant.components.frontend.setup',
-       autospec=True, return_value=True)
-class TestPanelCustom(unittest.TestCase):
-    """Test the panel_custom component."""
+async def test_webcomponent_custom_path_not_found(hass):
+    """Test if a web component is found in config panels dir."""
+    filename = 'mock.file'
 
-    def setup_method(self, method):
-        """Setup things to be run when tests are started."""
-        self.hass = get_test_home_assistant()
+    config = {
+        'panel_custom': {
+            'name': 'todomvc',
+            'webcomponent_path': filename,
+            'sidebar_title': 'Sidebar Title',
+            'sidebar_icon': 'mdi:iconicon',
+            'url_path': 'nice_url',
+            'config': 5,
+        }
+    }
 
-    def teardown_method(self, method):
-        """Stop everything that was started."""
-        self.hass.stop()
-        shutil.rmtree(self.hass.config.path(panel_custom.PANEL_DIR),
-                      ignore_errors=True)
+    with patch('os.path.isfile', Mock(return_value=False)):
+        result = await setup.async_setup_component(
+            hass, 'panel_custom', config
+        )
+        assert not result
+        assert len(hass.data.get(frontend.DATA_PANELS, {})) == 0
 
-    @patch('homeassistant.components.panel_custom.register_panel')
-    def test_webcomponent_in_panels_dir(self, mock_register, _mock_setup):
-        """Test if a web component is found in config panels dir."""
-        config = {
-            'panel_custom': {
-                'name': 'todomvc',
+
+async def test_webcomponent_custom_path(hass):
+    """Test if a web component is found in config panels dir."""
+    filename = 'mock.file'
+
+    config = {
+        'panel_custom': {
+            'name': 'todo-mvc',
+            'webcomponent_path': filename,
+            'sidebar_title': 'Sidebar Title',
+            'sidebar_icon': 'mdi:iconicon',
+            'url_path': 'nice_url',
+            'config': {
+                'hello': 'world',
             }
         }
+    }
 
-        assert not bootstrap.setup_component(self.hass, 'panel_custom', config)
-        assert not mock_register.called
-
-        path = self.hass.config.path(panel_custom.PANEL_DIR)
-        os.mkdir(path)
-
-        with open(os.path.join(path, 'todomvc.html'), 'a'):
-            assert bootstrap.setup_component(self.hass, 'panel_custom', config)
-            assert mock_register.called
-
-    @patch('homeassistant.components.panel_custom.register_panel')
-    def test_webcomponent_custom_path(self, mock_register, _mock_setup):
-        """Test if a web component is found in config panels dir."""
-        filename = 'mock.file'
-
-        config = {
-            'panel_custom': {
-                'name': 'todomvc',
-                'webcomponent_path': filename,
-                'sidebar_title': 'Sidebar Title',
-                'sidebar_icon': 'mdi:iconicon',
-                'url_path': 'nice_url',
-                'config': 5,
-            }
-        }
-
-        with patch('os.path.isfile', Mock(return_value=False)):
-            assert not bootstrap.setup_component(
-                self.hass, 'panel_custom', config
+    with patch('os.path.isfile', Mock(return_value=True)):
+        with patch('os.access', Mock(return_value=True)):
+            result = await setup.async_setup_component(
+                hass, 'panel_custom', config
             )
-            assert not mock_register.called
+            assert result
 
-        with patch('os.path.isfile', Mock(return_value=True)):
-            with patch('os.access', Mock(return_value=True)):
-                assert bootstrap.setup_component(
-                    self.hass, 'panel_custom', config
-                )
+            panels = hass.data.get(frontend.DATA_PANELS, [])
 
-                assert mock_register.called
+            assert panels
+            assert 'nice_url' in panels
 
-                args = mock_register.mock_calls[0][1]
-                assert args == (self.hass, 'todomvc', filename)
+            panel = panels['nice_url']
 
-                kwargs = mock_register.mock_calls[0][2]
-                assert kwargs == {
-                    'config': 5,
-                    'url_path': 'nice_url',
-                    'sidebar_icon': 'mdi:iconicon',
-                    'sidebar_title': 'Sidebar Title'
-                }
+            assert panel.config == {
+                'hello': 'world',
+                '_panel_custom': {
+                    'html_url': '/api/panel_custom/todo-mvc',
+                    'name': 'todo-mvc',
+                    'embed_iframe': False,
+                    'trust_external': False,
+                },
+            }
+            assert panel.frontend_url_path == 'nice_url'
+            assert panel.sidebar_icon == 'mdi:iconicon'
+            assert panel.sidebar_title == 'Sidebar Title'
+
+
+async def test_js_webcomponent(hass):
+    """Test if a web component is found in config panels dir."""
+    config = {
+        'panel_custom': {
+            'name': 'todo-mvc',
+            'js_url': '/local/bla.js',
+            'sidebar_title': 'Sidebar Title',
+            'sidebar_icon': 'mdi:iconicon',
+            'url_path': 'nice_url',
+            'config': {
+                'hello': 'world',
+            },
+            'embed_iframe': True,
+            'trust_external_script': True,
+        }
+    }
+
+    result = await setup.async_setup_component(
+        hass, 'panel_custom', config
+    )
+    assert result
+
+    panels = hass.data.get(frontend.DATA_PANELS, [])
+
+    assert panels
+    assert 'nice_url' in panels
+
+    panel = panels['nice_url']
+
+    assert panel.config == {
+        'hello': 'world',
+        '_panel_custom': {
+            'js_url': '/local/bla.js',
+            'name': 'todo-mvc',
+            'embed_iframe': True,
+            'trust_external': True,
+        }
+    }
+    assert panel.frontend_url_path == 'nice_url'
+    assert panel.sidebar_icon == 'mdi:iconicon'
+    assert panel.sidebar_title == 'Sidebar Title'
+
+
+async def test_module_webcomponent(hass):
+    """Test if a js module is found in config panels dir."""
+    config = {
+        'panel_custom': {
+            'name': 'todo-mvc',
+            'module_url': '/local/bla.js',
+            'sidebar_title': 'Sidebar Title',
+            'sidebar_icon': 'mdi:iconicon',
+            'url_path': 'nice_url',
+            'config': {
+                'hello': 'world',
+            },
+            'embed_iframe': True,
+            'trust_external_script': True,
+        }
+    }
+
+    result = await setup.async_setup_component(
+        hass, 'panel_custom', config
+    )
+    assert result
+
+    panels = hass.data.get(frontend.DATA_PANELS, [])
+
+    assert panels
+    assert 'nice_url' in panels
+
+    panel = panels['nice_url']
+
+    assert panel.config == {
+        'hello': 'world',
+        '_panel_custom': {
+            'module_url': '/local/bla.js',
+            'name': 'todo-mvc',
+            'embed_iframe': True,
+            'trust_external': True,
+        }
+    }
+    assert panel.frontend_url_path == 'nice_url'
+    assert panel.sidebar_icon == 'mdi:iconicon'
+    assert panel.sidebar_title == 'Sidebar Title'
+
+
+async def test_url_option_conflict(hass):
+    """Test config with multiple url options."""
+    to_try = [
+        {'panel_custom': {
+            'name': 'todo-mvc',
+            'module_url': '/local/bla.js',
+            'js_url': '/local/bla.js',
+        }
+        }, {'panel_custom': {
+            'name': 'todo-mvc',
+            'webcomponent_path': '/local/bla.html',
+            'js_url': '/local/bla.js',
+        }}, {'panel_custom': {
+            'name': 'todo-mvc',
+            'webcomponent_path': '/local/bla.html',
+            'module_url': '/local/bla.js',
+            'js_url': '/local/bla.js',
+        }}
+    ]
+
+    for config in to_try:
+        result = await setup.async_setup_component(
+            hass, 'panel_custom', config
+        )
+        assert not result

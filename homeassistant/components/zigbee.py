@@ -4,10 +4,9 @@ Support for ZigBee devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zigbee/
 """
+import asyncio
 import logging
-import pickle
 from binascii import hexlify, unhexlify
-from base64 import b64encode, b64decode
 
 import voluptuous as vol
 
@@ -15,6 +14,8 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_DEVICE, CONF_NAME, CONF_PIN)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
 
 REQUIREMENTS = ['xbee-helper==0.0.7']
 
@@ -22,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'zigbee'
 
-EVENT_ZIGBEE_FRAME_RECEIVED = 'zigbee_frame_received'
+SIGNAL_ZIGBEE_FRAME_RECEIVED = 'zigbee_frame_received'
 
 CONF_ADDRESS = 'address'
 CONF_BAUD = 'baud'
@@ -60,7 +61,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the connection to the ZigBee device."""
+    """Set up the connection to the ZigBee device."""
     global DEVICE
     global GPIO_DIGITAL_OUTPUT_LOW
     global GPIO_DIGITAL_OUTPUT_HIGH
@@ -97,14 +98,12 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, close_serial_port)
 
     def _frame_received(frame):
-        """Called when a ZigBee frame is received.
+        """Run when a ZigBee frame is received.
 
         Pickles the frame, then encodes it into base64 since it contains
         non JSON serializable binary.
         """
-        hass.bus.fire(
-            EVENT_ZIGBEE_FRAME_RECEIVED,
-            {ATTR_FRAME: b64encode(pickle.dumps(frame)).decode("ascii")})
+        dispatcher_send(hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, frame)
 
     DEVICE.add_frame_rx_handler(_frame_received)
 
@@ -125,17 +124,7 @@ def frame_is_relevant(entity, frame):
     return True
 
 
-def subscribe(hass, callback):
-    """Subscribe to incoming ZigBee frames."""
-    def zigbee_frame_subscriber(event):
-        """Decode and unpickle the frame from the event bus, and call back."""
-        frame = pickle.loads(b64decode(event.data[ATTR_FRAME]))
-        callback(frame)
-
-    hass.bus.listen(EVENT_ZIGBEE_FRAME_RECEIVED, zigbee_frame_subscriber)
-
-
-class ZigBeeConfig(object):
+class ZigBeeConfig:
     """Handle the fetching of configuration from the config file."""
 
     def __init__(self, config):
@@ -145,12 +134,12 @@ class ZigBeeConfig(object):
 
     @property
     def name(self):
-        """The name given to the entity."""
+        """Return the name given to the entity."""
         return self._config["name"]
 
     @property
     def address(self):
-        """The address of the device.
+        """Return the address of the device.
 
         If an address has been provided, unhexlify it, otherwise return None
         as we're talking to our local ZigBee device.
@@ -162,16 +151,16 @@ class ZigBeeConfig(object):
 
     @property
     def should_poll(self):
-        """No polling needed."""
+        """Return the polling state."""
         return self._should_poll
 
 
 class ZigBeePinConfig(ZigBeeConfig):
-    """Handle the fetching of configuration from the config file."""
+    """Handle the fetching of configuration from the configuration file."""
 
     @property
     def pin(self):
-        """The GPIO pin number."""
+        """Return the GPIO pin number."""
         return self._config["pin"]
 
 
@@ -206,7 +195,7 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
 
     @property
     def bool2state(self):
-        """A dictionary mapping the internal value to the ZigBee value.
+        """Return a dictionary mapping the internal value to the ZigBee value.
 
         For the translation of on/off as being pin high or low.
         """
@@ -214,7 +203,7 @@ class ZigBeeDigitalInConfig(ZigBeePinConfig):
 
     @property
     def state2bool(self):
-        """A dictionary mapping the ZigBee value to the internal value.
+        """Return a dictionary mapping the ZigBee value to the internal value.
 
         For the translation of pin high/low as being on or off.
         """
@@ -256,7 +245,7 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
 
     @property
     def bool2state(self):
-        """A dictionary mapping booleans to GPIOSetting objects.
+        """Return a dictionary mapping booleans to GPIOSetting objects.
 
         For the translation of on/off as being pin high or low.
         """
@@ -264,7 +253,7 @@ class ZigBeeDigitalOutConfig(ZigBeePinConfig):
 
     @property
     def state2bool(self):
-        """A dictionary mapping GPIOSetting objects to booleans.
+        """Return a dictionary mapping GPIOSetting objects to booleans.
 
         For the translation of pin high/low as being on or off.
         """
@@ -276,7 +265,7 @@ class ZigBeeAnalogInConfig(ZigBeePinConfig):
 
     @property
     def max_voltage(self):
-        """The voltage at which the ADC will report its highest value."""
+        """Return the voltage for ADC to report its highest value."""
         return float(self._config.get("max_volts", DEFAULT_ADC_MAX_VOLTS))
 
 
@@ -288,6 +277,9 @@ class ZigBeeDigitalIn(Entity):
         self._config = config
         self._state = False
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
         def handle_frame(frame):
             """Handle an incoming frame.
 
@@ -296,18 +288,19 @@ class ZigBeeDigitalIn(Entity):
             """
             if not frame_is_relevant(self, frame):
                 return
-            sample = frame['samples'].pop()
+            sample = next(iter(frame['samples']))
             pin_name = DIGITAL_PINS[self._config.pin]
             if pin_name not in sample:
                 # Doesn't contain information about our pin
                 return
-            self._state = self._config.state2bool[sample[pin_name]]
-            self.update_ha_state()
+            # Set state to the value of sample, respecting any inversion
+            # logic from the on_state config variable.
+            self._state = self._config.state2bool[
+                self._config.bool2state[sample[pin_name]]]
+            self.schedule_update_ha_state()
 
-        subscribe(hass, handle_frame)
-
-        # Get initial state
-        hass.add_job(self.async_update_ha_state, True)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, handle_frame)
 
     @property
     def name(self):
@@ -316,7 +309,7 @@ class ZigBeeDigitalIn(Entity):
 
     @property
     def config(self):
-        """The entity's configuration."""
+        """Return the entity's configuration."""
         return self._config
 
     @property
@@ -373,7 +366,7 @@ class ZigBeeDigitalOut(ZigBeeDigitalIn):
             return
         self._state = state
         if not self.should_poll:
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs):
         """Set the digital output to its 'on' state."""
@@ -410,6 +403,9 @@ class ZigBeeAnalogIn(Entity):
         self._config = config
         self._value = None
 
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
         def handle_frame(frame):
             """Handle an incoming frame.
 
@@ -428,26 +424,24 @@ class ZigBeeAnalogIn(Entity):
                 ADC_PERCENTAGE,
                 self._config.max_voltage
             )
-            self.update_ha_state()
+            self.schedule_update_ha_state()
 
-        subscribe(hass, handle_frame)
-
-        # Get initial state
-        hass.add_job(self.async_update_ha_state, True)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_ZIGBEE_FRAME_RECEIVED, handle_frame)
 
     @property
     def name(self):
-        """The name of the input."""
+        """Return the name of the input."""
         return self._config.name
 
     @property
     def config(self):
-        """The entity's configuration."""
+        """Return the entity's configuration."""
         return self._config
 
     @property
     def should_poll(self):
-        """The state of the polling, if needed."""
+        """Return the polling state, if needed."""
         return self._config.should_poll
 
     @property

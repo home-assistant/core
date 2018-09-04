@@ -1,17 +1,14 @@
 """Test config validators."""
-from collections import OrderedDict
 from datetime import timedelta, datetime, date
 import enum
 import os
 from socket import _GLOBAL_DEFAULT_TIMEOUT
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
-from unittest.mock import Mock, patch
 
 import homeassistant.helpers.config_validation as cv
-
-from tests.common import get_test_home_assistant
 
 
 def test_boolean():
@@ -100,18 +97,31 @@ def test_url():
 
 def test_platform_config():
     """Test platform config validation."""
-    for value in (
+    options = (
         {},
         {'hello': 'world'},
-    ):
+    )
+    for value in options:
         with pytest.raises(vol.MultipleInvalid):
             cv.PLATFORM_SCHEMA(value)
 
-    for value in (
+    options = (
         {'platform': 'mqtt'},
         {'platform': 'mqtt', 'beer': 'yes'},
-    ):
+    )
+    for value in options:
         cv.PLATFORM_SCHEMA(value)
+
+
+def test_ensure_list():
+    """Test ensure_list."""
+    schema = vol.Schema(cv.ensure_list)
+    assert [] == schema(None)
+    assert [1] == schema(1)
+    assert [1] == schema([1])
+    assert ['1'] == schema('1')
+    assert ['1'] == schema(['1'])
+    assert [{'1': '2'}] == schema({'1': '2'})
 
 
 def test_entity_id():
@@ -121,28 +131,30 @@ def test_entity_id():
     with pytest.raises(vol.MultipleInvalid):
         schema('invalid_entity')
 
-    assert 'sensor.light' == schema('sensor.LIGHT')
+    assert schema('sensor.LIGHT') == 'sensor.light'
 
 
 def test_entity_ids():
     """Test entity ID validation."""
     schema = vol.Schema(cv.entity_ids)
 
-    for value in (
+    options = (
         'invalid_entity',
         'sensor.light,sensor_invalid',
         ['invalid_entity'],
         ['sensor.light', 'sensor_invalid'],
         ['sensor.light,sensor_invalid'],
-    ):
+    )
+    for value in options:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in (
+    options = (
         [],
         ['sensor.light'],
         'sensor.light'
-    ):
+    )
+    for value in options:
         schema(value)
 
     assert schema('sensor.LIGHT, light.kitchen ') == [
@@ -150,9 +162,77 @@ def test_entity_ids():
     ]
 
 
+def test_entity_domain():
+    """Test entity domain validation."""
+    schema = vol.Schema(cv.entity_domain('sensor'))
+
+    options = (
+        'invalid_entity',
+        'cover.demo',
+    )
+
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            print(value)
+            schema(value)
+
+    assert schema('sensor.LIGHT') == 'sensor.light'
+
+
+def test_entities_domain():
+    """Test entities domain validation."""
+    schema = vol.Schema(cv.entities_domain('sensor'))
+
+    options = (
+        None,
+        '',
+        'invalid_entity',
+        ['sensor.light', 'cover.demo'],
+        ['sensor.light', 'sensor_invalid'],
+    )
+
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    options = (
+        'sensor.light',
+        ['SENSOR.light'],
+        ['sensor.light', 'sensor.demo']
+    )
+    for value in options:
+        schema(value)
+
+    assert schema('sensor.LIGHT, sensor.demo ') == [
+        'sensor.light', 'sensor.demo'
+    ]
+    assert schema(['sensor.light', 'SENSOR.demo']) == [
+        'sensor.light', 'sensor.demo'
+    ]
+
+
+def test_ensure_list_csv():
+    """Test ensure_list_csv."""
+    schema = vol.Schema(cv.ensure_list_csv)
+
+    options = (
+        None,
+        12,
+        [],
+        ['string'],
+        'string1,string2'
+    )
+    for value in options:
+        schema(value)
+
+    assert schema('string1, string2 ') == [
+        'string1', 'string2'
+    ]
+
+
 def test_event_schema():
     """Test event_schema validation."""
-    for value in (
+    options = (
         {}, None,
         {
             'event_data': {},
@@ -161,28 +241,17 @@ def test_event_schema():
             'event': 'state_changed',
             'event_data': 1,
         },
-    ):
+    )
+    for value in options:
         with pytest.raises(vol.MultipleInvalid):
             cv.EVENT_SCHEMA(value)
 
-    for value in (
+    options = (
         {'event': 'state_changed'},
         {'event': 'state_changed', 'event_data': {'hello': 'world'}},
-    ):
+    )
+    for value in options:
         cv.EVENT_SCHEMA(value)
-
-
-def test_platform_validator():
-    """Test platform validation."""
-    # Prepares loading
-    get_test_home_assistant()
-
-    schema = vol.Schema(cv.platform_validator('light'))
-
-    with pytest.raises(vol.MultipleInvalid):
-        schema('platform_that_does_not_exist')
-
-    schema('hue')
 
 
 def test_icon():
@@ -200,16 +269,19 @@ def test_time_period():
     """Test time_period validation."""
     schema = vol.Schema(cv.time_period)
 
-    for value in (
+    options = (
         None, '', 'hello:world', '12:', '12:34:56:78',
         {}, {'wrong_key': -10}
-    ):
+    )
+    for value in options:
+
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in (
+    options = (
         '8:20', '23:59', '-8:20', '-23:59:59', '-48:00', {'minutes': 5}, 1, '5'
-    ):
+    )
+    for value in options:
         schema(value)
 
     assert timedelta(seconds=180) == schema('180')
@@ -229,7 +301,7 @@ def test_service():
 
 def test_service_schema():
     """Test service_schema validation."""
-    for value in (
+    options = (
         {}, None,
         {
             'service': 'homeassistant.turn_on',
@@ -248,11 +320,12 @@ def test_service_schema():
                 'brightness': '{{ no_end'
             }
         },
-    ):
+    )
+    for value in options:
         with pytest.raises(vol.MultipleInvalid):
             cv.SERVICE_SCHEMA(value)
 
-    for value in (
+    options = (
         {'service': 'homeassistant.turn_on'},
         {
             'service': 'homeassistant.turn_on',
@@ -262,7 +335,8 @@ def test_service_schema():
             'service': 'homeassistant.turn_on',
             'entity_id': ['light.kitchen', 'light.ceiling'],
         },
-    ):
+    )
+    for value in options:
         cv.SERVICE_SCHEMA(value)
 
 
@@ -321,11 +395,12 @@ def test_template():
                            message='{} not considered invalid'.format(value)):
             schema(value)
 
-    for value in (
+    options = (
         1, 'Hello',
         '{{ beer }}',
         '{% if 1 == 1 %}Hello{% else %}World{% endif %}',
-    ):
+    )
+    for value in options:
         schema(value)
 
 
@@ -337,13 +412,14 @@ def test_template_complex():
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in (
+    options = (
         1, 'Hello',
         '{{ beer }}',
         '{% if 1 == 1 %}Hello{% else %}World{% endif %}',
         {'test': 1, 'test2': '{{ beer }}'},
         ['{{ beer }}', 1]
-    ):
+    )
+    for value in options:
         schema(value)
 
 
@@ -358,6 +434,31 @@ def test_time_zone():
     schema('UTC')
 
 
+def test_date():
+    """Test date validation."""
+    schema = vol.Schema(cv.date)
+
+    for value in ['Not a date', '23:42', '2016-11-23T18:59:08']:
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    schema(datetime.now().date())
+    schema('2016-11-23')
+
+
+def test_time():
+    """Test date validation."""
+    schema = vol.Schema(cv.time)
+
+    for value in ['Not a time', '2016-11-23', '2016-11-23T18:59:08']:
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    schema(datetime.now().time())
+    schema('23:42:00')
+    schema('23:42')
+
+
 def test_datetime():
     """Test date time validation."""
     schema = vol.Schema(cv.datetime)
@@ -369,20 +470,44 @@ def test_datetime():
     schema('2016-11-23T18:59:08')
 
 
+def test_deprecated(caplog):
+    """Test deprecation log."""
+    schema = vol.Schema({
+        'venus': cv.boolean,
+        'mars': cv.boolean
+    })
+    deprecated_schema = vol.All(
+        cv.deprecated('mars'),
+        schema
+    )
+
+    deprecated_schema({'venus': True})
+    # pylint: disable=len-as-condition
+    assert len(caplog.records) == 0
+
+    deprecated_schema({'mars': True})
+    assert len(caplog.records) == 1
+    assert caplog.records[0].name == __name__
+    assert ("The 'mars' option (with value 'True') is deprecated, "
+            "please remove it from your configuration.") in caplog.text
+
+
 def test_key_dependency():
     """Test key_dependency validator."""
     schema = vol.Schema(cv.key_dependency('beer', 'soda'))
 
-    for value in (
+    options = (
         {'beer': None}
-    ):
+    )
+    for value in options:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    for value in (
+    options = (
         {'beer': None, 'soda': None},
         {'soda': None}, {}
-    ):
+    )
+    for value in options:
         schema(value)
 
 
@@ -398,54 +523,6 @@ def test_has_at_least_one_key():
         schema(value)
 
 
-def test_ordered_dict_order():
-    """Test ordered_dict validator."""
-    schema = vol.Schema(cv.ordered_dict(int, cv.string))
-
-    val = OrderedDict()
-    val['first'] = 1
-    val['second'] = 2
-
-    validated = schema(val)
-
-    assert isinstance(validated, OrderedDict)
-    assert ['first', 'second'] == list(validated.keys())
-
-
-def test_ordered_dict_key_validator():
-    """Test ordered_dict key validator."""
-    schema = vol.Schema(cv.ordered_dict(cv.match_all, cv.string))
-
-    with pytest.raises(vol.Invalid):
-        schema({None: 1})
-
-    schema({'hello': 'world'})
-
-    schema = vol.Schema(cv.ordered_dict(cv.match_all, int))
-
-    with pytest.raises(vol.Invalid):
-        schema({'hello': 1})
-
-    schema({1: 'works'})
-
-
-def test_ordered_dict_value_validator():
-    """Test ordered_dict validator."""
-    schema = vol.Schema(cv.ordered_dict(cv.string))
-
-    with pytest.raises(vol.Invalid):
-        schema({'hello': None})
-
-    schema({'hello': 'world'})
-
-    schema = vol.Schema(cv.ordered_dict(int))
-
-    with pytest.raises(vol.Invalid):
-        schema({'hello': 'world'})
-
-    schema({'hello': 5})
-
-
 def test_enum():
     """Test enum validator."""
     class TestEnum(enum.Enum):
@@ -459,23 +536,45 @@ def test_enum():
     with pytest.raises(vol.Invalid):
         schema('value3')
 
-    TestEnum['value1']
 
-
-def test_socket_timeout():
+def test_socket_timeout():  # pylint: disable=invalid-name
     """Test socket timeout validator."""
-    TEST_CONF_TIMEOUT = 'timeout'
-
-    schema = vol.Schema(
-        {vol.Required(TEST_CONF_TIMEOUT, default=None): cv.socket_timeout})
+    schema = vol.Schema(cv.socket_timeout)
 
     with pytest.raises(vol.Invalid):
-        schema({TEST_CONF_TIMEOUT: 0.0})
+        schema(0.0)
 
     with pytest.raises(vol.Invalid):
-        schema({TEST_CONF_TIMEOUT: -1})
+        schema(-1)
 
-    assert _GLOBAL_DEFAULT_TIMEOUT == schema({TEST_CONF_TIMEOUT:
-                                              None})[TEST_CONF_TIMEOUT]
+    assert _GLOBAL_DEFAULT_TIMEOUT == schema(None)
 
-    assert 1.0 == schema({TEST_CONF_TIMEOUT: 1})[TEST_CONF_TIMEOUT]
+    assert schema(1) == 1.0
+
+
+def test_matches_regex():
+    """Test matches_regex validator."""
+    schema = vol.Schema(cv.matches_regex('.*uiae.*'))
+
+    with pytest.raises(vol.Invalid):
+        schema(1.0)
+
+    with pytest.raises(vol.Invalid):
+        schema("  nrtd   ")
+
+    test_str = "This is a test including uiae."
+    assert(schema(test_str) == test_str)
+
+
+def test_is_regex():
+    """Test the is_regex validator."""
+    schema = vol.Schema(cv.is_regex)
+
+    with pytest.raises(vol.Invalid):
+        schema("(")
+
+    with pytest.raises(vol.Invalid):
+        schema({"a dict": "is not a regex"})
+
+    valid_re = ".*"
+    schema(valid_re)

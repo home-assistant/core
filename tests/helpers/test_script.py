@@ -21,7 +21,7 @@ class TestScriptHelper(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -54,6 +54,47 @@ class TestScriptHelper(unittest.TestCase):
 
         assert len(calls) == 1
         assert calls[0].data.get('hello') == 'world'
+        assert not script_obj.can_cancel
+
+    def test_firing_event_template(self):
+        """Test the firing of events."""
+        event = 'test_event'
+        calls = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            calls.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA({
+            'event': event,
+            'event_data_template': {
+                'dict': {
+                   1: '{{ is_world }}',
+                   2: '{{ is_world }}{{ is_world }}',
+                   3: '{{ is_world }}{{ is_world }}{{ is_world }}',
+                },
+                'list': [
+                    '{{ is_world }}', '{{ is_world }}{{ is_world }}'
+                ]
+            }
+        }))
+
+        script_obj.run({'is_world': 'yes'})
+
+        self.hass.block_till_done()
+
+        assert len(calls) == 1
+        assert calls[0].data == {
+            'dict': {
+                1: 'yes',
+                2: 'yesyes',
+                3: 'yesyesyes',
+            },
+            'list': ['yes', 'yesyes']
+        }
         assert not script_obj.can_cancel
 
     def test_calling_service(self):
@@ -99,14 +140,14 @@ class TestScriptHelper(unittest.TestCase):
                 {% endif %}""",
             'data_template': {
                 'hello': """
-                    {% if True %}
+                    {% if is_world == 'yes' %}
                         world
                     {% else %}
-                        Not world
+                        not world
                     {% endif %}
                 """
             }
-        })
+        }, {'is_world': 'yes'})
 
         self.hass.block_till_done()
 
@@ -131,7 +172,6 @@ class TestScriptHelper(unittest.TestCase):
             {'event': event}]))
 
         script_obj.run()
-
         self.hass.block_till_done()
 
         assert script_obj.is_running
@@ -148,7 +188,7 @@ class TestScriptHelper(unittest.TestCase):
 
     def test_delay_template(self):
         """Test the delay as a template."""
-        event = 'test_evnt'
+        event = 'test_event'
         events = []
 
         @callback
@@ -164,7 +204,6 @@ class TestScriptHelper(unittest.TestCase):
             {'event': event}]))
 
         script_obj.run()
-
         self.hass.block_till_done()
 
         assert script_obj.is_running
@@ -178,6 +217,32 @@ class TestScriptHelper(unittest.TestCase):
 
         assert not script_obj.is_running
         assert len(events) == 2
+
+    def test_delay_invalid_template(self):
+        """Test the delay as a template that fails."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'delay': '{{ invalid_delay }}'},
+            {'delay': {'seconds': 5}},
+            {'event': event}]))
+
+        with mock.patch.object(script, '_LOGGER') as mock_logger:
+            script_obj.run()
+            self.hass.block_till_done()
+            assert mock_logger.error.called
+
+        assert not script_obj.is_running
+        assert len(events) == 1
 
     def test_cancel_while_delay(self):
         """Test the cancelling while the delay is present."""
@@ -196,7 +261,6 @@ class TestScriptHelper(unittest.TestCase):
             {'event': event}]))
 
         script_obj.run()
-
         self.hass.block_till_done()
 
         assert script_obj.is_running
@@ -213,6 +277,251 @@ class TestScriptHelper(unittest.TestCase):
 
         assert not script_obj.is_running
         assert len(events) == 0
+
+    def test_wait_template(self):
+        """Test the wait template."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('switch.test', 'on')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'wait_template': "{{states.switch.test.state == 'off'}}"},
+            {'event': event}]))
+
+        script_obj.run()
+        self.hass.block_till_done()
+
+        assert script_obj.is_running
+        assert script_obj.can_cancel
+        assert script_obj.last_action == event
+        assert len(events) == 1
+
+        self.hass.states.set('switch.test', 'off')
+        self.hass.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 2
+
+    def test_wait_template_cancel(self):
+        """Test the wait template cancel action."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('switch.test', 'on')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'wait_template': "{{states.switch.test.state == 'off'}}"},
+            {'event': event}]))
+
+        script_obj.run()
+        self.hass.block_till_done()
+
+        assert script_obj.is_running
+        assert script_obj.can_cancel
+        assert script_obj.last_action == event
+        assert len(events) == 1
+
+        script_obj.stop()
+
+        assert not script_obj.is_running
+        assert len(events) == 1
+
+        self.hass.states.set('switch.test', 'off')
+        self.hass.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 1
+
+    def test_wait_template_not_schedule(self):
+        """Test the wait template with correct condition."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('switch.test', 'on')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'wait_template': "{{states.switch.test.state == 'on'}}"},
+            {'event': event}]))
+
+        script_obj.run()
+        self.hass.block_till_done()
+
+        assert not script_obj.is_running
+        assert script_obj.can_cancel
+        assert len(events) == 2
+
+    def test_wait_template_timeout_halt(self):
+        """Test the wait template, halt on timeout."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('switch.test', 'on')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {
+                'wait_template': "{{states.switch.test.state == 'off'}}",
+                'continue_on_timeout': False,
+                'timeout': 5
+            },
+            {'event': event}]))
+
+        script_obj.run()
+        self.hass.block_till_done()
+
+        assert script_obj.is_running
+        assert script_obj.can_cancel
+        assert script_obj.last_action == event
+        assert len(events) == 1
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 1
+
+    def test_wait_template_timeout_continue(self):
+        """Test the wait template with continuing the script."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('switch.test', 'on')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {
+                'wait_template': "{{states.switch.test.state == 'off'}}",
+                'timeout': 5,
+                'continue_on_timeout': True
+            },
+            {'event': event}]))
+
+        script_obj.run()
+        self.hass.block_till_done()
+
+        assert script_obj.is_running
+        assert script_obj.can_cancel
+        assert script_obj.last_action == event
+        assert len(events) == 1
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 2
+
+    def test_wait_template_timeout_default(self):
+        """Test the wait template with default contiune."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('switch.test', 'on')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {
+                'wait_template': "{{states.switch.test.state == 'off'}}",
+                'timeout': 5
+            },
+            {'event': event}]))
+
+        script_obj.run()
+        self.hass.block_till_done()
+
+        assert script_obj.is_running
+        assert script_obj.can_cancel
+        assert script_obj.last_action == event
+        assert len(events) == 1
+
+        future = dt_util.utcnow() + timedelta(seconds=5)
+        fire_time_changed(self.hass, future)
+        self.hass.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 2
+
+    def test_wait_template_variables(self):
+        """Test the wait template with variables."""
+        event = 'test_event'
+        events = []
+
+        @callback
+        def record_event(event):
+            """Add recorded event to set."""
+            events.append(event)
+
+        self.hass.bus.listen(event, record_event)
+
+        self.hass.states.set('switch.test', 'on')
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'wait_template': "{{is_state(data, 'off')}}"},
+            {'event': event}]))
+
+        script_obj.run({
+            'data': 'switch.test'
+        })
+        self.hass.block_till_done()
+
+        assert script_obj.is_running
+        assert script_obj.can_cancel
+        assert script_obj.last_action == event
+        assert len(events) == 1
+
+        self.hass.states.set('switch.test', 'off')
+        self.hass.block_till_done()
+
+        assert not script_obj.is_running
+        assert len(events) == 2
 
     def test_passing_variables_to_script(self):
         """Test if we can pass variables to script."""
@@ -353,3 +662,22 @@ class TestScriptHelper(unittest.TestCase):
         script_obj.run()
         self.hass.block_till_done()
         assert len(script_obj._config_cache) == 2
+
+    def test_last_triggered(self):
+        """Test the last_triggered."""
+        event = 'test_event'
+
+        script_obj = script.Script(self.hass, cv.SCRIPT_SCHEMA([
+            {'event': event},
+            {'delay': {'seconds': 5}},
+            {'event': event}]))
+
+        assert script_obj.last_triggered is None
+
+        time = dt_util.utcnow()
+        with mock.patch('homeassistant.helpers.script.date_util.utcnow',
+                        return_value=time):
+            script_obj.run()
+            self.hass.block_till_done()
+
+        assert script_obj.last_triggered == time

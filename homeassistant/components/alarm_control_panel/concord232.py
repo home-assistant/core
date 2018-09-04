@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/alarm_control_panel.concord232/
 """
 import datetime
+from datetime import timedelta
 import logging
 
 import requests
@@ -17,7 +18,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['concord232==0.14']
+REQUIREMENTS = ['concord232==0.15']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -25,16 +26,16 @@ DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'CONCORD232'
 DEFAULT_PORT = 5007
 
-SCAN_INTERVAL = 1
+SCAN_INTERVAL = timedelta(seconds=10)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Concord232 alarm control panel platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -43,14 +44,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     url = 'http://{}:{}'.format(host, port)
 
     try:
-        add_devices([Concord232Alarm(hass, url, name)])
+        add_entities([Concord232Alarm(hass, url, name)])
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
-        return False
+        return
 
 
 class Concord232Alarm(alarm.AlarmControlPanel):
-    """Represents the Concord232-based alarm panel."""
+    """Representation of the Concord232-based alarm panel."""
 
     def __init__(self, hass, url, name):
         """Initialize the Concord232 alarm panel."""
@@ -78,8 +79,8 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """The characters if code is defined."""
-        return '[0-9]{4}([0-9]{2})?'
+        """Return the characters if code is defined."""
+        return 'Number'
 
     @property
     def state(self):
@@ -106,7 +107,7 @@ class Concord232Alarm(alarm.AlarmControlPanel):
             newstate = STATE_ALARM_ARMED_AWAY
 
         if not newstate == self._state:
-            _LOGGER.info("State Chnage from %s to %s", self._state, newstate)
+            _LOGGER.info("State change from %s to %s", self._state, newstate)
             self._state = newstate
         return self._state
 
@@ -116,8 +117,8 @@ class Concord232Alarm(alarm.AlarmControlPanel):
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._alarm.arm('home')
+        self._alarm.arm('stay')
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._alarm.arm('auto')
+        self._alarm.arm('away')

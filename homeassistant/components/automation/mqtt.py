@@ -2,14 +2,15 @@
 Offer MQTT listening automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#mqtt-trigger
+at https://home-assistant.io/docs/automation/trigger/#mqtt-trigger
 """
+import asyncio
 import json
 
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.const import (CONF_PLATFORM, CONF_PAYLOAD)
 import homeassistant.helpers.config_validation as cv
 
@@ -24,6 +25,7 @@ TRIGGER_SCHEMA = vol.Schema({
 })
 
 
+@asyncio.coroutine
 def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     topic = config.get(CONF_TOPIC)
@@ -49,4 +51,6 @@ def async_trigger(hass, config, action):
                 'trigger': data
             })
 
-    return mqtt.async_subscribe(hass, topic, mqtt_automation_listener)
+    remove = yield from mqtt.async_subscribe(
+        hass, topic, mqtt_automation_listener)
+    return remove

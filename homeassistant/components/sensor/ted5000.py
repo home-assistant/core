@@ -1,5 +1,5 @@
 """
-Support gahtering ted500 information.
+Support gathering ted500 information.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ted5000/
@@ -16,7 +16,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['xmltodict==0.10.2']
+REQUIREMENTS = ['xmltodict==0.11.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +32,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Ted5000 sensor."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Ted5000 sensor."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     name = config.get(CONF_NAME)
@@ -50,7 +49,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dev.append(Ted5000Sensor(gateway, name, mtu, 'W'))
         dev.append(Ted5000Sensor(gateway, name, mtu, 'V'))
 
-    add_devices(dev)
+    add_entities(dev)
     return True
 
 
@@ -68,7 +67,7 @@ class Ted5000Sensor(Entity):
 
     @property
     def name(self):
-        """The name of the sensor."""
+        """Return the name of the sensor."""
         return self._name
 
     @property
@@ -89,7 +88,7 @@ class Ted5000Sensor(Entity):
         self._gateway.update()
 
 
-class Ted5000Gateway(object):
+class Ted5000Gateway:
     """The class for handling the data retrieval."""
 
     def __init__(self, url):

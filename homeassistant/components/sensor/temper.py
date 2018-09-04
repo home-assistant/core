@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['temperusb==1.5.1']
+REQUIREMENTS = ['temperusb==1.5.3']
 
 CONF_SCALE = 'scale'
 CONF_OFFSET = 'offset'
@@ -33,9 +33,8 @@ def get_temper_devices():
     return TemperHandler().get_devices()
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Temper sensors."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Temper sensors."""
     temp_unit = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
     scaling = {
@@ -48,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if idx != 0:
             name = name + '_' + str(idx)
         TEMPER_SENSORS.append(TemperSensor(dev, temp_unit, name, scaling))
-    add_devices(TEMPER_SENSORS)
+    add_entities(TEMPER_SENSORS)
 
 
 def reset_devices():
@@ -107,6 +106,6 @@ class TemperSensor(Entity):
             sensor_value = self.temper_device.get_temperature(format_str)
             self.current_value = round(sensor_value, 1)
         except IOError:
-            _LOGGER.error('Failed to get temperature. The device address may'
-                          'have changed - attempting to reset device')
+            _LOGGER.error("Failed to get temperature. The device address may"
+                          "have changed. Attempting to reset device")
             reset_devices()

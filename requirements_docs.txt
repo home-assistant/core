@@ -1,3 +1,3 @@
-Sphinx==1.4.9
-sphinx-autodoc-typehints==1.1.0
+Sphinx==1.7.7
+sphinx-autodoc-typehints==1.3.0
 sphinx-autodoc-annotation==1.0.post1

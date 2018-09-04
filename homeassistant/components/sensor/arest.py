@@ -44,8 +44,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the aREST sensor."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the aREST sensor."""
     resource = config.get(CONF_RESOURCE)
     var_conf = config.get(CONF_MONITORED_VARIABLES)
     pins = config.get(CONF_PINS)
@@ -54,12 +54,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         response = requests.get(resource, timeout=10).json()
     except requests.exceptions.MissingSchema:
         _LOGGER.error("Missing resource or schema in configuration. "
-                      "Add http:// to your URL.")
+                      "Add http:// to your URL")
         return False
     except requests.exceptions.ConnectionError:
-        _LOGGER.error("No route to device at %s. "
-                      "Please check the IP address in the configuration file.",
-                      resource)
+        _LOGGER.error("No route to device at %s", resource)
         return False
 
     arest = ArestData(resource)
@@ -75,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             try:
                 return value_template.async_render({'value': value})
             except TemplateError:
-                _LOGGER.exception('Error parsing value')
+                _LOGGER.exception("Error parsing value")
                 return value
 
         return _render
@@ -85,13 +83,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if var_conf is not None:
         for variable, var_data in var_conf.items():
             if variable not in response['variables']:
-                _LOGGER.error("Variable: '%s' does not exist", variable)
+                _LOGGER.error("Variable: %s does not exist", variable)
                 continue
 
             renderer = make_renderer(var_data.get(CONF_VALUE_TEMPLATE))
             dev.append(ArestSensor(
                 arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
-                variable, variable=variable,
+                var_data.get(CONF_NAME, variable), variable=variable,
                 unit_of_measurement=var_data.get(CONF_UNIT_OF_MEASUREMENT),
                 renderer=renderer))
 
@@ -104,7 +102,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 pin=pinnum, unit_of_measurement=pin.get(
                     CONF_UNIT_OF_MEASUREMENT), renderer=renderer))
 
-    add_devices(dev)
+    add_entities(dev, True)
 
 
 class ArestSensor(Entity):
@@ -121,13 +119,12 @@ class ArestSensor(Entity):
         self._state = STATE_UNKNOWN
         self._unit_of_measurement = unit_of_measurement
         self._renderer = renderer
-        self.update()
 
         if self._pin is not None:
             request = requests.get(
                 '{}/mode/{}/i'.format(self._resource, self._pin), timeout=10)
-            if request.status_code is not 200:
-                _LOGGER.error("Can't set mode. Is device offline?")
+            if request.status_code != 200:
+                _LOGGER.error("Can't set mode of %s", self._resource)
 
     @property
     def name(self):
@@ -161,7 +158,7 @@ class ArestSensor(Entity):
         return self.arest.available
 
 
-class ArestData(object):
+class ArestData:
     """The Class for handling the data retrieval for variables."""
 
     def __init__(self, resource, pin=None):
@@ -184,15 +181,11 @@ class ArestData(object):
                         response = requests.get('{}/analog/{}'.format(
                             self._resource, self._pin[1:]), timeout=10)
                         self.data = {'value': response.json()['return_value']}
-                    else:
-                        _LOGGER.error("Wrong pin naming. "
-                                      "Please check your configuration file.")
                 except TypeError:
                     response = requests.get('{}/digital/{}'.format(
                         self._resource, self._pin), timeout=10)
                     self.data = {'value': response.json()['return_value']}
             self.available = True
         except requests.exceptions.ConnectionError:
-            _LOGGER.error("No route to device %s. Is device offline?",
-                          self._resource)
+            _LOGGER.error("No route to device %s", self._resource)
             self.available = False

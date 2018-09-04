@@ -11,11 +11,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-import homeassistant.components.arduino as arduino
+from homeassistant.components import arduino
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,9 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arduino platform."""
-    # Verify that the Arduino board is present
     if arduino.BOARD is None:
         _LOGGER.error("A connection has not been made to the Arduino board")
         return False
@@ -46,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for pinnum, pin in pins.items():
         sensors.append(ArduinoSensor(pin.get(CONF_NAME), pinnum, CONF_TYPE))
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class ArduinoSensor(Entity):

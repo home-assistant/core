@@ -3,11 +3,11 @@ import unittest
 
 import pytest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import rfxtrx as rfxtrx_core
 from homeassistant.const import TEMP_CELSIUS
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, mock_component
 
 
 @pytest.mark.skipif("os.environ.get('RFXTRX') != 'RUN'")
@@ -15,9 +15,9 @@ class TestSensorRfxtrx(unittest.TestCase):
     """Test the Rfxtrx sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
-        self.hass.config.components = ['rfxtrx']
+        mock_component(self.hass, 'rfxtrx')
 
     def tearDown(self):
         """Stop everything that was started."""

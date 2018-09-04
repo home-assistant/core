@@ -4,9 +4,9 @@ Support for SleepIQ from SleepNumber.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sleepiq/
 """
-
 import logging
 from datetime import timedelta
+from requests.exceptions import HTTPError
 
 import voluptuous as vol
 
@@ -15,7 +15,6 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 from homeassistant.util import Throttle
-from requests.exceptions import HTTPError
 
 DOMAIN = 'sleepiq'
 
@@ -39,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA = None
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    vol.Required(DOMAIN): vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
     }),
@@ -47,12 +46,11 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup SleepIQ.
+    """Set up the SleepIQ component.
 
     Will automatically load sensor components to support
     devices discovered on the account.
     """
-    # pylint: disable=global-statement
     global DATA
 
     from sleepyq import Sleepyq
@@ -75,8 +73,8 @@ def setup(hass, config):
     return True
 
 
-class SleepIQData(object):
-    """Gets the latest data from SleepIQ."""
+class SleepIQData:
+    """Get the latest data from SleepIQ."""
 
     def __init__(self, client):
         """Initialize the data object."""
@@ -112,14 +110,13 @@ class SleepIQSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'SleepNumber {} {} {}'.format(self.bed.name,
-                                             self.side.sleeper.first_name,
-                                             self._name)
+        return 'SleepNumber {} {} {}'.format(
+            self.bed.name, self.side.sleeper.first_name, self._name)
 
     def update(self):
         """Get the latest data from SleepIQ and updates the states."""
         # Call the API for new sleepiq data. Each sensor will re-trigger this
-        # same exact call, but thats fine. We cache results for a short period
+        # same exact call, but that's fine. We cache results for a short period
         # of time to prevent hitting API limits.
         self.sleepiq_data.update()
 

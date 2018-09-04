@@ -2,19 +2,20 @@
 
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import fan
-from homeassistant.components.fan.demo import FAN_ENTITY_ID
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from tests.common import get_test_home_assistant
+
+FAN_ENTITY_ID = 'fan.living_room_fan'
 
 
 class TestDemoFan(unittest.TestCase):
     """Test the fan demo platform."""
 
     def get_entity(self):
-        """Helper method to get the fan entity."""
+        """Get the fan entity."""
         return self.hass.states.get(FAN_ENTITY_ID)
 
     def setUp(self):
@@ -54,6 +55,27 @@ class TestDemoFan(unittest.TestCase):
         fan.turn_off(self.hass, FAN_ENTITY_ID)
         self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.get_entity().state)
+
+    def test_turn_off_without_entity_id(self):
+        """Test turning off all fans."""
+        self.assertEqual(STATE_OFF, self.get_entity().state)
+
+        fan.turn_on(self.hass, FAN_ENTITY_ID)
+        self.hass.block_till_done()
+        self.assertNotEqual(STATE_OFF, self.get_entity().state)
+
+        fan.turn_off(self.hass)
+        self.hass.block_till_done()
+        self.assertEqual(STATE_OFF, self.get_entity().state)
+
+    def test_set_direction(self):
+        """Test setting the direction of the device."""
+        self.assertEqual(STATE_OFF, self.get_entity().state)
+
+        fan.set_direction(self.hass, FAN_ENTITY_ID, fan.DIRECTION_REVERSE)
+        self.hass.block_till_done()
+        self.assertEqual(fan.DIRECTION_REVERSE,
+                         self.get_entity().attributes.get('direction'))
 
     def test_set_speed(self):
         """Test setting the speed of the device."""

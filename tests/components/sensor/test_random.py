@@ -1,7 +1,7 @@
 """The test for the random number sensor platform."""
 import unittest
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 
 from tests.common import get_test_home_assistant
 
@@ -18,7 +18,7 @@ class TestRandomSensor(unittest.TestCase):
         self.hass.stop()
 
     def test_random_sensor(self):
-        """Test the Randowm number sensor."""
+        """Test the Random number sensor."""
         config = {
             'sensor': {
                 'platform': 'random',

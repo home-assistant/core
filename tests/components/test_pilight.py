@@ -5,8 +5,10 @@ from unittest.mock import patch
 import socket
 from datetime import timedelta
 
+import pytest
+
 from homeassistant import core as ha
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 from homeassistant.components import pilight
 from homeassistant.util import dt as dt_util
 
@@ -39,11 +41,11 @@ class PilightDaemonSim:
         pass
 
     def send_code(self, call):  # pylint: disable=no-self-use
-        """Called pilight.send service is called."""
+        """Handle pilight.send service callback."""
         _LOGGER.error('PilightDaemonSim payload: ' + str(call))
 
     def start(self):
-        """Called homeassistant.start is called.
+        """Handle homeassistant.start callback.
 
         Also sends one test message after start up
         """
@@ -54,25 +56,32 @@ class PilightDaemonSim:
             self.called = True
 
     def stop(self):  # pylint: disable=no-self-use
-        """Called homeassistant.stop is called."""
+        """Handle homeassistant.stop callback."""
         _LOGGER.error('PilightDaemonSim stop')
 
     def set_callback(self, function):
-        """Callback called  on event pilight.pilight_received."""
+        """Handle pilight.pilight_received event callback."""
         self.callback = function
         _LOGGER.error('PilightDaemonSim callback: ' + str(function))
 
 
+@pytest.mark.skip("Flaky")
 class TestPilight(unittest.TestCase):
     """Test the Pilight component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.skip_teardown_stop = False
+
+    def tearDown(self):
+        """Stop everything that was started."""
+        if not self.skip_teardown_stop:
+            self.hass.stop()
 
     @patch('homeassistant.components.pilight._LOGGER.error')
     def test_connection_failed_error(self, mock_error):
-        """Try to connect at 127.0.0.1:5000 with socket error."""
+        """Try to connect at 127.0.0.1:5001 with socket error."""
         with assert_setup_component(4):
             with patch('pilight.pilight.Client',
                        side_effect=socket.error) as mock_client:
@@ -84,7 +93,7 @@ class TestPilight(unittest.TestCase):
 
     @patch('homeassistant.components.pilight._LOGGER.error')
     def test_connection_timeout_error(self, mock_error):
-        """Try to connect at 127.0.0.1:5000 with socket timeout."""
+        """Try to connect at 127.0.0.1:5001 with socket timeout."""
         with assert_setup_component(4):
             with patch('pilight.pilight.Client',
                        side_effect=socket.timeout) as mock_client:
@@ -208,6 +217,7 @@ class TestPilight(unittest.TestCase):
                 'PilightDaemonSim start' in str(error_log_call))
 
             # Test stop
+            self.skip_teardown_stop = True
             self.hass.stop()
             error_log_call = mock_pilight_error.call_args_list[-1]
             self.assertTrue(
@@ -297,7 +307,7 @@ class TestPilight(unittest.TestCase):
         with assert_setup_component(4):
             whitelist = {
                 'protocol': [PilightDaemonSim.test_message['protocol'],
-                             'other_protocoll'],
+                             'other_protocol'],
                 'id': [PilightDaemonSim.test_message['message']['id']]}
             self.assertTrue(setup_component(
                 self.hass, pilight.DOMAIN,
@@ -323,7 +333,7 @@ class TestPilight(unittest.TestCase):
         """Check whitelist filter with unmatched data, should not work."""
         with assert_setup_component(4):
             whitelist = {
-                'protocol': ['wrong_protocoll'],
+                'protocol': ['wrong_protocol'],
                 'id': [PilightDaemonSim.test_message['message']['id']]}
             self.assertTrue(setup_component(
                 self.hass, pilight.DOMAIN,
@@ -341,8 +351,12 @@ class TestPilightCallrateThrottler(unittest.TestCase):
     """Test the Throttler used to throttle calls to send_code."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+
+    def tearDown(self):
+        """Stop everything that was started."""
+        self.hass.stop()
 
     def test_call_rate_delay_throttle_disabled(self):
         """Test that the limiter is a noop if no delay set."""

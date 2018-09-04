@@ -9,31 +9,29 @@ import logging
 import requests
 
 from homeassistant.components.camera import Camera
-from homeassistant.loader import get_component
 
 DEPENDENCIES = ['bloomsky']
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup access to BloomSky cameras."""
-    bloomsky = get_component('bloomsky')
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up access to BloomSky cameras."""
+    bloomsky = hass.components.bloomsky
     for device in bloomsky.BLOOMSKY.devices.values():
-        add_devices([BloomSkyCamera(bloomsky.BLOOMSKY, device)])
+        add_entities([BloomSkyCamera(bloomsky.BLOOMSKY, device)])
 
 
 class BloomSkyCamera(Camera):
     """Representation of the images published from the BloomSky's camera."""
 
     def __init__(self, bs, device):
-        """Setup for access to the BloomSky camera images."""
+        """Initialize access to the BloomSky camera images."""
         super(BloomSkyCamera, self).__init__()
         self._name = device['DeviceName']
         self._id = device['DeviceID']
         self._bloomsky = bs
         self._url = ""
         self._last_url = ""
-        # _last_image will store images as they are downloaded so that the
+        # last_image will store images as they are downloaded so that the
         # frequent updates in home-assistant don't keep poking the server
         # to download the same image over and over.
         self._last_image = ""

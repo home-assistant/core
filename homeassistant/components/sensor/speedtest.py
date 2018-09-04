@@ -4,33 +4,40 @@ Support for Speedtest.net.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.speedtest/
 """
+import asyncio
 import logging
-import re
-import sys
-from subprocess import check_output, CalledProcessError
 
 import voluptuous as vol
 
-import homeassistant.util.dt as dt_util
+from homeassistant.components.sensor import DOMAIN, PLATFORM_SCHEMA
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components import recorder
-from homeassistant.components.sensor import (DOMAIN, PLATFORM_SCHEMA)
-from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_change
+from homeassistant.helpers.restore_state import async_get_last_state
+import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['speedtest-cli==1.0.0']
+REQUIREMENTS = ['speedtest-cli==2.0.2']
 
 _LOGGER = logging.getLogger(__name__)
-_SPEEDTEST_REGEX = re.compile(r'Ping:\s(\d+\.\d+)\sms[\r\n]+'
-                              r'Download:\s(\d+\.\d+)\sMbit/s[\r\n]+'
-                              r'Upload:\s(\d+\.\d+)\sMbit/s[\r\n]+')
 
+ATTR_BYTES_RECEIVED = 'bytes_received'
+ATTR_BYTES_SENT = 'bytes_sent'
+ATTR_SERVER_COUNTRY = 'server_country'
+ATTR_SERVER_HOST = 'server_host'
+ATTR_SERVER_ID = 'server_id'
+ATTR_SERVER_LATENCY = 'latency'
+ATTR_SERVER_NAME = 'server_name'
+
+CONF_ATTRIBUTION = "Data retrieved from Speedtest by Ookla"
 CONF_SECOND = 'second'
 CONF_MINUTE = 'minute'
 CONF_HOUR = 'hour'
 CONF_DAY = 'day'
 CONF_SERVER_ID = 'server_id'
+CONF_MANUAL = 'manual'
+
+ICON = 'mdi:speedometer'
 
 SENSOR_TYPES = {
     'ping': ['Ping', 'ms'],
@@ -41,29 +48,28 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS):
         vol.All(cv.ensure_list, [vol.In(list(SENSOR_TYPES))]),
-    vol.Optional(CONF_SERVER_ID): cv.positive_int,
-    vol.Optional(CONF_SECOND, default=[0]):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
-    vol.Optional(CONF_MINUTE, default=[0]):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
-    vol.Optional(CONF_HOUR):
-        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
     vol.Optional(CONF_DAY):
         vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(1, 31))]),
+    vol.Optional(CONF_HOUR):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 23))]),
+    vol.Optional(CONF_MANUAL, default=False): cv.boolean,
+    vol.Optional(CONF_MINUTE, default=[0]):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+    vol.Optional(CONF_SECOND, default=[0]):
+        vol.All(cv.ensure_list, [vol.All(vol.Coerce(int), vol.Range(0, 59))]),
+    vol.Optional(CONF_SERVER_ID): cv.positive_int,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Speedtest sensor."""
     data = SpeedtestData(hass, config)
+
     dev = []
     for sensor in config[CONF_MONITORED_CONDITIONS]:
-        if sensor not in SENSOR_TYPES:
-            _LOGGER.error("Sensor type: %s does not exist", sensor)
-        else:
-            dev.append(SpeedtestSensor(data, sensor))
+        dev.append(SpeedtestSensor(data, sensor))
 
-    add_devices(dev)
+    add_entities(dev)
 
     def update(call=None):
         """Update service for manual updates."""
@@ -83,6 +89,7 @@ class SpeedtestSensor(Entity):
         self.speedtest_client = speedtest_data
         self.type = sensor_type
         self._state = None
+        self._data = None
         self._unit_of_measurement = SENSOR_TYPES[self.type][1]
 
     @property
@@ -100,62 +107,71 @@ class SpeedtestSensor(Entity):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
+    @property
+    def icon(self):
+        """Return icon."""
+        return ICON
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        if self._data is not None:
+            return {
+                ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_BYTES_RECEIVED: self._data['bytes_received'],
+                ATTR_BYTES_SENT: self._data['bytes_sent'],
+                ATTR_SERVER_COUNTRY: self._data['server']['country'],
+                ATTR_SERVER_ID: self._data['server']['id'],
+                ATTR_SERVER_LATENCY: self._data['server']['latency'],
+                ATTR_SERVER_NAME: self._data['server']['name'],
+            }
+
     def update(self):
         """Get the latest data and update the states."""
-        data = self.speedtest_client.data
-        if data is None:
-            entity_id = 'sensor.speedtest_' + self._name.lower()
-            states = recorder.get_model('States')
-            try:
-                last_state = recorder.execute(
-                    recorder.query('States').filter(
-                        (states.entity_id == entity_id) &
-                        (states.last_changed == states.last_updated) &
-                        (states.state != 'unknown')
-                    ).order_by(states.state_id.desc()).limit(1))
-            except TypeError:
-                return
-            except RuntimeError:
-                return
-            if not last_state:
-                return
-            self._state = last_state[0].state
-        elif self.type == 'ping':
-            self._state = data['ping']
+        self._data = self.speedtest_client.data
+        if self._data is None:
+            return
+
+        if self.type == 'ping':
+            self._state = self._data['ping']
         elif self.type == 'download':
-            self._state = data['download']
+            self._state = round(self._data['download'] / 10**6, 2)
         elif self.type == 'upload':
-            self._state = data['upload']
+            self._state = round(self._data['upload'] / 10**6, 2)
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Handle all entity which are about to be added."""
+        state = yield from async_get_last_state(self.hass, self.entity_id)
+        if not state:
+            return
+        self._state = state.state
 
 
-class SpeedtestData(object):
+class SpeedtestData:
     """Get the latest data from speedtest.net."""
 
     def __init__(self, hass, config):
         """Initialize the data object."""
         self.data = None
         self._server_id = config.get(CONF_SERVER_ID)
-        track_time_change(hass, self.update,
-                          second=config.get(CONF_SECOND),
-                          minute=config.get(CONF_MINUTE),
-                          hour=config.get(CONF_HOUR),
-                          day=config.get(CONF_DAY))
+        if not config.get(CONF_MANUAL):
+            track_time_change(
+                hass, self.update, second=config.get(CONF_SECOND),
+                minute=config.get(CONF_MINUTE), hour=config.get(CONF_HOUR),
+                day=config.get(CONF_DAY))
 
     def update(self, now):
         """Get the latest data from speedtest.net."""
         import speedtest
+        _LOGGER.debug("Executing speedtest...")
 
-        _LOGGER.info('Executing speedtest...')
-        try:
-            args = [sys.executable, speedtest.__file__, '--simple']
-            if self._server_id:
-                args = args + ['--server', str(self._server_id)]
+        servers = [] if self._server_id is None else [self._server_id]
 
-            re_output = _SPEEDTEST_REGEX.split(
-                check_output(args).decode('utf-8'))
-        except CalledProcessError as process_error:
-            _LOGGER.error("Error executing speedtest: %s", process_error)
-            return
-        self.data = {'ping': round(float(re_output[1]), 2),
-                     'download': round(float(re_output[2]), 2),
-                     'upload': round(float(re_output[3]), 2)}
+        speed = speedtest.Speedtest()
+        speed.get_servers(servers)
+        speed.get_best_server()
+        speed.download()
+        speed.upload()
+
+        self.data = speed.results.dict()

@@ -15,11 +15,11 @@ from homeassistant.helpers.entity import ToggleEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup Tellstick switches."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up Tellstick switches."""
     if discovery_info is None:
         return
-    add_devices(TelldusLiveSwitch(hass, switch) for switch in discovery_info)
+    add_entities(TelldusLiveSwitch(hass, switch) for switch in discovery_info)
 
 
 class TelldusLiveSwitch(TelldusLiveEntity, ToggleEntity):
@@ -28,7 +28,7 @@ class TelldusLiveSwitch(TelldusLiveEntity, ToggleEntity):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        return self.device.is_on()
+        return self.device.is_on
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

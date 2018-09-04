@@ -8,10 +8,9 @@ from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import DEVICE_DEFAULT_NAME
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
-    """Setup the demo switches."""
-    add_devices_callback([
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+    """Set up the demo switches."""
+    add_entities_callback([
         DemoSwitch('Decorative Lights', True, None, True),
         DemoSwitch('AC', False, 'mdi:air-conditioner', False)
     ])
@@ -48,15 +47,15 @@ class DemoSwitch(SwitchDevice):
         return self._assumed
 
     @property
-    def current_power_mwh(self):
-        """Return the current power usage in mWh."""
+    def current_power_w(self):
+        """Return the current power usage in W."""
         if self._state:
             return 100
 
     @property
-    def today_power_mw(self):
-        """Return the today total power usage in mW."""
-        return 1500
+    def today_energy_kwh(self):
+        """Return the today total energy usage in kWh."""
+        return 15
 
     @property
     def is_on(self):

@@ -23,8 +23,9 @@ def ts_to_dt(timestamp: Optional[float]) -> Optional[datetime]:
 
 # Based on code at
 # http://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
-def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
-                   decimals: int=2, bar_length: int=68) -> None:
+def print_progress(iteration: int, total: int, prefix: str = '',
+                   suffix: str = '', decimals: int = 2,
+                   bar_length: int = 68) -> None:
     """Print progress bar.
 
     Call in a loop to create terminal progress bar
@@ -47,7 +48,7 @@ def print_progress(iteration: int, total: int, prefix: str='', suffix: str='',
 
 
 def run(script_args: List) -> int:
-    """The actual script body."""
+    """Run the actual script."""
     # pylint: disable=invalid-name
     from sqlalchemy import create_engine
     from sqlalchemy.orm import sessionmaker

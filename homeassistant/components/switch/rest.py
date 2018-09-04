@@ -4,44 +4,66 @@ Support for RESTful switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.rest/
 """
+import asyncio
 import logging
 
-import requests
+import aiohttp
+import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT)
+from homeassistant.const import (
+    CONF_HEADERS, CONF_NAME, CONF_RESOURCE, CONF_TIMEOUT, CONF_METHOD,
+    CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template import Template
-
-CONF_BODY_OFF = 'body_off'
-CONF_BODY_ON = 'body_on'
-DEFAULT_BODY_OFF = Template('OFF')
-DEFAULT_BODY_ON = Template('ON')
-DEFAULT_NAME = 'REST Switch'
-DEFAULT_TIMEOUT = 10
-CONF_IS_ON_TEMPLATE = 'is_on_template'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_RESOURCE): cv.url,
-    vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
-    vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
-    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-})
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_BODY_OFF = 'body_off'
+CONF_BODY_ON = 'body_on'
+CONF_IS_ON_TEMPLATE = 'is_on_template'
 
-# pylint: disable=unused-argument,
-def setup_platform(hass, config, add_devices, discovery_info=None):
+DEFAULT_METHOD = 'post'
+DEFAULT_BODY_OFF = 'OFF'
+DEFAULT_BODY_ON = 'ON'
+DEFAULT_NAME = 'REST Switch'
+DEFAULT_TIMEOUT = 10
+
+SUPPORT_REST_METHODS = ['post', 'put']
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_RESOURCE): cv.url,
+    vol.Optional(CONF_HEADERS): {cv.string: cv.string},
+    vol.Optional(CONF_BODY_OFF, default=DEFAULT_BODY_OFF): cv.template,
+    vol.Optional(CONF_BODY_ON, default=DEFAULT_BODY_ON): cv.template,
+    vol.Optional(CONF_IS_ON_TEMPLATE): cv.template,
+    vol.Optional(CONF_METHOD, default=DEFAULT_METHOD):
+        vol.All(vol.Lower, vol.In(SUPPORT_REST_METHODS)),
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+    vol.Inclusive(CONF_USERNAME, 'authentication'): cv.string,
+    vol.Inclusive(CONF_PASSWORD, 'authentication'): cv.string,
+})
+
+
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the RESTful switch."""
-    name = config.get(CONF_NAME)
-    resource = config.get(CONF_RESOURCE)
-    body_on = config.get(CONF_BODY_ON)
     body_off = config.get(CONF_BODY_OFF)
+    body_on = config.get(CONF_BODY_ON)
     is_on_template = config.get(CONF_IS_ON_TEMPLATE)
+    method = config.get(CONF_METHOD)
+    headers = config.get(CONF_HEADERS)
+    name = config.get(CONF_NAME)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+    resource = config.get(CONF_RESOURCE)
+
+    auth = None
+    if username:
+        auth = aiohttp.BasicAuth(username, password=password)
 
     if is_on_template is not None:
         is_on_template.hass = hass
@@ -52,30 +74,33 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     timeout = config.get(CONF_TIMEOUT)
 
     try:
-        requests.get(resource, timeout=10)
-    except requests.exceptions.MissingSchema:
+        switch = RestSwitch(name, resource, method, headers, auth, body_on,
+                            body_off, is_on_template, timeout)
+
+        req = yield from switch.get_device_state(hass)
+        if req.status >= 400:
+            _LOGGER.error("Got non-ok response from resource: %s", req.status)
+        else:
+            async_add_entities([switch])
+    except (TypeError, ValueError):
         _LOGGER.error("Missing resource or schema in configuration. "
                       "Add http:// or https:// to your URL")
-        return False
-    except requests.exceptions.ConnectionError:
+    except (asyncio.TimeoutError, aiohttp.ClientError):
         _LOGGER.error("No route to resource/endpoint: %s", resource)
-        return False
-
-    add_devices(
-        [RestSwitch(
-            hass, name, resource, body_on, body_off, is_on_template, timeout)])
 
 
 class RestSwitch(SwitchDevice):
     """Representation of a switch that can be toggled using REST."""
 
-    def __init__(self, hass, name, resource, body_on, body_off,
-                 is_on_template, timeout):
+    def __init__(self, name, resource, method, headers, auth, body_on,
+                 body_off, is_on_template, timeout):
         """Initialize the REST switch."""
         self._state = None
-        self._hass = hass
         self._name = name
         self._resource = resource
+        self._method = method
+        self._headers = headers
+        self._auth = auth
         self._body_on = body_on
         self._body_off = body_off
         self._is_on_template = is_on_template
@@ -83,7 +108,7 @@ class RestSwitch(SwitchDevice):
 
     @property
     def name(self):
-        """The name of the switch."""
+        """Return the name of the switch."""
         return self._name
 
     @property
@@ -91,46 +116,83 @@ class RestSwitch(SwitchDevice):
         """Return true if device is on."""
         return self._state
 
-    def turn_on(self, **kwargs):
+    @asyncio.coroutine
+    def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        body_on_t = self._body_on.render()
-        request = requests.post(
-            self._resource, data=body_on_t, timeout=self._timeout)
-        if request.status_code == 200:
-            self._state = True
-        else:
-            _LOGGER.error("Can't turn on %s. Is resource/endpoint offline?",
-                          self._resource)
+        body_on_t = self._body_on.async_render()
 
-    def turn_off(self, **kwargs):
+        try:
+            req = yield from self.set_device_state(body_on_t)
+
+            if req.status == 200:
+                self._state = True
+            else:
+                _LOGGER.error(
+                    "Can't turn on %s. Is resource/endpoint offline?",
+                    self._resource)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error while turn on %s", self._resource)
+
+    @asyncio.coroutine
+    def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        body_off_t = self._body_off.render()
-        request = requests.post(
-            self._resource, data=body_off_t, timeout=self._timeout)
-        if request.status_code == 200:
-            self._state = False
-        else:
-            _LOGGER.error("Can't turn off %s. Is resource/endpoint offline?",
-                          self._resource)
+        body_off_t = self._body_off.async_render()
 
-    def update(self):
+        try:
+            req = yield from self.set_device_state(body_off_t)
+            if req.status == 200:
+                self._state = False
+            else:
+                _LOGGER.error(
+                    "Can't turn off %s. Is resource/endpoint offline?",
+                    self._resource)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.error("Error while turn off %s", self._resource)
+
+    @asyncio.coroutine
+    def set_device_state(self, body):
+        """Send a state update to the device."""
+        websession = async_get_clientsession(self.hass)
+
+        with async_timeout.timeout(self._timeout, loop=self.hass.loop):
+            req = yield from getattr(websession, self._method)(
+                self._resource, auth=self._auth, data=bytes(body, 'utf-8'),
+                headers=self._headers)
+            return req
+
+    @asyncio.coroutine
+    def async_update(self):
+        """Get the current state, catching errors."""
+        try:
+            yield from self.get_device_state(self.hass)
+        except (asyncio.TimeoutError, aiohttp.ClientError):
+            _LOGGER.exception("Error while fetch data.")
+
+    @asyncio.coroutine
+    def get_device_state(self, hass):
         """Get the latest data from REST API and update the state."""
-        request = requests.get(self._resource, timeout=self._timeout)
+        websession = async_get_clientsession(hass)
+
+        with async_timeout.timeout(self._timeout, loop=hass.loop):
+            req = yield from websession.get(self._resource, auth=self._auth)
+            text = yield from req.text()
 
         if self._is_on_template is not None:
-            response = self._is_on_template.render_with_possible_json_value(
-                request.text, 'None')
-            response = response.lower()
-            if response == 'true':
+            text = self._is_on_template.async_render_with_possible_json_value(
+                text, 'None')
+            text = text.lower()
+            if text == 'true':
                 self._state = True
-            elif response == 'false':
+            elif text == 'false':
                 self._state = False
             else:
                 self._state = None
         else:
-            if request.text == self._body_on.template:
+            if text == self._body_on.template:
                 self._state = True
-            elif request.text == self._body_off.template:
+            elif text == self._body_off.template:
                 self._state = False
             else:
                 self._state = None
+
+        return req

@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, PLATFORM_SCHEMA, BaseNotificationService)
 
+_LOGGER = logging.getLogger(__name__)
 
 CONF_FACILITY = 'facility'
 CONF_OPTION = 'option'
@@ -64,10 +65,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-_LOGGER = logging.getLogger(__name__)
-
-
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the syslog notification service."""
     import syslog
 

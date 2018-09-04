@@ -8,9 +8,9 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_API_KEY, STATE_UNKNOWN)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['xboxapi==0.1.1']
@@ -27,22 +27,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Xbox platform."""
     from xboxapi import xbox_api
     api = xbox_api.XboxApi(config.get(CONF_API_KEY))
     devices = []
+
+    # request personal profile to check api connection
+    profile = api.get_profile()
+    if profile.get('error_code') is not None:
+        _LOGGER.error("Can't setup XboxAPI connection. Check your account or "
+                      " api key on xboxapi.com. Code: %s Description: %s ",
+                      profile.get('error_code', STATE_UNKNOWN),
+                      profile.get('error_message', STATE_UNKNOWN))
+        return
 
     for xuid in config.get(CONF_XUID):
         new_device = XboxSensor(hass, api, xuid)
         if new_device.success_init:
             devices.append(new_device)
 
-    if len(devices) > 0:
-        add_devices(devices)
-    else:
-        return False
+    if devices:
+        add_entities(devices, True)
 
 
 class XboxSensor(Entity):
@@ -57,13 +63,20 @@ class XboxSensor(Entity):
         self._api = api
 
         # get profile info
-        profile = self._api.get_user_profile(self._xuid)
+        profile = self._api.get_user_gamercard(self._xuid)
 
-        if profile.get('success', True) and profile.get('code', 0) != 28:
+        if profile.get('success', True) and profile.get('code') is None:
             self.success_init = True
-            self._gamertag = profile.get('Gamertag')
-            self._picture = profile.get('GameDisplayPicRaw')
+            self._gamertag = profile.get('gamertag')
+            self._gamerscore = profile.get('gamerscore')
+            self._picture = profile.get('gamerpicSmallSslImagePath')
+            self._tier = profile.get('tier')
         else:
+            _LOGGER.error("Can't get user profile %s. "
+                          "Error Code: %s Description: %s",
+                          self._xuid,
+                          profile.get('code', STATE_UNKNOWN),
+                          profile.get('description', STATE_UNKNOWN))
             self.success_init = False
 
     @property
@@ -80,6 +93,9 @@ class XboxSensor(Entity):
     def device_state_attributes(self):
         """Return the state attributes."""
         attributes = {}
+        attributes['gamerscore'] = self._gamerscore
+        attributes['tier'] = self._tier
+
         for device in self._presence:
             for title in device.get('titles'):
                 attributes[

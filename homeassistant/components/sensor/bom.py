@@ -5,15 +5,22 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bom/
 """
 import datetime
+import ftplib
+import gzip
+import io
+import json
 import logging
-import requests
+import os
+import re
+import zipfile
 
+import requests
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, STATE_UNKNOWN, CONF_NAME,
-    ATTR_ATTRIBUTION)
+    CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, CONF_NAME, ATTR_ATTRIBUTION,
+    CONF_LATITUDE, CONF_LONGITUDE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
@@ -21,14 +28,19 @@ import homeassistant.helpers.config_validation as cv
 _RESOURCE = 'http://www.bom.gov.au/fwo/{}/{}.{}.json'
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_LAST_UPDATE = 'last_update'
+ATTR_SENSOR_ID = 'sensor_id'
+ATTR_STATION_ID = 'station_id'
+ATTR_STATION_NAME = 'station_name'
+ATTR_ZONE_ID = 'zone_id'
+
 CONF_ATTRIBUTION = "Data provided by the Australian Bureau of Meteorology"
+CONF_STATION = 'station'
 CONF_ZONE_ID = 'zone_id'
 CONF_WMO_ID = 'wmo_id'
 
-MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=60)
-LAST_UPDATE = 0
+MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(minutes=35)
 
-# Sensor types are defined like: Name, units
 SENSOR_TYPES = {
     'wmo': ['wmo', None],
     'name': ['Station Name', None],
@@ -63,45 +75,68 @@ SENSOR_TYPES = {
     'weather': ['Weather', None],
     'wind_dir': ['Wind Direction', None],
     'wind_spd_kmh': ['Wind Speed kmh', 'km/h'],
-    'wind_spd_kt': ['Wind Direction kt', 'kt']
+    'wind_spd_kt': ['Wind Speed kt', 'kt']
 }
 
+
+def validate_station(station):
+    """Check that the station ID is well-formed."""
+    if station is None:
+        return
+    station = station.replace('.shtml', '')
+    if not re.fullmatch(r'ID[A-Z]\d\d\d\d\d\.\d\d\d\d\d', station):
+        raise vol.error.Invalid('Malformed station ID')
+    return station
+
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_ZONE_ID): cv.string,
-    vol.Required(CONF_WMO_ID): cv.string,
-    vol.Optional(CONF_NAME, default=None): cv.string,
+    vol.Inclusive(CONF_ZONE_ID, 'Deprecated partial station ID'): cv.string,
+    vol.Inclusive(CONF_WMO_ID, 'Deprecated partial station ID'): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_STATION): validate_station,
     vol.Required(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BOM sensor."""
-    rest = BOMCurrentData(
-        hass, config.get(CONF_ZONE_ID), config.get(CONF_WMO_ID))
+    station = config.get(CONF_STATION)
+    zone_id, wmo_id = config.get(CONF_ZONE_ID), config.get(CONF_WMO_ID)
 
-    sensors = []
-    for variable in config[CONF_MONITORED_CONDITIONS]:
-        sensors.append(BOMCurrentSensor(
-            rest, variable, config.get(CONF_NAME)))
+    if station is not None:
+        if zone_id and wmo_id:
+            _LOGGER.warning(
+                "Using config %s, not %s and %s for BOM sensor",
+                CONF_STATION, CONF_ZONE_ID, CONF_WMO_ID)
+    elif zone_id and wmo_id:
+        station = '{}.{}'.format(zone_id, wmo_id)
+    else:
+        station = closest_station(
+            config.get(CONF_LATITUDE), config.get(CONF_LONGITUDE),
+            hass.config.config_dir)
+        if station is None:
+            _LOGGER.error("Could not get BOM weather station from lat/lon")
+            return
+
+    bom_data = BOMCurrentData(hass, station)
 
     try:
-        rest.update()
+        bom_data.update()
     except ValueError as err:
-        _LOGGER.error("Received error from BOM_Current: %s", err)
-        return False
+        _LOGGER.error("Received error from BOM Current: %s", err)
+        return
 
-    add_devices(sensors)
-
-    return True
+    add_entities([BOMCurrentSensor(bom_data, variable, config.get(CONF_NAME))
+                  for variable in config[CONF_MONITORED_CONDITIONS]])
 
 
 class BOMCurrentSensor(Entity):
     """Implementation of a BOM current sensor."""
 
-    def __init__(self, rest, condition, stationname):
+    def __init__(self, bom_data, condition, stationname):
         """Initialize the sensor."""
-        self.rest = rest
+        self.bom_data = bom_data
         self._condition = condition
         self.stationname = stationname
 
@@ -110,29 +145,29 @@ class BOMCurrentSensor(Entity):
         """Return the name of the sensor."""
         if self.stationname is None:
             return 'BOM {}'.format(SENSOR_TYPES[self._condition][0])
-        else:
-            return 'BOM {} {}'.format(
-                self.stationname, SENSOR_TYPES[self._condition][0])
+
+        return 'BOM {} {}'.format(
+            self.stationname, SENSOR_TYPES[self._condition][0])
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self.rest.data and self._condition in self.rest.data:
-            return self.rest.data[self._condition]
-        else:
-            return STATE_UNKNOWN
+        return self.bom_data.get_reading(self._condition)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        attr = {}
-        attr['Sensor Id'] = self._condition
-        attr['Zone Id'] = self.rest.data['history_product']
-        attr['Station Id'] = self.rest.data['wmo']
-        attr['Station Name'] = self.rest.data['name']
-        attr['Last Update'] = datetime.datetime.strptime(str(
-            self.rest.data['local_date_time_full']), '%Y%m%d%H%M%S')
-        attr[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
+        attr = {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            ATTR_LAST_UPDATE: datetime.datetime.strptime(
+                str(self.bom_data.latest_data['local_date_time_full']),
+                '%Y%m%d%H%M%S'),
+            ATTR_SENSOR_ID: self._condition,
+            ATTR_STATION_ID: self.bom_data.latest_data['wmo'],
+            ATTR_STATION_NAME: self.bom_data.latest_data['name'],
+            ATTR_ZONE_ID: self.bom_data.latest_data['history_product'],
+        }
+
         return attr
 
     @property
@@ -142,43 +177,119 @@ class BOMCurrentSensor(Entity):
 
     def update(self):
         """Update current conditions."""
-        self.rest.update()
+        self.bom_data.update()
 
 
-class BOMCurrentData(object):
+class BOMCurrentData:
     """Get data from BOM."""
 
-    def __init__(self, hass, zone_id, wmo_id):
+    def __init__(self, hass, station_id):
         """Initialize the data object."""
         self._hass = hass
-        self._zone_id = zone_id
-        self._wmo_id = wmo_id
-        self.data = None
-        self._lastupdate = LAST_UPDATE
+        self._zone_id, self._wmo_id = station_id.split('.')
+        self._data = None
 
     def _build_url(self):
+        """Build the URL for the requests."""
         url = _RESOURCE.format(self._zone_id, self._zone_id, self._wmo_id)
-        _LOGGER.info("BOM url %s", url)
+        _LOGGER.debug("BOM URL: %s", url)
         return url
+
+    @property
+    def latest_data(self):
+        """Return the latest data object."""
+        if self._data:
+            return self._data[0]
+        return None
+
+    def get_reading(self, condition):
+        """Return the value for the given condition.
+
+        BOM weather publishes condition readings for weather (and a few other
+        conditions) at intervals throughout the day. To avoid a `-` value in
+        the frontend for these conditions, we traverse the historical data
+        for the latest value that is not `-`.
+
+        Iterators are used in this method to avoid iterating needlessly
+        iterating through the entire BOM provided dataset.
+        """
+        condition_readings = (entry[condition] for entry in self._data)
+        return next((x for x in condition_readings if x != '-'), None)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from BOM."""
-        if self._lastupdate != 0 and \
-            ((datetime.datetime.now() - self._lastupdate) <
-             datetime.timedelta(minutes=35)):
-            _LOGGER.info(
-                "BOM was updated %s minutes ago, skipping update as"
-                " < 35 minutes", (datetime.datetime.now() - self._lastupdate))
-            return self._lastupdate
-
         try:
             result = requests.get(self._build_url(), timeout=10).json()
-            self.data = result['observations']['data'][0]
-            self._lastupdate = datetime.datetime.strptime(
-                str(self.data['local_date_time_full']), '%Y%m%d%H%M%S')
-            return self._lastupdate
+            self._data = result['observations']['data']
         except ValueError as err:
             _LOGGER.error("Check BOM %s", err.args)
-            self.data = None
+            self._data = None
             raise
+
+
+def _get_bom_stations():
+    """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config.
+
+    This function does several MB of internet requests, so please use the
+    caching version to minimise latency and hit-count.
+    """
+    latlon = {}
+    with io.BytesIO() as file_obj:
+        with ftplib.FTP('ftp.bom.gov.au') as ftp:
+            ftp.login()
+            ftp.cwd('anon2/home/ncc/metadata/sitelists')
+            ftp.retrbinary('RETR stations.zip', file_obj.write)
+        file_obj.seek(0)
+        with zipfile.ZipFile(file_obj) as zipped:
+            with zipped.open('stations.txt') as station_txt:
+                for _ in range(4):
+                    station_txt.readline()  # skip header
+                while True:
+                    line = station_txt.readline().decode().strip()
+                    if len(line) < 120:
+                        break  # end while loop, ignoring any footer text
+                    wmo, lat, lon = (line[a:b].strip() for a, b in
+                                     [(128, 134), (70, 78), (79, 88)])
+                    if wmo != '..':
+                        latlon[wmo] = (float(lat), float(lon))
+    zones = {}
+    pattern = (r'<a href="/products/(?P<zone>ID[A-Z]\d\d\d\d\d)/'
+               r'(?P=zone)\.(?P<wmo>\d\d\d\d\d).shtml">')
+    for state in ('nsw', 'vic', 'qld', 'wa', 'tas', 'nt'):
+        url = 'http://www.bom.gov.au/{0}/observations/{0}all.shtml'.format(
+            state)
+        for zone_id, wmo_id in re.findall(pattern, requests.get(url).text):
+            zones[wmo_id] = zone_id
+    return {'{}.{}'.format(zones[k], k): latlon[k]
+            for k in set(latlon) & set(zones)}
+
+
+def bom_stations(cache_dir):
+    """Return {CONF_STATION: (lat, lon)} for all stations, for auto-config.
+
+    Results from internet requests are cached as compressed JSON, making
+    subsequent calls very much faster.
+    """
+    cache_file = os.path.join(cache_dir, '.bom-stations.json.gz')
+    if not os.path.isfile(cache_file):
+        stations = _get_bom_stations()
+        with gzip.open(cache_file, 'wt') as cache:
+            json.dump(stations, cache, sort_keys=True)
+        return stations
+    with gzip.open(cache_file, 'rt') as cache:
+        return {k: tuple(v) for k, v in json.load(cache).items()}
+
+
+def closest_station(lat, lon, cache_dir):
+    """Return the ZONE_ID.WMO_ID of the closest station to our lat/lon."""
+    if lat is None or lon is None or not os.path.isdir(cache_dir):
+        return
+    stations = bom_stations(cache_dir)
+
+    def comparable_dist(wmo_id):
+        """Create a psudeo-distance from latitude/longitude."""
+        station_lat, station_lon = stations[wmo_id]
+        return (lat - station_lat) ** 2 + (lon - station_lon) ** 2
+
+    return min(stations, key=comparable_dist)

@@ -8,14 +8,14 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components import ecobee
 from homeassistant.components.notify import (
-    BaseNotificationService, PLATFORM_SCHEMA)  # NOQA
-import homeassistant.helpers.config_validation as cv
+    BaseNotificationService, PLATFORM_SCHEMA)
 
-DEPENDENCIES = ['ecobee']
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['ecobee']
 
 CONF_INDEX = 'index'
 
@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Ecobee notification service."""
     index = config.get(CONF_INDEX)
     return EcobeeNotificationService(index)

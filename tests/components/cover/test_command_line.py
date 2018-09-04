@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from unittest import mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.cover as cover
 from homeassistant.components.cover import (
     command_line as cmd_rs)
@@ -17,7 +17,7 @@ class TestCommandCover(unittest.TestCase):
     """Test the cover command line platform."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.rs = cmd_rs.CommandCover(self.hass, 'foo',
                                       'command_open', 'command_close',

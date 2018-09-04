@@ -7,18 +7,18 @@ import sys
 from homeassistant.helpers.typing import ConfigType
 
 from homeassistant.core import HomeAssistant
-from homeassistant.components import (
-    zone as zone_cmp, sun as sun_cmp)
+from homeassistant.components import zone as zone_cmp
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE,
     CONF_ENTITY_ID, CONF_VALUE_TEMPLATE, CONF_CONDITION,
     WEEKDAYS, CONF_STATE, CONF_ZONE, CONF_BEFORE,
     CONF_AFTER, CONF_WEEKDAY, SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET,
-    CONF_BELOW, CONF_ABOVE)
+    CONF_BELOW, CONF_ABOVE, STATE_UNAVAILABLE, STATE_UNKNOWN)
 from homeassistant.exceptions import TemplateError, HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.sun import get_astral_event_date
 import homeassistant.util.dt as dt_util
-from homeassistant.util.async import run_callback_threadsafe
+from homeassistant.util.async_ import run_callback_threadsafe
 
 FROM_CONFIG_FORMAT = '{}_from_config'
 ASYNC_FROM_CONFIG_FORMAT = 'async_{}_from_config'
@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def _threaded_factory(async_factory):
-    """Helper method to create threaded versions of async factories."""
+    """Create threaded versions of async factories."""
     @ft.wraps(async_factory)
     def factory(config, config_validation=True):
         """Threaded factory."""
@@ -47,7 +47,7 @@ def _threaded_factory(async_factory):
     return factory
 
 
-def async_from_config(config: ConfigType, config_validation: bool=True):
+def async_from_config(config: ConfigType, config_validation: bool = True):
     """Turn a condition configuration into a method.
 
     Should be run on the event loop.
@@ -70,7 +70,7 @@ def async_from_config(config: ConfigType, config_validation: bool=True):
 from_config = _threaded_factory(async_from_config)
 
 
-def async_and_from_config(config: ConfigType, config_validation: bool=True):
+def async_and_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'AND'."""
     if config_validation:
         config = cv.AND_CONDITION_SCHEMA(config)
@@ -90,7 +90,7 @@ def async_and_from_config(config: ConfigType, config_validation: bool=True):
                 if not check(hass, variables):
                     return False
         except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.warning('Error during and-condition: %s', ex)
+            _LOGGER.warning("Error during and-condition: %s", ex)
             return False
 
         return True
@@ -101,7 +101,7 @@ def async_and_from_config(config: ConfigType, config_validation: bool=True):
 and_from_config = _threaded_factory(async_and_from_config)
 
 
-def async_or_from_config(config: ConfigType, config_validation: bool=True):
+def async_or_from_config(config: ConfigType, config_validation: bool = True):
     """Create multi condition matcher using 'OR'."""
     if config_validation:
         config = cv.OR_CONDITION_SCHEMA(config)
@@ -121,7 +121,7 @@ def async_or_from_config(config: ConfigType, config_validation: bool=True):
                 if check(hass, variables):
                     return True
         except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.warning('Error during or-condition: %s', ex)
+            _LOGGER.warning("Error during or-condition: %s", ex)
 
         return False
 
@@ -160,16 +160,20 @@ def async_numeric_state(hass: HomeAssistant, entity, below=None, above=None,
             _LOGGER.error("Template error: %s", ex)
             return False
 
+    if value in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        return False
+
     try:
         value = float(value)
     except ValueError:
-        _LOGGER.warning("Value cannot be processed as a number: %s", value)
+        _LOGGER.warning("Value cannot be processed as a number: %s "
+                        "(Offending entity: %s)", entity, value)
         return False
 
-    if below is not None and value > below:
+    if below is not None and value >= below:
         return False
 
-    if above is not None and value < above:
+    if above is not None and value <= above:
         return False
 
     return True
@@ -199,7 +203,10 @@ numeric_state_from_config = _threaded_factory(async_numeric_state_from_config)
 
 
 def state(hass, entity, req_state, for_period=None):
-    """Test if state matches requirements."""
+    """Test if state matches requirements.
+
+    Async friendly.
+    """
     if isinstance(entity, str):
         entity = hass.states.get(entity)
 
@@ -231,24 +238,32 @@ def state_from_config(config, config_validation=True):
 
 def sun(hass, before=None, after=None, before_offset=None, after_offset=None):
     """Test if current time matches sun requirements."""
-    now = dt_util.now().time()
+    utcnow = dt_util.utcnow()
+    today = dt_util.as_local(utcnow).date()
     before_offset = before_offset or timedelta(0)
     after_offset = after_offset or timedelta(0)
 
-    if before == SUN_EVENT_SUNRISE and now > (sun_cmp.next_rising(hass) +
-                                              before_offset).time():
+    sunrise = get_astral_event_date(hass, 'sunrise', today)
+    sunset = get_astral_event_date(hass, 'sunset', today)
+
+    if sunrise is None and SUN_EVENT_SUNRISE in (before, after):
+        # There is no sunrise today
         return False
 
-    elif before == SUN_EVENT_SUNSET and now > (sun_cmp.next_setting(hass) +
-                                               before_offset).time():
+    if sunset is None and SUN_EVENT_SUNSET in (before, after):
+        # There is no sunset today
         return False
 
-    if after == SUN_EVENT_SUNRISE and now < (sun_cmp.next_rising(hass) +
-                                             after_offset).time():
+    if before == SUN_EVENT_SUNRISE and utcnow > sunrise + before_offset:
         return False
 
-    elif after == SUN_EVENT_SUNSET and now < (sun_cmp.next_setting(hass) +
-                                              after_offset).time():
+    if before == SUN_EVENT_SUNSET and utcnow > sunset + before_offset:
+        return False
+
+    if after == SUN_EVENT_SUNRISE and utcnow < sunrise + after_offset:
+        return False
+
+    if after == SUN_EVENT_SUNSET and utcnow < sunset + after_offset:
         return False
 
     return True
@@ -282,7 +297,7 @@ def async_template(hass, value_template, variables=None):
     try:
         value = value_template.async_render(variables)
     except TemplateError as ex:
-        _LOGGER.error('Error during template condition: %s', ex)
+        _LOGGER.error("Error during template condition: %s", ex)
         return False
 
     return value.lower() == 'true'
@@ -357,7 +372,7 @@ def time_from_config(config, config_validation=True):
 def zone(hass, zone_ent, entity):
     """Test if zone-condition matches.
 
-    Can be run async.
+    Async friendly.
     """
     if isinstance(zone_ent, str):
         zone_ent = hass.states.get(zone_ent)
@@ -377,8 +392,8 @@ def zone(hass, zone_ent, entity):
     if latitude is None or longitude is None:
         return False
 
-    return zone_cmp.in_zone(zone_ent, latitude, longitude,
-                            entity.attributes.get(ATTR_GPS_ACCURACY, 0))
+    return zone_cmp.zone.in_zone(zone_ent, latitude, longitude,
+                                 entity.attributes.get(ATTR_GPS_ACCURACY, 0))
 
 
 def zone_from_config(config, config_validation=True):

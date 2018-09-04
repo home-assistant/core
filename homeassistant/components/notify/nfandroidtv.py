@@ -4,8 +4,9 @@ Notifications for Android TV notification service.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.nfandroidtv/
 """
-import os
 import logging
+import io
+import base64
 
 import requests
 import voluptuous as vol
@@ -31,6 +32,9 @@ DEFAULT_TRANSPARENCY = 'default'
 DEFAULT_COLOR = 'grey'
 DEFAULT_INTERRUPT = False
 DEFAULT_TIMEOUT = 5
+DEFAULT_ICON = (
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGP6zwAAAgcBApo'
+    'cMXEAAAAASUVORK5CYII=')
 
 ATTR_DURATION = 'duration'
 ATTR_POSITION = 'position'
@@ -77,14 +81,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.In(TRANSPARENCIES.keys()),
     vol.Optional(CONF_COLOR, default=DEFAULT_COLOR):
         vol.In(COLORS.keys()),
-    vol.Optional(CONF_COLOR, default=DEFAULT_COLOR): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
     vol.Optional(CONF_INTERRUPT, default=DEFAULT_INTERRUPT): cv.boolean,
 })
 
 
-# pylint: disable=unused-argument
-def get_service(hass, config):
+def get_service(hass, config, discovery_info=None):
     """Get the Notifications for Android TV notification service."""
     remoteip = config.get(CONF_IP)
     duration = config.get(CONF_DURATION)
@@ -111,16 +113,13 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         self._default_color = color
         self._default_interrupt = interrupt
         self._timeout = timeout
-        self._icon_file = os.path.join(
-            os.path.dirname(__file__), '..', 'frontend', 'www_static', 'icons',
-            'favicon-192x192.png')
+        self._icon_file = io.BytesIO(base64.b64decode(DEFAULT_ICON))
 
     def send_message(self, message="", **kwargs):
         """Send a message to a Android TV device."""
         _LOGGER.debug("Sending notification to: %s", self._target)
 
-        payload = dict(filename=('icon.png',
-                                 open(self._icon_file, 'rb'),
+        payload = dict(filename=('icon.png', self._icon_file,
                                  'application/octet-stream',
                                  {'Expires': '0'}), type='0',
                        title=kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT),
@@ -130,7 +129,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
                        transparency='%i' % TRANSPARENCIES.get(
                            self._default_transparency),
                        offset='0', app=ATTR_TITLE_DEFAULT, force='true',
-                       interrupt='%i' % self._default_interrupt)
+                       interrupt='%i' % self._default_interrupt,)
 
         data = kwargs.get(ATTR_DATA)
         if data:

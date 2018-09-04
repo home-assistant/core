@@ -1,58 +1,57 @@
 """
-Support for TPLink HS100/HS110 smart switch.
+Support for TPLink HS100/HS110/HS200 smart switch.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.tplink/
 """
 import logging
-
 import time
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_HOST, CONF_NAME)
+from homeassistant.components.switch import (
+    SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
+from homeassistant.const import (CONF_HOST, CONF_NAME, ATTR_VOLTAGE)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['https://github.com/GadgetReactor/pyHS100/archive/'
-                '1f771b7d8090a91c6a58931532e42730b021cbde.zip#pyHS100==0.2.0']
+REQUIREMENTS = ['pyHS100==0.3.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'TPLink Switch HS100'
+ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
+ATTR_CURRENT_A = 'current_a'
 
-ATTR_CURRENT_CONSUMPTION = 'Current consumption'
-ATTR_TOTAL_CONSUMPTION = 'Total consumption'
-ATTR_DAILY_CONSUMPTION = 'Daily consumption'
-ATTR_VOLTAGE = 'Voltage'
-ATTR_CURRENT = 'Current'
+CONF_LEDS = 'enable_leds'
+
+DEFAULT_NAME = 'TP-Link Switch'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_LEDS): cv.boolean,
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the TPLink switch platform."""
-    from pyHS100.pyHS100 import SmartPlug
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the TPLink switch platform."""
+    from pyHS100 import SmartPlug
     host = config.get(CONF_HOST)
     name = config.get(CONF_NAME)
+    leds_on = config.get(CONF_LEDS)
 
-    add_devices([SmartPlugSwitch(SmartPlug(host), name)], True)
+    add_entities([SmartPlugSwitch(SmartPlug(host), name, leds_on)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
     """Representation of a TPLink Smart Plug switch."""
 
-    def __init__(self, smartplug, name):
+    def __init__(self, smartplug, name, leds_on):
         """Initialize the switch."""
         self.smartplug = smartplug
         self._name = name
+        self._leds_on = leds_on
         self._state = None
-        self._emeter_present = (smartplug.model == 110)
-        _LOGGER.debug("Setting up TP-Link Smart Plug HS%i", smartplug.model)
+        self._available = True
         # Set up emeter cache
         self._emeter_params = {}
 
@@ -62,17 +61,22 @@ class SmartPlugSwitch(SwitchDevice):
         return self._name
 
     @property
+    def available(self) -> bool:
+        """Return if switch is available."""
+        return self._available
+
+    @property
     def is_on(self):
         """Return true if switch is on."""
-        return self._state == 'ON'
+        return self._state
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.smartplug.state = 'ON'
+        self.smartplug.turn_on()
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self.smartplug.state = 'OFF'
+        self.smartplug.turn_off()
 
     @property
     def device_state_attributes(self):
@@ -81,28 +85,44 @@ class SmartPlugSwitch(SwitchDevice):
 
     def update(self):
         """Update the TP-Link switch's state."""
+        from pyHS100 import SmartDeviceException
         try:
-            self._state = self.smartplug.state
+            self._state = self.smartplug.state == \
+                self.smartplug.SWITCH_STATE_ON
 
-            if self._emeter_present:
+            if self._leds_on is not None:
+                self.smartplug.led = self._leds_on
+                self._leds_on = None
+
+            # Pull the name from the device if a name was not specified
+            if self._name == DEFAULT_NAME:
+                self._name = self.smartplug.alias
+
+            if self.smartplug.has_emeter:
                 emeter_readings = self.smartplug.get_emeter_realtime()
 
-                self._emeter_params[ATTR_CURRENT_CONSUMPTION] \
-                    = "%.1f W" % emeter_readings["power"]
-                self._emeter_params[ATTR_TOTAL_CONSUMPTION] \
-                    = "%.2f kW" % emeter_readings["total"]
+                self._emeter_params[ATTR_CURRENT_POWER_W] \
+                    = "{:.2f}".format(emeter_readings["power"])
+                self._emeter_params[ATTR_TOTAL_ENERGY_KWH] \
+                    = "{:.3f}".format(emeter_readings["total"])
                 self._emeter_params[ATTR_VOLTAGE] \
-                    = "%.2f V" % emeter_readings["voltage"]
-                self._emeter_params[ATTR_CURRENT] \
-                    = "%.1f A" % emeter_readings["current"]
+                    = "{:.1f}".format(emeter_readings["voltage"])
+                self._emeter_params[ATTR_CURRENT_A] \
+                    = "{:.2f}".format(emeter_readings["current"])
 
                 emeter_statics = self.smartplug.get_emeter_daily()
                 try:
-                    self._emeter_params[ATTR_DAILY_CONSUMPTION] \
-                        = "%.2f kW" % emeter_statics[int(time.strftime("%e"))]
+                    self._emeter_params[ATTR_TODAY_ENERGY_KWH] \
+                        = "{:.3f}".format(
+                            emeter_statics[int(time.strftime("%e"))])
                 except KeyError:
-                    # device returned no daily history
+                    # Device returned no daily history
                     pass
 
-        except OSError:
-            _LOGGER.warning('Could not update status for %s', self.name)
+            self._available = True
+
+        except (SmartDeviceException, OSError) as ex:
+            if self._available:
+                _LOGGER.warning(
+                    "Could not read state for %s: %s", self.name, ex)
+                self._available = False

@@ -1,8 +1,10 @@
 """The tests for the SleepIQ component."""
 import unittest
+from unittest.mock import MagicMock, patch
+
 import requests_mock
 
-from homeassistant import bootstrap
+from homeassistant import setup
 import homeassistant.components.sleepiq as sleepiq
 
 from tests.common import load_fixture, get_test_home_assistant
@@ -49,8 +51,12 @@ class TestSleepIQ(unittest.TestCase):
         """Test the setup."""
         mock_responses(mock)
 
-        response = sleepiq.setup(self.hass, self.config)
-        self.assertTrue(response)
+        # We're mocking the load_platform discoveries or else the platforms
+        # will be setup during tear down when blocking till done, but the mocks
+        # are no longer active.
+        with patch(
+                'homeassistant.helpers.discovery.load_platform', MagicMock()):
+            assert sleepiq.setup(self.hass, self.config)
 
     @requests_mock.Mocker()
     def test_setup_login_failed(self, mock):
@@ -66,11 +72,11 @@ class TestSleepIQ(unittest.TestCase):
         """Test the setup when no login is configured."""
         conf = self.config.copy()
         del conf['sleepiq']['username']
-        assert not bootstrap.setup_component(self.hass, sleepiq.DOMAIN, conf)
+        assert not setup.setup_component(self.hass, sleepiq.DOMAIN, conf)
 
     def test_setup_component_no_password(self):
         """Test the setup when no password is configured."""
         conf = self.config.copy()
         del conf['sleepiq']['password']
 
-        assert not bootstrap.setup_component(self.hass, sleepiq.DOMAIN, conf)
+        assert not setup.setup_component(self.hass, sleepiq.DOMAIN, conf)

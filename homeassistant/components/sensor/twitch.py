@@ -31,12 +31,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Twitch platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Twitch platform."""
     channels = config.get(CONF_CHANNELS, [])
 
-    add_devices([TwitchSensor(channel) for channel in channels])
+    add_entities([TwitchSensor(channel) for channel in channels], True)
 
 
 class TwitchSensor(Entity):
@@ -49,7 +48,6 @@ class TwitchSensor(Entity):
         self._preview = None
         self._game = None
         self._title = None
-        self.update()
 
     @property
     def should_poll(self):

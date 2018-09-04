@@ -8,20 +8,21 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['py-cpuinfo==0.2.3']
+REQUIREMENTS = ['py-cpuinfo==4.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_BRAND = 'Brand'
 ATTR_HZ = 'GHz Advertised'
-ATTR_VENDOR = 'Vendor ID'
+ATTR_ARCH = 'arch'
 
 DEFAULT_NAME = 'CPU speed'
+
 ICON = 'mdi:pulse'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -29,12 +30,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the CPU speed sensor."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the CPU speed sensor."""
     name = config.get(CONF_NAME)
 
-    add_devices([CpuSpeedSensor(name)])
+    add_entities([CpuSpeedSensor(name)], True)
 
 
 class CpuSpeedSensor(Entity):
@@ -44,8 +44,8 @@ class CpuSpeedSensor(Entity):
         """Initialize the sensor."""
         self._name = name
         self._state = None
+        self.info = None
         self._unit_of_measurement = 'GHz'
-        self.update()
 
     @property
     def name(self):
@@ -67,7 +67,7 @@ class CpuSpeedSensor(Entity):
         """Return the state attributes."""
         if self.info is not None:
             return {
-                ATTR_VENDOR: self.info['vendor_id'],
+                ATTR_ARCH: self.info['arch'],
                 ATTR_BRAND: self.info['brand'],
                 ATTR_HZ: round(self.info['hz_advertised_raw'][0]/10**9, 2)
             }

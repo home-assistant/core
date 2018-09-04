@@ -19,14 +19,25 @@
 #
 import sys
 import os
-from os.path import relpath
 import inspect
-from homeassistant.const import (__version__, __short_version__, PROJECT_NAME,
-                                 PROJECT_LONG_DESCRIPTION,
-                                 PROJECT_COPYRIGHT, PROJECT_AUTHOR,
-                                 PROJECT_GITHUB_USERNAME,
-                                 PROJECT_GITHUB_REPOSITORY,
-                                 GITHUB_PATH, GITHUB_URL)
+
+from homeassistant.const import __version__, __short_version__
+
+PROJECT_NAME = 'Home Assistant'
+PROJECT_PACKAGE_NAME = 'homeassistant'
+PROJECT_AUTHOR = 'The Home Assistant Authors'
+PROJECT_COPYRIGHT = ' 2013-2018, {}'.format(PROJECT_AUTHOR)
+PROJECT_LONG_DESCRIPTION = ('Home Assistant is an open-source '
+                            'home automation platform running on Python 3. '
+                            'Track and control all devices at home and '
+                            'automate control. '
+                            'Installation in less than a minute.')
+PROJECT_GITHUB_USERNAME = 'home-assistant'
+PROJECT_GITHUB_REPOSITORY = 'home-assistant'
+
+GITHUB_PATH = '{}/{}'.format(
+    PROJECT_GITHUB_USERNAME, PROJECT_GITHUB_REPOSITORY)
+GITHUB_URL = 'https://github.com/{}'.format(GITHUB_PATH)
 
 
 sys.path.insert(0, os.path.abspath('_ext'))
@@ -87,9 +98,7 @@ edit_on_github_src_path = 'docs/source/'
 
 
 def linkcode_resolve(domain, info):
-    """
-    Determine the URL corresponding to Python object
-    """
+    """Determine the URL corresponding to Python object."""
     if domain != 'py':
         return None
     modname = info['module']
@@ -117,7 +126,11 @@ def linkcode_resolve(domain, info):
         linespec = "#L%d" % (lineno + 1)
     else:
         linespec = ""
-    fn = relpath(fn, start='../')
+    index = fn.find("/homeassistant/")
+    if index == -1:
+        index = 0
+
+    fn = fn[index:]
 
     return '{}/blob/{}/{}{}'.format(GITHUB_URL, code_branch, fn, linespec)
 

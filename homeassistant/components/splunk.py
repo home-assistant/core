@@ -7,13 +7,15 @@ https://home-assistant.io/components/splunk/
 import json
 import logging
 
+from aiohttp.hdrs import AUTHORIZATION
 import requests
 import voluptuous as vol
 
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, CONF_SSL, CONF_TOKEN, EVENT_STATE_CHANGED)
+    CONF_SSL, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TOKEN, EVENT_STATE_CHANGED)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import JSONEncoder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -22,6 +24,7 @@ DOMAIN = 'splunk'
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 8088
 DEFAULT_SSL = False
+DEFAULT_NAME = 'HASS'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -29,17 +32,19 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_SSL, default=False): cv.boolean,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
-    """Setup the Splunk component."""
+    """Set up the Splunk component."""
     conf = config[DOMAIN]
     host = conf.get(CONF_HOST)
     port = conf.get(CONF_PORT)
     token = conf.get(CONF_TOKEN)
     use_ssl = conf.get(CONF_SSL)
+    name = conf.get(CONF_NAME)
 
     if use_ssl:
         uri_scheme = 'https://'
@@ -48,7 +53,7 @@ def setup(hass, config):
 
     event_collector = '{}{}:{}/services/collector/event'.format(
         uri_scheme, host, port)
-    headers = {'Authorization': 'Splunk {}'.format(token)}
+    headers = {AUTHORIZATION: 'Splunk {}'.format(token)}
 
     def splunk_event_listener(event):
         """Listen for new messages on the bus and sends them to Splunk."""
@@ -69,16 +74,20 @@ def setup(hass, config):
                 'attributes': dict(state.attributes),
                 'time': str(event.time_fired),
                 'value': _state,
+                'host': name,
             }
         ]
 
         try:
-            payload = {"host": event_collector,
-                       "event": json_body}
-            requests.post(event_collector, data=json.dumps(payload),
-                          headers=headers)
+            payload = {
+                "host": event_collector,
+                "event": json_body,
+            }
+            requests.post(event_collector,
+                          data=json.dumps(payload, cls=JSONEncoder),
+                          headers=headers, timeout=10)
         except requests.exceptions.RequestException as error:
-            _LOGGER.exception('Error saving event to Splunk: %s', error)
+            _LOGGER.exception("Error saving event to Splunk: %s", error)
 
     hass.bus.listen(EVENT_STATE_CHANGED, splunk_event_listener)
 

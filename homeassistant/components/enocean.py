@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_DEVICE
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['enocean==0.31']
+REQUIREMENTS = ['enocean==0.40']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, config):
-    """Setup the EnOcean component."""
+    """Set up the EnOcean component."""
     global ENOCEAN_DONGLE
 
     serial_dev = config[DOMAIN].get(CONF_DEVICE)
@@ -43,8 +43,8 @@ class EnOceanDongle:
     def __init__(self, hass, ser):
         """Initialize the EnOcean dongle."""
         from enocean.communicators.serialcommunicator import SerialCommunicator
-        self.__communicator = SerialCommunicator(port=ser,
-                                                 callback=self.callback)
+        self.__communicator = SerialCommunicator(
+            port=ser, callback=self.callback)
         self.__communicator.start()
         self.__devices = []
 
@@ -65,16 +65,17 @@ class EnOceanDongle:
         return output
 
     def callback(self, temp):
-        """Callback function for EnOcean Device.
+        """Handle EnOcean device's callback.
 
-        This is the callback function called by
-        python-enocan whenever there is an incoming
-        packet.
+        This is the callback function called by python-enocan whenever there
+        is an incoming packet.
         """
         from enocean.protocol.packet import RadioPacket
         if isinstance(temp, RadioPacket):
+            _LOGGER.debug("Received radio packet: %s", temp)
             rxtype = None
             value = None
+            channel = 0
             if temp.data[6] == 0x30:
                 rxtype = "wallswitch"
                 value = 1
@@ -84,8 +85,9 @@ class EnOceanDongle:
             elif temp.data[4] == 0x0c:
                 rxtype = "power"
                 value = temp.data[3] + (temp.data[2] << 8)
-            elif temp.data[2] == 0x60:
+            elif temp.data[2] & 0x60 == 0x60:
                 rxtype = "switch_status"
+                channel = temp.data[2] & 0x1F
                 if temp.data[3] == 0xe4:
                     value = 1
                 elif temp.data[3] == 0x80:
@@ -95,20 +97,21 @@ class EnOceanDongle:
                 value = temp.data[2]
             for device in self.__devices:
                 if rxtype == "wallswitch" and device.stype == "listener":
-                    if temp.sender == self._combine_hex(device.dev_id):
+                    if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value, temp.data[1])
                 if rxtype == "power" and device.stype == "powersensor":
-                    if temp.sender == self._combine_hex(device.dev_id):
+                    if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
                 if rxtype == "power" and device.stype == "switch":
-                    if temp.sender == self._combine_hex(device.dev_id):
+                    if temp.sender_int == self._combine_hex(device.dev_id):
                         if value > 10:
                             device.value_changed(1)
-                if rxtype == "switch_status" and device.stype == "switch":
-                    if temp.sender == self._combine_hex(device.dev_id):
+                if rxtype == "switch_status" and device.stype == "switch" and \
+                        channel == device.channel:
+                    if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
                 if rxtype == "dimmerstatus" and device.stype == "dimmer":
-                    if temp.sender == self._combine_hex(device.dev_id):
+                    if temp.sender_int == self._combine_hex(device.dev_id):
                         device.value_changed(value)
 
 

@@ -1,14 +1,17 @@
 """Home Assistant command line scripts."""
 import argparse
+import asyncio
 import importlib
+import logging
 import os
 import sys
-import logging
+
 from typing import List
 
+from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
-from homeassistant.util.package import install_package
-from homeassistant.bootstrap import mount_local_lib_path
+from homeassistant import requirements
+from homeassistant.util.package import install_package, is_virtual_env
 
 
 def run(args: List) -> int:
@@ -36,12 +39,20 @@ def run(args: List) -> int:
     script = importlib.import_module('homeassistant.scripts.' + args[0])
 
     config_dir = extract_config_dir()
-    deps_dir = mount_local_lib_path(config_dir)
+
+    if not is_virtual_env():
+        asyncio.get_event_loop().run_until_complete(
+            async_mount_local_lib_path(config_dir))
+
+    pip_kwargs = requirements.pip_kwargs(config_dir)
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
+
     for req in getattr(script, 'REQUIREMENTS', []):
-        if not install_package(req, target=deps_dir):
-            print('Aborting scipt, could not install dependency', req)
+        returncode = install_package(req, **pip_kwargs)
+
+        if not returncode:
+            print('Aborting script, could not install dependency', req)
             return 1
 
     return script.run(args[1:])  # type: ignore

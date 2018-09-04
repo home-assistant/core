@@ -7,13 +7,14 @@ from unittest.mock import patch
 import homeassistant.core as ha
 import homeassistant.components as core_components
 from homeassistant.const import (SERVICE_TURN_ON, SERVICE_TURN_OFF)
-from homeassistant.util.async import run_coroutine_threadsafe
+from homeassistant.util.async_ import run_coroutine_threadsafe
 from homeassistant.util import dt as dt_util
 from homeassistant.helpers import state
 from homeassistant.const import (
     STATE_OPEN, STATE_CLOSED,
     STATE_LOCKED, STATE_UNLOCKED,
-    STATE_ON, STATE_OFF)
+    STATE_ON, STATE_OFF,
+    STATE_HOME, STATE_NOT_HOME)
 from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA, SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PAUSE)
 from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
@@ -22,40 +23,30 @@ from homeassistant.components.sun import (STATE_ABOVE_HORIZON,
 from tests.common import get_test_home_assistant, mock_service
 
 
-def test_async_track_states(event_loop):
+@asyncio.coroutine
+def test_async_track_states(hass):
     """Test AsyncTrackStates context manager."""
-    hass = get_test_home_assistant()
+    point1 = dt_util.utcnow()
+    point2 = point1 + timedelta(seconds=5)
+    point3 = point2 + timedelta(seconds=5)
 
-    try:
-        point1 = dt_util.utcnow()
-        point2 = point1 + timedelta(seconds=5)
-        point3 = point2 + timedelta(seconds=5)
+    with patch('homeassistant.core.dt_util.utcnow') as mock_utcnow:
+        mock_utcnow.return_value = point2
 
-        @asyncio.coroutine
-        @patch('homeassistant.core.dt_util.utcnow')
-        def run_test(mock_utcnow):
-            """Run the test."""
+        with state.AsyncTrackStates(hass) as states:
+            mock_utcnow.return_value = point1
+            hass.states.async_set('light.test', 'on')
+
             mock_utcnow.return_value = point2
+            hass.states.async_set('light.test2', 'on')
+            state2 = hass.states.get('light.test2')
 
-            with state.AsyncTrackStates(hass) as states:
-                mock_utcnow.return_value = point1
-                hass.states.set('light.test', 'on')
+            mock_utcnow.return_value = point3
+            hass.states.async_set('light.test3', 'on')
+            state3 = hass.states.get('light.test3')
 
-                mock_utcnow.return_value = point2
-                hass.states.set('light.test2', 'on')
-                state2 = hass.states.get('light.test2')
-
-                mock_utcnow.return_value = point3
-                hass.states.set('light.test3', 'on')
-                state3 = hass.states.get('light.test3')
-
-            assert [state2, state3] == \
-                sorted(states, key=lambda state: state.entity_id)
-
-        event_loop.run_until_complete(run_test())
-
-    finally:
-        hass.stop()
+    assert [state2, state3] == \
+        sorted(states, key=lambda state: state.entity_id)
 
 
 class TestStateHelpers(unittest.TestCase):
@@ -268,8 +259,9 @@ class TestStateHelpers(unittest.TestCase):
     def test_as_number_states(self):
         """Test state_as_number with states."""
         zero_states = (STATE_OFF, STATE_CLOSED, STATE_UNLOCKED,
-                       STATE_BELOW_HORIZON)
-        one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON)
+                       STATE_BELOW_HORIZON, STATE_NOT_HOME)
+        one_states = (STATE_ON, STATE_OPEN, STATE_LOCKED, STATE_ABOVE_HORIZON,
+                      STATE_HOME)
         for _state in zero_states:
             self.assertEqual(0, state.state_as_number(
                 ha.State('domain.test', _state, {})))

@@ -2,8 +2,9 @@
 Offer sun based automation rules.
 
 For more details about this automation rule, please refer to the documentation
-at https://home-assistant.io/components/automation/#sun-trigger
+at https://home-assistant.io/docs/automation/trigger/#sun-trigger
 """
+import asyncio
 from datetime import timedelta
 import logging
 
@@ -15,8 +16,6 @@ from homeassistant.const import (
 from homeassistant.helpers.event import async_track_sunrise, async_track_sunset
 import homeassistant.helpers.config_validation as cv
 
-DEPENDENCIES = ['sun']
-
 _LOGGER = logging.getLogger(__name__)
 
 TRIGGER_SCHEMA = vol.Schema({
@@ -26,6 +25,7 @@ TRIGGER_SCHEMA = vol.Schema({
 })
 
 
+@asyncio.coroutine
 def async_trigger(hass, config, action):
     """Listen for events based on configuration."""
     event = config.get(CONF_EVENT)
@@ -42,8 +42,6 @@ def async_trigger(hass, config, action):
             },
         })
 
-    # Do something to call action
     if event == SUN_EVENT_SUNRISE:
         return async_track_sunrise(hass, call_action, offset)
-    else:
-        return async_track_sunset(hass, call_action, offset)
+    return async_track_sunset(hass, call_action, offset)

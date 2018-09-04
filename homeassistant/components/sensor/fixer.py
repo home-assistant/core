@@ -4,22 +4,20 @@ Currency exchange rate support that comes from fixer.io.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fixer/
 """
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION, CONF_BASE)
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['fixerio==0.1.1']
+REQUIREMENTS = ['fixerio==1.0.0a0']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_BASE = 'Base currency'
 ATTR_EXCHANGE_RATE = 'Exchange rate'
 ATTR_TARGET = 'Target currency'
 
@@ -29,33 +27,33 @@ CONF_TARGET = 'target'
 DEFAULT_BASE = 'USD'
 DEFAULT_NAME = 'Exchange rate'
 
-ICON = 'mdi:currency'
+ICON = 'mdi:currency-usd'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(days=1)
+SCAN_INTERVAL = timedelta(days=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_API_KEY): cv.string,
     vol.Required(CONF_TARGET): cv.string,
-    vol.Optional(CONF_BASE, default=DEFAULT_BASE): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Fixer.io sensor."""
-    from fixerio import (Fixerio, exceptions)
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Fixer.io sensor."""
+    from fixerio import Fixerio, exceptions
 
+    api_key = config.get(CONF_API_KEY)
     name = config.get(CONF_NAME)
-    base = config.get(CONF_BASE)
     target = config.get(CONF_TARGET)
 
     try:
-        Fixerio(base=base, symbols=[target], secure=True).latest()
+        Fixerio(symbols=[target], access_key=api_key).latest()
     except exceptions.FixerioException:
-        _LOGGER.error('One of the given currencies is not supported')
-        return False
+        _LOGGER.error("One of the given currencies is not supported")
+        return
 
-    data = ExchangeData(base, target)
-    add_devices([ExchangeRateSensor(data, name, target)])
+    data = ExchangeData(target, api_key)
+    add_entities([ExchangeRateSensor(data, name, target)], True)
 
 
 class ExchangeRateSensor(Entity):
@@ -67,7 +65,6 @@ class ExchangeRateSensor(Entity):
         self._target = target
         self._name = name
         self._state = None
-        self.update()
 
     @property
     def name(self):
@@ -89,10 +86,9 @@ class ExchangeRateSensor(Entity):
         """Return the state attributes."""
         if self.data.rate is not None:
             return {
-                ATTR_BASE: self.data.rate['base'],
-                ATTR_TARGET: self._target,
-                ATTR_EXCHANGE_RATE: self.data.rate['rates'][self._target],
                 ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+                ATTR_EXCHANGE_RATE: self.data.rate['rates'][self._target],
+                ATTR_TARGET: self._target,
             }
 
     @property
@@ -106,21 +102,19 @@ class ExchangeRateSensor(Entity):
         self._state = round(self.data.rate['rates'][self._target], 3)
 
 
-class ExchangeData(object):
+class ExchangeData:
     """Get the latest data and update the states."""
 
-    def __init__(self, base_currency, target_currency):
+    def __init__(self, target_currency, api_key):
         """Initialize the data object."""
         from fixerio import Fixerio
 
+        self.api_key = api_key
         self.rate = None
-        self.base_currency = base_currency
         self.target_currency = target_currency
-        self.exchange = Fixerio(base=self.base_currency,
-                                symbols=[self.target_currency],
-                                secure=True)
+        self.exchange = Fixerio(
+            symbols=[self.target_currency], access_key=self.api_key)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from Fixer.io."""
         self.rate = self.exchange.latest()

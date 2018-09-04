@@ -3,7 +3,7 @@
 import unittest
 from unittest import mock
 
-from homeassistant.bootstrap import setup_component
+from homeassistant.setup import setup_component
 import homeassistant.components.logentries as logentries
 from homeassistant.const import STATE_ON, STATE_OFF, EVENT_STATE_CHANGED
 
@@ -14,7 +14,7 @@ class TestLogentries(unittest.TestCase):
     """Test the Logentries component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name

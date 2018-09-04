@@ -1,6 +1,6 @@
 """Test Home Assistant util methods."""
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 
 from homeassistant import util
@@ -31,6 +31,13 @@ class TestUtil(unittest.TestCase):
         self.assertEqual("test_more", util.slugify("Test More"))
         self.assertEqual("test_more", util.slugify("Test_(More)"))
         self.assertEqual("test_more", util.slugify("Tèst_Mörê"))
+        self.assertEqual("b827eb000000", util.slugify("B8:27:EB:00:00:00"))
+        self.assertEqual("testcom", util.slugify("test.com"))
+        self.assertEqual("greg_phone__exp_wayp1",
+                         util.slugify("greg_phone - exp_wayp1"))
+        self.assertEqual("we_are_we_are_a_test_calendar",
+                         util.slugify("We are, we are, a... Test Calendar"))
+        self.assertEqual("test_aouss_aou", util.slugify("Tèst_äöüß_ÄÖÜ"))
 
     def test_repr_helper(self):
         """Test repr_helper."""
@@ -214,7 +221,7 @@ class TestUtil(unittest.TestCase):
 
     def test_throttle_per_instance(self):
         """Test that the throttle method is done per instance of a class."""
-        class Tester(object):
+        class Tester:
             """A tester class for the throttle."""
 
             @util.Throttle(timedelta(seconds=1))
@@ -227,7 +234,7 @@ class TestUtil(unittest.TestCase):
 
     def test_throttle_on_method(self):
         """Test that throttle works when wrapping a method."""
-        class Tester(object):
+        class Tester:
             """A tester class for the throttle."""
 
             def hello(self):
@@ -242,7 +249,7 @@ class TestUtil(unittest.TestCase):
 
     def test_throttle_on_two_method(self):
         """Test that throttle works when wrapping two methods."""
-        class Tester(object):
+        class Tester:
             """A test class for the throttle."""
 
             @util.Throttle(timedelta(seconds=1))
@@ -259,3 +266,36 @@ class TestUtil(unittest.TestCase):
 
         self.assertTrue(tester.hello())
         self.assertTrue(tester.goodbye())
+
+    @patch.object(util, 'random')
+    def test_get_random_string(self, mock_random):
+        """Test get random string."""
+        results = ['A', 'B', 'C']
+
+        def mock_choice(choices):
+            return results.pop(0)
+
+        generator = MagicMock()
+        generator.choice.side_effect = mock_choice
+        mock_random.SystemRandom.return_value = generator
+
+        assert util.get_random_string(length=3) == 'ABC'
+
+
+async def test_throttle_async():
+    """Test Throttle decorator with async method."""
+    @util.Throttle(timedelta(seconds=2))
+    async def test_method():
+        """Only first call should return a value."""
+        return True
+
+    assert (await test_method()) is True
+    assert (await test_method()) is None
+
+    @util.Throttle(timedelta(seconds=2), timedelta(seconds=0.1))
+    async def test_method2():
+        """Only first call should return a value."""
+        return True
+
+    assert (await test_method2()) is True
+    assert (await test_method2()) is None

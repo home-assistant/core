@@ -1,41 +1,36 @@
 """
-The homematic cover platform.
+The HomeMatic cover platform.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.homematic/
-
-Important: For this platform to work the homematic component has to be
-properly configured.
 """
-
 import logging
+
+from homeassistant.components.cover import (
+    ATTR_POSITION, ATTR_TILT_POSITION, CoverDevice)
+from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.components.cover import CoverDevice,\
-    ATTR_POSITION
-from homeassistant.components.homematic import HMDevice
-from homeassistant.loader import get_component
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['homematic']
 
 
-def setup_platform(hass, config, add_callback_devices, discovery_info=None):
-    """Setup the platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the platform."""
     if discovery_info is None:
         return
 
-    homematic = get_component("homematic")
-    return homematic.setup_hmdevice_discovery_helper(
-        hass,
-        HMCover,
-        discovery_info,
-        add_callback_devices
-    )
+    devices = []
+    for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
+        new_device = HMCover(conf)
+        devices.append(new_device)
+
+    add_entities(devices)
 
 
 class HMCover(HMDevice, CoverDevice):
-    """Represents a Homematic Cover in Home Assistant."""
+    """Representation a HomeMatic Cover."""
 
     @property
     def current_cover_position(self):
@@ -44,45 +39,72 @@ class HMCover(HMDevice, CoverDevice):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if self.available:
-            return int(self._hm_get_state() * 100)
-        return None
+        return int(self._hm_get_state() * 100)
 
     def set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if self.available:
-            if ATTR_POSITION in kwargs:
-                position = float(kwargs[ATTR_POSITION])
-                position = min(100, max(0, position))
-                level = position / 100.0
-                self._hmdevice.set_level(level, self._channel)
+        if ATTR_POSITION in kwargs:
+            position = float(kwargs[ATTR_POSITION])
+            position = min(100, max(0, position))
+            level = position / 100.0
+            self._hmdevice.set_level(level, self._channel)
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
         if self.current_cover_position is not None:
-            if self.current_cover_position > 0:
-                return False
-            else:
-                return True
+            return self.current_cover_position == 0
 
     def open_cover(self, **kwargs):
         """Open the cover."""
-        if self.available:
-            self._hmdevice.move_up(self._channel)
+        self._hmdevice.move_up(self._channel)
 
     def close_cover(self, **kwargs):
         """Close the cover."""
-        if self.available:
-            self._hmdevice.move_down(self._channel)
+        self._hmdevice.move_down(self._channel)
 
     def stop_cover(self, **kwargs):
         """Stop the device if in motion."""
-        if self.available:
-            self._hmdevice.stop(self._channel)
+        self._hmdevice.stop(self._channel)
 
     def _init_data_struct(self):
-        """Generate a data dict (self._data) from hm metadata."""
-        # Add state to data dict
+        """Generate a data dictionary (self._data) from metadata."""
         self._state = "LEVEL"
         self._data.update({self._state: STATE_UNKNOWN})
+        if "LEVEL_2" in self._hmdevice.WRITENODE:
+            self._data.update(
+                {'LEVEL_2': STATE_UNKNOWN})
+
+    @property
+    def current_cover_tilt_position(self):
+        """Return current position of cover tilt.
+
+        None is unknown, 0 is closed, 100 is fully open.
+        """
+        if 'LEVEL_2' not in self._data:
+            return None
+
+        return int(self._data.get('LEVEL_2', 0) * 100)
+
+    def set_cover_tilt_position(self, **kwargs):
+        """Move the cover tilt to a specific position."""
+        if "LEVEL_2" in self._data and ATTR_TILT_POSITION in kwargs:
+            position = float(kwargs[ATTR_TILT_POSITION])
+            position = min(100, max(0, position))
+            level = position / 100.0
+            self._hmdevice.set_cover_tilt_position(level, self._channel)
+
+    def open_cover_tilt(self, **kwargs):
+        """Open the cover tilt."""
+        if "LEVEL_2" in self._data:
+            self._hmdevice.open_slats()
+
+    def close_cover_tilt(self, **kwargs):
+        """Close the cover tilt."""
+        if "LEVEL_2" in self._data:
+            self._hmdevice.close_slats()
+
+    def stop_cover_tilt(self, **kwargs):
+        """Stop cover tilt."""
+        if "LEVEL_2" in self._data:
+            self.stop_cover(**kwargs)

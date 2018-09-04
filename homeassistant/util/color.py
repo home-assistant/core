@@ -1,18 +1,13 @@
 """Color util methods."""
-import logging
 import math
+import colorsys
 
-from typing import Tuple
-
-_LOGGER = logging.getLogger(__name__)
-
-HASS_COLOR_MAX = 500  # mireds (inverted)
-HASS_COLOR_MIN = 154
+from typing import Tuple, List
 
 # Official CSS3 colors from w3.org:
 # https://www.w3.org/TR/2010/PR-css3-color-20101028/#html4
 # names do not have spaces in them so that we can compare against
-# reuqests more easily (by removing spaces from the requests as well).
+# requests more easily (by removing spaces from the requests as well).
 # This lets "dark seagreen" and "dark sea green" both match the same
 # color "darkseagreen".
 COLORS = {
@@ -167,23 +162,29 @@ COLORS = {
 }
 
 
-def color_name_to_rgb(color_name):
+def color_name_to_rgb(color_name: str) -> Tuple[int, int, int]:
     """Convert color name to RGB hex value."""
     # COLORS map has no spaces in it, so make the color_name have no
     # spaces in it as well for matching purposes
     hex_value = COLORS.get(color_name.replace(' ', '').lower())
     if not hex_value:
-        _LOGGER.error('unknown color supplied %s default to white', color_name)
-        hex_value = COLORS['white']
+        raise ValueError('Unknown color')
 
     return hex_value
+
+
+# pylint: disable=invalid-name
+def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float]:
+    """Convert from RGB color to XY color."""
+    return color_RGB_to_xy_brightness(iR, iG, iB)[:2]
 
 
 # Taken from:
 # http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 # License: Code is given as is. Use at your own risk and discretion.
 # pylint: disable=invalid-name
-def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
+def color_RGB_to_xy_brightness(
+        iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
     """Convert from RGB color to XY color."""
     if iR + iG + iB == 0:
         return 0.0, 0.0, 0
@@ -202,7 +203,7 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
 
     # Wide RGB D65 conversion formula
     X = R * 0.664511 + G * 0.154324 + B * 0.162028
-    Y = R * 0.313881 + G * 0.668433 + B * 0.047685
+    Y = R * 0.283881 + G * 0.668433 + B * 0.047685
     Z = R * 0.000088 + G * 0.072310 + B * 0.986039
 
     # Convert XYZ to xy
@@ -216,9 +217,13 @@ def color_RGB_to_xy(iR: int, iG: int, iB: int) -> Tuple[float, float, int]:
     return round(x, 3), round(y, 3), brightness
 
 
-# taken from
-# https://github.com/benknight/hue-python-rgb-converter/blob/master/rgb_cie.py
-# Copyright (c) 2014 Benjamin Knight / MIT License.
+def color_xy_to_RGB(vX: float, vY: float) -> Tuple[int, int, int]:
+    """Convert from XY to a normalized RGB."""
+    return color_xy_brightness_to_RGB(vX, vY, 255)
+
+
+# Converted to Python from Obj-C, original source from:
+# http://www.developers.meethue.com/documentation/color-conversions-rgb-xy
 def color_xy_brightness_to_RGB(vX: float, vY: float,
                                ibrightness: int) -> Tuple[int, int, int]:
     """Convert from XYZ to RGB."""
@@ -235,9 +240,9 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
     Z = (Y / vY) * (1 - vX - vY)
 
     # Convert to RGB using Wide RGB D65 conversion.
-    r = X * 1.612 - Y * 0.203 - Z * 0.302
-    g = -X * 0.509 + Y * 1.412 + Z * 0.066
-    b = X * 0.026 - Y * 0.072 + Z * 0.962
+    r = X * 1.656492 - Y * 0.354851 - Z * 0.255038
+    g = -X * 0.707196 + Y * 1.655397 + Z * 0.036152
+    b = X * 0.051713 - Y * 0.121364 + Z * 1.011530
 
     # Apply reverse gamma correction.
     r, g, b = map(
@@ -259,8 +264,92 @@ def color_xy_brightness_to_RGB(vX: float, vY: float,
     return (ir, ig, ib)
 
 
-def _match_max_scale(input_colors: Tuple[int, ...],
-                     output_colors: Tuple[int, ...]) -> Tuple[int, ...]:
+def color_hsb_to_RGB(fH: float, fS: float, fB: float) -> Tuple[int, int, int]:
+    """Convert a hsb into its rgb representation."""
+    if fS == 0:
+        fV = int(fB * 255)
+        return fV, fV, fV
+
+    r = g = b = 0
+    h = fH / 60
+    f = h - float(math.floor(h))
+    p = fB * (1 - fS)
+    q = fB * (1 - fS * f)
+    t = fB * (1 - (fS * (1 - f)))
+
+    if int(h) == 0:
+        r = int(fB * 255)
+        g = int(t * 255)
+        b = int(p * 255)
+    elif int(h) == 1:
+        r = int(q * 255)
+        g = int(fB * 255)
+        b = int(p * 255)
+    elif int(h) == 2:
+        r = int(p * 255)
+        g = int(fB * 255)
+        b = int(t * 255)
+    elif int(h) == 3:
+        r = int(p * 255)
+        g = int(q * 255)
+        b = int(fB * 255)
+    elif int(h) == 4:
+        r = int(t * 255)
+        g = int(p * 255)
+        b = int(fB * 255)
+    elif int(h) == 5:
+        r = int(fB * 255)
+        g = int(p * 255)
+        b = int(q * 255)
+
+    return (r, g, b)
+
+
+def color_RGB_to_hsv(
+        iR: float, iG: float, iB: float) -> Tuple[float, float, float]:
+    """Convert an rgb color to its hsv representation.
+
+    Hue is scaled 0-360
+    Sat is scaled 0-100
+    Val is scaled 0-100
+    """
+    fHSV = colorsys.rgb_to_hsv(iR/255.0, iG/255.0, iB/255.0)
+    return round(fHSV[0]*360, 3), round(fHSV[1]*100, 3), round(fHSV[2]*100, 3)
+
+
+def color_RGB_to_hs(iR: float, iG: float, iB: float) -> Tuple[float, float]:
+    """Convert an rgb color to its hs representation."""
+    return color_RGB_to_hsv(iR, iG, iB)[:2]
+
+
+def color_hsv_to_RGB(iH: float, iS: float, iV: float) -> Tuple[int, int, int]:
+    """Convert an hsv color into its rgb representation.
+
+    Hue is scaled 0-360
+    Sat is scaled 0-100
+    Val is scaled 0-100
+    """
+    fRGB = colorsys.hsv_to_rgb(iH/360, iS/100, iV/100)
+    return (int(fRGB[0]*255), int(fRGB[1]*255), int(fRGB[2]*255))
+
+
+def color_hs_to_RGB(iH: float, iS: float) -> Tuple[int, int, int]:
+    """Convert an hsv color into its rgb representation."""
+    return color_hsv_to_RGB(iH, iS, 100)
+
+
+def color_xy_to_hs(vX: float, vY: float) -> Tuple[float, float]:
+    """Convert an xy color to its hs representation."""
+    h, s, _ = color_RGB_to_hsv(*color_xy_to_RGB(vX, vY))
+    return h, s
+
+
+def color_hs_to_xy(iH: float, iS: float) -> Tuple[float, float]:
+    """Convert an hs color to its xy representation."""
+    return color_RGB_to_xy(*color_hs_to_RGB(iH, iS))
+
+
+def _match_max_scale(input_colors: Tuple, output_colors: Tuple) -> Tuple:
     """Match the maximum value of the output to the input."""
     max_in = max(input_colors)
     max_out = max(output_colors)
@@ -271,7 +360,7 @@ def _match_max_scale(input_colors: Tuple[int, ...],
     return tuple(int(round(i * factor)) for i in output_colors)
 
 
-def color_rgb_to_rgbw(r, g, b):
+def color_rgb_to_rgbw(r: int, g: int, b: int) -> Tuple[int, int, int, int]:
     """Convert an rgb color to an rgbw representation."""
     # Calculate the white channel as the minimum of input rgb channels.
     # Subtract the white portion from the remaining rgb channels.
@@ -280,20 +369,25 @@ def color_rgb_to_rgbw(r, g, b):
 
     # Match the output maximum value to the input. This ensures the full
     # channel range is used.
-    return _match_max_scale((r, g, b), rgbw)
+    return _match_max_scale((r, g, b), rgbw)  # type: ignore
 
 
-def color_rgbw_to_rgb(r, g, b, w):
+def color_rgbw_to_rgb(r: int, g: int, b: int, w: int) -> Tuple[int, int, int]:
     """Convert an rgbw color to an rgb representation."""
     # Add the white channel back into the rgb channels.
     rgb = (r + w, g + w, b + w)
 
-    # Match the output maximum value to the input. This ensures the the
+    # Match the output maximum value to the input. This ensures the
     # output doesn't overflow.
-    return _match_max_scale((r, g, b, w), rgb)
+    return _match_max_scale((r, g, b, w), rgb)  # type: ignore
 
 
-def rgb_hex_to_rgb_list(hex_string):
+def color_rgb_to_hex(r: int, g: int, b: int) -> str:
+    """Return a RGB color from a hex color string."""
+    return '{0:02x}{1:02x}{2:02x}'.format(round(r), round(g), round(b))
+
+
+def rgb_hex_to_rgb_list(hex_string: str) -> List[int]:
     """Return an RGB color value list from a hex color string."""
     return [int(hex_string[i:i + len(hex_string) // 3], 16)
             for i in range(0,
@@ -301,7 +395,14 @@ def rgb_hex_to_rgb_list(hex_string):
                            len(hex_string) // 3)]
 
 
-def color_temperature_to_rgb(color_temperature_kelvin):
+def color_temperature_to_hs(
+        color_temperature_kelvin: float) -> Tuple[float, float]:
+    """Return an hs color from a color temperature in Kelvin."""
+    return color_RGB_to_hs(*color_temperature_to_rgb(color_temperature_kelvin))
+
+
+def color_temperature_to_rgb(
+        color_temperature_kelvin: float) -> Tuple[float, float, float]:
     """
     Return an RGB color from a color temperature in Kelvin.
 
@@ -322,11 +423,11 @@ def color_temperature_to_rgb(color_temperature_kelvin):
 
     blue = _get_blue(tmp_internal)
 
-    return (red, green, blue)
+    return red, green, blue
 
 
-def _bound(color_component: float, minimum: float=0,
-           maximum: float=255) -> float:
+def _bound(color_component: float, minimum: float = 0,
+           maximum: float = 255) -> float:
     """
     Bound the given color component value between the given min and max values.
 
@@ -365,11 +466,11 @@ def _get_blue(temperature: float) -> float:
     return _bound(blue)
 
 
-def color_temperature_mired_to_kelvin(mired_temperature):
+def color_temperature_mired_to_kelvin(mired_temperature: float) -> float:
     """Convert absolute mired shift to degrees kelvin."""
-    return 1000000 / mired_temperature
+    return math.floor(1000000 / mired_temperature)
 
 
-def color_temperature_kelvin_to_mired(kelvin_temperature):
+def color_temperature_kelvin_to_mired(kelvin_temperature: float) -> float:
     """Convert degrees kelvin to mired shift."""
-    return 1000000 / kelvin_temperature
+    return math.floor(1000000 / kelvin_temperature)

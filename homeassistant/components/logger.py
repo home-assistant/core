@@ -13,6 +13,11 @@ import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'logger'
 
+DATA_LOGGER = 'logger'
+
+SERVICE_SET_DEFAULT_LEVEL = 'set_default_level'
+SERVICE_SET_LEVEL = 'set_level'
+
 LOGSEVERITY = {
     'CRITICAL': 50,
     'FATAL': 50,
@@ -27,7 +32,12 @@ LOGSEVERITY = {
 LOGGER_DEFAULT = 'default'
 LOGGER_LOGS = 'logs'
 
+ATTR_LEVEL = 'level'
+
 _VALID_LOG_LEVEL = vol.All(vol.Upper, vol.In(LOGSEVERITY))
+
+SERVICE_SET_DEFAULT_LEVEL_SCHEMA = vol.Schema({ATTR_LEVEL: _VALID_LOG_LEVEL})
+SERVICE_SET_LEVEL_SCHEMA = vol.Schema({cv.string: _VALID_LOG_LEVEL})
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -37,10 +47,14 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
+def set_level(hass, logs):
+    """Set log level for components."""
+    hass.services.call(DOMAIN, SERVICE_SET_LEVEL, logs)
+
+
 class HomeAssistantLogFilter(logging.Filter):
     """A log filter."""
 
-    # pylint: disable=no-init
     def __init__(self, logfilter):
         """Initialize the filter."""
         super().__init__()
@@ -48,7 +62,7 @@ class HomeAssistantLogFilter(logging.Filter):
         self.logfilter = logfilter
 
     def filter(self, record):
-        """A filter to use."""
+        """Filter the log entries."""
         # Log with filtered severity
         if LOGGER_LOGS in self.logfilter:
             for filtername in self.logfilter[LOGGER_LOGS]:
@@ -61,31 +75,39 @@ class HomeAssistantLogFilter(logging.Filter):
         return record.levelno >= default
 
 
-def setup(hass, config=None):
-    """Setup the logger component."""
+async def async_setup(hass, config):
+    """Set up the logger component."""
     logfilter = {}
 
-    # Set default log severity
-    logfilter[LOGGER_DEFAULT] = LOGSEVERITY['DEBUG']
-    if LOGGER_DEFAULT in config.get(DOMAIN):
-        logfilter[LOGGER_DEFAULT] = LOGSEVERITY[
-            config.get(DOMAIN)[LOGGER_DEFAULT]
-        ]
+    def set_default_log_level(level):
+        """Set the default log level for components."""
+        logfilter[LOGGER_DEFAULT] = LOGSEVERITY[level]
 
-    # Compute log severity for components
-    if LOGGER_LOGS in config.get(DOMAIN):
-        for key, value in config.get(DOMAIN)[LOGGER_LOGS].items():
-            config.get(DOMAIN)[LOGGER_LOGS][key] = LOGSEVERITY[value]
+    def set_log_levels(logpoints):
+        """Set the specified log levels."""
+        logs = {}
 
-        logs = OrderedDict(
+        # Preserve existing logs
+        if LOGGER_LOGS in logfilter:
+            logs.update(logfilter[LOGGER_LOGS])
+
+        # Add new logpoints mapped to correct severity
+        for key, value in logpoints.items():
+            logs[key] = LOGSEVERITY[value]
+
+        logfilter[LOGGER_LOGS] = OrderedDict(
             sorted(
-                config.get(DOMAIN)[LOGGER_LOGS].items(),
+                logs.items(),
                 key=lambda t: len(t[0]),
                 reverse=True
             )
         )
 
-        logfilter[LOGGER_LOGS] = logs
+    # Set default log severity
+    if LOGGER_DEFAULT in config.get(DOMAIN):
+        set_default_log_level(config.get(DOMAIN)[LOGGER_DEFAULT])
+    else:
+        set_default_log_level('DEBUG')
 
     logger = logging.getLogger('')
     logger.setLevel(logging.NOTSET)
@@ -94,5 +116,23 @@ def setup(hass, config=None):
     for handler in logging.root.handlers:
         handler.setLevel(logging.NOTSET)
         handler.addFilter(HomeAssistantLogFilter(logfilter))
+
+    if LOGGER_LOGS in config.get(DOMAIN):
+        set_log_levels(config.get(DOMAIN)[LOGGER_LOGS])
+
+    async def async_service_handler(service):
+        """Handle logger services."""
+        if service.service == SERVICE_SET_DEFAULT_LEVEL:
+            set_default_log_level(service.data.get(ATTR_LEVEL))
+        else:
+            set_log_levels(service.data)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_DEFAULT_LEVEL, async_service_handler,
+        schema=SERVICE_SET_DEFAULT_LEVEL_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_SET_LEVEL, async_service_handler,
+        schema=SERVICE_SET_LEVEL_SCHEMA)
 
     return True
