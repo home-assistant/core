@@ -2,30 +2,23 @@
 Yale Smart Alarm client for interacting with the Yale Smart Alarm System API.
 
 For more details about this platform, please refer to the documentation at
-https://github.com/domwillcode/yale-smart-alarm-client
+https://www.home-assistant.io/components/alarm_control_panel.yale_smart_alarm
 """
 
-import asyncio
 import logging
+
 import voluptuous as vol
 
-import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import PLATFORM_SCHEMA
+from homeassistant.components.alarm_control_panel import (AlarmControlPanel, PLATFORM_SCHEMA)
 from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    CONF_NAME,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_UNKNOWN)
+    CONF_PASSWORD, CONF_USERNAME, CONF_NAME,
+    STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['yalesmartalarmclient==0.1.2']
+REQUIREMENTS = ['yalesmartalarmclient==0.1.4']
 
 CONF_AREA_ID = 'area_id'
 
-YALE_SMART_ALARM_DOMAIN = 'yale_smart_alarm'
 DEFAULT_NAME = 'Yale Smart Alarm'
 
 DEFAULT_AREA_ID = '1'
@@ -40,42 +33,41 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the alarm platform."""
-    if YALE_SMART_ALARM_DOMAIN not in hass.data:
-        hass.data[YALE_SMART_ALARM_DOMAIN] = []
+    name = config.get(CONF_NAME)
+    username = config.get(CONF_USERNAME)
+    password = config.get(CONF_PASSWORD)
+    area_id = config.get(CONF_AREA_ID)
 
-    alarm_panel = YaleAlarmDevice(
-        config.get(CONF_NAME),
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD),
-        config.get(CONF_AREA_ID))
+    from yalesmartalarmclient.client import (YaleSmartAlarmClient, AuthenticationError)
+    try:
+        client = YaleSmartAlarmClient(username, password, area_id)
+    except AuthenticationError:
+        _LOGGER.error("Authentication to Yale Smart Alarm failed. Check credentials.")
+        return
 
-    hass.data[YALE_SMART_ALARM_DOMAIN].append(alarm_panel)
-
-    async_add_devices([alarm_panel], True)
+    add_devices([YaleAlarmDevice(name,client)], True)
 
 
-class YaleAlarmDevice(alarm.AlarmControlPanel):
+class YaleAlarmDevice(AlarmControlPanel):
     """Represent a Yale Smart Alarm."""
 
-    def __init__(self, name, username, password, area_id):
+    def __init__(self, name, client):
         """Initialize the Yale Alarm Device."""
-        _LOGGER.debug("Setting up Yale Smart Alarm")
         self._name = name
-        self._username = username
-        self._password = password
-        self._state = STATE_UNKNOWN
+        self._client = client
+        self._state = None
 
-        from yalesmartalarmclient.client import YaleSmartAlarmClient
+        from yalesmartalarmclient.client import (YALE_STATE_DISARM,
+                                                 YALE_STATE_ARM_PARTIAL,
+                                                 YALE_STATE_ARM_FULL)
+        self._state_map = {
+            YALE_STATE_DISARM: STATE_ALARM_DISARMED,
+            YALE_STATE_ARM_PARTIAL: STATE_ALARM_ARMED_HOME,
+            YALE_STATE_ARM_FULL: STATE_ALARM_ARMED_AWAY
+        }
 
-        self._client = YaleSmartAlarmClient(
-            username,
-            password,
-            area_id)
-
-        _LOGGER.debug("Yale Smart Alarm client created and authenticated")
 
     @property
     def name(self):
@@ -89,39 +81,22 @@ class YaleAlarmDevice(alarm.AlarmControlPanel):
 
     def update(self):
         """Return the state of the device."""
-        from yalesmartalarmclient.client import (YALE_STATE_DISARM,
-                                                 YALE_STATE_ARM_PARTIAL,
-                                                 YALE_STATE_ARM_FULL)
+        armed_status = self._client.get_armed_status()
 
-        status = self._client.get_armed_status()
+        self._state = self._state_map.get(armed_status, None)
 
-        if status == YALE_STATE_DISARM:
-            state = STATE_ALARM_DISARMED
-        elif status == YALE_STATE_ARM_PARTIAL:
-            state = STATE_ALARM_ARMED_HOME
-        elif status == YALE_STATE_ARM_FULL:
-            state = STATE_ALARM_ARMED_AWAY
-        else:
-            state = STATE_UNKNOWN
-
-        self._state = state
-
-    @asyncio.coroutine
-    def async_alarm_disarm(self, code=None):
+    def alarm_disarm(self, code=None):
         """Send disarm command."""
         self._client.disarm()
 
-    @asyncio.coroutine
-    def async_alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code=None):
         """Send arm home command."""
         self._client.arm_partial()
 
-    @asyncio.coroutine
-    def async_alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._client.arm_full()
 
-    @asyncio.coroutine
-    def async_alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code=None):
         """Send arm night command."""
         self._client.arm_partial()
