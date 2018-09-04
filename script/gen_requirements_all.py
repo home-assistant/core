@@ -78,6 +78,7 @@ TEST_REQUIREMENTS = (
     'pylitejet',
     'pymonoprice',
     'pynx584',
+    'pyopenuv',
     'pyotp',
     'pyqwikswitch',
     'PyRMVtransport',
