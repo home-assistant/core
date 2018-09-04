@@ -884,6 +884,8 @@ class SonosDevice(MediaPlayerDevice):
             sources += [SOURCE_LINEIN]
         elif 'PLAYBAR' in model:
             sources += [SOURCE_LINEIN, SOURCE_TV]
+        elif 'BEAM' in model:
+            sources += [SOURCE_TV]
 
         return sources
 

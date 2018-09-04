@@ -277,6 +277,15 @@ class TestMQTTCallbacks(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
+    def test_subscribe_topic_level_wildcard_root_topic_no_subtree_match(self):
+        """Test the subscription of wildcard topics."""
+        mqtt.subscribe(self.hass, 'test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'test-topic-123', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
     def test_subscribe_topic_subtree_wildcard_subtree_topic(self):
         """Test the subscription of wildcard topics."""
         mqtt.subscribe(self.hass, 'test-topic/#', self.record_calls)

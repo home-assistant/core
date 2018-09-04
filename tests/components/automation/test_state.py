@@ -4,7 +4,7 @@ from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 import homeassistant.components.automation as automation
@@ -38,6 +38,7 @@ class TestAutomationState(unittest.TestCase):
 
     def test_if_fires_on_entity_change(self):
         """Test for firing on entity change."""
+        context = Context()
         self.hass.states.set('test.entity', 'hello')
         self.hass.block_till_done()
 
@@ -59,9 +60,10 @@ class TestAutomationState(unittest.TestCase):
             }
         })
 
-        self.hass.states.set('test.entity', 'world')
+        self.hass.states.set('test.entity', 'world', context=context)
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
+        assert self.calls[0].context is context
         self.assertEqual(
             'state - test.entity - hello - world - None',
             self.calls[0].data['some'])

@@ -31,7 +31,7 @@ STORAGE_VERSION = 1
 STORAGE_KEY = 'core.entity_registry'
 
 
-@attr.s(slots=True, frozen=True)
+@attr.s(slots=True)
 class RegistryEntry:
     """Entity Registry Entry."""
 
@@ -249,6 +249,14 @@ class EntityRegistry:
         ]
 
         return data
+
+    @callback
+    def async_clear_config_entry(self, config_entry):
+        """Clear config entry from registry entries."""
+        for entry in self.entities.values():
+            if config_entry == entry.config_entry_id:
+                entry.config_entry_id = None
+                self.async_schedule_save()
 
 
 @bind_hass
