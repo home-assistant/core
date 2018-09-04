@@ -5,14 +5,17 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.dlink/
 """
 import logging
+import urllib
+from datetime import timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import TEMP_CELSIUS, STATE_UNKNOWN
+from homeassistant.util import dt as dt_util
+from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
+from homeassistant.const import (ATTR_TEMPERATURE,
+                                 CONF_HOST, CONF_NAME, CONF_PASSWORD,
+                                 CONF_USERNAME, TEMP_CELSIUS)
 
 REQUIREMENTS = ['pyW215==0.6.0']
 
@@ -23,9 +26,7 @@ DEFAULT_PASSWORD = ''
 DEFAULT_USERNAME = 'admin'
 CONF_USE_LEGACY_PROTOCOL = 'use_legacy_protocol'
 
-ATTR_CURRENT_CONSUMPTION = 'power_consumption'
 ATTR_TOTAL_CONSUMPTION = 'total_consumption'
-ATTR_TEMPERATURE = 'temperature'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -34,6 +35,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_USE_LEGACY_PROTOCOL, default=False): cv.boolean,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
+
+SCAN_INTERVAL = timedelta(minutes=2)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -46,10 +49,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     use_legacy_protocol = config.get(CONF_USE_LEGACY_PROTOCOL)
     name = config.get(CONF_NAME)
 
-    data = SmartPlugData(SmartPlug(host,
-                                   password,
-                                   username,
-                                   use_legacy_protocol))
+    smartplug = SmartPlug(host,
+                          password,
+                          username,
+                          use_legacy_protocol)
+    data = SmartPlugData(smartplug)
 
     add_entities([SmartPlugSwitch(hass, data, name)], True)
 
@@ -74,37 +78,28 @@ class SmartPlugSwitch(SwitchDevice):
         try:
             ui_temp = self.units.temperature(int(self.data.temperature),
                                              TEMP_CELSIUS)
-            temperature = "%i %s" % \
-                          (ui_temp, self.units.temperature_unit)
+            temperature = ui_temp
         except (ValueError, TypeError):
-            temperature = STATE_UNKNOWN
+            temperature = None
 
         try:
-            current_consumption = "%.2f W" % \
-                                  float(self.data.current_consumption)
-        except ValueError:
-            current_consumption = STATE_UNKNOWN
-
-        try:
-            total_consumption = "%.1f kWh" % \
-                                float(self.data.total_consumption)
-        except ValueError:
-            total_consumption = STATE_UNKNOWN
+            total_consumption = float(self.data.total_consumption)
+        except (ValueError, TypeError):
+            total_consumption = None
 
         attrs = {
-            ATTR_CURRENT_CONSUMPTION: current_consumption,
             ATTR_TOTAL_CONSUMPTION: total_consumption,
-            ATTR_TEMPERATURE: temperature
+            ATTR_TEMPERATURE: temperature,
         }
 
         return attrs
 
     @property
-    def current_power_watt(self):
+    def current_power_w(self):
         """Return the current power usage in Watt."""
         try:
             return float(self.data.current_consumption)
-        except ValueError:
+        except (ValueError, TypeError):
             return None
 
     @property
@@ -124,6 +119,11 @@ class SmartPlugSwitch(SwitchDevice):
         """Get the latest data from the smart plug and updates the states."""
         self.data.update()
 
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.data.available
+
 
 class SmartPlugData:
     """Get the latest data from smart plug."""
@@ -135,10 +135,34 @@ class SmartPlugData:
         self.temperature = None
         self.current_consumption = None
         self.total_consumption = None
+        self.available = False
+        self._n_tried = 0
+        self._last_tried = None
 
     def update(self):
         """Get the latest data from the smart plug."""
-        self.state = self.smartplug.state
+        if self._last_tried is not None:
+            last_try_s = (dt_util.now() - self._last_tried).total_seconds()/60
+            retry_seconds = min(self._n_tried*2, 10) - last_try_s
+            if self._n_tried > 0 and retry_seconds > 0:
+                _LOGGER.warning("Waiting %s s to retry", retry_seconds)
+                return
+
+        _state = 'unknown'
+        try:
+            self._last_tried = dt_util.now()
+            _state = self.smartplug.state
+        except urllib.error.HTTPError:
+            _LOGGER.error("Dlink connection problem")
+        if _state == 'unknown':
+            self._n_tried += 1
+            self.available = False
+            _LOGGER.warning("Failed to connect to dlink switch.")
+            return
+        self.state = _state
+        self.available = True
+
         self.temperature = self.smartplug.temperature
         self.current_consumption = self.smartplug.current_consumption
         self.total_consumption = self.smartplug.total_consumption
+        self._n_tried = 0
