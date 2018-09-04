@@ -62,6 +62,7 @@ def brightness_state(value):
         return round((value.data / 99) * 255), STATE_ON
     return 0, STATE_OFF
 
+
 def byte_to_zwave_brightness(value):
     """
     Converts brightness in 0-255 scale to 0-99 scale.
@@ -71,6 +72,7 @@ def byte_to_zwave_brightness(value):
     if value > 0:
         return max(1, int((value / 255) * 99))
     return 0
+
 
 def ct_to_hs(temp):
     """Convert color temperature (mireds) to hs."""
