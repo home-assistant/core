@@ -9,7 +9,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.alarm_control_panel import (AlarmControlPanel, PLATFORM_SCHEMA)
+from homeassistant.components.alarm_control_panel import (
+    AlarmControlPanel, PLATFORM_SCHEMA)
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, CONF_NAME,
     STATE_ALARM_ARMED_AWAY, STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
@@ -40,14 +41,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
     area_id = config.get(CONF_AREA_ID)
 
-    from yalesmartalarmclient.client import (YaleSmartAlarmClient, AuthenticationError)
+    from yalesmartalarmclient.client import (
+        YaleSmartAlarmClient, AuthenticationError)
     try:
         client = YaleSmartAlarmClient(username, password, area_id)
     except AuthenticationError:
-        _LOGGER.error("Authentication to Yale Smart Alarm failed. Check credentials.")
+        _LOGGER.error("Authentication failed. Check credentials.")
         return
 
-    add_devices([YaleAlarmDevice(name,client)], True)
+    add_devices([YaleAlarmDevice(name, client)], True)
 
 
 class YaleAlarmDevice(AlarmControlPanel):
@@ -67,7 +69,6 @@ class YaleAlarmDevice(AlarmControlPanel):
             YALE_STATE_ARM_PARTIAL: STATE_ALARM_ARMED_HOME,
             YALE_STATE_ARM_FULL: STATE_ALARM_ARMED_AWAY
         }
-
 
     @property
     def name(self):
