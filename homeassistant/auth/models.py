@@ -56,7 +56,7 @@ class RefreshToken:
                       default=attr.Factory(lambda: generate_secret(64)))
 
     last_used_at = attr.ib(type=Optional[datetime], default=None)
-    last_used_by = attr.ib(type=Optional[str],  default=None)
+    last_used_ip = attr.ib(type=Optional[str], default=None)
 
 
 @attr.s(slots=True)

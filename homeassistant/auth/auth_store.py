@@ -198,10 +198,10 @@ class AuthStore:
     @callback
     def async_log_refresh_token_usage(
             self, refresh_token: models.RefreshToken,
-            used_by: Optional[str] = None) -> models.RefreshToken:
+            remote_ip: Optional[str] = None) -> models.RefreshToken:
         """Update refresh token last used information."""
         refresh_token.last_used_at = dt_util.utcnow()
-        refresh_token.last_used_by = used_by
+        refresh_token.last_used_ip = remote_ip
         self._async_schedule_save()
         return refresh_token
 
@@ -252,9 +252,11 @@ class AuthStore:
                     token_type = models.TOKEN_TYPE_NORMAL
 
             # old refresh_token don't have last_used_at (pre-0.78)
-            last_used_at = rt_dict.get('last_used_at')
-            if last_used_at is not None:
+            last_used_at_str = rt_dict.get('last_used_at')
+            if last_used_at_str:
                 last_used_at = dt_util.parse_datetime(last_used_at_str)
+            else:
+                last_used_at = None
 
             token = models.RefreshToken(
                 id=rt_dict['id'],
@@ -270,7 +272,7 @@ class AuthStore:
                 token=rt_dict['token'],
                 jwt_key=rt_dict['jwt_key'],
                 last_used_at=last_used_at,
-                last_used_by=rt_dict.get('last_used_by'),
+                last_used_ip=rt_dict.get('last_used_ip'),
             )
             users[rt_dict['user_id']].refresh_tokens[token.id] = token
 
@@ -325,9 +327,10 @@ class AuthStore:
                     refresh_token.access_token_expiration.total_seconds(),
                 'token': refresh_token.token,
                 'jwt_key': refresh_token.jwt_key,
-                'last_used_at': refresh_token.last_used_at.isoformat()
+                'last_used_at':
+                    refresh_token.last_used_at.isoformat()
                     if refresh_token.last_used_at else None,
-                'last_used_by': refresh_token.last_used_by,
+                'last_used_ip': refresh_token.last_used_ip,
             }
             for user in self._users.values()
             for refresh_token in user.refresh_tokens.values()
