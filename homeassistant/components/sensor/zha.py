@@ -36,6 +36,7 @@ def make_sensor(discovery_info):
         RelativeHumidity, TemperatureMeasurement, PressureMeasurement,
         IlluminanceMeasurement
     )
+    from zigpy.zcl.clusters.general import PowerConfiguration
     from zigpy.zcl.clusters.smartenergy import Metering
     from zigpy.zcl.clusters.homeautomation import ElectricalMeasurement
     in_clusters = discovery_info['in_clusters']
@@ -52,6 +53,8 @@ def make_sensor(discovery_info):
     elif ElectricalMeasurement.cluster_id in in_clusters:
         sensor = ElectricalMeasurementSensor(**discovery_info)
         return sensor
+    elif PowerConfiguration.cluster_id in in_clusters:
+        sensor = BatterySensor(**discovery_info)
     else:
         sensor = Sensor(**discovery_info)
 
@@ -98,6 +101,35 @@ class Sensor(zha.Entity):
             [self.value_attribute]
         )
         self._state = result.get(self.value_attribute, self._state)
+
+
+class BatterySensor(Sensor):
+    """ZHA generic battery sensor."""
+
+    value_attribute = 32
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit of measurement of this entity."""
+        return '%'
+
+    async def async_update(self):
+        """Retrieve latest state."""
+        _LOGGER.debug("%s async_update", self.entity_id)
+
+        result = await zha.safe_read(
+            self._endpoint.power,
+            ['battery_voltage']
+        )
+        self._state = result.get('battery_voltage', self._state)
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        if self._state == 'unknown':
+            return 'unknown'
+
+        return self._state
 
 
 class TemperatureSensor(Sensor):
