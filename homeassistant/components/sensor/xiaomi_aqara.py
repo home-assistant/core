@@ -49,7 +49,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 devices.append(XiaomiSensor(device, 'Coordination',
                                             'coordination', gateway))
             else:
-                _LOGGER.warn("Unmapped Device Model ")
+                _LOGGER.warning("Unmapped Device Model ")
     add_entities(devices)
 
 
