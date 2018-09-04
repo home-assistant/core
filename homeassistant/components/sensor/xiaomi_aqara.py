@@ -94,7 +94,7 @@ class XiaomiSensor(XiaomiDevice):
         value = data.get(self._data_key)
         if value is None:
             return False
-        if self._data_key in ['coordination','status']:
+        if self._data_key in ['coordination', 'status']:
             self._state = value
             return True
         value = float(value)
