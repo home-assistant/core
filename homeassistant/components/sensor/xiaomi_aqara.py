@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 devices.append(XiaomiSensor(device, 'Bed Activity',
                                             'bed_activity', gateway))
                 devices.append(XiaomiSensor(device, 'Tilt Angle',
-                                            'final_tilt_angle',gateway))
+                                            'final_tilt_angle', gateway))
                 devices.append(XiaomiSensor(device, 'Coordination',
                                             'coordination', gateway))                
             else:
