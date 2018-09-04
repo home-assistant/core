@@ -1141,7 +1141,7 @@ python-tado==0.2.3
 # homeassistant.components.telegram_bot
 python-telegram-bot==11.0.0
 
-# homeassistant.components.sensor.twitchtest
+# homeassistant.components.sensor.twitch
 python-twitch-client==0.5.1
 
 # homeassistant.components.velbus
