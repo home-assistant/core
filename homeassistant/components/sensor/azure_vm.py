@@ -14,20 +14,18 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.azure import DOMAIN as AZURE_DOMAIN
-from homeassistant.const import (CONF_NAME, CONF_SCAN_INTERVAL)
+from homeassistant.const import (CONF_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['azure']
 
 CONF_RESOURCE_GROUP = 'resource_group'
 
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
+SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_RESOURCE_GROUP): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        cv.time_period,
 })
 
 
@@ -76,5 +74,5 @@ class AzureVmSensor(Entity):
         virtual_machine = self._azure_compute_client.virtual_machines.get(
             self._resource_group, self._name, expand='instanceView')
         self._state = virtual_machine.instance_view.statuses[1].display_status
-        _LOGGER.debug("Status of azure vm %s - %s is %s.", self._name,
+        _LOGGER.debug("Status of azure vm %s - %s is %s", self._name,
                       self._resource_group, self._state)

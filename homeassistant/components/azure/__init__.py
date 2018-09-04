@@ -44,19 +44,19 @@ def setup(hass, config):
             tenant=conf[CONF_TENANT_ID])
         hass.data[DOMAIN] = AzureSubscription(subscription_id, credentials)
         _LOGGER.debug(
-            "Azure subscription entity initialized for subscription %s.",
+            "Azure subscription entity initialized for subscription %s",
             subscription_id)
         return True
     except AuthenticationError:
         _LOGGER.error(
-            "Azure authentication failed for subscription %s.",
+            "Azure authentication failed for subscription %s",
             subscription_id)
         return False
     except (ClientRequestError, CloudError, HttpOperationError):
         _LOGGER.error(
-            "Azure subscription entity initialization failed for %s.",
+            "Azure subscription entity initialization failed for %s",
             subscription_id)
-        return False
+    return False
 
 
 class AzureSubscription:
