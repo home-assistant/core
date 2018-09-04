@@ -725,8 +725,8 @@ def _raise_on_error(result_code: int) -> None:
 
 def _match_topic(subscription: str, topic: str) -> bool:
     """Test if topic matches subscription."""
-    import paho.mqtt.matcher as matcher
-    matcher = matcher.MQTTMatcher()
+    from paho.mqtt.matcher import MQTTMatcher
+    matcher = MQTTMatcher()
     matcher[subscription] = True
     try:
         next(matcher.iter_match(topic))
