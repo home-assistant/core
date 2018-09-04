@@ -30,10 +30,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
-async def async_setup_platform(hass, config, async_add_entities,
-                               discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add the azure vm sensor."""
-    async_add_entities([AzureVmSensor(hass.data[DOMAIN], config)])
+    add_entities([AzureVmSensor(hass.data[DOMAIN], config)])
 
 
 class AzureVmSensor(Entity):
@@ -72,7 +71,7 @@ class AzureVmSensor(Entity):
         return 'mdi:server-off'
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
+    def update(self):
         """Retrieve latest state."""
         virtual_machine = self._azure_compute_client.virtual_machines.get(
             self._resource_group, self._name, expand='instanceView')

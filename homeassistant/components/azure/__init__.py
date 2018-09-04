@@ -12,7 +12,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['azure-mgmt-compute==2.0.0']
+REQUIREMENTS = ['azure-mgmt-compute==4.0.1']
 DOMAIN = 'azure'
 
 CONF_TENANT_ID = 'tenant_id'
@@ -30,7 +30,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_setup(hass, config):
+def setup(hass, config):
     """Set up the azure component."""
     from azure.common.credentials import ServicePrincipalCredentials
 
@@ -40,6 +40,9 @@ async def async_setup(hass, config):
         client_id=conf[CONF_CLIENT_ID], secret=conf[CONF_CLIENT_SECRET],
         tenant=conf[CONF_TENANT_ID])
     hass.data[DOMAIN] = AzureSubscription(subscription_id, credentials)
+    _LOGGER.debug(
+        "Azure subscription entity initialized for subscription %s.",
+        subscription_id)
     return True
 
 
@@ -50,9 +53,6 @@ class AzureSubscription:
         """Initialize the azure subscription Entity."""
         self._subscription_id = subscription_id
         self._credentials = credentials
-        _LOGGER.debug(
-            "Azure subscription entity initialized for subscription %s.",
-            self._subscription_id)
 
     @property
     def credentials(self):
