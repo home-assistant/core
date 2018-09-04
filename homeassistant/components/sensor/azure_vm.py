@@ -1,8 +1,8 @@
 """
-Sensor platform representing a Azure Virtual Machine.
+Sensor platform representing an Azure Virtual Machine.
 
-For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/sensor.azure_vm/
+For more details about this sensor platform, please refer to the documentation
+at https://home-assistant.io/components/sensor.azure_vm/
 """
 
 from datetime import timedelta
@@ -11,28 +11,29 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.util import Throttle
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
-from homeassistant.components.azure import DOMAIN
+from homeassistant.components.azure import DOMAIN as AZURE_DOMAIN
+from homeassistant.const import (CONF_NAME, CONF_SCAN_INTERVAL)
 
 _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['azure']
 
-CONF_NAME = 'name'
-CONG_RESOURCE_GROUP = 'resource_group'
+CONF_RESOURCE_GROUP = 'resource_group'
+
+DEFAULT_SCAN_INTERVAL = timedelta(minutes=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_NAME): cv.string,
-    vol.Required(CONG_RESOURCE_GROUP): cv.string,
+    vol.Required(CONF_RESOURCE_GROUP): cv.string,
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
+        cv.time_period,
 })
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Add the azure vm sensor."""
-    add_entities([AzureVmSensor(hass.data[DOMAIN], config)])
+    add_entities([AzureVmSensor(hass.data[AZURE_DOMAIN], config)])
 
 
 class AzureVmSensor(Entity):
@@ -45,7 +46,7 @@ class AzureVmSensor(Entity):
         self._azure_compute_client = ComputeManagementClient(
             azure_subscription.credentials, azure_subscription.subscription_id)
         self._name = config[CONF_NAME]
-        self._resource_group = config[CONG_RESOURCE_GROUP]
+        self._resource_group = config[CONF_RESOURCE_GROUP]
         self._state = None
 
     @property
@@ -70,11 +71,10 @@ class AzureVmSensor(Entity):
             return 'mdi:server'
         return 'mdi:server-off'
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Retrieve latest state."""
         virtual_machine = self._azure_compute_client.virtual_machines.get(
             self._resource_group, self._name, expand='instanceView')
         self._state = virtual_machine.instance_view.statuses[1].display_status
-        _LOGGER.debug("Status of azure vm %s - %s is %s ", self._name,
+        _LOGGER.debug("Status of azure vm %s - %s is %s.", self._name,
                       self._resource_group, self._state)

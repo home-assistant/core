@@ -32,18 +32,31 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the azure component."""
+    from azure.common.exceptions import AuthenticationError, \
+        ClientRequestError, CloudError, HttpOperationError
     from azure.common.credentials import ServicePrincipalCredentials
 
     conf = config[DOMAIN]
     subscription_id = conf[CONF_SUBSCRIPTION_ID]
-    credentials = ServicePrincipalCredentials(
-        client_id=conf[CONF_CLIENT_ID], secret=conf[CONF_CLIENT_SECRET],
-        tenant=conf[CONF_TENANT_ID])
-    hass.data[DOMAIN] = AzureSubscription(subscription_id, credentials)
-    _LOGGER.debug(
-        "Azure subscription entity initialized for subscription %s.",
-        subscription_id)
-    return True
+    try:
+        credentials = ServicePrincipalCredentials(
+            client_id=conf[CONF_CLIENT_ID], secret=conf[CONF_CLIENT_SECRET],
+            tenant=conf[CONF_TENANT_ID])
+        hass.data[DOMAIN] = AzureSubscription(subscription_id, credentials)
+        _LOGGER.debug(
+            "Azure subscription entity initialized for subscription %s.",
+            subscription_id)
+        return True
+    except AuthenticationError:
+        _LOGGER.error(
+            "Azure authentication failed for subscription %s.",
+            subscription_id)
+        return False
+    except (ClientRequestError, CloudError, HttpOperationError):
+        _LOGGER.error(
+            "Azure subscription entity initialization failed for %s.",
+            subscription_id)
+        return False
 
 
 class AzureSubscription:
