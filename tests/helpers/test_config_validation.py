@@ -270,7 +270,7 @@ def test_time_period():
     schema = vol.Schema(cv.time_period)
 
     options = (
-        None, '', 'hello:world', '12:', '12:34:56:78',
+        None, '', 'hello:world', '12:', '12:34:56:78:00',
         {}, {'wrong_key': -10}
     )
     for value in options:
@@ -279,7 +279,8 @@ def test_time_period():
             schema(value)
 
     options = (
-        '8:20', '23:59', '-8:20', '-23:59:59', '-48:00', {'minutes': 5}, 1, '5'
+        '8:20', '23:59', '-8:20', '-23:59:59', '-48:00', {'minutes': 5}, 1,
+        '5', '12:34:56:78'
     )
     for value in options:
         schema(value)
