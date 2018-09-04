@@ -149,7 +149,8 @@ class Script():
 
                 if CONF_TIMEOUT in action:
                     self._async_set_timeout(
-                        action, variables, context, action.get(CONF_CONTINUE, True))
+                        action, variables, context,
+                        action.get(CONF_CONTINUE, True))
 
                 return
 
