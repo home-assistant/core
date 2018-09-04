@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
 
-REQUIREMENTS = ['python-twitch-client']
+REQUIREMENTS = ['python-twitch-client==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,9 +37,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Twitch platform."""
     channels = config.get(CONF_CHANNELS, [])
-    from twitch import TwitchClient
-
-    client = TwichClient(client_id=config.get(CONF_CLIENTID))
+    from twitch import TwitchClient as TwitchClient
+    client=TwitchClient(client_id=config.get(CONF_CLIENTID))
     users = client.users.translate_usernames_to_ids(channels)
 
     add_entities([TwitchSensor(user, client) for user in users], True)
@@ -51,9 +50,9 @@ class TwitchSensor(Entity):
     def __init__(self, user, client):
         """Initialize the sensor."""
         self._client = client
-        self._id = user.id
         self._user = user
-        self._channel = user.name
+        self._channel = self._user.name
+        self._id = self._user.id
         self._state = STATE_OFFLINE
         self._preview = None
         self._game = None
@@ -82,14 +81,15 @@ class TwitchSensor(Entity):
     # pylint: disable=no-member
     def update(self):
         """Update device state."""
-        stream = self._client.api.streams.Streams.get_stream_by_user(self._id)
+        id = self._client.users.translate_usernames_to_ids([self._channel])[0].id
+        stream = self._client.streams.get_stream_by_user(self._id)
         if stream:
             self._game = stream.get('channel').get('game')
             self._title = stream.get('channel').get('status')
             self._preview = stream.get('preview').get('small')
             self._state = STATE_STREAMING
         else:
-            self._preview = self._user.get('logo')
+            self._preview = self._client.users.get_by_id(self._id).get('logo')
             self._state = STATE_OFFLINE
 
     @property
