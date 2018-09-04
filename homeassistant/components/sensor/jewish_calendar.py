@@ -23,7 +23,7 @@ CONF_LANGUAGE = 'english'
 
 DEFAULT_NAME = 'Jewish Calendar'
 
-ICON = 'mdi:clock'
+ICON = 'mdi:calendar-today'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
