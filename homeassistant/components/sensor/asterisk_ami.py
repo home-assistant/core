@@ -39,7 +39,7 @@ class AsteriskSensor(Entity):
 
     @property
     def should_poll(self):
-        """This sensor needs polling."""
+        """Return the polling mode of teh sensor."""
         return True
 
     def update(self):
@@ -73,7 +73,7 @@ class AsteriskMailbox(Entity):
 
     @property
     def should_poll(self):
-        """This sensor needs polling."""
+        """Return the polling mode of the sensor."""
         return True
 
     def update(self):
