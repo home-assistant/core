@@ -45,7 +45,7 @@ class DeviceRegistry:
         self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
     @callback
-    def async_get_device(self, identifiers: str, connections: tuple):
+    def async_get_device(self, identifiers: set, connections: set):
         """Check if device is registered."""
         for device in self.devices.values():
             if any(iden in device.identifiers for iden in identifiers) or \
@@ -126,6 +126,14 @@ class DeviceRegistry:
         ]
 
         return data
+
+    @callback
+    def async_clear_config_entry(self, config_entry):
+        """Clear config entry from registry entries."""
+        for device in self.devices.values():
+            if config_entry in device.config_entries:
+                device.config_entries.remove(config_entry)
+                self.async_schedule_save()
 
 
 @bind_hass

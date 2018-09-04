@@ -186,6 +186,15 @@ async def test_updating_config_entry_id(registry):
     assert entry2.config_entry_id == 'mock-id-2'
 
 
+async def test_removing_config_entry_id(registry):
+    """Test that we update config entry id in registry."""
+    entry = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-1')
+    assert entry.config_entry_id == 'mock-id-1'
+    registry.async_clear_config_entry('mock-id-1')
+    assert entry.config_entry_id is None
+
+
 async def test_migration(hass):
     """Test migration from old data to new."""
     old_conf = {
