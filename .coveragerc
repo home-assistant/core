@@ -123,7 +123,7 @@ omit =
     homeassistant/components/hangouts/const.py
     homeassistant/components/hangouts/hangouts_bot.py
     homeassistant/components/hangouts/hangups_utils.py
-    homeassistant/components/*/hangouts.py    
+    homeassistant/components/*/hangouts.py
 
     homeassistant/components/hdmi_cec.py
     homeassistant/components/*/hdmi_cec.py
@@ -145,12 +145,12 @@ omit =
 
     homeassistant/components/ihc/*
     homeassistant/components/*/ihc.py
-    
+
     homeassistant/components/insteon/*
     homeassistant/components/*/insteon.py
 
     homeassistant/components/insteon_local.py
-    
+
     homeassistant/components/insteon_plm.py
 
     homeassistant/components/ios.py
@@ -228,7 +228,7 @@ omit =
     homeassistant/components/opencv.py
     homeassistant/components/*/opencv.py
 
-    homeassistant/components/openuv.py
+    homeassistant/components/openuv/__init__.py
     homeassistant/components/*/openuv.py
 
     homeassistant/components/pilight.py

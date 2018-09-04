@@ -141,6 +141,7 @@ FLOWS = [
     'homematicip_cloud',
     'hue',
     'nest',
+    'openuv',
     'sonos',
     'zone',
 ]
