@@ -39,9 +39,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from twitch import TwitchClient as TwitchClient
 
     channels = config.get(CONF_CHANNELS, [])
-
-    client=TwitchClient(client_id=config.get(CONF_CLIENTID))
-
+    client = TwitchClient(client_id=config.get(CONF_CLIENTID))
     users = client.users.translate_usernames_to_ids(channels)
 
     add_entities([TwitchSensor(user, client) for user in users], True)
