@@ -68,6 +68,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             elif model in ['vibration']:
                 devices.append(XiaomiVibration(device, 'Vibration',
                                                'status', hass, gateway))
+            else:
+                _LOGGER.warning('Unmapped Device Model')
     add_entities(devices)
 
 
