@@ -2,6 +2,7 @@
 import asyncio
 import logging
 from collections import OrderedDict
+from datetime import timedelta
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 import jwt
@@ -242,8 +243,9 @@ class AuthManager:
                 modules[module_id] = module.name
         return modules
 
-    async def async_create_refresh_token(self, user: models.User,
-                                         client_id: Optional[str] = None) \
+    async def async_create_refresh_token(
+            self, user: models.User, client_id: Optional[str] = None,
+            access_token_expiration: Optional[timedelta] = None) \
             -> models.RefreshToken:
         """Create a new refresh token for a user."""
         if not user.is_active:
@@ -257,7 +259,8 @@ class AuthManager:
         if not user.system_generated and client_id is None:
             raise ValueError('Client is required to generate a refresh token.')
 
-        return await self._store.async_create_refresh_token(user, client_id)
+        return await self._store.async_create_refresh_token(
+            user, client_id, access_token_expiration)
 
     async def async_get_refresh_token(
             self, token_id: str) -> Optional[models.RefreshToken]:

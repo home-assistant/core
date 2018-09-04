@@ -128,11 +128,20 @@ class AuthStore:
         self._async_schedule_save()
 
     async def async_create_refresh_token(
-            self, user: models.User, client_id: Optional[str] = None) \
+            self, user: models.User, client_id: Optional[str] = None,
+            access_token_expiration: Optional[timedelta] = None) \
             -> models.RefreshToken:
         """Create a new token for a user."""
-        refresh_token = models.RefreshToken(user=user, client_id=client_id)
+        kwargs = {
+            'user': user,
+            'client_id': client_id
+        }  # type: Dict[str, Any]
+        if access_token_expiration:
+            kwargs['access_token_expiration'] = access_token_expiration
+
+        refresh_token = models.RefreshToken(**kwargs)
         user.refresh_tokens[refresh_token.id] = refresh_token
+
         self._async_schedule_save()
         return refresh_token
 
