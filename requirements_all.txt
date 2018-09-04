@@ -1041,6 +1041,9 @@ pysma==0.2
 # homeassistant.components.switch.snmp
 pysnmp==4.4.5
 
+# homeassistant.components.asterisk_ami
+pyst2==0.5.0
+
 # homeassistant.components.notify.stride
 pystride==0.1.7
 
