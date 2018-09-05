@@ -23,7 +23,7 @@ from homeassistant.helpers import extract_domain_configs, script, condition
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
-from homeassistant.util.dt import utcnow
+from homeassistant.util.dt import utcnow, parse_datetime, as_local, now
 import homeassistant.helpers.config_validation as cv
 
 DOMAIN = 'automation'
@@ -40,6 +40,11 @@ CONF_ACTION = 'action'
 CONF_TRIGGER = 'trigger'
 CONF_CONDITION_TYPE = 'condition_type'
 CONF_INITIAL_STATE = 'initial_state'
+CONF_COOLDOWN = 'cooldown'
+CONF_TIME = 'time'
+CONF_ONCE_PER_DAY = 'once_per_day'
+CONF_ONCE_PER_WEEK = 'once_per_week'
+CONF_ONCE_PER_MONTH = 'once_per_month'
 
 CONDITION_USE_TRIGGER_VALUES = 'use_trigger_values'
 CONDITION_TYPE_AND = 'and'
@@ -52,6 +57,7 @@ DEFAULT_INITIAL_STATE = True
 ATTR_LAST_TRIGGERED = 'last_triggered'
 ATTR_VARIABLES = 'variables'
 SERVICE_TRIGGER = 'trigger'
+SERVICE_COOLDOWN_RESET = 'cooldown_reset'
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,6 +88,13 @@ _TRIGGER_SCHEMA = vol.All(
 
 _CONDITION_SCHEMA = vol.All(cv.ensure_list, [cv.CONDITION_SCHEMA])
 
+_COOLDOWN_SCHEMA = vol.Schema({
+    vol.Optional(CONF_TIME): cv.time_period,
+    vol.Optional(CONF_ONCE_PER_DAY, default=False): cv.boolean,
+    vol.Optional(CONF_ONCE_PER_WEEK, default=False): cv.boolean,
+    vol.Optional(CONF_ONCE_PER_MONTH, default=False): cv.boolean,
+})
+
 PLATFORM_SCHEMA = vol.Schema({
     # str on purpose
     CONF_ID: str,
@@ -91,6 +104,7 @@ PLATFORM_SCHEMA = vol.Schema({
     vol.Required(CONF_TRIGGER): _TRIGGER_SCHEMA,
     vol.Optional(CONF_CONDITION): _CONDITION_SCHEMA,
     vol.Required(CONF_ACTION): cv.SCRIPT_SCHEMA,
+    vol.Optional(CONF_COOLDOWN, default={}): _COOLDOWN_SCHEMA,
 })
 
 SERVICE_SCHEMA = vol.Schema({
@@ -209,6 +223,12 @@ def async_setup(hass, config):
             return
         yield from _async_process_config(hass, conf, component)
 
+    @asyncio.coroutine
+    def cooldown_reset_service_handler(service_call):
+        """Reset cooldown of automation."""
+        for entity in component.async_extract_from_service(service_call):
+            entity.cooldown_reset()
+
     hass.services.async_register(
         DOMAIN, SERVICE_TRIGGER, trigger_service_handler,
         schema=TRIGGER_SERVICE_SCHEMA)
@@ -219,6 +239,10 @@ def async_setup(hass, config):
 
     hass.services.async_register(
         DOMAIN, SERVICE_TOGGLE, toggle_service_handler,
+        schema=SERVICE_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_COOLDOWN_RESET, cooldown_reset_service_handler,
         schema=SERVICE_SCHEMA)
 
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
@@ -233,7 +257,7 @@ class AutomationEntity(ToggleEntity):
     """Entity to show status of entity."""
 
     def __init__(self, automation_id, name, async_attach_triggers, cond_func,
-                 async_action, hidden, initial_state):
+                 async_action, hidden, initial_state, cooldown):
         """Initialize an automation entity."""
         self._id = automation_id
         self._name = name
@@ -244,6 +268,14 @@ class AutomationEntity(ToggleEntity):
         self._last_triggered = None
         self._hidden = hidden
         self._initial_state = initial_state
+        if 'time' in cooldown.keys():
+            self._cooldown_time = cooldown['time']
+        else:
+            self._cooldown_time = None
+        self._cooldown_once_per_day = cooldown['once_per_day']
+        self._cooldown_once_per_week = cooldown['once_per_week']
+        self._cooldown_once_per_month = cooldown['once_per_month']
+        self._cooldown_reset = False
 
     @property
     def name(self):
@@ -283,7 +315,13 @@ class AutomationEntity(ToggleEntity):
             state = yield from async_get_last_state(self.hass, self.entity_id)
             if state:
                 enable_automation = state.state == STATE_ON
-                self._last_triggered = state.attributes.get('last_triggered')
+                last_triggered = state.attributes.get('last_triggered')
+                if last_triggered is not None:
+                    if isinstance(last_triggered, str):
+                        self._last_triggered = parse_datetime(
+                            state.attributes.get('last_triggered'))
+                else:
+                    self._last_triggered = last_triggered
                 _LOGGER.debug("Automation %s initial state %s from recorder "
                               "last state %s", self.entity_id,
                               enable_automation, state)
@@ -328,15 +366,45 @@ class AutomationEntity(ToggleEntity):
         self._async_detach_triggers = None
         yield from self.async_update_ha_state()
 
+    def cooldown_reset(self):
+        """Resets cooldown of the automation."""
+        self._cooldown_reset = True
+
     @asyncio.coroutine
     def async_trigger(self, variables, skip_condition=False):
         """Trigger automation.
 
         This method is a coroutine.
         """
+        if self._last_triggered is not None and not self._cooldown_reset:
+            last_triggered = as_local(
+                self._last_triggered)
+            now_triggered = now()
+            if now_triggered.year <= last_triggered.year:
+                if self._cooldown_once_per_month:
+                    if now_triggered.month <= last_triggered.month:
+                        _LOGGER.debug(
+                            'Automation %s on cooldown, already triggerd this month', self._name)
+                        return
+                elif self._cooldown_once_per_week:
+                    if now_triggered.isocalendar()[1] <= last_triggered.isocalendar()[1]:
+                        _LOGGER.debug(
+                            'Automation %s on cooldown, already triggerd this week', self._name)
+                        return
+                elif self._cooldown_once_per_day:
+                    if now_triggered.timetuple().tm_yday <= last_triggered.timetuple().tm_yday:
+                        _LOGGER.debug(
+                            'Automation %s on cooldown, already triggerd this day', self._name)
+                        return
+                elif self._cooldown_time is not None:
+                    if now_triggered <= (last_triggered + self._cooldown_time):
+                        _LOGGER.info(
+                            'Automation %s on cooldown, already triggerd within cooldown time', self._name)
+                        return
         if skip_condition or self._cond_func(variables):
             yield from self._async_action(self.entity_id, variables)
             self._last_triggered = utcnow()
+            self._cooldown_reset = False
             yield from self.async_update_ha_state()
 
     @asyncio.coroutine
@@ -404,9 +472,11 @@ def _async_process_config(hass, config, component):
                 _async_process_trigger, hass, config,
                 config_block.get(CONF_TRIGGER, []), name
             )
+            cooldown = config_block.get(
+                CONF_COOLDOWN)
             entity = AutomationEntity(
                 automation_id, name, async_attach_triggers, cond_func, action,
-                hidden, initial_state)
+                hidden, initial_state, cooldown)
 
             entities.append(entity)
 
