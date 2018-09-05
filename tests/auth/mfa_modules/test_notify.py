@@ -53,7 +53,7 @@ async def test_validating_mfa_invalid_user(hass):
 
 
 async def test_validating_mfa_counter(hass):
-    """Test counter will move no matter code validation result."""
+    """Test counter will move only after generate code."""
     notify_auth_module = await auth_mfa_module_from_config(hass, {
         'type': 'notify'
     })
@@ -67,22 +67,26 @@ async def test_validating_mfa_counter(hass):
     init_count = notify_setting.counter
     assert init_count is not None
 
+    with patch('pyotp.HOTP.at', return_value=MOCK_CODE):
+        await notify_auth_module.async_generate('test-user')
+
+    notify_setting = list(notify_auth_module._user_settings.values())[0]
+    after_generate_count = notify_setting.counter
+    assert after_generate_count != init_count
+
     with patch('pyotp.HOTP.verify', return_value=True):
         assert await notify_auth_module.async_validate(
             'test-user', {'code': MOCK_CODE})
 
     notify_setting = list(notify_auth_module._user_settings.values())[0]
-    after_pass_count = notify_setting.counter
-    assert after_pass_count != init_count
+    assert after_generate_count == notify_setting.counter
 
     with patch('pyotp.HOTP.verify', return_value=False):
         assert await notify_auth_module.async_validate(
             'test-user', {'code': MOCK_CODE}) is False
 
     notify_setting = list(notify_auth_module._user_settings.values())[0]
-    after_fail_count = notify_setting.counter
-    assert after_fail_count != init_count
-    assert after_fail_count != after_pass_count
+    assert after_generate_count == notify_setting.counter
 
 
 async def test_setup_depose_user(hass):
@@ -174,6 +178,20 @@ async def test_login_flow_validates_mfa(hass):
     message.hass = hass
     assert MOCK_CODE in message.async_render()
 
+    with patch('pyotp.HOTP.verify', return_value=False):
+        result = await hass.auth.login_flow.async_configure(
+            result['flow_id'], {'code': 'invalid-code'})
+        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+        assert result['step_id'] == 'mfa'
+        assert result['errors']['base'] == 'invalid_code'
+
+    # wait service call finished
+    await hass.async_block_till_done()
+
+    # would not send new code, allow user retry
+    assert len(notify_calls) == 1
+
+    # retry twice
     with patch('pyotp.HOTP.verify', return_value=False), \
             patch('pyotp.HOTP.at', return_value=MOCK_CODE_2):
         result = await hass.auth.login_flow.async_configure(
@@ -181,6 +199,31 @@ async def test_login_flow_validates_mfa(hass):
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'mfa'
         assert result['errors']['base'] == 'invalid_code'
+
+        # after the 3rd failure, flow abort
+        result = await hass.auth.login_flow.async_configure(
+            result['flow_id'], {'code': 'invalid-code'})
+        assert result['type'] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result['reason'] == 'too_many_retry'
+
+    # wait service call finished
+    await hass.async_block_till_done()
+
+    # restart login
+    result = await hass.auth.login_flow.async_init(
+        (provider.type, provider.id))
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+
+    with patch('pyotp.HOTP.at', return_value=MOCK_CODE):
+        result = await hass.auth.login_flow.async_configure(
+            result['flow_id'],
+            {
+                'username': 'test-user',
+                'password': 'test-pass',
+            })
+        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+        assert result['step_id'] == 'mfa'
+        assert result['data_schema'].schema.get('code') == str
 
     # wait service call finished
     await hass.async_block_till_done()
@@ -191,7 +234,7 @@ async def test_login_flow_validates_mfa(hass):
     assert notify_call.service == 'test-notify'
     message = notify_call.data['message']
     message.hass = hass
-    assert MOCK_CODE_2 in message.async_render()
+    assert MOCK_CODE in message.async_render()
 
     with patch('pyotp.HOTP.verify', return_value=True):
         result = await hass.auth.login_flow.async_configure(

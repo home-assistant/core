@@ -34,6 +34,7 @@ class MultiFactorAuthModule:
     """Multi-factor Auth Module of validation function."""
 
     DEFAULT_TITLE = 'Unnamed auth module'
+    MAX_RETRY_TIME = 3
 
     def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
         """Initialize an auth module."""

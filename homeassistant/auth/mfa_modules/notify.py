@@ -201,9 +201,6 @@ class NotifyAuthModule(MultiFactorAuthModule):
             self._validate_one_time_password, user_id,
             user_input.get(INPUT_FIELD_CODE, ''))
 
-        # save user data no matter if passed validation to update counter
-        await self._async_save()
-
         return result
 
     def _validate_one_time_password(self, user_id: str, code: str) -> bool:
@@ -215,12 +212,8 @@ class NotifyAuthModule(MultiFactorAuthModule):
             _verify_otp(DUMMY_SECRET, code, 0)
             return False
 
-        result = _verify_otp(
+        return _verify_otp(
             notify_setting.secret, code, notify_setting.counter)
-
-        # move counter no matter if passed validation
-        notify_setting.counter += 1
-        return result
 
     async def async_generate(self, user_id: str) -> None:
         """Generate code and notify user."""
@@ -230,6 +223,9 @@ class NotifyAuthModule(MultiFactorAuthModule):
         code = await self.hass.async_add_executor_job(
             self._generate_and_send_one_time_password, user_id)
 
+        # update counter in storage
+        await self._async_save()
+
         await self.async_notify_user(user_id, code)
 
     def _generate_and_send_one_time_password(self, user_id: str) -> str:
@@ -238,6 +234,8 @@ class NotifyAuthModule(MultiFactorAuthModule):
         if notify_setting is None:
             raise ValueError('Cannot find user_id')
 
+        # always move counter before generate new code
+        notify_setting.counter += 1
         return _generate_otp(notify_setting.secret, notify_setting.counter)
 
     async def async_notify_user(self, user_id: str, code: str) -> None:
@@ -331,12 +329,11 @@ class NotifySetupFlow(SetupFlow):
             verified = await hass.async_add_executor_job(
                 pyotp.HOTP(self._ota_secret).verify,
                 user_input['code'], self._counter)
-            self._counter += 1  # type: ignore
             if verified:
                 result = await self._auth_module.async_setup_user(
                     self._user_id, {
                         'secret': self._ota_secret,
-                        'counter': self._counter,  # counter has increased
+                        'counter': self._counter + 1,  # increase counter
                         'notify_service': self._notify_service,
                         'target': self._target,
                     })

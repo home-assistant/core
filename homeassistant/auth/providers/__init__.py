@@ -171,6 +171,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
         self._auth_manager = auth_provider.hass.auth  # type: ignore
         self.available_mfa_modules = {}  # type: Dict[str, str]
         self.created_at = dt_util.utcnow()
+        self.invalid_mfa_times = 0
         self.user = None  # type: Optional[User]
 
     async def async_step_init(
@@ -232,12 +233,19 @@ class LoginFlow(data_entry_flow.FlowHandler):
                 self.user.id, user_input)  # type: ignore
             if not result:
                 errors['base'] = 'invalid_code'
+                self.invalid_mfa_times += 1
+                if (auth_module.MAX_RETRY_TIME > 0 and
+                        self.invalid_mfa_times >= auth_module.MAX_RETRY_TIME):
+                    return self.async_abort(
+                        reason='too_many_retry'
+                    )
 
             if not errors:
                 return await self.async_finish(self.user)
 
         # MFA module may have init code need generate
-        if hasattr(auth_module, 'async_generate'):
+        if (self.invalid_mfa_times == 0 and
+                hasattr(auth_module, 'async_generate')):
             await auth_module.async_generate(self.user.id)  # type: ignore
 
         description_placeholders = {

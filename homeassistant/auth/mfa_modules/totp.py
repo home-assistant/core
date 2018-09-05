@@ -60,6 +60,7 @@ class TotpAuthModule(MultiFactorAuthModule):
     """Auth module validate time-based one time password."""
 
     DEFAULT_TITLE = 'Time-based One Time Password'
+    MAX_RETRY_TIME = 5
 
     def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
         """Initialize the user data store."""
