@@ -383,25 +383,33 @@ class AutomationEntity(ToggleEntity):
             if now_triggered.year <= last_triggered.year:
                 if self._cooldown_once_per_month:
                     if now_triggered.month <= last_triggered.month:
-                        _LOGGER.debug('Automation % s on cooldown, already triggerd this
-                                      month', self._name)
+                        _LOGGER.debug(
+                            'Automation %s on cooldown, already triggerd '
+                            'this month',
+                            self._name)
                         return
                 elif self._cooldown_once_per_week:
-                    if now_triggered.isocalendar()[1]
-                    last_triggered.isocalendar()[1]:
-                        _LOGGER.debug('Automation % s on cooldown, already triggerd this
-                                      week', self._name)
+                    if now_triggered.isocalendar()[1] <= \
+                            last_triggered.isocalendar()[1]:
+                        _LOGGER.debug(
+                            'Automation %s on cooldown, already triggerd '
+                            'this week',
+                            self._name)
                         return
                 elif self._cooldown_once_per_day:
-                    if now_triggered.timetuple().tm_yday <=
-                    last_triggered.timetuple().tm_yday:
-                        _LOGGER.debug('Automation % s on cooldown, already triggerd this
-                                      day', self._name)
+                    if now_triggered.timetuple().tm_yday <= \
+                            last_triggered.timetuple().tm_yday:
+                        _LOGGER.debug(
+                            'Automation %s on cooldown, already triggerd '
+                            'this day',
+                            self._name)
                         return
                 elif self._cooldown_time is not None:
                     if now_triggered <= (last_triggered + self._cooldown_time):
-                        _LOGGER.info('Automation % s on cooldown, already triggerd
-                                     within cooldown time', self._name)
+                        _LOGGER.info(
+                            'Automation %s on cooldown, already triggerd '
+                            'within cooldown time',
+                            self._name)
                         return
         if skip_condition or self._cond_func(variables):
             yield from self._async_action(self.entity_id, variables)
