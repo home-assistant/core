@@ -92,6 +92,11 @@ class JewishCalSensor(Entity):
                       self.type, self._date)
 
     @property
+    def name(self):
+        """Return the name of the sensor."""
+        return '{} {}'.format(self.client_name, self._name)
+
+    @property
     def icon(self):
         """Icon to display in the front end."""
         return SENSOR_TYPES[self.type][1]
