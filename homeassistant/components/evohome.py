@@ -475,7 +475,7 @@ class EvoEntity(Entity):                                                        
             new_scan_interval = min(old_scan_interval * 2, 300)
             domain_data['params'][CONF_SCAN_INTERVAL] = new_scan_interval
 
-            _LOGGER.debug(
+            _LOGGER.warning(
                 "v1 API rate limit has been exceeded, suspending polling "
                 "for %s seconds, & increasing '%s' from %s to %s seconds.",
                 new_scan_interval * 3,
@@ -504,7 +504,7 @@ class EvoEntity(Entity):                                                        
                 new_scan_interval = max(old_scan_interval * 2, 300)
                 domain_data['params'][CONF_SCAN_INTERVAL] = new_scan_interval
 
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "v2 API rate limit has been exceeded, suspending polling "
                     "for %s seconds, & increasing '%s' from %s to %s seconds.",
                     new_scan_interval * 3,
@@ -576,8 +576,8 @@ class EvoEntity(Entity):                                                        
 
         if not self._available and \
                 self._timers['statusUpdated'] != datetime.min:
-            # if this isn't the first available(), before first update()
-            _LOGGER.debug(
+            # this isn't the first (un)available (i.e. is after 1st update())
+            _LOGGER.warning(
                 "available(%s) = %s, debug code = %s, self._status = %s",
                 self._id,
                 self._available,
@@ -930,7 +930,7 @@ class EvoController(EvoEntity):
     # 2. AFTER obtaining state data, do we need to increase precision of temps?
         if domain_data['params'][CONF_HIGH_PRECISION] and \
                 len(client.locations) > 1:
-            _LOGGER.debug(
+            _LOGGER.warning(
                 "Unable to increase temperature precision via the v1 api; "
                 "there is more than one Location/TCS. Disabling this feature."
             )
@@ -981,9 +981,9 @@ class EvoController(EvoEntity):
                     i.update(j)
 
             except TypeError:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "Failed to obtain higher-precision temperatures "
-                    "via the v1 api.  Can continue with v2 temps."
+                    "via the v1 api.  Continuing with v2 temps for now."
                 )
 
                 if isinstance(ec1_api.user_data, list):
@@ -1497,7 +1497,7 @@ class EvoZone(EvoSlaveEntity, ClimateDevice):
 # FollowSchedule - return to scheduled target temp (indefinitely)
         if operation_mode == EVO_FOLLOW:
             if temperature is not None or until is not None:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "set_operation_mode(%s): For '%s' mode, 'temperature "
                     "' and 'until' should both be None (will ignore them).",
                     self._id + " [" + self._name + "]",
@@ -1517,7 +1517,7 @@ class EvoZone(EvoSlaveEntity, ClimateDevice):
 
         else:
             if temperature is None:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "set_operation_mode(%s): For '%s' mode, 'temperature' "
                     "should not be None (will use current target temp).",
                     self._id,
@@ -1528,7 +1528,7 @@ class EvoZone(EvoSlaveEntity, ClimateDevice):
 # PermanentOverride - override target temp indefinitely
         if operation_mode == EVO_PERMOVER:
             if until is not None:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "set_operation_mode(%s): For '%s' mode, "
                     "'until' should be None (will ignore it).",
                     self._id,
@@ -1540,7 +1540,7 @@ class EvoZone(EvoSlaveEntity, ClimateDevice):
 # TemporaryOverride - override target temp, for a hour by default
         elif operation_mode == EVO_TEMPOVER:
             if until is None:
-                _LOGGER.debug(
+                _LOGGER.warning(
                     "set_operation_mode(%s): For '%s' mode, 'until' should "
                     "not be None (will use until next switchpoint).",
                     self._id,
