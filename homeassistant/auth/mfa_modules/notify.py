@@ -115,7 +115,8 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Save data."""
         await self._user_store.async_save({STORAGE_USERS: {
             user_id: attr.asdict(notify_setting)
-            for user_id, notify_setting in self._user_settings.items()
+            for user_id, notify_setting
+            in self._user_settings.items()  # type: ignore
         }})
 
     def _add_user_setup_data(self, user_id: str,
@@ -129,7 +130,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         ota_secret = secret or pyotp.random_base32()  # type: str
         init_counter = counter
 
-        self._user_settings[user_id] = NotifySetting(
+        self._user_settings[user_id] = NotifySetting(  # type: ignore
             secret=ota_secret,
             counter=init_counter,
             notify_service=notify_service,
@@ -208,7 +209,8 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
     def _validate_one_time_password(self, user_id: str, code: str) -> bool:
         """Validate one time password."""
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(  # type: ignore
+            user_id, None)
         if notify_setting is None:
             # even we cannot find user, we still do verify
             # to make timing the same as if user was found.
@@ -233,7 +235,8 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
     def _generate_and_send_one_time_password(self, user_id: str) -> str:
         """Generate and send one time password."""
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(  # type: ignore
+            user_id, None)
         if notify_setting is None:
             raise ValueError('Cannot find user_id')
 
@@ -246,12 +249,13 @@ class NotifyAuthModule(MultiFactorAuthModule):
         if self._user_settings is None:
             await self._async_load()
 
-        notify_setting = self._user_settings.get(user_id, None)
+        notify_setting = self._user_settings.get(  # type: ignore
+            user_id, None)
         if notify_setting is None:
             _LOGGER.error('Cannot find user %s', user_id)
             return
 
-        await self.async_notify(
+        await self.async_notify(   # type: ignore
             code, notify_setting.notify_service, notify_setting.target)
 
     async def async_notify(self, code: str, notify_service: str,
@@ -336,7 +340,7 @@ class NotifySetupFlow(SetupFlow):
                 result = await self._auth_module.async_setup_user(
                     self._user_id, {
                         'secret': self._ota_secret,
-                        'counter': self._counter + 1,  # increase counter
+                        'counter': self._counter + 1,   # type: ignore
                         'notify_service': self._notify_service,
                         'target': self._target,
                     })
