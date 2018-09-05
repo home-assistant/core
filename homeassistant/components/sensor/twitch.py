@@ -21,7 +21,7 @@ ATTR_GAME = 'game'
 ATTR_TITLE = 'title'
 
 CONF_CHANNELS = 'channels'
-CONF_CLIENTID = 'clientid'
+CONF_CLIENTID = 'client_id'
 ICON = 'mdi:twitch'
 
 STATE_OFFLINE = 'offline'
