@@ -37,39 +37,36 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the opentherm_gw device."""
-    gateway = OpenThermGateway()
-    gateway.friendly_name = config.get(CONF_NAME)
-    gateway.floor_temp = config.get(CONF_FLOOR_TEMP, False)
-    gateway.temp_precision = config.get(CONF_PRECISION)
+    gateway = OpenThermGateway(config)
     async_add_entities([gateway])
-    await gateway.connect(hass, config.get(CONF_DEVICE))
-    _LOGGER.debug("Connected to %s on %s", gateway.friendly_name,
-                  config.get(CONF_DEVICE))
 
 
 class OpenThermGateway(ClimateDevice):
     """Representation of a climate device."""
 
-    def __init__(self):
+    def __init__(self, config):
         """Initialize the sensor."""
         import pyotgw
         self.pyotgw = pyotgw
+        self.gateway = self.pyotgw.pyotgw()
+        self._device = config.get(CONF_DEVICE)
+        self.friendly_name = config.get(CONF_NAME)
+        self.floor_temp = config.get(CONF_FLOOR_TEMP)
+        self.temp_precision = config.get(CONF_PRECISION)
         self._current_operation = STATE_IDLE
         self._current_temperature = 0.0
         self._target_temperature = 0.0
-        self.gateway = self.pyotgw.pyotgw()
-        self.friendly_name = "OpenTherm Gateway"
-        self.floor_temp = False
-        self.temp_precision = None
         self._away_mode_a = None
         self._away_mode_b = None
         self._away_state_a = False
         self._away_state_b = False
 
-    async def connect(self, hass, gw_path):
-        """Connect to the OpenTherm Gateway device at gw_path."""
-        await self.gateway.connect(hass.loop, gw_path)
+    async def async_added_to_hass(self):
+        """Connect to the OpenTherm Gateway device"""
+        await self.gateway.connect(self.hass.loop, self._device)
         self.gateway.subscribe(self.receive_report)
+        _LOGGER.debug("Connected to %s on %s", self.friendly_name,
+                      self._device)
 
     async def receive_report(self, status):
         """Receive and handle a new report from the Gateway."""
