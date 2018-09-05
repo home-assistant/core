@@ -129,6 +129,6 @@ class JewishCalSensor(Entity):
                 date=self._date,
                 latitude=self.latitude, longitude=self.longitude,
                 hebrew=self._hebrew).zmanim
-            self._state = times[self.type]
+            self._state = times[self.type].time()
 
         _LOGGER.debug("New value: %s", self._state)
