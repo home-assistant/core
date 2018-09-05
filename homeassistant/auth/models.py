@@ -10,6 +10,10 @@ from homeassistant.util import dt as dt_util
 from .const import ACCESS_TOKEN_EXPIRATION
 from .util import generate_secret
 
+TOKEN_TYPE_NORMAL = 'normal'
+TOKEN_TYPE_SYSTEM = 'system'
+TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN = 'long_lived_access_token'
+
 
 @attr.s(slots=True)
 class User:
@@ -37,7 +41,14 @@ class RefreshToken:
     """RefreshToken for a user to grant new access tokens."""
 
     user = attr.ib(type=User)
-    client_id = attr.ib(type=str)  # type: Optional[str]
+    client_id = attr.ib(type=Optional[str])
+    client_name = attr.ib(type=Optional[str])
+    client_icon = attr.ib(type=Optional[str])
+    token_type = attr.ib(type=str, default=TOKEN_TYPE_NORMAL,
+                         validator=attr.validators.in_((
+                             TOKEN_TYPE_NORMAL, TOKEN_TYPE_SYSTEM,
+                             TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN)))
+    is_for_long_lived_access_token = attr.ib(type=bool, default=False)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     created_at = attr.ib(type=datetime, default=attr.Factory(dt_util.utcnow))
     access_token_expiration = attr.ib(type=timedelta,

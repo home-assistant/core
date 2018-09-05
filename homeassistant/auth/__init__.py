@@ -245,6 +245,9 @@ class AuthManager:
 
     async def async_create_refresh_token(
             self, user: models.User, client_id: Optional[str] = None,
+            client_name: Optional[str] = None,
+            client_icon: Optional[str] = None,
+            token_type: str = models.TOKEN_TYPE_NORMAL,
             access_token_expiration: Optional[timedelta] = None) \
             -> models.RefreshToken:
         """Create a new refresh token for a user."""
@@ -256,11 +259,31 @@ class AuthManager:
                 'System generated users cannot have refresh tokens connected '
                 'to a client.')
 
+        if user.system_generated and token_type != models.TOKEN_TYPE_SYSTEM:
+            raise ValueError(
+                'System generated users can only have system type '
+                'refresh tokens')
+
         if not user.system_generated and client_id is None:
             raise ValueError('Client is required to generate a refresh token.')
 
+        if (token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN and
+                client_id.lower().startswith(('http://', 'https://'))):
+            raise ValueError('Client_id is not allowed start with http:// or '
+                             'https:// for long-lived access token')
+
+        if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
+            for token in user.refresh_tokens.values():
+                if (token.token_type ==
+                        models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+                        and token.client_id == client_id):
+                    # Each client_id can only have one long_lived_access_token
+                    # type of refresh token, return exist one
+                    return token
+
         return await self._store.async_create_refresh_token(
-            user, client_id, access_token_expiration)
+            user, client_id, client_name, client_icon,
+            token_type, access_token_expiration)
 
     async def async_get_refresh_token(
             self, token_id: str) -> Optional[models.RefreshToken]:
@@ -282,7 +305,14 @@ class AuthManager:
     def async_create_access_token(self,
                                   refresh_token: models.RefreshToken) -> str:
         """Create a new access token."""
-        # pylint: disable=no-self-use
+        if refresh_token.token_type == \
+                models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
+            # Each long_lived_access_token type refresh token can only
+            # has one active access token. Previous issued access token will
+            # be revoked as side effect of mutate refresh token.
+            refresh_token = self._store.async_mutate_refresh_token(
+                refresh_token)
+
         return jwt.encode({
             'iss': refresh_token.id,
             'iat': dt_util.utcnow(),
