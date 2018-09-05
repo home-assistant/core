@@ -4,7 +4,6 @@ Sending HOTP through notify service
 """
 import logging
 from collections import OrderedDict
-from random import SystemRandom
 from typing import Any, Dict, Optional, Tuple, List  # noqa: F401
 
 import attr
@@ -60,7 +59,7 @@ def _generate_secret_and_init_counter() -> Tuple[str, int]:
     import pyotp
 
     ota_secret = pyotp.random_base32()
-    counter = SystemRandom().randint(0, 2 << 31)
+    counter = int(pyotp.random_base32(length=8, chars=list('1234567890')))
     return ota_secret, counter
 
 
@@ -68,14 +67,14 @@ def _generate_otp(secret: str, count: int) -> str:
     """Generate one time password."""
     import pyotp
 
-    return str(pyotp.HOTP(secret).at(count))
+    return str(pyotp.HOTP(secret, digits=8).at(count))
 
 
 def _verify_otp(secret: str, otp: str, counter: int) -> bool:
     """Verify one time password."""
     import pyotp
 
-    return bool(pyotp.HOTP(secret).verify(otp, counter))
+    return bool(pyotp.HOTP(secret, digits=8).verify(otp, counter))
 
 
 @MULTI_FACTOR_AUTH_MODULES.register('notify')
@@ -334,7 +333,7 @@ class NotifySetupFlow(SetupFlow):
         if user_input:
             hass = self._auth_module.hass
             verified = await hass.async_add_executor_job(
-                pyotp.HOTP(self._ota_secret).verify,
+                pyotp.HOTP(self._ota_secret, digits=8).verify,
                 user_input['code'], self._counter)
             if verified:
                 result = await self._auth_module.async_setup_user(
