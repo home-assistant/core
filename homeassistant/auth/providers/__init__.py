@@ -237,13 +237,12 @@ class LoginFlow(data_entry_flow.FlowHandler):
                 return await self.async_finish(self.user)
 
         # MFA module may have init code need generate
-        mfa_init_code = await auth_module.async_generate(
-            self.user.id)  # type: ignore
+        if hasattr(auth_module, 'async_generate'):
+            await auth_module.async_generate(self.user.id)  # type: ignore
 
         description_placeholders = {
             'mfa_module_name': auth_module.name,
             'mfa_module_id': auth_module.id,
-            'mfa_init_code': mfa_init_code,
         }  # type: Dict[str, Optional[str]]
 
         return self.async_show_form(

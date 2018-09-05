@@ -841,9 +841,8 @@ async def test_auth_provider_config_default(hass):
     assert len(hass.auth.auth_providers) == 1
     assert hass.auth.auth_providers[0].type == 'homeassistant'
     assert hass.auth.active is True
-    assert len(hass.auth.auth_mfa_modules) == 2
+    assert len(hass.auth.auth_mfa_modules) == 1
     assert hass.auth.auth_mfa_modules[0].id == 'totp'
-    assert hass.auth.auth_mfa_modules[1].id == 'notify'
 
 
 async def test_auth_provider_config_default_api_password(hass):

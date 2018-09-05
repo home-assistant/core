@@ -62,25 +62,25 @@ async def test_validating_mfa_counter(hass):
         'notify_service': 'dummy',
     })
 
-    assert notify_auth_module._users
-    user = list(notify_auth_module._users.values())[0]
-    init_count = user[1]
+    assert notify_auth_module._user_settings
+    notify_setting = list(notify_auth_module._user_settings.values())[0]
+    init_count = notify_setting.counter
     assert init_count is not None
 
     with patch('pyotp.HOTP.verify', return_value=True):
         assert await notify_auth_module.async_validate(
             'test-user', {'code': MOCK_CODE})
 
-    user = list(notify_auth_module._users.values())[0]
-    after_pass_count = user[1]
+    notify_setting = list(notify_auth_module._user_settings.values())[0]
+    after_pass_count = notify_setting.counter
     assert after_pass_count != init_count
 
     with patch('pyotp.HOTP.verify', return_value=False):
         assert await notify_auth_module.async_validate(
             'test-user', {'code': MOCK_CODE}) is False
 
-    user = list(notify_auth_module._users.values())[0]
-    after_fail_count = user[1]
+    notify_setting = list(notify_auth_module._user_settings.values())[0]
+    after_fail_count = notify_setting.counter
     assert after_fail_count != init_count
     assert after_fail_count != after_pass_count
 
@@ -91,16 +91,16 @@ async def test_setup_depose_user(hass):
         'type': 'notify'
     })
     await notify_auth_module.async_setup_user('test-user', {})
-    assert len(notify_auth_module._users) == 1
+    assert len(notify_auth_module._user_settings) == 1
     await notify_auth_module.async_setup_user('test-user', {})
-    assert len(notify_auth_module._users) == 1
+    assert len(notify_auth_module._user_settings) == 1
 
     await notify_auth_module.async_depose_user('test-user')
-    assert len(notify_auth_module._users) == 0
+    assert len(notify_auth_module._user_settings) == 0
 
     await notify_auth_module.async_setup_user(
         'test-user2', {'secret': 'secret-code'})
-    assert len(notify_auth_module._users) == 1
+    assert len(notify_auth_module._user_settings) == 1
 
 
 async def test_login_flow_validates_mfa(hass):
@@ -209,7 +209,7 @@ async def test_setup_user_notify_service(hass):
         'type': 'notify',
     })
 
-    services = notify_auth_module.aync_get_aviliable_notify_services()
+    services = notify_auth_module.aync_get_available_notify_services()
     assert services == ['test1', 'test2']
 
     flow = await notify_auth_module.async_setup_flow('test-user')
@@ -270,14 +270,14 @@ async def test_include_exclude_config(hass):
         'type': 'notify',
         'exclude': ['exclude1', 'exclude2', 'exclude3'],
     })
-    services = notify_auth_module.aync_get_aviliable_notify_services()
+    services = notify_auth_module.aync_get_available_notify_services()
     assert services == ['include1', 'include2']
 
     notify_auth_module = await auth_mfa_module_from_config(hass, {
         'type': 'notify',
         'include': ['include1', 'include2', 'include3'],
     })
-    services = notify_auth_module.aync_get_aviliable_notify_services()
+    services = notify_auth_module.aync_get_available_notify_services()
     assert services == ['include1', 'include2']
 
     # exclude has high priority than include
@@ -286,7 +286,7 @@ async def test_include_exclude_config(hass):
         'include': ['include1', 'include2', 'include3'],
         'exclude': ['exclude1', 'exclude2', 'include2'],
     })
-    services = notify_auth_module.aync_get_aviliable_notify_services()
+    services = notify_auth_module.aync_get_available_notify_services()
     assert services == ['include1']
 
 
@@ -298,7 +298,7 @@ async def test_setup_user_no_notify_service(hass):
         'exclude': 'test1',
     })
 
-    services = notify_auth_module.aync_get_aviliable_notify_services()
+    services = notify_auth_module.aync_get_available_notify_services()
     assert services == []
 
     flow = await notify_auth_module.async_setup_flow('test-user')

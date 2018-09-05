@@ -7,6 +7,7 @@ from collections import OrderedDict
 from random import SystemRandom
 from typing import Any, Dict, Optional, Tuple, List  # noqa: F401
 
+import attr
 import voluptuous as vol
 
 from homeassistant.const import CONF_EXCLUDE, CONF_INCLUDE
@@ -40,7 +41,18 @@ DUMMY_SECRET = '7Z5EFWI4RFLVV67G'
 
 _LOGGER = logging.getLogger(__name__)
 
-_UsersDict = Dict[str, Tuple[str, int, Optional[str], Optional[str]]]
+
+@attr.s(slots=True)
+class NotifySetting:
+    """Store notify setting for one user."""
+
+    secret = attr.ib(type=str)
+    counter = attr.ib(type=int)
+    notify_service = attr.ib(type=Optional[str], default=None)
+    target = attr.ib(type=Optional[str], default=None)
+
+
+_UsersDict = Dict[str, NotifySetting]
 
 
 def _generate_secret_and_init_counter() -> Tuple[str, int]:
@@ -75,7 +87,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
     def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
         """Initialize the user data store."""
         super().__init__(hass, config)
-        self._users = None  # type: Optional[_UsersDict]
+        self._user_settings = None  # type: Optional[_UsersDict]
         self._user_store = hass.helpers.storage.Store(
             STORAGE_VERSION, STORAGE_KEY)
         self._include = config.get(CONF_INCLUDE, [])
@@ -94,11 +106,14 @@ class NotifyAuthModule(MultiFactorAuthModule):
         if data is None:
             data = {STORAGE_USERS: {}}
 
-        self._users = data.get(STORAGE_USERS, {})
+        self._user_settings = data.get(STORAGE_USERS, {})
 
     async def _async_save(self) -> None:
         """Save data."""
-        await self._user_store.async_save({STORAGE_USERS: self._users})
+        await self._user_store.async_save({STORAGE_USERS: {
+            user_id: attr.asdict(notify_setting)
+            for user_id, notify_setting in self._user_settings.items()
+        }})
 
     def _add_user_setup_data(self, user_id: str,
                              secret: Optional[str] = None,
@@ -111,11 +126,15 @@ class NotifyAuthModule(MultiFactorAuthModule):
         ota_secret = secret or pyotp.random_base32()  # type: str
         init_counter = counter
 
-        self._users[user_id] = (ota_secret, init_counter,   # type: ignore
-                                notify_service, target)
+        self._user_settings[user_id] = NotifySetting(
+            secret=ota_secret,
+            counter=init_counter,
+            notify_service=notify_service,
+            target=target,
+        )
 
     @callback
-    def aync_get_aviliable_notify_services(self) -> List[str]:
+    def aync_get_available_notify_services(self) -> List[str]:
         """Return list of notify services."""
         unordered_services = [
             service_id for service_id in
@@ -139,11 +158,11 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """
         return NotifySetupFlow(
             self, self.input_schema, user_id,
-            self.aync_get_aviliable_notify_services())
+            self.aync_get_available_notify_services())
 
     async def async_setup_user(self, user_id: str, setup_data: Any) -> Any:
         """Set up auth module for user."""
-        if self._users is None:
+        if self._user_settings is None:
             await self._async_load()
 
         await self.hass.async_add_executor_job(
@@ -158,23 +177,23 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
     async def async_depose_user(self, user_id: str) -> None:
         """Depose auth module for user."""
-        if self._users is None:
+        if self._user_settings is None:
             await self._async_load()
 
-        if self._users.pop(user_id, None):   # type: ignore
+        if self._user_settings.pop(user_id, None):   # type: ignore
             await self._async_save()
 
     async def async_is_user_setup(self, user_id: str) -> bool:
         """Return whether user is setup."""
-        if self._users is None:
+        if self._user_settings is None:
             await self._async_load()
 
-        return user_id in self._users   # type: ignore
+        return user_id in self._user_settings   # type: ignore
 
     async def async_validate(
             self, user_id: str, user_input: Dict[str, Any]) -> bool:
         """Return True if validation passed."""
-        if self._users is None:
+        if self._user_settings is None:
             await self._async_load()
 
         # user_input has been validate in caller
@@ -189,24 +208,23 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
     def _validate_one_time_password(self, user_id: str, code: str) -> bool:
         """Validate one time password."""
-        ota_secret, counter, notify_service, target = \
-            self._users.get(user_id, (None, 0, None, None))  # type: ignore
-        if ota_secret is None:
+        notify_setting = self._user_settings.get(user_id, None)
+        if notify_setting is None:
             # even we cannot find user, we still do verify
             # to make timing the same as if user was found.
             _verify_otp(DUMMY_SECRET, code, 0)
             return False
 
-        result = _verify_otp(ota_secret, code, counter)
+        result = _verify_otp(
+            notify_setting.secret, code, notify_setting.counter)
 
         # move counter no matter if passed validation
-        self._users[user_id] = (ota_secret, counter + 1,  # type: ignore
-                                notify_service, target)
+        notify_setting.counter += 1
         return result
 
-    async def async_generate(self, user_id: str) -> Optional[str]:
+    async def async_generate(self, user_id: str) -> None:
         """Generate code and notify user."""
-        if self._users is None:
+        if self._user_settings is None:
             await self._async_load()
 
         code = await self.hass.async_add_executor_job(
@@ -214,31 +232,26 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         await self.async_notify_user(user_id, code)
 
-        # Do not return code, code has delivered by notify service
-        return None
-
     def _generate_and_send_one_time_password(self, user_id: str) -> str:
         """Generate and send one time password."""
-        ota_secret, counter, _, _ = \
-            self._users.get(user_id, (None, 0, None, None))  # type: ignore
-        if ota_secret is None:
+        notify_setting = self._user_settings.get(user_id, None)
+        if notify_setting is None:
             raise ValueError('Cannot find user_id')
 
-        return _generate_otp(ota_secret, counter)
+        return _generate_otp(notify_setting.secret, notify_setting.counter)
 
     async def async_notify_user(self, user_id: str, code: str) -> None:
         """Send code by user's notify service."""
-        if self._users is None:
+        if self._user_settings is None:
             await self._async_load()
 
-        _, _, notify_service, target = \
-            self._users.get(user_id, (None, 0, None, None))  # type: ignore
-
-        if notify_service is None:
+        notify_setting = self._user_settings.get(user_id, None)
+        if notify_setting is None:
             _LOGGER.error('Cannot find user %s', user_id)
             return
 
-        await self.async_notify(code, notify_service, target)
+        await self.async_notify(
+            code, notify_setting.notify_service, notify_setting.target)
 
     async def async_notify(self, code: str, notify_service: str,
                            target: Optional[str] = None) -> None:
