@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 # accessing non-default location other than using the protected member
     tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
 
-    _LOGGER.info(
+    _LOGGER.debug(
         "setup_platform(): Found Controller [idx=%s]: id: %s [%s], type: %s",
         loc_idx,
         tcs_obj_ref.systemId,
@@ -48,7 +48,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 # 2/3: Collect each (slave) Heating zone as a (climate component) device
     for zone_obj_ref in tcs_obj_ref._zones:                                     # noqa E501; pylint: disable=protected-access
-        _LOGGER.info(
+        _LOGGER.debug(
             "setup_platform(): Found Zone device: id: %s, type: %s",
             zone_obj_ref.zoneId + " [" + zone_obj_ref.name + "]",
             zone_obj_ref.zone_type  # also has .zoneType (different)
@@ -59,7 +59,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 # 3/3: Collect any (slave) DHW zone as a (climate component) device
     if tcs_obj_ref.hotwater:
-        _LOGGER.info(
+        _LOGGER.debug(
             "setup_platform(): Found DHW device: id: %s, type: %s",
             tcs_obj_ref.hotwater.zoneId,  # also has .dhwId (same)
             tcs_obj_ref.hotwater.zone_type
