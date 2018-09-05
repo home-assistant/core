@@ -1,5 +1,29 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Google Hangouts \u00e8 gi\u00e0 configurato",
+            "unknown": "Si \u00e8 verificato un errore sconosciuto."
+        },
+        "error": {
+            "invalid_2fa": "Autenticazione a 2 fattori non valida, riprovare.",
+            "invalid_2fa_method": "Metodo 2FA non valido (verifica sul telefono).",
+            "invalid_login": "Accesso non valido, si prega di riprovare."
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "2FA Pin"
+                },
+                "title": "Autenticazione a due fattori"
+            },
+            "user": {
+                "data": {
+                    "email": "Indirizzo email",
+                    "password": "Password"
+                },
+                "title": "Accesso a Google Hangouts"
+            }
+        },
         "title": "Google Hangouts"
     }
 }
