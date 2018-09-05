@@ -62,7 +62,7 @@ class OpenThermGateway(ClimateDevice):
         self._away_state_b = False
 
     async def async_added_to_hass(self):
-        """Connect to the OpenTherm Gateway device"""
+        """Connect to the OpenTherm Gateway device."""
         await self.gateway.connect(self.hass.loop, self._device)
         self.gateway.subscribe(self.receive_report)
         _LOGGER.debug("Connected to %s on %s", self.friendly_name,
