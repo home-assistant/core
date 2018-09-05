@@ -13,9 +13,11 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 from homeassistant.const import (
     CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL, ATTR_NAME,
-    CONF_VERIFY_SSL, CONF_TIMEOUT, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS)
+    CONF_VERIFY_SSL, CONF_TIMEOUT, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, CONF_ALLOW_UNREACHABLE)
 from homeassistant.util import Throttle
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+
 
 REQUIREMENTS = ['qnapstats==0.2.7']
 
@@ -99,6 +101,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NICS): cv.ensure_list,
     vol.Optional(CONF_DRIVES): cv.ensure_list,
     vol.Optional(CONF_VOLUMES): cv.ensure_list,
+    vol.Optional(CONF_ALLOW_UNREACHABLE, default=False): cv.boolean,
 })
 
 
@@ -107,8 +110,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     api = QNAPStatsAPI(config)
     api.update()
 
+    # QNAP is not available
     if not api.data:
-        hass.components.persistent_notification.create(
+        # the user is ok with qnap being not available, setup will be retried
+        if config.get(CONF_ALLOW_UNREACHABLE):
+            raise PlatformNotReady
+        else:
+            hass.components.persistent_notification.create(
             'Error: Failed to set up QNAP sensor.<br />'
             'Check the logs for additional information. '
             'You will need to restart hass after fixing.',
