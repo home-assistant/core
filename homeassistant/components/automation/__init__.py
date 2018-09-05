@@ -360,7 +360,7 @@ class AutomationEntity(ToggleEntity):
         await self.async_update_ha_state()
 
     def cooldown_reset(self):
-        """Resets cooldown of the automation."""
+        """Reset cooldown of the automation."""
         self._cooldown_reset = True
 
     async def async_trigger(self, variables, skip_condition=False,
