@@ -346,7 +346,8 @@ class XiaomiVibration(XiaomiBinarySensor):
             movement_type = 'free_fall'
         else:
             if value not in ('vibrate', 'tilt',  'free_fall'):
-                _LOGGER.warning("Unsupported movement_type detected: %s", value)
+                _LOGGER.warning("Unsupported movement_type detected: %s", 
+                                value)
                 return False
 
         self.hass.bus.fire('xiaomi_aqara.movement', {
