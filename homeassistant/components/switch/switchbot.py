@@ -3,7 +3,6 @@ Support for Switchbot.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.switchbot
 """
-import binascii
 import logging
 
 import voluptuous as vol
