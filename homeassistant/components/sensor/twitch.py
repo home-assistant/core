@@ -47,10 +47,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     except HTTPError as e:
         if e.response.status_code == 400:
             _LOGGER.error("Test API call failed, Check your client_id")
-            return False
         else:
             _LOGGER.error("Test API call failed")
-            return False
+        return False
 
     users = client.users.translate_usernames_to_ids(channels)
 
