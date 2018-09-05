@@ -1,23 +1,27 @@
-"""OpenTherm Gateway Climate component for Home Assistant."""
+"""
+Support for OpenTherm Gateway devices.
 
+For more details about this component, please refer to the documentation at
+http://home-assistant.io/components/climate.opentherm_gw/
+"""
 import logging
+
 import voluptuous as vol
 
 from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA,
                                               STATE_IDLE, STATE_HEAT,
                                               STATE_COOL,
                                               SUPPORT_TARGET_TEMPERATURE)
-from homeassistant.components.climate.modbus import CONF_PRECISION
-from homeassistant.const import (CONF_DEVICE, CONF_NAME, PRECISION_HALVES,
-                                 PRECISION_TENTHS, TEMP_CELSIUS,
-                                 PRECISION_WHOLE, STATE_ON, STATE_OFF,
-                                 STATE_UNKNOWN)
-from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.const import (ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME,
+                                 PRECISION_HALVES, PRECISION_TENTHS,
+                                 TEMP_CELSIUS, PRECISION_WHOLE, STATE_ON,
+                                 STATE_OFF, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyotgw==0.1a0']
 
 CONF_FLOOR_TEMP = "floor_temperature"
+CONF_PRECISION = 'precision'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_DEVICE): cv.string,
@@ -33,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the opentherm_gw component."""
+    """Set up the opentherm_gw device."""
     gateway = OpenThermGateway()
     gateway.friendly_name = config.get(CONF_NAME)
     gateway.floor_temp = config.get(CONF_FLOOR_TEMP, False)
@@ -42,7 +46,6 @@ async def async_setup_platform(hass, config, async_add_entities,
     await gateway.connect(hass, config.get(CONF_DEVICE))
     _LOGGER.debug("Connected to %s on %s", gateway.friendly_name,
                   config.get(CONF_DEVICE))
-    return True
 
 
 class OpenThermGateway(ClimateDevice):
@@ -66,10 +69,8 @@ class OpenThermGateway(ClimateDevice):
 
     async def connect(self, hass, gw_path):
         """Connect to the OpenTherm Gateway device at gw_path."""
-        self.hass = hass
         await self.gateway.connect(hass.loop, gw_path)
         self.gateway.subscribe(self.receive_report)
-        return
 
     async def receive_report(self, status):
         """Receive and handle a new report from the Gateway."""
@@ -175,27 +176,26 @@ class OpenThermGateway(ClimateDevice):
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
-        return (getattr(self, '_away_state_a', False) or
-                getattr(self, '_away_state_b', False))
+        return self._away_state_a or self._away_state_b
 
-    def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
-        if 'temperature' in kwargs:
-            temp = float(kwargs['temperature'])
-            return self.gateway.set_target_temp(temp)
-        return False
+        if ATTR_TEMPERATURE in kwargs:
+            temp = float(kwargs[ATTR_TEMPERATURE])
+            await self.gateway.set_target_temp(temp)
+            await self.async_update_ha_state()
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_TARGET_TEMPERATURE
+        return SUPPORT_FLAGS
 
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(1, TEMP_CELSIUS, self.temperature_unit)
+        return 1
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(30, TEMP_CELSIUS, self.temperature_unit)
+        return 30
