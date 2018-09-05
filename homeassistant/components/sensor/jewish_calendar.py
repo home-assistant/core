@@ -82,7 +82,7 @@ class JewishCalSensor(Entity):
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
-        self._date = dt_util.now()
+        self._date = dt_util.now().date()
         self._hebrew = (language == 'hebrew')
         self._state = None
         self.latitude = latitude
@@ -105,7 +105,7 @@ class JewishCalSensor(Entity):
         """Update the state of the sensor."""
         import hdate
 
-        self._date = dt_util.now()
+        self._date = dt_util.now().date()
 
         date = hdate.HDate(
             self._date, diaspora=self.diaspora, hebrew=self._hebrew)
