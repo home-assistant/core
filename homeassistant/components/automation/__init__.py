@@ -220,7 +220,6 @@ async def async_setup(hass, config):
             return
         await _async_process_config(hass, conf, component)
 
-    @asyncio.coroutine
     def cooldown_reset_service_handler(service_call):
         """Reset cooldown of automation."""
         for entity in component.async_extract_from_service(service_call):
@@ -238,14 +237,14 @@ async def async_setup(hass, config):
         DOMAIN, SERVICE_TOGGLE, toggle_service_handler,
         schema=SERVICE_SCHEMA)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_COOLDOWN_RESET, cooldown_reset_service_handler,
-        schema=SERVICE_SCHEMA)
-
     for service in (SERVICE_TURN_ON, SERVICE_TURN_OFF):
         hass.services.async_register(
             DOMAIN, service, turn_onoff_service_handler,
             schema=SERVICE_SCHEMA)
+
+    hass.services.async_register(
+        DOMAIN, SERVICE_COOLDOWN_RESET, cooldown_reset_service_handler,
+        schema=SERVICE_SCHEMA)
 
     return True
 
@@ -314,8 +313,9 @@ class AutomationEntity(ToggleEntity):
                 last_triggered = state.attributes.get('last_triggered')
                 if last_triggered is not None:
                     if isinstance(last_triggered, str):
-                        self._last_triggered = parse_datetime(
-                            state.attributes.get('last_triggered'))
+                        self._last_triggered = parse_datetime(last_triggered)
+                    else:
+                        self._last_triggered = last_triggered
                 else:
                     self._last_triggered = last_triggered
                 _LOGGER.debug("Automation %s initial state %s from recorder "
@@ -370,8 +370,7 @@ class AutomationEntity(ToggleEntity):
         This method is a coroutine.
         """
         if self._last_triggered is not None and not self._cooldown_reset:
-            last_triggered = as_local(
-                self._last_triggered)
+            last_triggered = as_local(self._last_triggered)
             now_triggered = now()
             if now_triggered.year <= last_triggered.year:
                 if self._cooldown_once_per_month:
@@ -473,8 +472,7 @@ async def _async_process_config(hass, config, component):
                 _async_process_trigger, hass, config,
                 config_block.get(CONF_TRIGGER, []), name
             )
-            cooldown = config_block.get(
-                CONF_COOLDOWN)
+            cooldown = config_block.get(CONF_COOLDOWN)
             entity = AutomationEntity(
                 automation_id, name, async_attach_triggers, cond_func, action,
                 hidden, initial_state, cooldown)
