@@ -106,7 +106,10 @@ class NotifyAuthModule(MultiFactorAuthModule):
         if data is None:
             data = {STORAGE_USERS: {}}
 
-        self._user_settings = data.get(STORAGE_USERS, {})
+        self._user_settings = {
+            user_id: NotifySetting(**setting)
+            for user_id, setting in data.get(STORAGE_USERS, {}).items()
+        }
 
     async def _async_save(self) -> None:
         """Save data."""
