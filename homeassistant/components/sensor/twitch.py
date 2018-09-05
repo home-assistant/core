@@ -37,9 +37,21 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Twitch platform."""
     from twitch import TwitchClient
+    from requests.exceptions import HTTPError
 
     channels = config.get(CONF_CHANNELS, [])
     client = TwitchClient(client_id=config.get(CONF_CLIENTID))
+
+    try:
+        client.ingests.get_server_list()
+    except HTTPError as e:
+        if e.response.status_code == 400:
+            _LOGGER.error("Test API call failed, Check your client_id")
+            return False
+        else:
+           _LOGGER.error("Test API call failed")
+           return False
+
     users = client.users.translate_usernames_to_ids(channels)
 
     add_entities([TwitchSensor(user, client) for user in users], True)
