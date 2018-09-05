@@ -594,6 +594,11 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
         template)
 })
 
+_SCRIPT_DELAY_TEMPLATE_SCHEMA = vol.Schema({
+    vol.Optional(CONF_ALIAS): string,
+    vol.Required("delay_template"): {match_all: template_complex}
+})
+
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("wait_template"): template,
@@ -604,5 +609,6 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
 SCRIPT_SCHEMA = vol.All(
     ensure_list,
     [vol.Any(SERVICE_SCHEMA, _SCRIPT_DELAY_SCHEMA,
-             _SCRIPT_WAIT_TEMPLATE_SCHEMA, EVENT_SCHEMA, CONDITION_SCHEMA)],
+             _SCRIPT_DELAY_TEMPLATE_SCHEMA, _SCRIPT_WAIT_TEMPLATE_SCHEMA,
+             EVENT_SCHEMA, CONDITION_SCHEMA)],
 )
