@@ -14,8 +14,7 @@ from homeassistant.components.climate import (ClimateDevice, PLATFORM_SCHEMA,
                                               SUPPORT_TARGET_TEMPERATURE)
 from homeassistant.const import (ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME,
                                  PRECISION_HALVES, PRECISION_TENTHS,
-                                 TEMP_CELSIUS, PRECISION_WHOLE, STATE_ON,
-                                 STATE_OFF, STATE_UNKNOWN)
+                                 TEMP_CELSIUS, PRECISION_WHOLE)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyotgw==0.1b0']
@@ -84,7 +83,7 @@ class OpenThermGateway(ClimateDevice):
         else:
             self._current_operation = STATE_IDLE
         self._current_temperature = status.get(self.pyotgw.DATA_ROOM_TEMP)
-        if status.get(self.pyotgw.DATA_ROOM_SETPOINT_OVRD) == None:
+        if status.get(self.pyotgw.DATA_ROOM_SETPOINT_OVRD) is None:
             temp = status.get(self.pyotgw.DATA_ROOM_SETPOINT)
         else:
             temp = status.get(self.pyotgw.DATA_ROOM_SETPOINT_OVRD)
