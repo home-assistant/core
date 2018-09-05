@@ -24,8 +24,8 @@ CONF_MESSAGE = 'message'
 CONFIG_SCHEMA = MULTI_FACTOR_AUTH_MODULE_SCHEMA.extend({
     vol.Optional(CONF_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
-    vol.Optional(CONF_MESSAGE, default='Your Home Assistant One-time Password'
-                                       ' is "{}"'): str
+    vol.Optional(CONF_MESSAGE,
+                 default='{} is your Home Assistant login code'): str
 }, extra=vol.PREVENT_EXTRA)
 
 STORAGE_VERSION = 1
