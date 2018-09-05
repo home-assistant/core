@@ -118,17 +118,6 @@ class OpenThermGateway(ClimateDevice):
         return self.friendly_name
 
     @property
-    def state(self):
-        """Return the current state."""
-        if self.is_on is False:
-            return STATE_OFF
-        if self._current_operation:
-            return self._current_operation
-        if self.is_on:
-            return STATE_ON
-        return STATE_UNKNOWN
-
-    @property
     def precision(self):
         """Return the precision of the system."""
         if self.temp_precision is not None:
