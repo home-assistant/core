@@ -29,6 +29,7 @@ CONF_EVENT = 'event'
 CONF_EVENT_DATA = 'event_data'
 CONF_EVENT_DATA_TEMPLATE = 'event_data_template'
 CONF_DELAY = 'delay'
+CONF_DELAY_TEMPLATE = 'delay_template'
 CONF_WAIT_TEMPLATE = 'wait_template'
 CONF_CONTINUE = 'continue_on_timeout'
 
@@ -53,8 +54,9 @@ class Script():
         self._cur = -1
         self.last_action = None
         self.last_triggered = None
-        self.can_cancel = any(CONF_DELAY in action or CONF_WAIT_TEMPLATE
-                              in action for action in self.sequence)
+        self.can_cancel = any(CONF_DELAY in action or CONF_DELAY_TEMPLATE
+                              in action or CONF_WAIT_TEMPLATE in action
+                              for action in self.sequence)
         self._async_listener = []
         self._template_cache = {}
         self._config_cache = {}
@@ -111,6 +113,40 @@ class Script():
 
                 unsub = async_track_point_in_utc_time(
                     self.hass, async_script_delay,
+                    date_util.utcnow() + delay
+                )
+                self._async_listener.append(unsub)
+
+                self._cur = cur + 1
+                if self._change_listener:
+                    self.hass.async_add_job(self._change_listener)
+                return
+
+            if CONF_DELAY_TEMPLATE in action:
+                # Call ourselves in the future to continue work
+                unsub = None
+
+                @callback
+                def async_script_delay_template(now):
+                    """Handle delay."""
+                    # pylint: disable=cell-var-from-loop
+                    self._async_listener.remove(unsub)
+                    self.hass.async_add_job(self.async_run(variables))
+
+                delay = action[CONF_DELAY_TEMPLATE]
+
+                delay_data = {}
+                try:
+                    delay_data.update(
+                        template.render_complex(delay, variables))
+                    delay = cv.time_period(delay_data)
+                except (TemplateError, vol.Invalid) as ex:
+                    _LOGGER.error("Error rendering '%s' delay template: %s",
+                                  self.name, ex)
+                    break
+
+                unsub = async_track_point_in_utc_time(
+                    self.hass, async_script_delay_template,
                     date_util.utcnow() + delay
                 )
                 self._async_listener.append(unsub)
