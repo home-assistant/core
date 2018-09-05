@@ -18,7 +18,7 @@ from homeassistant.const import (ATTR_TEMPERATURE, CONF_DEVICE, CONF_NAME,
                                  STATE_OFF, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyotgw==0.1a0']
+REQUIREMENTS = ['pyotgw==0.1b0']
 
 CONF_FLOOR_TEMP = "floor_temperature"
 CONF_PRECISION = 'precision'
@@ -84,7 +84,7 @@ class OpenThermGateway(ClimateDevice):
         else:
             self._current_operation = STATE_IDLE
         self._current_temperature = status.get(self.pyotgw.DATA_ROOM_TEMP)
-        if status.get(self.pyotgw.DATA_ROOM_SETPOINT_OVRD, 0) == 0:
+        if status.get(self.pyotgw.DATA_ROOM_SETPOINT_OVRD) == None:
             temp = status.get(self.pyotgw.DATA_ROOM_SETPOINT)
         else:
             temp = status.get(self.pyotgw.DATA_ROOM_SETPOINT_OVRD)
