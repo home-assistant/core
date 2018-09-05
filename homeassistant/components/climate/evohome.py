@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Setup a Honeywell (EMEA/EU) evohome CH/DHW system.
+    """Create a Honeywell (EMEA/EU) evohome CH/DHW system.
 
     An evohome system consists of: a controller, with 0-12 heating zones (e.g.
     TRVs, relays) and, optionally, a DHW controller (a HW boiler).
