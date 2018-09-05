@@ -86,7 +86,7 @@ class TwitchSensor(Entity):
         if stream:
             self._game = stream.get('channel').get('game')
             self._title = stream.get('channel').get('status')
-            self._preview = stream.get('preview').get('small')
+            self._preview = stream.get('preview').get('medium')
             self._state = STATE_STREAMING
         else:
             self._preview = self._client.users.get_by_id(self._id).get('logo')
