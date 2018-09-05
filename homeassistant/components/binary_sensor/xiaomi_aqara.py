@@ -346,8 +346,9 @@ class XiaomiVibration(XiaomiBinarySensor):
         elif value == "free_fall":
             movement_type = 'free_fall'
         else:
-            _LOGGER.warning("Unsupported movement_type detected: %s", value)
-            return False
+	    if value not in ('vibrate', 'tilt',  'free_fall'):
+            	_LOGGER.warning("Unsupported movement_type detected: %s", value)
+            	return False
 
         self._hass.bus.fire('movement', {
             'entity_id': self.entity_id,
