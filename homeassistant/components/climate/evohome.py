@@ -20,7 +20,7 @@ from homeassistant.components.evohome import (
 
 _LOGGER = logging.getLogger(__name__)
 
-#TBD: change LOGGER.info to LOGGER.debug
+
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Setup a Honeywell (EMEA/EU) evohome CH/DHW system.
 
@@ -44,8 +44,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         tcs_obj_ref.modelType
     )
     master = EvoController(hass, client, tcs_obj_ref)
-
     slaves = []
+
 # 2/3: Collect each (slave) Heating zone as a (climate component) device
     for zone_obj_ref in tcs_obj_ref._zones:                                     # noqa E501; pylint: disable=protected-access
         _LOGGER.info(
@@ -64,8 +64,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             tcs_obj_ref.hotwater.zoneId,  # also has .dhwId (same)
             tcs_obj_ref.hotwater.zone_type
         )
-#
-#
         slaves.append(EvoBoiler(hass, client, tcs_obj_ref.hotwater))
 
 # for efficiency, add controller + all zones in a single call (add_devices)
