@@ -591,7 +591,7 @@ _SCRIPT_DELAY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("delay"): vol.Any(
         vol.All(time_period, positive_timedelta),
-        template)
+        template, {match_all: template_complex})
 })
 
 _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
