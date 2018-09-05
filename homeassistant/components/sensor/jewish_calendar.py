@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.jewish_calendar/
 """
 import logging
-from datetime import date as dt
 
 import voluptuous as vol
 
