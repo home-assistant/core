@@ -87,6 +87,7 @@ from homeassistant.const import (
 #   HTTP_SERVICE_UNAVAILABLE = 503  # this is common with Honeywell's websites
 
 from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
@@ -239,9 +240,8 @@ def setup(hass, config):
         logging.getLogger().setLevel(log_level)
 
     except requests.RequestException as err:
-        # an exception here is catastrophic
         if str(HTTP_BAD_REQUEST) in str(err):
-            # possibly, bad user credentials were supplied
+            # this happens when bad user credentials are supplied
             _LOGGER.error(
                 "Failed to establish a connection with evohome web servers, "
                 "Check your username (%s), and password are correct."
@@ -249,11 +249,8 @@ def setup(hass, config):
                 domain_data['params'][CONF_USERNAME]
             )
         else:
-            _LOGGER.error(
-                "Failed to establish a connection with evohome web servers. "
-                "Unable to continue. Resolve any errors and restart HA."
-            )
-        raise
+            # back off and try again later
+            raise PlatformNotReady(err)
 
     finally:  # redact username, password as no longer needed
         del domain_data['params'][CONF_USERNAME]  # = 'REDACTED'
@@ -504,7 +501,7 @@ class EvoEntity(Entity):                                                        
             if str(HTTP_TOO_MANY_REQUESTS) in str(err):
                 # v2 api limit has been exceeded
                 old_scan_interval = domain_data['params'][CONF_SCAN_INTERVAL]
-                new_scan_interval = max(old_scan_interval, 300)
+                new_scan_interval = max(old_scan_interval * 2, 300)
                 domain_data['params'][CONF_SCAN_INTERVAL] = new_scan_interval
 
                 _LOGGER.debug(
@@ -917,6 +914,8 @@ class EvoController(EvoEntity):
             domain_data['status'].update(  # or: domain_data['status'] =
                 client.locations[loc_idx].status()[GWS][0][TCS][0])
 
+#       except requests.RequestException as err:
+#
 #       except requests.exceptions.ConnectionError as err:
 #           self._handle_requests_exceptions("ConnectionError", err)
         except requests.exceptions.HTTPError as err:
