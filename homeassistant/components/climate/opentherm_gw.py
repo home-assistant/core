@@ -122,14 +122,9 @@ class OpenThermGateway(ClimateDevice):
         """Return the precision of the system."""
         if self.temp_precision is not None:
             return self.temp_precision
-        if self.unit_of_measurement == TEMP_CELSIUS:
+        if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return PRECISION_HALVES
         return PRECISION_WHOLE
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement to display."""
-        return self.hass.config.units.temperature_unit
 
     @property
     def temperature_unit(self):
