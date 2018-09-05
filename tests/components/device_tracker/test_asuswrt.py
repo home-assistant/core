@@ -13,9 +13,9 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME, CONF_TRACK_NEW, CONF_NEW_DEVICE_DEFAULTS,
     CONF_AWAY_HIDE)
 from homeassistant.components.device_tracker.asuswrt import (
-    CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN, _ARP_REGEX,
-    CONF_PORT, PLATFORM_SCHEMA, Device, get_scanner, AsusWrtDeviceScanner,
-    _parse_lines, SshConnection, TelnetConnection, CONF_REQUIRE_IP)
+    CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN, CONF_PORT,
+    PLATFORM_SCHEMA, Device, get_scanner, AsusWrtDeviceScanner,
+    SshConnection, TelnetConnection, CONF_REQUIRE_IP)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 
@@ -149,11 +149,6 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
             os.remove(self.hass.config.path(device_tracker.YAML_DEVICES))
         except FileNotFoundError:
             pass
-
-    def test_parse_lines_wrong_input(self):
-        """Testing parse lines."""
-        output = _parse_lines("asdf asdfdfsafad", _ARP_REGEX)
-        self.assertEqual(output, [])
 
     def test_get_device_name(self):
         """Test for getting name."""
@@ -391,11 +386,9 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         """Test asuswrt data fetch."""
         scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
         scanner._get_wl = mock.Mock()
-        scanner._get_arp = mock.Mock()
         scanner._get_neigh = mock.Mock()
         scanner._get_leases = mock.Mock()
         scanner._get_wl.return_value = WL_DEVICES
-        scanner._get_arp.return_value = ARP_DEVICES
         scanner._get_neigh.return_value = NEIGH_DEVICES
         scanner._get_leases.return_value = LEASES_DEVICES
         self.assertEqual(WAKE_DEVICES, scanner.get_asuswrt_data())
@@ -406,11 +399,9 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         conf[CONF_MODE] = 'ap'
         scanner = AsusWrtDeviceScanner(conf)
         scanner._get_wl = mock.Mock()
-        scanner._get_arp = mock.Mock()
         scanner._get_neigh = mock.Mock()
         scanner._get_leases = mock.Mock()
         scanner._get_wl.return_value = WL_DEVICES
-        scanner._get_arp.return_value = ARP_DEVICES
         scanner._get_neigh.return_value = NEIGH_DEVICES
         scanner._get_leases.return_value = LEASES_DEVICES
         self.assertEqual(WAKE_DEVICES_AP, scanner.get_asuswrt_data())
@@ -421,11 +412,9 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         conf[CONF_REQUIRE_IP] = False
         scanner = AsusWrtDeviceScanner(conf)
         scanner._get_wl = mock.Mock()
-        scanner._get_arp = mock.Mock()
         scanner._get_neigh = mock.Mock()
         scanner._get_leases = mock.Mock()
         scanner._get_wl.return_value = WL_DEVICES
-        scanner._get_arp.return_value = ARP_DEVICES
         scanner._get_neigh.return_value = NEIGH_DEVICES
         scanner._get_leases.return_value = LEASES_DEVICES
         self.assertEqual(WAKE_DEVICES_NO_IP, scanner.get_asuswrt_data())
@@ -450,18 +439,6 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         self.assertEqual(WL_DEVICES, scanner._get_wl())
         mocked_ssh.run_command.return_value = ''
         self.assertEqual({}, scanner._get_wl())
-
-    @mock.patch(
-        'homeassistant.components.device_tracker.asuswrt.SshConnection')
-    def test_get_arp(self, mocked_ssh):
-        """Testing arp."""
-        mocked_ssh.run_command.return_value = ARP_DATA
-
-        scanner = get_scanner(self.hass, VALID_CONFIG_ROUTER_SSH)
-        scanner.connection = mocked_ssh
-        self.assertEqual(ARP_DEVICES, scanner._get_arp())
-        mocked_ssh.run_command.return_value = ''
-        self.assertEqual({}, scanner._get_arp())
 
     @mock.patch(
         'homeassistant.components.device_tracker.asuswrt.SshConnection')
