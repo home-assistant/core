@@ -18,14 +18,14 @@ DEPENDENCIES = ['neato']
 SCAN_INTERVAL = timedelta(minutes=10)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato Camera."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         if 'maps' in robot.traits:
             dev.append(NeatoCleaningMap(hass, robot))
     _LOGGER.debug("Adding robots for cleaning maps %s", dev)
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class NeatoCleaningMap(Camera):

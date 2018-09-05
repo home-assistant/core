@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pilight platform."""
     switches = config.get(CONF_SWITCHES)
     devices = []
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         )
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class _ReceiveHandle:

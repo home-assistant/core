@@ -64,14 +64,14 @@ def captured_sensor():
 
 
 class PlatformSetupFixture():
-    """Fixture for testing platform setup call to add_devices()."""
+    """Fixture for testing platform setup call to add_entities()."""
 
     def __init__(self):
         """Instantiate the platform setup fixture."""
         self.sensors = None
         self.update = False
 
-    def add_devices(self, sensors, update):
+    def add_entities(self, sensors, update):
         """Mock method for adding devices."""
         self.sensors = sensors
         self.update = update
@@ -101,7 +101,7 @@ def mock_dispatch():
 
 def test_setup_with_no_data(platform_setup, hass):
     """Test setup_platform with no data."""
-    arlo.setup_platform(hass, None, platform_setup.add_devices)
+    arlo.setup_platform(hass, None, platform_setup.add_entities)
     assert platform_setup.sensors is None
     assert not platform_setup.update
 
@@ -132,7 +132,7 @@ def test_setup_with_valid_data(platform_setup, hass):
         })]
     })
 
-    arlo.setup_platform(hass, config, platform_setup.add_devices)
+    arlo.setup_platform(hass, config, platform_setup.add_entities)
     assert len(platform_setup.sensors) == 8
     assert platform_setup.update
 

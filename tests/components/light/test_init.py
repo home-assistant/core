@@ -14,7 +14,7 @@ from homeassistant.components import light
 from homeassistant.helpers.intent import IntentHandleError
 
 from tests.common import (
-    async_mock_service, mock_service, get_test_home_assistant)
+    async_mock_service, mock_service, get_test_home_assistant, mock_storage)
 
 
 class TestLight(unittest.TestCase):
@@ -22,7 +22,7 @@ class TestLight(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -333,10 +333,11 @@ class TestLight(unittest.TestCase):
                        "group.all_lights.default,.4,.6,99\n"
         with mock.patch('os.path.isfile', side_effect=_mock_isfile):
             with mock.patch('builtins.open', side_effect=_mock_open):
-                self.assertTrue(setup_component(
-                    self.hass, light.DOMAIN,
-                    {light.DOMAIN: {CONF_PLATFORM: 'test'}}
-                ))
+                with mock_storage():
+                    self.assertTrue(setup_component(
+                        self.hass, light.DOMAIN,
+                        {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+                    ))
 
         dev, _, _ = platform.DEVICES
         light.turn_on(self.hass, dev.entity_id)
@@ -371,10 +372,11 @@ class TestLight(unittest.TestCase):
                        "light.ceiling_2.default,.6,.6,100\n"
         with mock.patch('os.path.isfile', side_effect=_mock_isfile):
             with mock.patch('builtins.open', side_effect=_mock_open):
-                self.assertTrue(setup_component(
-                    self.hass, light.DOMAIN,
-                    {light.DOMAIN: {CONF_PLATFORM: 'test'}}
-                ))
+                with mock_storage():
+                    self.assertTrue(setup_component(
+                        self.hass, light.DOMAIN,
+                        {light.DOMAIN: {CONF_PLATFORM: 'test'}}
+                    ))
 
         dev = next(filter(lambda x: x.entity_id == 'light.ceiling_2',
                           platform.DEVICES))

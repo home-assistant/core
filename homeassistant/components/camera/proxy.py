@@ -48,9 +48,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Proxy camera platform."""
-    async_add_devices([ProxyCamera(hass, config)])
+    async_add_entities([ProxyCamera(hass, config)])
 
 
 def _resize_image(image, opts):
@@ -64,7 +64,10 @@ def _resize_image(image, opts):
     quality = opts.quality or DEFAULT_QUALITY
     new_width = opts.max_width
 
-    img = Image.open(io.BytesIO(image))
+    try:
+        img = Image.open(io.BytesIO(image))
+    except IOError:
+        return image
     imgfmt = str(img.format)
     if imgfmt not in ('PNG', 'JPEG'):
         _LOGGER.debug("Image is of unsupported type: %s", imgfmt)

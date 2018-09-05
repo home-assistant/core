@@ -37,7 +37,7 @@ SUPPORT_PJLINK = SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PJLink platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     device = PjLinkDevice(host, port, name, encoding, password)
     hass_data[device_label] = device
-    add_devices([device], True)
+    add_entities([device], True)
 
 
 def format_input_source(input_source_name, input_source_number):

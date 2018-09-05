@@ -17,7 +17,7 @@ class TestSwitchFlux(unittest.TestCase):
     """Test the Flux switch platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):

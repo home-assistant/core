@@ -16,7 +16,7 @@ class TestSetupImageProcessing:
     """Test class for setup image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self):
@@ -24,7 +24,7 @@ class TestSetupImageProcessing:
         self.hass.stop()
 
     def test_setup_component(self):
-        """Setup demo platform on image_process component."""
+        """Set up demo platform on image_process component."""
         config = {
             ip.DOMAIN: {
                 'platform': 'demo'
@@ -35,7 +35,7 @@ class TestSetupImageProcessing:
             setup_component(self.hass, ip.DOMAIN, config)
 
     def test_setup_component_with_service(self):
-        """Setup demo platform on image_process component test service."""
+        """Set up demo platform on image_process component test service."""
         config = {
             ip.DOMAIN: {
                 'platform': 'demo'
@@ -52,7 +52,7 @@ class TestImageProcessing:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         setup_component(
@@ -113,7 +113,7 @@ class TestImageProcessingAlpr:
     """Test class for alpr image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         config = {
@@ -149,7 +149,7 @@ class TestImageProcessingAlpr:
         self.hass.stop()
 
     def test_alpr_event_single_call(self, aioclient_mock):
-        """Setup and scan a picture and test plates from event."""
+        """Set up and scan a picture and test plates from event."""
         aioclient_mock.get(self.url, content=b'image')
 
         ip.scan(self.hass, entity_id='image_processing.demo_alpr')
@@ -168,7 +168,7 @@ class TestImageProcessingAlpr:
         assert event_data[0]['entity_id'] == 'image_processing.demo_alpr'
 
     def test_alpr_event_double_call(self, aioclient_mock):
-        """Setup and scan a picture and test plates from event."""
+        """Set up and scan a picture and test plates from event."""
         aioclient_mock.get(self.url, content=b'image')
 
         ip.scan(self.hass, entity_id='image_processing.demo_alpr')
@@ -192,7 +192,7 @@ class TestImageProcessingAlpr:
            new_callable=PropertyMock(return_value=95))
     def test_alpr_event_single_call_confidence(self, confidence_mock,
                                                aioclient_mock):
-        """Setup and scan a picture and test plates from event."""
+        """Set up and scan a picture and test plates from event."""
         aioclient_mock.get(self.url, content=b'image')
 
         ip.scan(self.hass, entity_id='image_processing.demo_alpr')
@@ -215,7 +215,7 @@ class TestImageProcessingFace:
     """Test class for face image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         config = {
@@ -251,7 +251,7 @@ class TestImageProcessingFace:
         self.hass.stop()
 
     def test_face_event_call(self, aioclient_mock):
-        """Setup and scan a picture and test faces from event."""
+        """Set up and scan a picture and test faces from event."""
         aioclient_mock.get(self.url, content=b'image')
 
         ip.scan(self.hass, entity_id='image_processing.demo_face')
@@ -276,7 +276,7 @@ class TestImageProcessingFace:
            'DemoImageProcessingFace.confidence',
            new_callable=PropertyMock(return_value=None))
     def test_face_event_call_no_confidence(self, mock_config, aioclient_mock):
-        """Setup and scan a picture and test faces from event."""
+        """Set up and scan a picture and test faces from event."""
         aioclient_mock.get(self.url, content=b'image')
 
         ip.scan(self.hass, entity_id='image_processing.demo_face')

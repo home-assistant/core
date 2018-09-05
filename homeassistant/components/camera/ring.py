@@ -40,7 +40,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up a Ring Door Bell and StickUp Camera."""
     ring = hass.data[DATA_RING]
 
@@ -73,7 +74,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
 
-    async_add_devices(cams, True)
+    async_add_entities(cams, True)
     return True
 
 

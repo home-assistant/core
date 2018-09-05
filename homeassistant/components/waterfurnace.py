@@ -43,7 +43,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, base_config):
-    """Setup waterfurnace platform."""
+    """Set up waterfurnace platform."""
     import waterfurnace.waterfurnace as wf
     config = base_config.get(DOMAIN)
 
