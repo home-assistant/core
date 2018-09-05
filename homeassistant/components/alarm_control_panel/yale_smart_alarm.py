@@ -4,7 +4,6 @@ Yale Smart Alarm client for interacting with the Yale Smart Alarm System API.
 For more details about this platform, please refer to the documentation at
 https://www.home-assistant.io/components/alarm_control_panel.yale_smart_alarm
 """
-
 import logging
 
 import voluptuous as vol
@@ -34,22 +33,22 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the alarm platform."""
-    name = config.get(CONF_NAME)
-    username = config.get(CONF_USERNAME)
-    password = config.get(CONF_PASSWORD)
-    area_id = config.get(CONF_AREA_ID)
+    name = config[CONF_NAME]
+    username = config[CONF_USERNAME]
+    password = config[CONF_PASSWORD]
+    area_id = config[CONF_AREA_ID]
 
     from yalesmartalarmclient.client import (
         YaleSmartAlarmClient, AuthenticationError)
     try:
         client = YaleSmartAlarmClient(username, password, area_id)
     except AuthenticationError:
-        _LOGGER.error("Authentication failed. Check credentials.")
+        _LOGGER.error("Authentication failed. Check credentials")
         return
 
-    add_devices([YaleAlarmDevice(name, client)], True)
+    add_entities([YaleAlarmDevice(name, client)], True)
 
 
 class YaleAlarmDevice(AlarmControlPanel):
@@ -84,7 +83,7 @@ class YaleAlarmDevice(AlarmControlPanel):
         """Return the state of the device."""
         armed_status = self._client.get_armed_status()
 
-        self._state = self._state_map.get(armed_status, None)
+        self._state = self._state_map.get(armed_status)
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
@@ -97,7 +96,3 @@ class YaleAlarmDevice(AlarmControlPanel):
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._client.arm_full()
-
-    def alarm_arm_night(self, code=None):
-        """Send arm night command."""
-        self._client.arm_partial()
