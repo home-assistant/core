@@ -44,8 +44,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     try:
         client.ingests.get_server_list()
-    except HTTPError as e:
-        if e.response.status_code == 400:
+    except HTTPError as http_error:
+        if http_error.response.status_code == 400:
             _LOGGER.error("Test API call failed, Check your client_id")
         else:
             _LOGGER.error("Test API call failed")
