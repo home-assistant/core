@@ -101,8 +101,6 @@ class KNXFan(FanEntity):
         """Return the current speed."""
         if self.device.current_speed() is not None:
             return self.device.current_speed()
-        else:
-            return 0
 
     @property
     def speed_list(self) -> list:
