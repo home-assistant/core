@@ -10,7 +10,10 @@ homeassistant:
   customize_glob:
     fan.*:
       custom_ui_state_card: state-card-custom-fanspeed
-
+  auth_providers:
+  - type: trusted_networks
+  - type: homeassistant
+  - type: legacy_api_password
 # Track the sun
 sun:
 
@@ -90,7 +93,7 @@ media_extractor:
 
 # Enables the frontend
 frontend:
-#  development_repo: /home/andrzej/Projects/home-assistant-polymer
+  development_repo: /home/andrzej/Projects/home-assistant-polymer
   javascript_version: latest
   extra_html_url:
     - /static/ais_dom/custom_ui/state-card-ais-microphone.html
@@ -148,7 +151,10 @@ frontend:
 config:
 
 http:
-   # api_password: xxx
+   api_password: dom
+   trusted_networks:
+    - 127.0.0.1
+    - 192.168.1.0/24
    base_url: localhost:8123
    ssl_certificate: /data/data/pl.sviete.dom/files/home/AIS/servercert.pem
    ssl_key: /data/data/pl.sviete.dom/files/home/AIS/privekey.pem

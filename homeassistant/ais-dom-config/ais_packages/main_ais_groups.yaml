@@ -52,7 +52,7 @@ group:
   settings:
     name: Ustawienia
     view: yes
-    icon:  mdi:account-settings-variant
+    icon:  mdi:settings
     entities:
       - group.ais_tts_configuration
       - group.internet_status

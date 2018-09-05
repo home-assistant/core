@@ -312,7 +312,7 @@ class LocalData:
                     })
 
     def rclone_browse_folder(self, path):
-        rclone_cmd = ["rclone", "lsjson", path, G_RCLONE_CONF]
+        rclone_cmd = ["rclone", "lsjson", path, G_RCLONE_CONF, '--drive-formats=txt']
         proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         #  will wait for the process to complete and then we are going to return the output
@@ -354,7 +354,7 @@ class LocalData:
 
     def rclone_copy_and_read(self, path, item_path):
         # TODO clear .temp files...
-        rclone_cmd = ["rclone", "copy", path, G_LOCAL_FILES_ROOT + '/.temp/', G_RCLONE_CONF]
+        rclone_cmd = ["rclone", "copy", path, G_LOCAL_FILES_ROOT + '/.temp/', G_RCLONE_CONF, '--drive-formats=txt']
         proc = subprocess.run(rclone_cmd, encoding='utf-8', stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         if "" != proc.stderr:

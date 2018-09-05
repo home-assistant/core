@@ -92,7 +92,24 @@ async def async_start(hass, discovery_topic, hass_config):
 
         await async_load_platform(
             hass, component, platform, payload, hass_config)
-
+        # AIS dom, we are doing this here because the EVENT_PLATFORM_DISCOVERED is not fired
+        if component == 'sensor' and 'unique_id' in payload:
+            hass.async_add_job(
+                hass.services.async_call(
+                    'group',
+                    'set', {
+                        "object_id": "all_ais_sensors",
+                        "add_entities": ["sensor." + payload['unique_id']]
+                    }
+                )
+            )
+            # prepare ais dom menu
+            hass.async_add_job(
+                hass.services.async_call(
+                    'ais_ai_service',
+                    'prepare_remote_menu'
+                )
+            )
     await mqtt.async_subscribe(
         hass, discovery_topic + '/#', async_device_message_received, 0)
 

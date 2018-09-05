@@ -1113,8 +1113,9 @@ class AisColudData:
                     item['link'] = e.link
                     item['image_url'] = _image_url
                     item['description'] = e.description
-                    items.append(e.title)
-                    self.news_items.append(item)
+                    if e.title not in items:
+                        items.append(e.title)
+                        self.news_items.append(item)
                 self.hass.services.call(
                     'input_select',
                     'set_options', {

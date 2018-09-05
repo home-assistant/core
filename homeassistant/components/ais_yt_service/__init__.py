@@ -132,17 +132,14 @@ class YouTubeData:
 
     def process_select_track_name(self, call):
         _LOGGER.info("process_select_track_name")
-        id = None
-        _audio_info = {}
         # """Search in last search return."""
         name = call.data[ATTR_NAME]
         for item in G_YT_FOUND:
             if item["title"] == name:
-                id = item["id"]
-                _audio_info["IMAGE_URL"] = item["thumbnail"]
-                _audio_info["NAME"] = item["title"]
-                _audio_info["MEDIA_SOURCE"] = ais_global.G_AN_MUSIC
-                _audio_info = json.dumps(_audio_info)
+                item_id = item["id"]
+                _audio_info = json.dumps(
+                    {"IMAGE_URL": item["thumbnail"], "NAME": item["title"], "MEDIA_SOURCE": ais_global.G_AN_MUSIC}
+                )
 
         player_name = self.hass.states.get(
             'input_select.ais_music_player').state
@@ -152,7 +149,7 @@ class YouTubeData:
             'media_extractor',
             'play_media', {
                 "entity_id": player["entity_id"],
-                "media_content_id": url + id,
+                "media_content_id": url + item_id,
                 "media_content_type": "video/youtube"})
 
         # set stream image and title
