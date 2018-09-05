@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.jewish_calendar/
 """
 import logging
-from datetime import date
+from datetime import date as dt
 
 import voluptuous as vol
 
@@ -14,6 +14,8 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+import homeassistant.util.dt as dt_util
+
 
 REQUIREMENTS = ['hdate==0.6.1']
 
@@ -36,6 +38,8 @@ CONF_LANGUAGE = 'language'
 CONF_SENSORS = 'sensors'
 
 DEFAULT_NAME = 'Jewish Calendar'
+DEFAULT_LATITUDE = 31.778
+DEFAULT_LONGITUDE = 35.235
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -73,12 +77,13 @@ class JewishCalSensor(Entity):
     """Representation of an Jewish calendar sensor."""
 
     def __init__(self, name, language, sensor_type,
-                 latitude, longitude, diaspora):
+                 latitude=DEFAULT_LATITUDE, longitude=DEFAULT_LONGITUDE,
+                 diaspora=False):
         """Initialize the Jewish calendar sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
-        self._date = date.today()
+        self._date = dt_util.now()
         self._hebrew = (language == 'hebrew')
         self._state = None
         self.latitude = latitude
@@ -100,6 +105,8 @@ class JewishCalSensor(Entity):
     async def async_update(self):
         """Update the state of the sensor."""
         import hdate
+
+        self._date = dt_util.now()
 
         date = hdate.HDate(
             self._date, diaspora=self.diaspora, hebrew=self._hebrew)

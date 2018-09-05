@@ -52,19 +52,21 @@ class TestJewishCalenderSensor(unittest.TestCase):
     def test_jewish_calendar_sensor_date_output(self):
         """Test Jewish calendar sensor date output."""
         test_time = dt(2018, 9, 3)
-        sensor = JewishCalSensor('test', 'english')
+        sensor = JewishCalSensor(
+            name='test', language='english', sensor_type='date')
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(),
                 self.hass.loop).result()
-            self.assertEqual(sensor.state, 'Monday 23 Elul 5778')
+            self.assertEqual(sensor.state, '23 Elul 5778')
 
     def test_jewish_calendar_sensor_date_output_hebrew(self):
         """Test Jewish calendar sensor date output in hebrew."""
         test_time = dt(2018, 9, 3)
-        sensor = JewishCalSensor('test', 'hebrew')
+        sensor = JewishCalSensor(
+            name='test', language='hebrew', sensor_type='date')
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
                 sensor.async_update(),
                 self.hass.loop).result()
-            self.assertEqual(sensor.state, "יום שני כ\"ג באלול ה\' תשע\"ח")
+            self.assertEqual(sensor.state, "כ\"ג באלול ה\' תשע\"ח")
