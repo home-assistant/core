@@ -11,6 +11,7 @@ from homeassistant.const import (
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import ENTITY_ID_FORMAT
+from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.util import convert
 from homeassistant.components.vera import (
     VERA_CONTROLLER, VERA_DEVICES, VeraDevice)
@@ -20,6 +21,10 @@ DEPENDENCIES = ['vera']
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=5)
+
+EVENT_VERA_REMOTE = "vera_remote"
+
+ATTR_BUTTON = "button"
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -84,10 +89,17 @@ class VeraSensor(VeraDevice, Entity):
               self.vera_device.category == veraApi.CATEGORY_REMOTE):
             value = self.vera_device.get_last_scene_id(True)
             time = self.vera_device.get_last_scene_time(True)
+
             if time is not None and time == self.last_changed_time:
                 self.current_value = None
             else:
                 self.current_value = value
+
+                self.hass.bus.fire(EVENT_VERA_REMOTE, {
+                    ATTR_ENTITY_ID: self.entity_id,
+                    ATTR_BUTTON: self.current_value
+                })
+
             self.last_changed_time = time
         elif self.vera_device.category == veraApi.CATEGORY_POWER_METER:
             power = convert(self.vera_device.power, float, 0)
