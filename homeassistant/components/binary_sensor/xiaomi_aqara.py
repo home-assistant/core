@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 devices.append(XiaomiCube(device, hass, gateway))
             elif model in ['vibration']:
                 devices.append(XiaomiVibration(device, 'Vibration',
-                                               'status', hass, gateway))
+                                               'status', gateway))
             else:
                 _LOGGER.warning('Unmapped Device Model %s', model)
 
@@ -320,12 +320,10 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
 class XiaomiVibration(XiaomiBinarySensor):
     """Representation of a Xiaomi Vibration Sensor."""
 
-    def __init__(self, device, name, data_key, hass, xiaomi_hub):
+    def __init__(self, device, name, data_key, xiaomi_hub):
         """Initialize the XiaomiVibration."""
-        self._hass = hass
         self._last_action = None
-        XiaomiBinarySensor.__init__(self, device, name, xiaomi_hub,
-                                    data_key, None)
+        super().__init__(device, name, xiaomi_hub, data_key, None)
 
     @property
     def device_state_attributes(self):
@@ -351,7 +349,7 @@ class XiaomiVibration(XiaomiBinarySensor):
             	_LOGGER.warning("Unsupported movement_type detected: %s", value)
             	return False
 
-        self._hass.bus.fire('movement', {
+        self.hass.bus.fire('xiaomi_aqara.movement', {
             'entity_id': self.entity_id,
             'movement_type': movement_type
         })
