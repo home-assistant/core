@@ -2,6 +2,8 @@
 import unittest
 from unittest.mock import patch
 import asyncio
+import freezegun
+from freezegun import freeze_time
 
 from homeassistant.setup import setup_component
 from homeassistant.const import HTTP_HEADER_HA_AUTH
@@ -249,16 +251,21 @@ class TestMediaPlayerWeb(unittest.TestCase):
 
     def test_media_image_proxy(self):
         """Test the media server image proxy server ."""
-        fake_picture_data = 'test.test'
+        fake_picture1_data = 'test.test'
+        fake_picture2_data = 'hello.world'
 
         class MockResponse():
             def __init__(self):
                 self.status = 200
                 self.headers = {'Content-Type': 'sometype'}
+                self.calls = 0
 
             @asyncio.coroutine
             def read(self):
-                return fake_picture_data.encode('ascii')
+                self.calls+=1
+                if self.calls == 1:
+                    return fake_picture1_data.encode('ascii')
+                return fake_picture2_data.encode('ascii')
 
             @asyncio.coroutine
             def release(self):
@@ -266,9 +273,11 @@ class TestMediaPlayerWeb(unittest.TestCase):
 
         class MockWebsession():
 
+            response = MockResponse()
+
             @asyncio.coroutine
             def get(self, url):
-                return MockResponse()
+                return self.response
 
             def detach(self):
                 pass
@@ -277,7 +286,18 @@ class TestMediaPlayerWeb(unittest.TestCase):
 
         assert self.hass.states.is_state(entity_id, 'playing')
         state = self.hass.states.get(entity_id)
-        req = requests.get(HTTP_BASE_URL +
-                           state.attributes.get('entity_picture'))
+        with freeze_time("2018-09-05 01:00:00"):
+            req = requests.get(HTTP_BASE_URL +
+                               state.attributes.get('entity_picture'))
         assert req.status_code == 200
-        assert req.text == fake_picture_data
+        assert req.text == fake_picture1_data
+        with freeze_time("2018-09-05 01:04:59"):
+            req = requests.get(HTTP_BASE_URL +
+                               state.attributes.get('entity_picture'))
+        assert req.status_code == 200
+        assert req.text == fake_picture1_data
+        with freeze_time("2018-09-05 01:05:00"):
+            req = requests.get(HTTP_BASE_URL +
+                               state.attributes.get('entity_picture'))
+        assert req.status_code == 200
+        assert req.text == fake_picture2_data

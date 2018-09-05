@@ -35,6 +35,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
 from homeassistant.components import websocket_api
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
@@ -51,6 +52,7 @@ CACHE_MAXSIZE = 'maxsize'
 CACHE_LOCK = 'lock'
 CACHE_URL = 'url'
 CACHE_CONTENT = 'content'
+CACHE_TIMESTAMP = 'timestamp'
 ENTITY_IMAGE_CACHE = {
     CACHE_IMAGES: collections.OrderedDict(),
     CACHE_MAXSIZE: 16
@@ -964,7 +966,7 @@ async def _async_fetch_image(hass, url):
         cache_images[url] = {CACHE_LOCK: asyncio.Lock(loop=hass.loop)}
 
     async with cache_images[url][CACHE_LOCK]:
-        if CACHE_CONTENT in cache_images[url]:
+        if CACHE_CONTENT in cache_images[url] and (cache_images[url][CACHE_TIMESTAMP] + 300) > dt_util.utcnow().timestamp():
             return cache_images[url][CACHE_CONTENT]
 
         content, content_type = (None, None)
@@ -979,6 +981,7 @@ async def _async_fetch_image(hass, url):
                     if content_type:
                         content_type = content_type.split(';')[0]
                     cache_images[url][CACHE_CONTENT] = content, content_type
+                    cache_images[url][CACHE_TIMESTAMP] = dt_util.utcnow().timestamp()
 
         except asyncio.TimeoutError:
             pass
