@@ -44,13 +44,6 @@ PLATFORM_SCHEMA = vol.All(
     }))
 
 
-_LEASES_CMD = 'cat /var/lib/misc/dnsmasq.leases'
-_LEASES_REGEX = re.compile(
-    r'\w+\s' +
-    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))\s' +
-    r'(?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\s' +
-    r'(?P<host>([^\s]+))')
-
 # Command to get both 5GHz and 2.4GHz clients
 _WL_CMD = 'for dev in `nvram get wl_ifnames`; do wl -i $dev assoclist; done'
 _WL_REGEX = re.compile(
@@ -67,15 +60,6 @@ _IP_NEIGH_REGEX = re.compile(
     r'\s?(router)?'
     r'\s?(nud)?'
     r'(?P<status>(\w+))')
-
-_ARP_CMD = 'arp -n'
-_ARP_REGEX = re.compile(
-    r'.+\s' +
-    r'\((?P<ip>([0-9]{1,3}[\.]){3}[0-9]{1,3})\)\s' +
-    r'.+\s' +
-    r'(?P<mac>(([0-9a-f]{2}[:-]){5}([0-9a-f]{2})))' +
-    r'\s' +
-    r'.*')
 
 
 def get_scanner(hass, config):
@@ -167,10 +151,7 @@ class AsusWrtDeviceScanner(DeviceScanner):
         """
         devices = {}
         devices.update(self._get_wl())
-        devices.update(self._get_arp())
         devices.update(self._get_neigh(devices))
-        if not self.mode == 'ap':
-            devices.update(self._get_leases(devices))
 
         ret_devices = {}
         for key in devices:
@@ -189,24 +170,6 @@ class AsusWrtDeviceScanner(DeviceScanner):
             devices[mac] = Device(mac, None, None)
         return devices
 
-    def _get_leases(self, cur_devices):
-        lines = self.connection.run_command(_LEASES_CMD)
-        if not lines:
-            return {}
-        lines = [line for line in lines if not line.startswith('duid ')]
-        result = _parse_lines(lines, _LEASES_REGEX)
-        devices = {}
-        for device in result:
-            # For leases where the client doesn't set a hostname, ensure it
-            # is blank and not '*', which breaks entity_id down the line.
-            host = device['host']
-            if host == '*':
-                host = ''
-            mac = device['mac'].upper()
-            if mac in cur_devices:
-                devices[mac] = Device(mac, device['ip'], host)
-        return devices
-
     def _get_neigh(self, cur_devices):
         lines = self.connection.run_command(_IP_NEIGH_CMD)
         if not lines:
@@ -222,18 +185,6 @@ class AsusWrtDeviceScanner(DeviceScanner):
                 old_device = cur_devices.get(mac)
                 old_ip = old_device.ip if old_device else None
                 devices[mac] = Device(mac, device.get('ip', old_ip), None)
-        return devices
-
-    def _get_arp(self):
-        lines = self.connection.run_command(_ARP_CMD)
-        if not lines:
-            return {}
-        result = _parse_lines(lines, _ARP_REGEX)
-        devices = {}
-        for device in result:
-            if device['mac'] is not None:
-                mac = device['mac'].upper()
-                devices[mac] = Device(mac, device['ip'], None)
         return devices
 
 
