@@ -49,8 +49,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error("Test API call failed, Check your client_id")
             return False
         else:
-           _LOGGER.error("Test API call failed")
-           return False
+            _LOGGER.error("Test API call failed")
+            return False
 
     users = client.users.translate_usernames_to_ids(channels)
 
