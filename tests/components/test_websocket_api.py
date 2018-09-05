@@ -334,7 +334,7 @@ async def test_auth_active_with_token(hass, aiohttp_client, hass_access_token):
 
             await ws.send_json({
                 'type': wapi.TYPE_AUTH,
-                'access_token': hass_access_token.token
+                'access_token': hass_access_token
             })
 
             auth_msg = await ws.receive_json()
@@ -344,7 +344,9 @@ async def test_auth_active_with_token(hass, aiohttp_client, hass_access_token):
 async def test_auth_active_user_inactive(hass, aiohttp_client,
                                          hass_access_token):
     """Test authenticating with a token."""
-    hass_access_token.refresh_token.user.is_active = False
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_active = False
     assert await async_setup_component(hass, 'websocket_api', {
         'http': {
             'api_password': API_PASSWORD
@@ -361,7 +363,7 @@ async def test_auth_active_user_inactive(hass, aiohttp_client,
 
             await ws.send_json({
                 'type': wapi.TYPE_AUTH,
-                'access_token': hass_access_token.token
+                'access_token': hass_access_token
             })
 
             auth_msg = await ws.receive_json()
@@ -465,7 +467,7 @@ async def test_call_service_context_with_user(hass, aiohttp_client,
 
             await ws.send_json({
                 'type': wapi.TYPE_AUTH,
-                'access_token': hass_access_token.token
+                'access_token': hass_access_token
             })
 
             auth_msg = await ws.receive_json()
@@ -484,12 +486,15 @@ async def test_call_service_context_with_user(hass, aiohttp_client,
         msg = await ws.receive_json()
         assert msg['success']
 
+        refresh_token = await hass.auth.async_validate_access_token(
+            hass_access_token)
+
         assert len(calls) == 1
         call = calls[0]
         assert call.domain == 'domain_test'
         assert call.service == 'test_service'
         assert call.data == {'hello': 'world'}
-        assert call.context.user_id == hass_access_token.refresh_token.user.id
+        assert call.context.user_id == refresh_token.user.id
 
 
 async def test_call_service_context_no_user(hass, aiohttp_client):

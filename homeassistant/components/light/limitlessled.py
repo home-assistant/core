@@ -104,7 +104,7 @@ def rewrite_legacy(config):
     return {'bridges': new_bridges}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LimitlessLED lights."""
     from limitlessled.bridge import Bridge
 
@@ -126,7 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             lights.append(LimitlessLEDGroup(group, {
                 'fade': group_conf[CONF_FADE]
             }))
-    add_devices(lights)
+    add_entities(lights)
 
 
 def state(new_state):
@@ -190,7 +190,7 @@ class LimitlessLEDGroup(Light):
 
     @asyncio.coroutine
     def async_added_to_hass(self):
-        """Called when entity is about to be added to hass."""
+        """Handle entity about to be added to hass event."""
         last_state = yield from async_get_last_state(self.hass, self.entity_id)
         if last_state:
             self._is_on = (last_state.state == STATE_ON)

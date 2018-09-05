@@ -21,7 +21,7 @@ SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 
 
 @asyncio.coroutine
-def async_get_handler(hass, config, async_add_devices, discovery_info=None):
+def async_get_handler(hass, config, async_add_entities, discovery_info=None):
     """Set up the Asterix VM platform."""
     return AsteriskMailbox(hass, DOMAIN)
 

@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SUPPORTED_FEATURES = (SUPPORT_OPEN | SUPPORT_CLOSE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ryobi covers."""
     from py_ryobi_gdo import RyobiGDO as ryobi_door
     covers = []
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         covers.append(RyobiCover(hass, my_door))
     if covers:
         _LOGGER.debug("Adding covers")
-        add_devices(covers, True)
+        add_entities(covers, True)
 
 
 class RyobiCover(CoverDevice):

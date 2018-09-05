@@ -50,7 +50,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the ComEd Hourly Pricing sensor."""
     websession = async_get_clientsession(hass)
     dev = []
@@ -60,7 +61,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             hass.loop, websession, variable[CONF_SENSOR_TYPE],
             variable[CONF_OFFSET], variable.get(CONF_NAME)))
 
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class ComedHourlyPricingSensor(Entity):

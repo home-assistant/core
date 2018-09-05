@@ -9,7 +9,7 @@ from tests.common import MockUser, register_auth_provider
 
 
 @pytest.fixture(autouse=True)
-def setup_config(hass, aiohttp_client):
+def setup_config(hass):
     """Fixture that sets up the auth provider homeassistant module."""
     hass.loop.run_until_complete(register_auth_provider(hass, {
         'type': 'homeassistant'
@@ -22,7 +22,9 @@ async def test_create_auth_system_generated_user(hass, hass_access_token,
     """Test we can't add auth to system generated users."""
     system_user = MockUser(system_generated=True).add_to_hass(hass)
     client = await hass_ws_client(hass, hass_access_token)
-    hass_access_token.refresh_token.user.is_owner = True
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_owner = True
 
     await client.send_json({
         'id': 5,
@@ -47,7 +49,9 @@ async def test_create_auth_unknown_user(hass_ws_client, hass,
                                         hass_access_token):
     """Test create pointing at unknown user."""
     client = await hass_ws_client(hass, hass_access_token)
-    hass_access_token.refresh_token.user.is_owner = True
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_owner = True
 
     await client.send_json({
         'id': 5,
@@ -86,7 +90,9 @@ async def test_create_auth(hass, hass_ws_client, hass_access_token,
     """Test create auth command works."""
     client = await hass_ws_client(hass, hass_access_token)
     user = MockUser().add_to_hass(hass)
-    hass_access_token.refresh_token.user.is_owner = True
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_owner = True
 
     assert len(user.credentials) == 0
 
@@ -117,7 +123,9 @@ async def test_create_auth_duplicate_username(hass, hass_ws_client,
     """Test we can't create auth with a duplicate username."""
     client = await hass_ws_client(hass, hass_access_token)
     user = MockUser().add_to_hass(hass)
-    hass_access_token.refresh_token.user.is_owner = True
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_owner = True
 
     hass_storage[prov_ha.STORAGE_KEY] = {
         'version': 1,
@@ -145,7 +153,9 @@ async def test_delete_removes_just_auth(hass_ws_client, hass, hass_storage,
                                         hass_access_token):
     """Test deleting an auth without being connected to a user."""
     client = await hass_ws_client(hass, hass_access_token)
-    hass_access_token.refresh_token.user.is_owner = True
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_owner = True
 
     hass_storage[prov_ha.STORAGE_KEY] = {
         'version': 1,
@@ -171,7 +181,9 @@ async def test_delete_removes_credential(hass, hass_ws_client,
                                          hass_access_token, hass_storage):
     """Test deleting auth that is connected to a user."""
     client = await hass_ws_client(hass, hass_access_token)
-    hass_access_token.refresh_token.user.is_owner = True
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_owner = True
 
     user = MockUser().add_to_hass(hass)
     user.credentials.append(
@@ -216,7 +228,9 @@ async def test_delete_requires_owner(hass, hass_ws_client, hass_access_token):
 async def test_delete_unknown_auth(hass, hass_ws_client, hass_access_token):
     """Test trying to delete an unknown auth username."""
     client = await hass_ws_client(hass, hass_access_token)
-    hass_access_token.refresh_token.user.is_owner = True
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_owner = True
 
     await client.send_json({
         'id': 5,
@@ -240,7 +254,9 @@ async def test_change_password(hass, hass_ws_client, hass_access_token):
         'username': 'test-user'
     })
 
-    user = hass_access_token.refresh_token.user
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    user = refresh_token.user
     await hass.auth.async_link_user(user, credentials)
 
     client = await hass_ws_client(hass, hass_access_token)
@@ -268,7 +284,9 @@ async def test_change_password_wrong_pw(hass, hass_ws_client,
         'username': 'test-user'
     })
 
-    user = hass_access_token.refresh_token.user
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    user = refresh_token.user
     await hass.auth.async_link_user(user, credentials)
 
     client = await hass_ws_client(hass, hass_access_token)

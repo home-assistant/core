@@ -16,8 +16,8 @@ from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
 
 REQUIREMENTS = [
-    'bellows==0.6.0',
-    'zigpy==0.1.0',
+    'bellows==0.7.0',
+    'zigpy==0.2.0',
     'zigpy-xbee==0.1.1',
 ]
 
@@ -341,7 +341,7 @@ class Entity(entity.Entity):
         application_listener.register_entity(ieee, self)
 
     async def async_added_to_hass(self):
-        """Callback once the entity is added to hass.
+        """Handle entity addition to hass.
 
         It is now safe to update the entity state
         """

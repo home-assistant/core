@@ -50,6 +50,10 @@ class HueFlowHandler(data_entry_flow.FlowHandler):
         """Initialize the Hue flow."""
         self.host = None
 
+    async def async_step_user(self, user_input=None):
+        """Handle a flow initialized by the user."""
+        return await self.async_step_init(user_input)
+
     async def async_step_init(self, user_input=None):
         """Handle a flow start."""
         from aiohue.discovery import discover_nupnp

@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Currencylayer sensor."""
     base = config.get(CONF_BASE)
     api_key = config.get(CONF_API_KEY)
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sensors.append(CurrencylayerSensor(rest, base, variable))
     if 'error' in response.json():
         return False
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 class CurrencylayerSensor(Entity):

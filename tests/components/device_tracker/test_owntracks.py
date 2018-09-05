@@ -327,7 +327,7 @@ class TestDeviceTrackerOwnTracks(BaseMQTT):
 
     # pylint: disable=invalid-name
     def setup_method(self, _):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         mock_component(self.hass, 'group')
@@ -1316,7 +1316,7 @@ class TestDeviceTrackerOwnTrackConfigs(BaseMQTT):
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         mock_component(self.hass, 'group')

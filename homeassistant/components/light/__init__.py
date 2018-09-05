@@ -332,8 +332,8 @@ async def async_setup(hass, config):
     if not profiles_valid:
         return False
 
-    async def async_handle_light_service(service):
-        """Handle a turn light on or off service call."""
+    async def async_handle_light_on_service(service):
+        """Handle a turn light on service call."""
         # Get the validated data
         params = service.data.copy()
 
@@ -345,39 +345,38 @@ async def async_setup(hass, config):
 
         update_tasks = []
         for light in target_lights:
-            if service.service == SERVICE_TURN_ON:
-                pars = params
-                if not pars:
-                    pars = params.copy()
-                    pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
-                    preprocess_turn_on_alternatives(pars)
-                await light.async_turn_on(**pars)
-            elif service.service == SERVICE_TURN_OFF:
-                await light.async_turn_off(**params)
-            else:
-                await light.async_toggle(**params)
+            light.async_set_context(service.context)
+
+            pars = params
+            if not pars:
+                pars = params.copy()
+                pars[ATTR_PROFILE] = Profiles.get_default(light.entity_id)
+                preprocess_turn_on_alternatives(pars)
+            await light.async_turn_on(**pars)
 
             if not light.should_poll:
                 continue
 
             update_tasks.append(
-                light.async_update_ha_state(True, service.context))
+                light.async_update_ha_state(True))
 
         if update_tasks:
             await asyncio.wait(update_tasks, loop=hass.loop)
 
     # Listen for light on and light off service calls.
     hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_light_service,
+        DOMAIN, SERVICE_TURN_ON, async_handle_light_on_service,
         schema=LIGHT_TURN_ON_SCHEMA)
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_light_service,
-        schema=LIGHT_TURN_OFF_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, LIGHT_TURN_OFF_SCHEMA,
+        'async_turn_off'
+    )
 
-    hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_light_service,
-        schema=LIGHT_TOGGLE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, LIGHT_TOGGLE_SCHEMA,
+        'async_toggle'
+    )
 
     hass.helpers.intent.async_register(SetIntentHandler())
 
@@ -385,7 +384,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, entry):
-    """Setup a config entry."""
+    """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 

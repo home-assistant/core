@@ -423,7 +423,8 @@ class Event:
                 self.event_type == other.event_type and
                 self.data == other.data and
                 self.origin == other.origin and
-                self.time_fired == other.time_fired)
+                self.time_fired == other.time_fired and
+                self.context == other.context)
 
 
 class EventBus:
@@ -695,7 +696,8 @@ class State:
         return (self.__class__ == other.__class__ and  # type: ignore
                 self.entity_id == other.entity_id and
                 self.state == other.state and
-                self.attributes == other.attributes)
+                self.attributes == other.attributes and
+                self.context == other.context)
 
     def __repr__(self) -> str:
         """Return the representation of the states."""
@@ -1143,8 +1145,8 @@ class Config:
         # List of loaded components
         self.components = set()  # type: set
 
-        # Remote.API object pointing at local API
-        self.api = None
+        # API (HTTP) server configuration
+        self.api = None  # type: Optional[Any]
 
         # Directory that holds the configuration
         self.config_dir = None  # type: Optional[str]

@@ -45,6 +45,8 @@ SERVICE_RETURN_TO_BASE = 'return_to_base'
 SERVICE_SEND_COMMAND = 'send_command'
 SERVICE_SET_FAN_SPEED = 'set_fan_speed'
 SERVICE_START_PAUSE = 'start_pause'
+SERVICE_START = 'start'
+SERVICE_PAUSE = 'pause'
 SERVICE_STOP = 'stop'
 
 VACUUM_SERVICE_SCHEMA = vol.Schema({
@@ -59,21 +61,6 @@ VACUUM_SEND_COMMAND_SERVICE_SCHEMA = VACUUM_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_COMMAND): cv.string,
     vol.Optional(ATTR_PARAMS): vol.Any(dict, cv.ensure_list),
 })
-
-SERVICE_TO_METHOD = {
-    SERVICE_TURN_ON: {'method': 'async_turn_on'},
-    SERVICE_TURN_OFF: {'method': 'async_turn_off'},
-    SERVICE_TOGGLE: {'method': 'async_toggle'},
-    SERVICE_START_PAUSE: {'method': 'async_start_pause'},
-    SERVICE_RETURN_TO_BASE: {'method': 'async_return_to_base'},
-    SERVICE_CLEAN_SPOT: {'method': 'async_clean_spot'},
-    SERVICE_LOCATE: {'method': 'async_locate'},
-    SERVICE_STOP: {'method': 'async_stop'},
-    SERVICE_SET_FAN_SPEED: {'method': 'async_set_fan_speed',
-                            'schema': VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA},
-    SERVICE_SEND_COMMAND: {'method': 'async_send_command',
-                           'schema': VACUUM_SEND_COMMAND_SERVICE_SCHEMA},
-}
 
 STATE_CLEANING = 'cleaning'
 STATE_DOCKED = 'docked'
@@ -97,6 +84,7 @@ SUPPORT_LOCATE = 512
 SUPPORT_CLEAN_SPOT = 1024
 SUPPORT_MAP = 2048
 SUPPORT_STATE = 4096
+SUPPORT_START = 8192
 
 
 @bind_hass
@@ -156,6 +144,20 @@ def start_pause(hass, entity_id=None):
 
 
 @bind_hass
+def start(hass, entity_id=None):
+    """Tell all or specified vacuum to start or resume the current task."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_START, data)
+
+
+@bind_hass
+def pause(hass, entity_id=None):
+    """Tell all or the specified vacuum to pause the current task."""
+    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
+    hass.services.call(DOMAIN, SERVICE_PAUSE, data)
+
+
+@bind_hass
 def stop(hass, entity_id=None):
     """Stop all or specified vacuum."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
@@ -188,30 +190,54 @@ def async_setup(hass, config):
 
     yield from component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_vacuum_service(service):
-        """Map services to methods on VacuumDevice."""
-        method = SERVICE_TO_METHOD.get(service.service)
-        target_vacuums = component.async_extract_from_service(service)
-        params = service.data.copy()
-        params.pop(ATTR_ENTITY_ID, None)
-
-        update_tasks = []
-        for vacuum in target_vacuums:
-            yield from getattr(vacuum, method['method'])(**params)
-            if not vacuum.should_poll:
-                continue
-            update_tasks.append(vacuum.async_update_ha_state(True))
-
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get(
-            'schema', VACUUM_SERVICE_SCHEMA)
-        hass.services.async_register(
-            DOMAIN, service, async_handle_vacuum_service,
-            schema=schema)
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, VACUUM_SERVICE_SCHEMA,
+        'async_turn_on'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, VACUUM_SERVICE_SCHEMA,
+        'async_turn_off'
+    )
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, VACUUM_SERVICE_SCHEMA,
+        'async_toggle'
+    )
+    component.async_register_entity_service(
+        SERVICE_START_PAUSE, VACUUM_SERVICE_SCHEMA,
+        'async_start_pause'
+    )
+    component.async_register_entity_service(
+        SERVICE_START, VACUUM_SERVICE_SCHEMA,
+        'async_start'
+    )
+    component.async_register_entity_service(
+        SERVICE_PAUSE, VACUUM_SERVICE_SCHEMA,
+        'async_pause'
+    )
+    component.async_register_entity_service(
+        SERVICE_RETURN_TO_BASE, VACUUM_SERVICE_SCHEMA,
+        'async_return_to_base'
+    )
+    component.async_register_entity_service(
+        SERVICE_CLEAN_SPOT, VACUUM_SERVICE_SCHEMA,
+        'async_clean_spot'
+    )
+    component.async_register_entity_service(
+        SERVICE_LOCATE, VACUUM_SERVICE_SCHEMA,
+        'async_locate'
+    )
+    component.async_register_entity_service(
+        SERVICE_STOP, VACUUM_SERVICE_SCHEMA,
+        'async_stop'
+    )
+    component.async_register_entity_service(
+        SERVICE_SET_FAN_SPEED, VACUUM_SET_FAN_SPEED_SERVICE_SCHEMA,
+        'async_set_fan_speed'
+    )
+    component.async_register_entity_service(
+        SERVICE_SEND_COMMAND, VACUUM_SEND_COMMAND_SERVICE_SCHEMA,
+        'async_send_command'
+    )
 
     return True
 
@@ -241,18 +267,6 @@ class _BaseVacuum(Entity):
     def fan_speed_list(self):
         """Get the list of available fan speed steps of the vacuum cleaner."""
         raise NotImplementedError()
-
-    def start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task."""
-        raise NotImplementedError()
-
-    async def async_start_pause(self, **kwargs):
-        """Start, pause or resume the cleaning task.
-
-        This method must be run in the event loop.
-        """
-        await self.hass.async_add_executor_job(
-            partial(self.start_pause, **kwargs))
 
     def stop(self, **kwargs):
         """Stop the vacuum cleaner."""
@@ -384,6 +398,18 @@ class VacuumDevice(_BaseVacuum, ToggleEntity):
         await self.hass.async_add_executor_job(
             partial(self.turn_off, **kwargs))
 
+    def start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task."""
+        raise NotImplementedError()
+
+    async def async_start_pause(self, **kwargs):
+        """Start, pause or resume the cleaning task.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(
+            partial(self.start_pause, **kwargs))
+
 
 class StateVacuumDevice(_BaseVacuum):
     """Representation of a vacuum cleaner robot that supports states."""
@@ -415,3 +441,25 @@ class StateVacuumDevice(_BaseVacuum):
             data[ATTR_FAN_SPEED_LIST] = self.fan_speed_list
 
         return data
+
+    def start(self):
+        """Start or resume the cleaning task."""
+        raise NotImplementedError()
+
+    async def async_start(self):
+        """Start or resume the cleaning task.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(self.start)
+
+    def pause(self):
+        """Pause the cleaning task."""
+        raise NotImplementedError()
+
+    async def async_pause(self):
+        """Pause the cleaning task.
+
+        This method must be run in the event loop.
+        """
+        await self.hass.async_add_executor_job(self.pause)

@@ -53,7 +53,7 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE |
                  SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_FAN_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Ecobee Thermostat Platform."""
     if discovery_info is None:
         return
@@ -64,7 +64,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hold_temp)
     devices = [Thermostat(data, index, hold_temp)
                for index in range(len(data.ecobee.thermostats))]
-    add_devices(devices)
+    add_entities(devices)
 
     def fan_min_on_time_set_service(service):
         """Set the minimum fan on time on the target thermostats."""

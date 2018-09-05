@@ -43,7 +43,7 @@ class TestLightMQTTTemplate(unittest.TestCase):
     """Test the MQTT Template light."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 

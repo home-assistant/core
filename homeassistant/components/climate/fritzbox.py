@@ -35,7 +35,7 @@ ON_REPORT_SET_TEMPERATURE = 30.0
 OFF_REPORT_SET_TEMPERATURE = 0.0
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Fritzbox smarthome thermostat platform."""
     devices = []
     fritz_list = hass.data[FRITZBOX_DOMAIN]
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if device.has_thermostat:
                 devices.append(FritzboxThermostat(device, fritz))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class FritzboxThermostat(ClimateDevice):

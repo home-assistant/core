@@ -31,7 +31,7 @@ for key in VALUE_TO_STATE:
 
 
 def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+                   add_entities: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 fan platform."""
     devices = []
 
@@ -41,7 +41,7 @@ def setup_platform(hass, config: ConfigType,
     for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
         devices.append(ISYFanProgram(name, status, actions))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class ISYFanDevice(ISYDevice, FanEntity):

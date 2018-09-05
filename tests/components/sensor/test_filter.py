@@ -17,7 +17,7 @@ class TestFilterSensor(unittest.TestCase):
     """Test the Data Filter sensor."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         raw_values = [20, 19, 18, 21, 22, 0]
         self.values = []

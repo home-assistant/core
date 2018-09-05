@@ -30,7 +30,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Canary sensors."""
     data = hass.data[DATA_CANARY]
     devices = []
@@ -42,7 +42,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     CanaryCamera(hass, data, location, device, DEFAULT_TIMEOUT,
                                  config.get(CONF_FFMPEG_ARGUMENTS)))
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class CanaryCamera(Camera):

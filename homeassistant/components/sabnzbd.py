@@ -110,7 +110,7 @@ async def async_configure_sabnzbd(hass, config, use_ssl, name=DEFAULT_NAME,
 
 
 async def async_setup(hass, config):
-    """Setup the SABnzbd component."""
+    """Set up the SABnzbd component."""
     async def sabnzbd_discovered(service, info):
         """Handle service discovery."""
         ssl = info.get('properties', {}).get('https', '0') == '1'
@@ -129,7 +129,7 @@ async def async_setup(hass, config):
 
 @callback
 def async_setup_sabnzbd(hass, sab_api, config, name):
-    """Setup SABnzbd sensors and services."""
+    """Set up SABnzbd sensors and services."""
     sab_api_data = SabnzbdApiData(sab_api, name, config.get(CONF_SENSORS, {}))
 
     if config.get(CONF_SENSORS):
@@ -193,7 +193,7 @@ def async_request_configuration(hass, config, host):
             return
 
         def success():
-            """Setup was successful."""
+            """Signal successful setup."""
             conf = load_json(hass.config.path(CONFIG_FILE))
             conf[host] = {CONF_API_KEY: api_key}
             save_json(hass.config.path(CONFIG_FILE), conf)

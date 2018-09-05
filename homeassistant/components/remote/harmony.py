@@ -44,7 +44,7 @@ HARMONY_SYNC_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Harmony platform."""
     host = None
     activity = None
@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         device = HarmonyRemote(
             name, address, port, activity, harmony_conf_file, delay_secs)
         DEVICES.append(device)
-        add_devices([device])
+        add_entities([device])
         register_services(hass)
     except (ValueError, AttributeError):
         raise PlatformNotReady

@@ -23,7 +23,8 @@ SENSORS = [
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the MyChevy sensors."""
     if discovery_info is None:
         return
@@ -34,7 +35,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         for car in hub.cars:
             sensors.append(EVBinarySensor(hub, sconfig, car.vid))
 
-    async_add_devices(sensors)
+    async_add_entities(sensors)
 
 
 class EVBinarySensor(BinarySensorDevice):

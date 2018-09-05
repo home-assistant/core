@@ -13,13 +13,13 @@ DEVICETYPE_DEVICE_CLASS = {'motionsensor': 'motion',
                            'contactsensor': 'opening'}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive sensor devices."""
     if discovery_info is None:
         return
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveBinarySensorEntity(session, discovery_info)])
+    add_entities([HiveBinarySensorEntity(session, discovery_info)])
 
 
 class HiveBinarySensorEntity(BinarySensorDevice):

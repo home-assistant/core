@@ -1,14 +1,15 @@
 """Example auth provider."""
 from collections import OrderedDict
 import hmac
+from typing import Any, Dict, Optional, cast
 
 import voluptuous as vol
 
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant import data_entry_flow
 from homeassistant.core import callback
 
-from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS
+from . import AuthProvider, AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, LoginFlow
+from ..models import Credentials, UserMeta
 
 
 USER_SCHEMA = vol.Schema({
@@ -31,13 +32,13 @@ class InvalidAuthError(HomeAssistantError):
 class ExampleAuthProvider(AuthProvider):
     """Example auth provider based on hardcoded usernames and passwords."""
 
-    async def async_credential_flow(self):
+    async def async_login_flow(self, context: Optional[Dict]) -> LoginFlow:
         """Return a flow to login."""
-        return LoginFlow(self)
+        return ExampleLoginFlow(self)
 
     @callback
-    def async_validate_login(self, username, password):
-        """Helper to validate a username and password."""
+    def async_validate_login(self, username: str, password: str) -> None:
+        """Validate a username and password."""
         user = None
 
         # Compare all users to avoid timing attacks.
@@ -56,7 +57,8 @@ class ExampleAuthProvider(AuthProvider):
                                    password.encode('utf-8')):
             raise InvalidAuthError
 
-    async def async_get_or_create_credentials(self, flow_result):
+    async def async_get_or_create_credentials(
+            self, flow_result: Dict[str, str]) -> Credentials:
         """Get credentials based on the flow result."""
         username = flow_result['username']
 
@@ -69,49 +71,45 @@ class ExampleAuthProvider(AuthProvider):
             'username': username
         })
 
-    async def async_user_meta_for_credentials(self, credentials):
+    async def async_user_meta_for_credentials(
+            self, credentials: Credentials) -> UserMeta:
         """Return extra user metadata for credentials.
 
         Will be used to populate info when creating a new user.
         """
         username = credentials.data['username']
-        info = {
-            'is_active': True,
-        }
+        name = None
 
         for user in self.config['users']:
             if user['username'] == username:
-                info['name'] = user.get('name')
+                name = user.get('name')
                 break
 
-        return info
+        return UserMeta(name=name, is_active=True)
 
 
-class LoginFlow(data_entry_flow.FlowHandler):
+class ExampleLoginFlow(LoginFlow):
     """Handler for the login flow."""
 
-    def __init__(self, auth_provider):
-        """Initialize the login flow."""
-        self._auth_provider = auth_provider
-
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+            self, user_input: Optional[Dict[str, str]] = None) \
+            -> Dict[str, Any]:
         """Handle the step of the form."""
         errors = {}
 
         if user_input is not None:
             try:
-                self._auth_provider.async_validate_login(
-                    user_input['username'], user_input['password'])
+                cast(ExampleAuthProvider, self._auth_provider)\
+                    .async_validate_login(user_input['username'],
+                                          user_input['password'])
             except InvalidAuthError:
                 errors['base'] = 'invalid_auth'
 
             if not errors:
-                return self.async_create_entry(
-                    title=self._auth_provider.name,
-                    data=user_input
-                )
+                user_input.pop('password')
+                return await self.async_finish(user_input)
 
-        schema = OrderedDict()
+        schema = OrderedDict()  # type: Dict[str, type]
         schema['username'] = str
         schema['password'] = str
 

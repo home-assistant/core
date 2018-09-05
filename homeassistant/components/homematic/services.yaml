@@ -66,3 +66,20 @@ set_install_mode:
     address:
       description: (Optional) Address of homematic device or BidCoS-RF to learn
       example: LEQ3948571
+
+put_paramset:
+  description: Call to putParamset in the RPC XML interface
+  fields:
+    interface:
+      description: The interfaces name from the config
+      example: wireless
+    address:
+      description: Address of Homematic device
+      example: LEQ3948571
+    paramset_key:
+      description: The paramset_key argument to putParamset
+      example: MASTER
+    paramset:
+      description: A paramset dictionary
+      example: '{"WEEK_PROGRAM_POINTER": 1}'
+
