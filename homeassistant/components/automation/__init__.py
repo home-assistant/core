@@ -359,50 +359,14 @@ class AutomationEntity(ToggleEntity):
         self._async_detach_triggers = None
         await self.async_update_ha_state()
 
-    def cooldown_reset(self):
-        """Reset cooldown of the automation."""
-        self._cooldown_reset = True
-
     async def async_trigger(self, variables, skip_condition=False,
                             context=None):
         """Trigger automation.
 
         This method is a coroutine.
         """
-        if self._last_triggered is not None and not self._cooldown_reset:
-            last_triggered = as_local(self._last_triggered)
-            now_triggered = now()
-            if now_triggered.year <= last_triggered.year:
-                if self._cooldown_once_per_month:
-                    if now_triggered.month <= last_triggered.month:
-                        _LOGGER.debug(
-                            'Automation %s on cooldown, already triggerd '
-                            'this month',
-                            self._name)
-                        return
-                elif self._cooldown_once_per_week:
-                    if now_triggered.isocalendar()[1] <= \
-                            last_triggered.isocalendar()[1]:
-                        _LOGGER.debug(
-                            'Automation %s on cooldown, already triggerd '
-                            'this week',
-                            self._name)
-                        return
-                elif self._cooldown_once_per_day:
-                    if now_triggered.timetuple().tm_yday <= \
-                            last_triggered.timetuple().tm_yday:
-                        _LOGGER.debug(
-                            'Automation %s on cooldown, already triggerd '
-                            'this day',
-                            self._name)
-                        return
-                elif self._cooldown_time is not None:
-                    if now_triggered <= (last_triggered + self._cooldown_time):
-                        _LOGGER.info(
-                            'Automation %s on cooldown, already triggerd '
-                            'within cooldown time',
-                            self._name)
-                        return
+        if self.on_cooldown():
+            return
         if skip_condition or self._cond_func(variables):
             self.async_set_context(context)
             await self._async_action(self.entity_id, variables, context)
@@ -435,6 +399,47 @@ class AutomationEntity(ToggleEntity):
         return {
             CONF_ID: self._id
         }
+
+    def cooldown_reset(self):
+        """Reset cooldown of the automation."""
+        self._cooldown_reset = True
+
+    def on_cooldown(self):
+        """Check if automation is on cooldown."""
+        if self._last_triggered is None or self._cooldown_reset:
+            return False
+        last_triggered = as_local(self._last_triggered)
+        now_triggered = now()
+        if self._cooldown_once_per_week:
+            if (last_triggered - now_triggered).days <= 7 and \
+                    now_triggered.isocalendar()[1] == \
+                    last_triggered.isocalendar()[1]:
+                _LOGGER.debug(
+                    'Automation %s on cooldown, already triggerd '
+                    'this week', self._name)
+                return True
+        if now_triggered.year > last_triggered.year:
+            return False
+        if self._cooldown_once_per_month:
+            if now_triggered.month == last_triggered.month:
+                _LOGGER.debug(
+                    'Automation %s on cooldown, already triggerd '
+                    'this month', self._name)
+                return True
+        if self._cooldown_once_per_day:
+            if now_triggered.timetuple().tm_yday <= \
+                    last_triggered.timetuple().tm_yday:
+                _LOGGER.debug(
+                    'Automation %s on cooldown, already triggerd '
+                    'this day', self._name)
+                return True
+        if self._cooldown_time is not None:
+            if now_triggered <= (last_triggered + self._cooldown_time):
+                _LOGGER.debug(
+                    'Automation %s on cooldown, already triggerd '
+                    'within cooldown time', self._name)
+                return True
+        return False
 
 
 async def _async_process_config(hass, config, component):
