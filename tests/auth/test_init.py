@@ -503,12 +503,11 @@ async def test_one_long_lived_access_token_per_refresh_token(mock_hass):
 
     assert access_token != access_token_2
     assert jwt_key != jwt_key_2
-    
+
     rt = await manager.async_validate_access_token(access_token)
     assert rt is None, 'Previous issued access token has been invoked'
 
     rt = await manager.async_validate_access_token(access_token_2)
-
     jwt_payload = jwt.decode(
         access_token_2, rt.jwt_key, algorithm=['HS256'])
     assert jwt_payload['iss'] == refresh_token.id

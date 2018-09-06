@@ -48,7 +48,6 @@ class RefreshToken:
                          validator=attr.validators.in_((
                              TOKEN_TYPE_NORMAL, TOKEN_TYPE_SYSTEM,
                              TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN)))
-    is_for_long_lived_access_token = attr.ib(type=bool, default=False)
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     created_at = attr.ib(type=datetime, default=attr.Factory(dt_util.utcnow))
     access_token_expiration = attr.ib(type=timedelta,
