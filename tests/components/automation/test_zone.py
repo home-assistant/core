@@ -1,7 +1,7 @@
 """The tests for the location automation."""
 import unittest
 
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 from homeassistant.setup import setup_component
 from homeassistant.components import automation, zone
 
@@ -40,6 +40,7 @@ class TestAutomationZone(unittest.TestCase):
 
     def test_if_fires_on_zone_enter(self):
         """Test for firing on zone enter."""
+        context = Context()
         self.hass.states.set('test.entity', 'hello', {
             'latitude': 32.881011,
             'longitude': -117.234758
@@ -70,10 +71,11 @@ class TestAutomationZone(unittest.TestCase):
         self.hass.states.set('test.entity', 'hello', {
             'latitude': 32.880586,
             'longitude': -117.237564
-        })
+        }, context=context)
         self.hass.block_till_done()
 
         self.assertEqual(1, len(self.calls))
+        assert self.calls[0].context is context
         self.assertEqual(
             'zone - test.entity - hello - hello - test',
             self.calls[0].data['some'])
