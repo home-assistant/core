@@ -119,7 +119,8 @@ class JewishCalSensor(Entity):
             self._state = hdate.hdate_string.get_hebrew_date(
                 date.h_day, date.h_month, date.h_year, hebrew=self._hebrew)
         elif self.type == 'weekly_portion':
-            self._state = date.get_reading(self.diaspora)
+            self._state = hdate.hdate_string.get_parashe(
+                date.get_reading(self.diaspora), hebrew=self._hebrew)
         elif self.type == 'holiday_name':
             self._state = date.get_holyday_name()
         elif self.type == 'holyness':
