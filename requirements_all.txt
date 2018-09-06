@@ -53,6 +53,9 @@ PyQRCode==1.2.1
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.0.7
 
+# homeassistant.components.switch.switchbot
+PySwitchbot==0.3
+
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.9.5
 
@@ -744,7 +747,7 @@ pyCEC==0.4.13
 pyHS100==0.3.2
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.22.1
+pyRFXtrx==0.23
 
 # homeassistant.components.sensor.tibber
 pyTibber==0.4.1
@@ -1143,7 +1146,7 @@ python-tado==0.2.3
 python-telegram-bot==11.0.0
 
 # homeassistant.components.sensor.twitch
-python-twitch==1.3.0
+python-twitch-client==0.5.1
 
 # homeassistant.components.velbus
 python-velbus==2.0.19
@@ -1285,13 +1288,13 @@ sendgrid==5.6.0
 sense-hat==2.2.0
 
 # homeassistant.components.sensor.sense
-sense_energy==0.4.1
+sense_energy==0.4.2
 
 # homeassistant.components.media_player.aquostv
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.sensor.shodan
-shodan==1.10.0
+shodan==1.10.1
 
 # homeassistant.components.notify.simplepush
 simplepush==1.1.4
