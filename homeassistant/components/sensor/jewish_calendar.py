@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
 
 
-REQUIREMENTS = ['hdate==0.6.1']
+REQUIREMENTS = ['hdate==0.6.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,10 +116,10 @@ class JewishCalSensor(Entity):
             self._date, diaspora=self.diaspora, hebrew=self._hebrew)
 
         if self.type == 'date':
-            self._state = hdate.hdate_string.get_hebrew_date(
+            self._state = hdate.date.get_hebrew_date(
                 date.h_day, date.h_month, date.h_year, hebrew=self._hebrew)
         elif self.type == 'weekly_portion':
-            self._state = hdate.hdate_string.get_parashe(
+            self._state = hdate.date.get_parashe(
                 date.get_reading(self.diaspora), hebrew=self._hebrew)
         elif self.type == 'holiday_name':
             self._state = date.get_holyday_name()

@@ -107,4 +107,4 @@ class TestJewishCalenderSensor(unittest.TestCase):
             run_coroutine_threadsafe(
                 sensor.async_update(),
                 self.hass.loop).result()
-            self.assertEqual(sensor.state, "נצבים")
+            self.assertEqual(sensor.state, "פרשת נצבים")
