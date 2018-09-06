@@ -42,8 +42,8 @@ class RefreshToken:
 
     user = attr.ib(type=User)
     client_id = attr.ib(type=Optional[str])
-    client_name = attr.ib(type=Optional[str])
-    client_icon = attr.ib(type=Optional[str])
+    client_name = attr.ib(type=Optional[str], default=None)
+    client_icon = attr.ib(type=Optional[str], default=None)
     token_type = attr.ib(type=str, default=TOKEN_TYPE_NORMAL,
                          validator=attr.validators.in_((
                              TOKEN_TYPE_NORMAL, TOKEN_TYPE_SYSTEM,

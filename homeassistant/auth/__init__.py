@@ -247,7 +247,7 @@ class AuthManager:
             self, user: models.User, client_id: Optional[str] = None,
             client_name: Optional[str] = None,
             client_icon: Optional[str] = None,
-            token_type: str = models.TOKEN_TYPE_NORMAL,
+            token_type: Optional[str] = None,
             access_token_expiration: Optional[timedelta] = None) \
             -> models.RefreshToken:
         """Create a new refresh token for a user."""
@@ -259,13 +259,25 @@ class AuthManager:
                 'System generated users cannot have refresh tokens connected '
                 'to a client.')
 
+        if not user.system_generated and client_id is None:
+            raise ValueError('Client is required to generate a refresh token.')
+
+        if token_type is None:
+            if user.system_generated:
+                token_type = models.TOKEN_TYPE_SYSTEM
+            else:
+                token_type = models.TOKEN_TYPE_NORMAL
+
         if user.system_generated and token_type != models.TOKEN_TYPE_SYSTEM:
             raise ValueError(
                 'System generated users can only have system type '
                 'refresh tokens')
 
-        if not user.system_generated and client_id is None:
-            raise ValueError('Client is required to generate a refresh token.')
+        if not user.system_generated and \
+                token_type == models.TOKEN_TYPE_SYSTEM:
+            raise ValueError(
+                'Only system generated users can have system type '
+                'refresh tokens')
 
         if (token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN and
                 client_id.lower().startswith(('http://', 'https://'))):
@@ -278,8 +290,10 @@ class AuthManager:
                         models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
                         and token.client_id == client_id):
                     # Each client_id can only have one long_lived_access_token
-                    # type of refresh token, return exist one
-                    return token
+                    # type of refresh token, return exist one with updated
+                    # name and icon
+                    return self._store.async_update_refresh_token_name(
+                        token, client_name, client_icon)
 
         return await self._store.async_create_refresh_token(
             user, client_id, client_name, client_icon,
@@ -313,10 +327,11 @@ class AuthManager:
             refresh_token = self._store.async_mutate_refresh_token(
                 refresh_token)
 
+        now = dt_util.utcnow()
         return jwt.encode({
             'iss': refresh_token.id,
-            'iat': dt_util.utcnow(),
-            'exp': dt_util.utcnow() + refresh_token.access_token_expiration,
+            'iat': now,
+            'exp': now + refresh_token.access_token_expiration,
         }, refresh_token.jwt_key, algorithm='HS256').decode()
 
     async def async_validate_access_token(

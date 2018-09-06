@@ -206,6 +206,20 @@ class AuthStore:
         self._async_schedule_save()
         return refresh_token
 
+    @callback
+    def async_update_refresh_token_name(
+            self, refresh_token: models.RefreshToken,
+            client_name: Optional[str] = None,
+            client_icon: Optional[str] = None) -> models.RefreshToken:
+        """Change refresh token name and/or icon."""
+        if client_name:
+            refresh_token.client_name = client_name
+        if client_icon:
+            refresh_token.client_icon = client_icon
+
+        self._async_schedule_save()
+        return refresh_token
+
     async def _async_load(self) -> None:
         """Load the users."""
         data = await self._store.async_load()
