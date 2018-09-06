@@ -10,7 +10,8 @@ import voluptuous as vol
 
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import (
-    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity, SUPPORT_NIGHT_MODE, SUPPORT_ANGLE)
+    DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity, SUPPORT_NIGHT_MODE, SUPPORT_ANGLE, FLOW_FRONT, FLOW_BACK,
+    SUPPORT_FLOW_DIRECTION, SUPPORT_TIMER)
 from homeassistant.const import CONF_ENTITY_ID
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity
@@ -32,7 +33,8 @@ DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Dyson fan components."""
-    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink, DysonPureCool
+    from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
+    from libpurecoollink.dyson_pure_cool import DysonPureCool
 
     _LOGGER.debug("Creating new Dyson fans")
     if DYSON_FAN_DEVICES not in hass.data:
@@ -324,6 +326,26 @@ class DysonPureCoolDevice(FanEntity):
 
         self._device.enable_oscillation(angle_low, angle_high)
 
+    def set_timer(self, timer: str = None) -> None:
+        """Set timer."""
+
+        _LOGGER.debug("Set fan sleep timer to %s for device %s", timer, self.name)
+
+        if timer == 'OFF':
+            self._device.disable_sleep_timer()
+        else:
+            self._device.enable_sleep_timer(int(timer))
+
+    def set_flow_direction(self, flow_direction: str = None):
+        """Set flow direction."""
+
+        _LOGGER.debug("Set fan flow direction to %s for device %s", flow_direction, self.name)
+
+        if flow_direction == FLOW_FRONT:
+            self._device.enable_frontal_direction()
+        else:
+            self._device.disable_frontal_direction()
+
     @property
     def oscillating(self):
         """Return the oscillation state."""
@@ -363,6 +385,19 @@ class DysonPureCoolDevice(FanEntity):
         return self._device.state.oscillation_angle_high
 
     @property
+    def timer(self):
+        return self._device.state.sleep_timer
+
+    @property
+    def flow_direction(self):
+        from libpurecoollink.const import FrontalDirection
+
+        if self._device.state.front_direction == FrontalDirection.FRONTAL_ON.value:
+            return FLOW_FRONT
+        else:
+            return FLOW_BACK
+
+    @property
     def speed_list(self: ToggleEntity) -> list:
         """Get the list of available speeds."""
         from libpurecoollink.const import FanSpeed
@@ -386,4 +421,9 @@ class DysonPureCoolDevice(FanEntity):
     @property
     def supported_features(self: ToggleEntity) -> int:
         """Flag supported features."""
-        return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED | SUPPORT_NIGHT_MODE | SUPPORT_ANGLE
+        return SUPPORT_OSCILLATE | \
+            SUPPORT_SET_SPEED | \
+            SUPPORT_NIGHT_MODE | \
+            SUPPORT_ANGLE | \
+            SUPPORT_TIMER | \
+            SUPPORT_FLOW_DIRECTION
