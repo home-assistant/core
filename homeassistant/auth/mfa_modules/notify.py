@@ -167,7 +167,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Depose auth module for user."""
         if self._user_settings is None:
             await self._async_load()
-            assert self._user_settings
+            assert self._user_settings is not None
 
         if self._user_settings.pop(user_id, None):
             await self._async_save()
@@ -176,7 +176,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Return whether user is setup."""
         if self._user_settings is None:
             await self._async_load()
-            assert self._user_settings
+            assert self._user_settings is not None
 
         return user_id in self._user_settings
 
@@ -185,7 +185,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Return True if validation passed."""
         if self._user_settings is None:
             await self._async_load()
-            assert self._user_settings
+            assert self._user_settings is not None
 
         notify_setting = self._user_settings.get(user_id, None)
         if notify_setting is None:
@@ -201,7 +201,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Generate code and notify user."""
         if self._user_settings is None:
             await self._async_load()
-            assert self._user_settings
+            assert self._user_settings is not None
 
         notify_setting = self._user_settings.get(user_id, None)
         if notify_setting is None:
@@ -225,7 +225,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Send code by user's notify service."""
         if self._user_settings is None:
             await self._async_load()
-            assert self._user_settings
+            assert self._user_settings is not None
 
         notify_setting = self._user_settings.get(user_id, None)
         if notify_setting is None:
