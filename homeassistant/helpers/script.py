@@ -99,13 +99,12 @@ class Script():
                 delay = action[CONF_DELAY]
 
                 try:
-                    import collections
                     if isinstance(delay, template.Template):
                         delay = vol.All(
                             cv.time_period,
                             cv.positive_timedelta)(
                                 delay.async_render(variables))
-                    elif isinstance(delay, collections.Mapping):
+                    elif isinstance(delay, dict):
                         delay_data = {}
                         delay_data.update(
                             template.render_complex(delay, variables))
