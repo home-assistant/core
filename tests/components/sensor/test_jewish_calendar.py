@@ -49,6 +49,22 @@ class TestJewishCalenderSensor(unittest.TestCase):
             assert setup_component(self.hass, 'sensor', config)
         self.checkForLoggingErrors()
 
+    def test_jewish_calendar_multiple_sensors(self):
+        """Test jewish calendar sensor with multiple sensors setup."""
+        config = {
+            'sensor': {
+                'platform': 'jewish_calendar',
+                'sensors': [
+                    'date', 'weekly_portion', 'holiday_name',
+                    'holyness', 'first_light', 'gra_end_shma',
+                    'mga_end_shma', 'plag_mincha', 'first_stars'
+                ]
+            }
+        }
+        with self.assertLogs() as self.cm:
+            assert setup_component(self.hass, 'sensor', config)
+        self.checkForLoggingErrors()
+
     def test_jewish_calendar_sensor_date_output(self):
         """Test Jewish calendar sensor date output."""
         test_time = dt(2018, 9, 3)
@@ -70,3 +86,25 @@ class TestJewishCalenderSensor(unittest.TestCase):
                 sensor.async_update(),
                 self.hass.loop).result()
             self.assertEqual(sensor.state, "כ\"ג באלול ה\' תשע\"ח")
+
+    def test_jewish_calendar_sensor_holiday_name(self):
+        """Test Jewish calendar sensor date output in hebrew."""
+        test_time = dt(2018, 9, 10)
+        sensor = JewishCalSensor(
+            name='test', language='hebrew', sensor_type='holiday_name')
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(),
+                self.hass.loop).result()
+            self.assertEqual(sensor.state, "א\' ראש השנה")
+
+    def test_jewish_calendar_sensor_torah_reading(self):
+        """Test Jewish calendar sensor date output in hebrew."""
+        test_time = dt(2018, 9, 8)
+        sensor = JewishCalSensor(
+            name='test', language='hebrew', sensor_type='weekly_portion')
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(),
+                self.hass.loop).result()
+            self.assertEqual(sensor.state, "נצבים")
