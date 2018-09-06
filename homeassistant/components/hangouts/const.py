@@ -24,6 +24,8 @@ CONF_INTENT_TYPE = 'intent_type'
 CONF_SENTENCES = 'sentences'
 CONF_MATCHERS = 'matchers'
 
+INTENT_HELP = 'HangoutsHelp'
+
 EVENT_HANGOUTS_CONNECTED = 'hangouts_connected'
 EVENT_HANGOUTS_DISCONNECTED = 'hangouts_disconnected'
 EVENT_HANGOUTS_USERS_CHANGED = 'hangouts_users_changed'

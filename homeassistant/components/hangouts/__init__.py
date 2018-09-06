@@ -9,7 +9,9 @@ import logging
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.hangouts.intents import HelpIntent
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.helpers import intent
 from homeassistant.helpers import dispatcher
 import homeassistant.helpers.config_validation as cv
 
@@ -19,11 +21,11 @@ from .const import (
     MESSAGE_SCHEMA, SERVICE_SEND_MESSAGE,
     SERVICE_UPDATE, CONF_SENTENCES, CONF_MATCHERS,
     CONF_ERROR_SUPPRESSED_CONVERSATIONS, INTENT_SCHEMA, TARGETS_SCHEMA,
-    CONF_DEFAULT_CONVERSATIONS, EVENT_HANGOUTS_CONVERSATIONS_RESOLVED)
+    CONF_DEFAULT_CONVERSATIONS, EVENT_HANGOUTS_CONVERSATIONS_RESOLVED,
+    INTENT_HELP)
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
 from .config_flow import HangoutsFlowHandler  # noqa: F401
-
 
 REQUIREMENTS = ['hangups==0.4.5']
 
@@ -61,6 +63,11 @@ async def async_setup(hass, config):
         CONF_ERROR_SUPPRESSED_CONVERSATIONS:
             config[CONF_ERROR_SUPPRESSED_CONVERSATIONS],
     }
+
+    if (hass.data[DOMAIN][CONF_INTENTS] and
+            INTENT_HELP not in hass.data[DOMAIN][CONF_INTENTS]):
+        hass.data[DOMAIN][CONF_INTENTS][INTENT_HELP] = {
+            CONF_SENTENCES: ['HELP']}
 
     for data in hass.data[DOMAIN][CONF_INTENTS].values():
         matchers = []
@@ -122,6 +129,8 @@ async def async_setup_entry(hass, config):
                                  bot.
                                  async_handle_update_users_and_conversations,
                                  schema=vol.Schema({}))
+
+    intent.async_register(hass, HelpIntent(hass))
 
     return True
 

@@ -8,7 +8,7 @@ from .const import (
     EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
     EVENT_HANGOUTS_DISCONNECTED, EVENT_HANGOUTS_MESSAGE_RECEIVED,
     CONF_MATCHERS, CONF_CONVERSATION_ID,
-    CONF_CONVERSATION_NAME, EVENT_HANGOUTS_CONVERSATIONS_RESOLVED)
+    CONF_CONVERSATION_NAME, EVENT_HANGOUTS_CONVERSATIONS_RESOLVED, INTENT_HELP)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -103,7 +103,6 @@ class HangoutsBot:
         dispatcher.async_dispatcher_send(self.hass,
                                          EVENT_HANGOUTS_CONVERSATIONS_RESOLVED)
 
-
     async def _async_handle_conversation_event(self, event):
         from hangups import ChatMessageEvent
         if isinstance(event, ChatMessageEvent):
@@ -127,7 +126,8 @@ class HangoutsBot:
         if intents is not None:
             is_error = False
             try:
-                intent_result = await self._async_process(intents, message)
+                intent_result = await self._async_process(intents, message,
+                                                          conv_id)
             except (intent.UnknownIntent, intent.IntentHandleError) as err:
                 is_error = True
                 intent_result = intent.IntentResponse()
@@ -148,7 +148,7 @@ class HangoutsBot:
                     [{'text': message, 'parse_str': True}],
                     [{CONF_CONVERSATION_ID: conv_id}])
 
-    async def _async_process(self, intents, text):
+    async def _async_process(self, intents, text, conv_id):
         """Detect a matching intent."""
         for intent_type, data in intents.items():
             for matcher in data.get(CONF_MATCHERS, []):
@@ -156,12 +156,15 @@ class HangoutsBot:
 
                 if not match:
                     continue
+                if intent_type == INTENT_HELP:
+                    return await self.hass.helpers.intent.async_handle(
+                        DOMAIN, intent_type,
+                        {'conv_id': {'value': conv_id}}, text)
 
-                response = await self.hass.helpers.intent.async_handle(
+                return await self.hass.helpers.intent.async_handle(
                     DOMAIN, intent_type,
-                    {key: {'value': value} for key, value
-                     in match.groupdict().items()}, text)
-                return response
+                    {key: {'value': value}
+                     for key, value in match.groupdict().items()}, text)
 
     async def async_connect(self):
         """Login to the Google Hangouts."""
@@ -263,3 +266,7 @@ class HangoutsBot:
     async def async_handle_update_users_and_conversations(self, _=None):
         """Handle the update_users_and_conversations service."""
         await self._async_list_conversations()
+
+    def get_intents(self, conv_id):
+        """Return the intents for a specific conversation."""
+        return self._conversation_intents.get(conv_id)
