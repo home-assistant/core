@@ -183,7 +183,6 @@ class WazeTravelTime(Entity):
 
         return friendly_name
 
-    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Fetch new state data for the sensor."""
         import WazeRouteCalculator
