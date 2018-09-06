@@ -333,7 +333,7 @@ ephem==3.7.6.0
 epson-projector==0.1.3
 
 # homeassistant.components.netgear_lte
-eternalegypt==0.0.3
+eternalegypt==0.0.5
 
 # homeassistant.components.keyboard_remote
 # evdev==0.6.1
