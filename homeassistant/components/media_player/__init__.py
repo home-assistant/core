@@ -969,7 +969,9 @@ async def _async_fetch_image(hass, url):
         cache_images[url] = {CACHE_LOCK: asyncio.Lock(loop=hass.loop)}
 
     async with cache_images[url][CACHE_LOCK]:
-        if CACHE_CONTENT in cache_images[url] and (cache_images[url][CACHE_TIMESTAMP] + 300) > dt_util.utcnow().timestamp():
+        now = dt_util.utcnow().timestamp()
+        if CACHE_CONTENT in cache_images[url] and \
+           (cache_images[url][CACHE_TIMESTAMP] + 300) > now:
             return cache_images[url][CACHE_CONTENT]
 
         content, content_type = (None, None)
@@ -984,7 +986,7 @@ async def _async_fetch_image(hass, url):
                     if content_type:
                         content_type = content_type.split(';')[0]
                     cache_images[url][CACHE_CONTENT] = content, content_type
-                    cache_images[url][CACHE_TIMESTAMP] = dt_util.utcnow().timestamp()
+                    cache_images[url][CACHE_TIMESTAMP] = now
 
         except asyncio.TimeoutError:
             pass
