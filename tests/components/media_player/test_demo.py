@@ -2,7 +2,6 @@
 import unittest
 from unittest.mock import patch
 import asyncio
-import freezegun
 from freezegun import freeze_time
 
 from homeassistant.setup import setup_component
