@@ -467,7 +467,7 @@ async def test_create_long_lived_access_token(mock_hass):
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     user = MockUser().add_to_auth_manager(manager)
     refresh_token = await manager.async_create_refresh_token(
-        user, 'gps_logger',
+        user, 'gps_logger', 'GPS Logger',
         token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
         access_token_expiration=timedelta(days=300))
     assert refresh_token.token_type == \
@@ -487,7 +487,7 @@ async def test_one_long_lived_access_token_per_refresh_token(mock_hass):
     manager = await auth.auth_manager_from_config(mock_hass, [], [])
     user = MockUser().add_to_auth_manager(manager)
     refresh_token = await manager.async_create_refresh_token(
-        user, 'gps_logger',
+        user, 'https://gps.logger.com/', 'GPS Logger',
         token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
         access_token_expiration=timedelta(days=3000))
     assert refresh_token.token_type == \

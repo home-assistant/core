@@ -280,10 +280,9 @@ class AuthManager:
                 'refresh tokens')
 
         if (token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN and
-                (client_id is None or client_id.lower().startswith(
-                    ('http://', 'https://')))):
-            raise ValueError('Client_id is not allowed start with http:// or '
-                             'https:// for long-lived access token')
+                (client_id is None or client_name is None)):
+            raise ValueError('Client_id and client_name are both required for'
+                             ' long-lived access token')
 
         if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
             for token in user.refresh_tokens.values():
