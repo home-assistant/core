@@ -98,6 +98,17 @@ class TestJewishCalenderSensor(unittest.TestCase):
                 self.hass.loop).result()
             self.assertEqual(sensor.state, "א\' ראש השנה")
 
+    def test_jewish_calendar_sensor_holyness(self):
+        """Test Jewish calendar sensor date output in hebrew."""
+        test_time = dt(2018, 9, 10)
+        sensor = JewishCalSensor(
+            name='test', language='hebrew', sensor_type='holyness')
+        with patch('homeassistant.util.dt.now', return_value=test_time):
+            run_coroutine_threadsafe(
+                sensor.async_update(),
+                self.hass.loop).result()
+            self.assertEqual(sensor.state, 1)
+
     def test_jewish_calendar_sensor_torah_reading(self):
         """Test Jewish calendar sensor date output in hebrew."""
         test_time = dt(2018, 9, 8)

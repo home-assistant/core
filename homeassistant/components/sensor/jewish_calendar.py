@@ -130,7 +130,7 @@ class JewishCalSensor(Entity):
             except StopIteration:
                 self._state = ""
         elif self.type == 'holyness':
-            self._state = hdate.get_holyday_type(date.get_holyday())
+            self._state = hdate.date.get_holyday_type(date.get_holyday())
         else:
             times = hdate.Zmanim(
                 date=self._date,
