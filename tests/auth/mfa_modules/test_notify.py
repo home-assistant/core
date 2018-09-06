@@ -68,7 +68,7 @@ async def test_validating_mfa_counter(hass):
     assert init_count is not None
 
     with patch('pyotp.HOTP.at', return_value=MOCK_CODE):
-        await notify_auth_module.async_initialize('test-user')
+        await notify_auth_module.async_initialize_login_mfa_step('test-user')
 
     notify_setting = list(notify_auth_module._user_settings.values())[0]
     after_generate_count = notify_setting.counter

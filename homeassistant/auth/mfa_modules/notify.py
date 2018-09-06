@@ -197,7 +197,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             user_input.get(INPUT_FIELD_CODE, ''),
             notify_setting.counter)
 
-    async def async_initialize(self, user_id: str) -> None:
+    async def async_initialize_login_mfa_step(self, user_id: str) -> None:
         """Generate code and notify user."""
         if self._user_settings is None:
             await self._async_load()

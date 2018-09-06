@@ -224,8 +224,9 @@ class LoginFlow(data_entry_flow.FlowHandler):
             # will show invalid_auth_module error
             return await self.async_step_select_mfa_module(user_input={})
 
-        if user_input is None and hasattr(auth_module, 'async_initialize'):
-            await auth_module.async_initialize(self.user.id)
+        if user_input is None and hasattr(auth_module,
+                                          'async_initialize_login_mfa_step'):
+            await auth_module.async_initialize_login_mfa_step(self.user.id)
 
         if user_input is not None:
             expires = self.created_at + SESSION_EXPIRATION
