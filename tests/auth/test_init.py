@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
     models as auth_models, auth_store, const as auth_const)
-from homeassistant.auth.mfa_modules import SESSION_EXPIRATION
+from homeassistant.auth.const import SESSION_EXPIRATION
 from homeassistant.util import dt as dt_util
 from tests.common import (
     MockUser, ensure_auth_manager_loaded, flush_store, CLIENT_ID)

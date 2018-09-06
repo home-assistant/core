@@ -1,5 +1,4 @@
 """Plugable auth modules for Home Assistant."""
-from datetime import timedelta
 import importlib
 import logging
 import types
@@ -22,8 +21,6 @@ MULTI_FACTOR_AUTH_MODULE_SCHEMA = vol.Schema({
     # Specify ID if you have two mfa auth module for same type.
     vol.Optional(CONF_ID): str,
 }, extra=vol.ALLOW_EXTRA)
-
-SESSION_EXPIRATION = timedelta(minutes=5)
 
 DATA_REQS = 'mfa_auth_module_reqs_processed'
 

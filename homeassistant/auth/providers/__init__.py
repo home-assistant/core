@@ -15,8 +15,8 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from ..auth_store import AuthStore
+from ..const import SESSION_EXPIRATION
 from ..models import Credentials, User, UserMeta  # noqa: F401
-from ..mfa_modules import SESSION_EXPIRATION
 
 _LOGGER = logging.getLogger(__name__)
 DATA_REQS = 'auth_prov_reqs_processed'
@@ -213,6 +213,8 @@ class LoginFlow(data_entry_flow.FlowHandler):
             self, user_input: Optional[Dict[str, str]] = None) \
             -> Dict[str, Any]:
         """Handle the step of mfa validation."""
+        assert self.user
+
         errors = {}
 
         auth_module = self._auth_manager.get_auth_mfa_module(
@@ -222,6 +224,9 @@ class LoginFlow(data_entry_flow.FlowHandler):
             # will show invalid_auth_module error
             return await self.async_step_select_mfa_module(user_input={})
 
+        if user_input is None and hasattr(auth_module, 'async_initialize'):
+            await auth_module.async_initialize(self.user.id)
+
         if user_input is not None:
             expires = self.created_at + SESSION_EXPIRATION
             if dt_util.utcnow() > expires:
@@ -230,23 +235,17 @@ class LoginFlow(data_entry_flow.FlowHandler):
                 )
 
             result = await auth_module.async_validate(
-                self.user.id, user_input)  # type: ignore
+                self.user.id, user_input)
             if not result:
                 errors['base'] = 'invalid_code'
                 self.invalid_mfa_times += 1
-                if (auth_module.MAX_RETRY_TIME > 0 and
-                        self.invalid_mfa_times >= auth_module.MAX_RETRY_TIME):
+                if self.invalid_mfa_times >= auth_module.MAX_RETRY_TIME > 0:
                     return self.async_abort(
                         reason='too_many_retry'
                     )
 
             if not errors:
                 return await self.async_finish(self.user)
-
-        # MFA module may have init code need generate
-        if (self.invalid_mfa_times == 0 and
-                hasattr(auth_module, 'async_generate')):
-            await auth_module.async_generate(self.user.id)  # type: ignore
 
         description_placeholders = {
             'mfa_module_name': auth_module.name,
