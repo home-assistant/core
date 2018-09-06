@@ -205,7 +205,7 @@ class HangoutsBot:
         messages = []
         for i, segment in enumerate(message):
             if i:
-                messages.append(ChatMessageSegment('', 
+                messages.append(ChatMessageSegment('',
                                                    segment_type=hangouts_pb2.
                                                    SEGMENT_TYPE_LINE_BREAK))
             if 'parse_str' in segment and segment['parse_str']:
