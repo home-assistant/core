@@ -1500,20 +1500,25 @@ def temperature_from_object(hass, temp_obj, interval=False):
 
 
 def _convert_ha_mode(ha_mode):
-    mode = next(
-        (k for k, v in API_THERMOSTAT_MODES.items() if ha_mode in v),
-        None
-    )
+    for alexa_mode, op_candidates in API_THERMOSTAT_MODES.items():
+        if ha_mode in op_candidates:
+            return alexa_mode
 
-    return mode
+    return None
 
 
 def _thermostat_context_from_entity(hass, entity, mode=None, temp=None):
     unit = hass.config.units.temperature_unit
-    ha_mode = mode if mode\
-        else entity.attributes.get(climate.ATTR_OPERATION_MODE)
-    target_temp = temp if temp\
-        else entity.attributes.get(climate.ATTR_TEMPERATURE)
+    if mode:
+        ha_mode = mode
+    else:
+        ha_mode = entity.attributes.get(climate.ATTR_OPERATION_MODE)
+
+    if temp:
+        target_temp = temp
+    else:
+        target_temp = entity.attributes.get(climate.ATTR_TEMPERATURE)
+
     ctxt = {
         "properties": [{
             "namespace": 'Alexa.ThermostatController',
