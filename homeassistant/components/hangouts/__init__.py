@@ -18,7 +18,8 @@ from .const import (
     EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
     MESSAGE_SCHEMA, SERVICE_SEND_MESSAGE,
     SERVICE_UPDATE, CONF_SENTENCES, CONF_MATCHERS,
-    CONF_ERROR_SUPPRESSED_CONVERSATIONS, INTENT_SCHEMA, TARGETS_SCHEMA)
+    CONF_ERROR_SUPPRESSED_CONVERSATIONS, INTENT_SCHEMA, TARGETS_SCHEMA,
+    CONF_DEFAULT_CONVERSATIONS, EVENT_HANGOUTS_CONVERSATIONS_RESOLVED)
 
 # We need an import from .config_flow, without it .config_flow is never loaded.
 from .config_flow import HangoutsFlowHandler  # noqa: F401
@@ -33,6 +34,8 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_INTENTS, default={}): vol.Schema({
             cv.string: INTENT_SCHEMA
         }),
+        vol.Optional(CONF_DEFAULT_CONVERSATIONS, default=[]):
+            [TARGETS_SCHEMA],
         vol.Optional(CONF_ERROR_SUPPRESSED_CONVERSATIONS, default=[]):
             [TARGETS_SCHEMA]
     })
@@ -47,12 +50,14 @@ async def async_setup(hass, config):
     if config is None:
         hass.data[DOMAIN] = {
             CONF_INTENTS: {},
+            CONF_DEFAULT_CONVERSATIONS: [],
             CONF_ERROR_SUPPRESSED_CONVERSATIONS: [],
         }
         return True
 
     hass.data[DOMAIN] = {
         CONF_INTENTS: config[CONF_INTENTS],
+        CONF_DEFAULT_CONVERSATIONS: config[CONF_DEFAULT_CONVERSATIONS],
         CONF_ERROR_SUPPRESSED_CONVERSATIONS:
             config[CONF_ERROR_SUPPRESSED_CONVERSATIONS],
     }
@@ -82,6 +87,7 @@ async def async_setup_entry(hass, config):
             hass,
             config.data.get(CONF_REFRESH_TOKEN),
             hass.data[DOMAIN][CONF_INTENTS],
+            hass.data[DOMAIN][CONF_DEFAULT_CONVERSATIONS],
             hass.data[DOMAIN][CONF_ERROR_SUPPRESSED_CONVERSATIONS])
         hass.data[DOMAIN][CONF_BOT] = bot
     except GoogleAuthError as exception:
@@ -96,11 +102,12 @@ async def async_setup_entry(hass, config):
     dispatcher.async_dispatcher_connect(
         hass,
         EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
-        bot.async_update_conversation_commands)
+        bot.async_resolve_conversations)
+
     dispatcher.async_dispatcher_connect(
         hass,
-        EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
-        bot.async_handle_update_error_suppressed_conversations)
+        EVENT_HANGOUTS_CONVERSATIONS_RESOLVED,
+        bot.async_update_conversation_commands)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                bot.async_handle_hass_stop)

@@ -28,6 +28,7 @@ EVENT_HANGOUTS_CONNECTED = 'hangouts_connected'
 EVENT_HANGOUTS_DISCONNECTED = 'hangouts_disconnected'
 EVENT_HANGOUTS_USERS_CHANGED = 'hangouts_users_changed'
 EVENT_HANGOUTS_CONVERSATIONS_CHANGED = 'hangouts_conversations_changed'
+EVENT_HANGOUTS_CONVERSATIONS_RESOLVED = 'hangouts_conversations_resolved'
 EVENT_HANGOUTS_MESSAGE_RECEIVED = 'hangouts_message_received'
 
 CONF_CONVERSATION_ID = 'id'
