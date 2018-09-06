@@ -27,9 +27,9 @@ DOMAIN = 'insteon'
 CONF_IP_PORT = 'ip_port'
 CONF_HUB_USERNAME = 'username'
 CONF_HUB_PASSWORD = 'password'
+CONF_HUB_VERSION = 'hub_version'
 CONF_OVERRIDE = 'device_override'
-CONF_PLM_HUB_MSG = ('Must configure either a PLM port or a Hub host, username '
-                    'and password')
+CONF_PLM_HUB_MSG = ('Must configure either a PLM port or a Hub host')
 CONF_ADDRESS = 'address'
 CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
@@ -88,12 +88,13 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.All(
         vol.Schema(
             {vol.Exclusive(CONF_PORT, 'plm_or_hub',
-                           msg=CONF_PLM_HUB_MSG): cv.isdevice,
+                           msg=CONF_PLM_HUB_MSG): cv.string,
              vol.Exclusive(CONF_HOST, 'plm_or_hub',
                            msg=CONF_PLM_HUB_MSG): cv.string,
-             vol.Optional(CONF_IP_PORT, default=25105): int,
+             vol.Optional(CONF_IP_PORT): int,
              vol.Optional(CONF_HUB_USERNAME): cv.string,
              vol.Optional(CONF_HUB_PASSWORD): cv.string,
+             vol.Optional(CONF_HUB_VERSION, default=2): vol.In([1, 2]),
              vol.Optional(CONF_OVERRIDE): vol.All(
                  cv.ensure_list_csv, [CONF_DEVICE_OVERRIDE_SCHEMA]),
              vol.Optional(CONF_X10_ALL_UNITS_OFF): vol.In(HOUSECODES),
@@ -102,15 +103,7 @@ CONFIG_SCHEMA = vol.Schema({
              vol.Optional(CONF_X10): vol.All(cv.ensure_list_csv,
                                              [CONF_X10_SCHEMA])
              }, extra=vol.ALLOW_EXTRA, required=True),
-        cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
-        vol.Schema(
-            {vol.Inclusive(CONF_HOST, 'hub',
-                           msg=CONF_PLM_HUB_MSG): cv.string,
-             vol.Inclusive(CONF_HUB_USERNAME, 'hub',
-                           msg=CONF_PLM_HUB_MSG): cv.string,
-             vol.Inclusive(CONF_HUB_PASSWORD, 'hub',
-                           msg=CONF_PLM_HUB_MSG): cv.string,
-             }, extra=vol.ALLOW_EXTRA, required=True))
+        cv.has_at_least_one_key(CONF_PORT, CONF_HOST))
     }, extra=vol.ALLOW_EXTRA)
 
 
@@ -151,11 +144,20 @@ def async_setup(hass, config):
     ip_port = conf.get(CONF_IP_PORT)
     username = conf.get(CONF_HUB_USERNAME)
     password = conf.get(CONF_HUB_PASSWORD)
+    hub_version = conf.get(CONF_HUB_VERSION)
     overrides = conf.get(CONF_OVERRIDE, [])
     x10_devices = conf.get(CONF_X10, [])
     x10_all_units_off_housecode = conf.get(CONF_X10_ALL_UNITS_OFF)
     x10_all_lights_on_housecode = conf.get(CONF_X10_ALL_LIGHTS_ON)
     x10_all_lights_off_housecode = conf.get(CONF_X10_ALL_LIGHTS_OFF)
+
+    # Set the default value of the IP port based on Hub version if not
+    # explicitly set
+    if not ip_port:
+        if hub_version == 1:
+            ip_port = 9761
+        else:
+            ip_port = 25105
 
     @callback
     def async_new_insteon_device(device):
@@ -284,6 +286,7 @@ def async_setup(hass, config):
             port=ip_port,
             username=username,
             password=password,
+            hub_version=hub_version,
             loop=hass.loop,
             workdir=hass.config.config_dir)
     else:
