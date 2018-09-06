@@ -106,7 +106,7 @@ class OpenThermGateway(ClimateDevice):
         if self._away_mode_b is not None:
             self._away_state_b = (status.get(self.pyotgw.OTGW_GPIO_B_STATE) ==
                                   self._away_mode_b)
-        self.hass.async_add_job(self.async_update_ha_state(True))
+        self.async_schedule_update_ha_state()
 
     @property
     def name(self):
@@ -121,6 +121,11 @@ class OpenThermGateway(ClimateDevice):
         if self.hass.config.units.temperature_unit == TEMP_CELSIUS:
             return PRECISION_HALVES
         return PRECISION_WHOLE
+
+    @property
+    def should_poll(self):
+        """Disable polling for this entity."""
+        return False
 
     @property
     def temperature_unit(self):
@@ -162,8 +167,9 @@ class OpenThermGateway(ClimateDevice):
         """Set new target temperature."""
         if ATTR_TEMPERATURE in kwargs:
             temp = float(kwargs[ATTR_TEMPERATURE])
-            await self.gateway.set_target_temp(temp)
-            await self.async_update_ha_state()
+            self._target_temperature = await self.gateway.set_target_temp(
+                temp)
+            self.async_schedule_update_ha_state()
 
     @property
     def supported_features(self):
