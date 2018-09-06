@@ -32,8 +32,6 @@ https://home-assistant.io/components/evohome/
 #   0-12 Heating zones (a.k.a. Zone), and
 #   0-1 DHW controller, (a.k.a. Boiler)
 
-# TBD: https://developers.home-assistant.io/docs/en/development_index.html
-
 # List of future features
 # Replace AutoWithEco: mode that allows a delta of +/-0.5, +/-1.0, +/-1.5, etc.
 # Improve hueristics: detect TRV Off, and OpenWindow
@@ -107,11 +105,6 @@ CONF_USE_SCHEDULES = 'use_schedules'
 CONF_LOCATION_IDX = 'location_idx'
 CONF_AWAY_TEMP = 'away_temp'
 CONF_OFF_TEMP = 'off_temp'
-
-# TBD: for testing only (has extra logging)
-# https://www.home-assistant.io/developers/component_deps_and_reqs/
-# https://github.com/home-assistant/home-assistant.github.io/pull/5199
-
 
 API_VER = '0.2.7'  # alternatively, '0.2.5' is the version used elsewhere in HA
 
@@ -190,10 +183,6 @@ TCS_MODES = [
     EVO_HEATOFF
 ]
 DHW_STATES = {STATE_ON: 'On', STATE_OFF: 'Off'}
-
-# TBD: Check list:
-# - no I/O inside properties (DONE)
-# - I/O only inside setup(), update() & set_*() (WIP)
 
 
 def setup(hass, config):
@@ -1019,7 +1008,7 @@ class EvoController(EvoEntity):
             timedelta(seconds=domain_data['params'][CONF_SCAN_INTERVAL])
 
         if not expired:  # timer not expired, so exit
-            return
+            return True
 
 # it is time to update state data
 # NB: unlike all other config/state data, zones maintain their own schedules
@@ -1145,7 +1134,7 @@ class EvoSlaveEntity(EvoEntity):
                 self._id,
                 CONF_USE_SCHEDULES
             )
-            return
+            return None
 
         return self._schedule['schedule']
 
