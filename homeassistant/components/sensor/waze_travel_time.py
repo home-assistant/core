@@ -16,7 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['WazeRouteCalculator==0.6']
 
