@@ -3,10 +3,11 @@ import logging
 
 from homeassistant.helpers.entity import Entity
 
-from homeassistant.components.edp_redy import (EdpRedyDevice, EDP_REDY,
-                                               ACTIVE_POWER_ID)
+from homeassistant.components.edp_redy import EdpRedyDevice, EDP_REDY
 
 _LOGGER = logging.getLogger(__name__)
+
+DEPENDENCIES = ['edp_redy']
 
 # Load power in watts (W)
 ATTR_ACTIVE_POWER = 'active_power'
@@ -14,16 +15,19 @@ ATTR_ACTIVE_POWER = 'active_power'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for re:dy devices."""
+
+    from edp_redy.session import ACTIVE_POWER_ID
+
     session = hass.data[EDP_REDY]
     devices = []
 
-    """ Create sensors for modules """
-    for device_pkid, device_json in session.modules_dict.items():
+    # Create sensors for modules
+    for device_json in session.modules_dict.values():
         if "HA_POWER_METER" not in device_json["Capabilities"]:
             continue
         devices.append(EdpRedyModuleSensor(session, device_json))
 
-    """ Create a sensor for global active power """
+    # Create a sensor for global active power
     devices.append(EdpRedySensor(session, ACTIVE_POWER_ID, "Power Home",
                                  "mdi:flash", "W"))
 

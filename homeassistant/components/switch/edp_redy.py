@@ -6,6 +6,8 @@ from homeassistant.components.switch import SwitchDevice
 
 _LOGGER = logging.getLogger(__name__)
 
+DEPENDENCIES = ['edp_redy']
+
 # Load power in watts (W)
 ATTR_ACTIVE_POWER = 'active_power'
 
@@ -14,7 +16,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for re:dy devices."""
     session = hass.data[EDP_REDY]
     devices = []
-    for device_pkid, device_json in session.modules_dict.items():
+    for device_json in session.modules_dict.values():
         if "HA_SWITCH" not in device_json["Capabilities"]:
             continue
         devices.append(EdpRedySwitch(session, device_json))
