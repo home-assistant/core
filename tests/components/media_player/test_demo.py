@@ -262,7 +262,7 @@ class TestMediaPlayerWeb(unittest.TestCase):
 
             @asyncio.coroutine
             def read(self):
-                self.calls+=1
+                self.calls += 1
                 if self.calls == 1:
                     return fake_picture1_data.encode('ascii')
                 return fake_picture2_data.encode('ascii')
