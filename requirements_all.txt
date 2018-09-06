@@ -53,6 +53,9 @@ PyQRCode==1.2.1
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.0.7
 
+# homeassistant.components.switch.switchbot
+PySwitchbot==0.3
+
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.9.5
 
@@ -186,7 +189,6 @@ blinkstick==1.1.8
 blockchain==1.4.4
 
 # homeassistant.components.light.decora
-# homeassistant.components.switch.switchbot
 # homeassistant.components.switch.switchmate
 # bluepy==1.1.4
 
