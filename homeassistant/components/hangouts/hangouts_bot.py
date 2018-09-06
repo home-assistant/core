@@ -203,16 +203,17 @@ class HangoutsBot:
 
         from hangups import ChatMessageSegment, hangouts_pb2
         messages = []
-        for segment in message:
+        for i, segment in enumerate(message):
+            if i:
+                messages.append(ChatMessageSegment('', 
+                                                   segment_type=hangouts_pb2.
+                                                   SEGMENT_TYPE_LINE_BREAK))
             if 'parse_str' in segment and segment['parse_str']:
                 messages.extend(ChatMessageSegment.from_str(segment['text']))
             else:
                 if 'parse_str' in segment:
                     del segment['parse_str']
                 messages.append(ChatMessageSegment(**segment))
-            messages.append(ChatMessageSegment('',
-                                               segment_type=hangouts_pb2.
-                                               SEGMENT_TYPE_LINE_BREAK))
 
         if not messages:
             return False
