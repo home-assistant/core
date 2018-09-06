@@ -25,7 +25,7 @@ def get_mysensors_devices(hass, domain):
     return hass.data[MYSENSORS_PLATFORM_DEVICES.format(domain)]
 
 
-class MySensorsDevice(object):
+class MySensorsDevice:
     """Representation of a MySensors device."""
 
     def __init__(self, gateway, node_id, child_id, name, value_type):

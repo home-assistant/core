@@ -14,7 +14,7 @@ from homeassistant.components.discovery import SERVICE_HOMEKIT
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['homekit==0.6']
+REQUIREMENTS = ['homekit==0.10']
 
 DOMAIN = 'homekit_controller'
 HOMEKIT_DIR = '.homekit'
@@ -25,6 +25,12 @@ HOMEKIT_ACCESSORY_DISPATCH = {
     'outlet': 'switch',
     'thermostat': 'climate',
 }
+
+HOMEKIT_IGNORE = [
+    'BSB002',
+    'Home Assistant Bridge',
+    'TRADFRI gateway'
+]
 
 KNOWN_ACCESSORIES = "{}-accessories".format(DOMAIN)
 KNOWN_DEVICES = "{}-devices".format(DOMAIN)
@@ -236,6 +242,9 @@ def setup(hass, config):
         model = discovery_info['properties']['md']
         hkid = discovery_info['properties']['id']
         config_num = int(discovery_info['properties']['c#'])
+
+        if model in HOMEKIT_IGNORE:
+            return
 
         # Only register a device once, but rescan if the config has changed
         if hkid in hass.data[KNOWN_DEVICES]:

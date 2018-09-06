@@ -16,7 +16,7 @@ DEPENDENCIES = ['canary']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Canary alarms."""
     data = hass.data[DATA_CANARY]
     devices = []
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for location in data.locations:
         devices.append(CanaryAlarm(data, location.location_id))
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class CanaryAlarm(AlarmControlPanel):
@@ -55,9 +55,9 @@ class CanaryAlarm(AlarmControlPanel):
         mode = location.mode
         if mode.name == LOCATION_MODE_AWAY:
             return STATE_ALARM_ARMED_AWAY
-        elif mode.name == LOCATION_MODE_HOME:
+        if mode.name == LOCATION_MODE_HOME:
             return STATE_ALARM_ARMED_HOME
-        elif mode.name == LOCATION_MODE_NIGHT:
+        if mode.name == LOCATION_MODE_NIGHT:
             return STATE_ALARM_ARMED_NIGHT
         return None
 

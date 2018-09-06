@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Setup configured zones as well as home assistant zone if necessary."""
+    """Set up configured zones as well as home assistant zone if necessary."""
     hass.data[DOMAIN] = {}
     entities = set()
     zone_entries = configured_zones(hass)

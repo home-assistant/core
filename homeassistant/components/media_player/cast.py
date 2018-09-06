@@ -63,7 +63,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @attr.s(slots=True, frozen=True)
-class ChromecastInfo(object):
+class ChromecastInfo:
     """Class to hold all data about a chromecast for creating connections.
 
     This also has the same attributes as the mDNS fields by zeroconf.
@@ -146,7 +146,7 @@ def _setup_internal_discovery(hass: HomeAssistantType) -> None:
     import pychromecast
 
     def internal_callback(name):
-        """Called when zeroconf has discovered a new chromecast."""
+        """Handle zeroconf discovery of a new chromecast."""
         mdns = listener.services[name]
         _discover_chromecast(hass, ChromecastInfo(*mdns))
 
@@ -186,7 +186,7 @@ def _async_create_cast_device(hass: HomeAssistantType,
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None):
+                               async_add_entities, discovery_info=None):
     """Set up thet Cast platform.
 
     Deprecated.
@@ -195,22 +195,22 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         'Setting configuration for Cast via platform is deprecated. '
         'Configure via Cast component instead.')
     await _async_setup_platform(
-        hass, config, async_add_devices, discovery_info)
+        hass, config, async_add_entities, discovery_info)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Cast from a config entry."""
     config = hass.data[CAST_DOMAIN].get('media_player', {})
     if not isinstance(config, list):
         config = [config]
 
     await asyncio.wait([
-        _async_setup_platform(hass, cfg, async_add_devices, None)
+        _async_setup_platform(hass, cfg, async_add_entities, None)
         for cfg in config])
 
 
 async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                                async_add_devices, discovery_info):
+                                async_add_entities, discovery_info):
     """Set up the cast platform."""
     import pychromecast
 
@@ -229,14 +229,14 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 
     @callback
     def async_cast_discovered(discover: ChromecastInfo) -> None:
-        """Callback for when a new chromecast is discovered."""
+        """Handle discovery of a new chromecast."""
         if info is not None and info.host_port != discover.host_port:
             # Not our requested cast device.
             return
 
         cast_device = _async_create_cast_device(hass, discover)
         if cast_device is not None:
-            async_add_devices([cast_device])
+            async_add_entities([cast_device])
 
     async_dispatcher_connect(hass, SIGNAL_CAST_DISCOVERED,
                              async_cast_discovered)
@@ -258,7 +258,7 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         hass.async_add_job(_discover_chromecast, hass, info)
 
 
-class CastStatusListener(object):
+class CastStatusListener:
     """Helper class to handle pychromecast status callbacks.
 
     Necessary because a CastDevice entity can create a new socket client
@@ -277,17 +277,17 @@ class CastStatusListener(object):
         chromecast.register_connection_listener(self)
 
     def new_cast_status(self, cast_status):
-        """Called when a new CastStatus is received."""
+        """Handle reception of a new CastStatus."""
         if self._valid:
             self._cast_device.new_cast_status(cast_status)
 
     def new_media_status(self, media_status):
-        """Called when a new MediaStatus is received."""
+        """Handle reception of a new MediaStatus."""
         if self._valid:
             self._cast_device.new_media_status(media_status)
 
     def new_connection_status(self, connection_status):
-        """Called when a new ConnectionStatus is received."""
+        """Handle reception of a new ConnectionStatus."""
         if self._valid:
             self._cast_device.new_connection_status(connection_status)
 
@@ -321,7 +321,7 @@ class CastDevice(MediaPlayerDevice):
         """Create chromecast object when added to hass."""
         @callback
         def async_cast_discovered(discover: ChromecastInfo):
-            """Callback for changing elected leaders / IP."""
+            """Handle discovery of new Chromecast."""
             if self._cast_info.uuid is None:
                 # We can't handle empty UUIDs
                 return
@@ -499,13 +499,13 @@ class CastDevice(MediaPlayerDevice):
         """Return the state of the player."""
         if self.media_status is None:
             return None
-        elif self.media_status.player_is_playing:
+        if self.media_status.player_is_playing:
             return STATE_PLAYING
-        elif self.media_status.player_is_paused:
+        if self.media_status.player_is_paused:
             return STATE_PAUSED
-        elif self.media_status.player_is_idle:
+        if self.media_status.player_is_idle:
             return STATE_IDLE
-        elif self._chromecast is not None and self._chromecast.is_idle:
+        if self._chromecast is not None and self._chromecast.is_idle:
             return STATE_OFF
         return None
 
@@ -534,11 +534,11 @@ class CastDevice(MediaPlayerDevice):
         """Content type of current playing media."""
         if self.media_status is None:
             return None
-        elif self.media_status.media_is_tvshow:
+        if self.media_status.media_is_tvshow:
             return MEDIA_TYPE_TVSHOW
-        elif self.media_status.media_is_movie:
+        if self.media_status.media_is_movie:
             return MEDIA_TYPE_MOVIE
-        elif self.media_status.media_is_musictrack:
+        if self.media_status.media_is_musictrack:
             return MEDIA_TYPE_MUSIC
         return None
 

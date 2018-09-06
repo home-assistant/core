@@ -1,5 +1,4 @@
 """Ban logic for HTTP component."""
-
 from collections import defaultdict
 from datetime import datetime
 from ipaddress import ip_address
@@ -71,8 +70,23 @@ async def ban_middleware(request, handler):
         raise
 
 
+def log_invalid_auth(func):
+    """Decorate function to handle invalid auth or failed login attempts."""
+    async def handle_req(view, request, *args, **kwargs):
+        """Try to log failed login attempts if response status >= 400."""
+        resp = await func(view, request, *args, **kwargs)
+        if resp.status >= 400:
+            await process_wrong_login(request)
+        return resp
+    return handle_req
+
+
 async def process_wrong_login(request):
-    """Process a wrong login attempt."""
+    """Process a wrong login attempt.
+
+    Increase failed login attempts counter for remote IP address.
+    Add ip ban entry if failed login attempts exceeds threshold.
+    """
     remote_addr = request[KEY_REAL_IP]
 
     msg = ('Login attempt or request with invalid authentication '
@@ -107,7 +121,28 @@ async def process_wrong_login(request):
             'Banning IP address', NOTIFICATION_ID_BAN)
 
 
-class IpBan(object):
+async def process_success_login(request):
+    """Process a success login attempt.
+
+    Reset failed login attempts counter for remote IP address.
+    No release IP address from banned list function, it can only be done by
+    manual modify ip bans config file.
+    """
+    remote_addr = request[KEY_REAL_IP]
+
+    # Check if ban middleware is loaded
+    if (KEY_BANNED_IPS not in request.app or
+            request.app[KEY_LOGIN_THRESHOLD] < 1):
+        return
+
+    if remote_addr in request.app[KEY_FAILED_LOGIN_ATTEMPTS] and \
+            request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] > 0:
+        _LOGGER.debug('Login success, reset failed login attempts counter'
+                      ' from %s', remote_addr)
+        request.app[KEY_FAILED_LOGIN_ATTEMPTS].pop(remote_addr)
+
+
+class IpBan:
     """Represents banned IP address."""
 
     def __init__(self, ip_ban: str, banned_at: datetime = None) -> None:

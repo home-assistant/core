@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Roku platform."""
     hosts = []
 
@@ -73,7 +73,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 title=NOTIFICATION_TITLE,
                 notification_id=NOTIFICATION_ID)
 
-    add_devices(rokus)
+    add_entities(rokus)
 
 
 class RokuDevice(MediaPlayerDevice):
@@ -87,7 +87,7 @@ class RokuDevice(MediaPlayerDevice):
         self.ip_address = host
         self.channels = []
         self.current_app = None
-        self.device_info = {}
+        self._device_info = {}
 
         self.update()
 
@@ -96,7 +96,7 @@ class RokuDevice(MediaPlayerDevice):
         import requests.exceptions
 
         try:
-            self.device_info = self.roku.device_info
+            self._device_info = self.roku.device_info
             self.ip_address = self.roku.host
             self.channels = self.get_source_list()
 
@@ -121,9 +121,9 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        if self.device_info.userdevicename:
-            return self.device_info.userdevicename
-        return "Roku {}".format(self.device_info.sernum)
+        if self._device_info.userdevicename:
+            return self._device_info.userdevicename
+        return "Roku {}".format(self._device_info.sernum)
 
     @property
     def state(self):
@@ -134,9 +134,9 @@ class RokuDevice(MediaPlayerDevice):
         if (self.current_app.name == "Power Saver" or
                 self.current_app.is_screensaver):
             return STATE_IDLE
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return STATE_HOME
-        elif self.current_app.name is not None:
+        if self.current_app.name is not None:
             return STATE_PLAYING
 
         return STATE_UNKNOWN
@@ -149,16 +149,16 @@ class RokuDevice(MediaPlayerDevice):
     @property
     def unique_id(self):
         """Return a unique, HASS-friendly identifier for this entity."""
-        return self.device_info.sernum
+        return self._device_info.sernum
 
     @property
     def media_content_type(self):
         """Content type of current playing media."""
         if self.current_app is None:
             return None
-        elif self.current_app.name == "Power Saver":
+        if self.current_app.name == "Power Saver":
             return None
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return None
         return MEDIA_TYPE_MOVIE
 
@@ -167,11 +167,11 @@ class RokuDevice(MediaPlayerDevice):
         """Image url of current playing media."""
         if self.current_app is None:
             return None
-        elif self.current_app.name == "Roku":
+        if self.current_app.name == "Roku":
             return None
-        elif self.current_app.name == "Power Saver":
+        if self.current_app.name == "Power Saver":
             return None
-        elif self.current_app.id is None:
+        if self.current_app.id is None:
             return None
 
         return 'http://{0}:{1}/query/icon/{2}'.format(

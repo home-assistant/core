@@ -24,7 +24,7 @@ from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-import homeassistant.util as util
+from homeassistant import util
 
 REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2']
 
@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG WebOS TV platform."""
     if discovery_info is not None:
         host = urlparse(discovery_info[1]).hostname
@@ -84,11 +84,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     config = hass.config.path(config.get(CONF_FILENAME))
 
     setup_tv(host, name, customize, config, timeout, hass,
-             add_devices, turn_on_action)
+             add_entities, turn_on_action)
 
 
 def setup_tv(host, name, customize, config, timeout, hass,
-             add_devices, turn_on_action):
+             add_entities, turn_on_action):
     """Set up a LG WebOS TV based on host parameter."""
     from pylgtv import WebOsClient
     from pylgtv import PyLGTVPairException
@@ -113,7 +113,7 @@ def setup_tv(host, name, customize, config, timeout, hass,
             _LOGGER.warning("LG webOS TV %s needs to be paired", host)
             request_configuration(
                 host, name, customize, config, timeout, hass,
-                add_devices, turn_on_action)
+                add_entities, turn_on_action)
             return
 
     # If we came here and configuring this host, mark as done.
@@ -122,13 +122,13 @@ def setup_tv(host, name, customize, config, timeout, hass,
         configurator = hass.components.configurator
         configurator.request_done(request_id)
 
-    add_devices([LgWebOSDevice(host, name, customize, config, timeout,
-                               hass, turn_on_action)], True)
+    add_entities([LgWebOSDevice(host, name, customize, config, timeout,
+                                hass, turn_on_action)], True)
 
 
 def request_configuration(
         host, name, customize, config, timeout, hass,
-        add_devices, turn_on_action):
+        add_entities, turn_on_action):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
 
@@ -141,7 +141,7 @@ def request_configuration(
     def lgtv_configuration_callback(data):
         """Handle actions when configuration callback is called."""
         setup_tv(host, name, customize, config, timeout, hass,
-                 add_devices, turn_on_action)
+                 add_entities, turn_on_action)
 
     _CONFIGURING[host] = configurator.request_config(
         name, lgtv_configuration_callback,

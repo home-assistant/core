@@ -51,7 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Emby platform."""
     from pyemby import EmbyServer
 
@@ -94,7 +95,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         if new_devices:
             _LOGGER.debug("Adding new devices: %s", new_devices)
-            async_add_devices(new_devices, update_before_add=True)
+            async_add_entities(new_devices, update_before_add=True)
 
     @callback
     def device_removal_callback(data):
@@ -192,8 +193,8 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return 'Emby - {} - {}'.format(self.device.client, self.device.name) \
-            or DEVICE_DEFAULT_NAME
+        return ('Emby - {} - {}'.format(self.device.client, self.device.name)
+                or DEVICE_DEFAULT_NAME)
 
     @property
     def should_poll(self):
@@ -206,11 +207,11 @@ class EmbyDevice(MediaPlayerDevice):
         state = self.device.state
         if state == 'Paused':
             return STATE_PAUSED
-        elif state == 'Playing':
+        if state == 'Playing':
             return STATE_PLAYING
-        elif state == 'Idle':
+        if state == 'Idle':
             return STATE_IDLE
-        elif state == 'Off':
+        if state == 'Off':
             return STATE_OFF
 
     @property
@@ -230,15 +231,15 @@ class EmbyDevice(MediaPlayerDevice):
         media_type = self.device.media_type
         if media_type == 'Episode':
             return MEDIA_TYPE_TVSHOW
-        elif media_type == 'Movie':
+        if media_type == 'Movie':
             return MEDIA_TYPE_MOVIE
-        elif media_type == 'Trailer':
+        if media_type == 'Trailer':
             return MEDIA_TYPE_TRAILER
-        elif media_type == 'Music':
+        if media_type == 'Music':
             return MEDIA_TYPE_MUSIC
-        elif media_type == 'Video':
+        if media_type == 'Video':
             return MEDIA_TYPE_GENERIC_VIDEO
-        elif media_type == 'Audio':
+        if media_type == 'Audio':
             return MEDIA_TYPE_MUSIC
         return None
 

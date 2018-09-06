@@ -143,12 +143,12 @@ async def async_setup(hass, config):
         # No users, cannot continue
         return False
 
-    hass.async_add_job(discovery.async_load_platform(
+    hass.async_create_task(discovery.async_load_platform(
         hass, 'sensor', DOMAIN, {
             CONF_SENSORS: sensors,
         }, config))
 
-    hass.async_add_job(discovery.async_load_platform(
+    hass.async_create_task(discovery.async_load_platform(
         hass, 'binary_sensor', DOMAIN, {
             CONF_BINARY_SENSORS: binary_sensors,
         }, config))

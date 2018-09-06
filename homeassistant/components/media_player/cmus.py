@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discover_info=None):
+def setup_platform(hass, config, add_entities, discover_info=None):
     """Set up the CMUS platform."""
     from pycmus import exceptions
 
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discover_info=None):
     except exceptions.InvalidPassword:
         _LOGGER.error("The provided password was rejected by cmus")
         return False
-    add_devices([cmus_remote], True)
+    add_entities([cmus_remote], True)
 
 
 class CmusDevice(MediaPlayerDevice):
@@ -91,7 +91,7 @@ class CmusDevice(MediaPlayerDevice):
         """Return the media state."""
         if self.status.get('status') == 'playing':
             return STATE_PLAYING
-        elif self.status.get('status') == 'paused':
+        if self.status.get('status') == 'paused':
             return STATE_PAUSED
         return STATE_OFF
 

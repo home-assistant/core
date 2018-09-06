@@ -30,7 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Microsoft Face identify platform."""
     api = hass.data[DATA_MICROSOFT_FACE]
     face_group = config[CONF_GROUP]
@@ -43,7 +44,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             camera.get(CONF_NAME)
         ))
 
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
@@ -90,7 +91,7 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
             face_data = yield from self._api.call_api(
                 'post', 'detect', image, binary=True)
 
-            if face_data is None or len(face_data) < 1:
+            if not face_data:
                 return
 
             face_ids = [data['faceId'] for data in face_data]

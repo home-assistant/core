@@ -5,6 +5,7 @@ import logging
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.mqtt import MQTT_PUBLISH_SCHEMA
 import homeassistant.components.snips as snips
+from homeassistant.helpers.intent import (ServiceIntentHandler, async_register)
 from tests.common import (async_fire_mqtt_message, async_mock_intent,
                           async_mock_service)
 
@@ -122,6 +123,49 @@ async def test_snips_intent(hass, mqtt_mock):
                             'probability': {'value': 1},
                             'site_id': {'value': None}}
     assert intent.text_input == 'turn the lights green'
+
+
+async def test_snips_service_intent(hass, mqtt_mock):
+    """Test ServiceIntentHandler via Snips."""
+    hass.states.async_set('light.kitchen', 'off')
+    calls = async_mock_service(hass, 'light', 'turn_on')
+    result = await async_setup_component(hass, "snips", {
+        "snips": {},
+    })
+    assert result
+    payload = """
+    {
+        "input": "turn the light on",
+        "intent": {
+            "intentName": "Lights",
+            "probability": 0.85
+        },
+        "siteId": "default",
+        "slots": [
+            {
+                "slotName": "name",
+                "value": {
+                    "kind": "Custom",
+                    "value": "kitchen"
+                }
+            }
+        ]
+    }
+    """
+
+    async_register(hass, ServiceIntentHandler(
+        "Lights", "light", 'turn_on', "Turned {} on"))
+
+    async_fire_mqtt_message(hass, 'hermes/intent/Lights',
+                            payload)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].domain == 'light'
+    assert calls[0].service == 'turn_on'
+    assert calls[0].data['entity_id'] == 'light.kitchen'
+    assert 'probability' not in calls[0].data
+    assert 'site_id' not in calls[0].data
 
 
 async def test_snips_intent_with_duration(hass, mqtt_mock):

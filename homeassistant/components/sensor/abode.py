@@ -22,7 +22,7 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for an Abode device."""
     import abodepy.helpers.constants as CONST
 
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data.devices.extend(devices)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class AbodeSensor(AbodeDevice):
@@ -67,9 +67,9 @@ class AbodeSensor(AbodeDevice):
         """Return the state of the sensor."""
         if self._sensor_type == 'temp':
             return self._device.temp
-        elif self._sensor_type == 'humidity':
+        if self._sensor_type == 'humidity':
             return self._device.humidity
-        elif self._sensor_type == 'lux':
+        if self._sensor_type == 'lux':
             return self._device.lux
 
     @property
@@ -77,7 +77,7 @@ class AbodeSensor(AbodeDevice):
         """Return the units of measurement."""
         if self._sensor_type == 'temp':
             return self._device.temp_unit
-        elif self._sensor_type == 'humidity':
+        if self._sensor_type == 'humidity':
             return self._device.humidity_unit
-        elif self._sensor_type == 'lux':
+        if self._sensor_type == 'lux':
             return self._device.lux_unit

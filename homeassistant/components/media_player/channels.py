@@ -55,8 +55,8 @@ CHANNELS_SEEK_BY_SCHEMA = CHANNELS_SCHEMA.extend({
 REQUIREMENTS = ['pychannels==1.0.0']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Channels platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Channels platform."""
     device = ChannelsPlayer(
         config.get('name'),
         config.get(CONF_HOST),
@@ -66,11 +66,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if DATA_CHANNELS not in hass.data:
         hass.data[DATA_CHANNELS] = []
 
-    add_devices([device], True)
+    add_entities([device], True)
     hass.data[DATA_CHANNELS].append(device)
 
     def service_handler(service):
-        """Handler for services."""
+        """Handle service."""
         entity_id = service.data.get(ATTR_ENTITY_ID)
 
         device = next((device for device in hass.data[DATA_CHANNELS] if
@@ -217,7 +217,7 @@ class ChannelsPlayer(MediaPlayerDevice):
         """Image url of current playing media."""
         if self.now_playing_image_url:
             return self.now_playing_image_url
-        elif self.channel_image_url:
+        if self.channel_image_url:
             return self.channel_image_url
 
         return 'https://getchannels.com/assets/img/icon-1024.png'

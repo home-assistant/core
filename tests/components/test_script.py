@@ -18,7 +18,7 @@ class TestScriptComponent(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -199,8 +199,10 @@ class TestScriptComponent(unittest.TestCase):
                             }
                         }]
                     }}}):
-            script.reload(self.hass)
-            self.hass.block_till_done()
+            with patch('homeassistant.config.find_config_file',
+                       return_value=''):
+                script.reload(self.hass)
+                self.hass.block_till_done()
 
         assert self.hass.states.get(ENTITY_ID) is None
         assert not self.hass.services.has_service(script.DOMAIN, 'test')

@@ -164,7 +164,7 @@ def setup(hass, config):
     return True
 
 
-class AmcrestDevice(object):
+class AmcrestDevice:
     """Representation of a base Amcrest discovery device."""
 
     def __init__(self, camera, name, authentication, ffmpeg_arguments,

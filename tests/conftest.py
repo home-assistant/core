@@ -1,4 +1,4 @@
-"""Setup some common test helper things."""
+"""Set up some common test helper things."""
 import asyncio
 import functools
 import logging
@@ -21,7 +21,7 @@ if os.environ.get('UVLOOP') == '1':
     import uvloop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 

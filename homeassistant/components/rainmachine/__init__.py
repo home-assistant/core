@@ -151,7 +151,7 @@ async def async_setup(hass, config):
             ('sensor', conf[CONF_SENSORS]),
             ('switch', conf[CONF_SWITCHES]),
     ]:
-        hass.async_add_job(
+        hass.async_create_task(
             discovery.async_load_platform(hass, component, DOMAIN, schema,
                                           config))
 
@@ -201,7 +201,7 @@ async def async_setup(hass, config):
     return True
 
 
-class RainMachine(object):
+class RainMachine:
     """Define a generic RainMachine object."""
 
     def __init__(self, client):

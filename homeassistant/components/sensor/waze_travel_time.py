@@ -14,11 +14,11 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION, CONF_NAME, CONF_REGION, EVENT_HOMEASSISTANT_START,
     ATTR_LATITUDE, ATTR_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
-import homeassistant.helpers.location as location
+from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['WazeRouteCalculator==0.5']
+REQUIREMENTS = ['WazeRouteCalculator==0.6']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,14 +31,18 @@ CONF_DESTINATION = 'destination'
 CONF_ORIGIN = 'origin'
 CONF_INCL_FILTER = 'incl_filter'
 CONF_EXCL_FILTER = 'excl_filter'
+CONF_REALTIME = 'realtime'
 
 DEFAULT_NAME = 'Waze Travel Time'
+DEFAULT_REALTIME = True
 
 ICON = 'mdi:car'
 
 REGIONS = ['US', 'NA', 'EU', 'IL']
 
 SCAN_INTERVAL = timedelta(minutes=5)
+
+TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_ORIGIN): cv.string,
@@ -47,12 +51,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_INCL_FILTER): cv.string,
     vol.Optional(CONF_EXCL_FILTER): cv.string,
+    vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
 })
 
-TRACKABLE_DOMAINS = ['device_tracker', 'sensor', 'zone']
 
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Waze travel time sensor platform."""
     destination = config.get(CONF_DESTINATION)
     name = config.get(CONF_NAME)
@@ -60,34 +63,34 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     region = config.get(CONF_REGION)
     incl_filter = config.get(CONF_INCL_FILTER)
     excl_filter = config.get(CONF_EXCL_FILTER)
+    realtime = config.get(CONF_REALTIME)
 
     sensor = WazeTravelTime(name, origin, destination, region,
-                            incl_filter, excl_filter)
+                            incl_filter, excl_filter, realtime)
 
-    add_devices([sensor], True)
+    add_entities([sensor])
 
+    # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, sensor.update)
 
 
 def _get_location_from_attributes(state):
     """Get the lat/long string from an states attributes."""
     attr = state.attributes
-    return '{},{}'.format(
-        attr.get(ATTR_LATITUDE),
-        attr.get(ATTR_LONGITUDE)
-    )
+    return '{},{}'.format(attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE))
 
 
 class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
     def __init__(self, name, origin, destination, region,
-                 incl_filter, excl_filter):
+                 incl_filter, excl_filter, realtime):
         """Initialize the Waze travel time sensor."""
         self._name = name
         self._region = region
         self._incl_filter = incl_filter
         self._excl_filter = excl_filter
+        self._realtime = realtime
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
@@ -186,13 +189,11 @@ class WazeTravelTime(Entity):
 
         if self._origin_entity_id is not None:
             self._origin = self._get_location_from_entity(
-                self._origin_entity_id
-            )
+                self._origin_entity_id)
 
         if self._destination_entity_id is not None:
             self._destination = self._get_location_from_entity(
-                self._destination_entity_id
-            )
+                self._destination_entity_id)
 
         self._destination = self._resolve_zone(self._destination)
         self._origin = self._resolve_zone(self._origin)
@@ -201,7 +202,7 @@ class WazeTravelTime(Entity):
             try:
                 params = WazeRouteCalculator.WazeRouteCalculator(
                     self._origin, self._destination, self._region)
-                routes = params.calc_all_routes_info()
+                routes = params.calc_all_routes_info(real_time=self._realtime)
 
                 if self._incl_filter is not None:
                     routes = {k: v for k, v in routes.items() if
@@ -217,7 +218,8 @@ class WazeTravelTime(Entity):
                 self._state = {
                     'duration': duration,
                     'distance': distance,
-                    'route': route}
+                    'route': route,
+                }
             except WazeRouteCalculator.WRCError as exp:
                 _LOGGER.error("Error on retrieving data: %s", exp)
                 return

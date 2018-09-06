@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the RESTful sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     rest = RestData(method, resource, auth, headers, payload, verify_ssl)
     rest.update()
 
-    add_devices([RestSensor(
+    add_entities([RestSensor(
         hass, rest, name, unit, value_template, json_attrs, force_update
     )], True)
 
@@ -158,7 +158,7 @@ class RestSensor(Entity):
         return self._attributes
 
 
-class RestData(object):
+class RestData:
     """Class for handling the data retrieval."""
 
     def __init__(self, method, resource, auth, headers, data, verify_ssl):

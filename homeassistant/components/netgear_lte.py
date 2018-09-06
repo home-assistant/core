@@ -17,7 +17,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['eternalegypt==0.0.2']
+REQUIREMENTS = ['eternalegypt==0.0.3']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
@@ -37,6 +37,7 @@ class ModemData:
     """Class for modem state."""
 
     modem = attr.ib()
+    serial_number = attr.ib(init=False)
     unread_count = attr.ib(init=False)
     usage = attr.ib(init=False)
 
@@ -44,6 +45,7 @@ class ModemData:
     async def async_update(self):
         """Call the API to update the data."""
         information = await self.modem.information()
+        self.serial_number = information.serial_number
         self.unread_count = sum(1 for x in information.sms if x.unread)
         self.usage = information.usage
 
@@ -59,7 +61,7 @@ class LTEData:
         """Get the requested or the only modem_data value."""
         if CONF_HOST in config:
             return self.modem_data.get(config[CONF_HOST])
-        elif len(self.modem_data) == 1:
+        if len(self.modem_data) == 1:
             return next(iter(self.modem_data.values()))
 
         return None

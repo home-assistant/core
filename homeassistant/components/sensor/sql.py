@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['sqlalchemy==1.2.8']
+REQUIREMENTS = ['sqlalchemy==1.2.10']
 
 CONF_COLUMN_NAME = 'column'
 CONF_QUERIES = 'queries'
@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SQL sensor platform."""
     db_url = config.get(CONF_DB_URL, None)
     if not db_url:
@@ -87,7 +87,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         queries.append(sensor)
 
-    add_devices(queries, True)
+    add_entities(queries, True)
 
 
 class SQLSensor(Entity):

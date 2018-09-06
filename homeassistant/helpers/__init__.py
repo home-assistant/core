@@ -5,11 +5,6 @@ from typing import Any, Iterable, Tuple, Sequence, Dict
 
 from homeassistant.const import CONF_PLATFORM
 
-# Typing Imports and TypeAlias
-# pylint: disable=using-constant-test,unused-import
-if False:
-    from logging import Logger  # NOQA
-
 # pylint: disable=invalid-name
 ConfigType = Dict[str, Any]
 

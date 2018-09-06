@@ -29,7 +29,7 @@ from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['mutagen==1.40.0']
+REQUIREMENTS = ['mutagen==1.41.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -169,7 +169,7 @@ async def async_setup(hass, config):
     return True
 
 
-class SpeechManager(object):
+class SpeechManager:
     """Representation of a speech store."""
 
     def __init__(self, hass):
@@ -440,7 +440,7 @@ class SpeechManager(object):
         return data_bytes.getvalue()
 
 
-class Provider(object):
+class Provider:
     """Represent a single TTS provider."""
 
     hass = None

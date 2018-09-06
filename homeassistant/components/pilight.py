@@ -118,7 +118,7 @@ def setup(hass, config):
     return True
 
 
-class CallRateDelayThrottle(object):
+class CallRateDelayThrottle:
     """Helper class to provide service call rate throttling.
 
     This class provides a decorator to decorate service methods that need

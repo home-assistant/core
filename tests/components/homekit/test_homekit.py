@@ -9,9 +9,10 @@ from homeassistant.components.homekit import (
     STATUS_STOPPED, STATUS_WAIT)
 from homeassistant.components.homekit.accessories import HomeBridge
 from homeassistant.components.homekit.const import (
-    CONF_AUTO_START, DEFAULT_PORT, DOMAIN, HOMEKIT_FILE, SERVICE_HOMEKIT_START)
+    CONF_AUTO_START, BRIDGE_NAME, DEFAULT_PORT, DOMAIN, HOMEKIT_FILE,
+    SERVICE_HOMEKIT_START)
 from homeassistant.const import (
-    CONF_IP_ADDRESS, CONF_PORT,
+    CONF_NAME, CONF_IP_ADDRESS, CONF_PORT,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import State
 from homeassistant.helpers.entityfilter import generate_filter
@@ -47,7 +48,8 @@ async def test_setup_min(hass):
         assert await setup.async_setup_component(
             hass, DOMAIN, {DOMAIN: {}})
 
-    mock_homekit.assert_any_call(hass, DEFAULT_PORT, None, ANY, {})
+    mock_homekit.assert_any_call(hass, BRIDGE_NAME, DEFAULT_PORT, None, ANY,
+                                 {})
     assert mock_homekit().setup.called is True
 
     # Test auto start enabled
@@ -60,15 +62,16 @@ async def test_setup_min(hass):
 
 async def test_setup_auto_start_disabled(hass):
     """Test async_setup with auto start disabled and test service calls."""
-    config = {DOMAIN: {CONF_AUTO_START: False, CONF_PORT: 11111,
-                       CONF_IP_ADDRESS: '172.0.0.0'}}
+    config = {DOMAIN: {CONF_AUTO_START: False, CONF_NAME: 'Test Name',
+                       CONF_PORT: 11111, CONF_IP_ADDRESS: '172.0.0.0'}}
 
     with patch(PATH_HOMEKIT + '.HomeKit') as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         assert await setup.async_setup_component(
             hass, DOMAIN, config)
 
-    mock_homekit.assert_any_call(hass, 11111, '172.0.0.0', ANY, {})
+    mock_homekit.assert_any_call(hass, 'Test Name', 11111, '172.0.0.0', ANY,
+                                 {})
     assert mock_homekit().setup.called is True
 
     # Test auto_start disabled
@@ -96,7 +99,7 @@ async def test_setup_auto_start_disabled(hass):
 
 async def test_homekit_setup(hass, hk_driver):
     """Test setup of bridge and driver."""
-    homekit = HomeKit(hass, DEFAULT_PORT, None, {}, {})
+    homekit = HomeKit(hass, BRIDGE_NAME, DEFAULT_PORT, None, {}, {})
 
     with patch(PATH_HOMEKIT + '.accessories.HomeDriver',
                return_value=hk_driver) as mock_driver, \
@@ -115,7 +118,7 @@ async def test_homekit_setup(hass, hk_driver):
 
 async def test_homekit_setup_ip_address(hass, hk_driver):
     """Test setup with given IP address."""
-    homekit = HomeKit(hass, DEFAULT_PORT, '172.0.0.0', {}, {})
+    homekit = HomeKit(hass, BRIDGE_NAME, DEFAULT_PORT, '172.0.0.0', {}, {})
 
     with patch(PATH_HOMEKIT + '.accessories.HomeDriver',
                return_value=hk_driver) as mock_driver:
@@ -126,7 +129,7 @@ async def test_homekit_setup_ip_address(hass, hk_driver):
 
 async def test_homekit_add_accessory():
     """Add accessory if config exists and get_acc returns an accessory."""
-    homekit = HomeKit('hass', None, None, lambda entity_id: True, {})
+    homekit = HomeKit('hass', None, None, None, lambda entity_id: True, {})
     homekit.driver = 'driver'
     homekit.bridge = mock_bridge = Mock()
 
@@ -149,7 +152,7 @@ async def test_homekit_add_accessory():
 async def test_homekit_entity_filter(hass):
     """Test the entity filter."""
     entity_filter = generate_filter(['cover'], ['demo.test'], [], [])
-    homekit = HomeKit(hass, None, None, entity_filter, {})
+    homekit = HomeKit(hass, None, None, None, entity_filter, {})
 
     with patch(PATH_HOMEKIT + '.get_accessory') as mock_get_acc:
         mock_get_acc.return_value = None
@@ -169,7 +172,7 @@ async def test_homekit_entity_filter(hass):
 async def test_homekit_start(hass, hk_driver, debounce_patcher):
     """Test HomeKit start method."""
     pin = b'123-45-678'
-    homekit = HomeKit(hass, None, None, {}, {'cover.demo': {}})
+    homekit = HomeKit(hass, None, None, None, {}, {'cover.demo': {}})
     homekit.bridge = 'bridge'
     homekit.driver = hk_driver
 
@@ -199,7 +202,7 @@ async def test_homekit_start(hass, hk_driver, debounce_patcher):
 
 async def test_homekit_stop(hass):
     """Test HomeKit stop method."""
-    homekit = HomeKit(hass, None, None, None, None)
+    homekit = HomeKit(hass, None, None, None, None, None)
     homekit.driver = Mock()
 
     assert homekit.status == STATUS_READY

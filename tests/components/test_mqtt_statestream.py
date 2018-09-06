@@ -12,11 +12,11 @@ from tests.common import (
 )
 
 
-class TestMqttStateStream(object):
+class TestMqttStateStream:
     """Test the MQTT statestream module."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_mqtt = mock_mqtt_component(self.hass)
 

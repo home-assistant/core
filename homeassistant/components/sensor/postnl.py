@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the PostNL sensor platform."""
     from postnl_api import PostNL_API, UnauthorizedException
 
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.exception("Can't connect to the PostNL webservice")
         return
 
-    add_devices([PostNLSensor(api, name)], True)
+    add_entities([PostNLSensor(api, name)], True)
 
 
 class PostNLSensor(Entity):

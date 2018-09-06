@@ -1,7 +1,10 @@
 """The test for the geo rss events sensor platform."""
 import unittest
 from unittest import mock
+import sys
+
 import feedparser
+import pytest
 
 from homeassistant.setup import setup_component
 from tests.common import load_fixture, get_test_home_assistant
@@ -22,6 +25,9 @@ VALID_CONFIG_WITHOUT_CATEGORIES = {
 }
 
 
+# Until https://github.com/kurtmckee/feedparser/pull/131 is released.
+@pytest.mark.skipif(sys.version_info[:2] >= (3, 7),
+                    reason='Package incompatible with Python 3.7')
 class TestGeoRssServiceUpdater(unittest.TestCase):
     """Test the GeoRss service updater."""
 

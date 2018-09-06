@@ -60,21 +60,6 @@ def has_at_least_one_key(*keys: str) -> Callable:
     return validate
 
 
-def has_at_least_one_key_value(*items: list) -> Callable:
-    """Validate that at least one (key, value) pair exists."""
-    def validate(obj: Dict) -> Dict:
-        """Test (key,value) exist in dict."""
-        if not isinstance(obj, dict):
-            raise vol.Invalid('expected dictionary')
-
-        for item in obj.items():
-            if item in items:
-                return obj
-        raise vol.Invalid('must contain one of {}.'.format(str(items)))
-
-    return validate
-
-
 def boolean(value: Any) -> bool:
     """Validate and coerce a boolean value."""
     if isinstance(value, str):
@@ -107,7 +92,7 @@ def matches_regex(regex):
 
         if not regex.match(value):
             raise vol.Invalid('value {} does not match regular expression {}'
-                              .format(regex.pattern, value))
+                              .format(value, regex.pattern))
 
         return value
     return validator
@@ -361,7 +346,7 @@ def temperature_unit(value) -> str:
     value = str(value).upper()
     if value == 'C':
         return TEMP_CELSIUS
-    elif value == 'F':
+    if value == 'F':
         return TEMP_FAHRENHEIT
     raise vol.Invalid('invalid temperature unit (expected C or F)')
 
@@ -435,15 +420,14 @@ def socket_timeout(value):
     """
     if value is None:
         return _GLOBAL_DEFAULT_TIMEOUT
-    else:
-        try:
-            float_value = float(value)
-            if float_value > 0.0:
-                return float_value
-            raise vol.Invalid('Invalid socket timeout value.'
-                              ' float > 0.0 required.')
-        except Exception as _:
-            raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
+    try:
+        float_value = float(value)
+        if float_value > 0.0:
+            return float_value
+        raise vol.Invalid('Invalid socket timeout value.'
+                          ' float > 0.0 required.')
+    except Exception as _:
+        raise vol.Invalid('Invalid socket timeout: {err}'.format(err=_))
 
 
 # pylint: disable=no-value-for-parameter
@@ -614,6 +598,7 @@ _SCRIPT_WAIT_TEMPLATE_SCHEMA = vol.Schema({
     vol.Optional(CONF_ALIAS): string,
     vol.Required("wait_template"): template,
     vol.Optional(CONF_TIMEOUT): vol.All(time_period, positive_timedelta),
+    vol.Optional("continue_on_timeout"): boolean,
 })
 
 SCRIPT_SCHEMA = vol.All(

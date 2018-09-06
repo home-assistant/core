@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import CONF_FILENAME, CONF_HOST
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 
@@ -108,7 +108,8 @@ async def async_setup(hass, config):
         # deadlock: creating a config entry will set up the component but the
         # setup would block till the entry is created!
         hass.async_add_job(hass.config_entries.flow.async_init(
-            DOMAIN, source=data_entry_flow.SOURCE_IMPORT, data={
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            data={
                 'host': bridge_conf[CONF_HOST],
                 'path': bridge_conf[CONF_FILENAME],
             }

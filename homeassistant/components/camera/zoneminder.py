@@ -12,7 +12,7 @@ from homeassistant.const import CONF_NAME
 from homeassistant.components.camera.mjpeg import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera)
 
-import homeassistant.components.zoneminder as zoneminder
+from homeassistant.components import zoneminder
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,8 @@ def _get_image_url(hass, monitor, mode):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the ZoneMinder cameras."""
     cameras = []
     monitors = zoneminder.get_state('api/monitors.json')
@@ -77,7 +78,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.warning("No active cameras found")
         return
 
-    async_add_devices(cameras)
+    async_add_entities(cameras)
 
 
 class ZoneMinderCamera(MjpegCamera):

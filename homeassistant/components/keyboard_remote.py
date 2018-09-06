@@ -163,7 +163,7 @@ class KeyboardRemoteThread(threading.Thread):
                 )
 
 
-class KeyboardRemote(object):
+class KeyboardRemote:
     """Sets up one thread per device."""
 
     def __init__(self, hass, config):

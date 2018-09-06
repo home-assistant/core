@@ -24,13 +24,13 @@ DEPENDENCIES = ['rachio']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Rachio binary sensors."""
     devices = []
     for controller in hass.data[DOMAIN_RACHIO].controllers:
         devices.append(RachioControllerOnlineBinarySensor(hass, controller))
 
-    add_devices(devices)
+    add_entities(devices)
     _LOGGER.info("%d Rachio binary sensor(s) added", len(devices))
 
 
@@ -111,11 +111,10 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
 
         if data[KEY_STATUS] == STATUS_ONLINE:
             return True
-        elif data[KEY_STATUS] == STATUS_OFFLINE:
+        if data[KEY_STATUS] == STATUS_OFFLINE:
             return False
-        else:
-            _LOGGER.warning('"%s" reported in unknown state "%s"', self.name,
-                            data[KEY_STATUS])
+        _LOGGER.warning('"%s" reported in unknown state "%s"', self.name,
+                        data[KEY_STATUS])
 
     def _handle_update(self, *args, **kwargs) -> None:
         """Handle an update to the state of this sensor."""

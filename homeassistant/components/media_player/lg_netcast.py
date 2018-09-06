@@ -18,10 +18,9 @@ from homeassistant.components.media_player import (
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_ACCESS_TOKEN,
     STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
-import homeassistant.util as util
+from homeassistant import util
 
-REQUIREMENTS = ['https://github.com/wokar/pylgnetcast/archive/'
-                'v0.2.0.zip#pylgnetcast==0.2.0']
+REQUIREMENTS = ['pylgnetcast-homeassistant==0.2.0.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LG TV platform."""
     from pylgnetcast import LgNetCastClient
     host = config.get(CONF_HOST)
@@ -52,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     client = LgNetCastClient(host, access_token)
 
-    add_devices([LgTVDevice(client, name)], True)
+    add_entities([LgTVDevice(client, name)], True)
 
 
 class LgTVDevice(MediaPlayerDevice):

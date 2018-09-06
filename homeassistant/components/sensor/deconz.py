@@ -4,12 +4,13 @@ Support for deCONZ sensor.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/sensor.deconz/
 """
-from homeassistant.components.deconz import (
-    CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ, DATA_DECONZ_ID,
-    DATA_DECONZ_UNSUB)
+from homeassistant.components.deconz.const import (
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -21,13 +22,13 @@ ATTR_DAYLIGHT = 'daylight'
 ATTR_EVENT_ID = 'event_id'
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old way of setting up deCONZ sensors."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     @callback
     def async_add_sensor(sensors):
@@ -43,7 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                         entities.append(DeconzBattery(sensor))
                 else:
                     entities.append(DeconzSensor(sensor))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
@@ -72,7 +73,8 @@ class DeconzSensor(Entity):
         """
         if reason['state'] or \
            'reachable' in reason['attr'] or \
-           'battery' in reason['attr']:
+           'battery' in reason['attr'] or \
+           'on' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property
@@ -122,14 +124,32 @@ class DeconzSensor(Entity):
         attr = {}
         if self._sensor.battery:
             attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
+        if self._sensor.on is not None:
+            attr[ATTR_ON] = self._sensor.on
         if self._sensor.type in LIGHTLEVEL and self._sensor.dark is not None:
-            attr['dark'] = self._sensor.dark
+            attr[ATTR_DARK] = self._sensor.dark
         if self.unit_of_measurement == 'Watts':
             attr[ATTR_CURRENT] = self._sensor.current
             attr[ATTR_VOLTAGE] = self._sensor.voltage
         if self._sensor.sensor_class == 'daylight':
             attr[ATTR_DAYLIGHT] = self._sensor.daylight
         return attr
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if (self._sensor.uniqueid is None or
+                self._sensor.uniqueid.count(':') != 7):
+            return None
+        serial = self._sensor.uniqueid.split('-', 1)[0]
+        return {
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'name': self._sensor.name,
+            'sw_version': self._sensor.swversion,
+        }
 
 
 class DeconzBattery(Entity):
@@ -189,3 +209,19 @@ class DeconzBattery(Entity):
             ATTR_EVENT_ID: slugify(self._device.name),
         }
         return attr
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if (self._device.uniqueid is None or
+                self._device.uniqueid.count(':') != 7):
+            return None
+        serial = self._device.uniqueid.split('-', 1)[0]
+        return {
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
+            'manufacturer': self._device.manufacturer,
+            'model': self._device.modelid,
+            'name': self._device.name,
+            'sw_version': self._device.swversion,
+        }

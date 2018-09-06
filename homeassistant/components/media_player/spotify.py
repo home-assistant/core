@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SCAN_INTERVAL = timedelta(seconds=30)
 
 
-def request_configuration(hass, config, add_devices, oauth):
+def request_configuration(hass, config, add_entities, oauth):
     """Request Spotify authorization."""
     configurator = hass.components.configurator
     hass.data[DOMAIN] = configurator.request_config(
@@ -68,7 +68,7 @@ def request_configuration(hass, config, add_devices, oauth):
         submit_caption=CONFIGURATOR_SUBMIT_CAPTION)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Spotify platform."""
     import spotipy.oauth2
     callback_url = '{}{}'.format(hass.config.api.base_url, AUTH_CALLBACK_PATH)
@@ -81,8 +81,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not token_info:
         _LOGGER.info("no token; requesting authorization")
         hass.http.register_view(SpotifyAuthCallbackView(
-            config, add_devices, oauth))
-        request_configuration(hass, config, add_devices, oauth)
+            config, add_entities, oauth))
+        request_configuration(hass, config, add_entities, oauth)
         return
     if hass.data.get(DOMAIN):
         configurator = hass.components.configurator
@@ -90,7 +90,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         del hass.data[DOMAIN]
     player = SpotifyMediaPlayer(oauth, config.get(CONF_NAME, DEFAULT_NAME),
                                 config[CONF_ALIASES])
-    add_devices([player], True)
+    add_entities([player], True)
 
 
 class SpotifyAuthCallbackView(HomeAssistantView):
@@ -100,10 +100,10 @@ class SpotifyAuthCallbackView(HomeAssistantView):
     url = AUTH_CALLBACK_PATH
     name = AUTH_CALLBACK_NAME
 
-    def __init__(self, config, add_devices, oauth):
+    def __init__(self, config, add_entities, oauth):
         """Initialize."""
         self.config = config
-        self.add_devices = add_devices
+        self.add_entities = add_entities
         self.oauth = oauth
 
     @callback
@@ -111,7 +111,8 @@ class SpotifyAuthCallbackView(HomeAssistantView):
         """Receive authorization token."""
         hass = request.app['hass']
         self.oauth.get_access_token(request.query['code'])
-        hass.async_add_job(setup_platform, hass, self.config, self.add_devices)
+        hass.async_add_job(
+            setup_platform, hass, self.config, self.add_entities)
 
 
 class SpotifyMediaPlayer(MediaPlayerDevice):
