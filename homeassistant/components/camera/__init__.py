@@ -142,6 +142,68 @@ def async_snapshot(hass, filename, entity_id=None):
 @bind_hass
 async def async_get_image(hass, entity_id, timeout=10):
     """Fetch an image from a camera entity."""
+    camera = _get_camera_from_entity_id(hass, entity_id)
+
+    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
+        with async_timeout.timeout(timeout, loop=hass.loop):
+            image = await camera.async_camera_image()
+
+            if image:
+                return Image(camera.content_type, image)
+
+    raise HomeAssistantError('Unable to get image')
+
+
+@bind_hass
+async def async_get_mjpeg_stream(hass, request, entity_id):
+    """Fetch an mjpeg stream from a camera entity."""
+    camera = _get_camera_from_entity_id(hass, entity_id)
+
+    return await camera.handle_async_mjpeg_stream(request)
+
+
+async def async_get_still_stream(request, image_cb, content_type, interval):
+    """Generate an HTTP MJPEG stream from camera images.
+
+    This method must be run in the event loop.
+    """
+    response = web.StreamResponse()
+    response.content_type = ('multipart/x-mixed-replace; '
+                             'boundary=--frameboundary')
+    await response.prepare(request)
+
+    async def write_to_mjpeg_stream(img_bytes):
+        """Write image to stream."""
+        await response.write(bytes(
+            '--frameboundary\r\n'
+            'Content-Type: {}\r\n'
+            'Content-Length: {}\r\n\r\n'.format(
+                content_type, len(img_bytes)),
+            'utf-8') + img_bytes + b'\r\n')
+
+    last_image = None
+
+    while True:
+        img_bytes = await image_cb()
+        if not img_bytes:
+            break
+
+        if img_bytes != last_image:
+            await write_to_mjpeg_stream(img_bytes)
+
+            # Chrome seems to always ignore first picture,
+            # print it twice.
+            if last_image is None:
+                await write_to_mjpeg_stream(img_bytes)
+            last_image = img_bytes
+
+        await asyncio.sleep(interval)
+
+    return response
+
+
+def _get_camera_from_entity_id(hass, entity_id):
+    """Get camera component from entity_id."""
     component = hass.data.get(DOMAIN)
 
     if component is None:
@@ -155,14 +217,7 @@ async def async_get_image(hass, entity_id, timeout=10):
     if not camera.is_on:
         raise HomeAssistantError('Camera is off')
 
-    with suppress(asyncio.CancelledError, asyncio.TimeoutError):
-        with async_timeout.timeout(timeout, loop=hass.loop):
-            image = await camera.async_camera_image()
-
-            if image:
-                return Image(camera.content_type, image)
-
-    raise HomeAssistantError('Unable to get image')
+    return camera
 
 
 async def async_setup(hass, config):
@@ -290,39 +345,8 @@ class Camera(Entity):
 
         This method must be run in the event loop.
         """
-        response = web.StreamResponse()
-        response.content_type = ('multipart/x-mixed-replace; '
-                                 'boundary=--frameboundary')
-        await response.prepare(request)
-
-        async def write_to_mjpeg_stream(img_bytes):
-            """Write image to stream."""
-            await response.write(bytes(
-                '--frameboundary\r\n'
-                'Content-Type: {}\r\n'
-                'Content-Length: {}\r\n\r\n'.format(
-                    self.content_type, len(img_bytes)),
-                'utf-8') + img_bytes + b'\r\n')
-
-        last_image = None
-
-        while True:
-            img_bytes = await self.async_camera_image()
-            if not img_bytes:
-                break
-
-            if img_bytes and img_bytes != last_image:
-                await write_to_mjpeg_stream(img_bytes)
-
-                # Chrome seems to always ignore first picture,
-                # print it twice.
-                if last_image is None:
-                    await write_to_mjpeg_stream(img_bytes)
-                last_image = img_bytes
-
-            await asyncio.sleep(interval)
-
-        return response
+        return await async_get_still_stream(request, self.async_camera_image,
+                                            self.content_type, interval)
 
     async def handle_async_mjpeg_stream(self, request):
         """Serve an HTTP MJPEG stream from the camera.
