@@ -14,7 +14,7 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['igd', 'history']
+DEPENDENCIES = ['igd']
 
 BYTES_RECEIVED = 'bytes_received'
 BYTES_SENT = 'bytes_sent'
@@ -52,18 +52,18 @@ async def async_setup_platform(hass, config, async_add_devices,
         return
 
     udn = discovery_info['udn']
-    igd_device = hass.data[DOMAIN]['devices'][udn]
+    device = hass.data[DOMAIN]['devices'][udn]
 
     # raw sensors + per-second sensors
     sensors = [
-        RawIGDSensor(igd_device, name, sensor_type)
+        RawIGDSensor(device, name, sensor_type)
         for name, sensor_type in SENSOR_TYPES.items()
     ]
     sensors += [
-        KBytePerSecondIGDSensor(igd_device, IN),
-        KBytePerSecondIGDSensor(igd_device, OUT),
-        PacketsPerSecondIGDSensor(igd_device, IN),
-        PacketsPerSecondIGDSensor(igd_device, OUT),
+        KBytePerSecondIGDSensor(device, IN),
+        KBytePerSecondIGDSensor(device, OUT),
+        PacketsPerSecondIGDSensor(device, IN),
+        PacketsPerSecondIGDSensor(device, OUT),
     ]
     hass.data[DOMAIN]['sensors'][udn] = sensors
     async_add_devices(sensors, True)
@@ -108,7 +108,6 @@ class RawIGDSensor(Entity):
 
     async def async_update(self):
         """Get the latest information from the IGD."""
-        _LOGGER.debug('%s: async_update', self)
         if self._type_name == BYTES_RECEIVED:
             self._state = await self._device.async_get_total_bytes_received()
         elif self._type_name == BYTES_SENT:
@@ -171,7 +170,6 @@ class PerSecondIGDSensor(Entity):
 
     async def async_update(self):
         """Get the latest information from the IGD."""
-        _LOGGER.debug('%s: async_update', self)
         new_value = await self._async_fetch_value()
 
         if self._last_value is None:
