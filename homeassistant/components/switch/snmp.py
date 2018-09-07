@@ -86,8 +86,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the SNMP switch."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -106,21 +106,20 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
 
-    add_entities(
-        [SnmpSwitch(name, host, port, community, baseoid, command_oid, version,
-                    username, authkey, authproto, privkey, privproto,
-                    payload_on, payload_off,
-                    command_payload_on, command_payload_off)], True)
+    async_add_entities(
+        [SnmpSwitch(
+            name, host, port, community, baseoid, command_oid, version,
+            username, authkey, authproto, privkey, privproto, payload_on,
+            payload_off, command_payload_on, command_payload_off)], True)
 
 
 class SnmpSwitch(SwitchDevice):
     """Representation of a SNMP switch."""
 
-    def __init__(self, name, host, port, community,
-                 baseoid, commandoid, version,
-                 username, authkey, authproto, privkey, privproto,
-                 payload_on, payload_off,
-                 command_payload_on, command_payload_off):
+    def __init__(self, name, host, port, community, baseoid, commandoid,
+                 version, username, authkey, authproto, privkey, privproto,
+                 payload_on, payload_off, command_payload_on,
+                 command_payload_off):
         """Initialize the switch."""
         from pysnmp.hlapi.asyncio import (
             CommunityData, ContextData, SnmpEngine,
@@ -156,14 +155,14 @@ class SnmpSwitch(SwitchDevice):
                     privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
                 ),
                 UdpTransportTarget((host, port)),
-                ContextData()
+                ContextData(),
             ]
         else:
             self._request_args = [
                 SnmpEngine(),
                 CommunityData(community, mpModel=SNMP_VERSIONS[version]),
                 UdpTransportTarget((host, port)),
-                ContextData()
+                ContextData(),
             ]
 
     async def async_turn_on(self, **kwargs):
@@ -184,9 +183,7 @@ class SnmpSwitch(SwitchDevice):
         from pyasn1.type.univ import (Integer)
 
         errindication, errstatus, errindex, restable = await getCmd(
-            *self._request_args,
-            ObjectType(ObjectIdentity(self._baseoid))
-        )
+            *self._request_args, ObjectType(ObjectIdentity(self._baseoid)))
 
         if errindication:
             _LOGGER.error("SNMP error: %s", errindication)
