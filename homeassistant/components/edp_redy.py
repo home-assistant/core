@@ -13,7 +13,7 @@ import voluptuous as vol
 from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD,
                                  EVENT_HOMEASSISTANT_START)
 from homeassistant.core import callback
-from homeassistant.helpers import discovery, dispatcher
+from homeassistant.helpers import discovery, dispatcher, aiohttp_client
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_point_in_time
@@ -26,7 +26,7 @@ EDP_REDY = "edp_redy"
 DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
 UPDATE_INTERVAL = 30
 
-REQUIREMENTS = ['edp_redy==0.0.1']
+REQUIREMENTS = ['edp_redy==0.0.2']
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -41,7 +41,9 @@ async def async_setup(hass, config):
     from edp_redy import EdpRedySession
 
     session = EdpRedySession(config[DOMAIN][CONF_USERNAME],
-                             config[DOMAIN][CONF_PASSWORD])
+                             config[DOMAIN][CONF_PASSWORD],
+                             aiohttp_client.async_get_clientsession(hass),
+                             hass.loop)
     hass.data[EDP_REDY] = session
     platform_loaded = False
 
