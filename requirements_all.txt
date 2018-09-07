@@ -140,7 +140,8 @@ apcaccess==0.0.13
 apns2==0.3.0
 
 # homeassistant.components.aqualogic
-aqualogic==0.8
+aqualogic==0.9
+zope.event==4.3.0
 
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0

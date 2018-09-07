@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_MONITORED_CONDITIONS, 
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.aqualogic as aqualogic
 import homeassistant.helpers.config_validation as cv
@@ -87,13 +88,24 @@ class AquaLogicSensor(Entity):
             return SENSOR_TYPES[self._type][1][1]
 
     @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
+
+    @property
     def icon(self):
         """Icon to use in the frontend, if any."""
         return SENSOR_TYPES[self._type][2]
 
-    def update(self):
-        """Update the sensor."""
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            aqualogic.UPDATE_TOPIC, self.async_update_callback)
+
+    @callback
+    def async_update_callback(self):
         panel = self._component.panel;
-        if panel == None:
-            return
-        self._state = getattr(panel, self._type)
+        if panel is not None:
+            self._state = getattr(panel, self._type)
+            self.async_schedule_update_ha_state()

@@ -9,6 +9,7 @@ import logging
 import time
 import threading
 import socket
+import zope.event
 
 import voluptuous as vol
 
@@ -19,11 +20,13 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ["aqualogic==0.8"]
+REQUIREMENTS = ["aqualogic==0.9"]
+REQUIREMENTS = ["zope.event==4.3.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = "aqualogic"
+UPDATE_TOPIC = DOMAIN + "_update"
 CONF_UNIT = "unit"
 RECONNECT_INTERVAL = timedelta(seconds=10)
 
@@ -72,8 +75,12 @@ class AquaLogicProcessor(threading.Thread):
         _LOGGER.debug("Event processing signaled exit")
         self._shutdown = true
 
+    def data_changed(self, panel):
+        self._hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
+
     def run(self):
         from aqualogic.core import AquaLogic
+        zope.event.subscribers.append(self.data_changed)
         while True:
             try:
                 #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

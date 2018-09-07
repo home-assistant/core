@@ -10,6 +10,7 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
+from homeassistant.core import callback
 import homeassistant.components.aqualogic as aqualogic
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import (
@@ -77,6 +78,11 @@ class AquaLogicSwitch(SwitchDevice):
         return "AquaLogic {}".format(SWITCH_TYPES[self._type])
 
     @property
+    def should_poll(self):
+        """Return the polling state."""
+        return False
+
+    @property
     def is_on(self):
         """Return true if device is on."""
         panel = self._component.panel
@@ -102,3 +108,13 @@ class AquaLogicSwitch(SwitchDevice):
         if panel == None:
             return
         panel.set_state(self._stateName, False)
+    
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register callbacks."""
+        self.hass.helpers.dispatcher.async_dispatcher_connect(
+            aqualogic.UPDATE_TOPIC, self.async_update_callback)
+
+    @callback
+    def async_update_callback(self):
+        self.async_schedule_update_ha_state()
