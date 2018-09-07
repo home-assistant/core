@@ -57,7 +57,6 @@ class AquaLogicSwitch(SwitchDevice):
         """Initialize switch."""
         from aqualogic.core import AquaLogic, States
         import aqualogic.core
-        print(aqualogic.core.__file__)
         self._component = component
         self._type = switch_type
         self._stateName = {
@@ -84,8 +83,6 @@ class AquaLogicSwitch(SwitchDevice):
         if panel == None:
             return False
         state = panel.get_state(self._stateName);
-        print(self.name + " "  + str(state));
-        print('States: {}'.format(panel.states()))
         return state
 
     def turn_on(self):
