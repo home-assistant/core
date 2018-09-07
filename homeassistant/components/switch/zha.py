@@ -24,8 +24,13 @@ async def async_setup_platform(hass, config, async_add_entities,
     from zigpy.zcl.clusters.general import OnOff
     in_clusters = discovery_info['in_clusters']
     cluster = in_clusters[OnOff.cluster_id]
-    await cluster.bind()
-    await cluster.configure_reporting(0, 0, 600, 1,)
+
+    from zigpy.exceptions import DeliveryError
+    try:
+        await cluster.bind()
+        await cluster.configure_reporting(0, 0, 600, 1,)
+    except DeliveryError as ex:
+        _LOGGER.error("Unable to fetch switch status: %s", ex)
 
     async_add_entities([Switch(**discovery_info)], update_before_add=True)
 
