@@ -49,7 +49,8 @@ class StreamHandler(logging.Handler):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the API stream platform."""
     entity = APICount()
     handler = StreamHandler(entity)
@@ -65,7 +66,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, remove_logger)
 
-    async_add_devices([entity])
+    async_add_entities([entity])
 
 
 class APICount(Entity):

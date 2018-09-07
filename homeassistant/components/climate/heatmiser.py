@@ -34,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the heatmiser thermostat."""
     from heatmiserV3 import heatmiser, connection
 
@@ -46,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     serport.open()
 
     for tstat in tstats.values():
-        add_devices([
+        add_entities([
             HeatmiserV3Thermostat(
                 heatmiser, tstat.get(CONF_ID), tstat.get(CONF_NAME), serport)
             ])
@@ -58,7 +58,6 @@ class HeatmiserV3Thermostat(ClimateDevice):
     def __init__(self, heatmiser, device, name, serport):
         """Initialize the thermostat."""
         self.heatmiser = heatmiser
-        self.device = device
         self.serport = serport
         self._current_temperature = None
         self._name = name

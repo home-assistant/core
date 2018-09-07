@@ -232,10 +232,10 @@ def test_query_climate_request(hass_fixture, assistant_client):
 def test_query_climate_request_f(hass_fixture, assistant_client):
     """Test a query request."""
     # Mock demo devices as fahrenheit to see if we convert to celsius
+    hass_fixture.config.units.temperature_unit = const.TEMP_FAHRENHEIT
     for entity_id in ('climate.hvac', 'climate.heatpump', 'climate.ecobee'):
         state = hass_fixture.states.get(entity_id)
         attr = dict(state.attributes)
-        attr[const.ATTR_UNIT_OF_MEASUREMENT] = const.TEMP_FAHRENHEIT
         hass_fixture.states.async_set(entity_id, state.state, attr)
 
     reqid = '5711642932632160984'
@@ -282,6 +282,7 @@ def test_query_climate_request_f(hass_fixture, assistant_client):
         'thermostatMode': 'cool',
         'thermostatHumidityAmbient': 54,
     }
+    hass_fixture.config.units.temperature_unit = const.TEMP_CELSIUS
 
 
 @asyncio.coroutine

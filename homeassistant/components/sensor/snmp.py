@@ -16,7 +16,7 @@ from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_UNIT_OF_MEASUREMENT, STATE_UNKNOWN,
     CONF_USERNAME, CONF_VALUE_TEMPLATE)
 
-REQUIREMENTS = ['pysnmp==4.4.4']
+REQUIREMENTS = ['pysnmp==4.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,8 +86,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the SNMP sensor."""
     from pysnmp.hlapi.asyncio import (
         getCmd, CommunityData, SnmpEngine, UdpTransportTarget, ContextData,
@@ -123,33 +123,29 @@ async def async_setup_platform(hass, config, async_add_devices,
         request_args = [
             SnmpEngine(),
             UsmUserData(
-                username,
-                authKey=authkey or None,
-                privKey=privkey or None,
+                username, authKey=authkey or None, privKey=privkey or None,
                 authProtocol=getattr(hlapi, MAP_AUTH_PROTOCOLS[authproto]),
-                privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),
-            ),
+                privProtocol=getattr(hlapi, MAP_PRIV_PROTOCOLS[privproto]),),
             UdpTransportTarget((host, port)),
-            ContextData()
+            ContextData(),
         ]
     else:
         request_args = [
             SnmpEngine(),
             CommunityData(community, mpModel=SNMP_VERSIONS[version]),
             UdpTransportTarget((host, port)),
-            ContextData()
+            ContextData(),
         ]
 
     errindication, _, _, _ = await getCmd(
-        *request_args,
-        ObjectType(ObjectIdentity(baseoid))
-    )
+        *request_args, ObjectType(ObjectIdentity(baseoid)))
 
     if errindication and not accept_errors:
         _LOGGER.error("Please check the details in the configuration file")
-        return False
+        return
+
     data = SnmpData(request_args, baseoid, accept_errors, default_value)
-    async_add_devices([SnmpSensor(data, name, unit, value_template)], True)
+    async_add_entities([SnmpSensor(data, name, unit, value_template)], True)
 
 
 class SnmpSensor(Entity):
@@ -209,9 +205,7 @@ class SnmpData:
         from pysnmp.hlapi.asyncio import (getCmd, ObjectType, ObjectIdentity)
 
         errindication, errstatus, errindex, restable = await getCmd(
-            *self._request_args,
-            ObjectType(ObjectIdentity(self._baseoid))
-        )
+            *self._request_args, ObjectType(ObjectIdentity(self._baseoid)))
 
         if errindication and not self._accept_errors:
             _LOGGER.error("SNMP error: %s", errindication)

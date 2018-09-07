@@ -2,9 +2,10 @@
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 
-from .const import STEPS, STEP_USER, DOMAIN
+from .const import DOMAIN, STEP_USER, STEPS
 
 DEPENDENCIES = ['http']
+
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
 
@@ -21,7 +22,7 @@ def async_is_onboarded(hass):
 
 
 async def async_setup(hass, config):
-    """Set up the onboard component."""
+    """Set up the onboarding component."""
     store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
     data = await store.async_load()
 

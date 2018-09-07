@@ -24,7 +24,7 @@ CLASS_MAPPING = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Zigbee Home Automation binary sensors."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
@@ -34,14 +34,14 @@ async def async_setup_platform(hass, config, async_add_devices,
     from zigpy.zcl.clusters.general import OnOff
     from zigpy.zcl.clusters.security import IasZone
     if IasZone.cluster_id in discovery_info['in_clusters']:
-        await _async_setup_iaszone(hass, config, async_add_devices,
+        await _async_setup_iaszone(hass, config, async_add_entities,
                                    discovery_info)
     elif OnOff.cluster_id in discovery_info['out_clusters']:
-        await _async_setup_remote(hass, config, async_add_devices,
+        await _async_setup_remote(hass, config, async_add_entities,
                                   discovery_info)
 
 
-async def _async_setup_iaszone(hass, config, async_add_devices,
+async def _async_setup_iaszone(hass, config, async_add_entities,
                                discovery_info):
     device_class = None
     from zigpy.zcl.clusters.security import IasZone
@@ -59,10 +59,11 @@ async def _async_setup_iaszone(hass, config, async_add_devices,
         pass
 
     sensor = BinarySensor(device_class, **discovery_info)
-    async_add_devices([sensor], update_before_add=True)
+    async_add_entities([sensor], update_before_add=True)
 
 
-async def _async_setup_remote(hass, config, async_add_devices, discovery_info):
+async def _async_setup_remote(hass, config, async_add_entities,
+                              discovery_info):
 
     async def safe(coro):
         """Run coro, catching ZigBee delivery errors, and ignoring them."""
@@ -85,7 +86,7 @@ async def _async_setup_remote(hass, config, async_add_devices, discovery_info):
             await safe(cluster.configure_reporting(0, 1, 600, 1))
 
     sensor = Switch(**discovery_info)
-    async_add_devices([sensor], update_before_add=True)
+    async_add_entities([sensor], update_before_add=True)
 
 
 class BinarySensor(zha.Entity, BinarySensorDevice):

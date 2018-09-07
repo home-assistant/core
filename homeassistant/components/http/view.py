@@ -11,10 +11,10 @@ import logging
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized, HTTPInternalServerError
 
-import homeassistant.remote as rem
 from homeassistant.components.http.ban import process_success_login
 from homeassistant.core import Context, is_callback
 from homeassistant.const import CONTENT_TYPE_JSON
+from homeassistant.helpers.json import JSONEncoder
 
 from .const import KEY_AUTHENTICATED, KEY_REAL_IP
 
@@ -44,7 +44,7 @@ class HomeAssistantView:
         """Return a JSON response."""
         try:
             msg = json.dumps(
-                result, sort_keys=True, cls=rem.JSONEncoder).encode('UTF-8')
+                result, sort_keys=True, cls=JSONEncoder).encode('UTF-8')
         except TypeError as err:
             _LOGGER.error('Unable to serialize to JSON: %s\n%s', err, result)
             raise HTTPInternalServerError

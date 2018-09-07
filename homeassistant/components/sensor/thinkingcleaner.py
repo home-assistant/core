@@ -51,7 +51,7 @@ STATES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ThinkingCleaner platform."""
     from pythinkingcleaner import Discovery
 
@@ -70,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             dev.append(ThinkingCleanerSensor(device, type_name,
                                              update_devices))
 
-    add_devices(dev)
+    add_entities(dev)
 
 
 class ThinkingCleanerSensor(Entity):

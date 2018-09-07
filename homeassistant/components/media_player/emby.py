@@ -51,7 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Emby platform."""
     from pyemby import EmbyServer
 
@@ -94,7 +95,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         if new_devices:
             _LOGGER.debug("Adding new devices: %s", new_devices)
-            async_add_devices(new_devices, update_before_add=True)
+            async_add_entities(new_devices, update_before_add=True)
 
     @callback
     def device_removal_callback(data):
@@ -192,8 +193,8 @@ class EmbyDevice(MediaPlayerDevice):
     @property
     def name(self):
         """Return the name of the device."""
-        return 'Emby - {} - {}'.format(self.device.client, self.device.name) \
-            or DEVICE_DEFAULT_NAME
+        return ('Emby - {} - {}'.format(self.device.client, self.device.name)
+                or DEVICE_DEFAULT_NAME)
 
     @property
     def should_poll(self):

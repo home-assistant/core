@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pymediaroom==0.6.3']
+REQUIREMENTS = ['pymediaroom==0.6.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Mediaroom platform."""
     known_hosts = hass.data.get(DATA_MEDIAROOM)
@@ -57,10 +57,10 @@ async def async_setup_platform(hass, config, async_add_devices,
         known_hosts = hass.data[DATA_MEDIAROOM] = []
     host = config.get(CONF_HOST, None)
     if host:
-        async_add_devices([MediaroomDevice(host=host,
-                                           device_id=None,
-                                           optimistic=config[CONF_OPTIMISTIC],
-                                           timeout=config[CONF_TIMEOUT])])
+        async_add_entities([MediaroomDevice(host=host,
+                                            device_id=None,
+                                            optimistic=config[CONF_OPTIMISTIC],
+                                            timeout=config[CONF_TIMEOUT])])
         hass.data[DATA_MEDIAROOM].append(host)
 
     _LOGGER.debug("Trying to discover Mediaroom STB")
@@ -77,7 +77,7 @@ async def async_setup_platform(hass, config, async_add_devices,
             host=notify.ip_address, device_id=notify.device_uuid,
             optimistic=False
         )
-        async_add_devices([new_stb])
+        async_add_entities([new_stb])
 
     if not config[CONF_OPTIMISTIC]:
         from pymediaroom import install_mediaroom_protocol
@@ -103,7 +103,7 @@ class MediaroomDevice(MediaPlayerDevice):
     """Representation of a Mediaroom set-up-box on the network."""
 
     def set_state(self, mediaroom_state):
-        """Helper method to map pymediaroom states to HA states."""
+        """Map pymediaroom state to HA state."""
         from pymediaroom import State
 
         state_map = {

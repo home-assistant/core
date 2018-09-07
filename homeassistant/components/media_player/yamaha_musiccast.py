@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yamaha MusicCast platform."""
     import socket
     import pymusiccast
@@ -93,7 +93,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.debug(
                 "receiver: %s / Port: %d / Zone: %s",
                 receiver, port, zone)
-            add_devices(
+            add_entities(
                 [YamahaDevice(receiver, receiver.zones[zone])],
                 True)
     else:

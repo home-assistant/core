@@ -52,6 +52,8 @@ homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
 homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/history_graph.py @andrey-git
+homeassistant/components/light/lifx.py @amelchio
+homeassistant/components/light/lifx_legacy.py @amelchio
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
 homeassistant/components/lock/nello.py @pschmitt
@@ -65,6 +67,7 @@ homeassistant/components/media_player/sonos.py @amelchio
 homeassistant/components/media_player/xiaomi_tv.py @fattdev
 homeassistant/components/media_player/yamaha_musiccast.py @jalmeroth
 homeassistant/components/plant.py @ChristianKuehnel
+homeassistant/components/scene/lifx_cloud.py @amelchio
 homeassistant/components/sensor/airvisual.py @bachya
 homeassistant/components/sensor/filter.py @dgomes
 homeassistant/components/sensor/gearbest.py @HerrHofrat
@@ -87,6 +90,8 @@ homeassistant/components/*/axis.py @kane610
 homeassistant/components/*/bmw_connected_drive.py @ChristianKuehnel
 homeassistant/components/*/broadlink.py @danielhiversen
 homeassistant/components/*/deconz.py @kane610
+homeassistant/components/ecovacs.py @OverloadUT
+homeassistant/components/*/ecovacs.py @OverloadUT
 homeassistant/components/eight_sleep.py @mezz64
 homeassistant/components/*/eight_sleep.py @mezz64
 homeassistant/components/hive.py @Rendili @KJonline
@@ -98,6 +103,8 @@ homeassistant/components/konnected.py @heythisisnate
 homeassistant/components/*/konnected.py @heythisisnate
 homeassistant/components/matrix.py @tinloaf
 homeassistant/components/*/matrix.py @tinloaf
+homeassistant/components/openuv.py @bachya
+homeassistant/components/*/openuv.py @bachya
 homeassistant/components/qwikswitch.py @kellerza
 homeassistant/components/*/qwikswitch.py @kellerza
 homeassistant/components/rainmachine/* @bachya

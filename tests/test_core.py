@@ -130,7 +130,7 @@ class TestHomeAssistant(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -246,8 +246,9 @@ class TestEvent(unittest.TestCase):
         """Test events."""
         now = dt_util.utcnow()
         data = {'some': 'attr'}
+        context = ha.Context()
         event1, event2 = [
-            ha.Event('some_type', data, time_fired=now)
+            ha.Event('some_type', data, time_fired=now, context=context)
             for _ in range(2)
         ]
 
@@ -290,7 +291,7 @@ class TestEventBus(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.bus = self.hass.bus
 
@@ -494,7 +495,7 @@ class TestStateMachine(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.states = self.hass.states
         self.states.set("light.Bowl", "on")
@@ -619,7 +620,7 @@ class TestServiceRegistry(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.services = self.hass.services
 
@@ -774,7 +775,7 @@ class TestConfig(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.config = ha.Config()
         self.assertIsNone(self.config.config_dir)
 

@@ -9,7 +9,7 @@ from homeassistant.setup import async_setup_component
 
 @pytest.fixture
 def mock_http_client(loop, hass, aiohttp_client):
-    """Setup test fixture."""
+    """Set up test fixture."""
     config = {
         'rss_feed_template': {
             'testfeed': {

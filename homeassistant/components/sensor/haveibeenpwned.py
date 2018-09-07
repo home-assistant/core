@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HaveIBeenPwned sensor."""
     emails = config.get(CONF_EMAIL)
     data = HaveIBeenPwnedData(emails)
@@ -44,7 +44,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for email in emails:
         devices.append(HaveIBeenPwnedSensor(data, hass, email))
 
-    add_devices(devices)
+    add_entities(devices)
 
     # To make sure we get initial data for the sensors ignoring the normal
     # throttle of 15 minutes but using an update throttle of 5 seconds

@@ -48,7 +48,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the departure sensor."""
     import ns_api
     nsapi = ns_api.NSAPI(
@@ -72,7 +72,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 nsapi, departure.get(CONF_NAME), departure.get(CONF_FROM),
                 departure.get(CONF_TO), departure.get(CONF_VIA)))
     if sensors:
-        add_devices(sensors, True)
+        add_entities(sensors, True)
 
 
 def valid_stations(stations, given_stations):

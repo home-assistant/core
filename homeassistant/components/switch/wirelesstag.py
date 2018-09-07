@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up switches for a Wireless Sensor Tags."""
     platform = hass.data.get(WIRELESSTAG_DOMAIN)
 
@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if switch_type in WirelessTagSwitch.allowed_switches(tag):
                 switches.append(WirelessTagSwitch(platform, tag, switch_type))
 
-    add_devices(switches, True)
+    add_entities(switches, True)
 
 
 class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):

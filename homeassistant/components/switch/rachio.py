@@ -47,7 +47,7 @@ ATTR_ZONE_SUMMARY = 'Summary'
 ATTR_ZONE_NUMBER = 'Zone number'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Rachio switches."""
     manual_run_time = timedelta(minutes=config.get(CONF_MANUAL_RUN_MINS))
     _LOGGER.info("Rachio run time is %s", str(manual_run_time))
@@ -60,7 +60,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for zone in controller.list_zones():
             devices.append(RachioZone(hass, controller, zone, manual_run_time))
 
-    add_devices(devices)
+    add_entities(devices)
     _LOGGER.info("%d Rachio switch(es) added", len(devices))
 
 

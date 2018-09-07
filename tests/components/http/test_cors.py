@@ -49,7 +49,7 @@ async def mock_handler(request):
 
 @pytest.fixture
 def client(loop, aiohttp_client):
-    """Fixture to setup a web.Application."""
+    """Fixture to set up a web.Application."""
     app = web.Application()
     app.router.add_get('/', mock_handler)
     setup_cors(app, [TRUSTED_ORIGIN])

@@ -67,7 +67,7 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
 
 
 # noinspection PyUnusedLocal
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the History Stats sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     entity_state = config.get(CONF_STATE)
@@ -81,8 +81,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if template is not None:
             template.hass = hass
 
-    add_devices([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
-                                    duration, sensor_type, name)])
+    add_entities([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
+                                     duration, sensor_type, name)])
 
     return True
 

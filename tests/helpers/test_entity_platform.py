@@ -142,9 +142,9 @@ class TestHelpersEntityPlatform(unittest.TestCase):
            'async_track_time_interval')
     def test_set_scan_interval_via_platform(self, mock_track):
         """Test the setting of the scan interval via platform."""
-        def platform_setup(hass, config, add_devices, discovery_info=None):
+        def platform_setup(hass, config, add_entities, discovery_info=None):
             """Test the platform setup."""
-            add_devices([MockEntity(should_poll=True)])
+            add_entities([MockEntity(should_poll=True)])
 
         platform = MockPlatform(platform_setup)
         platform.SCAN_INTERVAL = timedelta(seconds=30)
@@ -336,7 +336,7 @@ def test_raise_error_on_update(hass):
     entity2 = MockEntity(name='test_2')
 
     def _raise():
-        """Helper to raise an exception."""
+        """Raise an exception."""
         raise AssertionError
 
     entity1.update = _raise
@@ -520,9 +520,9 @@ async def test_setup_entry(hass):
     """Test we can setup an entry."""
     registry = mock_registry(hass)
 
-    async def async_setup_entry(hass, config_entry, async_add_devices):
+    async def async_setup_entry(hass, config_entry, async_add_entities):
         """Mock setup entry method."""
-        async_add_devices([
+        async_add_entities([
             MockEntity(name='test1', unique_id='unique')
         ])
         return True

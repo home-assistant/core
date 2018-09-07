@@ -51,7 +51,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None):
+                               async_add_entities, discovery_info=None):
     """Set up MQTT Sensor."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -60,7 +60,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     if value_template is not None:
         value_template.hass = hass
 
-    async_add_devices([MqttSensor(
+    async_add_entities([MqttSensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_QOS),
