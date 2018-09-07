@@ -1508,6 +1508,9 @@ yahoo-finance==1.4.0
 # homeassistant.components.weather.yweather
 yahooweather==0.10
 
+# homeassistant.components.alarm_control_panel.yale_smart_alarm
+yalesmartalarmclient==0.1.4
+
 # homeassistant.components.light.yeelight
 yeelight==0.4.0
 
