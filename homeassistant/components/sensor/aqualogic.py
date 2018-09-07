@@ -23,7 +23,8 @@ DEPENDENCIES = ['aqualogic']
 TEMP_UNITS = [TEMP_CELSIUS, TEMP_FAHRENHEIT]
 PERCENT_UNITS = ['%', '%']
 SALT_UNITS = ['g/L', 'PPM']
-RPM_UNITS = ['RPM', 'RPM']
+WATT_UNITS = ['W', 'W']
+NO_UNITS = [None, None]
 
 # sensor_type [ description, unit, icon ]
 # sensor_type corresponds to property names in aqualogic.core.AquaLogic
@@ -34,7 +35,9 @@ SENSOR_TYPES = {
     'pool_chlorinator': ['Pool Chlorinator', PERCENT_UNITS, 'mdi:gauge'],
     'spa_chlorinator': ['Spa Chlorinator', PERCENT_UNITS, 'mdi:gauge'],
     'salt_level': ['Salt Level', SALT_UNITS, 'mdi:gauge'],
-    'pump_speed': ['Pump Speed', RPM_UNITS, 'mdi:speedometer']
+    'pump_speed': ['Pump Speed', PERCENT_UNITS, 'mdi:speedometer'],
+    'pump_power': ['Pump Power', WATT_UNITS, 'mdi:gauge'],
+    'status': ['Status', NO_UNITS, 'mdi:alert']
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({

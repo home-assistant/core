@@ -19,7 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ["aqualogic==0.7"]
+REQUIREMENTS = ["aqualogic==0.8"]
 
 _LOGGER = logging.getLogger(__name__)
 
