@@ -998,6 +998,9 @@ pyopenuv==1.0.4
 # homeassistant.components.iota
 pyota==2.0.5
 
+# homeassistant.components.climate.opentherm_gw
+pyotgw==0.1b0
+
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.sensor.otp
 pyotp==2.2.6
