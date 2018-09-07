@@ -174,8 +174,8 @@ class RadioThermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return {
-            ATTR_FAN: self._fmode,
-            ATTR_MODE: self._tmode,
+            ATTR_FAN: self._fstate,
+            ATTR_MODE: self._tstate,
         }
 
     @property
