@@ -151,8 +151,7 @@ async def async_setup_platform(
 class SnmpSensor(Entity):
     """Representation of a SNMP sensor."""
 
-    def __init__(self, data, name, unit_of_measurement,
-                 value_template):
+    def __init__(self, data, name, unit_of_measurement, value_template):
         """Initialize the sensor."""
         self.data = data
         self._name = name
