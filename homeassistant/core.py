@@ -63,7 +63,7 @@ DOMAIN = 'homeassistant'
 SERVICE_CALL_LIMIT = 10  # seconds
 
 # Pattern for validating entity IDs (format: <domain>.<entity>)
-ENTITY_ID_PATTERN = re.compile(r"^(\w+)\.(\w+)$")
+ENTITY_ID_PATTERN = re.compile(r"^([a-z0-9_]+)\.([a-z0-9_]+)$")
 
 # How long to wait till things that run on startup have to finish.
 TIMEOUT_EVENT_START = 15
