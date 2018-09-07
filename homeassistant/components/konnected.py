@@ -35,6 +35,7 @@ CONF_API_HOST = 'api_host'
 CONF_MOMENTARY = 'momentary'
 CONF_PAUSE = 'pause'
 CONF_REPEAT = 'repeat'
+CONF_INVERSE = 'inverse'
 
 STATE_LOW = 'low'
 STATE_HIGH = 'high'
@@ -48,6 +49,7 @@ _BINARY_SENSOR_SCHEMA = vol.All(
         vol.Exclusive(CONF_ZONE, 's_pin'): vol.Any(*ZONE_TO_PIN),
         vol.Required(CONF_TYPE): DEVICE_CLASSES_SCHEMA,
         vol.Optional(CONF_NAME): cv.string,
+        vol.Optional(CONF_INVERSE): cv.boolean,
     }), cv.has_at_least_one_key(CONF_PIN, CONF_ZONE)
 )
 
@@ -156,6 +158,7 @@ class ConfiguredDevice:
                 CONF_TYPE: entity[CONF_TYPE],
                 CONF_NAME: entity.get(CONF_NAME, 'Konnected {} Zone {}'.format(
                     self.device_id[6:], PIN_TO_ZONE[pin])),
+                CONF_INVERSE: entity.get(CONF_INVERSE),
                 ATTR_STATE: None
             }
             _LOGGER.debug('Set up sensor %s (initial state: %s)',
@@ -259,15 +262,19 @@ class DiscoveredDevice:
 
     def update_initial_states(self):
         """Update the initial state of each sensor from status poll."""
-        for sensor in self.status.get('sensors'):
-            entity_id = self.stored_configuration[CONF_BINARY_SENSORS]. \
-                get(sensor.get(CONF_PIN), {}). \
-                get(ATTR_ENTITY_ID)
+        for sensor_data in self.status.get('sensors'):
+            sensor_config = self.stored_configuration[CONF_BINARY_SENSORS]. \
+                get(sensor_data.get(CONF_PIN), {})
+            entity_id = sensor_config.get(ATTR_ENTITY_ID)
+
+            state = bool(sensor_data.get(ATTR_STATE))
+            if sensor_config.get(CONF_INVERSE):
+                state = not state
 
             async_dispatcher_send(
                 self.hass,
                 SIGNAL_SENSOR_UPDATE.format(entity_id),
-                bool(sensor.get(ATTR_STATE)))
+                state)
 
     def sync_device_config(self):
         """Sync the new pin configuration to the Konnected device."""
@@ -341,7 +348,6 @@ class KonnectedView(HomeAssistantView):
             return self.json_message(
                 "unauthorized", status_code=HTTP_UNAUTHORIZED)
         pin_num = int(pin_num)
-        state = bool(int(state))
         device = data[CONF_DEVICES].get(device_id)
         if device is None:
             return self.json_message('unregistered device',
@@ -356,6 +362,9 @@ class KonnectedView(HomeAssistantView):
         if entity_id is None:
             return self.json_message('uninitialized sensor/actuator',
                                      status_code=HTTP_NOT_FOUND)
+        state = bool(int(state))
+        if pin_data.get(CONF_INVERSE):
+            state = not state
 
         async_dispatcher_send(
             hass, SIGNAL_SENSOR_UPDATE.format(entity_id), state)
