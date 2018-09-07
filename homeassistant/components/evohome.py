@@ -1016,8 +1016,11 @@ class EvoController(EvoEntity):
         self._status = domain_data['status']
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
-            status = dict(self._status)
-            status['zones'] = '...'
+            status = dict(self._status)  # create a copy since we're editing
+#           if 'zones' in status:
+#               status['zones'] = '...'
+#           if 'dhw' in status:
+#               status['dhw'] = '...'
             _LOGGER.debug(
                 "update(%s), self._status = %s",
                 self._id,
