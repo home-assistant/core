@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-# Sensor types: Name, category, units, icon, kind
+# Sensor types: Name, unit of measure, icon per sensor key
 SENSOR_TYPES = {
     'battery_level': [
         'Battery', '%', 'battery-50'],
@@ -114,9 +114,6 @@ class LogiSensor(Entity):
         if (self._sensor_type == 'privacy_mode' and
                 self._state != STATE_UNKNOWN):
             return 'mdi:eye-off' if self._state == 'on' else 'mdi:eye'
-        if (self._sensor_type == 'is_streaming' and
-                self._state != STATE_UNKNOWN):
-            return 'mdi:camera' if self._state == 'on' else 'mdi:camera-off'
         return self._icon
 
     @property

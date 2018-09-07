@@ -1,5 +1,5 @@
 """
-Support for Logi Circle cameras
+Support for Logi Circle cameras.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/logi/
@@ -11,7 +11,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
-REQUIREMENTS = ['logi_circle==0.1.3']
+REQUIREMENTS = ['logi_circle==0.1.5']
 
 _LOGGER = logging.getLogger(__name__)
 
