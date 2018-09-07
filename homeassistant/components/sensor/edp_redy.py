@@ -15,7 +15,6 @@ ATTR_ACTIVE_POWER = 'active_power'
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Perform the setup for re:dy devices."""
-
     from edp_redy.session import ACTIVE_POWER_ID
 
     session = hass.data[EDP_REDY]
