@@ -142,18 +142,7 @@ def async_snapshot(hass, filename, entity_id=None):
 @bind_hass
 async def async_get_image(hass, entity_id, timeout=10):
     """Fetch an image from a camera entity."""
-    component = hass.data.get(DOMAIN)
-
-    if component is None:
-        raise HomeAssistantError('Camera component not setup')
-
-    camera = component.get_entity(entity_id)
-
-    if camera is None:
-        raise HomeAssistantError('Camera not found')
-
-    if not camera.is_on:
-        raise HomeAssistantError('Camera is off')
+    camera = _get_camera_from_entity_id(hass, entity_id)
 
     with suppress(asyncio.CancelledError, asyncio.TimeoutError):
         with async_timeout.timeout(timeout, loop=hass.loop):
@@ -163,6 +152,72 @@ async def async_get_image(hass, entity_id, timeout=10):
                 return Image(camera.content_type, image)
 
     raise HomeAssistantError('Unable to get image')
+
+
+@bind_hass
+async def async_get_mjpeg_stream(hass, request, entity_id):
+    """Fetch an mjpeg stream from a camera entity."""
+    camera = _get_camera_from_entity_id(hass, entity_id)
+
+    return await camera.handle_async_mjpeg_stream(request)
+
+
+async def async_get_still_stream(request, image_cb, content_type, interval):
+    """Generate an HTTP MJPEG stream from camera images.
+
+    This method must be run in the event loop.
+    """
+    response = web.StreamResponse()
+    response.content_type = ('multipart/x-mixed-replace; '
+                             'boundary=--frameboundary')
+    await response.prepare(request)
+
+    async def write_to_mjpeg_stream(img_bytes):
+        """Write image to stream."""
+        await response.write(bytes(
+            '--frameboundary\r\n'
+            'Content-Type: {}\r\n'
+            'Content-Length: {}\r\n\r\n'.format(
+                content_type, len(img_bytes)),
+            'utf-8') + img_bytes + b'\r\n')
+
+    last_image = None
+
+    while True:
+        img_bytes = await image_cb()
+        if not img_bytes:
+            break
+
+        if img_bytes != last_image:
+            await write_to_mjpeg_stream(img_bytes)
+
+            # Chrome seems to always ignore first picture,
+            # print it twice.
+            if last_image is None:
+                await write_to_mjpeg_stream(img_bytes)
+            last_image = img_bytes
+
+        await asyncio.sleep(interval)
+
+    return response
+
+
+def _get_camera_from_entity_id(hass, entity_id):
+    """Get camera component from entity_id."""
+    component = hass.data.get(DOMAIN)
+
+    if component is None:
+        raise HomeAssistantError('Camera component not set up')
+
+    camera = component.get_entity(entity_id)
+
+    if camera is None:
+        raise HomeAssistantError('Camera not found')
+
+    if not camera.is_on:
+        raise HomeAssistantError('Camera is off')
+
+    return camera
 
 
 async def async_setup(hass, config):
@@ -189,80 +244,32 @@ async def async_setup(hass, config):
     hass.helpers.event.async_track_time_interval(
         update_tokens, TOKEN_CHANGE_INTERVAL)
 
-    async def async_handle_camera_service(service):
-        """Handle calls to the camera services."""
-        target_cameras = component.async_extract_from_service(service)
-
-        update_tasks = []
-        for camera in target_cameras:
-            if service.service == SERVICE_ENABLE_MOTION:
-                await camera.async_enable_motion_detection()
-            elif service.service == SERVICE_DISABLE_MOTION:
-                await camera.async_disable_motion_detection()
-            elif service.service == SERVICE_TURN_OFF and \
-                    camera.supported_features & SUPPORT_ON_OFF:
-                await camera.async_turn_off()
-            elif service.service == SERVICE_TURN_ON and \
-                    camera.supported_features & SUPPORT_ON_OFF:
-                await camera.async_turn_on()
-
-            if not camera.should_poll:
-                continue
-            update_tasks.append(camera.async_update_ha_state(True))
-
-        if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
-
-    async def async_handle_snapshot_service(service):
-        """Handle snapshot services calls."""
-        target_cameras = component.async_extract_from_service(service)
-        filename = service.data[ATTR_FILENAME]
-        filename.hass = hass
-
-        for camera in target_cameras:
-            snapshot_file = filename.async_render(
-                variables={ATTR_ENTITY_ID: camera})
-
-            # check if we allow to access to that file
-            if not hass.config.is_allowed_path(snapshot_file):
-                _LOGGER.error(
-                    "Can't write %s, no access to path!", snapshot_file)
-                continue
-
-            image = await camera.async_camera_image()
-
-            def _write_image(to_file, image_data):
-                """Executor helper to write image."""
-                with open(to_file, 'wb') as img_file:
-                    img_file.write(image_data)
-
-            try:
-                await hass.async_add_job(
-                    _write_image, snapshot_file, image)
-            except OSError as err:
-                _LOGGER.error("Can't write image to file: %s", err)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_camera_service,
-        schema=CAMERA_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_camera_service,
-        schema=CAMERA_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_ENABLE_MOTION, async_handle_camera_service,
-        schema=CAMERA_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_DISABLE_MOTION, async_handle_camera_service,
-        schema=CAMERA_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_SNAPSHOT, async_handle_snapshot_service,
-        schema=CAMERA_SERVICE_SNAPSHOT)
+    component.async_register_entity_service(
+        SERVICE_ENABLE_MOTION, CAMERA_SERVICE_SCHEMA,
+        'async_enable_motion_detection'
+    )
+    component.async_register_entity_service(
+        SERVICE_DISABLE_MOTION, CAMERA_SERVICE_SCHEMA,
+        'async_disable_motion_detection'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, CAMERA_SERVICE_SCHEMA,
+        'async_turn_off'
+    )
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, CAMERA_SERVICE_SCHEMA,
+        'async_turn_on'
+    )
+    component.async_register_entity_service(
+        SERVICE_SNAPSHOT, CAMERA_SERVICE_SNAPSHOT,
+        async_handle_snapshot_service
+    )
 
     return True
 
 
 async def async_setup_entry(hass, entry):
-    """Setup a config entry."""
+    """Set up a config entry."""
     return await hass.data[DOMAIN].async_setup_entry(entry)
 
 
@@ -338,39 +345,8 @@ class Camera(Entity):
 
         This method must be run in the event loop.
         """
-        response = web.StreamResponse()
-        response.content_type = ('multipart/x-mixed-replace; '
-                                 'boundary=--frameboundary')
-        await response.prepare(request)
-
-        async def write_to_mjpeg_stream(img_bytes):
-            """Write image to stream."""
-            await response.write(bytes(
-                '--frameboundary\r\n'
-                'Content-Type: {}\r\n'
-                'Content-Length: {}\r\n\r\n'.format(
-                    self.content_type, len(img_bytes)),
-                'utf-8') + img_bytes + b'\r\n')
-
-        last_image = None
-
-        while True:
-            img_bytes = await self.async_camera_image()
-            if not img_bytes:
-                break
-
-            if img_bytes and img_bytes != last_image:
-                await write_to_mjpeg_stream(img_bytes)
-
-                # Chrome seems to always ignore first picture,
-                # print it twice.
-                if last_image is None:
-                    await write_to_mjpeg_stream(img_bytes)
-                last_image = img_bytes
-
-            await asyncio.sleep(interval)
-
-        return response
+        return await async_get_still_stream(request, self.async_camera_image,
+                                            self.content_type, interval)
 
     async def handle_async_mjpeg_stream(self, request):
         """Serve an HTTP MJPEG stream from the camera.
@@ -553,3 +529,32 @@ def websocket_camera_thumbnail(hass, connection, msg):
                 msg['id'], 'image_fetch_failed', 'Unable to fetch image'))
 
     hass.async_add_job(send_camera_still())
+
+
+async def async_handle_snapshot_service(camera, service):
+    """Handle snapshot services calls."""
+    hass = camera.hass
+    filename = service.data[ATTR_FILENAME]
+    filename.hass = hass
+
+    snapshot_file = filename.async_render(
+        variables={ATTR_ENTITY_ID: camera})
+
+    # check if we allow to access to that file
+    if not hass.config.is_allowed_path(snapshot_file):
+        _LOGGER.error(
+            "Can't write %s, no access to path!", snapshot_file)
+        return
+
+    image = await camera.async_camera_image()
+
+    def _write_image(to_file, image_data):
+        """Executor helper to write image."""
+        with open(to_file, 'wb') as img_file:
+            img_file.write(image_data)
+
+    try:
+        await hass.async_add_executor_job(
+            _write_image, snapshot_file, image)
+    except OSError as err:
+        _LOGGER.error("Can't write image to file: %s", err)

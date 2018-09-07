@@ -21,13 +21,13 @@ SPEED_LOWEST = 'lowest'
 SUPPORTED_FEATURES = SUPPORT_DIRECTION + SUPPORT_SET_SPEED
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
     import pywink
 
     for fan in pywink.get_fans():
         if fan.object_id() + fan.name() not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkFanDevice(fan, hass)])
+            add_entities([WinkFanDevice(fan, hass)])
 
 
 class WinkFanDevice(WinkDevice, FanEntity):

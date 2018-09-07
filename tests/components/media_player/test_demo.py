@@ -25,7 +25,7 @@ class TestDemoMediaPlayer(unittest.TestCase):
     """Test the media_player module."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -227,7 +227,7 @@ class TestMediaPlayerWeb(unittest.TestCase):
     """Test the media player web views sensor."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         assert setup_component(self.hass, http.DOMAIN, {

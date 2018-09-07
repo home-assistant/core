@@ -78,7 +78,6 @@ async def async_million_events(hass):
 
 
 @benchmark
-# pylint: disable=invalid-name
 async def async_million_time_changed_helper(hass):
     """Run a million events through time changed helper."""
     count = 0
@@ -109,7 +108,6 @@ async def async_million_time_changed_helper(hass):
 
 
 @benchmark
-# pylint: disable=invalid-name
 async def async_million_state_changed_helper(hass):
     """Run a million events through state changed helper."""
     count = 0

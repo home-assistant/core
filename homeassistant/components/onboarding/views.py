@@ -3,21 +3,21 @@ import asyncio
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.http.view import HomeAssistantView
+from homeassistant.core import callback
 
-from .const import DOMAIN, STEPS, STEP_USER
+from .const import DOMAIN, STEP_USER, STEPS
 
 
 async def async_setup(hass, data, store):
-    """Setup onboarding."""
+    """Set up the onboarding view."""
     hass.http.register_view(OnboardingView(data, store))
     hass.http.register_view(UserOnboardingView(data, store))
 
 
 class OnboardingView(HomeAssistantView):
-    """Returns the onboarding status."""
+    """Return the onboarding status."""
 
     requires_auth = False
     url = '/api/onboarding'

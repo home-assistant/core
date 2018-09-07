@@ -98,7 +98,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the BME680 sensor."""
     SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
@@ -112,7 +113,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         dev.append(BME680Sensor(
             sensor_handler, variable, SENSOR_TYPES[variable][1], name))
 
-    async_add_devices(dev)
+    async_add_entities(dev)
     return
 
 

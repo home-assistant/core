@@ -76,11 +76,11 @@ class TestMelissa(unittest.TestCase):
         self.hass.data[DATA_MELISSA] = self.api
 
         config = {}
-        add_devices = Mock()
+        add_entities = Mock()
         discovery_info = {}
 
-        melissa.setup_platform(self.hass, config, add_devices, discovery_info)
-        add_devices.assert_called_once_with(thermostats)
+        melissa.setup_platform(self.hass, config, add_entities, discovery_info)
+        add_entities.assert_called_once_with(thermostats)
 
     def test_get_name(self):
         """Test name property."""

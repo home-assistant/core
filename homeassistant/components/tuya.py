@@ -10,14 +10,14 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD)
+from homeassistant.const import (CONF_USERNAME, CONF_PASSWORD, CONF_PLATFORM)
 from homeassistant.helpers import discovery
 from homeassistant.helpers.dispatcher import (
     dispatcher_send, async_dispatcher_connect)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['tuyapy==0.1.2']
+REQUIREMENTS = ['tuyapy==0.1.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,8 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_COUNTRYCODE): cv.string
+        vol.Required(CONF_COUNTRYCODE): cv.string,
+        vol.Optional(CONF_PLATFORM, default='tuya'): cv.string,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -58,9 +59,10 @@ def setup(hass, config):
     username = config[DOMAIN][CONF_USERNAME]
     password = config[DOMAIN][CONF_PASSWORD]
     country_code = config[DOMAIN][CONF_COUNTRYCODE]
+    platform = config[DOMAIN][CONF_PLATFORM]
 
     hass.data[DATA_TUYA] = tuya
-    tuya.init(username, password, country_code)
+    tuya.init(username, password, country_code, platform)
     hass.data[DOMAIN] = {
         'entities': {}
     }

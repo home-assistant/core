@@ -100,7 +100,7 @@ VEGETATION_MAP = {
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the RainMachine Switch platform."""
     if discovery_info is None:
         return
@@ -129,7 +129,7 @@ async def async_setup_platform(
         _LOGGER.debug('Adding zone: %s', zone)
         entities.append(RainMachineZone(rainmachine, zone, zone_run_time))
 
-    async_add_devices(entities, True)
+    async_add_entities(entities, True)
 
 
 class RainMachineSwitch(RainMachineEntity, SwitchDevice):

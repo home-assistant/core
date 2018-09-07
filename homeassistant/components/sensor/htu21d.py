@@ -41,7 +41,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # pylint: disable=import-error
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the HTU21D sensor."""
     import smbus
     from i2csense.htu21d import HTU21D
@@ -63,7 +64,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     dev = [HTU21DSensor(sensor_handler, name, SENSOR_TEMPERATURE, temp_unit),
            HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, '%')]
 
-    async_add_devices(dev)
+    async_add_entities(dev)
 
 
 class HTU21DHandler:

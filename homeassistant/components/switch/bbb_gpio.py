@@ -34,14 +34,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BeagleBone Black GPIO devices."""
     pins = config.get(CONF_PINS)
 
     switches = []
     for pin, params in pins.items():
         switches.append(BBBGPIOSwitch(pin, params))
-    add_devices(switches)
+    add_entities(switches)
 
 
 class BBBGPIOSwitch(ToggleEntity):

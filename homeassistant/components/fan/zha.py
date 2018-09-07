@@ -39,13 +39,14 @@ SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Zigbee Home Automation fans."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
-    async_add_devices([ZhaFan(**discovery_info)], update_before_add=True)
+    async_add_entities([ZhaFan(**discovery_info)], update_before_add=True)
 
 
 class ZhaFan(zha.Entity, FanEntity):

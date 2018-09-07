@@ -17,7 +17,7 @@ class TestGraphite(unittest.TestCase):
     """Test the Graphite component."""
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.gf = graphite.GraphiteFeeder(self.hass, 'foo', 123, 'ha')
 

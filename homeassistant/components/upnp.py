@@ -15,7 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.util import get_local_ip
 
-REQUIREMENTS = ['pyupnp-async==0.1.0.2']
+REQUIREMENTS = ['pyupnp-async==0.1.1.1']
 DEPENDENCIES = ['http']
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +37,7 @@ NOTIFICATION_TITLE = 'UPnP Setup'
 IGD_DEVICE = 'urn:schemas-upnp-org:device:InternetGatewayDevice:1'
 PPP_SERVICE = 'urn:schemas-upnp-org:service:WANPPPConnection:1'
 IP_SERVICE = 'urn:schemas-upnp-org:service:WANIPConnection:1'
+IP_SERVICE2 = 'urn:schemas-upnp-org:service:WANIPConnection:2'
 CIC_SERVICE = 'urn:schemas-upnp-org:service:WANCommonInterfaceConfig:1'
 
 UNITS = {
@@ -48,7 +49,7 @@ UNITS = {
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
-        vol.Optional(CONF_ENABLE_PORT_MAPPING, default=True): cv.boolean,
+        vol.Optional(CONF_ENABLE_PORT_MAPPING, default=False): cv.boolean,
         vol.Optional(CONF_UNITS, default="MBytes"): vol.In(UNITS),
         vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
         vol.Optional(CONF_PORTS):
@@ -86,8 +87,10 @@ async def async_setup(hass, config):
                 service = device.find_first_service(PPP_SERVICE)
             if _service['serviceType'] == IP_SERVICE:
                 service = device.find_first_service(IP_SERVICE)
+            if _service['serviceType'] == IP_SERVICE2:
+                service = device.find_first_service(IP_SERVICE2)
             if _service['serviceType'] == CIC_SERVICE:
-                unit = config.get(CONF_UNITS)
+                unit = config[CONF_UNITS]
                 hass.async_create_task(discovery.async_load_platform(
                     hass, 'sensor', DOMAIN, {'unit': unit}, config))
     except UpnpSoapError as error:
@@ -98,7 +101,7 @@ async def async_setup(hass, config):
         _LOGGER.warning("Could not find any UPnP IGD")
         return False
 
-    port_mapping = config.get(CONF_ENABLE_PORT_MAPPING)
+    port_mapping = config[CONF_ENABLE_PORT_MAPPING]
     if not port_mapping:
         return True
 
@@ -116,7 +119,8 @@ async def async_setup(hass, config):
             await service.add_port_mapping(internal, external, host, 'TCP',
                                            desc='Home Assistant')
             registered.append(external)
-            _LOGGER.debug("external %s -> %s @ %s", external, internal, host)
+            _LOGGER.debug("Mapping external TCP port %s -> %s @ %s",
+                          external, internal, host)
         except UpnpSoapError as error:
             _LOGGER.error(error)
             hass.components.persistent_notification.create(

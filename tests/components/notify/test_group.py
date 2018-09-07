@@ -14,7 +14,7 @@ class TestNotifyGroup(unittest.TestCase):
     """Test the notify.group platform."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.events = []
         self.service1 = demo.DemoNotificationService(self.hass)

@@ -7,7 +7,6 @@ set -e
 INSTALL_TELLSTICK="${INSTALL_TELLSTICK:-yes}"
 INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
-INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
 
 # Required debian packages for running hass or components
@@ -57,10 +56,6 @@ fi
 
 if [ "$INSTALL_LIBCEC" == "yes" ]; then
   virtualization/Docker/scripts/libcec
-fi
-
-if [ "$INSTALL_PHANTOMJS" == "yes" ]; then
-  virtualization/Docker/scripts/phantomjs
 fi
 
 if [ "$INSTALL_SSOCR" == "yes" ]; then

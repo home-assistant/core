@@ -18,7 +18,7 @@ git clone --depth 1 https://github.com/auerswal/ssocr.git ssocr
 cd ssocr/
 
 # Compile the library
-make
+make -j$(nproc)
 
 # Install the binaries/libraries to your local system (prefix is /usr/local)
 make install

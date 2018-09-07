@@ -99,7 +99,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flux lights."""
     import flux_led
     lights = []
@@ -116,7 +116,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         light_ips.append(ipaddr)
 
     if not config.get(CONF_AUTOMATIC_ADD, False):
-        add_devices(lights, True)
+        add_entities(lights, True)
         return
 
     # Find the bulbs on the LAN
@@ -132,7 +132,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         light = FluxLight(device)
         lights.append(light)
 
-    add_devices(lights, True)
+    add_entities(lights, True)
 
 
 class FluxLight(Light):

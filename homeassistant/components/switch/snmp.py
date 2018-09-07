@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pysnmp==4.4.4']
+REQUIREMENTS = ['pysnmp==4.4.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,8 +86,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
+
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SNMP switch."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -106,7 +106,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     payload_on = config.get(CONF_PAYLOAD_ON)
     payload_off = config.get(CONF_PAYLOAD_OFF)
 
-    async_add_devices(
+    add_entities(
         [SnmpSwitch(name, host, port, community, baseoid, command_oid, version,
                     username, authkey, authproto, privkey, privproto,
                     payload_on, payload_off,
@@ -114,7 +114,7 @@ async def async_setup_platform(hass, config, async_add_devices,
 
 
 class SnmpSwitch(SwitchDevice):
-    """Represents a SNMP switch."""
+    """Representation of a SNMP switch."""
 
     def __init__(self, name, host, port, community,
                  baseoid, commandoid, version,
@@ -129,7 +129,7 @@ class SnmpSwitch(SwitchDevice):
         self._name = name
         self._baseoid = baseoid
 
-        """Set the command OID to the base OID if command OID is unset"""
+        # Set the command OID to the base OID if command OID is unset
         self._commandoid = commandoid or baseoid
         self._command_payload_on = command_payload_on or payload_on
         self._command_payload_off = command_payload_off or payload_off

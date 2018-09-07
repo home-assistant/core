@@ -35,11 +35,11 @@ SENSORS = {
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the MySensors platform for sensors."""
     mysensors.setup_mysensors_platform(
         hass, DOMAIN, discovery_info, MySensorsSensor,
-        async_add_devices=async_add_devices)
+        async_add_entities=async_add_entities)
 
 
 class MySensorsSensor(mysensors.device.MySensorsEntity):

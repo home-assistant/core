@@ -56,7 +56,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Fritz!Box call monitor sensor platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -77,7 +77,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     sensor = FritzBoxCallSensor(name=name, phonebook=phonebook)
 
-    add_devices([sensor])
+    add_entities([sensor])
 
     monitor = FritzBoxCallMonitor(host=host, port=port, sensor=sensor)
     monitor.connect()

@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Panasonic Viera TV platform."""
     from panasonic_viera import RemoteControl
 
@@ -61,13 +61,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         else:
             uuid = None
         remote = RemoteControl(host, port)
-        add_devices([PanasonicVieraTVDevice(mac, name, remote, uuid)])
+        add_entities([PanasonicVieraTVDevice(mac, name, remote, uuid)])
         return True
 
     host = config.get(CONF_HOST)
     remote = RemoteControl(host, port)
 
-    add_devices([PanasonicVieraTVDevice(mac, name, remote)])
+    add_entities([PanasonicVieraTVDevice(mac, name, remote)])
     return True
 
 
