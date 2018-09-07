@@ -49,7 +49,7 @@ class OpenThermGateway(ClimateDevice):
         import pyotgw
         self.pyotgw = pyotgw
         self.gateway = self.pyotgw.pyotgw()
-        self._device = config.get(CONF_DEVICE)
+        self._device = config[CONF_DEVICE]
         self.friendly_name = config.get(CONF_NAME)
         self.floor_temp = config.get(CONF_FLOOR_TEMP)
         self.temp_precision = config.get(CONF_PRECISION)
@@ -80,23 +80,25 @@ class OpenThermGateway(ClimateDevice):
         else:
             self._current_operation = STATE_IDLE
         self._current_temperature = status.get(self.pyotgw.DATA_ROOM_TEMP)
-        if status.get(self.pyotgw.DATA_ROOM_SETPOINT_OVRD) is None:
+
+        temp = status.get(self.pyotgw.DATA_ROOM_SETPOINT_OVRD)
+        if temp is None:
             temp = status.get(self.pyotgw.DATA_ROOM_SETPOINT)
-        else:
-            temp = status.get(self.pyotgw.DATA_ROOM_SETPOINT_OVRD)
         self._target_temperature = temp
 
         # GPIO mode 5: 0 == Away
         # GPIO mode 6: 1 == Away
-        if status.get(self.pyotgw.OTGW_GPIO_A) == 5:
+        gpio_a_state = status.get(self.pyotgw.OTGW_GPIO_A)
+        if gpio_a_state == 5:
             self._away_mode_a = 0
-        elif status.get(self.pyotgw.OTGW_GPIO_A) == 6:
+        elif gpio_a_state == 6:
             self._away_mode_a = 1
         else:
             self._away_mode_a = None
-        if status.get(self.pyotgw.OTGW_GPIO_B) == 5:
+        gpio_b_state = status.get(self.pyotgw.OTGW_GPIO_B)
+        if gpio_b_state == 5:
             self._away_mode_b = 0
-        elif status.get(self.pyotgw.OTGW_GPIO_B) == 6:
+        elif gpio_b_state == 6:
             self._away_mode_b = 1
         else:
             self._away_mode_b = None
