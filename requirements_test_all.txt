@@ -13,8 +13,8 @@ pylint==2.1.1
 pytest-aiohttp==0.3.0
 pytest-cov==2.5.1
 pytest-sugar==0.9.1
-pytest-timeout==1.3.1
-pytest==3.7.2
+pytest-timeout==1.3.2
+pytest==3.8.0
 requests_mock==1.5.2
 
 
