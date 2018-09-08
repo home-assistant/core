@@ -4,12 +4,13 @@ Support for DoorBird device.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/doorbird/
 """
-import logging
 
 import asyncio
+import datetime
+import logging
 import voluptuous as vol
 
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.const import CONF_HOST, CONF_USERNAME, \
     CONF_PASSWORD, CONF_NAME, CONF_DEVICES, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
@@ -25,6 +26,7 @@ API_URL = '/api/{}'.format(DOMAIN)
 
 CONF_DOORBELL_EVENTS = 'doorbell_events'
 CONF_CUSTOM_URL = 'hass_url_override'
+CONF_TOKEN = 'token'
 
 DOORBELL_EVENT = 'doorbell'
 MOTION_EVENT = 'motionsensor'
@@ -47,6 +49,7 @@ DEVICE_SCHEMA = vol.Schema({
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
+        vol.Required(CONF_TOKEN): cv.string,
         vol.Required(CONF_DEVICES): vol.All(cv.ensure_list, [DEVICE_SCHEMA])
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -56,8 +59,10 @@ def setup(hass, config):
     """Set up the DoorBird component."""
     from doorbirdpy import DoorBird
 
+    token = config[DOMAIN].get(CONF_TOKEN)
+
     # Provide an endpoint for the doorstations to call to trigger events
-    hass.http.register_view(DoorbirdRequestView())
+    hass.http.register_view(DoorbirdRequestView(token))
 
     doorstations = []
 
@@ -76,7 +81,8 @@ def setup(hass, config):
         if status[0]:
             _LOGGER.info("Connected to DoorBird at %s as %s", device_ip,
                          username)
-            doorstation = ConfiguredDoorbird(device, name, events, custom_url)
+            doorstation = ConfiguredDoorbird(device, name, events, custom_url,
+                                             token)
             doorstations.append(doorstation)
         elif status[1] == 401:
             _LOGGER.error("Authorization rejected by DoorBird at %s",
@@ -99,6 +105,15 @@ def setup(hass, config):
 
     return True
 
+def get_doorstation_by_slug(hass, slug):
+    """Get doorstation by slug"""
+    for doorstation in hass.data[DOMAIN]:
+        if slugify(doorstation.name) in slug:
+            return doorstation
+
+def handle_event(event):
+    """Dummy handler used to register events in GUI"""
+    return None
 
 def subscribe_events(hass, doorstation):
     """Initialize the subscriber."""
@@ -116,7 +131,8 @@ def subscribe_events(hass, doorstation):
 
         slug = slugify(name)
 
-        url = '{}{}/{}'.format(hass_url, API_URL, slug)
+        url = '{}{}/{}?token={}'.format(hass_url, API_URL, slug,
+                                        doorstation.token)
 
         _LOGGER.info("DoorBird will connect to this instance via %s",
                      url)
@@ -126,16 +142,20 @@ def subscribe_events(hass, doorstation):
 
         doorstation.device.subscribe_notification(event_type, url)
 
+        #Register a dummy listener so event is listed in GUI
+        hass.bus.listen('{}_{}'.format(DOMAIN, slug), handle_event)
+
 
 class ConfiguredDoorbird():
     """Attach additional information to pass along with configured device."""
 
-    def __init__(self, device, name, events=None, custom_url=None):
+    def __init__(self, device, name, events=None, custom_url=None, token=None):
         """Initialize configured device."""
         self._name = name
         self._device = device
         self._custom_url = custom_url
         self._monitored_events = events
+        self._token = token
 
     @property
     def name(self):
@@ -160,6 +180,11 @@ class ConfiguredDoorbird():
 
         return self._monitored_events
 
+    @property
+    def token(self):
+        """Get token used to authenticate event endpoint"""
+        return self._token
+
 
 class DoorbirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
@@ -169,12 +194,31 @@ class DoorbirdRequestView(HomeAssistantView):
     name = API_URL[1:].replace('/', ':')
     extra_urls = [API_URL + '/{sensor}']
 
+    def __init__(self, token):
+        HomeAssistantView.__init__(self)
+        self._token = token
+
     # pylint: disable=no-self-use
     @asyncio.coroutine
     def get(self, request, sensor):
         """Respond to requests from the device."""
+
+        requestToken = request.query.get('token')
+
+        authenticated = requestToken == self._token
+
+        if requestToken == '' or not authenticated:
+            return self.json_message('Unauthorized.')
+
         hass = request.app['hass']
 
-        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor))
+        doorstation = get_doorstation_by_slug(hass, sensor)
+
+        if doorstation is not None:
+            eventData = doorstation.get_event_data
+        else:
+            eventData = {}
+
+        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor), eventData)
 
         return 'OK'
