@@ -1,15 +1,10 @@
 """The tests for the clarifai_general component."""
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import patch
 
 import pytest
-import requests
-import requests_mock
 
 from homeassistant.core import callback
-from homeassistant.const import (
-    ATTR_ENTITY_ID, ATTR_NAME, CONF_FRIENDLY_NAME, CONF_PASSWORD,
-    CONF_USERNAME, CONF_IP_ADDRESS, CONF_PORT,
-    HTTP_BAD_REQUEST, HTTP_OK, HTTP_UNAUTHORIZED, STATE_UNKNOWN)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.image_processing.clarifai_general as cg
@@ -94,10 +89,10 @@ def test_valid_api_key(mock_app):
 def test_invalid_api_key(caplog, mock_app):
     """Test that an invalid api key is caught."""
     pass
-    #from clarifai.rest import ApiError
-    #mock_app.side_effect = ApiError
-    #cg.validate_api_key(MOCK_API_KEY)
-    #assert "Clarifai error: Key not found" in caplog.text
+    # from clarifai.rest import ApiError
+    # mock_app.side_effect = ApiError
+    # cg.validate_api_key(MOCK_API_KEY)
+    # assert "Clarifai error: Key not found" in caplog.text
 
 
 async def test_setup_platform(hass, mock_app, mock_image):
