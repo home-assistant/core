@@ -7,6 +7,8 @@ https://home-assistant.io/components/insteon/
 import asyncio
 import collections
 import logging
+from typing import Callable, Dict
+
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -18,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import discovery
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['insteonplm==0.14.1']
+REQUIREMENTS = ['insteonplm==0.14.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +31,7 @@ CONF_HUB_USERNAME = 'username'
 CONF_HUB_PASSWORD = 'password'
 CONF_HUB_VERSION = 'hub_version'
 CONF_OVERRIDE = 'device_override'
-CONF_PLM_HUB_MSG = ('Must configure either a PLM port or a Hub host')
+CONF_PLM_HUB_MSG = 'Must configure either a PLM port or a Hub host'
 CONF_ADDRESS = 'address'
 CONF_CAT = 'cat'
 CONF_SUBCAT = 'subcat'
@@ -65,6 +67,35 @@ BUTTON_PRESSED_STATE_NAME = 'onLevelButton'
 EVENT_BUTTON_ON = 'insteon.button_on'
 EVENT_BUTTON_OFF = 'insteon.button_off'
 EVENT_CONF_BUTTON = 'button'
+
+
+# Adapted from:
+# https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
+def set_default_port() -> Callable:
+    """Set the default port based on the Hub version."""
+    def set_default(obj: Dict) -> Dict:
+        """Set ip_port default value based on hub_version."""
+        if not isinstance(obj, dict):
+            raise vol.Invalid('expected dictionary')
+
+        ip_port = None
+        try:
+            ip_port = obj[CONF_IP_PORT]
+        except KeyError:
+            try:
+                hub_version = obj[CONF_HUB_VERSION]
+                # Found hub_version but not ip_port
+                if hub_version == 1:
+                    obj[CONF_IP_PORT] = 9761
+                elif not ip_port:
+                    obj[CONF_IP_PORT] = 25105
+            except KeyError:
+                raise vol.Invalid('Schema must contain {}.'.format(
+                    CONF_HUB_VERSION))
+        return obj
+
+    return set_default
+
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
     cv.deprecated(CONF_PLATFORM), vol.Schema({
@@ -103,7 +134,8 @@ CONFIG_SCHEMA = vol.Schema({
              vol.Optional(CONF_X10): vol.All(cv.ensure_list_csv,
                                              [CONF_X10_SCHEMA])
              }, extra=vol.ALLOW_EXTRA, required=True),
-        cv.has_at_least_one_key(CONF_PORT, CONF_HOST))
+        cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
+        set_default_port())
     }, extra=vol.ALLOW_EXTRA)
 
 
@@ -150,14 +182,6 @@ def async_setup(hass, config):
     x10_all_units_off_housecode = conf.get(CONF_X10_ALL_UNITS_OFF)
     x10_all_lights_on_housecode = conf.get(CONF_X10_ALL_LIGHTS_ON)
     x10_all_lights_off_housecode = conf.get(CONF_X10_ALL_LIGHTS_OFF)
-
-    # Set the default value of the IP port based on Hub version if not
-    # explicitly set
-    if not ip_port:
-        if hub_version == 1:
-            ip_port = 9761
-        else:
-            ip_port = 25105
 
     @callback
     def async_new_insteon_device(device):
