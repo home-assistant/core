@@ -1649,7 +1649,7 @@ class EvoZone(EvoSlaveEntity, ClimateDevice):
         temperature, which would be a function of operating mode (both
         controller and zone) and, for TRVs, the OpenWindowMode feature.
 
-        Boilers do not have setpoints; they are only on or off.  Their 
+        Boilers do not have setpoints; they are only on or off.  Their
         (scheduled) setpoint is the same as their target temperature.
         """
         # Zones have: {'DhwState': 'On',     'TimeOfDay': '17:30:00'}
