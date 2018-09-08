@@ -16,8 +16,7 @@ from homeassistant.components.vacuum import (
     SUPPORT_RETURN_HOME, SUPPORT_SEND_COMMAND, SUPPORT_STOP,
     SUPPORT_STATE, SUPPORT_START, VACUUM_SERVICE_SCHEMA, StateVacuumDevice,
     STATE_CLEANING, STATE_DOCKED, STATE_PAUSED, STATE_IDLE, STATE_RETURNING,
-    STATE_ERROR, STATE_REMOTE, STATE_SPOT_CLEANING, STATE_GOING_TO_TARGET,
-    STATE_UPDATING, STATE_ZONED_CLEANING)
+    STATE_ERROR)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_TOKEN, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
@@ -61,8 +60,7 @@ ATTR_ERROR = 'error'
 ATTR_RC_DURATION = 'duration'
 ATTR_RC_ROTATION = 'rotation'
 ATTR_RC_VELOCITY = 'velocity'
-ATTR_RAW_STATE = 'state'
-ATTR_RAW_STATE_CODE = 'state_code'
+ATTR_STATUS = 'status'
 
 SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_VELOCITY):
@@ -92,18 +90,16 @@ SUPPORT_XIAOMI = SUPPORT_STATE | SUPPORT_PAUSE | \
 STATE_CODE_TO_STATE = {
     2: STATE_IDLE,
     3: STATE_IDLE,
-    4: STATE_REMOTE,
     5: STATE_CLEANING,
     6: STATE_RETURNING,
     8: STATE_DOCKED,
     9: STATE_ERROR,
     10: STATE_PAUSED,
-    11: STATE_SPOT_CLEANING,
+    11: STATE_CLEANING,
     12: STATE_ERROR,
-    14: STATE_UPDATING,
     15: STATE_RETURNING,
-    16: STATE_GOING_TO_TARGET,
-    17: STATE_ZONED_CLEANING,
+    16: STATE_CLEANING,
+    17: STATE_CLEANING,
 }
 
 
@@ -245,13 +241,12 @@ class MiroboVacuum(StateVacuumDevice):
                     / 3600),
                 ATTR_SENSOR_DIRTY_LEFT: int(
                     self.consumable_state.sensor_dirty_left.total_seconds()
-                    / 3600)
+                    / 3600),
+                ATTR_STATUS: str(self.vacuum_state.state)
                 })
 
             if self.vacuum_state.got_error:
                 attrs[ATTR_ERROR] = self.vacuum_state.error
-        attrs[ATTR_RAW_STATE_CODE] = self.vacuum_state.state_code
-        attrs[ATTR_RAW_STATE] = self.vacuum_state.state
         return attrs
 
     @property
