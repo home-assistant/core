@@ -8,13 +8,12 @@ import datetime
 import logging
 import re
 
-from env_canada import ECData
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_MONITORED_CONDITIONS, TEMP_CELSIUS, CONF_NAME, CONF_LATITUDE,
-    CONF_LONGITUDE, ATTR_ATTRIBUTION, ATTR_HIDDEN)
+    CONF_LONGITUDE, ATTR_ATTRIBUTION, ATTR_LOCATION)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.util.dt as dt
@@ -26,7 +25,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_UPDATED = 'updated'
 ATTR_STATION = 'station'
-ATTR_LOCATION = 'location'
 
 CONF_ATTRIBUTION = "Data provided by Environment Canada"
 CONF_STATION = 'station'
@@ -75,7 +73,7 @@ def validate_station(station):
 
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES.keys())):
+    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_STATION): validate_station,
@@ -86,6 +84,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Set up the Environment Canada sensor."""
+    from env_canada import ECData
+
     if config.get(CONF_STATION):
         ec_data = ECData(station_id=config[CONF_STATION])
     elif config.get(CONF_LATITUDE) and config.get(CONF_LONGITUDE):
@@ -125,15 +125,10 @@ class ECSensor(Entity):
     @property
     def device_state_attributes(self):
         """Return the state attributes of the device."""
-        if self.state:
-            hidden = False
-        else:
-            hidden = True
-
         timestamp = self.ec_data.conditions.get('timestamp')
         if timestamp:
             updated_utc = datetime.datetime.strptime(timestamp, '%Y%m%d%H%M%S')
-            updated_local = dt.as_local(updated_utc)
+            updated_local = dt.as_local(updated_utc).isoformat()
         else:
             updated_local = None
 
@@ -142,7 +137,6 @@ class ECSensor(Entity):
             ATTR_UPDATED: updated_local,
             ATTR_LOCATION: self.ec_data.conditions.get('location'),
             ATTR_STATION: self.ec_data.conditions.get('station'),
-            ATTR_HIDDEN: hidden
         }
 
         return attr
