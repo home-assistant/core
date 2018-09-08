@@ -65,27 +65,24 @@ async def _async_setup_iaszone(hass, config, async_add_entities,
 async def _async_setup_remote(hass, config, async_add_entities,
                               discovery_info):
 
-    async def safe(coro):
-        """Run coro, catching ZigBee delivery errors, and ignoring them."""
-        import zigpy.exceptions
-        try:
-            await coro
-        except zigpy.exceptions.DeliveryError as exc:
-            _LOGGER.warning("Ignoring error during setup: %s", exc)
+    sensor = Switch(**discovery_info)
 
     if discovery_info['new_join']:
         from zigpy.zcl.clusters.general import OnOff, LevelControl
         out_clusters = discovery_info['out_clusters']
         if OnOff.cluster_id in out_clusters:
             cluster = out_clusters[OnOff.cluster_id]
-            await safe(cluster.bind())
-            await safe(cluster.configure_reporting(0, 0, 600, 1))
+            await zha.configure_reporting(
+                sensor.entity_id, cluster, 0, min_report=0, max_report=600,
+                reportable_change=1
+            )
         if LevelControl.cluster_id in out_clusters:
             cluster = out_clusters[LevelControl.cluster_id]
-            await safe(cluster.bind())
-            await safe(cluster.configure_reporting(0, 1, 600, 1))
+            await zha.configure_reporting(
+                sensor.entity_id, cluster, 0, min_report=1, max_report=600,
+                reportable_change=1
+            )
 
-    sensor = Switch(**discovery_info)
     async_add_entities([sensor], update_before_add=True)
 
 
