@@ -48,7 +48,6 @@ CONF_BASE_URL = 'base_url'
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = 'tts'
 DEFAULT_TIME_MEMORY = 300
-DEFAULT_BASE_URL = ''
 DEPENDENCIES = ['http']
 DOMAIN = 'tts'
 
@@ -67,7 +66,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
     vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
         vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
-    vol.Optional(CONF_BASE_URL, default=DEFAULT_BASE_URL): cv.string,
+    vol.Optional(CONF_BASE_URL): cv.string,
 })
 
 SCHEMA_SERVICE_SAY = vol.Schema({
@@ -90,10 +89,7 @@ async def async_setup(hass, config):
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
-        base_url = conf.get(CONF_BASE_URL, DEFAULT_BASE_URL)
-
-        if base_url == '':
-            base_url = hass.config.api.base_url
+        base_url = conf.get(CONF_BASE_URL) or hass.config.api.base_url
 
         await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
     except (HomeAssistantError, KeyError) as err:
@@ -187,7 +183,7 @@ class SpeechManager:
         self.use_cache = DEFAULT_CACHE
         self.cache_dir = DEFAULT_CACHE_DIR
         self.time_memory = DEFAULT_TIME_MEMORY
-        self.base_url = DEFAULT_BASE_URL
+        self.base_url = None
         self.file_cache = {}
         self.mem_cache = {}
 
