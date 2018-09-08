@@ -49,10 +49,10 @@ VALID_CONFIG = {
 
 
 @pytest.fixture
-def mock_clarifai():
+def mock_app():
     """Return a mock camera image."""
-    with patch('clarifai.rest.ClarifaiApp') as _mock_clarifai:
-        yield _mock_clarifai
+    with patch('clarifai.rest.ClarifaiApp') as _mock_app:
+        yield _mock_app
 
 
 @pytest.fixture
@@ -73,7 +73,13 @@ def test_parse_data():
     assert cg.parse_concepts(RAW_CONCEPTS) == PARSED_CONCEPTS
 
 
-async def test_setup_platform(hass, mock_clarifai, mock_image):
+def test_validate_api_key(mock_app):
+    """Test that the api key is validated."""
+    cg.validate_api_key(MOCK_API_KEY)
+    mock_app.assert_called_with(api_key=MOCK_API_KEY)
+
+
+async def test_setup_platform(hass, mock_app, mock_image):
     """Set up platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
