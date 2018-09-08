@@ -12,12 +12,6 @@ import homeassistant.components.image_processing.clarifai_general as cg
 
 # Mock data returned by the Clarifai API.
 
-MOCK_HEALTH = {'success': True,
-               'hostname': 'b893cc4f7fd6',
-               'metadata': {'boxname': 'facebox', 'build': 'development'},
-               'errors': []}
-
-
 MOCK_NAME = 'mock_name'
 MOCK_API_KEY = '12345'
 
@@ -132,3 +126,4 @@ async def test_setup_platform_with_name(hass, mock_app):
     assert hass.states.get(named_entity_id)
     state = hass.states.get(named_entity_id)
     assert state.attributes.get(CONF_FRIENDLY_NAME) == MOCK_NAME
+
