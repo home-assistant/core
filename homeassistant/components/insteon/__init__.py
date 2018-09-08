@@ -78,8 +78,9 @@ def set_default_port() -> Callable:
         if not isinstance(obj, dict):
             raise vol.Invalid('expected dictionary')
 
-        ip_port = None
         try:
+            # If the ip_port is found do nothing
+            # If it is not found (KeyError) the set the default
             ip_port = obj[CONF_IP_PORT]
         except KeyError:
             try:
