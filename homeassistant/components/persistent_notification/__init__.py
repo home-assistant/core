@@ -6,10 +6,12 @@ https://home-assistant.io/components/persistent_notification/
 """
 import asyncio
 import logging
+from collections import OrderedDict
 from typing import Awaitable
 
 import voluptuous as vol
 
+from homeassistant.components import websocket_api
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.loader import bind_hass
@@ -20,13 +22,17 @@ from homeassistant.util import slugify
 ATTR_MESSAGE = 'message'
 ATTR_NOTIFICATION_ID = 'notification_id'
 ATTR_TITLE = 'title'
+ATTR_STATUS = 'status'
 
 DOMAIN = 'persistent_notification'
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
+EVENT_PERSISTENT_NOTIFICATIONS_UPDATED = 'persistent_notifications_updated'
+
 SERVICE_CREATE = 'create'
 SERVICE_DISMISS = 'dismiss'
+SERVICE_MARK_READ = 'mark_read'
 
 SCHEMA_SERVICE_CREATE = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.template,
@@ -38,11 +44,23 @@ SCHEMA_SERVICE_DISMISS = vol.Schema({
     vol.Required(ATTR_NOTIFICATION_ID): cv.string,
 })
 
+SCHEMA_SERVICE_MARK_READ = vol.Schema({
+    vol.Required(ATTR_NOTIFICATION_ID): cv.string,
+})
 
 DEFAULT_OBJECT_ID = 'notification'
 _LOGGER = logging.getLogger(__name__)
 
 STATE = 'notifying'
+STATUS_UNREAD = 'unread'
+STATUS_READ = 'read'
+
+WS_TYPE_GET_NOTIFICATIONS = 'persistent_notification/get'
+SCHEMA_WS_GET = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_GET_NOTIFICATIONS,
+})
+
+PERSISTENT_NOTIFICATIONS = OrderedDict()
 
 
 @bind_hass
@@ -55,6 +73,12 @@ def create(hass, message, title=None, notification_id=None):
 def dismiss(hass, notification_id):
     """Remove a notification."""
     hass.add_job(async_dismiss, hass, notification_id)
+
+
+@bind_hass
+def mark_read(hass, notification_id):
+    """Mark a notification as read."""
+    hass.add_job(async_mark_read, hass, notification_id)
 
 
 @callback
@@ -76,11 +100,21 @@ def async_create(hass: HomeAssistant, message: str, title: str = None,
 
 @callback
 @bind_hass
-def async_dismiss(hass, notification_id):
+def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     """Remove a notification."""
     data = {ATTR_NOTIFICATION_ID: notification_id}
 
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
+
+
+@callback
+@bind_hass
+def async_mark_read(hass: HomeAssistant, notification_id: str) -> None:
+    """Mark a notification as read."""
+    data = {ATTR_NOTIFICATION_ID: notification_id}
+
+    hass.async_add_job(
+        hass.services.async_call(DOMAIN, SERVICE_MARK_READ, data))
 
 
 @asyncio.coroutine
@@ -98,6 +132,8 @@ def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
         else:
             entity_id = async_generate_entity_id(
                 ENTITY_ID_FORMAT, DEFAULT_OBJECT_ID, hass=hass)
+            notification_id = entity_id.split('.')[1]
+
         attr = {}
         if title is not None:
             try:
@@ -120,13 +156,46 @@ def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
 
         hass.states.async_set(entity_id, STATE, attr)
 
+        # Store notification and fire event
+        # This will eventually replace state machine storage
+        PERSISTENT_NOTIFICATIONS[entity_id] = {
+            ATTR_MESSAGE: message,
+            ATTR_NOTIFICATION_ID: notification_id,
+            ATTR_STATUS: STATUS_UNREAD,
+            ATTR_TITLE: title,
+        }
+
+        hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
+
     @callback
     def dismiss_service(call):
         """Handle the dismiss notification service call."""
         notification_id = call.data.get(ATTR_NOTIFICATION_ID)
         entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
 
+        if entity_id not in PERSISTENT_NOTIFICATIONS:
+            _LOGGER.error('Dismissing persistent_notification failed: '
+                          'Notification ID %s not found.', notification_id)
+            return
+
         hass.states.async_remove(entity_id)
+
+        del PERSISTENT_NOTIFICATIONS[entity_id]
+        hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
+
+    @callback
+    def mark_read_service(call):
+        """Handle the mark_read notification service call."""
+        notification_id = call.data.get(ATTR_NOTIFICATION_ID)
+        entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
+
+        if entity_id not in PERSISTENT_NOTIFICATIONS:
+            _LOGGER.error('Marking persistent_notification read failed: '
+                          'Notification ID %s not found.', notification_id)
+            return
+
+        PERSISTENT_NOTIFICATIONS[entity_id][ATTR_STATUS] = STATUS_READ
+        hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
 
     hass.services.async_register(DOMAIN, SERVICE_CREATE, create_service,
                                  SCHEMA_SERVICE_CREATE)
@@ -134,4 +203,27 @@ def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
     hass.services.async_register(DOMAIN, SERVICE_DISMISS, dismiss_service,
                                  SCHEMA_SERVICE_DISMISS)
 
+    hass.services.async_register(DOMAIN, SERVICE_MARK_READ, mark_read_service,
+                                 SCHEMA_SERVICE_MARK_READ)
+
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_GET_NOTIFICATIONS, websocket_get_notifications,
+        SCHEMA_WS_GET
+    )
+
     return True
+
+
+@callback
+def websocket_get_notifications(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
+    """Return a list of persistent_notifications."""
+    connection.send_message_outside(
+        websocket_api.result_message(msg['id'], [
+            {
+                key: data[key] for key in (ATTR_NOTIFICATION_ID, ATTR_MESSAGE,
+                                           ATTR_STATUS, ATTR_TITLE)
+            }
+            for data in PERSISTENT_NOTIFICATIONS.values()
+        ])
+    )
