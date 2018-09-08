@@ -463,6 +463,9 @@ homematicip==0.9.8
 # homeassistant.components.remember_the_milk
 httplib2==0.10.3
 
+# homeassistant.components.huawei_lte
+huawei-lte-api==1.0.12
+
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
 
