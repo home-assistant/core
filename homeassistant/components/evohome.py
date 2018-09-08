@@ -649,6 +649,24 @@ class EvoEntity(Entity):                                                        
             # Controllers do not have a temperature at all
             data = {}
 
+        if self._type & EVO_DHW:
+            # Zones & DHW controllers report a current temperature
+            # they have different precision, & a zone's precision may change
+            # lowest possible target_temp
+            data[ATTR_MIN_TEMP] = show_temp(
+                self.hass,
+                self.min_temp,
+                self.temperature_unit,
+                self.precision
+            )
+            # highest possible target_temp
+            data[ATTR_MAX_TEMP] = show_temp(
+                self.hass,
+                self.max_temp,
+                self.temperature_unit,
+                self.precision
+            )
+
         # Heating zones also have a target temperature (and a setpoint)
         if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
             data[ATTR_TEMPERATURE] = show_temp(
@@ -914,7 +932,7 @@ class EvoController(EvoEntity):
             # only update the timers if the api call was successful
             domain_data['timers']['statusUpdated'] = datetime.now()
 
-#       _LOGGER.debug("domain_data['status'] = %s", domain_data['status'])
+        _LOGGER.debug("domain_data['status'] = %s", domain_data['status'])
 
     # 2. AFTER obtaining state data, do we need to increase precision of temps?
         if domain_data['params'][CONF_HIGH_PRECISION] and \
@@ -938,31 +956,51 @@ class EvoController(EvoEntity):
                     "client.temperatures()..."
                 )
                 # this is a a generator, so use list()
+                # i think: DHW first (if any), then zones ordered by name
                 new_dict_list = list(ec1_api.temperatures(force_refresh=True))
 
-    # now, prepare the v1 temps to merge with v2 status
+                _LOGGER.debug(
+                    "_update_state_data(): new_dict_list = %s",
+                    new_dict_list
+                )
+
+    # start prep of the data
+                for zone in new_dict_list:
+                    del zone['name']
+                    zone['apiV1Status'] = {}
+                    # is 128 is used for 'unavailable' temps?
+                    temp = zone.pop('temp')
+                    if temp != 128:
+                        zone['apiV1Status']['temp'] = temp
+                    else:
+                        zone['apiV1Status']['temp'] = None
+
+    # first handle the DHW, if any (done this way for readability)
+                if new_dict_list[0]['thermostat'] == 'DOMESTIC_HOT_WATER':
+                    dhw_v1 = new_dict_list.pop(0)
+
+                    dhw_v1['dhwId'] = str(dhw_v1.pop('id'))
+                    del dhw_v1['setpoint']
+                    del dhw_v1['thermostat']
+
+                    dhw_v2 = domain_data['status']['dhw']
+                    dhw_v2.update(dhw_v1)  # more like a merge
+
+    # now, prepare the v1 zones to merge into the v2 zones
                 for zone in new_dict_list:
                     zone['zoneId'] = str(zone.pop('id'))
+                    zone['apiV1Status']['setpoint'] = zone.pop('setpoint')
                     del zone['thermostat']
-    #               del zone['setpoint']
-                    del zone['name']
-                    temp = zone.pop('temp')
-                    if temp != 128:  # is 128 is used for 'unavailable' temps?
-                        zone['highPrecisionTemp'] = temp
-                    else:
-                        zone['highPrecisionTemp'] = None
 
                 org_dict_list = domain_data['status']['zones']
 
-    # this was the old way of doing it...
-    #           for temp in new_dict_list:
-    #               for zone in org_dict_list:
-    #                   if str(temp['id']) == zone['zoneId']:
-    #                       zone['highPrecisionTemp'] = temp['temp']
-    #                       break
-    # I think the old way was better! e.g. didn't need to prepare temps + sort
+                _LOGGER.debug(
+                    "_update_state_data(): org_dict_list = %s",
+                    org_dict_list
+                )
 
-    # this is the new way of doing it (more python-esque) - dont use sorted()!
+    # finally, merge the v1 zones into the v2 zones
+    #  - dont use sorted(), it will create a new list!
                 new_dict_list.sort(key=lambda x: x['zoneId'])
                 org_dict_list.sort(key=lambda x: x['zoneId'])
                 # v2 and v1 lists _should_ now be zip'ble
@@ -989,6 +1027,11 @@ class EvoController(EvoEntity):
                         ec1_api.user_data
                     )
     #               raise  # usually, no raise for TypeError
+
+        _LOGGER.debug(
+            "_update_state_data(): domain_data['status'] = %s",
+            domain_data['status']
+        )
 
     def update(self):
         """Get the latest state data of the installation.
@@ -1172,8 +1215,8 @@ class EvoSlaveEntity(EvoEntity):
         # evoBoiler(Entity) *also* needs uses unit_of_measurement
 
         # TBA: this needs work - what if v1 temps failed, or ==128
-        if 'highPrecisionTemp' in self._status:
-            curr_temp = self._status['highPrecisionTemp']
+        if 'apiV1Status' in self._status:
+            curr_temp = self._status['apiV1Status']['temp']
         elif self._status['temperatureStatus']['isAvailable']:
             curr_temp = self._status['temperatureStatus']['temperature']
         else:
@@ -1186,7 +1229,7 @@ class EvoSlaveEntity(EvoEntity):
                 self._id
             )
 
-#       _LOGGER.debug("current_temperature(%s) = %s", self._id, curr_temp)
+        _LOGGER.debug("current_temperature(%s) = %s", self._id, curr_temp)
         return curr_temp
 
     @property
@@ -1198,15 +1241,43 @@ class EvoSlaveEntity(EvoEntity):
     @property
     def precision(self):
         """Return the temperature precision to use in the frontend UI."""
-        if self._type & EVO_DHW:  # Honeywell has (e.g.) 62C, not 62.0C
-            precision = PRECISION_WHOLE
-        elif self._params[CONF_HIGH_PRECISION]:
-            precision = PRECISION_TENTHS
-        else:
+        if self._params[CONF_HIGH_PRECISION]:
+            precision = PRECISION_TENTHS  # and is actually 0.01 for zones!
+        elif self._type & EVO_ZONE:
             precision = PRECISION_HALVES
+        elif self._type & EVO_DHW:
+            precision = PRECISION_WHOLE
 
 #       _LOGGER.debug("precision(%s) = %s", self._id, precision)
         return precision
+
+    @property
+    def min_temp(self):
+        """Return the minimum target temp (setpoint) of a zone.
+
+        Setpoints are 5-35C by default, but can be further limited.  Only
+        applies to heating zones, not DHW controllers (boilers).
+        """
+        if self._type & EVO_ZONE:
+            temp = self._config[SETPOINT_CAPABILITIES]['minHeatSetpoint']
+        elif self._type & EVO_DHW:
+            temp = 30
+#       _LOGGER.debug("min_temp(%s) = %s", self._id, temp)
+        return temp
+
+    @property
+    def max_temp(self):
+        """Return the maximum target temp (setpoint) of a zone.
+
+        Setpoints are 5-35C by default, but can be further limited.  Only
+        applies to heating zones, not DHW controllers (boilers).
+        """
+        if self._type & EVO_ZONE:
+            temp = self._config[SETPOINT_CAPABILITIES]['maxHeatSetpoint']
+        elif self._type & EVO_DHW:
+            temp = 85
+#       _LOGGER.debug("max_temp(%s) = %s", self._id, temp)
+        return temp
 
     def update(self):
         """Get the latest state data of the Heating/DHW zone.
@@ -1578,7 +1649,8 @@ class EvoZone(EvoSlaveEntity, ClimateDevice):
         temperature, which would be a function of operating mode (both
         controller and zone) and, for TRVs, the OpenWindowMode feature.
 
-        Boilers do not have setpoints; they are only on or off.
+        Boilers do not have setpoints; they are only on or off.  Their 
+        (scheduled) setpoint is the same as their target temperature.
         """
         # Zones have: {'DhwState': 'On',     'TimeOfDay': '17:30:00'}
         # DHW has:    {'heatSetpoint': 17.3, 'TimeOfDay': '17:30:00'}
@@ -1634,7 +1706,7 @@ class EvoZone(EvoSlaveEntity, ClimateDevice):
 
             elif tcs_opmode == EVO_AWAY:
                 # default 'Away' temp is 15C, but can be set otherwise
-                # it seems to set to CONF_AWAY_TEMP even if setpoint is lower
+                # TBC: set to CONF_AWAY_TEMP even if set setpoint is lower
                 temp = self._params[CONF_AWAY_TEMP]
 
             elif tcs_opmode == EVO_HEATOFF:
@@ -1676,28 +1748,6 @@ class EvoZone(EvoSlaveEntity, ClimateDevice):
         step = PRECISION_HALVES
 #       _LOGGER.debug("target_temperature_step(%s) = %s", self._id, step)
         return step
-
-    @property
-    def min_temp(self):
-        """Return the minimum target temp (setpoint) of a zone.
-
-        Setpoints are 5-35C by default, but can be further limited.  Only
-        applies to heating zones, not DHW controllers (boilers).
-        """
-        temp = self._config[SETPOINT_CAPABILITIES]['minHeatSetpoint']
-#       _LOGGER.debug("min_temp(%s) = %s", self._id, temp)
-        return temp
-
-    @property
-    def max_temp(self):
-        """Return the maximum target temp (setpoint) of a zone.
-
-        Setpoints are 5-35C by default, but can be further limited.  Only
-        applies to heating zones, not DHW controllers (boilers).
-        """
-        temp = self._config[SETPOINT_CAPABILITIES]['maxHeatSetpoint']
-#       _LOGGER.debug("max_temp(%s) = %s", self._id, temp)
-        return temp
 
 
 class EvoBoiler(EvoSlaveEntity):
