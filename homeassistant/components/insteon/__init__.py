@@ -7,7 +7,7 @@ https://home-assistant.io/components/insteon/
 import asyncio
 import collections
 import logging
-from typing import Callable, Dict
+from typing import Dict
 
 import voluptuous as vol
 
