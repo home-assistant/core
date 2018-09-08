@@ -1,8 +1,8 @@
 """
-Component that will perform image classification via Clarifai.
+Component that will perform image classification via Clarifai general model.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/image_processing/clarifai
+https://home-assistant.io/components/image_processing/clarifai_general
 """
 import base64
 import json
@@ -90,8 +90,8 @@ class ClarifaiClassifier(ImageProcessingEntity):
             self._name = "{} {}".format(CLASSIFIER, entity_name)
         self._concepts = concepts
         self._camera_entity = camera_entity
-        self._classifications = {}  # The dict of classifications
-        self._state = None    # The most likely classification
+        self._classifications = {}  # The dict of classifications.
+        self._state = None  # The most likely classification.
 
     def process_image(self, image):
         """Perform classification of a single image."""
