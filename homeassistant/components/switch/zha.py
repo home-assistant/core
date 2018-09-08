@@ -13,6 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zha']
 
+
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Zigbee Home Automation switches."""
@@ -25,6 +26,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 
 async def make_sensor(discovery_info):
+    """Create ZHA sensors factory."""
     from zigpy.zcl.clusters.general import OnOff
 
     sensor = Switch(**discovery_info)
