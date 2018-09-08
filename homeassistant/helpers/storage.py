@@ -2,7 +2,7 @@
 import asyncio
 import logging
 import os
-from typing import Dict, Optional
+from typing import Dict, Optional, Callable
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import callback
@@ -15,17 +15,19 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @bind_hass
-async def async_migrator(hass, old_path, store, *, old_conf_migrate_func=None):
-    """Helper function to migrate old data to a store and then load data.
+async def async_migrator(hass, old_path, store, *,
+                         old_conf_load_func=json.load_json,
+                         old_conf_migrate_func=None):
+    """Migrate old data to a store and then load data.
 
     async def old_conf_migrate_func(old_data)
     """
     def load_old_config():
-        """Helper to load old config."""
+        """Load old config."""
         if not os.path.isfile(old_path):
             return None
 
-        return json.load_json(old_path)
+        return old_conf_load_func(old_path)
 
     config = await hass.async_add_executor_job(load_old_config)
 
@@ -52,7 +54,7 @@ class Store:
         self._data = None
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
-        self._write_lock = asyncio.Lock()
+        self._write_lock = asyncio.Lock(loop=hass.loop)
         self._load_task = None
 
     @property
@@ -75,9 +77,14 @@ class Store:
         return await self._load_task
 
     async def _async_load(self):
-        """Helper to load the data."""
+        """Load the data."""
+        # Check if we have a pending write
         if self._data is not None:
             data = self._data
+
+            # If we didn't generate data yet, do it now.
+            if 'data_func' in data:
+                data['data'] = data.pop('data_func')()
         else:
             data = await self.hass.async_add_executor_job(
                 json.load_json, self.path)
@@ -95,8 +102,8 @@ class Store:
         self._load_task = None
         return stored
 
-    async def async_save(self, data: Dict, *, delay: Optional[int] = None):
-        """Save data with an optional delay."""
+    async def async_save(self, data):
+        """Save data."""
         self._data = {
             'version': self.version,
             'key': self.key,
@@ -104,11 +111,20 @@ class Store:
         }
 
         self._async_cleanup_delay_listener()
+        self._async_cleanup_stop_listener()
+        await self._async_handle_write_data()
 
-        if delay is None:
-            self._async_cleanup_stop_listener()
-            await self._async_handle_write_data()
-            return
+    @callback
+    def async_delay_save(self, data_func: Callable[[], Dict],
+                         delay: Optional[int] = None):
+        """Save data with an optional delay."""
+        self._data = {
+            'version': self.version,
+            'key': self.key,
+            'data_func': data_func,
+        }
+
+        self._async_cleanup_delay_listener()
 
         self._unsub_delay_listener = async_call_later(
             self.hass, delay, self._async_callback_delayed_write)
@@ -149,8 +165,12 @@ class Store:
         await self._async_handle_write_data()
 
     async def _async_handle_write_data(self, *_args):
-        """Handler to handle writing the config."""
+        """Handle writing the config."""
         data = self._data
+
+        if 'data_func' in data:
+            data['data'] = data.pop('data_func')()
+
         self._data = None
 
         async with self._write_lock:

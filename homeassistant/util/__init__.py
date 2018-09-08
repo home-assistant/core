@@ -154,7 +154,7 @@ class OrderedEnum(enum.Enum):
 class OrderedSet(MutableSet[T]):
     """Ordered set taken from http://code.activestate.com/recipes/576694/."""
 
-    def __init__(self, iterable: Iterable[T] = None) -> None:
+    def __init__(self, iterable: Optional[Iterable[T]] = None) -> None:
         """Initialize the set."""
         self.end = end = []  # type: List[Any]
         end += [None, end, end]  # sentinel node for doubly linked list
@@ -260,7 +260,7 @@ class Throttle:
     """
 
     def __init__(self, min_time: timedelta,
-                 limit_no_throttle: timedelta = None) -> None:
+                 limit_no_throttle: Optional[timedelta] = None) -> None:
         """Initialize the throttle."""
         self.min_time = min_time
         self.limit_no_throttle = limit_no_throttle

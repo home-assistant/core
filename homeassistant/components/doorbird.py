@@ -139,17 +139,17 @@ class ConfiguredDoorbird():
 
     @property
     def name(self):
-        """Custom device name."""
+        """Get custom device name."""
         return self._name
 
     @property
     def device(self):
-        """The configured device."""
+        """Get the configured device."""
         return self._device
 
     @property
     def custom_url(self):
-        """Custom url for device."""
+        """Get custom url for device."""
         return self._custom_url
 
     @property

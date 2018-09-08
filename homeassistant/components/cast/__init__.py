@@ -1,5 +1,5 @@
 """Component to embed Google Cast."""
-from homeassistant import data_entry_flow
+from homeassistant import config_entries
 from homeassistant.helpers import config_entry_flow
 
 
@@ -15,7 +15,7 @@ async def async_setup(hass, config):
 
     if conf is not None:
         hass.async_create_task(hass.config_entries.flow.async_init(
-            DOMAIN, source=data_entry_flow.SOURCE_IMPORT))
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
 
     return True
 

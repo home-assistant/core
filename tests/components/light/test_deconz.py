@@ -37,6 +37,15 @@ GROUP = {
     },
 }
 
+SWITCH = {
+    "1": {
+        "id": "Switch 1 id",
+        "name": "Switch 1 name",
+        "type": "On/Off plug-in unit",
+        "state": {}
+    }
+}
+
 
 async def setup_bridge(hass, data, allow_deconz_groups=True):
     """Load the deCONZ light platform."""
@@ -112,3 +121,10 @@ async def test_do_not_add_deconz_groups(hass):
     async_dispatcher_send(hass, 'deconz_new_group', [group])
     await hass.async_block_till_done()
     assert len(hass.data[deconz.DATA_DECONZ_ID]) == 0
+
+
+async def test_no_switch(hass):
+    """Test that a switch doesn't get created as a light entity."""
+    await setup_bridge(hass, {"lights": SWITCH})
+    assert len(hass.data[deconz.DATA_DECONZ_ID]) == 0
+    assert len(hass.states.async_all()) == 0

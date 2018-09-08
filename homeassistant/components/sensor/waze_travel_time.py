@@ -16,7 +16,6 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers import location
 from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
 
 REQUIREMENTS = ['WazeRouteCalculator==0.6']
 
@@ -31,8 +30,10 @@ CONF_DESTINATION = 'destination'
 CONF_ORIGIN = 'origin'
 CONF_INCL_FILTER = 'incl_filter'
 CONF_EXCL_FILTER = 'excl_filter'
+CONF_REALTIME = 'realtime'
 
 DEFAULT_NAME = 'Waze Travel Time'
+DEFAULT_REALTIME = True
 
 ICON = 'mdi:car'
 
@@ -49,10 +50,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_INCL_FILTER): cv.string,
     vol.Optional(CONF_EXCL_FILTER): cv.string,
+    vol.Optional(CONF_REALTIME, default=DEFAULT_REALTIME): cv.boolean,
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Waze travel time sensor platform."""
     destination = config.get(CONF_DESTINATION)
     name = config.get(CONF_NAME)
@@ -60,14 +62,16 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     region = config.get(CONF_REGION)
     incl_filter = config.get(CONF_INCL_FILTER)
     excl_filter = config.get(CONF_EXCL_FILTER)
+    realtime = config.get(CONF_REALTIME)
 
     sensor = WazeTravelTime(name, origin, destination, region,
-                            incl_filter, excl_filter)
+                            incl_filter, excl_filter, realtime)
 
-    add_devices([sensor])
+    add_entities([sensor])
 
     # Wait until start event is sent to load this component.
-    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, sensor.update)
+    hass.bus.listen_once(
+        EVENT_HOMEASSISTANT_START, lambda _: sensor.update())
 
 
 def _get_location_from_attributes(state):
@@ -80,12 +84,13 @@ class WazeTravelTime(Entity):
     """Representation of a Waze travel time sensor."""
 
     def __init__(self, name, origin, destination, region,
-                 incl_filter, excl_filter):
+                 incl_filter, excl_filter, realtime):
         """Initialize the Waze travel time sensor."""
         self._name = name
         self._region = region
         self._incl_filter = incl_filter
         self._excl_filter = excl_filter
+        self._realtime = realtime
         self._state = None
         self._origin_entity_id = None
         self._destination_entity_id = None
@@ -177,7 +182,6 @@ class WazeTravelTime(Entity):
 
         return friendly_name
 
-    @Throttle(SCAN_INTERVAL)
     def update(self):
         """Fetch new state data for the sensor."""
         import WazeRouteCalculator
@@ -197,7 +201,7 @@ class WazeTravelTime(Entity):
             try:
                 params = WazeRouteCalculator.WazeRouteCalculator(
                     self._origin, self._destination, self._region)
-                routes = params.calc_all_routes_info()
+                routes = params.calc_all_routes_info(real_time=self._realtime)
 
                 if self._incl_filter is not None:
                     routes = {k: v for k, v in routes.items() if

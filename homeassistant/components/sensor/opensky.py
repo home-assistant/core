@@ -56,11 +56,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Open Sky platform."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-    add_devices([OpenSkySensor(
+    add_entities([OpenSkySensor(
         hass, config.get(CONF_NAME, DOMAIN), latitude, longitude,
         config.get(CONF_RADIUS), config.get(CONF_ALTITUDE))], True)
 

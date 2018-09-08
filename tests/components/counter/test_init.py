@@ -4,7 +4,7 @@ import asyncio
 import unittest
 import logging
 
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, State, Context
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.counter import (
     DOMAIN, decrement, increment, reset, CONF_INITIAL, CONF_STEP, CONF_NAME,
@@ -202,3 +202,24 @@ def test_no_initial_state_and_no_restore_state(hass):
     state = hass.states.get('counter.test1')
     assert state
     assert int(state.state) == 0
+
+
+async def test_counter_context(hass):
+    """Test that counter context works."""
+    assert await async_setup_component(hass, 'counter', {
+        'counter': {
+            'test': {}
+        }
+    })
+
+    state = hass.states.get('counter.test')
+    assert state is not None
+
+    await hass.services.async_call('counter', 'increment', {
+        'entity_id': state.entity_id,
+    }, True, Context(user_id='abcd'))
+
+    state2 = hass.states.get('counter.test')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

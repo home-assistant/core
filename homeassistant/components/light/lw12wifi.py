@@ -36,8 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup LW-12 WiFi LED Controller platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up LW-12 WiFi LED Controller platform."""
     import lw12
 
     # Assign configuration variables.
@@ -46,14 +46,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config.get(CONF_PORT)
     # Add devices
     lw12_light = lw12.LW12Controller(host, port)
-    add_devices([LW12WiFi(name, lw12_light)])
+    add_entities([LW12WiFi(name, lw12_light)])
 
 
 class LW12WiFi(Light):
     """LW-12 WiFi LED Controller."""
 
     def __init__(self, name, lw12_light):
-        """Initialisation of LW-12 WiFi LED Controller.
+        """Initialise LW-12 WiFi LED Controller.
 
         Args:
             name: Friendly name for this platform to use.

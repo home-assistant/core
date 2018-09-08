@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Find and return DIN III Relay switch."""
     import dlipower
 
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for outlet in power_switch[0:]
     )
 
-    add_devices(outlets)
+    add_entities(outlets)
 
 
 class DINRelay(SwitchDevice):

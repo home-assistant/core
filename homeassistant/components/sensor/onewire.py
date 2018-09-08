@@ -47,7 +47,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the one wire Sensors."""
     base_dir = config.get(CONF_MOUNT_DIR)
     devs = []
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       "Check the mount_dir parameter if it's defined")
         return
 
-    add_devices(devs, True)
+    add_entities(devs, True)
 
 
 class OneWire(Entity):

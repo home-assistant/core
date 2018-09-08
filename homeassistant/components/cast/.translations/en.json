@@ -6,7 +6,7 @@
         },
         "step": {
             "confirm": {
-                "description": "Do you want to setup Google Cast?",
+                "description": "Do you want to set up Google Cast?",
                 "title": "Google Cast"
             }
         },

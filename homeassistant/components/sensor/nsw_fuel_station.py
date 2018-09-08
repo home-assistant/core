@@ -42,7 +42,7 @@ NOTIFICATION_ID = 'nsw_fuel_station_notification'
 NOTIFICATION_TITLE = 'NSW Fuel Station Sensor Setup'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NSW Fuel Station sensor."""
     from nsw_fuel import FuelCheckClient
 
@@ -66,7 +66,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     available_fuel_types = station_data.get_available_fuel_types()
 
-    add_devices([
+    add_entities([
         StationPriceSensor(station_data, fuel_type)
         for fuel_type in fuel_types
         if fuel_type in available_fuel_types

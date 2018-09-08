@@ -1,7 +1,7 @@
 """Tests for the Cast config flow."""
 from unittest.mock import patch
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.setup import async_setup_component
 from homeassistant.components import cast
 
@@ -15,7 +15,8 @@ async def test_creating_entry_sets_up_media_player(hass):
             MockDependency('pychromecast', 'discovery'), \
             patch('pychromecast.discovery.discover_chromecasts',
                   return_value=True):
-        result = await hass.config_entries.flow.async_init(cast.DOMAIN)
+        result = await hass.config_entries.flow.async_init(
+            cast.DOMAIN, context={'source': config_entries.SOURCE_USER})
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
         await hass.async_block_till_done()

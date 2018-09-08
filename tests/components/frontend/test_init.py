@@ -348,3 +348,14 @@ async def test_onboarding_load(mock_http_client):
     """Test onboarding component loaded by default."""
     resp = await mock_http_client.get('/api/onboarding')
     assert resp.status == 200
+
+
+async def test_auth_authorize(mock_http_client):
+    """Test the authorize endpoint works."""
+    resp = await mock_http_client.get('/auth/authorize?hello=world')
+    assert resp.url.query_string == 'hello=world'
+    assert resp.url.path == '/frontend_es5/authorize.html'
+
+    resp = await mock_http_client.get('/auth/authorize?latest&hello=world')
+    assert resp.url.query_string == 'latest&hello=world'
+    assert resp.url.path == '/frontend_latest/authorize.html'

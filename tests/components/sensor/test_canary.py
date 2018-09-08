@@ -24,7 +24,7 @@ class TestCanarySensorSetup(unittest.TestCase):
 
     DEVICES = []
 
-    def add_devices(self, devices, action):
+    def add_entities(self, devices, action):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -51,7 +51,7 @@ class TestCanarySensorSetup(unittest.TestCase):
             mock_location("Work", True, devices=[online_device_at_work]),
         ]
 
-        canary.setup_platform(self.hass, self.config, self.add_devices, None)
+        canary.setup_platform(self.hass, self.config, self.add_entities, None)
 
         self.assertEqual(6, len(self.DEVICES))
 

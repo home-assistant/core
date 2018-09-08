@@ -27,7 +27,7 @@ SENSOR_TYPES = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the IGD sensors."""
     if discovery_info is None:
@@ -36,7 +36,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     device = hass.data[DATA_UPNP]
     service = device.find_first_service(CIC_SERVICE)
     unit = discovery_info['unit']
-    async_add_devices([
+    async_add_entities([
         IGDSensor(service, t, unit if SENSOR_TYPES[t][1] else '#')
         for t in SENSOR_TYPES], True)
 

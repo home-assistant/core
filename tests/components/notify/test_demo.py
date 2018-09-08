@@ -20,7 +20,7 @@ class TestNotifyDemo(unittest.TestCase):
     """Test the demo notify."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.events = []
         self.calls = []
@@ -73,7 +73,7 @@ class TestNotifyDemo(unittest.TestCase):
 
     @callback
     def record_calls(self, *args):
-        """Helper for recording calls."""
+        """Record calls."""
         self.calls.append(args)
 
     def test_sending_none_message(self):

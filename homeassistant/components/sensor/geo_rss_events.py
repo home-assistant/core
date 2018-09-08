@@ -54,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GeoRSS component."""
     home_latitude = hass.config.latitude
     home_longitude = hass.config.longitude
@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             device = GeoRssServiceSensor(category, data, name,
                                          unit_of_measurement)
             devices.append(device)
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class GeoRssServiceSensor(Entity):

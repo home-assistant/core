@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nanoleaf Aurora device."""
     import nanoleaf
     import nanoleaf.setup
@@ -83,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return
 
     hass.data[DATA_NANOLEAF_AURORA][host] = aurora_light
-    add_devices([AuroraLight(aurora_light, name)], True)
+    add_entities([AuroraLight(aurora_light, name)], True)
 
 
 class AuroraLight(Light):
