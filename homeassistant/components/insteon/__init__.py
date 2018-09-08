@@ -79,7 +79,7 @@ def set_default_port(schema: Dict) -> Dict:
         # Found hub_version but not ip_port
         if hub_version == 1:
             schema[CONF_IP_PORT] = 9761
-        elif not ip_port:
+        else:
             schema[CONF_IP_PORT] = 25105
     return schema
 
@@ -109,7 +109,7 @@ CONFIG_SCHEMA = vol.Schema({
                            msg=CONF_PLM_HUB_MSG): cv.string,
              vol.Exclusive(CONF_HOST, 'plm_or_hub',
                            msg=CONF_PLM_HUB_MSG): cv.string,
-             vol.Optional(CONF_IP_PORT): int,
+             vol.Optional(CONF_IP_PORT): cv.port,
              vol.Optional(CONF_HUB_USERNAME): cv.string,
              vol.Optional(CONF_HUB_PASSWORD): cv.string,
              vol.Optional(CONF_HUB_VERSION, default=2): vol.In([1, 2]),
