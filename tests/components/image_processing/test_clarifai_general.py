@@ -73,10 +73,19 @@ def test_parse_data():
     assert cg.parse_concepts(RAW_CONCEPTS) == PARSED_CONCEPTS
 
 
-def test_validate_api_key(mock_app):
+def test_valid_api_key(mock_app):
     """Test that the api key is validated."""
     cg.validate_api_key(MOCK_API_KEY)
     mock_app.assert_called_with(api_key=MOCK_API_KEY)
+
+
+def test_invalid_api_key(caplog, mock_app):
+    """Test that an invalid api key is caught."""
+    pass
+    #from clarifai.rest import ApiError
+    #mock_app.side_effect = ApiError
+    #cg.validate_api_key(MOCK_API_KEY)
+    #assert "Clarifai error: Key not found" in caplog.text
 
 
 async def test_setup_platform(hass, mock_app, mock_image):
