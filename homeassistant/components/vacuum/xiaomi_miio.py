@@ -60,6 +60,7 @@ ATTR_ERROR = 'error'
 ATTR_RC_DURATION = 'duration'
 ATTR_RC_ROTATION = 'rotation'
 ATTR_RC_VELOCITY = 'velocity'
+ATTR_STATUS = 'status'
 
 SERVICE_SCHEMA_REMOTE_CONTROL = VACUUM_SERVICE_SCHEMA.extend({
     vol.Optional(ATTR_RC_VELOCITY):
@@ -240,7 +241,8 @@ class MiroboVacuum(StateVacuumDevice):
                     / 3600),
                 ATTR_SENSOR_DIRTY_LEFT: int(
                     self.consumable_state.sensor_dirty_left.total_seconds()
-                    / 3600)
+                    / 3600),
+                ATTR_STATUS: str(self.vacuum_state.state)
                 })
 
             if self.vacuum_state.got_error:
