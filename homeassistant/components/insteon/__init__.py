@@ -69,33 +69,19 @@ EVENT_BUTTON_OFF = 'insteon.button_off'
 EVENT_CONF_BUTTON = 'button'
 
 
-# Adapted from:
-# https://github.com/alecthomas/voluptuous/issues/115#issuecomment-144464666
-def set_default_port() -> Callable:
+def set_default_port(schema: Dict) -> Dict:
     """Set the default port based on the Hub version."""
-    def set_default(obj: Dict) -> Dict:
-        """Set ip_port default value based on hub_version."""
-        if not isinstance(obj, dict):
-            raise vol.Invalid('expected dictionary')
-
-        try:
-            # If the ip_port is found do nothing
-            # If it is not found (KeyError) the set the default
-            ip_port = obj[CONF_IP_PORT]
-        except KeyError:
-            try:
-                hub_version = obj[CONF_HUB_VERSION]
-                # Found hub_version but not ip_port
-                if hub_version == 1:
-                    obj[CONF_IP_PORT] = 9761
-                elif not ip_port:
-                    obj[CONF_IP_PORT] = 25105
-            except KeyError:
-                raise vol.Invalid('Schema must contain {}.'.format(
-                    CONF_HUB_VERSION))
-        return obj
-
-    return set_default
+    # If the ip_port is found do nothing
+    # If it is not found the set the default
+    ip_port = schema.get(CONF_IP_PORT)
+    if not ip_port:
+        hub_version = schema.get(CONF_HUB_VERSION)
+        # Found hub_version but not ip_port
+        if hub_version == 1:
+            schema[CONF_IP_PORT] = 9761
+        elif not ip_port:
+            schema[CONF_IP_PORT] = 25105
+    return schema
 
 
 CONF_DEVICE_OVERRIDE_SCHEMA = vol.All(
@@ -136,7 +122,7 @@ CONFIG_SCHEMA = vol.Schema({
                                              [CONF_X10_SCHEMA])
              }, extra=vol.ALLOW_EXTRA, required=True),
         cv.has_at_least_one_key(CONF_PORT, CONF_HOST),
-        set_default_port())
+        set_default_port)
     }, extra=vol.ALLOW_EXTRA)
 
 
