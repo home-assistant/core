@@ -28,9 +28,9 @@ MOCK_API_KEY = '12345'
 
 MOCK_RESPONSE = {'status': {'description': 'Ok'},
                  'outputs': [{'data': {'concepts': [{'name': 'dog',
-                                                    'value': 0.85432},
-                                                   {'name': 'cat',
-                                                    'value': 0.14568}]}}]}
+                                                     'value': 0.85432},
+                                                    {'name': 'cat',
+                                                     'value': 0.14568}]}}]}
 
 # Concepts data after parsing.
 PARSED_CONCEPTS = {'cat': 14.57, 'dog': 85.43}
@@ -65,6 +65,15 @@ def mock_image():
         yield image
 
 
+@pytest.fixture
+def mock_response():
+    """Return a mock response from Clarifai."""
+    with patch('homeassistant.components.image_processing.clarifai_general.'
+               'ClarifaiClassifier.model.predict_by_base64',
+               return_value=MOCK_RESPONSE) as _mock_response:
+        yield _mock_response
+
+
 def test_encode_image():
     """Test that binary data is encoded correctly."""
     assert cg.encode_image(b'test') == b'dGVzdA=='
@@ -97,20 +106,7 @@ async def test_setup_platform(hass, mock_app, mock_image):
     assert hass.states.get(VALID_ENTITY_ID)
 
 
-async def test_setup_platform_with_name(hass, mock_app):
-    """Set up platform with one entity and a name."""
-    named_entity_id = 'image_processing.{}'.format(MOCK_NAME)
-
-    valid_config_named = VALID_CONFIG.copy()
-    valid_config_named[ip.DOMAIN][ip.CONF_SOURCE][ip.CONF_NAME] = MOCK_NAME
-
-    await async_setup_component(hass, ip.DOMAIN, valid_config_named)
-    assert hass.states.get(named_entity_id)
-    state = hass.states.get(named_entity_id)
-    assert state.attributes.get(CONF_FRIENDLY_NAME) == MOCK_NAME
-
-
-async def test_process_image(hass, mock_app, mock_image):
+async def test_process_image(hass, mock_app, mock_image, mock_response):
     """Test successful processing of an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
@@ -123,31 +119,21 @@ async def test_process_image(hass, mock_app, mock_image):
         events.append(event)
 
     hass.bus.async_listen('image_processing.model_prediction', mock_event)
+    data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
+    await hass.services.async_call(ip.DOMAIN,
+                                   ip.SERVICE_SCAN,
+                                   service_data=data)
+    await hass.async_block_till_done()
 
-    with requests_mock.Mocker() as mock_req:
-        url = "http://{}:{}/facebox/check".format(MOCK_IP, MOCK_PORT)
-        mock_req.post(url, json=MOCK_JSON)
-        data = {ATTR_ENTITY_ID: VALID_ENTITY_ID}
-        await hass.services.async_call(ip.DOMAIN,
-                                       ip.SERVICE_SCAN,
-                                       service_data=data)
-        await hass.async_block_till_done()
 
-    state = hass.states.get(VALID_ENTITY_ID)
-    assert state.state == '1'
-    assert state.attributes.get('matched_faces') == MATCHED_FACES
-    assert state.attributes.get('total_matched_faces') == 1
+async def test_setup_platform_with_name(hass, mock_app):
+    """Set up platform with one entity and a name."""
+    named_entity_id = 'image_processing.{}'.format(MOCK_NAME)
 
-    PARSED_FACES[0][ATTR_ENTITY_ID] = VALID_ENTITY_ID  # Update.
-    assert state.attributes.get('faces') == PARSED_FACES
-    assert state.attributes.get(CONF_FRIENDLY_NAME) == 'facebox demo_camera'
+    valid_config_named = VALID_CONFIG.copy()
+    valid_config_named[ip.DOMAIN][ip.CONF_SOURCE][ip.CONF_NAME] = MOCK_NAME
 
-    assert len(face_events) == 1
-    assert face_events[0].data[ATTR_NAME] == PARSED_FACES[0][ATTR_NAME]
-    assert (face_events[0].data[fb.ATTR_CONFIDENCE]
-            == PARSED_FACES[0][fb.ATTR_CONFIDENCE])
-    assert face_events[0].data[ATTR_ENTITY_ID] == VALID_ENTITY_ID
-    assert (face_events[0].data[fb.ATTR_IMAGE_ID] ==
-            PARSED_FACES[0][fb.ATTR_IMAGE_ID])
-    assert (face_events[0].data[fb.ATTR_BOUNDING_BOX] ==
-            PARSED_FACES[0][fb.ATTR_BOUNDING_BOX])
+    await async_setup_component(hass, ip.DOMAIN, valid_config_named)
+    assert hass.states.get(named_entity_id)
+    state = hass.states.get(named_entity_id)
+    assert state.attributes.get(CONF_FRIENDLY_NAME) == MOCK_NAME
