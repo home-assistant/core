@@ -142,7 +142,7 @@ def subscribe_events(hass, doorstation):
 
         doorstation.device.subscribe_notification(event_type, url)
 
-        #Register a dummy listener so event is listed in GUI
+        # Register a dummy listener so event is listed in GUI
         hass.bus.listen('{}_{}'.format(DOMAIN, slug), handle_event)
 
 
@@ -185,6 +185,15 @@ class ConfiguredDoorbird():
         """Get token used to authenticate event endpoint"""
         return self._token
 
+    def get_event_data(self):
+        return {
+            'timestamp': datetime.datetime.now(),
+            'live_video_url': self._device.live_video_url(),
+            'live_image_url': self._device.live_image_url(),
+            'rtsp_live_video_url': self._device.rtsp_live_video_url(),
+            'html5_viewer_url': self._device.html5_viewer_url()
+        }
+
 
 class DoorbirdRequestView(HomeAssistantView):
     """Provide a page for the device to call."""
@@ -215,7 +224,7 @@ class DoorbirdRequestView(HomeAssistantView):
         doorstation = get_doorstation_by_slug(hass, sensor)
 
         if doorstation is not None:
-            eventData = doorstation.get_event_data
+            eventData = doorstation.get_event_data()
         else:
             eventData = {}
 
