@@ -6,11 +6,10 @@ https://home-assistant.io/components/doorbird/
 """
 
 import asyncio
-import datetime
 import logging
 import voluptuous as vol
 
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_HOST, CONF_USERNAME, \
     CONF_PASSWORD, CONF_NAME, CONF_DEVICES, CONF_MONITORED_CONDITIONS
 import homeassistant.helpers.config_validation as cv
@@ -111,9 +110,11 @@ def get_doorstation_by_slug(hass, slug):
         if slugify(doorstation.name) in slug:
             return doorstation
 
+
 def handle_event(event):
     """Dummy handler used to register events in GUI"""
     return None
+
 
 def subscribe_events(hass, doorstation):
     """Initialize the subscriber."""
