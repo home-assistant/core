@@ -77,6 +77,7 @@ async def async_setup(hass, config):
     service = None
     resp = await pyupnp_async.msearch_first(search_target=IGD_DEVICE)
     if not resp:
+        _LOGGER.warning("Could not find any UPnP IGD")
         return False
 
     try:
@@ -98,7 +99,7 @@ async def async_setup(hass, config):
         return False
 
     if not service:
-        _LOGGER.warning("Could not find any UPnP IGD")
+        _LOGGER.warning("Could not find UPnP service for port mapping")
         return False
 
     port_mapping = config[CONF_ENABLE_PORT_MAPPING]
