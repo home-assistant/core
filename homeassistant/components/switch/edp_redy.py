@@ -12,7 +12,8 @@ DEPENDENCIES = ['edp_redy']
 ATTR_ACTIVE_POWER = 'active_power'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Perform the setup for re:dy devices."""
     session = hass.data[EDP_REDY]
     devices = []
@@ -21,7 +22,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             continue
         devices.append(EdpRedySwitch(session, device_json))
 
-    add_devices(devices)
+    async_add_entities(devices, True)
 
 
 class EdpRedySwitch(EdpRedyDevice, SwitchDevice):
