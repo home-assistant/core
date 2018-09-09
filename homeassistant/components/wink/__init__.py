@@ -464,7 +464,7 @@ def setup(hass, config):
             schema=SET_PAIRING_MODE_SCHEMA)
 
     def nimbus_service_handle(service):
-        """Handle nimbus services"""
+        """Handle nimbus services."""
         entity_id = service.data.get('entity_id')[0]
         _all_dials = []
         for sensor in hass.data[DOMAIN]['entities']['sensor']:
@@ -820,6 +820,7 @@ class WinkNimbusDialDevice(WinkDevice):
     """Representation of the Quirky Nimbus device."""
 
     def __init__(self, nimbus, dial, hass):
+        """Initialize the Nimbus dial."""
         super().__init__(dial, hass)
         self.parent = nimbus
 
@@ -863,6 +864,7 @@ class WinkNimbusDialDevice(WinkDevice):
     def set_configuration(self, **kwargs):
         """
         Set the dial config.
+
         Anything not sent will default to current setting.
         """
         attributes = {**self.dial_attributes(), **kwargs}
