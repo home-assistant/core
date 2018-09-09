@@ -12,10 +12,10 @@ from typing import List  # noqa: F401
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA, MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['onkyo-eiscp==1.2.4']
