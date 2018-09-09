@@ -191,10 +191,10 @@ class ConfiguredDoorbird():
     def get_event_data(self):
         return {
             'timestamp': datetime.datetime.now(),
-            'live_video_url': self._device.live_video_url(),
-            'live_image_url': self._device.live_image_url(),
-            'rtsp_live_video_url': self._device.rtsp_live_video_url(),
-            'html5_viewer_url': self._device.html5_viewer_url()
+            'live_video_url': self._device.live_video_url,
+            'live_image_url': self._device.live_image_url,
+            'rtsp_live_video_url': self._device.rtsp_live_video_url,
+            'html5_viewer_url': self._device.html5_viewer_url
         }
 
 
