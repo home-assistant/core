@@ -9,8 +9,8 @@ import datetime
 import functools as ft
 import logging
 import socket
-import urllib
 import threading
+import urllib
 
 import voluptuous as vol
 

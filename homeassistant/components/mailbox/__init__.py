@@ -4,31 +4,33 @@ Provides functionality for mailboxes.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mailbox/
 """
-
 import asyncio
-import logging
 from contextlib import suppress
 from datetime import timedelta
-
-import async_timeout
+import logging
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound
+import async_timeout
 
-from homeassistant.core import callback
-from homeassistant.helpers import config_per_platform, discovery
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity import Entity
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_per_platform, discovery
+from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_prepare_setup_platform
+
+_LOGGER = logging.getLogger(__name__)
+
+CONTENT_TYPE_MPEG = 'audio/mpeg'
 
 DEPENDENCIES = ['http']
 DOMAIN = 'mailbox'
+
 EVENT = 'mailbox_updated'
-CONTENT_TYPE_MPEG = 'audio/mpeg'
+
 SCAN_INTERVAL = timedelta(seconds=30)
-_LOGGER = logging.getLogger(__name__)
 
 
 @asyncio.coroutine
