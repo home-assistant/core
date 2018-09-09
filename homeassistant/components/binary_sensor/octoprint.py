@@ -35,8 +35,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""
-    octoprint_api = hass.data[DOMAIN]["api"]
     name = config.get(CONF_NAME)
+    if name not in hass.data[DOMAIN]:
+        raise vol.Invalid('Please configure the octoprint component for this '
+                          'printer first')
+    octoprint_api = hass.data[DOMAIN][name]
     monitored_conditions = config.get(
         CONF_MONITORED_CONDITIONS, SENSOR_TYPES.keys())
 

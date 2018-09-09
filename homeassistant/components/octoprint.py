@@ -11,7 +11,8 @@ import requests
 import voluptuous as vol
 from aiohttp.hdrs import CONTENT_TYPE
 
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON
+from homeassistant.const import (CONF_API_KEY, CONF_HOST, CONTENT_TYPE_JSON,
+                                 CONF_NAME)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,33 +20,40 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = 'octoprint'
 CONF_NUMBER_OF_TOOLS = 'number_of_tools'
 CONF_BED = 'bed'
+DEFAULT_NAME = 'OctoPrint'
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    DOMAIN: vol.All(cv.ensure_list, [vol.Schema({
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_HOST): cv.string,
+        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_NUMBER_OF_TOOLS, default=0): cv.positive_int,
         vol.Optional(CONF_BED, default=False): cv.boolean
-    }),
+    })]),
 }, extra=vol.ALLOW_EXTRA)
 
 
 def setup(hass, config):
     """Set up the OctoPrint component."""
-    base_url = 'http://{}/api/'.format(config[DOMAIN][CONF_HOST])
-    api_key = config[DOMAIN][CONF_API_KEY]
-    number_of_tools = config[DOMAIN][CONF_NUMBER_OF_TOOLS]
-    bed = config[DOMAIN][CONF_BED]
 
-    hass.data[DOMAIN] = {"api": None}
+    printers = hass.data[DOMAIN] = {}
 
-    try:
-        octoprint_api = OctoPrintAPI(base_url, api_key, bed, number_of_tools)
-        hass.data[DOMAIN]["api"] = octoprint_api
-        octoprint_api.get('printer')
-        octoprint_api.get('job')
-    except requests.exceptions.RequestException as conn_err:
-        _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
+    for printer in config[DOMAIN]:
+        name = printer[CONF_NAME]
+        if name in printers:
+            raise vol.Invalid('Printer names must be unique')
+        base_url = 'http://{}/api/'.format(printer[CONF_HOST])
+        api_key = printer[CONF_API_KEY]
+        number_of_tools = printer[CONF_NUMBER_OF_TOOLS]
+        bed = printer[CONF_BED]
+        try:
+            octoprint_api = OctoPrintAPI(base_url, api_key, bed,
+                                         number_of_tools)
+            printers[name] = octoprint_api
+            octoprint_api.get('printer')
+            octoprint_api.get('job')
+        except requests.exceptions.RequestException as conn_err:
+            _LOGGER.error("Error setting up OctoPrint API: %r", conn_err)
 
     return True
 
