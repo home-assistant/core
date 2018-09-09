@@ -7,23 +7,21 @@ https://home-assistant.io/components/sensor.octoprint/
 import logging
 import time
 
+from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
-from aiohttp.hdrs import CONTENT_TYPE
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (TEMP_CELSIUS, CONF_NAME, CONF_API_KEY,
-                                 CONF_MONITORED_CONDITIONS, CONF_HOST,
-                                 CONTENT_TYPE_JSON)
-
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import (
+    CONF_API_KEY, CONF_HOST, CONF_MONITORED_CONDITIONS, CONF_NAME,
+    CONTENT_TYPE_JSON, TEMP_CELSIUS)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NUMBER_OF_TOOLS = 'number_of_tools'
 CONF_BED = 'bed'
-DOMAIN = "octoprint"
 DEFAULT_NAME = 'OctoPrint'
 NOTIFICATION_ID = 'octoprint_notification'
 NOTIFICATION_TITLE = 'OctoPrint sensor setup error'
