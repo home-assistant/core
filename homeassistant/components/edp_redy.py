@@ -51,14 +51,14 @@ async def async_setup(hass, config):
         update_success = await session.async_update()
 
         if update_success:
-            dispatcher.async_dispatcher_send(hass, DATA_UPDATE_TOPIC)
-
             nonlocal platform_loaded
             if not platform_loaded:
                 for component in ['sensor', 'switch']:
                     await discovery.async_load_platform(hass, component,
                                                         DOMAIN, {}, config)
                 platform_loaded = True
+            
+            dispatcher.async_dispatcher_send(hass, DATA_UPDATE_TOPIC)
 
         # schedule next update
         async_track_point_in_time(hass, async_update_and_sched,
