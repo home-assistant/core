@@ -116,7 +116,7 @@ set_nimbus_dial_configuration:
   description: Set the configuration of an individual nimbus dial
   fields:
     entity_id:
-      description: Name fo the entity to set.
+      description: Name of the entity to set.
       example: 'wink.nimbus_dial_3'
     rotation:
       description: Direction dial hand should spin ["cw" or "ccw"]
@@ -125,7 +125,7 @@ set_nimbus_dial_configuration:
       description: Number of times the hand should move
       example: 12
     scale:
-      description: Home the dial should move in response to higer values ["log" or "linear"]
+      description: How the dial should move in response to higher values ["log" or "linear"]
       example: "linear"
     min_value:
       description: The minimum value allowed to be set
