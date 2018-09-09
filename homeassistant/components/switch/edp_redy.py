@@ -30,12 +30,9 @@ class EdpRedySwitch(EdpRedyDevice, SwitchDevice):
 
     def __init__(self, session, device_json):
         """Initialize the switch."""
-        EdpRedyDevice.__init__(self, session, device_json['PKID'],
-                               device_json['Name'])
+        super().__init__(session, device_json['PKID'], device_json['Name'])
 
         self._active_power = None
-
-        self._parse_data(device_json)
 
     @property
     def icon(self):
@@ -61,27 +58,25 @@ class EdpRedySwitch(EdpRedyDevice, SwitchDevice):
         """Turn the switch on."""
         if await self._async_send_state_cmd(True):
             self._state = True
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
         if await self._async_send_state_cmd(False):
             self._state = False
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
     async def _async_send_state_cmd(self, state):
         state_json = {'devModuleId': self._id, 'key': 'RelayState',
                       'value': state}
         return await self._session.async_set_state_var(state_json)
 
-    def _data_updated(self):
+    async def async_update(self):
         if self._id in self._session.modules_dict:
             device_json = self._session.modules_dict[self._id]
             self._parse_data(device_json)
         else:
             self._is_available = False
-
-        super()._data_updated()
 
     def _parse_data(self, data):
         """Parse data received from the server."""
@@ -89,8 +84,7 @@ class EdpRedySwitch(EdpRedyDevice, SwitchDevice):
 
         for state_var in data['StateVars']:
             if state_var['Name'] == 'RelayState':
-                self._state = True if state_var['Value'] == 'true' \
-                    else False
+                self._state = state_var['Value'] == 'true'
             elif state_var['Name'] == 'ActivePower':
                 try:
                     self._active_power = float(state_var['Value']) * 1000

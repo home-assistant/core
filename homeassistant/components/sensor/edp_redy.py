@@ -39,12 +39,10 @@ class EdpRedySensor(EdpRedyDevice, Entity):
 
     def __init__(self, session, sensor_id, name, icon, unit):
         """Initialize the sensor."""
-        EdpRedyDevice.__init__(self, session, sensor_id, name)
+        super().__init__(session, sensor_id, name)
 
         self._icon = icon
         self._unit = unit
-
-        self._update_state()
 
     @property
     def state(self):
@@ -61,11 +59,7 @@ class EdpRedySensor(EdpRedyDevice, Entity):
         """Return the unit of measurement of this sensor."""
         return self._unit
 
-    def _data_updated(self):
-        self._update_state()
-        super()._data_updated()
-
-    def _update_state(self):
+    async def async_update(self):
         if self._id in self._session.values_dict:
             self._state = self._session.values_dict[self._id]
             self._is_available = True
@@ -78,10 +72,8 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
 
     def __init__(self, session, device_json):
         """Initialize the sensor."""
-        EdpRedyDevice.__init__(self, session, device_json['PKID'],
-                               "Power {0}".format(device_json['Name']))
-
-        self._parse_data(device_json)
+        super().__init__(session, device_json['PKID'],
+                         "Power {0}".format(device_json['Name']))
 
     @property
     def state(self):
@@ -98,14 +90,12 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
         """Return the unit of measurement of this sensor."""
         return 'W'
 
-    def _data_updated(self):
+    async def async_update(self):
         if self._id in self._session.modules_dict:
             device_json = self._session.modules_dict[self._id]
             self._parse_data(device_json)
         else:
             self._is_available = False
-
-        super()._data_updated()
 
     def _parse_data(self, data):
         """Parse data received from the server."""
