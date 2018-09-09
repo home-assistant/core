@@ -22,7 +22,7 @@ from homeassistant.util import dt as dt_util
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'edp_redy'
-EDP_REDY = "edp_redy"
+EDP_REDY = 'edp_redy'
 DATA_UPDATE_TOPIC = '{0}_data_update'.format(DOMAIN)
 UPDATE_INTERVAL = 30
 
@@ -127,7 +127,7 @@ class EdpRedyDevice(Entity):
         """Parse data received from the server."""
         if "OutOfOrder" in data:
             try:
-                self._is_available = not data["OutOfOrder"]
+                self._is_available = not data['OutOfOrder']
             except ValueError:
                 _LOGGER.error(
                     "Could not parse OutOfOrder for %s", self._id)

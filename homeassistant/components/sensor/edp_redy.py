@@ -22,13 +22,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     # Create sensors for modules
     for device_json in session.modules_dict.values():
-        if "HA_POWER_METER" not in device_json["Capabilities"]:
+        if 'HA_POWER_METER' not in device_json['Capabilities']:
             continue
         devices.append(EdpRedyModuleSensor(session, device_json))
 
     # Create a sensor for global active power
     devices.append(EdpRedySensor(session, ACTIVE_POWER_ID, "Power Home",
-                                 "mdi:flash", "W"))
+                                 'mdi:flash', 'W'))
 
     add_devices(devices)
 
@@ -90,7 +90,7 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        return "mdi:flash"
+        return 'mdi:flash'
 
     @property
     def unit_of_measurement(self):
@@ -112,10 +112,10 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
 
         _LOGGER.debug("Sensor data: %s", str(data))
 
-        for state_var in data["StateVars"]:
-            if state_var["Name"] == "ActivePower":
+        for state_var in data['StateVars']:
+            if state_var['Name'] == 'ActivePower':
                 try:
-                    self._state = float(state_var["Value"]) * 1000
+                    self._state = float(state_var['Value']) * 1000
                 except ValueError:
                     _LOGGER.error("Could not parse power for %s", self._id)
                     self._state = 0
