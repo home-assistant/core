@@ -13,6 +13,7 @@ pytz>=2018.04
 pyyaml>=3.13,<4
 requests==2.19.1
 voluptuous==0.11.5
+voluptuous-serialize==2.0.0
 
 # homeassistant.components.nuimo_controller
 --only-binary=all nuimo==0.1.0
@@ -1443,9 +1444,6 @@ venstarcolortouch==0.6
 
 # homeassistant.components.sensor.volkszaehler
 volkszaehler==0.1.2
-
-# homeassistant.components.config.config_entries
-voluptuous-serialize==2.0.0
 
 # homeassistant.components.volvooncall
 volvooncall==0.4.0
