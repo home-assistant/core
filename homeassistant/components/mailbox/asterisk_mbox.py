@@ -7,17 +7,18 @@ https://home-assistant.io/components/mailbox.asteriskvm/
 import asyncio
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.asterisk_mbox import DOMAIN
-from homeassistant.components.mailbox import (Mailbox, CONTENT_TYPE_MPEG,
-                                              StreamError)
+from homeassistant.components.mailbox import (
+    CONTENT_TYPE_MPEG, Mailbox, StreamError)
+from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-DEPENDENCIES = ['asterisk_mbox']
 _LOGGER = logging.getLogger(__name__)
 
-SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
+DEPENDENCIES = ['asterisk_mbox']
+
 SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
+SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
 
 
 @asyncio.coroutine

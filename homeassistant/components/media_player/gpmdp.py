@@ -4,19 +4,19 @@ Support for Google Play Music Desktop Player.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.gpmdp/
 """
-import logging
 import json
+import logging
 import socket
 import time
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_PAUSE, SUPPORT_VOLUME_SET, SUPPORT_SEEK, SUPPORT_PLAY,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_PLAYING, STATE_PAUSED, STATE_OFF, CONF_HOST, CONF_PORT, CONF_NAME)
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
@@ -55,9 +55,11 @@ def request_configuration(hass, config, url, add_entities_callback):
         return
     from websocket import create_connection
     websocket = create_connection((url), timeout=1)
-    websocket.send(json.dumps({'namespace': 'connect',
-                               'method': 'connect',
-                               'arguments': ['Home Assistant']}))
+    websocket.send(json.dumps({
+        'namespace': 'connect',
+        'method': 'connect',
+        'arguments': ['Home Assistant']
+    }))
 
     def gpmdp_configuration_callback(callback_data):
         """Handle configuration changes."""
