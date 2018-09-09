@@ -57,7 +57,7 @@ async def async_setup(hass, config):
                     await discovery.async_load_platform(hass, component,
                                                         DOMAIN, {}, config)
                 platform_loaded = True
-            
+
             dispatcher.async_dispatcher_send(hass, DATA_UPDATE_TOPIC)
 
         # schedule next update
