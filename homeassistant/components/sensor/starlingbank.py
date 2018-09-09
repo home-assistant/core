@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+    """Sensor platform setup."""
     accounts = config.get(CONF_ACCOUNTS)
 
     sensors = []
@@ -68,10 +68,11 @@ class StarlingBalanceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._balance_data_type == 'cleared_balance':
-            return "{0} Cleared Balance".format(self._account_name)
-        elif self._balance_data_type == 'effective_balance':
-            return "{0} Effective Balance".format(self._account_name)
+        if self._balance_data_type == 'effective_balance':
+            name = "Effective Balance"
+        else:
+            name = "Cleared Balance"
+        return "{0} {1}".format(self._account_name, name)
 
     @property
     def state(self):
