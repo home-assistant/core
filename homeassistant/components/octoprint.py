@@ -35,7 +35,6 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the OctoPrint component."""
-
     printers = hass.data[DOMAIN] = {}
 
     for printer in config[DOMAIN]:
