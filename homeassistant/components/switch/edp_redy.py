@@ -72,6 +72,7 @@ class EdpRedySwitch(EdpRedyDevice, SwitchDevice):
         return await self._session.async_set_state_var(state_json)
 
     async def async_update(self):
+        """Parse the data for this switch."""
         if self._id in self._session.modules_dict:
             device_json = self._session.modules_dict[self._id]
             self._parse_data(device_json)

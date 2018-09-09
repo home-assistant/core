@@ -60,6 +60,7 @@ class EdpRedySensor(EdpRedyDevice, Entity):
         return self._unit
 
     async def async_update(self):
+        """Parse the data for this sensor."""
         if self._id in self._session.values_dict:
             self._state = self._session.values_dict[self._id]
             self._is_available = True
@@ -91,6 +92,7 @@ class EdpRedyModuleSensor(EdpRedyDevice, Entity):
         return 'W'
 
     async def async_update(self):
+        """Parse the data for this sensor."""
         if self._id in self._session.modules_dict:
             device_json = self._session.modules_dict[self._id]
             self._parse_data(device_json)
