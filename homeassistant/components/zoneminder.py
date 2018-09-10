@@ -26,8 +26,6 @@ DOMAIN = 'zoneminder'
 
 LOGIN_RETRIES = 2
 
-ZM = None
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -44,8 +42,6 @@ CONFIG_SCHEMA = vol.Schema({
 def setup(hass, config):
     """Set up the ZoneMinder component."""
     from zoneminder.zm import ZoneMinder
-    global ZM
-    ZM = None
 
     conf = config[DOMAIN]
     if conf[CONF_SSL]:
@@ -54,27 +50,22 @@ def setup(hass, config):
         schema = 'http'
 
     server_origin = '{}://{}'.format(schema, conf[CONF_HOST])
-    ZM = ZoneMinder(server_origin, conf.get(CONF_USERNAME, None), conf.get(CONF_PASSWORD, None),
-                    conf.get(CONF_PATH), conf.get(CONF_PATH_ZMS), conf.get(CONF_VERIFY_SSL))
+    hass.data[DOMAIN] = ZoneMinder(server_origin,
+                                   conf.get(CONF_USERNAME, None),
+                                   conf.get(CONF_PASSWORD, None),
+                                   conf.get(CONF_PATH),
+                                   conf.get(CONF_PATH_ZMS),
+                                   conf.get(CONF_VERIFY_SSL))
 
-    hass.data[DOMAIN] = ZM
-
-    return login()
-
-
-def login():
-    """Login to the ZoneMinder API."""
-    global ZM
-    return ZM.login()
+    return hass.data[DOMAIN].login()
 
 
-def get_state(api_url):
+def get_state(hass, api_url):
     """Get a state from the ZoneMinder API service."""
-    global ZM
-    return ZM._zm_request('get', api_url)
+    return hass.data[DOMAIN]._zm_request('get', api_url)
 
 
-def change_state(api_url, post_data):
-    """Update a state using the Zoneminder API."""
-    global ZM
-    return ZM._zm_request('post', api_url, data=post_data)
+def change_state(hass, api_url, post_data):
+    """Update a state using the Zoneminder API.
+    """
+    return hass.data[DOMAIN]._zm_request('post', api_url, data=post_data)

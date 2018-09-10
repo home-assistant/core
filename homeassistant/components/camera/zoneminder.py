@@ -23,11 +23,10 @@ DOMAIN = 'zoneminder'
 def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     """Set up the ZoneMinder cameras."""
-    from zoneminder.zm import ZoneMinder
-    zm: ZoneMinder = hass.data[DOMAIN]
+    zm = hass.data[DOMAIN]
 
     cameras = []
-    monitors = zoneminder.get_state('api/monitors.json')
+    monitors = zoneminder.get_state(hass, 'api/monitors.json')
     if not monitors:
         _LOGGER.warning("Could not fetch monitors from ZoneMinder")
         return

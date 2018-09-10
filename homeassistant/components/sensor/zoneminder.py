@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     sensors = []
 
-    monitors = zoneminder.get_state('api/monitors.json')
+    monitors = zoneminder.get_state(hass, 'api/monitors.json')
     for i in monitors['monitors']:
         sensors.append(
             ZMSensorMonitors(int(i['Monitor']['Id']), i['Monitor']['Name'])
@@ -83,8 +83,8 @@ class ZMSensorMonitors(Entity):
     def update(self):
         """Update the sensor."""
         monitor = zoneminder.get_state(
-            'api/monitors/{}.json'.format(self._monitor_id)
-        )
+            self.hass, 'api/monitors/{}.json'.format(
+                self._monitor_id))
         if monitor['monitor']['Monitor']['Function'] is None:
             self._state = STATE_UNKNOWN
         else:
@@ -131,10 +131,10 @@ class ZMSensorEvents(Entity):
         if self._include_archived:
             archived_filter = ''
 
-        event = zoneminder.get_state(
-            'api/events/consoleEvents/{}{}.json'.format(date_filter,
-                                                        archived_filter)
-        )
+        event = zoneminder.get_state(self.hass,
+                                     'api/events/consoleEvents/{}{}.json'.format(
+                                         date_filter,
+                                         archived_filter))
 
         try:
             self._state = event['results'][str(self._monitor_id)]
