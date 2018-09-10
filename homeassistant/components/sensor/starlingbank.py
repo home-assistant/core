@@ -40,13 +40,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Sensor platform setup."""
-    accounts = config.get(CONF_ACCOUNTS)
+    from starlingbank import StarlingAccount
 
     sensors = []
-    for account in accounts:
+    for account in CONF_ACCOUNTS:
+        starling_account = StarlingAccount(account[CONF_ACCESS_TOKEN])
         for balance_type in account[CONF_BALANCE_TYPES]:
             sensors.append(StarlingBalanceSensor(
-                account[CONF_ACCESS_TOKEN],
+                starling_account,
                 account[CONF_NAME],
                 balance_type
             ))
@@ -56,11 +57,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class StarlingBalanceSensor(Entity):
     """Representation of a Starling balance sensor."""
 
-    def __init__(self, token, account_name, balance_data_type):
+    def __init__(self, starling_account, account_name, balance_data_type):
         """Initialize the sensor."""
-        from starlingbank import StarlingAccount
-
-        self._starling_account = StarlingAccount(token)
+        self._starling_account = starling_account
         self._balance_data_type = balance_data_type
         self._state = None
         self._account_name = account_name
