@@ -11,14 +11,8 @@ evohome:
 
 These config parameters are presented with their default values:
 
-# scan_interval: 300     # seconds, you can probably get away with 60
-# high_precision: true   # tenths instead of halves
+# scan_interval: 180     # seconds, you can probably get away with 60
 # location_idx: 0        # if you have more than 1 location, use this
-
-These config parameters are YMMV:
-
-# use_heuristics: false  # this is for the highly adventurous person, YMMV
-# use_schedules: false   # this is for the slightly adventurous person
 # away_temp: 15.0        # °C, if you have a non-default Away temp
 # off_temp: 5.0          # °C, if you have a non-default Heating Off temp
 
@@ -145,9 +139,6 @@ EVO_FROSTMODE = 'FrostProtect'
 # bit masks for dispatcher packets
 EVO_MASTER = 0x01
 EVO_SLAVE = 0x02
-EVO_ZONE = 0x04
-EVO_DHW = 0x08
-EVO_UNKNOWN = 0x10  # there shouldn't ever be any of these
 
 # these are used to help prevent E501 (line too long) violations
 GWS = 'gateways'
@@ -519,13 +510,7 @@ class EvoEntity(Entity):                                                        
     @property
     def current_operation(self):
         """Return the operation mode of the evohome entity."""
-        if self._type & EVO_MASTER:
-            curr_op = self._status['systemModeStatus']['mode']
-        elif self._type & EVO_ZONE:
-            curr_op = self._status[SETPOINT_STATE]['setpointMode']
-        elif self._type & EVO_DHW:
-            curr_op = self._status['stateStatus']['mode']
-
+        curr_op = self._status['systemModeStatus']['mode']
         _LOGGER.debug("current_operation(%s) = %s", self._id, curr_op)
         return curr_op
 
