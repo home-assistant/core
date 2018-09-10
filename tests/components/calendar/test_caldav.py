@@ -235,7 +235,7 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
                                       {
                                           "name": "HomeOffice",
                                           "calendar": "Second",
-                                          "filter": "HomeOffice"
+                                          "search": "HomeOffice"
                                       }]
                               },
                               _add_device)
@@ -318,11 +318,13 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
     def test_matching_filter(self, mock_now):
         """Test that the matching event is returned."""
+        DEVICE_DATA_CUSTOM = DEVICE_DATA
+        DEVICE_DATA_CUSTOM['search'] = "This is a normal event"
+        DEVICE_DATA_CUSTOM['include_all_day'] = False
+
         cal = caldav.WebDavCalendarEventDevice(self.hass,
-                                               DEVICE_DATA,
-                                               self.calendar,
-                                               False,
-                                               "This is a normal event")
+                                               DEVICE_DATA_CUSTOM,
+                                               self.calendar)
 
         self.assertEqual(cal.state, STATE_OFF)
         self.assertFalse(cal.offset_reached())
@@ -339,11 +341,13 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
     def test_matching_filter_real_regexp(self, mock_now):
         """Test that the event matching the regexp is returned."""
+        DEVICE_DATA_CUSTOM = DEVICE_DATA
+        DEVICE_DATA_CUSTOM['search'] = "^This.*event"
+        DEVICE_DATA_CUSTOM['include_all_day'] = False
+
         cal = caldav.WebDavCalendarEventDevice(self.hass,
-                                               DEVICE_DATA,
-                                               self.calendar,
-                                               False,
-                                               "^This.*event")
+                                               DEVICE_DATA_CUSTOM,
+                                               self.calendar)
 
         self.assertEqual(cal.state, STATE_OFF)
         self.assertFalse(cal.offset_reached())
@@ -360,32 +364,38 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(20, 00))
     def test_filter_matching_past_event(self, mock_now):
         """Test that the matching past event is not returned."""
+        DEVICE_DATA_CUSTOM = DEVICE_DATA
+        DEVICE_DATA_CUSTOM['search'] = "This is a normal event"
+        DEVICE_DATA_CUSTOM['include_all_day'] = False
+
         cal = caldav.WebDavCalendarEventDevice(self.hass,
-                                               DEVICE_DATA,
-                                               self.calendar,
-                                               False,
-                                               "This is a normal event")
+                                               DEVICE_DATA_CUSTOM,
+                                               self.calendar)
 
         self.assertEqual(cal.data.event, None)
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(12, 00))
     def test_no_result_with_filtering(self, mock_now):
         """Test that nothing is returned since nothing matches."""
+        DEVICE_DATA_CUSTOM = DEVICE_DATA
+        DEVICE_DATA_CUSTOM['search'] = "This is a non-existing event"
+        DEVICE_DATA_CUSTOM['include_all_day'] = False
+
         cal = caldav.WebDavCalendarEventDevice(self.hass,
-                                               DEVICE_DATA,
-                                               self.calendar,
-                                               False,
-                                               "This is a non-existing event")
+                                               DEVICE_DATA_CUSTOM,
+                                               self.calendar)
 
         self.assertEqual(cal.data.event, None)
 
     @patch('homeassistant.util.dt.now', return_value=_local_datetime(17, 30))
     def test_all_day_event_returned(self, mock_now):
         """Test that the event lasting the whole day is returned."""
+        DEVICE_DATA_CUSTOM = DEVICE_DATA
+        DEVICE_DATA_CUSTOM['include_all_day'] = True
+
         cal = caldav.WebDavCalendarEventDevice(self.hass,
-                                               DEVICE_DATA,
-                                               self.calendar,
-                                               True)
+                                               DEVICE_DATA_CUSTOM,
+                                               self.calendar)
 
         self.assertEqual(cal.name, DEVICE_DATA["name"])
         self.assertEqual(cal.state, STATE_ON)
@@ -397,4 +407,52 @@ class TestComponentsWebDavCalendar(unittest.TestCase):
             "end_time": "2017-11-28 00:00:00",
             "location": "Hamburg",
             "description": "What a beautiful day",
+        })
+
+    @patch('homeassistant.util.dt.now', return_value=_local_datetime(16, 10))
+    def test_calendar_offset(self, mock_now):
+        """Test that the offset, set by calendar, is reached."""
+        DEVICE_DATA_CUSTOM = DEVICE_DATA
+        DEVICE_DATA_CUSTOM['search'] = "This is a normal event"
+        DEVICE_DATA_CUSTOM['include_all_day'] = False
+        DEVICE_DATA_CUSTOM['cal_offset'] = dt.dt.timedelta(hours=-1)
+
+        cal = caldav.WebDavCalendarEventDevice(self.hass,
+                                               DEVICE_DATA_CUSTOM,
+                                               self.calendar)
+
+        self.assertEqual(cal.state, STATE_OFF)
+        self.assertTrue(cal.offset_reached())
+        self.assertEqual(cal.device_state_attributes, {
+            "message": "This is a normal event",
+            "all_day": False,
+            "offset_reached": True,
+            "start_time": "2017-11-27 17:00:00",
+            "end_time": "2017-11-27 18:00:00",
+            "location": "Hamburg",
+            "description": "Surprisingly rainy",
+        })
+
+    @patch('homeassistant.util.dt.now', return_value=_local_datetime(16, 10))
+    def test_calendar_offset_false(self, mock_now):
+        """Test that the inverse offset, set by calendar, isnt reached."""
+        DEVICE_DATA_CUSTOM = DEVICE_DATA
+        DEVICE_DATA_CUSTOM['search'] = "This is a normal event"
+        DEVICE_DATA_CUSTOM['include_all_day'] = False
+        DEVICE_DATA_CUSTOM['cal_offset'] = dt.dt.timedelta(hours=1)
+
+        cal = caldav.WebDavCalendarEventDevice(self.hass,
+                                               DEVICE_DATA_CUSTOM,
+                                               self.calendar)
+
+        self.assertEqual(cal.state, STATE_OFF)
+        self.assertFalse(cal.offset_reached())
+        self.assertEqual(cal.device_state_attributes, {
+            "message": "This is a normal event",
+            "all_day": False,
+            "offset_reached": False,
+            "start_time": "2017-11-27 17:00:00",
+            "end_time": "2017-11-27 18:00:00",
+            "location": "Hamburg",
+            "description": "Surprisingly rainy",
         })
