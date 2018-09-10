@@ -5,9 +5,7 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/zoneminder/
 """
 import logging
-from urllib.parse import urljoin
 
-import requests
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -28,7 +26,7 @@ DOMAIN = 'zoneminder'
 
 LOGIN_RETRIES = 2
 
-ZM = {}
+ZM = None
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -45,8 +43,9 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the ZoneMinder component."""
+    from zoneminder.zm import ZoneMinder
     global ZM
-    ZM = {}
+    ZM = None
 
     conf = config[DOMAIN]
     if conf[CONF_SSL]:
@@ -55,18 +54,8 @@ def setup(hass, config):
         schema = 'http'
 
     server_origin = '{}://{}'.format(schema, conf[CONF_HOST])
-    url = urljoin(server_origin, conf[CONF_PATH])
-    username = conf.get(CONF_USERNAME, None)
-    password = conf.get(CONF_PASSWORD, None)
-
-    ssl_verification = conf.get(CONF_VERIFY_SSL)
-
-    ZM['server_origin'] = server_origin
-    ZM['url'] = url
-    ZM['username'] = username
-    ZM['password'] = password
-    ZM['path_zms'] = conf.get(CONF_PATH_ZMS)
-    ZM['ssl_verification'] = ssl_verification
+    ZM = ZoneMinder(server_origin, conf.get(CONF_USERNAME, None), conf.get(CONF_PASSWORD, None),
+                    conf.get(CONF_PATH), conf.get(CONF_PATH_ZMS), conf.get(CONF_VERIFY_SSL))
 
     hass.data[DOMAIN] = ZM
 
@@ -75,63 +64,17 @@ def setup(hass, config):
 
 def login():
     """Login to the ZoneMinder API."""
-    _LOGGER.debug("Attempting to login to ZoneMinder")
-
-    login_post = {'view': 'console', 'action': 'login'}
-    if ZM['username']:
-        login_post['username'] = ZM['username']
-    if ZM['password']:
-        login_post['password'] = ZM['password']
-
-    req = requests.post(ZM['url'] + '/index.php', data=login_post,
-                        verify=ZM['ssl_verification'], timeout=DEFAULT_TIMEOUT)
-
-    ZM['cookies'] = req.cookies
-
-    # Login calls returns a 200 response on both failure and success.
-    # The only way to tell if you logged in correctly is to issue an api call.
-    req = requests.get(
-        ZM['url'] + 'api/host/getVersion.json', cookies=ZM['cookies'],
-        timeout=DEFAULT_TIMEOUT, verify=ZM['ssl_verification'])
-
-    if not req.ok:
-        _LOGGER.error("Connection error logging into ZoneMinder")
-        return False
-
-    return True
-
-
-def _zm_request(method, api_url, data=None):
-    """Perform a Zoneminder request."""
-    # Since the API uses sessions that expire, sometimes we need to re-auth
-    # if the call fails.
-    for _ in range(LOGIN_RETRIES):
-        req = requests.request(
-            method, urljoin(ZM['url'], api_url), data=data,
-            cookies=ZM['cookies'], timeout=DEFAULT_TIMEOUT,
-            verify=ZM['ssl_verification'])
-
-        if not req.ok:
-            login()
-        else:
-            break
-
-    else:
-        _LOGGER.error("Unable to get API response from ZoneMinder")
-
-    try:
-        return req.json()
-    except ValueError:
-        _LOGGER.exception(
-            "JSON decode exception caught while attempting to decode: %s",
-            req.text)
+    global ZM
+    return ZM.login()
 
 
 def get_state(api_url):
     """Get a state from the ZoneMinder API service."""
-    return _zm_request('get', api_url)
+    global ZM
+    return ZM._zm_request('get', api_url)
 
 
 def change_state(api_url, post_data):
     """Update a state using the Zoneminder API."""
-    return _zm_request('post', api_url, data=post_data)
+    global ZM
+    return ZM._zm_request('post', api_url, data=post_data)

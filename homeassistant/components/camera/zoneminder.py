@@ -6,7 +6,6 @@ https://home-assistant.io/components/camera.zoneminder/
 """
 import asyncio
 import logging
-from urllib.parse import urljoin, urlencode
 
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera.mjpeg import (
@@ -19,39 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['zoneminder']
 DOMAIN = 'zoneminder'
 
-# From ZoneMinder's web/includes/config.php.in
-ZM_STATE_ALARM = "2"
-
-
-def _get_image_url(hass, monitor, mode):
-    zm_data = hass.data[DOMAIN]
-    query = urlencode({
-        'mode': mode,
-        'buffer': monitor['StreamReplayBuffer'],
-        'monitor': monitor['Id'],
-    })
-    url = '{zms_url}?{query}'.format(
-        zms_url=urljoin(zm_data['server_origin'], zm_data['path_zms']),
-        query=query,
-    )
-    _LOGGER.debug('Monitor %s %s URL (without auth): %s',
-                  monitor['Id'], mode, url)
-
-    if not zm_data['username']:
-        return url
-
-    url += '&user={:s}'.format(zm_data['username'])
-
-    if not zm_data['password']:
-        return url
-
-    return url + '&pass={:s}'.format(zm_data['password'])
-
 
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_entities,
                          discovery_info=None):
     """Set up the ZoneMinder cameras."""
+    from zoneminder.zm import ZoneMinder
+    zm: ZoneMinder = hass.data[DOMAIN]
+
     cameras = []
     monitors = zoneminder.get_state('api/monitors.json')
     if not monitors:
@@ -69,8 +43,8 @@ def async_setup_platform(hass, config, async_add_entities,
 
         device_info = {
             CONF_NAME: monitor['Name'],
-            CONF_MJPEG_URL: _get_image_url(hass, monitor, 'jpeg'),
-            CONF_STILL_IMAGE_URL: _get_image_url(hass, monitor, 'single')
+            CONF_MJPEG_URL: zm.get_mjpeg_image_url(monitor),
+            CONF_STILL_IMAGE_URL: zm.get_still_image_url(monitor)
         }
         cameras.append(ZoneMinderCamera(hass, device_info, monitor))
 
@@ -98,16 +72,14 @@ class ZoneMinderCamera(MjpegCamera):
     def update(self):
         """Update our recording state from the ZM API."""
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor_id)
-        status_response = zoneminder.get_state(
-            'api/monitors/alarm/id:%i/command:status.json' % self._monitor_id
-        )
+        status = self.hass.data[DOMAIN].is_recording(self._monitor_id)
 
-        if not status_response:
+        if not status:
             _LOGGER.warning("Could not get status for monitor %i",
                             self._monitor_id)
             return
 
-        self._is_recording = status_response.get('status') == ZM_STATE_ALARM
+        self._is_recording = status
 
     @property
     def is_recording(self):
