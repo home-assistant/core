@@ -13,6 +13,7 @@ pytz>=2018.04
 pyyaml>=3.13,<4
 requests==2.19.1
 voluptuous==0.11.5
+voluptuous-serialize==2.0.0
 
 # homeassistant.components.nuimo_controller
 --only-binary=all nuimo==0.1.0
@@ -52,6 +53,9 @@ PyQRCode==1.2.1
 
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.0.7
+
+# homeassistant.components.switch.switchbot
+PySwitchbot==0.3
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.9.5
@@ -740,10 +744,10 @@ pyCEC==0.4.13
 
 # homeassistant.components.light.tplink
 # homeassistant.components.switch.tplink
-pyHS100==0.3.2
+pyHS100==0.3.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.22.1
+pyRFXtrx==0.23
 
 # homeassistant.components.sensor.tibber
 pyTibber==0.4.1
@@ -995,6 +999,9 @@ pyopenuv==1.0.4
 # homeassistant.components.iota
 pyota==2.0.5
 
+# homeassistant.components.climate.opentherm_gw
+pyotgw==0.1b0
+
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.sensor.otp
 pyotp==2.2.6
@@ -1142,7 +1149,7 @@ python-tado==0.2.3
 python-telegram-bot==11.0.0
 
 # homeassistant.components.sensor.twitch
-python-twitch==1.3.0
+python-twitch-client==0.5.1
 
 # homeassistant.components.velbus
 python-velbus==2.0.19
@@ -1290,7 +1297,7 @@ sense_energy==0.4.2
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.sensor.shodan
-shodan==1.10.0
+shodan==1.10.1
 
 # homeassistant.components.notify.simplepush
 simplepush==1.1.4
@@ -1438,9 +1445,6 @@ venstarcolortouch==0.6
 # homeassistant.components.sensor.volkszaehler
 volkszaehler==0.1.2
 
-# homeassistant.components.config.config_entries
-voluptuous-serialize==2.0.0
-
 # homeassistant.components.volvooncall
 volvooncall==0.4.0
 
@@ -1504,6 +1508,9 @@ yahoo-finance==1.4.0
 # homeassistant.components.sensor.yweather
 # homeassistant.components.weather.yweather
 yahooweather==0.10
+
+# homeassistant.components.alarm_control_panel.yale_smart_alarm
+yalesmartalarmclient==0.1.4
 
 # homeassistant.components.light.yeelight
 yeelight==0.4.0
