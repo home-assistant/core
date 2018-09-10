@@ -43,6 +43,7 @@ CONF_CACHE = 'cache'
 CONF_CACHE_DIR = 'cache_dir'
 CONF_LANG = 'language'
 CONF_TIME_MEMORY = 'time_memory'
+CONF_BASE_URL = 'base_url'
 
 DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = 'tts'
@@ -65,6 +66,7 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_CACHE_DIR, default=DEFAULT_CACHE_DIR): cv.string,
     vol.Optional(CONF_TIME_MEMORY, default=DEFAULT_TIME_MEMORY):
         vol.All(vol.Coerce(int), vol.Range(min=60, max=57600)),
+    vol.Optional(CONF_BASE_URL): cv.string,
 })
 
 SCHEMA_SERVICE_SAY = vol.Schema({
@@ -87,8 +89,9 @@ async def async_setup(hass, config):
         use_cache = conf.get(CONF_CACHE, DEFAULT_CACHE)
         cache_dir = conf.get(CONF_CACHE_DIR, DEFAULT_CACHE_DIR)
         time_memory = conf.get(CONF_TIME_MEMORY, DEFAULT_TIME_MEMORY)
+        base_url = conf.get(CONF_BASE_URL) or hass.config.api.base_url
 
-        await tts.async_init_cache(use_cache, cache_dir, time_memory)
+        await tts.async_init_cache(use_cache, cache_dir, time_memory, base_url)
     except (HomeAssistantError, KeyError) as err:
         _LOGGER.error("Error on cache init %s", err)
         return False
@@ -180,13 +183,16 @@ class SpeechManager:
         self.use_cache = DEFAULT_CACHE
         self.cache_dir = DEFAULT_CACHE_DIR
         self.time_memory = DEFAULT_TIME_MEMORY
+        self.base_url = None
         self.file_cache = {}
         self.mem_cache = {}
 
-    async def async_init_cache(self, use_cache, cache_dir, time_memory):
+    async def async_init_cache(self, use_cache, cache_dir, time_memory,
+                               base_url):
         """Init config folder and load file cache."""
         self.use_cache = use_cache
         self.time_memory = time_memory
+        self.base_url = base_url
 
         def init_tts_cache_dir(cache_dir):
             """Init cache folder."""
@@ -299,8 +305,7 @@ class SpeechManager:
             filename = await self.async_get_tts_audio(
                 engine, key, message, use_cache, language, options)
 
-        return "{}/api/tts_proxy/{}".format(
-            self.hass.config.api.base_url, filename)
+        return "{}/api/tts_proxy/{}".format(self.base_url, filename)
 
     async def async_get_tts_audio(
             self, engine, key, message, cache, language, options):
