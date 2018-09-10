@@ -78,17 +78,11 @@ ATTR_UNTIL = 'until'
 PARALLEL_UPDATES = 0
 
 # these are specific to this component
-CONF_HIGH_PRECISION = 'high_precision'
-CONF_USE_HEURISTICS = 'use_heuristics'
-CONF_USE_SCHEDULES = 'use_schedules'
 CONF_LOCATION_IDX = 'location_idx'
 CONF_AWAY_TEMP = 'away_temp'
 CONF_OFF_TEMP = 'off_temp'
 
 REQUIREMENTS = ['evohomeclient==0.2.7']
-SETPOINT_CAPABILITIES = 'setpointCapabilities'
-SETPOINT_STATE = 'setpointStatus'
-TARGET_TEMPERATURE = 'targetHeatTemperature'
 
 # https://www.home-assistant.io/components/logger/
 _LOGGER = logging.getLogger(__name__)
@@ -110,10 +104,6 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_SCAN_INTERVAL,
                      default=MIN_SCAN_INTERVAL): cv.positive_int,
 
-        vol.Optional(CONF_HIGH_PRECISION, default=True): cv.boolean,
-        vol.Optional(CONF_USE_HEURISTICS, default=False): cv.boolean,
-        vol.Optional(CONF_USE_SCHEDULES, default=False): cv.boolean,
-
         vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
         vol.Optional(CONF_AWAY_TEMP, default=15.0): CV_FLOAT,
         vol.Optional(CONF_OFF_TEMP, default=5.0): CV_FLOAT,
@@ -133,7 +123,6 @@ EVO_HEATOFF = 'HeatingOff'
 EVO_FOLLOW = 'FollowSchedule'
 EVO_TEMPOVER = 'TemporaryOverride'
 EVO_PERMOVER = 'PermanentOverride'
-EVO_OPENWINDOW = 'OpenWindow'
 EVO_FROSTMODE = 'FrostProtect'
 
 # bit masks for dispatcher packets
@@ -339,7 +328,7 @@ class EvoEntity(Entity):                                                        
 
 # set the entity's (initial) behaviour
         self._available = False  # will be True after first update()
-        self._should_poll = bool(self._type & EVO_MASTER)
+        self._should_poll = True
 
 # create a listener for (internal) update packets...
         hass.helpers.dispatcher.async_dispatcher_connect(
@@ -476,21 +465,6 @@ class EvoEntity(Entity):                                                        
         return self._available
 
     @property
-    def should_poll(self):
-        """Only the Controller will ever be polled.
-
-        The Controller is usually (but not always) polled, and it will obtain
-        the state data for its slaves (which themselves are never polled).
-        """
-        if self._type & EVO_MASTER:
-            pass  # the Controller will decide this as it goes along
-        else:
-            self._should_poll = False
-
-        _LOGGER.debug("should_poll(%s) = %s", self._id, self._should_poll)
-        return self._should_poll
-
-    @property
     def supported_features(self):
         """Get the list of supported features of the Controller."""
         feats = self._supported_features
@@ -526,10 +500,6 @@ class EvoController(EvoEntity, ClimateDevice):
         """Initialize the evohome Controller."""
         self._obj = obj_ref
         self._type = EVO_MASTER
-
-# Note, for access to slave object references, can use:
-# - heating zones:  self._obj._zones
-# - DHW controller: self._obj.hotwater
 
         super().__init__(hass, client, obj_ref)
 
@@ -597,11 +567,7 @@ class EvoController(EvoEntity, ClimateDevice):
                 "tcs._set_status(%s)...",
                 operation_mode
             )
-# These 2 lines obligate only 1 location/controller, the 3rd/4th works for 1+
-# self.client._get_single_heating_system()._set_status(mode)
-# self.client.set_status_normal
-# self.client.locations[0]._gateways[0]._control_systems[0]._set_status(mode)
-# self._obj._set_status(mode)
+
             try:
                 self._obj._set_status(operation_mode)                           # noqa: E501; pylint: disable=protected-access
             except requests.exceptions.HTTPError as err:
@@ -624,7 +590,7 @@ class EvoController(EvoEntity, ClimateDevice):
         client = domain_data['client']
         loc_idx = domain_data['params'][CONF_LOCATION_IDX]
 
-    # 1. Obtain latest state data (e.g. temps)...
+        # Obtain latest state data (e.g. temps)...
         _LOGGER.debug(
             "_update_state_data(): API call [1 request(s)]: "
             "client.locations[loc_idx].status()..."
@@ -641,8 +607,6 @@ class EvoController(EvoEntity, ClimateDevice):
             # only update the timers if the api call was successful
             domain_data['timers']['statusUpdated'] = datetime.now()
 
-        _LOGGER.debug("domain_data['status'] = %s", domain_data['status'])
-
         _LOGGER.debug(
             "_update_state_data(): domain_data['status'] = %s",
             domain_data['status']
@@ -658,7 +622,6 @@ class EvoController(EvoEntity, ClimateDevice):
         This is not asyncio-friendly due to the underlying client api.
         """
         domain_data = self.hass.data[DATA_EVOHOME]
-#       self._should_poll = True
 
         # Wait a minimum (scan_interval/60) mins (rounded up) between updates
         timeout = datetime.now() + timedelta(seconds=55)
