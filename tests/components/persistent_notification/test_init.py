@@ -20,8 +20,9 @@ class TestPersistentNotification:
 
     def test_create(self):
         """Test creating notification without title or notification id."""
+        notifications = self.hass.data[pn.DOMAIN]['notifications']
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 0
+        assert len(notifications) == 0
 
         pn.create(self.hass, 'Hello World {{ 1 + 1 }}',
                   title='{{ 1 + 1 }} beers')
@@ -29,35 +30,36 @@ class TestPersistentNotification:
 
         entity_ids = self.hass.states.entity_ids(pn.DOMAIN)
         assert len(entity_ids) == 1
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 1
+        assert len(notifications) == 1
 
         state = self.hass.states.get(entity_ids[0])
         assert state.state == pn.STATE
         assert state.attributes.get('message') == 'Hello World 2'
         assert state.attributes.get('title') == '2 beers'
 
-        notification = pn.PERSISTENT_NOTIFICATIONS.get(entity_ids[0])
+        notification = notifications.get(entity_ids[0])
         assert notification['status'] == pn.STATUS_UNREAD
         assert notification['message'] == 'Hello World 2'
         assert notification['title'] == '2 beers'
-        pn.PERSISTENT_NOTIFICATIONS.clear()
+        notifications.clear()
 
     def test_create_notification_id(self):
         """Ensure overwrites existing notification with same id."""
+        notifications = self.hass.data[pn.DOMAIN]['notifications']
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 0
+        assert len(notifications) == 0
 
         pn.create(self.hass, 'test', notification_id='Beer 2')
         self.hass.block_till_done()
 
         assert len(self.hass.states.entity_ids()) == 1
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 1
+        assert len(notifications) == 1
 
         entity_id = 'persistent_notification.beer_2'
         state = self.hass.states.get(entity_id)
         assert state.attributes.get('message') == 'test'
 
-        notification = pn.PERSISTENT_NOTIFICATIONS.get(entity_id)
+        notification = notifications.get(entity_id)
         assert notification['message'] == 'test'
         assert notification['title'] is None
 
@@ -69,67 +71,72 @@ class TestPersistentNotification:
         state = self.hass.states.get(entity_id)
         assert state.attributes.get('message') == 'test 2'
 
-        notification = pn.PERSISTENT_NOTIFICATIONS.get(entity_id)
+        notification = notifications.get(entity_id)
         assert notification['message'] == 'test 2'
-        pn.PERSISTENT_NOTIFICATIONS.clear()
+        notifications.clear()
 
     def test_create_template_error(self):
         """Ensure we output templates if contain error."""
+        notifications = self.hass.data[pn.DOMAIN]['notifications']
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 0
+        assert len(notifications) == 0
 
         pn.create(self.hass, '{{ message + 1 }}', '{{ title + 1 }}')
         self.hass.block_till_done()
 
         entity_ids = self.hass.states.entity_ids(pn.DOMAIN)
         assert len(entity_ids) == 1
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 1
+        assert len(notifications) == 1
 
         state = self.hass.states.get(entity_ids[0])
         assert state.attributes.get('message') == '{{ message + 1 }}'
         assert state.attributes.get('title') == '{{ title + 1 }}'
 
-        notification = pn.PERSISTENT_NOTIFICATIONS.get(entity_ids[0])
+        notification = notifications.get(entity_ids[0])
         assert notification['message'] == '{{ message + 1 }}'
         assert notification['title'] == '{{ title + 1 }}'
-        pn.PERSISTENT_NOTIFICATIONS.clear()
+        notifications.clear()
 
     def test_dismiss_notification(self):
         """Ensure removal of specific notification."""
+        notifications = self.hass.data[pn.DOMAIN]['notifications']
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 0
+        assert len(notifications) == 0
 
         pn.create(self.hass, 'test', notification_id='Beer 2')
         self.hass.block_till_done()
 
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 1
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 1
+        assert len(notifications) == 1
         pn.dismiss(self.hass, notification_id='Beer 2')
         self.hass.block_till_done()
 
         assert len(self.hass.states.entity_ids(pn.DOMAIN)) == 0
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 0
-        pn.PERSISTENT_NOTIFICATIONS.clear()
+        assert len(notifications) == 0
+        notifications.clear()
 
     def test_mark_read(self):
         """Ensure notification is marked as Read."""
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 0
+        notifications = self.hass.data[pn.DOMAIN]['notifications']
+        assert len(notifications) == 0
 
         pn.create(self.hass, 'test', notification_id='Beer 2')
         self.hass.block_till_done()
 
         entity_id = 'persistent_notification.beer_2'
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 1
-        notification = pn.PERSISTENT_NOTIFICATIONS.get(entity_id)
+        assert len(notifications) == 1
+        notification = notifications.get(entity_id)
         assert notification['status'] == pn.STATUS_UNREAD
 
-        pn.mark_read(self.hass, notification_id='Beer 2')
+        self.hass.services.call(pn.DOMAIN, pn.SERVICE_MARK_READ, {
+            'notification_id': 'Beer 2'
+        })
         self.hass.block_till_done()
 
-        assert len(pn.PERSISTENT_NOTIFICATIONS) == 1
-        notification = pn.PERSISTENT_NOTIFICATIONS.get(entity_id)
+        assert len(notifications) == 1
+        notification = notifications.get(entity_id)
         assert notification['status'] == pn.STATUS_READ
-        pn.PERSISTENT_NOTIFICATIONS.clear()
+        notifications.clear()
 
 
 async def test_ws_get_notifications(hass, hass_ws_client):
@@ -169,7 +176,9 @@ async def test_ws_get_notifications(hass, hass_ws_client):
     assert notification['status'] == pn.STATUS_UNREAD
 
     # Mark Read
-    hass.components.persistent_notification.async_mark_read('Beer 2')
+    await hass.services.async_call(pn.DOMAIN, pn.SERVICE_MARK_READ, {
+        'notification_id': 'Beer 2'
+    })
     await client.send_json({
         'id': 7,
         'type': 'persistent_notification/get'

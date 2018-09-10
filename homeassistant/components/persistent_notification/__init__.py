@@ -60,8 +60,6 @@ SCHEMA_WS_GET = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_GET_NOTIFICATIONS,
 })
 
-PERSISTENT_NOTIFICATIONS = OrderedDict()
-
 
 @bind_hass
 def create(hass, message, title=None, notification_id=None):
@@ -73,12 +71,6 @@ def create(hass, message, title=None, notification_id=None):
 def dismiss(hass, notification_id):
     """Remove a notification."""
     hass.add_job(async_dismiss, hass, notification_id)
-
-
-@bind_hass
-def mark_read(hass, notification_id):
-    """Mark a notification as read."""
-    hass.add_job(async_mark_read, hass, notification_id)
 
 
 @callback
@@ -107,19 +99,12 @@ def async_dismiss(hass: HomeAssistant, notification_id: str) -> None:
     hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_DISMISS, data))
 
 
-@callback
-@bind_hass
-def async_mark_read(hass: HomeAssistant, notification_id: str) -> None:
-    """Mark a notification as read."""
-    data = {ATTR_NOTIFICATION_ID: notification_id}
-
-    hass.async_add_job(
-        hass.services.async_call(DOMAIN, SERVICE_MARK_READ, data))
-
-
 @asyncio.coroutine
 def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
     """Set up the persistent notification component."""
+    persistent_notifications = OrderedDict()
+    hass.data[DOMAIN] = {'notifications': persistent_notifications}
+
     @callback
     def create_service(call):
         """Handle a create notification service call."""
@@ -158,7 +143,7 @@ def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
 
         # Store notification and fire event
         # This will eventually replace state machine storage
-        PERSISTENT_NOTIFICATIONS[entity_id] = {
+        persistent_notifications[entity_id] = {
             ATTR_MESSAGE: message,
             ATTR_NOTIFICATION_ID: notification_id,
             ATTR_STATUS: STATUS_UNREAD,
@@ -173,14 +158,12 @@ def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
         notification_id = call.data.get(ATTR_NOTIFICATION_ID)
         entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
 
-        if entity_id not in PERSISTENT_NOTIFICATIONS:
-            _LOGGER.error('Dismissing persistent_notification failed: '
-                          'Notification ID %s not found.', notification_id)
+        if entity_id not in persistent_notifications:
             return
 
         hass.states.async_remove(entity_id)
 
-        del PERSISTENT_NOTIFICATIONS[entity_id]
+        del persistent_notifications[entity_id]
         hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
 
     @callback
@@ -189,12 +172,12 @@ def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
         notification_id = call.data.get(ATTR_NOTIFICATION_ID)
         entity_id = ENTITY_ID_FORMAT.format(slugify(notification_id))
 
-        if entity_id not in PERSISTENT_NOTIFICATIONS:
+        if entity_id not in persistent_notifications:
             _LOGGER.error('Marking persistent_notification read failed: '
                           'Notification ID %s not found.', notification_id)
             return
 
-        PERSISTENT_NOTIFICATIONS[entity_id][ATTR_STATUS] = STATUS_READ
+        persistent_notifications[entity_id][ATTR_STATUS] = STATUS_READ
         hass.bus.async_fire(EVENT_PERSISTENT_NOTIFICATIONS_UPDATED)
 
     hass.services.async_register(DOMAIN, SERVICE_CREATE, create_service,
@@ -218,12 +201,12 @@ def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
 def websocket_get_notifications(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return a list of persistent_notifications."""
-    connection.send_message_outside(
+    connection.to_write.put_nowait(
         websocket_api.result_message(msg['id'], [
             {
                 key: data[key] for key in (ATTR_NOTIFICATION_ID, ATTR_MESSAGE,
                                            ATTR_STATUS, ATTR_TITLE)
             }
-            for data in PERSISTENT_NOTIFICATIONS.values()
+            for data in hass.data[DOMAIN]['notifications'].values()
         ])
     )
