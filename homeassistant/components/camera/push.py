@@ -87,6 +87,8 @@ class CameraPushReceiver(HomeAssistantView):
             return self.json_message('Unknown {}'.format(entity_id),
                                      status)
 
+        # Supports HA authentication and token based
+        # when token has been configured
         authenticated = (request[KEY_AUTHENTICATED] or
                          (_camera.token is not None and
                           request.query.get('token') == _camera.token))
