@@ -56,7 +56,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     cameras = [PushCamera(config[CONF_NAME],
                           config[CONF_BUFFER_SIZE],
                           config[CONF_TIMEOUT],
-                          config[CONF_TOKEN])]
+                          config.get(CONF_TOKEN))]
 
     hass.http.register_view(CameraPushReceiver(hass,
                                                config[CONF_IMAGE_FIELD]))
@@ -88,7 +88,8 @@ class CameraPushReceiver(HomeAssistantView):
                                      status)
 
         authenticated = (request[KEY_AUTHENTICATED] or
-                         request.query.get('token') == _camera.token)
+                         (_camera.token is not None and
+                          request.query.get('token') == _camera.token))
 
         if not authenticated:
             return self.json_message(
