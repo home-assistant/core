@@ -52,7 +52,7 @@ PyMata==2.14
 PyQRCode==1.2.1
 
 # homeassistant.components.sensor.rmvtransport
-PyRMVtransport==0.0.7
+PyRMVtransport==0.1
 
 # homeassistant.components.switch.switchbot
 PySwitchbot==0.3
