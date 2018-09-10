@@ -48,14 +48,6 @@ from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE,
     SUPPORT_AWAY_MODE,
     SUPPORT_ON_OFF,
-
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    ATTR_TARGET_TEMP_STEP,
-    ATTR_OPERATION_MODE,
-    ATTR_OPERATION_LIST,
-    ATTR_AWAY_MODE,
 )
 
 from homeassistant.const import (
@@ -89,7 +81,6 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.temperature import display_temp as show_temp
 
 # these are specific to this component
 ATTR_UNTIL = 'until'
@@ -106,18 +97,10 @@ CONF_LOCATION_IDX = 'location_idx'
 CONF_AWAY_TEMP = 'away_temp'
 CONF_OFF_TEMP = 'off_temp'
 
-API_VER = '0.2.7'  # alternatively, '0.2.5' is the version used elsewhere in HA
-
-if API_VER == '0.2.7':  # these vars for >=0.2.6 (is it v3 of the api?)...
-    REQUIREMENTS = ['evohomeclient==0.2.7']
-    SETPOINT_CAPABILITIES = 'setpointCapabilities'
-    SETPOINT_STATE = 'setpointStatus'
-    TARGET_TEMPERATURE = 'targetHeatTemperature'
-else:  # these vars for <=0.2.5...
-    REQUIREMENTS = ['evohomeclient==0.2.5']
-    SETPOINT_CAPABILITIES = 'heatSetpointCapabilities'
-    SETPOINT_STATE = 'heatSetpointStatus'
-    TARGET_TEMPERATURE = 'targetTemperature'
+REQUIREMENTS = ['evohomeclient==0.2.7']
+SETPOINT_CAPABILITIES = 'setpointCapabilities'
+SETPOINT_STATE = 'setpointStatus'
+TARGET_TEMPERATURE = 'targetHeatTemperature'
 
 # https://www.home-assistant.io/components/logger/
 _LOGGER = logging.getLogger(__name__)
@@ -625,88 +608,6 @@ class EvoEntity(Entity):                                                        
 
 #       _LOGGER.debug("current_operation(%s) = %s", self._id, curr_op)
         return curr_op
-
-    @property
-    def state_attributes(self):
-        """Return the optional state attributes."""
-        # Re: state_attributes(), HA assumes Climate objects have:
-        # - self.current_temperature:      True for Heating & DHW zones
-        # - self.target_temperature:       True for Heating zones only
-        # - self.min_temp & self.max_temp: True for Heating zones only
-
-        if self._type & EVO_SLAVE:
-            # Zones & DHW controllers report a current temperature
-            # they have different precision, & a zone's precision may change
-            data = {
-                ATTR_CURRENT_TEMPERATURE: show_temp(
-                    self.hass,
-                    self.current_temperature,
-                    self.temperature_unit,
-                    self.precision
-                ),
-            }
-        else:
-            # Controllers do not have a temperature at all
-            data = {}
-
-        if self._type & EVO_DHW:
-            # Zones & DHW controllers report a current temperature
-            # they have different precision, & a zone's precision may change
-            # lowest possible target_temp
-            data[ATTR_MIN_TEMP] = show_temp(
-                self.hass,
-                self.min_temp,
-                self.temperature_unit,
-                self.precision
-            )
-            # highest possible target_temp
-            data[ATTR_MAX_TEMP] = show_temp(
-                self.hass,
-                self.max_temp,
-                self.temperature_unit,
-                self.precision
-            )
-
-        # Heating zones also have a target temperature (and a setpoint)
-        if self._supported_features & SUPPORT_TARGET_TEMPERATURE:
-            data[ATTR_TEMPERATURE] = show_temp(
-                self.hass,
-                self.target_temperature,
-                self.temperature_unit,
-                PRECISION_HALVES
-            )
-            # lowest possible target_temp
-            data[ATTR_MIN_TEMP] = show_temp(
-                self.hass,
-                self.min_temp,
-                self.temperature_unit,
-                PRECISION_HALVES
-            )
-            # highest possible target_temp
-            data[ATTR_MAX_TEMP] = show_temp(
-                self.hass,
-                self.max_temp,
-                self.temperature_unit,
-                PRECISION_HALVES
-            )
-            data[ATTR_TARGET_TEMP_STEP] = self.target_temperature_step
-
-        # DHW zones (a.k.a. boilers) have a setpoint not exposed via the api
-        if self._supported_features & SUPPORT_ON_OFF:
-            pass
-
-        # All evohome entitys have an operation mode& and operation list
-        if self._supported_features & SUPPORT_OPERATION_MODE:
-            data[ATTR_OPERATION_MODE] = self.current_operation
-            data[ATTR_OPERATION_LIST] = self._op_list
-
-        # Controllers support away mode (slaves, strictly speaking, do not)
-        if self._supported_features & SUPPORT_AWAY_MODE:
-            is_away = self.is_away_mode_on
-            data[ATTR_AWAY_MODE] = STATE_ON if is_away else STATE_OFF
-
-        _LOGGER.debug("state_attributes(%s) = %s", self._id, data)
-        return data
 
 
 class EvoController(EvoEntity):
