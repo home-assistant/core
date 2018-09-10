@@ -19,7 +19,7 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED,
     CONF_DEVICES, CONF_BINARY_SENSORS, CONF_SWITCHES, CONF_HOST, CONF_PORT,
     CONF_ID, CONF_NAME, CONF_TYPE, CONF_PIN, CONF_ZONE, CONF_ACCESS_TOKEN,
-    ATTR_ENTITY_ID, ATTR_STATE)
+    ATTR_ENTITY_ID, ATTR_STATE, STATE_ON)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
@@ -327,6 +327,43 @@ class KonnectedView(HomeAssistantView):
     def __init__(self, auth_token):
         """Initialize the view."""
         self.auth_token = auth_token
+
+    @staticmethod
+    def binary_value(state, activation):
+        """Return binary value for GPIO based on state and activation."""
+        if activation == STATE_HIGH:
+            return 1 if state == STATE_ON else 0
+        return 0 if state == STATE_ON else 1
+
+    async def get(self, request: Request, device_id) -> Response:
+        """Return the current binary state of a switch."""
+        hass = request.app['hass']
+        pin_num = int(request.query.get('pin'))
+        data = hass.data[DOMAIN]
+
+        device = data[CONF_DEVICES][device_id]
+        if not device:
+            return self.json_message(
+                'Device ' + device_id + ' not configured',
+                status_code=HTTP_NOT_FOUND)
+
+        try:
+            pin = next(filter(
+                lambda switch: switch[CONF_PIN] == pin_num,
+                device[CONF_SWITCHES]))
+        except StopIteration:
+            pin = None
+
+        if not pin:
+            return self.json_message(
+                'Switch on pin ' + pin_num + ' not configured',
+                status_code=HTTP_NOT_FOUND)
+
+        return self.json(
+            {'pin': pin_num,
+             'state': self.binary_value(
+                 hass.states.get(pin[ATTR_ENTITY_ID]).state,
+                 pin[CONF_ACTIVATION])})
 
     async def put(self, request: Request, device_id,
                   pin_num=None, state=None) -> Response:
