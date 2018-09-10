@@ -63,7 +63,7 @@ def setup(hass, config):
 
         if arlo_base_station is not None:
             arlo_base_station.refresh_rate = scan_interval.total_seconds()
-        elif len(arlo.cameras) == 0:
+        elif not arlo.cameras == 0:
             _LOGGER.error("No camera or base station available.")
             return False
 
