@@ -145,6 +145,8 @@ def async_setup(hass, config):
         DOMAIN, 'select_rss_news_item', select_rss_news_item)
     hass.services.async_register(
         DOMAIN, 'select_rss_help_item', select_rss_help_item)
+
+
     def device_discovered(service):
         """ Called when a device has been discovered. """
         _LOGGER.info("Discovered a new device type: " + str(service.as_dict()))
@@ -172,14 +174,17 @@ def async_setup(hass, config):
                     hass.services.async_call('ais_cloud', 'get_players')
                 )
             # prepare menu
-            yield from hass.services.async_call(
+            hass.async_add_job(
+                hass.services.async_call(
                 'ais_ai_service',
                 'prepare_remote_menu'
+                )
             )
         except Exception as e:
             _LOGGER.error("device_discovered: " + str(e))
 
     hass.bus.async_listen(EVENT_PLATFORM_DISCOVERED, device_discovered)
+
 
     def state_changed(state_event):
         """ Called on state change """

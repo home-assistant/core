@@ -209,23 +209,20 @@ def _execute_upgrade(hass, call):
     import subprocess
     if reinstall_android_app is None or reinstall_android_app is False:
         # partial update (without android app)
-        script = "/data/data/pl.sviete.dom/.ais/upgrade_ais.sh"
+        script = str(os.path.dirname(__file__))
+        script += '/scripts/upgrade_ais.sh'
         process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
         process.wait()
         _LOGGER.info("_execute_upgrade, return: " + str(process.returncode))
         yield from hass.services.async_call('homeassistant', 'restart')
     else:
         # full update
-        script = "/data/data/pl.sviete.dom/.ais/upgrade_ais_full.sh"
+        script = str(os.path.dirname(__file__))
+        script += '/scripts/upgrade_ais_full.sh'
         process = subprocess.Popen(script, shell=True, stdout=subprocess.PIPE)
         process.wait()
         _LOGGER.info("_execute_upgrade, return: " + str(process.returncode))
         yield from hass.services.async_call('homeassistant', 'stop')
-    # subprocess.call(['pm2', 'restart', 'ais'])
-    # this works on box
-    # import os
-    # _LOGGER.info("_execute_upgrade ")
-    # os.system('sh /data/data/pl.sviete.dom/.ais/upgrade_ais.sh')
 
 
 @asyncio.coroutine
