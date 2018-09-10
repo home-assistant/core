@@ -31,7 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
     vol.Required(CONF_GITLAB_ID): cv.string,
     vol.Optional(CONF_SCAN_INTERVAL,
-                 default=timedelta(seconds=30)): cv.time_period,
+                 default=timedelta(seconds=300)): cv.time_period,
 })
 
 
