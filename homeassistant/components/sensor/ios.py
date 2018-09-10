@@ -21,14 +21,17 @@ DEFAULT_ICON_STATE = 'mdi:power-plug'
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the iOS sensor."""
-    if discovery_info is None:
-        return
+    # Leave here for if someone accidentally adds platform: ios to config
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up iOS from a config entry."""
     dev = list()
-    for device_name, device in ios.devices().items():
+    for device_name, device in ios.devices(hass).items():
         for sensor_type in ('level', 'state'):
             dev.append(IOSSensor(sensor_type, device_name, device))
 
-    add_entities(dev, True)
+    async_add_entities(dev, True)
 
 
 class IOSSensor(Entity):
@@ -102,5 +105,5 @@ class IOSSensor(Entity):
 
     def update(self):
         """Get the latest state of the sensor."""
-        self._device = ios.devices().get(self._device_name)
+        self._device = ios.devices(self.hass).get(self._device_name)
         self._state = self._device[ios.ATTR_BATTERY][self.type]
