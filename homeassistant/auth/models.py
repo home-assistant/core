@@ -7,7 +7,6 @@ import attr
 
 from homeassistant.util import dt as dt_util
 
-from .const import ACCESS_TOKEN_EXPIRATION
 from .util import generate_secret
 
 TOKEN_TYPE_NORMAL = 'normal'
@@ -42,6 +41,7 @@ class RefreshToken:
 
     user = attr.ib(type=User)
     client_id = attr.ib(type=Optional[str])
+    access_token_expiration = attr.ib(type=timedelta)
     client_name = attr.ib(type=Optional[str], default=None)
     client_icon = attr.ib(type=Optional[str], default=None)
     token_type = attr.ib(type=str, default=TOKEN_TYPE_NORMAL,
@@ -50,8 +50,6 @@ class RefreshToken:
                              TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN)))
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
     created_at = attr.ib(type=datetime, default=attr.Factory(dt_util.utcnow))
-    access_token_expiration = attr.ib(type=timedelta,
-                                      default=ACCESS_TOKEN_EXPIRATION)
     token = attr.ib(type=str,
                     default=attr.Factory(lambda: generate_secret(64)))
     jwt_key = attr.ib(type=str,

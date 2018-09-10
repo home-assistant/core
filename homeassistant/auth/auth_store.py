@@ -5,10 +5,11 @@ from logging import getLogger
 from typing import Any, Dict, List, Optional  # noqa: F401
 import hmac
 
+from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
 
-from . import models, util
+from . import models
 
 STORAGE_VERSION = 1
 STORAGE_KEY = 'auth'
@@ -132,20 +133,19 @@ class AuthStore:
             client_name: Optional[str] = None,
             client_icon: Optional[str] = None,
             token_type: str = models.TOKEN_TYPE_NORMAL,
-            access_token_expiration: Optional[timedelta] = None) \
+            access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION) \
             -> models.RefreshToken:
         """Create a new token for a user."""
         kwargs = {
             'user': user,
             'client_id': client_id,
             'token_type': token_type,
+            'access_token_expiration': access_token_expiration
         }  # type: Dict[str, Any]
         if client_name:
             kwargs['client_name'] = client_name
         if client_icon:
             kwargs['client_icon'] = client_icon
-        if access_token_expiration:
-            kwargs['access_token_expiration'] = access_token_expiration
 
         refresh_token = models.RefreshToken(**kwargs)
         user.refresh_tokens[refresh_token.id] = refresh_token
@@ -194,31 +194,6 @@ class AuthStore:
                     found = refresh_token
 
         return found
-
-    @callback
-    def async_mutate_refresh_token(
-            self, refresh_token: models.RefreshToken) -> models.RefreshToken:
-        """Return exist refresh token with mutated jwt_key.
-
-        The previous issued access tokens will be revoked as side effect
-        """
-        refresh_token.jwt_key = util.generate_secret(64)
-        self._async_schedule_save()
-        return refresh_token
-
-    @callback
-    def async_update_refresh_token_name(
-            self, refresh_token: models.RefreshToken,
-            client_name: Optional[str] = None,
-            client_icon: Optional[str] = None) -> models.RefreshToken:
-        """Change refresh token name and/or icon."""
-        if client_name:
-            refresh_token.client_name = client_name
-        if client_icon:
-            refresh_token.client_icon = client_icon
-
-        self._async_schedule_save()
-        return refresh_token
 
     async def _async_load(self) -> None:
         """Load the users."""

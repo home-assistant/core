@@ -338,7 +338,7 @@ async def test_refresh_token_requires_client_for_user(hass):
     assert token.token_type == auth_models.TOKEN_TYPE_NORMAL
     # default access token expiration
     assert token.access_token_expiration == \
-        auth_models.ACCESS_TOKEN_EXPIRATION
+        auth_const.ACCESS_TOKEN_EXPIRATION
 
 
 async def test_refresh_token_not_requires_client_for_system_user(hass):
@@ -408,9 +408,9 @@ async def test_refresh_token_type_long_lived_access_token(hass):
         user, 'gps_logger', 'GPS LOGGER 2', 'mdi:home',
         token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN)
     assert new_token is not None
-    assert new_token.id == token.id
-    assert new_token.token == token.token
-    assert new_token.jwt_key == token.jwt_key
+    assert new_token.id != token.id
+    assert new_token.token != token.token
+    assert new_token.jwt_key != token.jwt_key
     assert new_token.client_id == 'gps_logger'
     assert new_token.client_name == 'GPS LOGGER 2'
     assert new_token.client_icon == 'mdi:home'
@@ -472,9 +472,7 @@ async def test_create_long_lived_access_token(mock_hass):
         access_token_expiration=timedelta(days=300))
     assert refresh_token.token_type == \
         auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
-    jwt_key = refresh_token.jwt_key
     access_token = manager.async_create_access_token(refresh_token)
-    assert refresh_token.jwt_key != jwt_key
     jwt_payload = jwt.decode(
         access_token, refresh_token.jwt_key, algorithm=['HS256'])
     assert jwt_payload['iss'] == refresh_token.id
@@ -498,8 +496,15 @@ async def test_one_long_lived_access_token_per_refresh_token(mock_hass):
     rt = await manager.async_validate_access_token(access_token)
     assert rt.id == refresh_token.id
 
-    access_token_2 = manager.async_create_access_token(refresh_token)
-    jwt_key_2 = refresh_token.jwt_key
+    refresh_token_2 = await manager.async_create_refresh_token(
+        user, 'https://gps.logger.com/', 'GPS Logger',
+        token_type=auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        access_token_expiration=timedelta(days=3000))
+    assert refresh_token.id not in user.refresh_tokens
+    assert refresh_token_2.token_type == \
+        auth_models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
+    access_token_2 = manager.async_create_access_token(refresh_token_2)
+    jwt_key_2 = refresh_token_2.jwt_key
 
     assert access_token != access_token_2
     assert jwt_key != jwt_key_2
@@ -510,7 +515,7 @@ async def test_one_long_lived_access_token_per_refresh_token(mock_hass):
     rt = await manager.async_validate_access_token(access_token_2)
     jwt_payload = jwt.decode(
         access_token_2, rt.jwt_key, algorithm=['HS256'])
-    assert jwt_payload['iss'] == refresh_token.id
+    assert jwt_payload['iss'] == refresh_token_2.id
     assert jwt_payload['exp'] - jwt_payload['iat'] == \
         timedelta(days=3000).total_seconds()
 

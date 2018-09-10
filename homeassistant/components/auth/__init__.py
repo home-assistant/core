@@ -430,7 +430,7 @@ def websocket_current_user(
 def websocket_create_long_lived_access_token(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Create or refresh a long-lived access token."""
-    async def async_create_long_lived_access_tokenr(user):
+    async def async_create_long_lived_access_token(user):
         """Create or refresh a long-lived access token."""
         refresh_token = await hass.auth.async_create_refresh_token(
             user, msg['client_id'],
@@ -445,4 +445,4 @@ def websocket_create_long_lived_access_token(
             websocket_api.result_message(msg['id'], access_token))
 
     hass.async_create_task(
-        async_create_long_lived_access_tokenr(connection.user))
+        async_create_long_lived_access_token(connection.user))

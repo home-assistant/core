@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple, cast
 import jwt
 
 from homeassistant import data_entry_flow
+from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -248,7 +249,7 @@ class AuthManager:
             client_name: Optional[str] = None,
             client_icon: Optional[str] = None,
             token_type: Optional[str] = None,
-            access_token_expiration: Optional[timedelta] = None) \
+            access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION) \
             -> models.RefreshToken:
         """Create a new refresh token for a user."""
         if not user.is_active:
@@ -285,15 +286,17 @@ class AuthManager:
                              ' long-lived access token')
 
         if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
-            for token in user.refresh_tokens.values():
-                if (token.token_type ==
-                        models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
-                        and token.client_id == client_id):
+            for token in list(user.refresh_tokens.values()):
+                if (token.client_id == client_id and token.token_type ==
+                        models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN):
                     # Each client_id can only have one long_lived_access_token
-                    # type of refresh token, return exist one with updated
-                    # name and icon
-                    return self._store.async_update_refresh_token_name(
-                        token, client_name, client_icon)
+                    # type of refresh token, remove exist refresh token, a new
+                    # one will be created. As a side effect, all previous
+                    # issued long-lived access token for this client_id will
+                    # be invoked.
+                    # Continue scan all tokens in case there are multiple
+                    # long_lived_access_token type of refresh tokens.
+                    await self._store.async_remove_refresh_token(token)
 
         return await self._store.async_create_refresh_token(
             user, client_id, client_name, client_icon,
@@ -319,14 +322,6 @@ class AuthManager:
     def async_create_access_token(self,
                                   refresh_token: models.RefreshToken) -> str:
         """Create a new access token."""
-        if refresh_token.token_type == \
-                models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
-            # Each long_lived_access_token type refresh token can only
-            # has one active access token. Previous issued access token will
-            # be revoked as side effect of mutate refresh token.
-            refresh_token = self._store.async_mutate_refresh_token(
-                refresh_token)
-
         now = dt_util.utcnow()
         return jwt.encode({
             'iss': refresh_token.id,
