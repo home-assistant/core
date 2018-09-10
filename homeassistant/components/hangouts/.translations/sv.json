@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Google Hangouts \u00e4r redan inst\u00e4llt",
+            "unknown": "Ett ok\u00e4nt fel intr\u00e4ffade"
+        },
+        "step": {
+            "2fa": {
+                "title": "Tv\u00e5faktorsautentisering"
+            },
+            "user": {
+                "data": {
+                    "email": "E-postadress",
+                    "password": "L\u00f6senord"
+                },
+                "title": "Google Hangouts-inloggning"
+            }
+        },
+        "title": "Google Hangouts"
+    }
+}
