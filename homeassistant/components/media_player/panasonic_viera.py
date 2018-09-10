@@ -9,21 +9,18 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MEDIA_TYPE_URL,
-    SUPPORT_PLAY_MEDIA, SUPPORT_STOP,
-    SUPPORT_VOLUME_STEP, MediaPlayerDevice, PLATFORM_SCHEMA)
+    MEDIA_TYPE_URL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT)
+    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON,
+    STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['panasonic_viera==0.3.1',
-                'wakeonlan==1.0.0']
+REQUIREMENTS = ['panasonic_viera==0.3.1', 'wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_MAC = 'mac'
 
 DEFAULT_NAME = 'Panasonic Viera TV'
 DEFAULT_PORT = 55000

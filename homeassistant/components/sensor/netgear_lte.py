@@ -43,7 +43,7 @@ async def async_setup_platform(
 
 @attr.s
 class LTESensor(Entity):
-    """Data usage sensor entity."""
+    """Base LTE sensor entity."""
 
     modem_data = attr.ib()
     sensor_type = attr.ib()

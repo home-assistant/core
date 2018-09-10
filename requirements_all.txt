@@ -1,5 +1,5 @@
 # Home Assistant core
-aiohttp==3.4.0
+aiohttp==3.4.4
 astral==1.6.1
 async_timeout==3.0.0
 attrs==18.2.0
@@ -13,6 +13,7 @@ pytz>=2018.04
 pyyaml>=3.13,<4
 requests==2.19.1
 voluptuous==0.11.5
+voluptuous-serialize==2.0.0
 
 # homeassistant.components.nuimo_controller
 --only-binary=all nuimo==0.1.0
@@ -452,7 +453,7 @@ hole==0.3.0
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180903.0
+home-assistant-frontend==20180910.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -486,7 +487,7 @@ ihcsdk==2.2.0
 influxdb==5.0.0
 
 # homeassistant.components.insteon
-insteonplm==0.13.1
+insteonplm==0.14.2
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
@@ -502,7 +503,7 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.6
 
 # homeassistant.scripts.keyring
-keyring==13.2.1
+keyring==15.0.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==3.1
@@ -744,7 +745,7 @@ pyCEC==0.4.13
 
 # homeassistant.components.light.tplink
 # homeassistant.components.switch.tplink
-pyHS100==0.3.2
+pyHS100==0.3.3
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.23
@@ -1445,9 +1446,6 @@ venstarcolortouch==0.6
 # homeassistant.components.sensor.volkszaehler
 volkszaehler==0.1.2
 
-# homeassistant.components.config.config_entries
-voluptuous-serialize==2.0.0
-
 # homeassistant.components.volvooncall
 volvooncall==0.4.0
 
@@ -1464,7 +1462,7 @@ vultr==0.1.2
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.samsungtv
 # homeassistant.components.switch.wake_on_lan
-wakeonlan==1.0.0
+wakeonlan==1.1.6
 
 # homeassistant.components.sensor.waqi
 waqiasync==1.0.0
@@ -1522,7 +1520,7 @@ yeelight==0.4.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.09.01
+youtube_dl==2018.09.10
 
 # homeassistant.components.light.zengge
 zengge==0.2

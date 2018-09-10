@@ -5,37 +5,34 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.samsungtv/
 """
 import asyncio
+from datetime import timedelta
 import logging
 import socket
-from datetime import timedelta
-
+import subprocess
 import sys
 
-import subprocess
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_PLAY,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_PLAY_MEDIA,
-    MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_CHANNEL)
+    MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_PORT,
-    CONF_MAC)
+    CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF,
+    STATE_ON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import dt as dt_util
 
-REQUIREMENTS = ['samsungctl[websocket]==0.7.1', 'wakeonlan==1.0.0']
+REQUIREMENTS = ['samsungctl[websocket]==0.7.1', 'wakeonlan==1.1.6']
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_TIMEOUT = 'timeout'
 
 DEFAULT_NAME = 'Samsung TV Remote'
 DEFAULT_PORT = 55000
 DEFAULT_TIMEOUT = 0
-KEY_PRESS_TIMEOUT = 1.2
 
+KEY_PRESS_TIMEOUT = 1.2
 KNOWN_DEVICES_KEY = 'samsungtv_known_devices'
 
 SUPPORT_SAMSUNGTV = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \

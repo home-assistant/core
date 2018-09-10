@@ -4,29 +4,28 @@ Support for the DirecTV receivers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.directv/
 """
-import voluptuous as vol
 import requests
+import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_STOP, PLATFORM_SCHEMA,
-    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
-    MediaPlayerDevice)
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_DEVICE, CONF_HOST, CONF_NAME, STATE_OFF, STATE_PLAYING, CONF_PORT)
+    CONF_DEVICE, CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['directpy==0.5']
 
 DEFAULT_DEVICE = '0'
-DEFAULT_NAME = 'DirecTV Receiver'
+DEFAULT_NAME = "DirecTV Receiver"
 DEFAULT_PORT = 8080
 
 SUPPORT_DTV = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
     SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_NEXT_TRACK | \
     SUPPORT_PREVIOUS_TRACK | SUPPORT_PLAY
 
-DATA_DIRECTV = "data_directv"
+DATA_DIRECTV = 'data_directv'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -51,9 +50,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     elif discovery_info:
         host = discovery_info.get('host')
-        name = 'DirecTV_' + discovery_info.get('serial', '')
+        name = 'DirecTV_{}'.format(discovery_info.get('serial', ''))
 
-        # attempt to discover additional RVU units
+        # Attempt to discover additional RVU units
         try:
             resp = requests.get(
                 'http://%s:%d/info/getLocations' % (host, DEFAULT_PORT)).json()
@@ -65,7 +64,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                                       DEFAULT_PORT, loc["clientAddr"]])
 
         except requests.exceptions.RequestException:
-            # bail out and just go forward with uPnP data
+            # Bail out and just go forward with uPnP data
             if DEFAULT_DEVICE not in known_devices:
                 hosts.append([name, host, DEFAULT_PORT, DEFAULT_DEVICE])
 
@@ -77,8 +76,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(dtvs)
     hass.data[DATA_DIRECTV] = known_devices
-
-    return True
 
 
 class DirecTvDevice(MediaPlayerDevice):
