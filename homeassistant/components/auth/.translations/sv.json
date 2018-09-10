@@ -1,0 +1,12 @@
+{
+    "mfa_setup": {
+        "totp": {
+            "step": {
+                "init": {
+                    "title": "St\u00e4ll in tv\u00e5faktorsautentisering med TOTP"
+                }
+            },
+            "title": "TOTP"
+        }
+    }
+}
