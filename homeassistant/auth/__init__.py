@@ -260,9 +260,6 @@ class AuthManager:
                 'System generated users cannot have refresh tokens connected '
                 'to a client.')
 
-        if not user.system_generated and client_id is None:
-            raise ValueError('Client is required to generate a refresh token.')
-
         if token_type is None:
             if user.system_generated:
                 token_type = models.TOKEN_TYPE_SYSTEM
@@ -280,20 +277,23 @@ class AuthManager:
                 'Only system generated users can have system type '
                 'refresh tokens')
 
+        if token_type == models.TOKEN_TYPE_NORMAL and client_id is None:
+            raise ValueError('Client is required to generate a refresh token.')
+
         if (token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN and
-                (client_id is None or client_name is None)):
-            raise ValueError('Client_id and client_name are both required for'
-                             ' long-lived access token')
+                client_name is None):
+            raise ValueError('Client_name is required for long-lived access '
+                             'token')
 
         if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
             for token in list(user.refresh_tokens.values()):
-                if (token.client_id == client_id and token.token_type ==
+                if (token.client_name == client_name and token.token_type ==
                         models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN):
-                    # Each client_id can only have one long_lived_access_token
-                    # type of refresh token, remove exist refresh token, a new
-                    # one will be created. As a side effect, all previous
-                    # issued long-lived access token for this client_id will
-                    # be invoked.
+                    # Each client_name can only have one
+                    # long_lived_access_token type of refresh token, remove
+                    # exist refresh token, a new one will be created.
+                    # As a side effect, all previous issued long-lived access
+                    # token for this client_id will be invoked.
                     # Continue scan all tokens in case there are multiple
                     # long_lived_access_token type of refresh tokens.
                     await self._store.async_remove_refresh_token(token)
@@ -322,6 +322,7 @@ class AuthManager:
     def async_create_access_token(self,
                                   refresh_token: models.RefreshToken) -> str:
         """Create a new access token."""
+        # pylint: disable=no-self-use
         now = dt_util.utcnow()
         return jwt.encode({
             'iss': refresh_token.id,

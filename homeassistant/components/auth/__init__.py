@@ -104,7 +104,6 @@ Home Assistant. User need to record the token in secure place.
 {
     "id": 11,
     "type": "auth/long_lived_access_token",
-    "client_id": "gps_logger",
     "client_name": "GPS Logger",
     "client_icon": null,
     "lifespan": 365
@@ -152,9 +151,8 @@ WS_TYPE_LONG_LIVED_ACCESS_TOKEN = 'auth/long_lived_access_token'
 SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN = \
     websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
         vol.Required('type'): WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
-        vol.Required('client_id'): str,
         vol.Required('lifespan'): int,  # days
-        vol.Optional('client_name'): str,
+        vol.Required('client_name'): str,
         vol.Optional('client_icon'): str,
     })
 
@@ -433,8 +431,9 @@ def websocket_create_long_lived_access_token(
     async def async_create_long_lived_access_token(user):
         """Create or refresh a long-lived access token."""
         refresh_token = await hass.auth.async_create_refresh_token(
-            user, msg['client_id'],
-            msg.get('client_name'), msg.get('client_icon'),
+            user,
+            client_name=msg['client_name'],
+            client_icon=msg.get('client_icon'),
             token_type=TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
             access_token_expiration=timedelta(days=msg['lifespan']))
 

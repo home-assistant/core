@@ -299,7 +299,6 @@ async def test_ws_long_lived_access_token(hass, hass_ws_client):
     await ws_client.send_json({
         'id': 5,
         'type': auth.WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
-        'client_id': 'gps_logger',
         'client_name': 'GPS Logger',
         'lifespan': 365,
     })
@@ -312,7 +311,7 @@ async def test_ws_long_lived_access_token(hass, hass_ws_client):
 
     refresh_token = await hass.auth.async_validate_access_token(
         long_lived_access_token)
-    assert refresh_token.client_id == 'gps_logger'
+    assert refresh_token.client_id is None
     assert refresh_token.client_name == 'GPS Logger'
     assert refresh_token.client_icon is None
 
