@@ -11,8 +11,6 @@ import logging
 
 from homeassistant.components.evohome import (
     EvoController,
-    EvoZone,
-    EvoBoiler,
 
     DATA_EVOHOME,
     CONF_LOCATION_IDX,
@@ -44,29 +42,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         tcs_obj_ref.modelType
     )
     master = EvoController(hass, client, tcs_obj_ref)
-    slaves = []
-
-# 2/3: Collect each (slave) Heating zone as a (climate component) device
-    for zone_obj_ref in tcs_obj_ref._zones:                                     # noqa E501; pylint: disable=protected-access
-        _LOGGER.debug(
-            "setup_platform(): Found Zone device: id: %s, type: %s",
-            zone_obj_ref.zoneId + " [" + zone_obj_ref.name + "]",
-            zone_obj_ref.zone_type  # also has .zoneType (different)
-        )
-# We may not handle some zones correctly (e.g. UFH) - how to test for them?
-#       if zone['zoneType'] in [ "RadiatorZone", "ZoneValves" ]:
-        slaves.append(EvoZone(hass, client, zone_obj_ref))
-
-# 3/3: Collect any (slave) DHW zone as a (climate component) device
-    if tcs_obj_ref.hotwater:
-        _LOGGER.debug(
-            "setup_platform(): Found DHW device: id: %s, type: %s",
-            tcs_obj_ref.hotwater.zoneId,  # also has .dhwId (same)
-            tcs_obj_ref.hotwater.zone_type
-        )
-        slaves.append(EvoBoiler(hass, client, tcs_obj_ref.hotwater))
-
-# for efficiency, add controller + all zones in a single call (add_devices)
-    add_entities([master] + slaves, update_before_add=False)
+    add_entities([master], update_before_add=False)
 
     return True
