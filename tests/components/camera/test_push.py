@@ -54,7 +54,8 @@ async def test_cases_with_no_auth(aioclient_mock, hass, aiohttp_client):
         data=files)
     assert resp.status == 200
 
-async def test_cases_with_no_auth_no_token(aioclient_mock, hass, aiohttp_client):
+
+async def test_no_auth_no_token(aioclient_mock, hass, aiohttp_client):
     """Test cases where aiohttp_client is not auth."""
     await async_setup_component(hass, 'camera', {
         'camera': {
@@ -76,7 +77,7 @@ async def test_cases_with_no_auth_no_token(aioclient_mock, hass, aiohttp_client)
     resp = await client.post(
         '/api/camera_push/camera.config_test?token=12345678',
         data=files)
-    assert resp.status == 401 
+    assert resp.status == 401
 
 
 async def test_posting_url(hass, aiohttp_client):
