@@ -386,6 +386,31 @@ def test_x10_address():
     schema('C11')
 
 
+def test_ipv4_address():
+    """Test ipv4 addr validator."""
+    schema = vol.Schema(cv.ipv4_address)
+    with pytest.raises(vol.Invalid):
+        schema('1')
+        schema('1.1')
+        schema('1.1.1.')
+        schema('hostname')
+
+    schema('192.168.0.0')
+    schema('0.0.0.0')
+
+
+def test_mac_address():
+    """Test mac addr validator."""
+    schema = vol.Schema(cv.mac_address)
+    with pytest.raises(vol.Invalid):
+        schema('00:00:00:00:00')
+        schema('00:00:00:00:00:00:00')
+        schema('hostname')
+
+    schema('00:AA:BB:CC:DD:EE')
+    schema('00:aa:bb:cc:dd:ee')
+
+
 def test_template():
     """Test template validator."""
     schema = vol.Schema(cv.template)
