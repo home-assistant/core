@@ -486,7 +486,7 @@ ihcsdk==2.2.0
 influxdb==5.0.0
 
 # homeassistant.components.insteon
-insteonplm==0.13.1
+insteonplm==0.14.2
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
