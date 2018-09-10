@@ -24,11 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-SERVICE_SET_MODE = 'logi_set_mode'
+SERVICE_SET_CONFIG = 'logi_set_config'
 SERVICE_LIVESTREAM_SNAPSHOT = 'logi_livestream_snapshot'
 SERVICE_LIVESTREAM_RECORD = 'logi_livestream_record'
 DATA_KEY = 'camera.logi'
 
+BATTERY_SAVING_MODE_KEY = 'BATTERY_SAVING'
 PRIVACY_MODE_KEY = 'PRIVACY_MODE'
 LED_MODE_KEY = 'LED'
 
@@ -41,8 +42,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.time_period,
 })
 
-LOGI_SERVICE_SET_MODE = CAMERA_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_MODE): cv.string,
+LOGI_SERVICE_SET_CONFIG = CAMERA_SERVICE_SCHEMA.extend({
+    vol.Required(ATTR_MODE): vol.In([BATTERY_SAVING_MODE_KEY, LED_MODE_KEY,
+                                     PRIVACY_MODE_KEY]),
     vol.Required(ATTR_VALUE): cv.boolean
 })
 
@@ -58,7 +60,7 @@ LOGI_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend({
 
 async def async_setup_platform(hass,
                                config,
-                               async_add_devices,
+                               async_add_entities,
                                discovery_info=None):
     """Set up a Logi Circle Camera."""
     devices = hass.data[DATA_LOGI]
@@ -67,7 +69,7 @@ async def async_setup_platform(hass,
     for device in devices:
         cameras.append(LogiCam(hass, device, config))
 
-    async_add_devices(cameras, True)
+    async_add_entities(cameras, True)
 
     async def service_handler(service):
         """Dispatch service calls to target entities."""
@@ -81,16 +83,16 @@ async def async_setup_platform(hass,
             target_devices = cameras
 
         for target_device in target_devices:
-            if service.service == SERVICE_SET_MODE:
-                await target_device.set_mode(**params)
+            if service.service == SERVICE_SET_CONFIG:
+                await target_device.set_config(**params)
             if service.service == SERVICE_LIVESTREAM_SNAPSHOT:
                 await target_device.livestream_snapshot(**params)
             if service.service == SERVICE_LIVESTREAM_RECORD:
                 await target_device.download_livestream(**params)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_MODE, service_handler,
-        schema=LOGI_SERVICE_SET_MODE)
+        DOMAIN, SERVICE_SET_CONFIG, service_handler,
+        schema=LOGI_SERVICE_SET_CONFIG)
 
     hass.services.async_register(
         DOMAIN, SERVICE_LIVESTREAM_SNAPSHOT, service_handler,
@@ -100,8 +102,6 @@ async def async_setup_platform(hass,
         DOMAIN, SERVICE_LIVESTREAM_RECORD, service_handler,
         schema=LOGI_SERVICE_RECORD)
 
-    return True
-
 
 class LogiCam(Camera):
     """An implementation of a Logi Circle camera."""
@@ -110,7 +110,6 @@ class LogiCam(Camera):
         """Initialize Logi camera."""
         super(LogiCam, self).__init__()
         self._camera = camera
-        self._hass = hass
         self._name = self._camera.name
 
     @property
@@ -128,13 +127,18 @@ class LogiCam(Camera):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            'battery_saving_mode': ('on' if self._camera.battery_saving
+                                    else 'off'),
             'firmware': self._camera.firmware,
-            'model': self._camera.model,
-            'model_type': self._camera.model_type,
-            'timezone': self._camera.timezone,
+            'generation': self._camera.model_generation,
             'ip_address': self._camera.ip_address,
             'mac_address': self._camera.mac_address,
-            'plan': self._camera.plan_name
+            'microphone_gain': self._camera.microphone_gain,
+            'model': self._camera.model,
+            'mount': self._camera.mount,
+            'plan': self._camera.plan_name,
+            'speaker_volume': self._camera.speaker_volume,
+            'timezone': self._camera.timezone
         }
 
     async def async_camera_image(self):
@@ -143,33 +147,38 @@ class LogiCam(Camera):
 
     async def async_turn_off(self):
         """Disable streaming mode for this camera."""
-        await self._camera.set_streaming_mode('off')
+        await self._camera.set_streaming_mode(False)
 
     async def async_turn_on(self):
         """Enable streaming mode for this camera."""
-        if self._camera.model == 'A1533':
-            await self._camera.set_streaming_mode('on')
-        else:
-            await self._camera.set_streaming_mode('onAlert')
+        await self._camera.set_streaming_mode(True)
 
     @property
     def should_poll(self):
         """Update the image periodically."""
         return True
 
-    async def set_mode(self, mode, value):
-        """Set an operation mode for the target camera."""
+    async def set_config(self, mode, value):
+        """Set an configuration property for the target camera."""
         if mode == LED_MODE_KEY:
             await self._camera.set_led(value)
         if mode == PRIVACY_MODE_KEY:
             await self._camera.set_privacy_mode(value)
+        if mode == BATTERY_SAVING_MODE_KEY:
+            await self._camera.set_battery_saving_mode(value)
 
     async def download_livestream(self, filename, duration):
         """Download a recording from the camera's livestream."""
-        # Render filename from template
-        filename.hass = self._hass
+        # Render filename from template.
+        filename.hass = self.hass
         stream_file = filename.async_render(
             variables={ATTR_ENTITY_ID: self.entity_id})
+
+        # Respect configured path whitelist.
+        if not self.hass.config.is_allowed_path(stream_file):
+            _LOGGER.error(
+                "Can't write %s, no access to path!", stream_file)
+            return
 
         asyncio.shield(self._camera.record_livestream(
             stream_file, timedelta(seconds=duration)), loop=self.hass.loop)
@@ -177,9 +186,15 @@ class LogiCam(Camera):
     async def livestream_snapshot(self, filename):
         """Download a still frame from the camera's livestream."""
         # Render filename from template.
-        filename.hass = self._hass
+        filename.hass = self.hass
         snapshot_file = filename.async_render(
             variables={ATTR_ENTITY_ID: self.entity_id})
+
+        # Respect configured path whitelist.
+        if not self.hass.config.is_allowed_path(snapshot_file):
+            _LOGGER.error(
+                "Can't write %s, no access to path!", snapshot_file)
+            return
 
         asyncio.shield(self._camera.get_livestream_image(
             snapshot_file), loop=self.hass.loop)

@@ -183,6 +183,9 @@ omit =
     homeassistant/components/linode.py
     homeassistant/components/*/linode.py
 
+    homeassistant/components/logi.py
+    homeassistant/components/*/logi.py
+
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
 

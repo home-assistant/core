@@ -11,7 +11,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
-REQUIREMENTS = ['logi_circle==0.1.5']
+REQUIREMENTS = ['logi_circle==0.1.7']
 
 _LOGGER = logging.getLogger(__name__)
 

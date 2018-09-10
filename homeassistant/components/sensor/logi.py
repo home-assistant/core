@@ -26,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
-# Sensor types: Name, unit of measure, icon per sensor key
+# Sensor types: Name, unit of measure, icon per sensor key.
 SENSOR_TYPES = {
     'battery_level': [
         'Battery', '%', 'battery-50'],
@@ -42,6 +42,12 @@ SENSOR_TYPES = {
 
     'signal_strength_percentage': [
         'WiFi Signal Strength', '%', 'wifi'],
+
+    'speaker_volume': [
+        'Volume', '%', 'volume-high'],
+
+    'streaming_mode': [
+        'Streaming Mode', None, 'camera'],
 }
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -52,7 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up a sensor for a Logi Circle device."""
     devices = hass.data[DATA_LOGI]
 
@@ -62,8 +69,7 @@ async def async_setup_platform(hass, config, add_devices, discovery_info=None):
             if device.supports_feature(sensor_type):
                 sensors.append(LogiSensor(hass, device, sensor_type))
 
-    add_devices(sensors, True)
-    return True
+    async_add_entities(sensors, True)
 
 
 class LogiSensor(Entity):
@@ -95,13 +101,18 @@ class LogiSensor(Entity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+            'battery_saving_mode': ('on' if self._camera.battery_saving
+                                    else 'off'),
             'firmware': self._camera.firmware,
-            'model': self._camera.model,
-            'model_type': self._camera.model_type,
-            'timezone': self._camera.timezone,
+            'generation': self._camera.model_generation,
             'ip_address': self._camera.ip_address,
             'mac_address': self._camera.mac_address,
-            'plan': self._camera.plan_name
+            'microphone_gain': self._camera.microphone_gain,
+            'model': self._camera.model,
+            'mount': self._camera.mount,
+            'plan': self._camera.plan_name,
+            'speaker_volume': self._camera.speaker_volume,
+            'timezone': self._camera.timezone
         }
 
     @property
@@ -114,6 +125,9 @@ class LogiSensor(Entity):
         if (self._sensor_type == 'privacy_mode' and
                 self._state != STATE_UNKNOWN):
             return 'mdi:eye-off' if self._state == 'on' else 'mdi:eye'
+        if (self._sensor_type == 'streaming_mode' and
+                self._state != STATE_UNKNOWN):
+            return 'mdi:camera' if self._state == 'on' else 'mdi:camera-off'
         return self._icon
 
     @property
@@ -124,7 +138,6 @@ class LogiSensor(Entity):
     async def update(self):
         """Get the latest data and updates the state."""
         _LOGGER.debug("Pulling data from %s sensor", self._name)
-
         await self._camera.update()
 
         if self._sensor_type == 'last_activity_time':
