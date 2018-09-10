@@ -13,8 +13,6 @@ These config parameters are presented with their default values:
 
 # scan_interval: 180     # seconds, you can probably get away with 60
 # location_idx: 0        # if you have more than 1 location, use this
-# away_temp: 15.0        # °C, if you have a non-default Away temp
-# off_temp: 5.0          # °C, if you have a non-default Heating Off temp
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/evohome/
@@ -79,8 +77,6 @@ PARALLEL_UPDATES = 0
 
 # these are specific to this component
 CONF_LOCATION_IDX = 'location_idx'
-CONF_AWAY_TEMP = 'away_temp'
-CONF_OFF_TEMP = 'off_temp'
 
 REQUIREMENTS = ['evohomeclient==0.2.7']
 
@@ -105,8 +101,6 @@ CONFIG_SCHEMA = vol.Schema({
                      default=MIN_SCAN_INTERVAL): cv.positive_int,
 
         vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
-        vol.Optional(CONF_AWAY_TEMP, default=15.0): CV_FLOAT,
-        vol.Optional(CONF_OFF_TEMP, default=5.0): CV_FLOAT,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
