@@ -6,8 +6,10 @@
         },
         "step": {
             "confirm": {
-                "description": "Voulez-vous configurer Sonos?"
+                "description": "Voulez-vous configurer Sonos?",
+                "title": "Sonos"
             }
-        }
+        },
+        "title": "Sonos"
     }
 }
