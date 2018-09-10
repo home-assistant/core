@@ -266,15 +266,9 @@ class AuthManager:
             else:
                 token_type = models.TOKEN_TYPE_NORMAL
 
-        if user.system_generated and token_type != models.TOKEN_TYPE_SYSTEM:
+        if user.system_generated != (token_type == models.TOKEN_TYPE_SYSTEM):
             raise ValueError(
                 'System generated users can only have system type '
-                'refresh tokens')
-
-        if not user.system_generated and \
-                token_type == models.TOKEN_TYPE_SYSTEM:
-            raise ValueError(
-                'Only system generated users can have system type '
                 'refresh tokens')
 
         if token_type == models.TOKEN_TYPE_NORMAL and client_id is None:
