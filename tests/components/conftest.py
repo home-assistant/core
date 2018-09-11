@@ -34,6 +34,8 @@ def hass_ws_client(aiohttp_client):
         auth_ok = await websocket.receive_json()
         assert auth_ok['type'] == wapi.TYPE_AUTH_OK
 
+        # wrap in client
+        websocket.client = client
         return websocket
 
     return create_client
