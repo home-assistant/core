@@ -7,22 +7,18 @@ https://home-assistant.io/components/light.tplink/
 import logging
 import time
 
-import voluptuous as vol
-
-from homeassistant.const import CONF_HOST
 from homeassistant.components.light import (
     Light, ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_HS_COLOR, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_COLOR, PLATFORM_SCHEMA)
-import homeassistant.helpers.config_validation as cv
+    SUPPORT_COLOR_TEMP, SUPPORT_COLOR)
 from homeassistant.util.color import \
     color_temperature_mired_to_kelvin as mired_to_kelvin
 from homeassistant.util.color import (
     color_temperature_kelvin_to_mired as kelvin_to_mired)
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.components.tplink import DOMAIN as TPLINK_DOMAIN
 
-DOMAIN = 'tplink'
+DEPENDENCIES = ['tplink']
 
-REQUIREMENTS = ['pyHS100==0.3.3']
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,26 +26,17 @@ ATTR_CURRENT_POWER_W = 'current_power_w'
 ATTR_DAILY_ENERGY_KWH = 'daily_energy_kwh'
 ATTR_MONTHLY_ENERGY_KWH = 'monthly_energy_kwh'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-})
 
+async def async_setup_entry(hass, config_entry, async_add_devices):
+    """Set up discovered switches."""
+    devs = []
+    for dev in hass.data[TPLINK_DOMAIN]['light']:
+        # fetch MAC and name already now to avoid I/O inside init
+        unique_id = dev.sys_info['mac']
+        name = dev.alias
+        devs.append(TPLinkSmartBulb(dev, unique_id, name))
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Initialise pyLB100 SmartBulb."""
-    from pyHS100 import SmartBulb, SmartDeviceException
-    host = config.get(CONF_HOST)
-
-    bulb = SmartBulb(host)
-    # fetch MAC and name already now to avoid I/O inside init
-    try:
-        unique_id = bulb.sys_info['mac']
-        name = bulb.alias
-    except SmartDeviceException as ex:
-        _LOGGER.error("Unable to fetch data from the device: %s", ex)
-        raise PlatformNotReady
-
-    add_devices([TPLinkSmartBulb(bulb, unique_id, name)], True)
+    async_add_devices(devs, True)
 
 
 def brightness_to_percentage(byt):

@@ -7,58 +7,37 @@ https://home-assistant.io/components/switch.tplink/
 import logging
 import time
 
-import voluptuous as vol
-
 from homeassistant.components.switch import (
-    SwitchDevice, PLATFORM_SCHEMA, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
-from homeassistant.const import (CONF_HOST, ATTR_VOLTAGE)
-import homeassistant.helpers.config_validation as cv
+    SwitchDevice, ATTR_CURRENT_POWER_W, ATTR_TODAY_ENERGY_KWH)
+from homeassistant.components.tplink import DOMAIN as TPLINK_DOMAIN
+from homeassistant.const import ATTR_VOLTAGE
 from homeassistant.exceptions import PlatformNotReady
 
-DOMAIN = 'tplink'
-REQUIREMENTS = ['pyHS100==0.3.3']
+DEPENDENCIES = ['tplink']
+
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_TOTAL_ENERGY_KWH = 'total_energy_kwh'
 ATTR_CURRENT_A = 'current_a'
 
-CONF_LEDS = 'enable_leds'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_LEDS): cv.boolean,
-})
-
 
 async def async_setup_entry(hass, config_entry, async_add_devices):
     """Set up discovered switches."""
+    from pyHS100 import SmartDeviceException
     devs = []
-    for dev in hass.data[DOMAIN]['switch']:
-        unique_id = dev.sys_info['mac']
-        name = dev.alias
-        devs.append(SmartPlugSwitch(dev, unique_id, name, leds_on=None))
+    for dev in hass.data[TPLINK_DOMAIN]['switch']:
+        try:
+            # fetch MAC and name already now to avoid I/O inside init
+            unique_id = dev.sys_info['mac']
+            name = dev.alias
+            devs.append(SmartPlugSwitch(dev, unique_id, name, leds_on=None))
+        except SmartDeviceException as ex:
+            _LOGGER.error("Unable to fetch data from the device: %s", ex)
+            raise PlatformNotReady
 
     async_add_devices(devs, True)
-
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the TPLink switch platform."""
-    _LOGGER.error("TPLINK setup_platform")
-    from pyHS100 import SmartPlug, SmartDeviceException
-    host = config.get(CONF_HOST)
-    leds_on = config.get(CONF_LEDS)
-
-    plug = SmartPlug(host)
-    # fetch MAC and name already now to avoid I/O inside init
-    try:
-        unique_id = plug.sys_info['mac']
-        name = plug.alias
-    except SmartDeviceException as ex:
-        _LOGGER.error("Unable to fetch data from the device: %s", ex)
-        raise PlatformNotReady
-
-    add_devices([SmartPlugSwitch(plug, unique_id, name, leds_on)], True)
 
 
 class SmartPlugSwitch(SwitchDevice):
