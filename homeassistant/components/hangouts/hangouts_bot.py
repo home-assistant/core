@@ -221,26 +221,30 @@ class HangoutsBot:
 
         image_file = None
         if data.get('image') is not None:
-          uri = data.get('image')
-          validate = urlparse(uri)
-          if validate.scheme:
-            try:
-              websession = async_get_clientsession(self.hass)
-              with async_timeout.timeout(5, loop=self.hass.loop):
-                response = await websession.get(uri)
-                if response.status != 200:
-                  _LOGGER.error('Fetch image failed, {}, {}'.format(response.status, response))
-                  image_file = None
-                else:
-                  image_data = await response.read()
-                  image_file = io.BytesIO(image_data)
-                  image_file.name = "image.png"
-            except (asyncio.TimeoutError, aiohttp.ClientError) as error:
-              _LOGGER.error('Failed to fetch image, {}'.format(type(error)))
-              image_file = None
-          else:
-            image_file = open(uri, 'rb')
-            
+            uri = data.get('image')
+            validate = urlparse(uri)
+            if validate.scheme:
+                try:
+                    websession = async_get_clientsession(self.hass)
+                    with async_timeout.timeout(5, loop=self.hass.loop):
+                        response = await websession.get(uri)
+                        if response.status != 200:
+                            _LOGGER.error(
+                                'Fetch image failed, {}, {}'.format(
+                                    response.status, response
+                                )
+                            )
+                            image_file = None
+                        else:
+                            image_data = await response.read()
+                            image_file = io.BytesIO(image_data)
+                            image_file.name = "image.png"
+                except (asyncio.TimeoutError, aiohttp.ClientError) as error:
+                    _LOGGER.error('Failed to fetch image, {}'.format(type(error)))
+                    image_file = None
+            else:
+                image_file = open(uri, 'rb')
+
         if not messages:
             return False
         for conv in conversations:
