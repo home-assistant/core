@@ -630,34 +630,17 @@ class EvoController(EvoEntity, ClimateDevice):
         self._update_state_data(domain_data)
         self._status = domain_data['status']
 
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            status = dict(self._status)  # create a copy since we're editing
-            if 'zones' in status:
-                status['zones'] = '...'
-            if 'dhw' in status:
-                status['dhw'] = '...'
-            _LOGGER.debug(
-                "update(%s), self._status = %s",
-                self._id,
-                status
-            )
-
-# Finally, send a message to the slaves to update themselves
-        pkt = {
-            'sender': 'controller',
-            'signal': 'update',
-            'to': EVO_SLAVE
-        }
-        self.hass.helpers.dispatcher.async_dispatcher_send(
-            DISPATCHER_EVOHOME,
-            pkt
+        _LOGGER.debug(
+            "update(%s), self._status = %s",
+            self._id,
+            self._status
         )
 
         return True
 
     @property
     def target_temperature(self):
-        """Return the current temperature of the Heating/DHW zone."""
+        """Return the average target temperature of the Heating/DHW zones."""
         num_temps = total_temp = 0
         for zone in self._status['zones']:
             num_temps = num_temps + 1
@@ -671,7 +654,7 @@ class EvoController(EvoEntity, ClimateDevice):
 
     @property
     def current_temperature(self):
-        """Return the current temperature of the Heating/DHW zone."""
+        """Return the average current temperature of the Heating/DHW zones."""
         num_temps = total_temp = 0
         for zone in self._status['zones']:
             if zone['temperatureStatus']['isAvailable'] is True:
