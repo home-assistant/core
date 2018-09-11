@@ -72,6 +72,11 @@ class Sensor(zha.Entity):
     value_attribute = 0
     min_reportable_change = 1
 
+    def __init__(self, **kwargs):
+        """Initialize generic ZHA sensor."""
+        super().__init__(**kwargs)
+        self._only_cache = True
+
     @property
     def should_poll(self) -> bool:
         """State gets pushed from device."""
@@ -95,9 +100,12 @@ class Sensor(zha.Entity):
         """Retrieve latest state."""
         result = await zha.safe_read(
             list(self._in_clusters.values())[0],
-            [self.value_attribute]
+            [self.value_attribute],
+            allow_cache=False,
+            only_cache=self._only_cache
         )
         self._state = result.get(self.value_attribute, self._state)
+        self._only_cache = False
 
 
 class TemperatureSensor(Sensor):
@@ -226,5 +234,6 @@ class ElectricalMeasurementSensor(Sensor):
         result = await zha.safe_read(
             self._endpoint.electrical_measurement,
             ['active_power'],
-            allow_cache=False)
+            allow_cache=False, only_cache=self._only_cache)
         self._state = result.get('active_power', self._state)
+        self._only_cache = False
