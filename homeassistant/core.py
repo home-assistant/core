@@ -904,7 +904,6 @@ class ServiceRegistry:
         self._services = {}  # type: Dict[str, Dict[str, Service]]
         self._hass = hass
         self._async_unsub_call_event = None  # type: Optional[CALLBACK_TYPE]
-        self._call_id = 0
 
     @property
     def services(self) -> Dict[str, Dict[str, Service]]:
@@ -1043,8 +1042,7 @@ class ServiceRegistry:
         This method is a coroutine.
         """
         context = context or Context()
-        self._call_id += 1
-        call_id = self._call_id
+        call_id = uuid.uuid4().hex
         event_data = {
             ATTR_DOMAIN: domain.lower(),
             ATTR_SERVICE: service.lower(),
