@@ -384,7 +384,7 @@ def get_discovery_info(hass, discovery_info):
     return all_discovery_info.get(discovery_key, None)
 
 
-async def safe_read(cluster, attributes, allow_cache=True):
+async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
     """Swallow all exceptions from network read.
 
     If we throw during initialization, setup fails. Rather have an entity that
@@ -395,6 +395,7 @@ async def safe_read(cluster, attributes, allow_cache=True):
         result, _ = await cluster.read_attributes(
             attributes,
             allow_cache=allow_cache,
+            only_cache=only_cache
         )
         return result
     except Exception:  # pylint: disable=broad-except
