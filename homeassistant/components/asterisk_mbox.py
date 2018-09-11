@@ -67,7 +67,7 @@ class AsteriskData:
         async_dispatcher_connect(
             self.hass, SIGNAL_CDR_REQUEST, self._request_cdr)
         async_dispatcher_connect(
-             self.hass, SIGNAL_DISCOVER_PLATFORM, self._discover_platform)
+            self.hass, SIGNAL_DISCOVER_PLATFORM, self._discover_platform)
 
     @callback
     def _discover_platform(self, component):
@@ -89,8 +89,9 @@ class AsteriskData:
                 msg, key=lambda item: item['info']['origtime'], reverse=True)
             if not isinstance(old_messages, list):
                 async_dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
-                                DOMAIN)
-            async_dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE, self.messages)
+                                      DOMAIN)
+            async_dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE,
+                                  self.messages)
         elif command == CMD_MESSAGE_CDR:
             _LOGGER.info("AsteriskVM sent updated CDR list")
             self.cdr = msg['entries']
