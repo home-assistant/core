@@ -52,6 +52,11 @@ class ZhaFan(zha.Entity, FanEntity):
 
     _domain = DOMAIN
 
+    def __init__(self, **kwargs):
+        """Initiliaze ZHA fan."""
+        super().__init__(**kwargs)
+        self._only_cache = True
+
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
@@ -101,9 +106,12 @@ class ZhaFan(zha.Entity, FanEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await zha.safe_read(self._endpoint.fan, ['fan_mode'])
+        result = await zha.safe_read(self._endpoint.fan, ['fan_mode'],
+                                     allow_cache=False,
+                                     only_cache=self._only_cache)
         new_value = result.get('fan_mode', None)
         self._state = VALUE_TO_SPEED.get(new_value, None)
+        self._only_cache = False
 
     @property
     def should_poll(self) -> bool:
