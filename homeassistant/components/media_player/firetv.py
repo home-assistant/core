@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FireTV platform."""
     name = config.get(CONF_NAME)
     ssl = config.get(CONF_SSL)
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         response = requests.get(
             DEVICE_LIST_URL.format(proto, host, port)).json()
         if device_id in response[CONF_DEVICES].keys():
-            add_devices([FireTVDevice(proto, host, port, device_id, name)])
+            add_entities([FireTVDevice(proto, host, port, device_id, name)])
             _LOGGER.info("Device %s accessible and ready for control",
                          device_id)
         else:
@@ -68,7 +68,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Could not connect to firetv-server at %s", host)
 
 
-class FireTV(object):
+class FireTV:
     """The firetv-server client.
 
     Should a native Python 3 ADB module become available, python-firetv can

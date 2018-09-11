@@ -36,7 +36,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the DirecTV platform."""
     known_devices = hass.data.get(DATA_DIRECTV)
     if not known_devices:
@@ -75,7 +75,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dtvs.append(DirecTvDevice(*host))
         known_devices.append(host[-1])
 
-    add_devices(dtvs)
+    add_entities(dtvs)
     hass.data[DATA_DIRECTV] = known_devices
 
     return True
@@ -140,7 +140,7 @@ class DirecTvDevice(MediaPlayerDevice):
         """Return the title of current episode of TV show."""
         if self._is_standby:
             return None
-        elif 'episodeTitle' in self._current:
+        if 'episodeTitle' in self._current:
             return self._current['episodeTitle']
         return None
 

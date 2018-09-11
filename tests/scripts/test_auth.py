@@ -47,7 +47,7 @@ async def test_add_user(hass, provider, capsys, hass_storage):
     assert len(hass_storage[hass_auth.STORAGE_KEY]['data']['users']) == 1
 
     captured = capsys.readouterr()
-    assert captured.out == 'User created\n'
+    assert captured.out == 'Auth created\n'
 
     assert len(data.users) == 1
     data.validate_login('paulus', 'test-pass')

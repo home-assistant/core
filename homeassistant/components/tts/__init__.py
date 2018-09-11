@@ -29,7 +29,7 @@ from homeassistant.helpers import config_per_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['mutagen==1.40.0']
+REQUIREMENTS = ['mutagen==1.41.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,8 +69,8 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
 
 SCHEMA_SERVICE_SAY = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.string,
-    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_CACHE): cv.boolean,
+    vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Optional(ATTR_LANGUAGE): cv.string,
     vol.Optional(ATTR_OPTIONS): dict,
 })
@@ -117,7 +117,7 @@ async def async_setup(hass, config):
 
             tts.async_register_engine(p_type, provider, p_config)
         except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error setting up platform %s", p_type)
+            _LOGGER.exception("Error setting up platform: %s", p_type)
             return
 
         async def async_say_handle(service):
@@ -134,7 +134,7 @@ async def async_setup(hass, config):
                     options=options
                 )
             except HomeAssistantError as err:
-                _LOGGER.error("Error on init tts: %s", err)
+                _LOGGER.error("Error on init TTS: %s", err)
                 return
 
             data = {
@@ -169,7 +169,7 @@ async def async_setup(hass, config):
     return True
 
 
-class SpeechManager(object):
+class SpeechManager:
     """Representation of a speech store."""
 
     def __init__(self, hass):
@@ -302,8 +302,8 @@ class SpeechManager(object):
         return "{}/api/tts_proxy/{}".format(
             self.hass.config.api.base_url, filename)
 
-    async def async_get_tts_audio(self, engine, key, message, cache, language,
-                                  options):
+    async def async_get_tts_audio(
+            self, engine, key, message, cache, language, options):
         """Receive TTS and store for view in cache.
 
         This method is a coroutine.
@@ -440,7 +440,7 @@ class SpeechManager(object):
         return data_bytes.getvalue()
 
 
-class Provider(object):
+class Provider:
     """Represent a single TTS provider."""
 
     hass = None

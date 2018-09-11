@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.components.cover import (
     CoverDevice, ATTR_TILT_POSITION, SUPPORT_OPEN_TILT,
     SUPPORT_CLOSE_TILT, SUPPORT_STOP_TILT, SUPPORT_SET_TILT_POSITION,
@@ -92,7 +92,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the MQTT Cover."""
     if discovery_info is not None:
@@ -105,7 +105,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     if set_position_template is not None:
         set_position_template.hass = hass
 
-    async_add_devices([MqttCover(
+    async_add_entities([MqttCover(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),

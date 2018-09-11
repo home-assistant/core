@@ -49,7 +49,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Swiss hydrological sensor."""
     import xmltodict
 
@@ -67,7 +67,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         return False
 
     data = HydrologicalData(station)
-    add_devices([SwissHydrologicalDataSensor(name, data)], True)
+    add_entities([SwissHydrologicalDataSensor(name, data)], True)
 
 
 class SwissHydrologicalDataSensor(Entity):
@@ -145,7 +145,7 @@ class SwissHydrologicalDataSensor(Entity):
                 self._state = self.data.measurings['03']['current']
 
 
-class HydrologicalData(object):
+class HydrologicalData:
     """The Class for handling the data retrieval."""
 
     def __init__(self, station):

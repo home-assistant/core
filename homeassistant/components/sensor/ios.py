@@ -19,7 +19,7 @@ DEFAULT_ICON_LEVEL = 'mdi:battery'
 DEFAULT_ICON_STATE = 'mdi:power-plug'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the iOS sensor."""
     if discovery_info is None:
         return
@@ -28,7 +28,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         for sensor_type in ('level', 'state'):
             dev.append(IOSSensor(sensor_type, device_name, device))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class IOSSensor(Entity):
@@ -86,8 +86,8 @@ class IOSSensor(Entity):
         battery_level = device_battery[ios.ATTR_BATTERY_LEVEL]
         charging = True
         icon_state = DEFAULT_ICON_STATE
-        if (battery_state == ios.ATTR_BATTERY_STATE_FULL or
-                battery_state == ios.ATTR_BATTERY_STATE_UNPLUGGED):
+        if battery_state in (ios.ATTR_BATTERY_STATE_FULL,
+                             ios.ATTR_BATTERY_STATE_UNPLUGGED):
             charging = False
             icon_state = "{}-off".format(DEFAULT_ICON_STATE)
         elif battery_state == ios.ATTR_BATTERY_STATE_UNKNOWN:

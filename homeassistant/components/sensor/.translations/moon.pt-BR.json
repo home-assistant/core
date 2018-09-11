@@ -1,0 +1,10 @@
+{
+    "state": {
+        "full_moon": "Cheia",
+        "new_moon": "Nova",
+        "waning_crescent": "Minguante",
+        "waning_gibbous": "Minguante gibosa",
+        "waxing_crescent": "Crescente",
+        "waxing_gibbous": "Crescente gibosa"
+    }
+}

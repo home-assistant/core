@@ -15,7 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect, async_dispatcher_send)
 
-REQUIREMENTS = ['asterisk_mbox==0.4.0']
+REQUIREMENTS = ['asterisk_mbox==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +48,7 @@ def setup(hass, config):
     return True
 
 
-class AsteriskData(object):
+class AsteriskData:
     """Store Asterisk mailbox data."""
 
     def __init__(self, hass, host, port, password):

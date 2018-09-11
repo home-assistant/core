@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _CONFIGURING = {}
 
-REQUIREMENTS = ['py-august==0.4.0']
+REQUIREMENTS = ['py-august==0.6.0']
 
 DEFAULT_TIMEOUT = 10
 ACTIVITY_FETCH_LIMIT = 10
@@ -123,9 +123,9 @@ def setup_august(hass, config, api, authenticator):
             discovery.load_platform(hass, component, DOMAIN, {}, config)
 
         return True
-    elif state == AuthenticationState.BAD_PASSWORD:
+    if state == AuthenticationState.BAD_PASSWORD:
         return False
-    elif state == AuthenticationState.REQUIRES_VALIDATION:
+    if state == AuthenticationState.REQUIRES_VALIDATION:
         request_configuration(hass, config, api, authenticator)
         return True
 

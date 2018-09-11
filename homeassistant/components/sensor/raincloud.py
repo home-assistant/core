@@ -25,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a sensor for a raincloud device."""
     raincloud = hass.data[DATA_RAINCLOUD].data
 
@@ -40,7 +40,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for zone in raincloud.controller.faucet.zones:
                 sensors.append(RainCloudSensor(zone, sensor_type))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
     return True
 
 

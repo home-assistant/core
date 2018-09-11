@@ -33,6 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Quiet down soco logging to just actual problems.
 logging.getLogger('soco').setLevel(logging.WARNING)
+logging.getLogger('soco.events').setLevel(logging.ERROR)
 logging.getLogger('soco.data_structures_entry').setLevel(logging.ERROR)
 _SOCO_SERVICES_LOGGER = logging.getLogger('soco.services')
 
@@ -55,6 +56,7 @@ DATA_SONOS = 'sonos_devices'
 SOURCE_LINEIN = 'Line-in'
 SOURCE_TV = 'TV'
 
+CONF_ADVERTISE_ADDR = 'advertise_addr'
 CONF_INTERFACE_ADDR = 'interface_addr'
 
 # Service call validation schemas
@@ -73,6 +75,7 @@ ATTR_SONOS_GROUP = 'sonos_group'
 UPNP_ERRORS_TO_IGNORE = ['701', '711']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
     vol.Optional(CONF_INTERFACE_ADDR): cv.string,
     vol.Optional(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
 })
@@ -118,47 +121,36 @@ class SonosData:
         self.topology_lock = threading.Lock()
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sonos platform.
 
     Deprecated.
     """
     _LOGGER.warning('Loading Sonos via platform config is deprecated.')
-    _setup_platform(hass, config, add_devices, discovery_info)
+    _setup_platform(hass, config, add_entities, discovery_info)
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up Sonos from a config entry."""
-    def add_devices(devices, update_before_add=False):
+    def add_entities(devices, update_before_add=False):
         """Sync version of async add devices."""
-        hass.add_job(async_add_devices, devices, update_before_add)
+        hass.add_job(async_add_entities, devices, update_before_add)
 
     hass.add_job(_setup_platform, hass,
                  hass.data[SONOS_DOMAIN].get('media_player', {}),
-                 add_devices, None)
+                 add_entities, None)
 
 
-def _setup_platform(hass, config, add_devices, discovery_info):
+def _setup_platform(hass, config, add_entities, discovery_info):
     """Set up the Sonos platform."""
     import soco
-    import soco.events
-    import soco.exceptions
-
-    orig_parse_event_xml = soco.events.parse_event_xml
-
-    def safe_parse_event_xml(xml):
-        """Avoid SoCo 0.14 event thread dying from invalid xml."""
-        try:
-            return orig_parse_event_xml(xml)
-        # pylint: disable=broad-except
-        except Exception as ex:
-            _LOGGER.debug("Dodged exception: %s %s", type(ex), str(ex))
-            return {}
-
-    soco.events.parse_event_xml = safe_parse_event_xml
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
+
+    advertise_addr = config.get(CONF_ADVERTISE_ADDR)
+    if advertise_addr:
+        soco.config.EVENT_ADVERTISE_IP = advertise_addr
 
     players = []
     if discovery_info:
@@ -194,7 +186,7 @@ def _setup_platform(hass, config, add_devices, discovery_info):
             return
 
     hass.data[DATA_SONOS].uids.update(p.uid for p in players)
-    add_devices(SonosDevice(p) for p in players)
+    add_entities(SonosDevice(p) for p in players)
     _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):
@@ -397,6 +389,18 @@ class SonosDevice(MediaPlayerDevice):
         return self._name
 
     @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (SONOS_DOMAIN, self._unique_id)
+            },
+            'name': self._name,
+            'model': self._model.replace("Sonos ", ""),
+            'manufacturer': 'Sonos',
+        }
+
+    @property
     @soco_coordinator
     def state(self):
         """Return the state of the device."""
@@ -447,11 +451,15 @@ class SonosDevice(MediaPlayerDevice):
 
         self.update_volume()
 
-        self._favorites = []
-        # SoCo 0.14 raises a generic Exception on invalid xml in favorites.
+        self._set_favorites()
+
+    def _set_favorites(self):
+        """Set available favorites."""
+        # SoCo 0.16 raises a generic Exception on invalid xml in favorites.
         # Filter those out now so our list is safe to use.
         # pylint: disable=broad-except
         try:
+            self._favorites = []
             for fav in self.soco.music_library.get_sonos_favorites():
                 try:
                     if fav.reference.get_uri():
@@ -492,6 +500,9 @@ class SonosDevice(MediaPlayerDevice):
 
         queue = _ProcessSonosEventQueue(self.update_groups)
         player.zoneGroupTopology.subscribe(auto_renew=True, event_queue=queue)
+
+        queue = _ProcessSonosEventQueue(self.update_content)
+        player.contentDirectory.subscribe(auto_renew=True, event_queue=queue)
 
     def update(self):
         """Retrieve latest state."""
@@ -735,6 +746,11 @@ class SonosDevice(MediaPlayerDevice):
                         slave._sonos_group = sonos_group
                         slave.schedule_update_ha_state()
 
+    def update_content(self, event=None):
+        """Update information about available content."""
+        self._set_favorites()
+        self.schedule_update_ha_state()
+
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
@@ -851,9 +867,7 @@ class SonosDevice(MediaPlayerDevice):
                 src = fav.pop()
                 uri = src.reference.get_uri()
                 if _is_radio_uri(uri):
-                    # SoCo 0.14 fails to XML escape the title parameter
-                    from xml.sax.saxutils import escape
-                    self.soco.play_uri(uri, title=escape(source))
+                    self.soco.play_uri(uri, title=source)
                 else:
                     self.soco.clear_queue()
                     self.soco.add_to_queue(src.reference)
@@ -865,10 +879,13 @@ class SonosDevice(MediaPlayerDevice):
         """List of available input sources."""
         sources = [fav.title for fav in self._favorites]
 
-        if 'PLAY:5' in self._model or 'CONNECT' in self._model:
+        model = self._model.upper()
+        if 'PLAY:5' in model or 'CONNECT' in model:
             sources += [SOURCE_LINEIN]
-        elif 'PLAYBAR' in self._model:
+        elif 'PLAYBAR' in model:
             sources += [SOURCE_LINEIN, SOURCE_TV]
+        elif 'BEAM' in model:
+            sources += [SOURCE_TV]
 
         return sources
 

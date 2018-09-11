@@ -51,7 +51,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Volumio platform."""
     if DATA_VOLUMIO not in hass.data:
         hass.data[DATA_VOLUMIO] = dict()
@@ -75,7 +76,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     entity = Volumio(name, host, port, hass)
 
     hass.data[DATA_VOLUMIO][ip_addr] = entity
-    async_add_devices([entity])
+    async_add_entities([entity])
 
 
 class Volumio(MediaPlayerDevice):
@@ -142,7 +143,7 @@ class Volumio(MediaPlayerDevice):
         status = self._state.get('status', None)
         if status == 'pause':
             return STATE_PAUSED
-        elif status == 'play':
+        if status == 'play':
             return STATE_PLAYING
 
         return STATE_IDLE

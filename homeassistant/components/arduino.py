@@ -62,7 +62,7 @@ def setup(hass, config):
     return True
 
 
-class ArduinoBoard(object):
+class ArduinoBoard:
     """Representation of an Arduino board."""
 
     def __init__(self, port):

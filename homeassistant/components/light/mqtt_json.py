@@ -9,7 +9,7 @@ import json
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
     ATTR_TRANSITION, ATTR_WHITE_VALUE, ATTR_HS_COLOR,
@@ -81,11 +81,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None):
+                               async_add_entities, discovery_info=None):
     """Set up a MQTT JSON Light."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
-    async_add_devices([MqttJson(
+    async_add_entities([MqttJson(
         config.get(CONF_NAME),
         config.get(CONF_EFFECT_LIST),
         {

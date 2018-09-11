@@ -46,8 +46,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the sensor platform."""
     from Adafruit_SHT31 import SHT31
 
     i2c_address = config.get(CONF_I2C_ADDRESS)
@@ -72,10 +72,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = "{} {}".format(config.get(CONF_NAME), sensor_type.capitalize())
         devs.append(sensor_class(sensor_client, name))
 
-    add_devices(devs)
+    add_entities(devs)
 
 
-class SHTClient(object):
+class SHTClient:
     """Get the latest data from the SHT sensor."""
 
     def __init__(self, adafruit_sht):

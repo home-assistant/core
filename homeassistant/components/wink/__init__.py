@@ -173,10 +173,9 @@ def _request_app_setup(hass, config):
                        ATTR_CLIENT_SECRET: client_secret})
             setup(hass, config)
             return
-        else:
-            error_msg = "Your input was invalid. Please try again."
-            _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
-            configurator.notify_errors(_configurator, error_msg)
+        error_msg = "Your input was invalid. Please try again."
+        _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
+        configurator.notify_errors(_configurator, error_msg)
 
     start_url = "{}{}".format(hass.config.api.base_url,
                               WINK_AUTH_CALLBACK_PATH)
@@ -452,7 +451,7 @@ def setup(hass, config):
             _man = siren.wink.device_manufacturer()
             if (service.service != SERVICE_SET_AUTO_SHUTOFF and
                     service.service != SERVICE_ENABLE_SIREN and
-                    (_man != 'dome' and _man != 'wink')):
+                    _man not in ('dome', 'wink')):
                 _LOGGER.error("Service only valid for Dome or Wink sirens")
                 return
 
@@ -487,7 +486,7 @@ def setup(hass, config):
     has_dome_or_wink_siren = False
     for siren in pywink.get_sirens():
         _man = siren.device_manufacturer()
-        if _man == "dome" or _man == "wink":
+        if _man in ("dome", "wink"):
             has_dome_or_wink_siren = True
         _id = siren.object_id() + siren.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:

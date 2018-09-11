@@ -65,7 +65,7 @@ def setup(hass, config):
     return True
 
 
-class USPSData(object):
+class USPSData:
     """Stores the data retrieved from USPS.
 
     For each entity to use, acts as the single point responsible for fetching

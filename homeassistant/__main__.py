@@ -8,7 +8,7 @@ import subprocess
 import sys
 import threading
 
-from typing import Optional, List, Dict, Any  # noqa #pylint: disable=unused-import
+from typing import List, Dict, Any  # noqa pylint: disable=unused-import
 
 
 from homeassistant import monkey_patch
@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 
 
-def attempt_use_uvloop():
+def attempt_use_uvloop() -> None:
     """Attempt to use uvloop."""
     import asyncio
 
@@ -280,11 +280,11 @@ def setup_and_run_hass(config_dir: str,
         # Imported here to avoid importing asyncio before monkey patch
         from homeassistant.util.async_ import run_callback_threadsafe
 
-        def open_browser(event):
-            """Open the webinterface in a browser."""
-            if hass.config.api is not None:
+        def open_browser(_: Any) -> None:
+            """Open the web interface in a browser."""
+            if hass.config.api is not None:  # type: ignore
                 import webbrowser
-                webbrowser.open(hass.config.api.base_url)
+                webbrowser.open(hass.config.api.base_url)  # type: ignore
 
         run_callback_threadsafe(
             hass.loop,

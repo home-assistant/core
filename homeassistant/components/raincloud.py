@@ -124,7 +124,7 @@ def setup(hass, config):
     return True
 
 
-class RainCloudHub(object):
+class RainCloudHub:
     """Representation of a base RainCloud device."""
 
     def __init__(self, data):

@@ -6,7 +6,7 @@ https://home-assistant.io/components/switch.litejet/
 """
 import logging
 
-import homeassistant.components.litejet as litejet
+from homeassistant.components import litejet
 from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['litejet']
@@ -16,7 +16,7 @@ ATTR_NUMBER = 'number'
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the LiteJet switch platform."""
     litejet_ = hass.data['litejet_system']
 
@@ -25,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = litejet_.get_switch_name(i)
         if not litejet.is_ignored(hass, name):
             devices.append(LiteJetSwitch(hass, litejet_, i, name))
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class LiteJetSwitch(SwitchDevice):

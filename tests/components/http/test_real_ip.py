@@ -8,7 +8,7 @@ from homeassistant.components.http.const import KEY_REAL_IP
 
 
 async def mock_handler(request):
-    """Handler that returns the real IP as text."""
+    """Return the real IP as text."""
     return web.Response(text=str(request[KEY_REAL_IP]))
 
 

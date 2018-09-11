@@ -231,7 +231,7 @@ def do_setup(hass, config):
     return True
 
 
-class GoogleCalendarService(object):
+class GoogleCalendarService:
     """Calendar service interface to Google."""
 
     def __init__(self, token_file):

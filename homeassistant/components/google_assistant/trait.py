@@ -14,7 +14,6 @@ from homeassistant.components import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -50,15 +49,14 @@ TRAITS = []
 
 
 def register_trait(trait):
-    """Decorator to register a trait."""
+    """Decorate a function to register a trait."""
     TRAITS.append(trait)
     return trait
 
 
-def _google_temp_unit(state):
+def _google_temp_unit(units):
     """Return Google temperature unit."""
-    if (state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) ==
-            TEMP_FAHRENHEIT):
+    if units == TEMP_FAHRENHEIT:
         return 'F'
     return 'C'
 
@@ -68,8 +66,9 @@ class _Trait:
 
     commands = []
 
-    def __init__(self, state):
+    def __init__(self, hass, state):
         """Initialize a trait for a state."""
+        self.hass = hass
         self.state = state
 
     def sync_attributes(self):
@@ -84,7 +83,7 @@ class _Trait:
         """Test if command can be executed."""
         return command in self.commands
 
-    async def execute(self, hass, command, params):
+    async def execute(self, command, params):
         """Execute a trait command."""
         raise NotImplementedError
 
@@ -106,9 +105,9 @@ class BrightnessTrait(_Trait):
         """Test if state is supported."""
         if domain == light.DOMAIN:
             return features & light.SUPPORT_BRIGHTNESS
-        elif domain == cover.DOMAIN:
+        if domain == cover.DOMAIN:
             return features & cover.SUPPORT_SET_POSITION
-        elif domain == media_player.DOMAIN:
+        if domain == media_player.DOMAIN:
             return features & media_player.SUPPORT_VOLUME_SET
 
         return False
@@ -141,24 +140,24 @@ class BrightnessTrait(_Trait):
 
         return response
 
-    async def execute(self, hass, command, params):
+    async def execute(self, command, params):
         """Execute a brightness command."""
         domain = self.state.domain
 
         if domain == light.DOMAIN:
-            await hass.services.async_call(
+            await self.hass.services.async_call(
                 light.DOMAIN, light.SERVICE_TURN_ON, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     light.ATTR_BRIGHTNESS_PCT: params['brightness']
                 }, blocking=True)
         elif domain == cover.DOMAIN:
-            await hass.services.async_call(
+            await self.hass.services.async_call(
                 cover.DOMAIN, cover.SERVICE_SET_COVER_POSITION, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     cover.ATTR_POSITION: params['brightness']
                 }, blocking=True)
         elif domain == media_player.DOMAIN:
-            await hass.services.async_call(
+            await self.hass.services.async_call(
                 media_player.DOMAIN, media_player.SERVICE_VOLUME_SET, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     media_player.ATTR_MEDIA_VOLUME_LEVEL:
@@ -201,7 +200,7 @@ class OnOffTrait(_Trait):
             return {'on': self.state.state != cover.STATE_CLOSED}
         return {'on': self.state.state != STATE_OFF}
 
-    async def execute(self, hass, command, params):
+    async def execute(self, command, params):
         """Execute an OnOff command."""
         domain = self.state.domain
 
@@ -220,7 +219,7 @@ class OnOffTrait(_Trait):
             service_domain = domain
             service = SERVICE_TURN_ON if params['on'] else SERVICE_TURN_OFF
 
-        await hass.services.async_call(service_domain, service, {
+        await self.hass.services.async_call(service_domain, service, {
             ATTR_ENTITY_ID: self.state.entity_id
         }, blocking=True)
 
@@ -268,14 +267,14 @@ class ColorSpectrumTrait(_Trait):
         return (command in self.commands and
                 'spectrumRGB' in params.get('color', {}))
 
-    async def execute(self, hass, command, params):
+    async def execute(self, command, params):
         """Execute a color spectrum command."""
         # Convert integer to hex format and left pad with 0's till length 6
         hex_value = "{0:06x}".format(params['color']['spectrumRGB'])
         color = color_util.color_RGB_to_hs(
             *color_util.rgb_hex_to_rgb_list(hex_value))
 
-        await hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
+        await self.hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
             light.ATTR_HS_COLOR: color
         }, blocking=True)
@@ -304,10 +303,12 @@ class ColorTemperatureTrait(_Trait):
     def sync_attributes(self):
         """Return color temperature attributes for a sync request."""
         attrs = self.state.attributes
+        # Max Kelvin is Min Mireds K = 1000000 / mireds
+        # Min Kevin is Max Mireds K = 1000000 / mireds
         return {
-            'temperatureMinK': color_util.color_temperature_mired_to_kelvin(
-                attrs.get(light.ATTR_MIN_MIREDS)),
             'temperatureMaxK': color_util.color_temperature_mired_to_kelvin(
+                attrs.get(light.ATTR_MIN_MIREDS)),
+            'temperatureMinK': color_util.color_temperature_mired_to_kelvin(
                 attrs.get(light.ATTR_MAX_MIREDS)),
         }
 
@@ -329,7 +330,7 @@ class ColorTemperatureTrait(_Trait):
         return (command in self.commands and
                 'temperature' in params.get('color', {}))
 
-    async def execute(self, hass, command, params):
+    async def execute(self, command, params):
         """Execute a color temperature command."""
         temp = color_util.color_temperature_kelvin_to_mired(
             params['color']['temperature'])
@@ -342,7 +343,7 @@ class ColorTemperatureTrait(_Trait):
                 "Temperature should be between {} and {}".format(min_temp,
                                                                  max_temp))
 
-        await hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
+        await self.hass.services.async_call(light.DOMAIN, SERVICE_TURN_ON, {
             ATTR_ENTITY_ID: self.state.entity_id,
             light.ATTR_COLOR_TEMP: temp,
         }, blocking=True)
@@ -374,12 +375,13 @@ class SceneTrait(_Trait):
         """Return scene query attributes."""
         return {}
 
-    async def execute(self, hass, command, params):
+    async def execute(self, command, params):
         """Execute a scene command."""
         # Don't block for scripts as they can be slow.
-        await hass.services.async_call(self.state.domain, SERVICE_TURN_ON, {
-            ATTR_ENTITY_ID: self.state.entity_id
-        }, blocking=self.state.domain != script.DOMAIN)
+        await self.hass.services.async_call(
+            self.state.domain, SERVICE_TURN_ON, {
+                ATTR_ENTITY_ID: self.state.entity_id
+            }, blocking=self.state.domain != script.DOMAIN)
 
 
 @register_trait
@@ -423,7 +425,8 @@ class TemperatureSettingTrait(_Trait):
 
         return {
             'availableThermostatModes': ','.join(modes),
-            'thermostatTemperatureUnit': _google_temp_unit(self.state),
+            'thermostatTemperatureUnit': _google_temp_unit(
+                self.hass.config.units.temperature_unit)
         }
 
     def query_attributes(self):
@@ -435,7 +438,7 @@ class TemperatureSettingTrait(_Trait):
         if operation is not None and operation in self.hass_to_google:
             response['thermostatMode'] = self.hass_to_google[operation]
 
-        unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        unit = self.hass.config.units.temperature_unit
 
         current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
@@ -463,10 +466,10 @@ class TemperatureSettingTrait(_Trait):
 
         return response
 
-    async def execute(self, hass, command, params):
+    async def execute(self, command, params):
         """Execute a temperature point or mode command."""
         # All sent in temperatures are always in Celsius
-        unit = self.state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        unit = self.hass.config.units.temperature_unit
         min_temp = self.state.attributes[climate.ATTR_MIN_TEMP]
         max_temp = self.state.attributes[climate.ATTR_MAX_TEMP]
 
@@ -480,7 +483,7 @@ class TemperatureSettingTrait(_Trait):
                     "Temperature should be between {} and {}".format(min_temp,
                                                                      max_temp))
 
-            await hass.services.async_call(
+            await self.hass.services.async_call(
                 climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_TEMPERATURE: temp
@@ -506,7 +509,7 @@ class TemperatureSettingTrait(_Trait):
                     "Lower bound for temperature range should be between "
                     "{} and {}".format(min_temp, max_temp))
 
-            await hass.services.async_call(
+            await self.hass.services.async_call(
                 climate.DOMAIN, climate.SERVICE_SET_TEMPERATURE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_TARGET_TEMP_HIGH: temp_high,
@@ -514,7 +517,7 @@ class TemperatureSettingTrait(_Trait):
                 }, blocking=True)
 
         elif command == COMMAND_THERMOSTAT_SET_MODE:
-            await hass.services.async_call(
+            await self.hass.services.async_call(
                 climate.DOMAIN, climate.SERVICE_SET_OPERATION_MODE, {
                     ATTR_ENTITY_ID: self.state.entity_id,
                     climate.ATTR_OPERATION_MODE:

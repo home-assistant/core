@@ -84,7 +84,7 @@ def setup_ecobee(hass, network, config):
     discovery.load_platform(hass, 'weather', DOMAIN, {}, config)
 
 
-class EcobeeData(object):
+class EcobeeData:
     """Get the latest data and update the states."""
 
     def __init__(self, config_file):

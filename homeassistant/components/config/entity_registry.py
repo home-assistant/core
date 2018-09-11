@@ -20,6 +20,7 @@ SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('entity_id'): cv.entity_id,
     # If passed in, we update value. Passing None will remove old value.
     vol.Optional('name'): vol.Any(str, None),
+    vol.Optional('new_entity_id'): str,
 })
 
 
@@ -74,18 +75,33 @@ def websocket_update_entity(hass, connection, msg):
                 msg['id'], websocket_api.ERR_NOT_FOUND, 'Entity not found'))
             return
 
-        entry = registry.async_update_entity(
-            msg['entity_id'], name=msg['name'])
-        connection.send_message_outside(websocket_api.result_message(
-            msg['id'], _entry_dict(entry)
-        ))
+        changes = {}
 
-    hass.async_add_job(update_entity())
+        if 'name' in msg:
+            changes['name'] = msg['name']
+
+        if 'new_entity_id' in msg:
+            changes['new_entity_id'] = msg['new_entity_id']
+
+        try:
+            if changes:
+                entry = registry.async_update_entity(
+                    msg['entity_id'], **changes)
+        except ValueError as err:
+            connection.send_message_outside(websocket_api.error_message(
+                msg['id'], 'invalid_info', str(err)
+            ))
+        else:
+            connection.send_message_outside(websocket_api.result_message(
+                msg['id'], _entry_dict(entry)
+            ))
+
+    hass.async_create_task(update_entity())
 
 
 @callback
 def _entry_dict(entry):
-    """Helper to convert entry to API format."""
+    """Convert entry to API format."""
     return {
         'entity_id': entry.entity_id,
         'name': entry.name

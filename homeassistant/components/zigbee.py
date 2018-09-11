@@ -124,7 +124,7 @@ def frame_is_relevant(entity, frame):
     return True
 
 
-class ZigBeeConfig(object):
+class ZigBeeConfig:
     """Handle the fetching of configuration from the config file."""
 
     def __init__(self, config):

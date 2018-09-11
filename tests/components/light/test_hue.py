@@ -182,7 +182,7 @@ def mock_bridge(hass):
 
         if path == 'lights':
             return bridge.mock_light_responses.popleft()
-        elif path == 'groups':
+        if path == 'groups':
             return bridge.mock_group_responses.popleft()
         return None
 

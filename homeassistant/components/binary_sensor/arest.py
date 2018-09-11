@@ -29,7 +29,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the aREST binary sensor."""
     resource = config.get(CONF_RESOURCE)
     pin = config.get(CONF_PIN)
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     arest = ArestData(resource, pin)
 
-    add_devices([ArestBinarySensor(
+    add_entities([ArestBinarySensor(
         arest, resource, config.get(CONF_NAME, response[CONF_NAME]),
         device_class, pin)], True)
 
@@ -89,7 +89,7 @@ class ArestBinarySensor(BinarySensorDevice):
         self.arest.update()
 
 
-class ArestData(object):
+class ArestData:
     """Class for handling the data retrieval for pins."""
 
     def __init__(self, resource, pin):

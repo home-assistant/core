@@ -44,7 +44,7 @@ def async_trigger(hass, config, action):
 
     # Automation are enabled while hass is starting up, fire right away
     # Check state because a config reload shouldn't trigger it.
-    elif hass.state == CoreState.starting:
+    if hass.state == CoreState.starting:
         hass.async_run_job(action, {
             'trigger': {
                 'platform': 'homeassistant',

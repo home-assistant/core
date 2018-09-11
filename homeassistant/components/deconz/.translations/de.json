@@ -24,7 +24,8 @@
                 "data": {
                     "allow_clip_sensor": "Import virtueller Sensoren zulassen",
                     "allow_deconz_groups": "Import von deCONZ-Gruppen zulassen"
-                }
+                },
+                "title": "Weitere Konfigurationsoptionen f\u00fcr deCONZ"
             }
         },
         "title": "deCONZ Zigbee Gateway"

@@ -36,7 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the sochain sensors."""
     from pysochain import ChainSo
     address = config.get(CONF_ADDRESS)
@@ -46,7 +47,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     session = async_get_clientsession(hass)
     chainso = ChainSo(network, address, hass.loop, session)
 
-    async_add_devices([SochainSensor(name, network.upper(), chainso)], True)
+    async_add_entities([SochainSensor(name, network.upper(), chainso)], True)
 
 
 class SochainSensor(Entity):

@@ -92,7 +92,7 @@ SERVICE_TO_STATE = {
 }
 
 
-class AsyncTrackStates(object):
+class AsyncTrackStates:
     """
     Record the time when the with-block is entered.
 
@@ -214,9 +214,9 @@ def state_as_number(state):
     if state.state in (STATE_ON, STATE_LOCKED, STATE_ABOVE_HORIZON,
                        STATE_OPEN, STATE_HOME, STATE_HEAT, STATE_COOL):
         return 1
-    elif state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
-                         STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME,
-                         STATE_IDLE):
+    if state.state in (STATE_OFF, STATE_UNLOCKED, STATE_UNKNOWN,
+                       STATE_BELOW_HORIZON, STATE_CLOSED, STATE_NOT_HOME,
+                       STATE_IDLE):
         return 0
 
     return float(state.state)

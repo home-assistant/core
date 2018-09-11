@@ -9,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.core import callback
 from homeassistant.const import CONF_DEVICES
 from homeassistant.components.mqtt import CONF_QOS

@@ -116,7 +116,7 @@ def async_setup(hass, config):
     return True
 
 
-class FFmpegManager(object):
+class FFmpegManager:
     """Helper for ha-ffmpeg."""
 
     def __init__(self, hass, ffmpeg_bin, run_test):

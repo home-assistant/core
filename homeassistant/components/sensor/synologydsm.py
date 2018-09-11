@@ -86,7 +86,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Synology NAS Sensor."""
     def run_setup(event):
         """Wait until Home Assistant is fully initialized before creating.
@@ -123,13 +123,13 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         for variable in monitored_conditions
                         if variable in _STORAGE_DSK_MON_COND]
 
-        add_devices(sensors, True)
+        add_entities(sensors, True)
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
-class SynoApi(object):
+class SynoApi:
     """Class to interface with Synology DSM API."""
 
     def __init__(self, host, port, username, password, temp_unit, use_ssl):
@@ -140,7 +140,7 @@ class SynoApi(object):
         try:
             self._api = SynologyDSM(host, port, username, password,
                                     use_https=use_ssl)
-        except:  # noqa: E722  # pylint: disable=bare-except
+        except:  # noqa: E722 pylint: disable=bare-except
             _LOGGER.error("Error setting up Synology DSM")
 
         # Will be updated when update() gets called.
@@ -214,7 +214,7 @@ class SynoNasUtilSensor(SynoNasSensor):
 
             if self.var_id in network_sensors:
                 return round(attr / 1024.0, 1)
-            elif self.var_id in memory_sensors:
+            if self.var_id in memory_sensors:
                 return round(attr / 1024.0 / 1024.0, 1)
         else:
             return getattr(self._api.utilisation, self.var_id)

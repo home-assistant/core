@@ -157,7 +157,7 @@ def setup(hass, config):
     return True
 
 
-class ModbusHub(object):
+class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
     def __init__(self, modbus_client):

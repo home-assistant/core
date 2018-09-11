@@ -17,7 +17,7 @@ import sys
 from types import ModuleType
 
 # pylint: disable=unused-import
-from typing import Dict, List, Optional, Sequence, Set, TYPE_CHECKING  # NOQA
+from typing import Optional, Set, TYPE_CHECKING, Callable, Any, TypeVar  # NOQA
 
 from homeassistant.const import PLATFORM_FORMAT
 from homeassistant.util import OrderedSet
@@ -26,6 +26,8 @@ from homeassistant.util import OrderedSet
 # pylint: disable=using-constant-test,unused-import
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant  # NOQA
+
+CALLABLE_T = TypeVar('CALLABLE_T', bound=Callable)  # noqa pylint: disable=invalid-name
 
 PREPARED = False
 
@@ -51,7 +53,8 @@ def set_component(hass,  # type: HomeAssistant
     cache[comp_name] = component
 
 
-def get_platform(hass, domain: str, platform: str) -> Optional[ModuleType]:
+def get_platform(hass,  # type: HomeAssistant
+                 domain: str, platform: str) -> Optional[ModuleType]:
     """Try to load specified platform.
 
     Async friendly.
@@ -59,7 +62,8 @@ def get_platform(hass, domain: str, platform: str) -> Optional[ModuleType]:
     return get_component(hass, PLATFORM_FORMAT.format(domain, platform))
 
 
-def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
+def get_component(hass,  # type: HomeAssistant
+                  comp_or_platform: str) -> Optional[ModuleType]:
     """Try to load specified component.
 
     Looks in config dir first, then built-in components.
@@ -73,6 +77,9 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
 
     cache = hass.data.get(DATA_KEY)
     if cache is None:
+        if hass.config.config_dir is None:
+            _LOGGER.error("Can't load components - config dir is not set")
+            return None
         # Only insert if it's not there (happens during tests)
         if sys.path[0] != hass.config.config_dir:
             sys.path.insert(0, hass.config.config_dir)
@@ -134,14 +141,38 @@ def get_component(hass, comp_or_platform) -> Optional[ModuleType]:
     return None
 
 
+class ModuleWrapper:
+    """Class to wrap a Python module and auto fill in hass argument."""
+
+    def __init__(self,
+                 hass,  # type: HomeAssistant
+                 module: ModuleType) -> None:
+        """Initialize the module wrapper."""
+        self._hass = hass
+        self._module = module
+
+    def __getattr__(self, attr: str) -> Any:
+        """Fetch an attribute."""
+        value = getattr(self._module, attr)
+
+        if hasattr(value, '__bind_hass'):
+            value = ft.partial(value, self._hass)
+
+        setattr(self, attr, value)
+        return value
+
+
 class Components:
     """Helper to load components."""
 
-    def __init__(self, hass):
+    def __init__(
+            self,
+            hass  # type: HomeAssistant
+    ) -> None:
         """Initialize the Components class."""
         self._hass = hass
 
-    def __getattr__(self, comp_name):
+    def __getattr__(self, comp_name: str) -> ModuleWrapper:
         """Fetch a component."""
         component = get_component(self._hass, comp_name)
         if component is None:
@@ -154,11 +185,14 @@ class Components:
 class Helpers:
     """Helper to load helpers."""
 
-    def __init__(self, hass):
+    def __init__(
+            self,
+            hass  # type: HomeAssistant
+    ) -> None:
         """Initialize the Helpers class."""
         self._hass = hass
 
-    def __getattr__(self, helper_name):
+    def __getattr__(self, helper_name: str) -> ModuleWrapper:
         """Fetch a helper."""
         helper = importlib.import_module(
             'homeassistant.helpers.{}'.format(helper_name))
@@ -167,33 +201,14 @@ class Helpers:
         return wrapped
 
 
-class ModuleWrapper:
-    """Class to wrap a Python module and auto fill in hass argument."""
-
-    def __init__(self, hass, module):
-        """Initialize the module wrapper."""
-        self._hass = hass
-        self._module = module
-
-    def __getattr__(self, attr):
-        """Fetch an attribute."""
-        value = getattr(self._module, attr)
-
-        if hasattr(value, '__bind_hass'):
-            value = ft.partial(value, self._hass)
-
-        setattr(self, attr, value)
-        return value
-
-
-def bind_hass(func):
+def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
     """Decorate function to indicate that first argument is hass."""
-    # pylint: disable=protected-access
-    func.__bind_hass = True
+    setattr(func, '__bind_hass', True)
     return func
 
 
-def load_order_component(hass, comp_name: str) -> OrderedSet:
+def load_order_component(hass,  # type: HomeAssistant
+                         comp_name: str) -> OrderedSet:
     """Return an OrderedSet of components in the correct order of loading.
 
     Raises HomeAssistantError if a circular dependency is detected.
@@ -204,7 +219,8 @@ def load_order_component(hass, comp_name: str) -> OrderedSet:
     return _load_order_component(hass, comp_name, OrderedSet(), set())
 
 
-def _load_order_component(hass, comp_name: str, load_order: OrderedSet,
+def _load_order_component(hass,  # type: HomeAssistant
+                          comp_name: str, load_order: OrderedSet,
                           loading: Set) -> OrderedSet:
     """Recursive function to get load order of components.
 

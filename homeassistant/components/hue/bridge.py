@@ -19,7 +19,7 @@ SCENE_SCHEMA = vol.Schema({
 })
 
 
-class HueBridge(object):
+class HueBridge:
     """Manages a single Hue bridge."""
 
     def __init__(self, hass, config_entry, allow_unreachable, allow_groups):
@@ -51,7 +51,8 @@ class HueBridge(object):
             # linking procedure. When linking succeeds, it will remove the
             # old config entry.
             hass.async_add_job(hass.config_entries.flow.async_init(
-                DOMAIN, source='import', data={
+                DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+                data={
                     'host': host,
                 }
             ))
@@ -78,7 +79,7 @@ class HueBridge(object):
                              host)
             return False
 
-        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             self.config_entry, 'light'))
 
         hass.services.async_register(

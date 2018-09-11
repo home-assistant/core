@@ -9,7 +9,7 @@ import logging
 
 from aiohttp import web
 import voluptuous as vol
-
+from typing import Optional
 from homeassistant.auth.util import generate_secret
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
@@ -122,15 +122,14 @@ def setup(hass, config) -> bool:
         _LOGGER.error("No Rachio devices found in account %s",
                       person.username)
         return False
-    else:
-        _LOGGER.info("%d Rachio device(s) found", len(person.controllers))
+    _LOGGER.info("%d Rachio device(s) found", len(person.controllers))
 
     # Enable component
     hass.data[DOMAIN] = person
     return True
 
 
-class RachioPerson(object):
+class RachioPerson:
     """Represent a Rachio user."""
 
     def __init__(self, hass, rachio):
@@ -162,7 +161,7 @@ class RachioPerson(object):
         return self._controllers
 
 
-class RachioIro(object):
+class RachioIro:
     """Represent a Rachio Iro."""
 
     def __init__(self, hass, rachio, data):
@@ -242,7 +241,7 @@ class RachioIro(object):
         # Only enabled zones
         return [z for z in self._zones if z[KEY_ENABLED]]
 
-    def get_zone(self, zone_id) -> dict or None:
+    def get_zone(self, zone_id) -> Optional[dict]:
         """Return the zone with the given ID."""
         for zone in self.list_zones(include_disabled=True):
             if zone[KEY_ID] == zone_id:

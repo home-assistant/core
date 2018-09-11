@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MPC-HC platform."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     url = '{}:{}'.format(host, port)
 
-    add_devices([MpcHcDevice(name, url)], True)
+    add_entities([MpcHcDevice(name, url)], True)
 
 
 class MpcHcDevice(MediaPlayerDevice):
@@ -93,7 +93,7 @@ class MpcHcDevice(MediaPlayerDevice):
             return STATE_OFF
         if state == 'playing':
             return STATE_PLAYING
-        elif state == 'paused':
+        if state == 'paused':
             return STATE_PAUSED
 
         return STATE_IDLE

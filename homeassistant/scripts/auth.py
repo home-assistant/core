@@ -5,15 +5,15 @@ import logging
 import os
 
 from homeassistant.auth import auth_manager_from_config
+from homeassistant.auth.providers import homeassistant as hass_auth
 from homeassistant.core import HomeAssistant
 from homeassistant.config import get_default_config_dir
-from homeassistant.auth.providers import homeassistant as hass_auth
 
 
 def run(args):
     """Handle Home Assistant auth provider script."""
     parser = argparse.ArgumentParser(
-        description=("Manage Home Assistant users"))
+        description="Manage Home Assistant users")
     parser.add_argument(
         '--script', choices=['auth'])
     parser.add_argument(
@@ -56,7 +56,7 @@ async def run_command(hass, args):
     hass.config.config_dir = os.path.join(os.getcwd(), args.config)
     hass.auth = await auth_manager_from_config(hass, [{
         'type': 'homeassistant',
-    }])
+    }], [])
     provider = hass.auth.auth_providers[0]
     await provider.async_initialize()
     await args.func(hass, provider, args)
@@ -81,16 +81,9 @@ async def add_user(hass, provider, args):
         print("Username already exists!")
         return
 
-    credentials = await provider.async_get_or_create_credentials({
-        'username': args.username
-    })
-
-    user = await hass.auth.async_create_user(args.username)
-    await hass.auth.async_link_user(user, credentials)
-
     # Save username/password
     await provider.data.async_save()
-    print("User created")
+    print("Auth created")
 
 
 async def validate_login(hass, provider, args):

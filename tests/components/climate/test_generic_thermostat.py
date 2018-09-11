@@ -9,7 +9,6 @@ import homeassistant.core as ha
 from homeassistant.core import callback, CoreState, State
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
@@ -42,7 +41,7 @@ class TestSetupClimateGenericThermostat(unittest.TestCase):
     """Test the Generic thermostat with custom config."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -79,7 +78,7 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
     """
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
         self.assertTrue(run_coroutine_threadsafe(
@@ -141,18 +140,16 @@ class TestGenericThermostatHeaterSwitching(unittest.TestCase):
         self.assertEqual(STATE_ON,
                          self.hass.states.get(heater_switch).state)
 
-    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
-        """Setup the test sensor."""
-        self.hass.states.set(ENT_SENSOR, temp, {
-            ATTR_UNIT_OF_MEASUREMENT: unit
-        })
+    def _setup_sensor(self, temp):
+        """Set up the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp)
 
 
 class TestClimateGenericThermostat(unittest.TestCase):
     """Test the Generic thermostat."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.units = METRIC_SYSTEM
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
@@ -222,30 +219,15 @@ class TestClimateGenericThermostat(unittest.TestCase):
         state = self.hass.states.get(ENTITY)
         self.assertEqual(23, state.attributes.get('temperature'))
 
-    def test_sensor_bad_unit(self):
-        """Test sensor that have bad unit."""
-        state = self.hass.states.get(ENTITY)
-        temp = state.attributes.get('current_temperature')
-        unit = state.attributes.get('unit_of_measurement')
-
-        self._setup_sensor(22.0, unit='bad_unit')
-        self.hass.block_till_done()
-
-        state = self.hass.states.get(ENTITY)
-        self.assertEqual(unit, state.attributes.get('unit_of_measurement'))
-        self.assertEqual(temp, state.attributes.get('current_temperature'))
-
     def test_sensor_bad_value(self):
         """Test sensor that have None as state."""
         state = self.hass.states.get(ENTITY)
         temp = state.attributes.get('current_temperature')
-        unit = state.attributes.get('unit_of_measurement')
 
         self._setup_sensor(None)
         self.hass.block_till_done()
 
         state = self.hass.states.get(ENTITY)
-        self.assertEqual(unit, state.attributes.get('unit_of_measurement'))
         self.assertEqual(temp, state.attributes.get('current_temperature'))
 
     def test_set_target_temp_heater_on(self):
@@ -367,14 +349,12 @@ class TestClimateGenericThermostat(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_ON, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
-        """Setup the test sensor."""
-        self.hass.states.set(ENT_SENSOR, temp, {
-            ATTR_UNIT_OF_MEASUREMENT: unit
-        })
+    def _setup_sensor(self, temp):
+        """Set up the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp)
 
     def _setup_switch(self, is_on):
-        """Setup the test switch."""
+        """Set up the test switch."""
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
@@ -391,7 +371,7 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
     """Test the Generic thermostat."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
@@ -532,14 +512,12 @@ class TestClimateGenericThermostatACMode(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))
 
-    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
-        """Setup the test sensor."""
-        self.hass.states.set(ENT_SENSOR, temp, {
-            ATTR_UNIT_OF_MEASUREMENT: unit
-        })
+    def _setup_sensor(self, temp):
+        """Set up the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp)
 
     def _setup_switch(self, is_on):
-        """Setup the test switch."""
+        """Set up the test switch."""
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
@@ -556,7 +534,7 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
     """Test the Generic Thermostat."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
@@ -626,14 +604,12 @@ class TestClimateGenericThermostatACModeMinCycle(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
-        """Setup the test sensor."""
-        self.hass.states.set(ENT_SENSOR, temp, {
-            ATTR_UNIT_OF_MEASUREMENT: unit
-        })
+    def _setup_sensor(self, temp):
+        """Set up the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp)
 
     def _setup_switch(self, is_on):
-        """Setup the test switch."""
+        """Set up the test switch."""
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
@@ -650,7 +626,7 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
     """Test the Generic thermostat."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
@@ -719,14 +695,12 @@ class TestClimateGenericThermostatMinCycle(unittest.TestCase):
         self.assertEqual(SERVICE_TURN_OFF, call.service)
         self.assertEqual(ENT_SWITCH, call.data['entity_id'])
 
-    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
-        """Setup the test sensor."""
-        self.hass.states.set(ENT_SENSOR, temp, {
-            ATTR_UNIT_OF_MEASUREMENT: unit
-        })
+    def _setup_sensor(self, temp):
+        """Set up the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp)
 
     def _setup_switch(self, is_on):
-        """Setup the test switch."""
+        """Set up the test switch."""
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
@@ -743,7 +717,7 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
     """Test the Generic Thermostat."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
@@ -812,14 +786,12 @@ class TestClimateGenericThermostatACKeepAlive(unittest.TestCase):
         """Send a time changed event."""
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
 
-    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
-        """Setup the test sensor."""
-        self.hass.states.set(ENT_SENSOR, temp, {
-            ATTR_UNIT_OF_MEASUREMENT: unit
-        })
+    def _setup_sensor(self, temp):
+        """Set up the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp)
 
     def _setup_switch(self, is_on):
-        """Setup the test switch."""
+        """Set up the test switch."""
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
@@ -836,7 +808,7 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
     """Test the Generic Thermostat."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
         assert setup_component(self.hass, climate.DOMAIN, {'climate': {
@@ -904,14 +876,12 @@ class TestClimateGenericThermostatKeepAlive(unittest.TestCase):
         """Send a time changed event."""
         self.hass.bus.fire(ha.EVENT_TIME_CHANGED, {ha.ATTR_NOW: now})
 
-    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
-        """Setup the test sensor."""
-        self.hass.states.set(ENT_SENSOR, temp, {
-            ATTR_UNIT_OF_MEASUREMENT: unit
-        })
+    def _setup_sensor(self, temp):
+        """Set up the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp)
 
     def _setup_switch(self, is_on):
-        """Setup the test switch."""
+        """Set up the test switch."""
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 
@@ -999,7 +969,7 @@ class TestClimateGenericThermostatRestoreState(unittest.TestCase):
     """Test generic thermostat when restore state from HA startup."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.hass.config.temperature_unit = TEMP_CELSIUS
 
@@ -1047,14 +1017,12 @@ class TestClimateGenericThermostatRestoreState(unittest.TestCase):
             'ac_mode': True
         }})
 
-    def _setup_sensor(self, temp, unit=TEMP_CELSIUS):
-        """Setup the test sensor."""
-        self.hass.states.set(ENT_SENSOR, temp, {
-            ATTR_UNIT_OF_MEASUREMENT: unit
-        })
+    def _setup_sensor(self, temp):
+        """Set up the test sensor."""
+        self.hass.states.set(ENT_SENSOR, temp)
 
     def _setup_switch(self, is_on):
-        """Setup the test switch."""
+        """Set up the test switch."""
         self.hass.states.set(ENT_SWITCH, STATE_ON if is_on else STATE_OFF)
         self.calls = []
 

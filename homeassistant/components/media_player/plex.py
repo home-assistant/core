@@ -59,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 PLEX_DATA = "plex"
 
 
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up the Plex platform."""
     if PLEX_DATA not in hass.data:
         hass.data[PLEX_DATA] = {}
@@ -98,12 +98,12 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
 
     setup_plexserver(
         host, token, has_ssl, verify_ssl,
-        hass, config, add_devices_callback
+        hass, config, add_entities_callback
     )
 
 
 def setup_plexserver(
-        host, token, has_ssl, verify_ssl, hass, config, add_devices_callback):
+        host, token, has_ssl, verify_ssl, hass, config, add_entities_callback):
     """Set up a plexserver based on host parameter."""
     import plexapi.server
     import plexapi.exceptions
@@ -124,7 +124,7 @@ def setup_plexserver(
             plexapi.exceptions.NotFound) as error:
         _LOGGER.info(error)
         # No token or wrong token
-        request_configuration(host, hass, config, add_devices_callback)
+        request_configuration(host, hass, config, add_entities_callback)
         return
 
     # If we came here and configuring this host, mark as done
@@ -214,7 +214,7 @@ def setup_plexserver(
             del plex_clients[clients_to_remove.pop()]
 
         if new_plex_clients:
-            add_devices_callback(new_plex_clients)
+            add_entities_callback(new_plex_clients)
 
     @util.Throttle(MIN_TIME_BETWEEN_SCANS, MIN_TIME_BETWEEN_FORCED_SCANS)
     def update_sessions():
@@ -238,7 +238,7 @@ def setup_plexserver(
     update_devices()
 
 
-def request_configuration(host, hass, config, add_devices_callback):
+def request_configuration(host, hass, config, add_entities_callback):
     """Request configuration steps from the user."""
     configurator = hass.components.configurator
     # We got an error if this method is called while we are configuring
@@ -254,7 +254,7 @@ def request_configuration(host, hass, config, add_devices_callback):
             host, data.get('token'),
             cv.boolean(data.get('has_ssl')),
             cv.boolean(data.get('do_not_verify')),
-            hass, config, add_devices_callback
+            hass, config, add_entities_callback
         )
 
     _CONFIGURING[host] = configurator.request_config(
@@ -573,11 +573,11 @@ class PlexClient(MediaPlayerDevice):
             _LOGGER.debug("Clip content type detected, "
                           "compatibility may vary: %s", self.entity_id)
             return MEDIA_TYPE_TVSHOW
-        elif self._session_type == 'episode':
+        if self._session_type == 'episode':
             return MEDIA_TYPE_TVSHOW
-        elif self._session_type == 'movie':
+        if self._session_type == 'movie':
             return MEDIA_TYPE_MOVIE
-        elif self._session_type == 'track':
+        if self._session_type == 'track':
             return MEDIA_TYPE_MUSIC
 
         return None
@@ -654,7 +654,7 @@ class PlexClient(MediaPlayerDevice):
         if not self._make:
             return None
         # no mute support
-        elif self.make.lower() == "shield android tv":
+        if self.make.lower() == "shield android tv":
             _LOGGER.debug(
                 "Shield Android TV client detected, disabling mute "
                 "controls: %s", self.entity_id)
@@ -663,7 +663,7 @@ class PlexClient(MediaPlayerDevice):
                     SUPPORT_VOLUME_SET | SUPPORT_PLAY |
                     SUPPORT_TURN_OFF)
         # Only supports play,pause,stop (and off which really is stop)
-        elif self.make.lower().startswith("tivo"):
+        if self.make.lower().startswith("tivo"):
             _LOGGER.debug(
                 "Tivo client detected, only enabling pause, play, "
                 "stop, and off controls: %s", self.entity_id)
@@ -671,7 +671,7 @@ class PlexClient(MediaPlayerDevice):
                     SUPPORT_TURN_OFF)
         # Not all devices support playback functionality
         # Playback includes volume, stop/play/pause, etc.
-        elif self.device and 'playback' in self._device_protocol_capabilities:
+        if self.device and 'playback' in self._device_protocol_capabilities:
             return (SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK |
                     SUPPORT_NEXT_TRACK | SUPPORT_STOP |
                     SUPPORT_VOLUME_SET | SUPPORT_PLAY |

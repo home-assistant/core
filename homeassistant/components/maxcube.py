@@ -79,7 +79,7 @@ def setup(hass, config):
     return True
 
 
-class MaxCubeHandle(object):
+class MaxCubeHandle:
     """Keep the cube instance in one place and centralize the update."""
 
     def __init__(self, cube, scan_interval):

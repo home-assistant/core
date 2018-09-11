@@ -91,8 +91,7 @@ def _get_skyhub_data(url):
         return
     if response.status_code == 200:
         return _parse_skyhub_response(response.text)
-    else:
-        _LOGGER.error("Invalid response from Sky Hub: %s", response)
+    _LOGGER.error("Invalid response from Sky Hub: %s", response)
 
 
 def _parse_skyhub_response(data_str):

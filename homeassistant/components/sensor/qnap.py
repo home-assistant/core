@@ -17,7 +17,7 @@ from homeassistant.const import (
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['qnapstats==0.2.6']
+REQUIREMENTS = ['qnapstats==0.2.7']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,7 +102,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the QNAP NAS sensor."""
     api = QNAPStatsAPI(config)
     api.update()
@@ -151,7 +151,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     for variable in config[CONF_MONITORED_CONDITIONS]
                     if variable in _VOLUME_MON_COND]
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 def round_nicely(number):
@@ -164,7 +164,7 @@ def round_nicely(number):
     return round(number)
 
 
-class QNAPStatsAPI(object):
+class QNAPStatsAPI:
     """Class to interface with the API."""
 
     def __init__(self, config):
@@ -173,7 +173,7 @@ class QNAPStatsAPI(object):
 
         protocol = "https" if config.get(CONF_SSL) else "http"
         self._api = QNAPStats(
-            protocol + "://" + config.get(CONF_HOST),
+            '{}://{}'.format(protocol, config.get(CONF_HOST)),
             config.get(CONF_PORT),
             config.get(CONF_USERNAME),
             config.get(CONF_PASSWORD),
@@ -192,7 +192,7 @@ class QNAPStatsAPI(object):
             self.data["smart_drive_health"] = self._api.get_smart_disk_health()
             self.data["volumes"] = self._api.get_volumes()
             self.data["bandwidth"] = self._api.get_bandwidth()
-        except:  # noqa: E722  # pylint: disable=bare-except
+        except:  # noqa: E722 pylint: disable=bare-except
             _LOGGER.exception("Failed to fetch QNAP stats from the NAS")
 
 
@@ -241,7 +241,7 @@ class QNAPCPUSensor(QNAPSensor):
         """Return the state of the sensor."""
         if self.var_id == 'cpu_temp':
             return self._api.data['system_stats']['cpu']['temp_c']
-        elif self.var_id == 'cpu_usage':
+        if self.var_id == 'cpu_usage':
             return self._api.data['system_stats']['cpu']['usage_percent']
 
 

@@ -12,17 +12,25 @@ def manager():
     handlers = Registry()
     entries = []
 
-    async def async_create_flow(handler_name, *, source, data):
+    async def async_create_flow(handler_name, *, context, data):
         handler = handlers.get(handler_name)
 
         if handler is None:
             raise data_entry_flow.UnknownHandler
 
-        return handler()
+        flow = handler()
+        flow.init_step = context.get('init_step', 'init') \
+            if context is not None else 'init'
+        flow.source = context.get('source') \
+            if context is not None else 'user_input'
+        return flow
 
-    async def async_add_entry(result):
-        if (result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY):
+    async def async_add_entry(flow, result):
+        if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            result['source'] = flow.context.get('source') \
+                if flow.context is not None else 'user'
             entries.append(result)
+        return result
 
     manager = data_entry_flow.FlowManager(
         None, async_create_flow, async_add_entry)
@@ -57,12 +65,12 @@ async def test_configure_two_steps(manager):
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 1
 
-        async def async_step_init(self, user_input=None):
+        async def async_step_first(self, user_input=None):
             if user_input is not None:
                 self.init_data = user_input
                 return await self.async_step_second()
             return self.async_show_form(
-                step_id='init',
+                step_id='first',
                 data_schema=vol.Schema([str])
             )
 
@@ -77,7 +85,7 @@ async def test_configure_two_steps(manager):
                 data_schema=vol.Schema([str])
             )
 
-    form = await manager.async_init('test')
+    form = await manager.async_init('test', context={'init_step': 'first'})
 
     with pytest.raises(vol.Invalid):
         form = await manager.async_configure(
@@ -163,7 +171,7 @@ async def test_create_saves_data(manager):
     assert entry['handler'] == 'test'
     assert entry['title'] == 'Test Title'
     assert entry['data'] == 'Test Data'
-    assert entry['source'] == data_entry_flow.SOURCE_USER
+    assert entry['source'] == 'user'
 
 
 async def test_discovery_init_flow(manager):
@@ -172,7 +180,7 @@ async def test_discovery_init_flow(manager):
     class TestFlow(data_entry_flow.FlowHandler):
         VERSION = 5
 
-        async def async_step_discovery(self, info):
+        async def async_step_init(self, info):
             return self.async_create_entry(title=info['id'], data=info)
 
     data = {
@@ -181,7 +189,7 @@ async def test_discovery_init_flow(manager):
     }
 
     await manager.async_init(
-        'test', source=data_entry_flow.SOURCE_DISCOVERY, data=data)
+        'test', context={'source': 'discovery'}, data=data)
     assert len(manager.async_progress()) == 0
     assert len(manager.mock_created_entries) == 1
 
@@ -190,4 +198,50 @@ async def test_discovery_init_flow(manager):
     assert entry['handler'] == 'test'
     assert entry['title'] == 'hello'
     assert entry['data'] == data
-    assert entry['source'] == data_entry_flow.SOURCE_DISCOVERY
+    assert entry['source'] == 'discovery'
+
+
+async def test_finish_callback_change_result_type(hass):
+    """Test finish callback can change result type."""
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 1
+
+        async def async_step_init(self, input):
+            """Return init form with one input field 'count'."""
+            if input is not None:
+                return self.async_create_entry(title='init', data=input)
+            return self.async_show_form(
+                step_id='init',
+                data_schema=vol.Schema({'count': int}))
+
+    async def async_create_flow(handler_name, *, context, data):
+        """Create a test flow."""
+        return TestFlow()
+
+    async def async_finish_flow(flow, result):
+        """Redirect to init form if count <= 1."""
+        if result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+            if (result['data'] is None or
+                    result['data'].get('count', 0) <= 1):
+                return flow.async_show_form(
+                    step_id='init',
+                    data_schema=vol.Schema({'count': int}))
+            else:
+                result['result'] = result['data']['count']
+        return result
+
+    manager = data_entry_flow.FlowManager(
+        hass, async_create_flow, async_finish_flow)
+
+    result = await manager.async_init('test')
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'init'
+
+    result = await manager.async_configure(result['flow_id'], {'count': 0})
+    assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+    assert result['step_id'] == 'init'
+    assert 'result' not in result
+
+    result = await manager.async_configure(result['flow_id'], {'count': 2})
+    assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result['result'] == 2

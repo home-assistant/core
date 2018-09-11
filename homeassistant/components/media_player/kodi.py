@@ -155,11 +155,13 @@ def _check_deprecated_turn_off(hass, turn_off_action):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Kodi platform."""
     if DATA_KODI not in hass.data:
         hass.data[DATA_KODI] = dict()
 
+    unique_id = None
     # Is this a manual configuration?
     if discovery_info is None:
         name = config.get(CONF_NAME)
@@ -175,12 +177,23 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         tcp_port = DEFAULT_TCP_PORT
         encryption = DEFAULT_PROXY_SSL
         websocket = DEFAULT_ENABLE_WEBSOCKET
+        properties = discovery_info.get('properties')
+        if properties is not None:
+            unique_id = properties.get('uuid', None)
 
     # Only add a device once, so discovered devices do not override manual
     # config.
     ip_addr = socket.gethostbyname(host)
     if ip_addr in hass.data[DATA_KODI]:
         return
+
+    # If we got an unique id, check that it does not exist already.
+    # This is necessary as netdisco does not deterministally return the same
+    # advertisement when the service is offered over multiple IP addresses.
+    if unique_id is not None:
+        for device in hass.data[DATA_KODI].values():
+            if device.unique_id == unique_id:
+                return
 
     entity = KodiDevice(
         hass,
@@ -190,10 +203,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         password=config.get(CONF_PASSWORD),
         turn_on_action=config.get(CONF_TURN_ON_ACTION),
         turn_off_action=config.get(CONF_TURN_OFF_ACTION),
-        timeout=config.get(CONF_TIMEOUT), websocket=websocket)
+        timeout=config.get(CONF_TIMEOUT), websocket=websocket,
+        unique_id=unique_id)
 
     hass.data[DATA_KODI][ip_addr] = entity
-    async_add_devices([entity], update_before_add=True)
+    async_add_entities([entity], update_before_add=True)
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -260,12 +274,14 @@ class KodiDevice(MediaPlayerDevice):
     def __init__(self, hass, name, host, port, tcp_port, encryption=False,
                  username=None, password=None,
                  turn_on_action=None, turn_off_action=None,
-                 timeout=DEFAULT_TIMEOUT, websocket=True):
+                 timeout=DEFAULT_TIMEOUT, websocket=True,
+                 unique_id=None):
         """Initialize the Kodi device."""
         import jsonrpc_async
         import jsonrpc_websocket
         self.hass = hass
         self._name = name
+        self._unique_id = unique_id
 
         kwargs = {
             'timeout': timeout,
@@ -383,6 +399,11 @@ class KodiDevice(MediaPlayerDevice):
                 _LOGGER.info("Unable to fetch kodi data")
                 _LOGGER.debug("Unable to fetch kodi data", exc_info=True)
             return None
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the device."""
+        return self._unique_id
 
     @property
     def state(self):
@@ -749,7 +770,7 @@ class KodiDevice(MediaPlayerDevice):
         if media_type == "CHANNEL":
             return self.server.Player.Open(
                 {"item": {"channelid": int(media_id)}})
-        elif media_type == "PLAYLIST":
+        if media_type == "PLAYLIST":
             return self.server.Player.Open(
                 {"item": {"playlistid": int(media_id)}})
 
@@ -759,7 +780,7 @@ class KodiDevice(MediaPlayerDevice):
     @asyncio.coroutine
     def async_set_shuffle(self, shuffle):
         """Set shuffle mode, for the first player."""
-        if len(self._players) < 1:
+        if not self._players:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle(
             {"playerid": self._players[0]['playerid'], "shuffle": shuffle})
