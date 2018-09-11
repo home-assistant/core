@@ -1,10 +1,15 @@
 """The Hangouts Bot."""
+import io
 import logging
-
+import asyncio
+import aiohttp
+import async_timeout
+from urllib.parse import urlparse
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import dispatcher, intent
 
 from .const import (
-    ATTR_MESSAGE, ATTR_TARGET, CONF_CONVERSATIONS, DOMAIN,
+    ATTR_MESSAGE, ATTR_TARGET, ATTR_DATA, CONF_CONVERSATIONS, DOMAIN,
     EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
     EVENT_HANGOUTS_DISCONNECTED, EVENT_HANGOUTS_MESSAGE_RECEIVED,
     CONF_MATCHERS, CONF_CONVERSATION_ID,
@@ -185,7 +190,7 @@ class HangoutsBot:
         """Run once when Home Assistant stops."""
         await self.async_disconnect()
 
-    async def _async_send_message(self, message, targets):
+    async def _async_send_message(self, message, targets, data):
         conversations = []
         for target in targets:
             conversation = None
@@ -214,10 +219,32 @@ class HangoutsBot:
                                                segment_type=hangouts_pb2.
                                                SEGMENT_TYPE_LINE_BREAK))
 
+        image_file = None
+        if data.get('image') is not None:
+          uri = data.get('image')
+          validate = urlparse(uri)
+          if validate.scheme:
+            try:
+              websession = async_get_clientsession(self.hass)
+              with async_timeout.timeout(5, loop=self.hass.loop):
+                response = await websession.get(uri)
+                if response.status != 200:
+                  _LOGGER.error('Fetch image failed, {}, {}'.format(response.status, response))
+                  image_file = None
+                else:
+                  image_data = await response.read()
+                  image_file = io.BytesIO(image_data)
+                  image_file.name = "image.png"
+            except (asyncio.TimeoutError, aiohttp.ClientError) as error:
+              _LOGGER.error('Failed to fetch image, {}'.format(type(error)))
+              image_file = None
+          else:
+            image_file = open(uri, 'rb')
+            
         if not messages:
             return False
         for conv in conversations:
-            await conv.send_message(messages)
+            await conv.send_message(messages, image_file)
 
     async def _async_list_conversations(self):
         import hangups
@@ -242,7 +269,8 @@ class HangoutsBot:
     async def async_handle_send_message(self, service):
         """Handle the send_message service."""
         await self._async_send_message(service.data[ATTR_MESSAGE],
-                                       service.data[ATTR_TARGET])
+                                       service.data[ATTR_TARGET],
+                                       service.data[ATTR_DATA])
 
     async def async_handle_update_users_and_conversations(self, _=None):
         """Handle the update_users_and_conversations service."""
