@@ -7,7 +7,6 @@ from urllib.parse import urlparse
 from socket import _GLOBAL_DEFAULT_TIMEOUT
 import logging
 import inspect
-
 from typing import Any, Union, TypeVar, Callable, Sequence, Dict
 
 import voluptuous as vol

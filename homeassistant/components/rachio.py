@@ -6,10 +6,10 @@ https://home-assistant.io/components/rachio/
 """
 import asyncio
 import logging
+from typing import Optional
 
 from aiohttp import web
 import voluptuous as vol
-from typing import Optional
 from homeassistant.auth.util import generate_secret
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_API_KEY, EVENT_HOMEASSISTANT_STOP, URL_API
