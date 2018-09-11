@@ -18,8 +18,7 @@ from time import monotonic
 import uuid
 
 from types import MappingProxyType
-# pylint: disable=unused-import
-from typing import (  # NOQA
+from typing import (  # noqa: F401 pylint: disable=unused-import
     Optional, Any, Callable, List, TypeVar, Dict, Coroutine, Set,
     TYPE_CHECKING, Awaitable, Iterator)
 

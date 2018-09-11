@@ -5,7 +5,6 @@ import importlib
 import logging
 import os
 import sys
-
 from typing import List
 
 from homeassistant.bootstrap import async_mount_local_lib_path
