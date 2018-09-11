@@ -284,13 +284,8 @@ class AuthManager:
                 if (token.client_name == client_name and token.token_type ==
                         models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN):
                     # Each client_name can only have one
-                    # long_lived_access_token type of refresh token, remove
-                    # exist refresh token, a new one will be created.
-                    # As a side effect, all previous issued long-lived access
-                    # token for this client_id will be invoked.
-                    # Continue scan all tokens in case there are multiple
-                    # long_lived_access_token type of refresh tokens.
-                    await self._store.async_remove_refresh_token(token)
+                    # long_lived_access_token type of refresh token
+                    raise ValueError('{} already exists'.format(client_name))
 
         return await self._store.async_create_refresh_token(
             user, client_id, client_name, client_icon,
