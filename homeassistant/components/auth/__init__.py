@@ -12,6 +12,7 @@ be in JSON as it's more readable.
 Exchange the authorization code retrieved from the login flow for tokens.
 
 {
+    "client_id": "https://hassbian.local:8123/",
     "grant_type": "authorization_code",
     "code": "411ee2f916e648d691e937ae9344681e"
 }
@@ -32,6 +33,7 @@ token.
 Request a new access token using a refresh token.
 
 {
+    "client_id": "https://hassbian.local:8123/",
     "grant_type": "refresh_token",
     "refresh_token": "IJKLMNOPQRST"
 }
@@ -55,6 +57,67 @@ ever been granted by that refresh token. Response code will ALWAYS be 200.
     "action": "revoke"
 }
 
+# Websocket API
+
+## Get current user
+
+Send websocket command `auth/current_user` will return current user of the
+active websocket connection.
+
+{
+    "id": 10,
+    "type": "auth/current_user",
+}
+
+The result payload likes
+
+{
+    "id": 10,
+    "type": "result",
+    "success": true,
+    "result": {
+        "id": "USER_ID",
+        "name": "John Doe",
+        "is_owner': true,
+        "credentials": [
+            {
+                "auth_provider_type": "homeassistant",
+                "auth_provider_id": null
+            }
+        ],
+        "mfa_modules": [
+            {
+                "id": "totp",
+                "name": "TOTP",
+                "enabled": true,
+            }
+        ]
+    }
+}
+
+## Create a long-lived access token
+
+Send websocket command `auth/long_lived_access_token` will create
+a long-lived access token for current user. Access token will not be saved in
+Home Assistant. User need to record the token in secure place.
+
+{
+    "id": 11,
+    "type": "auth/long_lived_access_token",
+    "client_name": "GPS Logger",
+    "client_icon": null,
+    "lifespan": 365
+}
+
+Result will be a long-lived access token:
+
+{
+    "id": 11,
+    "type": "result",
+    "success": true,
+    "result": "ABCDEFGH"
+}
+
 """
 import logging
 import uuid
@@ -63,7 +126,8 @@ from datetime import timedelta
 from aiohttp import web
 import voluptuous as vol
 
-from homeassistant.auth.models import User, Credentials
+from homeassistant.auth.models import User, Credentials, \
+    TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 from homeassistant.components import websocket_api
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -83,6 +147,15 @@ SCHEMA_WS_CURRENT_USER = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_CURRENT_USER,
 })
 
+WS_TYPE_LONG_LIVED_ACCESS_TOKEN = 'auth/long_lived_access_token'
+SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        vol.Required('lifespan'): int,  # days
+        vol.Required('client_name'): str,
+        vol.Optional('client_icon'): str,
+    })
+
 RESULT_TYPE_CREDENTIALS = 'credentials'
 RESULT_TYPE_USER = 'user'
 
@@ -99,6 +172,11 @@ async def async_setup(hass, config):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_CURRENT_USER, websocket_current_user,
         SCHEMA_WS_CURRENT_USER
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        websocket_create_long_lived_access_token,
+        SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN
     )
 
     await login_flow.async_setup(hass, store_result)
@@ -343,3 +421,27 @@ def websocket_current_user(
             }))
 
     hass.async_create_task(async_get_current_user(connection.user))
+
+
+@websocket_api.ws_require_user()
+@callback
+def websocket_create_long_lived_access_token(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
+    """Create or a long-lived access token."""
+    async def async_create_long_lived_access_token(user):
+        """Create or a long-lived access token."""
+        refresh_token = await hass.auth.async_create_refresh_token(
+            user,
+            client_name=msg['client_name'],
+            client_icon=msg.get('client_icon'),
+            token_type=TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN,
+            access_token_expiration=timedelta(days=msg['lifespan']))
+
+        access_token = hass.auth.async_create_access_token(
+            refresh_token)
+
+        connection.send_message_outside(
+            websocket_api.result_message(msg['id'], access_token))
+
+    hass.async_create_task(
+        async_create_long_lived_access_token(connection.user))
