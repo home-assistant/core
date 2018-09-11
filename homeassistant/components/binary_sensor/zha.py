@@ -98,6 +98,7 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
         """Initialize the ZHA binary sensor."""
         super().__init__(**kwargs)
         self._device_class = device_class
+        self._only_cache = True
         from zigpy.zcl.clusters.security import IasZone
         self._ias_zone_cluster = self._in_clusters[IasZone.cluster_id]
 
@@ -135,8 +136,10 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
 
         result = await zha.safe_read(self._endpoint.ias_zone,
                                      ['zone_status'],
-                                     allow_cache=False)
+                                     allow_cache=False,
+                                     only_cache=self._only_cache)
         state = result.get('zone_status', self._state)
+        self._only_cache = False
         if isinstance(state, (int, uint16_t)):
             self._state = result.get('zone_status', self._state) & 3
 
