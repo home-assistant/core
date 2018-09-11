@@ -29,7 +29,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
-    ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
+    ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
@@ -904,6 +904,7 @@ class ServiceRegistry:
         self._services = {}  # type: Dict[str, Dict[str, Service]]
         self._hass = hass
         self._async_unsub_call_event = None  # type: Optional[CALLBACK_TYPE]
+        self._call_id = 0
 
     @property
     def services(self) -> Dict[str, Dict[str, Service]]:
@@ -1042,10 +1043,13 @@ class ServiceRegistry:
         This method is a coroutine.
         """
         context = context or Context()
+        self._call_id += 1
+        call_id = self._call_id
         event_data = {
             ATTR_DOMAIN: domain.lower(),
             ATTR_SERVICE: service.lower(),
             ATTR_SERVICE_DATA: service_data,
+            ATTR_SERVICE_CALL_ID: call_id,
         }
 
         if not blocking:
@@ -1058,7 +1062,7 @@ class ServiceRegistry:
         @callback
         def service_executed(event: Event) -> None:
             """Handle an executed service."""
-            if event.context == context:
+            if event.data[ATTR_SERVICE_CALL_ID] == call_id:
                 fut.set_result(True)
 
         unsub = self._hass.bus.async_listen(
@@ -1077,6 +1081,7 @@ class ServiceRegistry:
         service_data = event.data.get(ATTR_SERVICE_DATA) or {}
         domain = event.data.get(ATTR_DOMAIN).lower()  # type: ignore
         service = event.data.get(ATTR_SERVICE).lower()  # type: ignore
+        call_id = event.data.get(ATTR_SERVICE_CALL_ID)
 
         if not self.has_service(domain, service):
             if event.origin == EventOrigin.local:
@@ -1088,12 +1093,17 @@ class ServiceRegistry:
 
         def fire_service_executed() -> None:
             """Fire service executed event."""
+            if not call_id:
+                return
+
+            data = {ATTR_SERVICE_CALL_ID: call_id}
+
             if (service_handler.is_coroutinefunction or
                     service_handler.is_callback):
-                self._hass.bus.async_fire(EVENT_SERVICE_EXECUTED, {},
+                self._hass.bus.async_fire(EVENT_SERVICE_EXECUTED, data,
                                           EventOrigin.local, event.context)
             else:
-                self._hass.bus.fire(EVENT_SERVICE_EXECUTED, {},
+                self._hass.bus.fire(EVENT_SERVICE_EXECUTED, data,
                                     EventOrigin.local, event.context)
 
         try:
