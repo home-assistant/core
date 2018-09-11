@@ -67,7 +67,7 @@ class MqttCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
-    
+
     @property
     def unique_id(self):
         """Return a unique ID."""
