@@ -247,7 +247,7 @@ def setup(hass, config):
         tmp = dict(domain_data['config'])
         tmp['locationInfo']['postcode'] = 'REDACTED'
 
-#       _LOGGER.debug("setup(): domain_data['config']: %s", tmp)
+        _LOGGER.debug("setup(): domain_data['config']: %s", tmp)
 
 
 # Now we're ready to go, but we have no state as yet, so...
@@ -429,7 +429,7 @@ class EvoEntity(Entity):                                                        
         However, evohome entities can become unavailable for other reasons.
         """
         no_recent_updates = self._timers['statusUpdated'] < datetime.now() - \
-            timedelta(seconds=self._params[CONF_SCAN_INTERVAL] * 2.1)
+            timedelta(seconds=self._params[CONF_SCAN_INTERVAL] * 3.1)
 
         if no_recent_updates:
             # unavailable because no successful update()s (but why?)
@@ -446,16 +446,18 @@ class EvoEntity(Entity):                                                        
 
         if not self._available and \
                 self._timers['statusUpdated'] != datetime.min:
-            # this isn't the first (un)available (i.e. is after 1st update())
+            # this isn't the first (un)available (i.e. after STARTUP)
             _LOGGER.warning(
-                "available(%s) = %s, debug code = %s, self._status = %s",
+                "available(%s) = %s (debug code %s), "
+                "self._status = %s, self._timers = %s",
                 self._id,
                 self._available,
                 debug_code,
-                self._status
+                self._status,
+                self._timers
             )
 
-#       _LOGGER.debug("available(%s) = %s", self._id, self._available)
+        _LOGGER.debug("available(%s) = %s", self._id, self._available)
         return self._available
 
     @property
