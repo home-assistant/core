@@ -280,7 +280,7 @@ class AuthManager:
                              'token')
 
         if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
-            for token in list(user.refresh_tokens.values()):
+            for token in user.refresh_tokens.values():
                 if (token.client_name == client_name and token.token_type ==
                         models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN):
                     # Each client_name can only have one
