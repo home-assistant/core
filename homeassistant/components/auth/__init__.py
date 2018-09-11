@@ -156,6 +156,19 @@ SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN = \
         vol.Optional('client_icon'): str,
     })
 
+WS_TYPE_REFRESH_TOKENS = 'auth/refresh_tokens'
+SCHEMA_WS_REFRESH_TOKENS = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_REFRESH_TOKENS,
+    })
+
+WS_TYPE_DELETE_REFRESH_TOKEN = 'auth/delete_refresh_token'
+SCHEMA_WS_DELETE_REFRESH_TOKEN = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_DELETE_REFRESH_TOKEN,
+        vol.Required('refresh_token_id'): str,
+    })
+
 RESULT_TYPE_CREDENTIALS = 'credentials'
 RESULT_TYPE_USER = 'user'
 
@@ -177,6 +190,16 @@ async def async_setup(hass, config):
         WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
         websocket_create_long_lived_access_token,
         SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_REFRESH_TOKENS,
+        websocket_refresh_tokens,
+        SCHEMA_WS_REFRESH_TOKENS
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_DELETE_REFRESH_TOKEN,
+        websocket_delete_refresh_token,
+        SCHEMA_WS_DELETE_REFRESH_TOKEN
     )
 
     await login_flow.async_setup(hass, store_result)
@@ -445,3 +468,40 @@ def websocket_create_long_lived_access_token(
 
     hass.async_create_task(
         async_create_long_lived_access_token(connection.user))
+
+
+@websocket_api.ws_require_user()
+@callback
+def websocket_refresh_tokens(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
+    """Return metadata of users refresh tokens."""
+    connection.to_write.put_nowait(websocket_api.result_message(msg['id'], [{
+        'id': refresh.id,
+        'client_id': refresh.client_id,
+        'client_name': refresh.client_name,
+        'client_icon': refresh.client_icon,
+        'type': refresh.token_type,
+        'created_at': refresh.created_at,
+    } for refresh in connection.user.refresh_tokens.values()]))
+
+
+@websocket_api.ws_require_user()
+@callback
+def websocket_delete_refresh_token(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
+    """Handle a delete refresh token request."""
+    async def async_delete_refresh_token(user, refresh_token_id):
+        """Delete a refresh token."""
+        refresh_token = connection.user.refresh_tokens.get(refresh_token_id)
+
+        if refresh_token is None:
+            return websocket_api.error_message(
+                msg['id'], 'invalid_token_id', 'Received invalid token')
+
+        await hass.auth.async_remove_refresh_token(refresh_token)
+
+        connection.send_message_outside(
+            websocket_api.result_message(msg['id'], {}))
+
+    hass.async_create_task(
+        async_delete_refresh_token(connection.user, msg['refresh_token_id']))
