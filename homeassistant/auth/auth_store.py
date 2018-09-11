@@ -235,7 +235,7 @@ class AuthStore:
                 continue
             token_type = rt_dict.get('token_type')
             if token_type is None:
-                if rt_dict['clinet_id'] is None:
+                if rt_dict['client_id'] is None:
                     token_type = models.TOKEN_TYPE_SYSTEM
                 else:
                     token_type = models.TOKEN_TYPE_NORMAL
