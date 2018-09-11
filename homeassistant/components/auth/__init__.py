@@ -95,9 +95,9 @@ The result payload likes
     }
 }
 
-## Create or refresh long-lived access token
+## Create a long-lived access token
 
-Send websocket command `auth/long_lived_access_token` will create or refresh
+Send websocket command `auth/long_lived_access_token` will create
 a long-lived access token for current user. Access token will not be saved in
 Home Assistant. User need to record the token in secure place.
 
@@ -427,9 +427,9 @@ def websocket_current_user(
 @callback
 def websocket_create_long_lived_access_token(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
-    """Create or refresh a long-lived access token."""
+    """Create or a long-lived access token."""
     async def async_create_long_lived_access_token(user):
-        """Create or refresh a long-lived access token."""
+        """Create or a long-lived access token."""
         refresh_token = await hass.auth.async_create_refresh_token(
             user,
             client_name=msg['client_name'],
