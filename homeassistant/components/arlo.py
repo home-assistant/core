@@ -61,10 +61,12 @@ def setup(hass, config):
         arlo_base_station = next((
             station for station in arlo.base_stations), None)
 
-        if arlo_base_station is None:
+        if arlo_base_station is not None:
+            arlo_base_station.refresh_rate = scan_interval.total_seconds()
+        elif not arlo.cameras:
+            _LOGGER.error("No Arlo camera or base station available.")
             return False
 
-        arlo_base_station.refresh_rate = scan_interval.total_seconds()
         hass.data[DATA_ARLO] = arlo
 
     except (ConnectTimeout, HTTPError) as ex:
