@@ -252,7 +252,7 @@ class MqttCover(MqttAvailability, CoverDevice):
     def unique_id(self):
         """Return a unique ID."""
         return self._unique_id
-    
+
     @property
     def is_closed(self):
         """Return if the cover is closed."""
