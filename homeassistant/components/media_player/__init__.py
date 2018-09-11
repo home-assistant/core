@@ -82,6 +82,7 @@ ATTR_APP_ID = 'app_id'
 ATTR_APP_NAME = 'app_name'
 ATTR_INPUT_SOURCE = 'source'
 ATTR_INPUT_SOURCE_LIST = 'source_list'
+ATTR_INPUT_CHANNEL_LIST = 'channel_list'
 ATTR_SOUND_MODE = 'sound_mode'
 ATTR_SOUND_MODE_LIST = 'sound_mode_list'
 ATTR_MEDIA_ENQUEUE = 'enqueue'
@@ -174,6 +175,7 @@ ATTR_TO_PROPERTY = [
     ATTR_APP_NAME,
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
+    ATTR_INPUT_CHANNEL_LIST,
     ATTR_SOUND_MODE,
     ATTR_SOUND_MODE_LIST,
     ATTR_MEDIA_SHUFFLE,
@@ -618,6 +620,11 @@ class MediaPlayerDevice(Entity):
     @property
     def source_list(self):
         """List of available input sources."""
+        return None
+
+    @property
+    def channel_list(self):
+        """List of available channels."""
         return None
 
     @property
