@@ -1,8 +1,8 @@
 """Classes to help gather user submissions."""
 import logging
+from typing import Dict, Any, Callable, Hashable, List, Optional  # noqa pylint: disable=unused-import
 import uuid
 import voluptuous as vol
-from typing import Dict, Any, Callable, Hashable, List, Optional  # noqa pylint: disable=unused-import
 from .core import callback, HomeAssistant
 from .exceptions import HomeAssistantError
 

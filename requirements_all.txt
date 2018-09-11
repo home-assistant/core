@@ -1,8 +1,8 @@
 # Home Assistant core
-aiohttp==3.4.0
+aiohttp==3.4.4
 astral==1.6.1
 async_timeout==3.0.0
-attrs==18.1.0
+attrs==18.2.0
 bcrypt==3.1.4
 certifi>=2018.04.16
 jinja2>=2.10
@@ -13,6 +13,7 @@ pytz>=2018.04
 pyyaml>=3.13,<4
 requests==2.19.1
 voluptuous==0.11.5
+voluptuous-serialize==2.0.0
 
 # homeassistant.components.nuimo_controller
 --only-binary=all nuimo==0.1.0
@@ -51,7 +52,10 @@ PyMata==2.14
 PyQRCode==1.2.1
 
 # homeassistant.components.sensor.rmvtransport
-PyRMVtransport==0.0.7
+PyRMVtransport==0.1
+
+# homeassistant.components.switch.switchbot
+PySwitchbot==0.3
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.9.5
@@ -168,7 +172,7 @@ batinfo==0.4.2
 beautifulsoup4==4.6.3
 
 # homeassistant.components.zha
-bellows==0.6.0
+bellows==0.7.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.5.1
@@ -448,7 +452,7 @@ hole==0.3.0
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180831.0
+home-assistant-frontend==20180910.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -482,7 +486,7 @@ ihcsdk==2.2.0
 influxdb==5.0.0
 
 # homeassistant.components.insteon
-insteonplm==0.13.1
+insteonplm==0.14.2
 
 # homeassistant.components.sensor.iperf3
 iperf3==0.1.10
@@ -498,7 +502,7 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.6
 
 # homeassistant.scripts.keyring
-keyring==13.2.1
+keyring==15.0.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==3.1
@@ -740,10 +744,10 @@ pyCEC==0.4.13
 
 # homeassistant.components.light.tplink
 # homeassistant.components.switch.tplink
-pyHS100==0.3.2
+pyHS100==0.3.3
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.22.1
+pyRFXtrx==0.23
 
 # homeassistant.components.switch.switchmate
 pySwitchmate==0.3
@@ -823,7 +827,7 @@ pycsspeechtts==1.0.2
 pydaikin==0.4
 
 # homeassistant.components.deconz
-pydeconz==45
+pydeconz==47
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -993,10 +997,13 @@ pynut2==2.1.2
 pynx584==0.4
 
 # homeassistant.components.openuv
-pyopenuv==1.0.1
+pyopenuv==1.0.4
 
 # homeassistant.components.iota
 pyota==2.0.5
+
+# homeassistant.components.climate.opentherm_gw
+pyotgw==0.1b0
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.sensor.otp
@@ -1142,10 +1149,10 @@ python-synology==0.2.0
 python-tado==0.2.3
 
 # homeassistant.components.telegram_bot
-python-telegram-bot==10.1.0
+python-telegram-bot==11.0.0
 
 # homeassistant.components.sensor.twitch
-python-twitch==1.3.0
+python-twitch-client==0.5.1
 
 # homeassistant.components.velbus
 python-velbus==2.0.19
@@ -1287,13 +1294,13 @@ sendgrid==5.6.0
 sense-hat==2.2.0
 
 # homeassistant.components.sensor.sense
-sense_energy==0.4.1
+sense_energy==0.4.2
 
 # homeassistant.components.media_player.aquostv
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.sensor.shodan
-shodan==1.10.0
+shodan==1.10.1
 
 # homeassistant.components.notify.simplepush
 simplepush==1.1.4
@@ -1441,9 +1448,6 @@ venstarcolortouch==0.6
 # homeassistant.components.sensor.volkszaehler
 volkszaehler==0.1.2
 
-# homeassistant.components.config.config_entries
-voluptuous-serialize==2.0.0
-
 # homeassistant.components.volvooncall
 volvooncall==0.4.0
 
@@ -1460,7 +1464,7 @@ vultr==0.1.2
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.samsungtv
 # homeassistant.components.switch.wake_on_lan
-wakeonlan==1.0.0
+wakeonlan==1.1.6
 
 # homeassistant.components.sensor.waqi
 waqiasync==1.0.0
@@ -1508,6 +1512,9 @@ yahoo-finance==1.4.0
 # homeassistant.components.weather.yweather
 yahooweather==0.10
 
+# homeassistant.components.alarm_control_panel.yale_smart_alarm
+yalesmartalarmclient==0.1.4
+
 # homeassistant.components.light.yeelight
 yeelight==0.4.0
 
@@ -1515,7 +1522,7 @@ yeelight==0.4.0
 yeelightsunflower==0.0.10
 
 # homeassistant.components.media_extractor
-youtube_dl==2018.08.22
+youtube_dl==2018.09.10
 
 # homeassistant.components.light.zengge
 zengge==0.2
@@ -1533,4 +1540,4 @@ ziggo-mediabox-xl==1.0.0
 zigpy-xbee==0.1.1
 
 # homeassistant.components.zha
-zigpy==0.1.0
+zigpy==0.2.0

@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None) -> None:
+def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Perform the setup for Switchmate devices."""
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]

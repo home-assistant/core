@@ -5,7 +5,6 @@ import os
 import sys
 from time import time
 from collections import OrderedDict
-
 from typing import Any, Optional, Dict
 
 import voluptuous as vol

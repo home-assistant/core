@@ -22,7 +22,7 @@ requests_mock==1.5.2
 HAP-python==2.2.2
 
 # homeassistant.components.sensor.rmvtransport
-PyRMVtransport==0.0.7
+PyRMVtransport==0.1
 
 # homeassistant.components.sonos
 SoCo==0.16
@@ -84,7 +84,7 @@ hbmqtt==0.9.4
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180831.0
+home-assistant-frontend==20180910.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -139,7 +139,7 @@ py-canary==0.5.0
 pyblackbird==0.5
 
 # homeassistant.components.deconz
-pydeconz==45
+pydeconz==47
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -153,6 +153,9 @@ pymonoprice==0.3
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.4
+
+# homeassistant.components.openuv
+pyopenuv==1.0.4
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.sensor.otp
@@ -212,9 +215,6 @@ statsd==3.2.1
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
 
-# homeassistant.components.config.config_entries
-voluptuous-serialize==2.0.0
-
 # homeassistant.components.vultr
 vultr==0.1.2
 
@@ -222,7 +222,7 @@ vultr==0.1.2
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.samsungtv
 # homeassistant.components.switch.wake_on_lan
-wakeonlan==1.0.0
+wakeonlan==1.1.6
 
 # homeassistant.components.cloud
 warrant==0.6.1

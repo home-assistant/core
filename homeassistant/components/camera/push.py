@@ -13,8 +13,10 @@ import voluptuous as vol
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA,\
     STATE_IDLE, STATE_RECORDING
 from homeassistant.core import callback
-from homeassistant.components.http.view import HomeAssistantView
-from homeassistant.const import CONF_NAME, CONF_TIMEOUT, HTTP_BAD_REQUEST
+from homeassistant.components.http.view import KEY_AUTHENTICATED,\
+    HomeAssistantView
+from homeassistant.const import CONF_NAME, CONF_TIMEOUT,\
+    HTTP_NOT_FOUND, HTTP_UNAUTHORIZED, HTTP_BAD_REQUEST
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
@@ -25,11 +27,13 @@ DEPENDENCIES = ['http']
 
 CONF_BUFFER_SIZE = 'buffer'
 CONF_IMAGE_FIELD = 'field'
+CONF_TOKEN = 'token'
 
 DEFAULT_NAME = "Push Camera"
 
 ATTR_FILENAME = 'filename'
 ATTR_LAST_TRIP = 'last_trip'
+ATTR_TOKEN = 'token'
 
 PUSH_CAMERA_DATA = 'push_camera'
 
@@ -39,6 +43,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TIMEOUT, default=timedelta(seconds=5)): vol.All(
         cv.time_period, cv.positive_timedelta),
     vol.Optional(CONF_IMAGE_FIELD, default='image'): cv.string,
+    vol.Optional(CONF_TOKEN): vol.All(cv.string, vol.Length(min=8)),
 })
 
 
@@ -50,7 +55,8 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     cameras = [PushCamera(config[CONF_NAME],
                           config[CONF_BUFFER_SIZE],
-                          config[CONF_TIMEOUT])]
+                          config[CONF_TIMEOUT],
+                          config.get(CONF_TOKEN))]
 
     hass.http.register_view(CameraPushReceiver(hass,
                                                config[CONF_IMAGE_FIELD]))
@@ -63,6 +69,7 @@ class CameraPushReceiver(HomeAssistantView):
 
     url = "/api/camera_push/{entity_id}"
     name = 'api:camera_push:camera_entity'
+    requires_auth = False
 
     def __init__(self, hass, image_field):
         """Initialize CameraPushReceiver with camera entity."""
@@ -75,8 +82,21 @@ class CameraPushReceiver(HomeAssistantView):
 
         if _camera is None:
             _LOGGER.error("Unknown %s", entity_id)
+            status = HTTP_NOT_FOUND if request[KEY_AUTHENTICATED]\
+                else HTTP_UNAUTHORIZED
             return self.json_message('Unknown {}'.format(entity_id),
-                                     HTTP_BAD_REQUEST)
+                                     status)
+
+        # Supports HA authentication and token based
+        # when token has been configured
+        authenticated = (request[KEY_AUTHENTICATED] or
+                         (_camera.token is not None and
+                          request.query.get('token') == _camera.token))
+
+        if not authenticated:
+            return self.json_message(
+                'Invalid authorization credentials for {}'.format(entity_id),
+                HTTP_UNAUTHORIZED)
 
         try:
             data = await request.post()
@@ -95,7 +115,7 @@ class CameraPushReceiver(HomeAssistantView):
 class PushCamera(Camera):
     """The representation of a Push camera."""
 
-    def __init__(self, name, buffer_size, timeout):
+    def __init__(self, name, buffer_size, timeout, token):
         """Initialize push camera component."""
         super().__init__()
         self._name = name
@@ -106,6 +126,7 @@ class PushCamera(Camera):
         self._timeout = timeout
         self.queue = deque([], buffer_size)
         self._current_image = None
+        self.token = token
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""
@@ -168,5 +189,6 @@ class PushCamera(Camera):
             name: value for name, value in (
                 (ATTR_LAST_TRIP, self._last_trip),
                 (ATTR_FILENAME, self._filename),
+                (ATTR_TOKEN, self.token),
             ) if value is not None
         }
