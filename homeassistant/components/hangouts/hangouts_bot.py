@@ -240,7 +240,11 @@ class HangoutsBot:
                             image_file = io.BytesIO(image_data)
                             image_file.name = "image.png"
                 except (asyncio.TimeoutError, aiohttp.ClientError) as error:
-                    _LOGGER.error('Failed to fetch image, {}'.format(type(error)))
+                    _LOGGER.error(
+                        'Failed to fetch image, {}'.format(
+                            type(error)
+                        )
+                    )
                     image_file = None
             else:
                 image_file = open(uri, 'rb')
