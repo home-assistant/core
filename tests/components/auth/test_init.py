@@ -2,6 +2,8 @@
 from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant import const
+from homeassistant.auth import auth_manager_from_config
 from homeassistant.auth.models import Credentials
 from homeassistant.components.auth import RESULT_TYPE_USER
 from homeassistant.setup import async_setup_component
@@ -10,7 +12,8 @@ from homeassistant.components import auth
 
 from . import async_setup_auth
 
-from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
+from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser, \
+    ensure_auth_manager_loaded
 
 
 async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
@@ -267,3 +270,57 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
     })
 
     assert resp.status == 400
+
+
+async def test_ws_long_lived_access_token(hass, hass_ws_client):
+    """Test generate long-lived access token."""
+    hass.auth = await auth_manager_from_config(
+        hass, provider_configs=[{
+            'type': 'insecure_example',
+            'users': [{
+                'username': 'test-user',
+                'password': 'test-pass',
+                'name': 'Test Name',
+            }]
+        }], module_configs=[])
+    ensure_auth_manager_loaded(hass.auth)
+    assert await async_setup_component(hass, 'auth', {'http': {}})
+    assert await async_setup_component(hass, 'api', {'http': {}})
+
+    user = MockUser(id='mock-user').add_to_hass(hass)
+    cred = await hass.auth.auth_providers[0].async_get_or_create_credentials(
+        {'username': 'test-user'})
+    await hass.auth.async_link_user(user, cred)
+
+    ws_client = await hass_ws_client(hass, hass.auth.async_create_access_token(
+        await hass.auth.async_create_refresh_token(user, CLIENT_ID)))
+
+    # verify create long-lived access token
+    await ws_client.send_json({
+        'id': 5,
+        'type': auth.WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        'client_name': 'GPS Logger',
+        'lifespan': 365,
+    })
+
+    result = await ws_client.receive_json()
+    assert result['success'], result
+
+    long_lived_access_token = result['result']
+    assert long_lived_access_token is not None
+
+    refresh_token = await hass.auth.async_validate_access_token(
+        long_lived_access_token)
+    assert refresh_token.client_id is None
+    assert refresh_token.client_name == 'GPS Logger'
+    assert refresh_token.client_icon is None
+
+    # verify long-lived access token can be used as bearer token
+    api_client = ws_client.client
+    resp = await api_client.get(const.URL_API)
+    assert resp.status == 401
+
+    resp = await api_client.get(const.URL_API, headers={
+        'Authorization': 'Bearer {}'.format(long_lived_access_token)
+    })
+    assert resp.status == 200
