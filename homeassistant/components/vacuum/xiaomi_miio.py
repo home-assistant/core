@@ -179,7 +179,8 @@ class MiroboVacuum(StateVacuumDevice):
     def state(self):
         """Return the status of the vacuum cleaner."""
         if self.vacuum_state is not None:
-            # We can have an error even when the state code does not indicate it (anymore).
+            # The vacuum reverts back to an idle state after erroring out.
+            # We want to keep returning an error until it has been cleared.
             if self.vacuum_state.got_error:
                 return STATE_ERROR
             try:
