@@ -4,7 +4,9 @@ Support for balance data via the Starling Bank API.
 For more details about this platform, please refer to the documentation at
 https://www.home-assistant.io/components/sensor.starlingbank/
 """
+import logging
 import voluptuous as vol
+import requests
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -13,7 +15,9 @@ from homeassistant.const import (
 )
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['starlingbank==1.1']
+REQUIREMENTS = ['starlingbank==1.2']
+
+_LOGGER = logging.getLogger(__name__)
 
 BALANCE_TYPES = ['cleared_balance', 'effective_balance']
 DEFAULT_ACCOUNT_NAME = 'Starling'
@@ -21,6 +25,7 @@ ICON = 'mdi:currency-gbp'
 
 CONF_ACCOUNTS = 'accounts'
 CONF_BALANCE_TYPES = 'balance_types'
+CONF_SANDBOX = 'sandbox'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -32,7 +37,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
                 ): vol.All(
                     cv.ensure_list,  # Wraps value in a list if it is not one.
                     [vol.In(BALANCE_TYPES)]
-                )
+                ),
+            vol.Optional(CONF_SANDBOX, default=False): cv.boolean
         }], cv.ensure_list)
     }
 )
@@ -43,15 +49,26 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     from starlingbank import StarlingAccount
 
     sensors = []
-    for account in CONF_ACCOUNTS:
-        starling_account = StarlingAccount(account[CONF_ACCESS_TOKEN])
-        for balance_type in account[CONF_BALANCE_TYPES]:
-            sensors.append(StarlingBalanceSensor(
-                starling_account,
+    for account in config[CONF_ACCOUNTS]:
+        try:
+            starling_account = StarlingAccount(
+                account[CONF_ACCESS_TOKEN],
+                sandbox=account[CONF_SANDBOX]
+            )
+            for balance_type in account[CONF_BALANCE_TYPES]:
+                sensors.append(StarlingBalanceSensor(
+                    starling_account,
+                    account[CONF_NAME],
+                    balance_type
+                ))
+        except requests.exceptions.HTTPError as error:
+            _LOGGER.error(
+                "Unable to set up Starling account '%s': %s",
                 account[CONF_NAME],
-                balance_type
-            ))
-    add_devices(sensors, True)  # True forces an update upon platform setup.
+                error
+            )
+
+    add_devices(sensors, True)  # True forces update upon platform setup.
 
 
 class StarlingBalanceSensor(Entity):
