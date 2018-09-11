@@ -22,7 +22,7 @@ requests_mock==1.5.2
 HAP-python==2.2.2
 
 # homeassistant.components.sensor.rmvtransport
-PyRMVtransport==0.0.7
+PyRMVtransport==0.1
 
 # homeassistant.components.sonos
 SoCo==0.16
