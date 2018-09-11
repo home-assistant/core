@@ -7,7 +7,6 @@ https://home-assistant.io/components/media_player.cast/
 import asyncio
 import logging
 import threading
-
 from typing import Optional, Tuple
 
 import attr
