@@ -1064,6 +1064,7 @@ class ServiceRegistry:
             """Handle an executed service."""
             if event.data[ATTR_SERVICE_CALL_ID] == call_id:
                 fut.set_result(True)
+                unsub()
 
         unsub = self._hass.bus.async_listen(
             EVENT_SERVICE_EXECUTED, service_executed)
@@ -1073,7 +1074,8 @@ class ServiceRegistry:
 
         done, _ = await asyncio.wait([fut], timeout=SERVICE_CALL_LIMIT)
         success = bool(done)
-        unsub()
+        if not success:
+            unsub()
         return success
 
     async def _event_to_service_call(self, event: Event) -> None:
