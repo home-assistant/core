@@ -30,3 +30,10 @@ trigger:
 
 reload:
   description: Reload the automation configuration.
+
+cooldown_reset:
+  description: Resets the cooldown of an automation.
+  fields:
+    entity_id:
+      description: Name of the automation to reset.
+      example: 'automation.notify_home'
