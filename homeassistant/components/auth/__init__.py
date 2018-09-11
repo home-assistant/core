@@ -492,10 +492,9 @@ def websocket_delete_refresh_token(
     """Handle a delete refresh token request."""
     async def async_delete_refresh_token(user, refresh_token_id):
         """Delete a refresh token."""
-        refresh_token = await hass.auth.async_get_refresh_token(
-            refresh_token_id)
+        refresh_token = connection.user.refresh_tokens.get(refresh_token_id)
 
-        if refresh_token is None or refresh_token.user != user:
+        if refresh_token is None:
             return websocket_api.error_message(
                 msg['id'], 'invalid_token_id', 'Received invalid token')
 
