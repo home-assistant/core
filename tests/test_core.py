@@ -20,9 +20,10 @@ from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED)
+    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED,
+    EVENT_SERVICE_EXECUTED)
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, async_mock_service
 
 PST = pytz.timezone('America/Los_Angeles')
 
@@ -969,3 +970,27 @@ def test_track_task_functions(loop):
         assert hass._track_task
     finally:
         yield from hass.async_stop()
+
+
+async def test_service_executed_with_subservices(hass):
+    """Test we block correctly till all services done."""
+    calls = async_mock_service(hass, 'test', 'inner')
+
+    async def handle_outer(call):
+        """Handle outer service call."""
+        calls.append(call)
+        call1 = hass.services.async_call('test', 'inner', blocking=True,
+                                         context=call.context)
+        call2 = hass.services.async_call('test', 'inner', blocking=True,
+                                         context=call.context)
+        await asyncio.wait([call1, call2])
+        calls.append(call)
+
+    hass.services.async_register('test', 'outer', handle_outer)
+
+    await hass.services.async_call('test', 'outer', blocking=True)
+
+    assert len(calls) == 4
+    assert [call.service for call in calls] == [
+        'outer', 'inner', 'inner', 'outer']
+    assert len(hass.bus.async_listeners().get(EVENT_SERVICE_EXECUTED, [])) == 0
