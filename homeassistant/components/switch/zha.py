@@ -36,6 +36,11 @@ class Switch(zha.Entity, SwitchDevice):
     _domain = DOMAIN
     value_attribute = 0
 
+    def __init__(self, **kwargs):
+        """Initialize ZHA switch."""
+        super().__init__(**kwargs)
+        self._only_cache = True
+
     def attribute_updated(self, attribute, value):
         """Handle attribute update from device."""
         _LOGGER.debug("Attribute updated: %s %s %s", self, attribute, value)
@@ -80,5 +85,8 @@ class Switch(zha.Entity, SwitchDevice):
     async def async_update(self):
         """Retrieve latest state."""
         result = await zha.safe_read(self._endpoint.on_off,
-                                     ['on_off'])
+                                     ['on_off'],
+                                     allow_cache=False,
+                                     only_cache=self._only_cache)
         self._state = result.get('on_off', self._state)
+        self._only_cache = False
