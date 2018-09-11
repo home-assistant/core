@@ -25,27 +25,15 @@ def async_setup_platform(hass, config, async_add_entities,
     """Set up the ZoneMinder cameras."""
     zm = hass.data[DOMAIN]
 
-    cameras = []
-    monitors = zoneminder.get_state(hass, 'api/monitors.json')
+    monitors = zm.get_monitors()
     if not monitors:
         _LOGGER.warning("Could not fetch monitors from ZoneMinder")
         return
 
-    for i in monitors['monitors']:
-        monitor = i['Monitor']
-
-        if monitor['Function'] == 'None':
-            _LOGGER.info("Skipping camera %s", monitor['Id'])
-            continue
-
-        _LOGGER.info("Initializing camera %s", monitor['Id'])
-
-        device_info = {
-            CONF_NAME: monitor['Name'],
-            CONF_MJPEG_URL: zm.get_mjpeg_image_url(monitor),
-            CONF_STILL_IMAGE_URL: zm.get_still_image_url(monitor)
-        }
-        cameras.append(ZoneMinderCamera(hass, device_info, monitor))
+    cameras = []
+    for monitor in monitors:
+        _LOGGER.info("Initializing camera %s", monitor.id)
+        cameras.append(ZoneMinderCamera(hass, monitor))
 
     if not cameras:
         _LOGGER.warning("No active cameras found")
@@ -57,10 +45,15 @@ def async_setup_platform(hass, config, async_add_entities,
 class ZoneMinderCamera(MjpegCamera):
     """Representation of a ZoneMinder Monitor Stream."""
 
-    def __init__(self, hass, device_info, monitor):
+    def __init__(self, hass, monitor):
         """Initialize as a subclass of MjpegCamera."""
+        device_info = {
+            CONF_NAME: monitor.name,
+            CONF_MJPEG_URL: monitor.mjpeg_image_url,
+            CONF_STILL_IMAGE_URL: monitor.still_image_url
+        }
         super().__init__(hass, device_info)
-        self._monitor_id = int(monitor['Id'])
+        self._monitor_id = monitor.id
         self._is_recording = None
 
     @property
@@ -73,7 +66,7 @@ class ZoneMinderCamera(MjpegCamera):
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor_id)
         status = self.hass.data[DOMAIN].is_recording(self._monitor_id)
 
-        if not status:
+        if status is None:
             _LOGGER.warning("Could not get status for monitor %i",
                             self._monitor_id)
             return
