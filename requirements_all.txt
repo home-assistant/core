@@ -190,7 +190,6 @@ blinkstick==1.1.8
 blockchain==1.4.4
 
 # homeassistant.components.light.decora
-# homeassistant.components.switch.switchmate
 # bluepy==1.1.4
 
 # homeassistant.components.sensor.bme680
@@ -748,6 +747,9 @@ pyHS100==0.3.3
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.23
+
+# homeassistant.components.switch.switchmate
+pySwitchmate==0.3
 
 # homeassistant.components.sensor.tibber
 pyTibber==0.4.1
