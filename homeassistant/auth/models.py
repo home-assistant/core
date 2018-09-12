@@ -55,13 +55,16 @@ class RefreshToken:
     jwt_key = attr.ib(type=str,
                       default=attr.Factory(lambda: generate_secret(64)))
 
+    last_used_at = attr.ib(type=Optional[datetime], default=None)
+    last_used_ip = attr.ib(type=Optional[str], default=None)
+
 
 @attr.s(slots=True)
 class Credentials:
     """Credentials for a user on an auth provider."""
 
     auth_provider_type = attr.ib(type=str)
-    auth_provider_id = attr.ib(type=str)  # type: Optional[str]
+    auth_provider_id = attr.ib(type=Optional[str])
 
     # Allow the auth provider to store data to represent their auth.
     data = attr.ib(type=dict)

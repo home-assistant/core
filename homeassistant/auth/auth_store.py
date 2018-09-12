@@ -195,6 +195,15 @@ class AuthStore:
 
         return found
 
+    @callback
+    def async_log_refresh_token_usage(
+            self, refresh_token: models.RefreshToken,
+            remote_ip: Optional[str] = None) -> None:
+        """Update refresh token last used information."""
+        refresh_token.last_used_at = dt_util.utcnow()
+        refresh_token.last_used_ip = remote_ip
+        self._async_schedule_save()
+
     async def _async_load(self) -> None:
         """Load the users."""
         data = await self._store.async_load()
@@ -233,12 +242,21 @@ class AuthStore:
                     'Ignoring refresh token %(id)s with invalid created_at '
                     '%(created_at)s for user_id %(user_id)s', rt_dict)
                 continue
+
             token_type = rt_dict.get('token_type')
             if token_type is None:
                 if rt_dict['client_id'] is None:
                     token_type = models.TOKEN_TYPE_SYSTEM
                 else:
                     token_type = models.TOKEN_TYPE_NORMAL
+
+            # old refresh_token don't have last_used_at (pre-0.78)
+            last_used_at_str = rt_dict.get('last_used_at')
+            if last_used_at_str:
+                last_used_at = dt_util.parse_datetime(last_used_at_str)
+            else:
+                last_used_at = None
+
             token = models.RefreshToken(
                 id=rt_dict['id'],
                 user=users[rt_dict['user_id']],
@@ -251,7 +269,9 @@ class AuthStore:
                 access_token_expiration=timedelta(
                     seconds=rt_dict['access_token_expiration']),
                 token=rt_dict['token'],
-                jwt_key=rt_dict['jwt_key']
+                jwt_key=rt_dict['jwt_key'],
+                last_used_at=last_used_at,
+                last_used_ip=rt_dict.get('last_used_ip'),
             )
             users[rt_dict['user_id']].refresh_tokens[token.id] = token
 
@@ -306,6 +326,10 @@ class AuthStore:
                     refresh_token.access_token_expiration.total_seconds(),
                 'token': refresh_token.token,
                 'jwt_key': refresh_token.jwt_key,
+                'last_used_at':
+                    refresh_token.last_used_at.isoformat()
+                    if refresh_token.last_used_at else None,
+                'last_used_ip': refresh_token.last_used_ip,
             }
             for user in self._users.values()
             for refresh_token in user.refresh_tokens.values()
