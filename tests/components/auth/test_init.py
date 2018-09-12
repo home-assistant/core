@@ -320,6 +320,7 @@ async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
     assert token['client_name'] == refresh_token.client_name
     assert token['client_icon'] == refresh_token.client_icon
     assert token['created_at'] == refresh_token.created_at.isoformat()
+    assert token['is_current'] is True
 
 
 async def test_ws_delete_refresh_token(hass, hass_ws_client,
