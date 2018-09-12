@@ -9,25 +9,22 @@ from datetime import timedelta
 import logging
 from typing import Any, List, Sequence, Callable
 
-import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.components import group, zone
+from homeassistant.components.zone.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import config_per_platform, discovery
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.restore_state import async_get_last_state
 from homeassistant.helpers.typing import GPSType, ConfigType, HomeAssistantType
 import homeassistant.helpers.config_validation as cv
-from homeassistant.loader import get_component
-import homeassistant.util as util
+from homeassistant import util
 from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
 from homeassistant.util.yaml import dump
@@ -36,7 +33,7 @@ from homeassistant.helpers.event import async_track_utc_time_change
 from homeassistant.const import (
     ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE, CONF_NAME, CONF_MAC,
     DEVICE_DEFAULT_NAME, STATE_HOME, STATE_NOT_HOME, ATTR_ENTITY_ID,
-    CONF_ICON, ATTR_ICON)
+    CONF_ICON, ATTR_ICON, ATTR_NAME)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,9 +71,7 @@ ATTR_GPS = 'gps'
 ATTR_HOST_NAME = 'host_name'
 ATTR_LOCATION_NAME = 'location_name'
 ATTR_MAC = 'mac'
-ATTR_NAME = 'name'
 ATTR_SOURCE_TYPE = 'source_type'
-ATTR_VENDOR = 'vendor'
 ATTR_CONSIDER_HOME = 'consider_home'
 
 SOURCE_TYPE_GPS = 'gps'
@@ -236,7 +231,7 @@ def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-class DeviceTracker(object):
+class DeviceTracker:
     """Representation of a device tracker."""
 
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
@@ -325,33 +320,28 @@ class DeviceTracker(object):
         # During init, we ignore the group
         if self.group and self.track_new:
             self.group.async_set_group(
-                self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
+                util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
                 name=GROUP_NAME_ALL_DEVICES, add=[device.entity_id])
-
-        # lookup mac vendor string to be stored in config
-        yield from device.set_vendor_for_mac()
 
         self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
             ATTR_ENTITY_ID: device.entity_id,
             ATTR_HOST_NAME: device.host_name,
             ATTR_MAC: device.mac,
-            ATTR_VENDOR: device.vendor,
         })
 
         # update known_devices.yaml
-        self.hass.async_add_job(
+        self.hass.async_create_task(
             self.async_update_config(
                 self.hass.config.path(YAML_DEVICES), dev_id, device)
         )
 
-    @asyncio.coroutine
-    def async_update_config(self, path, dev_id, device):
+    async def async_update_config(self, path, dev_id, device):
         """Add device to YAML configuration file.
 
         This method is a coroutine.
         """
-        with (yield from self._is_updating):
-            yield from self.hass.async_add_job(
+        async with self._is_updating:
+            await self.hass.async_add_executor_job(
                 update_config, self.hass.config.path(YAML_DEVICES),
                 dev_id, device)
 
@@ -364,9 +354,9 @@ class DeviceTracker(object):
         entity_ids = [dev.entity_id for dev in self.devices.values()
                       if dev.track]
 
-        self.group = get_component('group')
+        self.group = self.hass.components.group
         self.group.async_set_group(
-            self.hass, util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
+            util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
             name=GROUP_NAME_ALL_DEVICES, entity_ids=entity_ids)
 
     @callback
@@ -413,7 +403,6 @@ class Device(Entity):
     consider_home = None  # type: dt_util.dt.timedelta
     battery = None  # type: int
     attributes = None  # type: dict
-    vendor = None  # type: str
     icon = None  # type: str
 
     # Track if the last update of this device was HOME.
@@ -423,7 +412,7 @@ class Device(Entity):
     def __init__(self, hass: HomeAssistantType, consider_home: timedelta,
                  track: bool, dev_id: str, mac: str, name: str = None,
                  picture: str = None, gravatar: str = None, icon: str = None,
-                 hide_if_away: bool = False, vendor: str = None) -> None:
+                 hide_if_away: bool = False) -> None:
         """Initialize a device."""
         self.hass = hass
         self.entity_id = ENTITY_ID_FORMAT.format(dev_id)
@@ -451,7 +440,6 @@ class Device(Entity):
         self.icon = icon
 
         self.away_hide = hide_if_away
-        self.vendor = vendor
 
         self.source_type = None
 
@@ -548,10 +536,10 @@ class Device(Entity):
         """
         if not self.last_seen:
             return
-        elif self.location_name:
+        if self.location_name:
             self._state = self.location_name
         elif self.gps is not None and self.source_type == SOURCE_TYPE_GPS:
-            zone_state = zone.async_active_zone(
+            zone_state = async_active_zone(
                 self.hass, self.gps[0], self.gps[1], self.gps_accuracy)
             if zone_state is None:
                 self._state = STATE_NOT_HOME
@@ -566,51 +554,6 @@ class Device(Entity):
         else:
             self._state = STATE_HOME
             self.last_update_home = True
-
-    @asyncio.coroutine
-    def set_vendor_for_mac(self):
-        """Set vendor string using api.macvendors.com."""
-        self.vendor = yield from self.get_vendor_for_mac()
-
-    @asyncio.coroutine
-    def get_vendor_for_mac(self):
-        """Try to find the vendor string for a given MAC address."""
-        if not self.mac:
-            return None
-
-        if '_' in self.mac:
-            _, mac = self.mac.split('_', 1)
-        else:
-            mac = self.mac
-
-        if not len(mac.split(':')) == 6:
-            return 'unknown'
-
-        # We only need the first 3 bytes of the MAC for a lookup
-        # this improves somewhat on privacy
-        oui_bytes = mac.split(':')[0:3]
-        # bytes like 00 get truncates to 0, API needs full bytes
-        oui = '{:02x}:{:02x}:{:02x}'.format(*[int(b, 16) for b in oui_bytes])
-        url = 'http://api.macvendors.com/' + oui
-        try:
-            websession = async_get_clientsession(self.hass)
-
-            with async_timeout.timeout(5, loop=self.hass.loop):
-                resp = yield from websession.get(url)
-            # mac vendor found, response is the string
-            if resp.status == 200:
-                vendor_string = yield from resp.text()
-                return vendor_string
-            # If vendor is not known to the API (404) or there
-            # was a failure during the lookup (500); set vendor
-            # to something other then None to prevent retry
-            # as the value is only relevant when it is to be stored
-            # in the 'known_devices.yaml' file which only happens
-            # the first time the device is seen.
-            return 'unknown'
-        except (asyncio.TimeoutError, aiohttp.ClientError):
-            # Same as above
-            return 'unknown'
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -633,7 +576,7 @@ class Device(Entity):
                         state.attributes[ATTR_LONGITUDE])
 
 
-class DeviceScanner(object):
+class DeviceScanner:
     """Device scanner object."""
 
     hass = None  # type: HomeAssistantType
@@ -660,6 +603,17 @@ class DeviceScanner(object):
         """
         return self.hass.async_add_job(self.get_device_name, device)
 
+    def get_extra_attributes(self, device: str) -> dict:
+        """Get the extra attributes of a device."""
+        raise NotImplementedError()
+
+    def async_get_extra_attributes(self, device: str) -> Any:
+        """Get the extra attributes of a device.
+
+        This method must be run in the event loop and returns a coroutine.
+        """
+        return self.hass.async_add_job(self.get_extra_attributes, device)
+
 
 def load_config(path: str, hass: HomeAssistantType, consider_home: timedelta):
     """Load devices from YAML configuration file."""
@@ -685,7 +639,6 @@ def async_load_config(path: str, hass: HomeAssistantType,
         vol.Optional('picture', default=None): vol.Any(None, cv.string),
         vol.Optional(CONF_CONSIDER_HOME, default=consider_home): vol.All(
             cv.time_period, cv.positive_timedelta),
-        vol.Optional('vendor', default=None): vol.Any(None, cv.string),
     })
     try:
         result = []
@@ -697,6 +650,8 @@ def async_load_config(path: str, hass: HomeAssistantType,
             return []
 
         for dev_id, device in devices.items():
+            # Deprecated option. We just ignore it to avoid breaking change
+            device.pop('vendor', None)
             try:
                 device = dev_schema(device)
                 device['dev_id'] = cv.slugify(dev_id)
@@ -725,8 +680,7 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
     # Initial scan of each mac we also tell about host name for config
     seen = set()  # type: Any
 
-    @asyncio.coroutine
-    def async_device_tracker_scan(now: dt_util.dt.datetime):
+    async def async_device_tracker_scan(now: dt_util.dt.datetime):
         """Handle interval matches."""
         if update_lock.locked():
             _LOGGER.warning(
@@ -734,20 +688,30 @@ def async_setup_scanner_platform(hass: HomeAssistantType, config: ConfigType,
                 "scan interval %s", platform, interval)
             return
 
-        with (yield from update_lock):
-            found_devices = yield from scanner.async_scan_devices()
+        async with update_lock:
+            found_devices = await scanner.async_scan_devices()
 
         for mac in found_devices:
             if mac in seen:
                 host_name = None
             else:
-                host_name = yield from scanner.async_get_device_name(mac)
+                host_name = await scanner.async_get_device_name(mac)
                 seen.add(mac)
+
+            try:
+                extra_attributes = (await
+                                    scanner.async_get_extra_attributes(mac))
+            except NotImplementedError:
+                extra_attributes = dict()
 
             kwargs = {
                 'mac': mac,
                 'host_name': host_name,
-                'source_type': SOURCE_TYPE_ROUTER
+                'source_type': SOURCE_TYPE_ROUTER,
+                'attributes': {
+                    'scanner': scanner.__class__.__name__,
+                    **extra_attributes
+                }
             }
 
             zone_home = hass.states.get(zone.ENTITY_ID_HOME)
@@ -772,7 +736,6 @@ def update_config(path: str, dev_id: str, device: Device):
             'picture': device.config_picture,
             'track': device.track,
             CONF_AWAY_HIDE: device.away_hide,
-            'vendor': device.vendor,
         }}
         out.write('\n')
         out.write(dump(device))

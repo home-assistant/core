@@ -8,7 +8,7 @@ import json
 import logging
 import re
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
@@ -20,16 +20,21 @@ TOPIC_MATCHER = re.compile(
     r'(?:(?P<node_id>[a-zA-Z0-9_-]+)/)?(?P<object_id>[a-zA-Z0-9_-]+)/config')
 
 SUPPORTED_COMPONENTS = [
-    'binary_sensor', 'cover', 'fan', 'light', 'sensor', 'switch', 'lock']
+    'binary_sensor', 'camera', 'cover', 'fan',
+    'light', 'sensor', 'switch', 'lock', 'climate',
+    'alarm_control_panel']
 
 ALLOWED_PLATFORMS = {
     'binary_sensor': ['mqtt'],
+    'camera': ['mqtt'],
     'cover': ['mqtt'],
     'fan': ['mqtt'],
     'light': ['mqtt', 'mqtt_json', 'mqtt_template'],
     'lock': ['mqtt'],
     'sensor': ['mqtt'],
     'switch': ['mqtt'],
+    'climate': ['mqtt'],
+    'alarm_control_panel': ['mqtt'],
 }
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'

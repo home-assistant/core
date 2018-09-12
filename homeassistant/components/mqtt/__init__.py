@@ -13,7 +13,6 @@ import os
 import socket
 import time
 import ssl
-import re
 import requests.certs
 import attr
 
@@ -32,7 +31,8 @@ from homeassistant.util.async_ import (
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE, CONF_USERNAME,
     CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
-from homeassistant.components.mqtt.server import HBMQTT_CONFIG_SCHEMA
+
+from .server import HBMQTT_CONFIG_SCHEMA
 
 REQUIREMENTS = ['paho-mqtt==1.3.1']
 
@@ -90,22 +90,52 @@ ATTR_RETAIN = CONF_RETAIN
 MAX_RECONNECT_WAIT = 300  # seconds
 
 
-def valid_subscribe_topic(value: Any, invalid_chars='\0') -> str:
-    """Validate that we can subscribe using this MQTT topic."""
+def valid_topic(value: Any) -> str:
+    """Validate that this is a valid topic name/filter."""
     value = cv.string(value)
-    if all(c not in value for c in invalid_chars):
-        return vol.Length(min=1, max=65535)(value)
-    raise vol.Invalid('Invalid MQTT topic name')
+    try:
+        raw_value = value.encode('utf-8')
+    except UnicodeError:
+        raise vol.Invalid("MQTT topic name/filter must be valid UTF-8 string.")
+    if not raw_value:
+        raise vol.Invalid("MQTT topic name/filter must not be empty.")
+    if len(raw_value) > 65535:
+        raise vol.Invalid("MQTT topic name/filter must not be longer than "
+                          "65535 encoded bytes.")
+    if '\0' in value:
+        raise vol.Invalid("MQTT topic name/filter must not contain null "
+                          "character.")
+    return value
+
+
+def valid_subscribe_topic(value: Any) -> str:
+    """Validate that we can subscribe using this MQTT topic."""
+    value = valid_topic(value)
+    for i in (i for i, c in enumerate(value) if c == '+'):
+        if (i > 0 and value[i - 1] != '/') or \
+                (i < len(value) - 1 and value[i + 1] != '/'):
+            raise vol.Invalid("Single-level wildcard must occupy an entire "
+                              "level of the filter")
+
+    index = value.find('#')
+    if index != -1:
+        if index != len(value) - 1:
+            # If there are multiple wildcards, this will also trigger
+            raise vol.Invalid("Multi-level wildcard must be the last "
+                              "character in the topic filter.")
+        if len(value) > 1 and value[index - 1] != '/':
+            raise vol.Invalid("Multi-level wildcard must be after a topic "
+                              "level separator.")
+
+    return value
 
 
 def valid_publish_topic(value: Any) -> str:
     """Validate that we can publish using this MQTT topic."""
-    return valid_subscribe_topic(value, invalid_chars='#+\0')
-
-
-def valid_discovery_topic(value: Any) -> str:
-    """Validate a discovery topic."""
-    return valid_subscribe_topic(value, invalid_chars='#+\0/')
+    value = valid_topic(value)
+    if '+' in value or '#' in value:
+        raise vol.Invalid("Wildcards can not be used in topic names")
+    return value
 
 
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
@@ -143,8 +173,10 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_WILL_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
         vol.Optional(CONF_BIRTH_MESSAGE): MQTT_WILL_BIRTH_SCHEMA,
         vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): cv.boolean,
+        # discovery_prefix must be a valid publish topic because if no
+        # state topic is specified, it will be created with the given prefix.
         vol.Optional(CONF_DISCOVERY_PREFIX,
-                     default=DEFAULT_DISCOVERY_PREFIX): valid_discovery_topic,
+                     default=DEFAULT_DISCOVERY_PREFIX): valid_publish_topic,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
@@ -274,7 +306,8 @@ async def _async_setup_server(hass: HomeAssistantType,
         return None
 
     success, broker_config = \
-        await server.async_start(hass, conf.get(CONF_EMBEDDED))
+        await server.async_start(
+            hass, conf.get(CONF_PASSWORD), conf.get(CONF_EMBEDDED))
 
     if not success:
         return None
@@ -317,6 +350,16 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     if CONF_EMBEDDED not in conf and CONF_BROKER in conf:
         broker_config = None
     else:
+        if (conf.get(CONF_PASSWORD) is None and
+                config.get('http') is not None and
+                config['http'].get('api_password') is not None):
+            _LOGGER.error(
+                "Starting from release 0.76, the embedded MQTT broker does not"
+                " use api_password as default password anymore. Please set"
+                " password configuration. See https://home-assistant.io/docs/"
+                "mqtt/broker#embedded-broker for details")
+            return False
+
         broker_config = await _async_setup_server(hass, config)
 
     if CONF_BROKER in conf:
@@ -430,7 +473,7 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
 
 
 @attr.s(slots=True, frozen=True)
-class Subscription(object):
+class Subscription:
     """Class to hold data about an active subscription."""
 
     topic = attr.ib(type=str)
@@ -440,7 +483,7 @@ class Subscription(object):
 
 
 @attr.s(slots=True, frozen=True)
-class Message(object):
+class Message:
     """MQTT Message."""
 
     topic = attr.ib(type=str)
@@ -449,7 +492,7 @@ class Message(object):
     retain = attr.ib(type=bool, default=False)
 
 
-class MQTT(object):
+class MQTT:
     """Home Assistant MQTT client."""
 
     def __init__(self, hass: HomeAssistantType, broker: str, port: int,
@@ -506,6 +549,7 @@ class MQTT(object):
         This method must be run in the event loop and returns a coroutine.
         """
         async with self._paho_lock:
+            _LOGGER.debug("Transmitting message on %s: %s", topic, payload)
             await self.hass.async_add_job(
                 self._mqttc.publish, topic, payload, qos, retain)
 
@@ -682,23 +726,14 @@ def _raise_on_error(result_code: int) -> None:
 
 def _match_topic(subscription: str, topic: str) -> bool:
     """Test if topic matches subscription."""
-    reg_ex_parts = []  # type: List[str]
-    suffix = ""
-    if subscription.endswith('#'):
-        subscription = subscription[:-2]
-        suffix = "(.*)"
-    sub_parts = subscription.split('/')
-    for sub_part in sub_parts:
-        if sub_part == "+":
-            reg_ex_parts.append(r"([^\/]+)")
-        else:
-            reg_ex_parts.append(re.escape(sub_part))
-
-    reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
-
-    reg = re.compile(reg_ex)
-
-    return reg.match(topic) is not None
+    from paho.mqtt.matcher import MQTTMatcher
+    matcher = MQTTMatcher()
+    matcher[subscription] = True
+    try:
+        next(matcher.iter_match(topic))
+        return True
+    except StopIteration:
+        return False
 
 
 class MqttAvailability(Entity):

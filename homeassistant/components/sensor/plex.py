@@ -41,8 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Plex sensor."""
     name = config.get(CONF_NAME)
     plex_user = config.get(CONF_USERNAME)
@@ -58,7 +57,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     import plexapi.exceptions
 
     try:
-        add_devices([PlexSensor(
+        add_entities([PlexSensor(
             name, plex_url, plex_user, plex_password, plex_server,
             plex_token)], True)
     except (plexapi.exceptions.BadRequest, plexapi.exceptions.Unauthorized,
@@ -128,7 +127,7 @@ class PlexSensor(Entity):
                     season_title += " ({0})".format(sess.show().year)
                 season_episode = "S{0}".format(sess.parentIndex)
                 if sess.index is not None:
-                    season_episode += " · E{1}".format(sess.index)
+                    season_episode += " · E{0}".format(sess.index)
                 episode_title = sess.title
                 now_playing_title = "{0} - {1} - {2}".format(season_title,
                                                              season_episode,

@@ -19,14 +19,15 @@ DEPENDENCIES = ['satel_integra']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up for Satel Integra alarm panels."""
     if not discovery_info:
         return
 
     device = SatelIntegraAlarmPanel(
         "Alarm Panel", discovery_info.get(CONF_ARM_HOME_MODE))
-    async_add_devices([device])
+    async_add_entities([device])
 
 
 class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
@@ -66,7 +67,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanel):
     @property
     def code_format(self):
         """Return the regex for code format or None if no code is required."""
-        return '^\\d{4,6}$'
+        return 'Number'
 
     @property
     def state(self):

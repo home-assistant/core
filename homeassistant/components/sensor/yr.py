@@ -67,7 +67,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Yr.no sensor."""
     elevation = config.get(CONF_ELEVATION, hass.config.elevation or 0)
     forecast = config.get(CONF_FORECAST)
@@ -88,7 +89,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     dev = []
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(YrSensor(name, sensor_type))
-    async_add_devices(dev)
+    async_add_entities(dev)
 
     weather = YrData(hass, coordinates, forecast, dev)
     async_track_utc_time_change(hass, weather.updating_devices, minute=31)
@@ -117,7 +118,7 @@ class YrSensor(Entity):
         return self._state
 
     @property
-    def should_poll(self):  # pylint: disable=no-self-use
+    def should_poll(self):
         """No polling needed."""
         return False
 
@@ -142,7 +143,7 @@ class YrSensor(Entity):
         return self._unit_of_measurement
 
 
-class YrData(object):
+class YrData:
     """Get the latest data and updates the states."""
 
     def __init__(self, hass, coordinates, forecast, devices):

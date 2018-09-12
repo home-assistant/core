@@ -134,42 +134,25 @@ def async_setup(hass, config):
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_REMOTES)
     yield from component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_handle_remote_service(service):
-        """Handle calls to the remote services."""
-        target_remotes = component.async_extract_from_service(service)
-        kwargs = service.data.copy()
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, REMOTE_SERVICE_ACTIVITY_SCHEMA,
+        'async_turn_off'
+    )
 
-        update_tasks = []
-        for remote in target_remotes:
-            if service.service == SERVICE_TURN_ON:
-                yield from remote.async_turn_on(**kwargs)
-            elif service.service == SERVICE_TOGGLE:
-                yield from remote.async_toggle(**kwargs)
-            elif service.service == SERVICE_SEND_COMMAND:
-                yield from remote.async_send_command(**kwargs)
-            else:
-                yield from remote.async_turn_off(**kwargs)
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, REMOTE_SERVICE_ACTIVITY_SCHEMA,
+        'async_turn_on'
+    )
 
-            if not remote.should_poll:
-                continue
-            update_tasks.append(remote.async_update_ha_state(True))
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, REMOTE_SERVICE_ACTIVITY_SCHEMA,
+        'async_toggle'
+    )
 
-        if update_tasks:
-            yield from asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_remote_service,
-        schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_remote_service,
-        schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_remote_service,
-        schema=REMOTE_SERVICE_ACTIVITY_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_SEND_COMMAND, async_handle_remote_service,
-        schema=REMOTE_SERVICE_SEND_COMMAND_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_SEND_COMMAND, REMOTE_SERVICE_SEND_COMMAND_SCHEMA,
+        'async_send_command'
+    )
 
     return True
 

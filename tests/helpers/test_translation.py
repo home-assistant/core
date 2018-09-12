@@ -50,15 +50,15 @@ async def test_component_translation_file(hass):
     })
 
     assert path.normpath(translation.component_translation_file(
-        'switch.test', 'en')) == path.normpath(hass.config.path(
+        hass, 'switch.test', 'en')) == path.normpath(hass.config.path(
             'custom_components', 'switch', '.translations', 'test.en.json'))
 
     assert path.normpath(translation.component_translation_file(
-        'test_standalone', 'en')) == path.normpath(hass.config.path(
+        hass, 'test_standalone', 'en')) == path.normpath(hass.config.path(
             'custom_components', '.translations', 'test_standalone.en.json'))
 
     assert path.normpath(translation.component_translation_file(
-        'test_package', 'en')) == path.normpath(hass.config.path(
+        hass, 'test_package', 'en')) == path.normpath(hass.config.path(
             'custom_components', 'test_package', '.translations', 'en.json'))
 
 

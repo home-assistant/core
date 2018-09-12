@@ -6,7 +6,7 @@ https://home-assistant.io/components/light.litejet/
 """
 import logging
 
-import homeassistant.components.litejet as litejet
+from homeassistant.components import litejet
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, SUPPORT_BRIGHTNESS, Light)
 
@@ -17,7 +17,7 @@ DEPENDENCIES = ['litejet']
 ATTR_NUMBER = 'number'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up lights for the LiteJet platform."""
     litejet_ = hass.data['litejet_system']
 
@@ -26,7 +26,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         name = litejet_.get_load_name(i)
         if not litejet.is_ignored(hass, name):
             devices.append(LiteJetLight(hass, litejet_, i, name))
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class LiteJetLight(Light):

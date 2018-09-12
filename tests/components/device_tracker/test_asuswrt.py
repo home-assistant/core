@@ -3,9 +3,9 @@ import os
 from datetime import timedelta
 import unittest
 from unittest import mock
+import socket
 
 import voluptuous as vol
-from future.backports import socket
 
 from homeassistant.setup import setup_component
 from homeassistant.components import device_tracker
@@ -15,7 +15,7 @@ from homeassistant.components.device_tracker import (
 from homeassistant.components.device_tracker.asuswrt import (
     CONF_PROTOCOL, CONF_MODE, CONF_PUB_KEY, DOMAIN, _ARP_REGEX,
     CONF_PORT, PLATFORM_SCHEMA, Device, get_scanner, AsusWrtDeviceScanner,
-    _parse_lines, SshConnection, TelnetConnection)
+    _parse_lines, SshConnection, TelnetConnection, CONF_REQUIRE_IP)
 from homeassistant.const import (CONF_PLATFORM, CONF_PASSWORD, CONF_USERNAME,
                                  CONF_HOST)
 
@@ -105,9 +105,18 @@ WAKE_DEVICES_AP = {
         mac='08:09:10:11:12:14', ip='123.123.123.126', name=None)
 }
 
+WAKE_DEVICES_NO_IP = {
+    '01:02:03:04:06:08': Device(
+        mac='01:02:03:04:06:08', ip='123.123.123.125', name=None),
+    '08:09:10:11:12:14': Device(
+        mac='08:09:10:11:12:14', ip='123.123.123.126', name=None),
+    '08:09:10:11:12:15': Device(
+        mac='08:09:10:11:12:15', ip=None, name=None)
+}
+
 
 def setup_module():
-    """Setup the test module."""
+    """Set up the test module."""
     global FAKEFILE
     FAKEFILE = get_test_config_dir('fake_file')
     with open(FAKEFILE, 'w') as out:
@@ -129,7 +138,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     hass = None
 
     def setup_method(self, _):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'zone')
 
@@ -159,8 +168,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         scanner.last_results = WAKE_DEVICES
         self.assertEqual(list(WAKE_DEVICES), scanner.scan_devices())
 
-    def test_password_or_pub_key_required(self): \
-            # pylint: disable=invalid-name
+    def test_password_or_pub_key_required(self):
         """Test creating an AsusWRT scanner without a pass or pubkey."""
         with assert_setup_component(0, DOMAIN):
             assert setup_component(
@@ -174,8 +182,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     @mock.patch(
         'homeassistant.components.device_tracker.asuswrt.AsusWrtDeviceScanner',
         return_value=mock.MagicMock())
-    def test_get_scanner_with_password_no_pubkey(self, asuswrt_mock): \
-            # pylint: disable=invalid-name
+    def test_get_scanner_with_password_no_pubkey(self, asuswrt_mock):
         """Test creating an AsusWRT scanner with a password and no pubkey."""
         conf_dict = {
             DOMAIN: {
@@ -204,8 +211,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
     @mock.patch(
         'homeassistant.components.device_tracker.asuswrt.AsusWrtDeviceScanner',
         return_value=mock.MagicMock())
-    def test_get_scanner_with_pubkey_no_password(self, asuswrt_mock): \
-            # pylint: disable=invalid-name
+    def test_get_scanner_with_pubkey_no_password(self, asuswrt_mock):
         """Test creating an AsusWRT scanner with a pubkey and no password."""
         conf_dict = {
             device_tracker.DOMAIN: {
@@ -283,8 +289,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
                       password='fake_pass', port=22)
         )
 
-    def test_ssh_login_without_password_or_pubkey(self): \
-            # pylint: disable=invalid-name
+    def test_ssh_login_without_password_or_pubkey(self):
         """Test that login is not called without password or pub_key."""
         ssh = mock.MagicMock()
         ssh_mock = mock.patch('pexpect.pxssh.pxssh', return_value=ssh)
@@ -354,8 +359,7 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
             mock.call(b'#')
         )
 
-    def test_telnet_login_without_password(self): \
-            # pylint: disable=invalid-name
+    def test_telnet_login_without_password(self):
         """Test that login is not called without password or pub_key."""
         telnet = mock.MagicMock()
         telnet_mock = mock.patch('telnetlib.Telnet', return_value=telnet)
@@ -410,6 +414,21 @@ class TestComponentsDeviceTrackerASUSWRT(unittest.TestCase):
         scanner._get_neigh.return_value = NEIGH_DEVICES
         scanner._get_leases.return_value = LEASES_DEVICES
         self.assertEqual(WAKE_DEVICES_AP, scanner.get_asuswrt_data())
+
+    def test_get_asuswrt_data_no_ip(self):
+        """Test for get asuswrt_data and not requiring ip."""
+        conf = VALID_CONFIG_ROUTER_SSH.copy()[DOMAIN]
+        conf[CONF_REQUIRE_IP] = False
+        scanner = AsusWrtDeviceScanner(conf)
+        scanner._get_wl = mock.Mock()
+        scanner._get_arp = mock.Mock()
+        scanner._get_neigh = mock.Mock()
+        scanner._get_leases = mock.Mock()
+        scanner._get_wl.return_value = WL_DEVICES
+        scanner._get_arp.return_value = ARP_DEVICES
+        scanner._get_neigh.return_value = NEIGH_DEVICES
+        scanner._get_leases.return_value = LEASES_DEVICES
+        self.assertEqual(WAKE_DEVICES_NO_IP, scanner.get_asuswrt_data())
 
     def test_update_info(self):
         """Test for update info."""
@@ -481,7 +500,7 @@ class TestSshConnection(unittest.TestCase):
     """Testing SshConnection."""
 
     def setUp(self):
-        """Setup test env."""
+        """Set up test env."""
         self.connection = SshConnection(
             'fake', 'fake', 'fake', 'fake', 'fake')
         self.connection._connected = True
@@ -525,7 +544,7 @@ class TestTelnetConnection(unittest.TestCase):
     """Testing TelnetConnection."""
 
     def setUp(self):
-        """Setup test env."""
+        """Set up test env."""
         self.connection = TelnetConnection(
             'fake', 'fake', 'fake', 'fake')
         self.connection._connected = True

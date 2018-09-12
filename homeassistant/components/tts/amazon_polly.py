@@ -20,7 +20,11 @@ CONF_PROFILE_NAME = 'profile_name'
 ATTR_CREDENTIALS = 'credentials'
 
 DEFAULT_REGION = 'us-east-1'
-SUPPORTED_REGIONS = ['us-east-1', 'us-east-2', 'us-west-2', 'eu-west-1']
+SUPPORTED_REGIONS = ['us-east-1', 'us-east-2', 'us-west-1', 'us-west-2',
+                     'ca-central-1', 'eu-west-1', 'eu-central-1', 'eu-west-2',
+                     'eu-west-3', 'ap-southeast-1', 'ap-southeast-2',
+                     'ap-northeast-2', 'ap-northeast-1', 'ap-south-1',
+                     'sa-east-1']
 
 CONF_VOICE = 'voice'
 CONF_OUTPUT_FORMAT = 'output_format'
@@ -34,7 +38,8 @@ SUPPORTED_VOICES = ['Geraint', 'Gwyneth', 'Mads', 'Naja', 'Hans', 'Marlene',
                     'Chantal', 'Celine', 'Mathieu', 'Dora', 'Karl', 'Carla',
                     'Giorgio', 'Mizuki', 'Liv', 'Lotte', 'Ruben', 'Ewa',
                     'Jacek', 'Jan', 'Maja', 'Ricardo', 'Vitoria', 'Cristiano',
-                    'Ines', 'Carmen', 'Maxim', 'Tatyana', 'Astrid', 'Filiz']
+                    'Ines', 'Carmen', 'Maxim', 'Tatyana', 'Astrid', 'Filiz',
+                    'Aditi', 'Léa', 'Matthew', 'Seoyeon', 'Takumi', 'Vicki']
 
 SUPPORTED_OUTPUT_FORMATS = ['mp3', 'ogg_vorbis', 'pcm']
 

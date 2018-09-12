@@ -7,10 +7,12 @@ https://home-assistant.io/components/switch.wemo/
 import asyncio
 import logging
 from datetime import datetime, timedelta
+import requests
 
 import async_timeout
 
 from homeassistant.components.switch import SwitchDevice
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.util import convert
 from homeassistant.const import (
     STATE_OFF, STATE_ON, STATE_STANDBY, STATE_UNKNOWN)
@@ -33,18 +35,23 @@ WEMO_OFF = 0
 WEMO_STANDBY = 8
 
 
-# pylint: disable=unused-argument, too-many-function-args
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up discovered WeMo switches."""
-    import pywemo.discovery as discovery
+    from pywemo import discovery
 
     if discovery_info is not None:
         location = discovery_info['ssdp_description']
         mac = discovery_info['mac_address']
-        device = discovery.device_from_description(location, mac)
+
+        try:
+            device = discovery.device_from_description(location, mac)
+        except (requests.exceptions.ConnectionError,
+                requests.exceptions.Timeout) as err:
+            _LOGGER.error('Unable to access %s (%s)', location, err)
+            raise PlatformNotReady
 
         if device:
-            add_devices_callback([WemoSwitch(device)])
+            add_entities_callback([WemoSwitch(device)])
 
 
 class WemoSwitch(SwitchDevice):
@@ -70,7 +77,7 @@ class WemoSwitch(SwitchDevice):
             self._async_locked_subscription_callback(not updated))
 
     async def _async_locked_subscription_callback(self, force_update):
-        """Helper to handle an update from a subscription."""
+        """Handle an update from a subscription."""
         # If an update is in progress, we don't do anything
         if self._update_lock.locked():
             return
@@ -167,9 +174,9 @@ class WemoSwitch(SwitchDevice):
             standby_state = int(self.insight_params['state'])
             if standby_state == WEMO_ON:
                 return STATE_ON
-            elif standby_state == WEMO_OFF:
+            if standby_state == WEMO_OFF:
                 return STATE_OFF
-            elif standby_state == WEMO_STANDBY:
+            if standby_state == WEMO_STANDBY:
                 return STATE_STANDBY
             return STATE_UNKNOWN
 

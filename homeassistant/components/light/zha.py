@@ -6,7 +6,6 @@ at https://home-assistant.io/components/light.zha/
 """
 import logging
 from homeassistant.components import light, zha
-from homeassistant.const import STATE_UNKNOWN
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,7 +20,7 @@ CAPABILITIES_COLOR_TEMP = 0x10
 UNSUPPORTED_ATTRIBUTE = 0x86
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Zigbee Home Automation lights."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
@@ -43,7 +42,7 @@ async def async_setup_platform(hass, config, async_add_devices,
             if result.get('color_temperature') is not UNSUPPORTED_ATTRIBUTE:
                 discovery_info['color_capabilities'] |= CAPABILITIES_COLOR_TEMP
 
-    async_add_devices([Light(**discovery_info)], update_before_add=True)
+    async_add_entities([Light(**discovery_info)], update_before_add=True)
 
 
 class Light(zha.Entity, light.Light):
@@ -76,7 +75,7 @@ class Light(zha.Entity, light.Light):
     @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
-        if self._state == STATE_UNKNOWN:
+        if self._state is None:
             return False
         return bool(self._state)
 
@@ -173,7 +172,8 @@ class Light(zha.Entity, light.Light):
             result = await zha.safe_read(self._endpoint.light_color,
                                          ['current_x', 'current_y'])
             if 'current_x' in result and 'current_y' in result:
-                xy_color = (result['current_x'], result['current_y'])
+                xy_color = (round(result['current_x']/65535, 3),
+                            round(result['current_y']/65535, 3))
                 self._hs_color = color_util.color_xy_to_hs(*xy_color)
 
     @property

@@ -16,7 +16,7 @@ from homeassistant.components.image_processing import (
 from homeassistant.core import split_entity_id
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['numpy==1.14.2']
+REQUIREMENTS = ['numpy==1.15.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,7 +80,7 @@ def _get_default_classifier(dest_path):
                 fil.write(chunk)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenCV image processing platform."""
     try:
         # Verify that the OpenCV python package is pre-installed
@@ -105,7 +105,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hass, camera[CONF_ENTITY_ID], camera.get(CONF_NAME),
             config[CONF_CLASSIFIER]))
 
-    add_devices(entities)
+    add_entities(entities)
 
 
 class OpenCVImageProcessor(ImageProcessingEntity):
@@ -152,7 +152,6 @@ class OpenCVImageProcessor(ImageProcessingEntity):
         import cv2  # pylint: disable=import-error
         import numpy
 
-        # pylint: disable=no-member
         cv_image = cv2.imdecode(
             numpy.asarray(bytearray(image)), cv2.IMREAD_UNCHANGED)
 
@@ -168,7 +167,6 @@ class OpenCVImageProcessor(ImageProcessingEntity):
             else:
                 path = classifier
 
-            # pylint: disable=no-member
             cascade = cv2.CascadeClassifier(path)
 
             detections = cascade.detectMultiScale(

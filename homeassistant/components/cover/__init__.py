@@ -4,7 +4,6 @@ Support for Cover devices.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover/
 """
-import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
@@ -17,6 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import group
+from homeassistant.helpers import intent
 from homeassistant.const import (
     SERVICE_OPEN_COVER, SERVICE_CLOSE_COVER, SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER, SERVICE_OPEN_COVER_TILT, SERVICE_CLOSE_COVER_TILT,
@@ -55,6 +55,9 @@ ATTR_CURRENT_TILT_POSITION = 'current_tilt_position'
 ATTR_POSITION = 'position'
 ATTR_TILT_POSITION = 'tilt_position'
 
+INTENT_OPEN_COVER = 'HassOpenCover'
+INTENT_CLOSE_COVER = 'HassCloseCover'
+
 COVER_SERVICE_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
 })
@@ -68,21 +71,6 @@ COVER_SET_COVER_TILT_POSITION_SCHEMA = COVER_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_TILT_POSITION):
         vol.All(vol.Coerce(int), vol.Range(min=0, max=100)),
 })
-
-SERVICE_TO_METHOD = {
-    SERVICE_OPEN_COVER: {'method': 'async_open_cover'},
-    SERVICE_CLOSE_COVER: {'method': 'async_close_cover'},
-    SERVICE_SET_COVER_POSITION: {
-        'method': 'async_set_cover_position',
-        'schema': COVER_SET_COVER_POSITION_SCHEMA},
-    SERVICE_STOP_COVER: {'method': 'async_stop_cover'},
-    SERVICE_OPEN_COVER_TILT: {'method': 'async_open_cover_tilt'},
-    SERVICE_CLOSE_COVER_TILT: {'method': 'async_close_cover_tilt'},
-    SERVICE_STOP_COVER_TILT: {'method': 'async_stop_cover_tilt'},
-    SERVICE_SET_COVER_TILT_POSITION: {
-        'method': 'async_set_cover_tilt_position',
-        'schema': COVER_SET_COVER_TILT_POSITION_SCHEMA},
-}
 
 
 @bind_hass
@@ -157,30 +145,52 @@ async def async_setup(hass, config):
 
     await component.async_setup(config)
 
-    async def async_handle_cover_service(service):
-        """Handle calls to the cover services."""
-        covers = component.async_extract_from_service(service)
-        method = SERVICE_TO_METHOD.get(service.service)
-        params = service.data.copy()
-        params.pop(ATTR_ENTITY_ID, None)
+    component.async_register_entity_service(
+        SERVICE_OPEN_COVER, COVER_SERVICE_SCHEMA,
+        'async_open_cover'
+    )
 
-        # call method
-        update_tasks = []
-        for cover in covers:
-            await getattr(cover, method['method'])(**params)
-            if not cover.should_poll:
-                continue
-            update_tasks.append(cover.async_update_ha_state(True))
+    component.async_register_entity_service(
+        SERVICE_CLOSE_COVER, COVER_SERVICE_SCHEMA,
+        'async_close_cover'
+    )
 
-        if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
+    component.async_register_entity_service(
+        SERVICE_SET_COVER_POSITION, COVER_SET_COVER_POSITION_SCHEMA,
+        'async_set_cover_position'
+    )
 
-    for service_name in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service_name].get(
-            'schema', COVER_SERVICE_SCHEMA)
-        hass.services.async_register(
-            DOMAIN, service_name, async_handle_cover_service,
-            schema=schema)
+    component.async_register_entity_service(
+        SERVICE_STOP_COVER, COVER_SERVICE_SCHEMA,
+        'async_stop_cover'
+    )
+
+    component.async_register_entity_service(
+        SERVICE_OPEN_COVER_TILT, COVER_SERVICE_SCHEMA,
+        'async_open_cover_tilt'
+    )
+
+    component.async_register_entity_service(
+        SERVICE_CLOSE_COVER_TILT, COVER_SERVICE_SCHEMA,
+        'async_close_cover_tilt'
+    )
+
+    component.async_register_entity_service(
+        SERVICE_STOP_COVER_TILT, COVER_SERVICE_SCHEMA,
+        'async_stop_cover_tilt'
+    )
+
+    component.async_register_entity_service(
+        SERVICE_SET_COVER_TILT_POSITION, COVER_SET_COVER_TILT_POSITION_SCHEMA,
+        'async_set_cover_tilt_position'
+    )
+
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        INTENT_OPEN_COVER, DOMAIN, SERVICE_OPEN_COVER,
+        "Opened {}"))
+    hass.helpers.intent.async_register(intent.ServiceIntentHandler(
+        INTENT_CLOSE_COVER, DOMAIN, SERVICE_CLOSE_COVER,
+        "Closed {}"))
 
     return True
 
@@ -188,7 +198,6 @@ async def async_setup(hass, config):
 class CoverDevice(Entity):
     """Representation a cover."""
 
-    # pylint: disable=no-self-use
     @property
     def current_cover_position(self):
         """Return current position of cover.

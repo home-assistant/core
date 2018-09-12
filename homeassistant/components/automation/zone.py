@@ -51,7 +51,7 @@ def async_trigger(hass, config, action):
         # pylint: disable=too-many-boolean-expressions
         if event == EVENT_ENTER and not from_match and to_match or \
            event == EVENT_LEAVE and from_match and not to_match:
-            hass.async_run_job(action, {
+            hass.async_run_job(action({
                 'trigger': {
                     'platform': 'zone',
                     'entity_id': entity,
@@ -60,7 +60,7 @@ def async_trigger(hass, config, action):
                     'zone': zone_state,
                     'event': event,
                 },
-            })
+            }, context=to_s.context))
 
     return async_track_state_change(hass, entity_id, zone_automation_listener,
                                     MATCH_ALL, MATCH_ALL)

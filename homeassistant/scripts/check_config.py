@@ -6,22 +6,22 @@ import os
 from collections import OrderedDict, namedtuple
 from glob import glob
 from platform import system
+from typing import Dict, List, Sequence
 from unittest.mock import patch
 
 import attr
-from typing import Dict, List, Sequence
 import voluptuous as vol
 
 from homeassistant import bootstrap, core, loader
 from homeassistant.config import (
     get_default_config_dir, CONF_CORE, CORE_CONFIG_SCHEMA,
     CONF_PACKAGES, merge_packages_config, _format_config_error,
-    find_config_file, load_yaml_config_file, get_component,
-    extract_domain_configs, config_per_platform, get_platform)
-import homeassistant.util.yaml as yaml
+    find_config_file, load_yaml_config_file,
+    extract_domain_configs, config_per_platform)
+from homeassistant.util import yaml
 from homeassistant.exceptions import HomeAssistantError
 
-REQUIREMENTS = ('colorlog==3.1.2',)
+REQUIREMENTS = ('colorlog==3.1.4',)
 if system() == 'Windows':  # Ensure colorama installed for colorlog on Windows
     REQUIREMENTS += ('colorama<=1',)
 
@@ -58,7 +58,7 @@ def color(the_color, *args, reset=None):
 def run(script_args: List) -> int:
     """Handle ensure config commandline script."""
     parser = argparse.ArgumentParser(
-        description=("Check Home Assistant configuration."))
+        description="Check Home Assistant configuration.")
     parser.add_argument(
         '--script', choices=['check_config'])
     parser.add_argument(
@@ -163,13 +163,13 @@ def check(config_dir, secrets=False):
         'secret_cache': None,
     }
 
-    # pylint: disable=unused-variable
+    # pylint: disable=possibly-unused-variable
     def mock_load(filename):
         """Mock hass.util.load_yaml to save config file names."""
         res['yaml_files'][filename] = True
         return MOCKS['load'][1](filename)
 
-    # pylint: disable=unused-variable
+    # pylint: disable=possibly-unused-variable
     def mock_secrets(ldr, node):
         """Mock _get_secrets."""
         try:
@@ -201,18 +201,10 @@ def check(config_dir, secrets=False):
         yaml.yaml.SafeLoader.add_constructor('!secret', yaml._secret_yaml)
 
     try:
-        class HassConfig():
-            """Hass object with config."""
+        hass = core.HomeAssistant()
+        hass.config.config_dir = config_dir
 
-            def __init__(self, conf_dir):
-                """Init the config_dir."""
-                self.config = core.Config()
-                self.config.config_dir = conf_dir
-
-        loader.prepare(HassConfig(config_dir))
-
-        res['components'] = check_ha_config_file(config_dir)
-
+        res['components'] = check_ha_config_file(hass)
         res['secret_cache'] = OrderedDict(yaml.__SECRET_CACHE)
 
         for err in res['components'].errors:
@@ -222,6 +214,7 @@ def check(config_dir, secrets=False):
                 res['except'].setdefault(domain, []).append(err.config)
 
     except Exception as err:  # pylint: disable=broad-except
+        _LOGGER.exception("BURB")
         print(color('red', 'Fatal error while loading config:'), str(err))
         res['except'].setdefault(ERROR_STR, []).append(str(err))
     finally:
@@ -252,7 +245,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     """
     def sort_dict_key(val):
         """Return the dict key for sorting."""
-        key = str.lower(val[0])
+        key = str(val[0]).lower()
         return '0' if key == 'platform' else key
 
     indent_str = indent_count * ' '
@@ -261,10 +254,10 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
     if isinstance(layer, Dict):
         for key, value in sorted(layer.items(), key=sort_dict_key):
             if isinstance(value, (dict, list)):
-                print(indent_str, key + ':', line_info(value, **kwargs))
+                print(indent_str, str(key) + ':', line_info(value, **kwargs))
                 dump_dict(value, indent_count + 2)
             else:
-                print(indent_str, key + ':', value)
+                print(indent_str, str(key) + ':', value)
             indent_str = indent_count * ' '
     if isinstance(layer, Sequence):
         for i in layer:
@@ -274,7 +267,7 @@ def dump_dict(layer, indent_count=3, listi=False, **kwargs):
                 print(' ', indent_str, i)
 
 
-CheckConfigError = namedtuple(  # pylint: disable=invalid-name
+CheckConfigError = namedtuple(
     'CheckConfigError', "message domain config")
 
 
@@ -290,8 +283,9 @@ class HomeAssistantConfig(OrderedDict):
         return self
 
 
-def check_ha_config_file(config_dir):
+def check_ha_config_file(hass):
     """Check if Home Assistant configuration file is valid."""
+    config_dir = hass.config.config_dir
     result = HomeAssistantConfig()
 
     def _pack_error(package, component, config, message):
@@ -330,8 +324,8 @@ def check_ha_config_file(config_dir):
 
     # Merge packages
     merge_packages_config(
-        config, core_config.get(CONF_PACKAGES, {}), _pack_error)
-    del core_config[CONF_PACKAGES]
+        hass, config, core_config.get(CONF_PACKAGES, {}), _pack_error)
+    core_config.pop(CONF_PACKAGES, None)
 
     # Ensure we have no None values after merge
     for key, value in config.items():
@@ -343,7 +337,7 @@ def check_ha_config_file(config_dir):
 
     # Process and validate config
     for domain in components:
-        component = get_component(domain)
+        component = loader.get_component(hass, domain)
         if not component:
             result.add_error("Component not found: {}".format(domain))
             continue
@@ -375,7 +369,7 @@ def check_ha_config_file(config_dir):
                 platforms.append(p_validated)
                 continue
 
-            platform = get_platform(domain, p_name)
+            platform = loader.get_platform(hass, domain, p_name)
 
             if platform is None:
                 result.add_error(
@@ -384,7 +378,6 @@ def check_ha_config_file(config_dir):
 
             # Validate platform specific schema
             if hasattr(platform, 'PLATFORM_SCHEMA'):
-                # pylint: disable=no-member
                 try:
                     p_validated = platform.PLATFORM_SCHEMA(p_validated)
                 except vol.Invalid as ex:

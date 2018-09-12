@@ -6,22 +6,24 @@ https://home-assistant.io/components/media_player.volumio/
 
 Volumio rest API: https://volumio.github.io/docs/API/REST_API.html
 """
+import asyncio
 from datetime import timedelta
 import logging
-import asyncio
-import aiohttp
+import socket
 
+import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
-    SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC,
-    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_CLEAR_PLAYLIST)
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_CLEAR_PLAYLIST,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_PLAYING, STATE_PAUSED, STATE_IDLE, CONF_HOST, CONF_PORT, CONF_NAME)
-import homeassistant.helpers.config_validation as cv
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_IDLE, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
 _CONFIGURING = {}
@@ -30,6 +32,8 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_HOST = 'localhost'
 DEFAULT_NAME = 'Volumio'
 DEFAULT_PORT = 3000
+
+DATA_VOLUMIO = 'volumio'
 
 TIMEOUT = 10
 
@@ -48,13 +52,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Volumio platform."""
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    name = config.get(CONF_NAME)
+    if DATA_VOLUMIO not in hass.data:
+        hass.data[DATA_VOLUMIO] = dict()
 
-    async_add_devices([Volumio(name, host, port, hass)])
+    # This is a manual configuration?
+    if discovery_info is None:
+        name = config.get(CONF_NAME)
+        host = config.get(CONF_HOST)
+        port = config.get(CONF_PORT)
+    else:
+        name = "{} ({})".format(DEFAULT_NAME, discovery_info.get('hostname'))
+        host = discovery_info.get('host')
+        port = discovery_info.get('port')
+
+    # Only add a device once, so discovered devices do not override manual
+    # config.
+    ip_addr = socket.gethostbyname(host)
+    if ip_addr in hass.data[DATA_VOLUMIO]:
+        return
+
+    entity = Volumio(name, host, port, hass)
+
+    hass.data[DATA_VOLUMIO][ip_addr] = entity
+    async_add_entities([entity])
 
 
 class Volumio(MediaPlayerDevice):
@@ -121,7 +144,7 @@ class Volumio(MediaPlayerDevice):
         status = self._state.get('status', None)
         if status == 'pause':
             return STATE_PAUSED
-        elif status == 'play':
+        if status == 'play':
             return STATE_PLAYING
 
         return STATE_IDLE

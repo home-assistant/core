@@ -19,7 +19,7 @@ class TestRestSensorSetup(unittest.TestCase):
     """Tests for setting up the REST sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):
@@ -121,7 +121,7 @@ class TestRestSensor(unittest.TestCase):
     """Tests for REST sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.initial_state = 'initial_state'
         self.rest = Mock('rest.RestData')
@@ -267,7 +267,7 @@ class TestRestData(unittest.TestCase):
     """Tests for RestData."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.method = "GET"
         self.resource = "http://localhost"
         self.verify_ssl = True

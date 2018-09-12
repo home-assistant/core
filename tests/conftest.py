@@ -1,4 +1,4 @@
-"""Setup some common test helper things."""
+"""Set up some common test helper things."""
 import asyncio
 import functools
 import logging
@@ -12,7 +12,8 @@ from homeassistant import util
 from homeassistant.util import location
 
 from tests.common import (
-    async_test_home_assistant, INSTANCES, async_mock_mqtt_component, mock_coro)
+    async_test_home_assistant, INSTANCES, async_mock_mqtt_component, mock_coro,
+    mock_storage as mock_storage)
 from tests.test_util.aiohttp import mock_aiohttp_client
 from tests.mock.zwave import MockNetwork, MockOption
 
@@ -20,11 +21,11 @@ if os.environ.get('UVLOOP') == '1':
     import uvloop
     asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
-logging.basicConfig()
+logging.basicConfig(level=logging.DEBUG)
 logging.getLogger('sqlalchemy.engine').setLevel(logging.INFO)
 
 
-def test_real(func):
+def check_real(func):
     """Force a function to require a keyword _test_real to be passed in."""
     @functools.wraps(func)
     def guard_func(*args, **kwargs):
@@ -40,8 +41,8 @@ def test_real(func):
 
 
 # Guard a few functions that would make network connections
-location.detect_location_info = test_real(location.detect_location_info)
-location.elevation = test_real(location.elevation)
+location.detect_location_info = check_real(location.detect_location_info)
+location.elevation = check_real(location.elevation)
 util.get_local_ip = lambda: '127.0.0.1'
 
 
@@ -59,7 +60,14 @@ def verify_cleanup():
 
 
 @pytest.fixture
-def hass(loop):
+def hass_storage():
+    """Fixture to mock storage."""
+    with mock_storage() as stored_data:
+        yield stored_data
+
+
+@pytest.fixture
+def hass(loop, hass_storage):
     """Fixture to provide a test instance of HASS."""
     hass = loop.run_until_complete(async_test_home_assistant(loop))
 
@@ -123,7 +131,5 @@ def mock_device_tracker_conf():
     ), patch(
         'homeassistant.components.device_tracker.async_load_config',
             side_effect=lambda *args: mock_coro(devices)
-    ), patch('homeassistant.components.device_tracker'
-             '.Device.set_vendor_for_mac'):
-
+    ):
         yield devices

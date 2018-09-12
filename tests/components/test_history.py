@@ -17,7 +17,7 @@ class TestComponentHistory(unittest.TestCase):
     """Test History component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
@@ -83,9 +83,10 @@ class TestComponentHistory(unittest.TestCase):
             self.wait_recording_done()
 
         # Get states returns everything before POINT
-        self.assertEqual(states,
-                         sorted(history.get_states(self.hass, future),
-                                key=lambda state: state.entity_id))
+        for state1, state2 in zip(
+                states, sorted(history.get_states(self.hass, future),
+                               key=lambda state: state.entity_id)):
+            assert state1 == state2
 
         # Test get_state here because we have a DB setup
         self.assertEqual(
@@ -128,6 +129,39 @@ class TestComponentHistory(unittest.TestCase):
 
         hist = history.state_changes_during_period(
             self.hass, start, end, entity_id)
+
+        self.assertEqual(states, hist[entity_id])
+
+    def test_get_last_state_changes(self):
+        """Test number of state changes."""
+        self.init_recorder()
+        entity_id = 'sensor.test'
+
+        def set_state(state):
+            """Set the state."""
+            self.hass.states.set(entity_id, state)
+            self.wait_recording_done()
+            return self.hass.states.get(entity_id)
+
+        start = dt_util.utcnow() - timedelta(minutes=2)
+        point = start + timedelta(minutes=1)
+        point2 = point + timedelta(minutes=1)
+
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=start):
+            set_state('1')
+
+        states = []
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=point):
+            states.append(set_state('2'))
+
+        with patch('homeassistant.components.recorder.dt_util.utcnow',
+                   return_value=point2):
+            states.append(set_state('3'))
+
+        hist = history.get_last_state_changes(
+            self.hass, 2, entity_id)
 
         self.assertEqual(states, hist[entity_id])
 
@@ -395,8 +429,7 @@ class TestComponentHistory(unittest.TestCase):
                     history.CONF_ENTITIES: ['media_player.test']}}})
         self.check_significant_states(zero, four, states, config)
 
-    def check_significant_states(self, zero, four, states, config): \
-            # pylint: disable=no-self-use
+    def check_significant_states(self, zero, four, states, config):
         """Check if significant states are retrieved."""
         filters = history.Filters()
         exclude = config[history.DOMAIN].get(history.CONF_EXCLUDE)

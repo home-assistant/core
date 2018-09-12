@@ -13,6 +13,7 @@ from homeassistant.components.binary_sensor.zwave import get_device
 from homeassistant.components.zwave import (
     const, CONFIG_SCHEMA, CONF_DEVICE_CONFIG_GLOB, DATA_NETWORK)
 from homeassistant.setup import setup_component
+from tests.common import mock_registry
 
 import pytest
 
@@ -127,24 +128,24 @@ def test_setup_platform(hass, mock_openzwave):
     mock_device = MagicMock()
     hass.data[DATA_NETWORK] = MagicMock()
     hass.data[zwave.DATA_DEVICES] = {456: mock_device}
-    async_add_devices = MagicMock()
+    async_add_entities = MagicMock()
 
     result = yield from zwave.async_setup_platform(
-        hass, None, async_add_devices, None)
+        hass, None, async_add_entities, None)
     assert not result
-    assert not async_add_devices.called
+    assert not async_add_entities.called
 
     result = yield from zwave.async_setup_platform(
-        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 123})
+        hass, None, async_add_entities, {const.DISCOVERY_DEVICE: 123})
     assert not result
-    assert not async_add_devices.called
+    assert not async_add_entities.called
 
     result = yield from zwave.async_setup_platform(
-        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 456})
+        hass, None, async_add_entities, {const.DISCOVERY_DEVICE: 456})
     assert result
-    assert async_add_devices.called
-    assert len(async_add_devices.mock_calls) == 1
-    assert async_add_devices.mock_calls[0][1][0] == [mock_device]
+    assert async_add_entities.called
+    assert len(async_add_entities.mock_calls) == 1
+    assert async_add_entities.mock_calls[0][1][0] == [mock_device]
 
 
 @asyncio.coroutine
@@ -162,10 +163,10 @@ def test_zwave_ready_wait(hass, mock_openzwave):
     asyncio_sleep = asyncio.sleep
 
     @asyncio.coroutine
-    def sleep(duration, loop):
+    def sleep(duration, loop=None):
         if duration > 0:
             sleeps.append(duration)
-        yield from asyncio_sleep(0, loop=loop)
+        yield from asyncio_sleep(0)
 
     with patch('homeassistant.components.zwave.dt_util.utcnow', new=utcnow):
         with patch('asyncio.sleep', new=sleep):
@@ -222,6 +223,48 @@ def test_node_discovery(hass, mock_openzwave):
     yield from hass.async_block_till_done()
 
     assert hass.states.get('zwave.mock_node').state is 'unknown'
+
+
+async def test_unparsed_node_discovery(hass, mock_openzwave):
+    """Test discovery of a node."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_NODE_ADDED:
+            mock_receivers.append(receiver)
+
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
+        await async_setup_component(hass, 'zwave', {'zwave': {}})
+
+    assert len(mock_receivers) == 1
+
+    node = MockNode(
+        node_id=14, manufacturer_name=None, name=None, is_ready=False)
+
+    sleeps = []
+
+    def utcnow():
+        return datetime.fromtimestamp(len(sleeps))
+
+    asyncio_sleep = asyncio.sleep
+
+    async def sleep(duration, loop=None):
+        if duration > 0:
+            sleeps.append(duration)
+        await asyncio_sleep(0)
+
+    with patch('homeassistant.components.zwave.dt_util.utcnow', new=utcnow):
+        with patch('asyncio.sleep', new=sleep):
+            with patch.object(zwave, '_LOGGER') as mock_logger:
+                hass.async_add_job(mock_receivers[0], node)
+                await hass.async_block_till_done()
+
+                assert len(sleeps) == const.NODE_READY_WAIT_SECS
+                assert mock_logger.warning.called
+                assert len(mock_logger.warning.mock_calls) == 1
+                assert mock_logger.warning.mock_calls[0][1][1:] == \
+                    (14, const.NODE_READY_WAIT_SECS)
+    assert hass.states.get('zwave.unknown_node_14').state is 'unknown'
 
 
 @asyncio.coroutine
@@ -427,6 +470,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         """Initialize values for this testcase class."""
         self.hass = get_test_home_assistant()
         self.hass.start()
+        self.registry = mock_registry(self.hass)
 
         setup_component(self.hass, 'zwave', {'zwave': {}})
         self.hass.block_till_done()
@@ -446,7 +490,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
                     const.DISC_OPTIONAL: True,
                 }}}
         self.primary = MockValue(
-            command_class='mock_primary_class', node=self.node)
+            command_class='mock_primary_class', node=self.node, value_id=1000)
         self.secondary = MockValue(
             command_class='mock_secondary_class', node=self.node)
         self.duplicate_secondary = MockValue(
@@ -480,6 +524,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
 
         assert values.primary is self.primary
@@ -551,6 +596,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         self.hass.block_till_done()
 
@@ -589,6 +635,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         values._check_entity_ready()
         self.hass.block_till_done()
@@ -598,7 +645,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
     @patch.object(zwave, 'get_platform')
     @patch.object(zwave, 'discovery')
     def test_entity_workaround_component(self, discovery, get_platform):
-        """Test ignore workaround."""
+        """Test component workaround."""
         discovery.async_load_platform.return_value = mock_coro()
         mock_platform = MagicMock()
         get_platform.return_value = mock_platform
@@ -625,6 +672,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         values._check_entity_ready()
         self.hass.block_till_done()
@@ -656,6 +704,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         values._check_entity_ready()
         self.hass.block_till_done()
@@ -679,8 +728,38 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         values._check_entity_ready()
+        self.hass.block_till_done()
+
+        assert not discovery.async_load_platform.called
+
+    @patch.object(zwave, 'get_platform')
+    @patch.object(zwave, 'discovery')
+    def test_entity_config_ignore_with_registry(self, discovery, get_platform):
+        """Test ignore config.
+
+        The case when the device is in entity registry.
+        """
+        self.node.values = {
+            self.primary.value_id: self.primary,
+            self.secondary.value_id: self.secondary,
+        }
+        self.device_config = {'mock_component.registry_id': {
+            zwave.CONF_IGNORED: True
+        }}
+        self.registry.async_get_or_create(
+            'mock_component', zwave.DOMAIN, '567-1000',
+            suggested_object_id='registry_id')
+        zwave.ZWaveDeviceEntityValues(
+            hass=self.hass,
+            schema=self.mock_schema,
+            primary_value=self.primary,
+            zwave_config=self.zwave_config,
+            device_config=self.device_config,
+            registry=self.registry
+        )
         self.hass.block_till_done()
 
         assert not discovery.async_load_platform.called
@@ -702,6 +781,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         self.hass.block_till_done()
 
@@ -729,6 +809,7 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
             primary_value=self.primary,
             zwave_config=self.zwave_config,
             device_config=self.device_config,
+            registry=self.registry
         )
         values._check_entity_ready()
         self.hass.block_till_done()
@@ -1094,20 +1175,18 @@ class TestZWaveServices(unittest.TestCase):
             assert mock_logger.info.mock_calls[0][1][3] == 2345
 
     def test_print_node(self):
-        """Test zwave print_config_parameter service."""
-        node1 = MockNode(node_id=14)
-        node2 = MockNode(node_id=15)
-        self.zwave_network.nodes = {14: node1, 15: node2}
+        """Test zwave print_node_parameter service."""
+        node = MockNode(node_id=14)
 
-        with patch.object(zwave, 'pprint') as mock_pprint:
+        self.zwave_network.nodes = {14: node}
+
+        with self.assertLogs(level='INFO') as mock_logger:
             self.hass.services.call('zwave', 'print_node', {
-                const.ATTR_NODE_ID: 15,
+                const.ATTR_NODE_ID: 14
             })
             self.hass.block_till_done()
 
-            assert mock_pprint.called
-            assert len(mock_pprint.mock_calls) == 1
-            assert mock_pprint.mock_calls[0][1][0]['node_id'] == 15
+            self.assertIn("FOUND NODE ", mock_logger.output[1])
 
     def test_set_wakeup(self):
         """Test zwave set_wakeup service."""

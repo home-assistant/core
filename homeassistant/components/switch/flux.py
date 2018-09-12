@@ -72,7 +72,8 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
             turn_on(hass, light,
                     xy_color=[x_val, y_val],
                     brightness=brightness,
-                    transition=transition)
+                    transition=transition,
+                    white_value=brightness)
 
 
 def set_lights_temp(hass, lights, mired, brightness, transition):
@@ -94,8 +95,7 @@ def set_lights_rgb(hass, lights, rgb, transition):
                     transition=transition)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Flux switches."""
     name = config.get(CONF_NAME)
     lights = config.get(CONF_LIGHTS)
@@ -113,7 +113,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                       start_colortemp, sunset_colortemp, stop_colortemp,
                       brightness, disable_brightness_adjust, mode, interval,
                       transition)
-    add_devices([flux])
+    add_entities([flux])
 
     def update(call=None):
         """Update lights."""
@@ -218,7 +218,6 @@ class FluxSwitch(SwitchDevice):
                 else:
                     sunset_time = sunset
 
-                # pylint: disable=no-member
                 night_length = int(stop_time.timestamp() -
                                    sunset_time.timestamp())
                 seconds_from_sunset = int(now.timestamp() -

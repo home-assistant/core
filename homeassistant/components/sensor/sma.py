@@ -64,7 +64,8 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up SMA WebConnect sensor."""
     import pysma
 
@@ -93,7 +94,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensor_defs = {name: val for name, val in sensor_defs.items()
                    if name in used_sensors}
 
-    async_add_devices(hass_sensors)
+    async_add_entities(hass_sensors)
 
     # Init the SMA interface
     session = async_get_clientsession(hass)
@@ -198,5 +199,4 @@ class SMAsensor(Entity):
             update = True
             self._state = new_state
 
-        return self.async_update_ha_state() if update else None \
-            # pylint: disable=protected-access
+        return self.async_update_ha_state() if update else None

@@ -20,6 +20,7 @@ ATTR_POLL_INTENSITY = "poll_intensity"
 ATTR_VALUE_INDEX = "value_index"
 ATTR_VALUE_INSTANCE = "value_instance"
 NETWORK_READY_WAIT_SECS = 300
+NODE_READY_WAIT_SECS = 30
 
 DISCOVERY_DEVICE = 'device'
 
@@ -51,6 +52,7 @@ SERVICE_RENAME_VALUE = "rename_value"
 SERVICE_REFRESH_ENTITY = "refresh_entity"
 SERVICE_REFRESH_NODE = "refresh_node"
 SERVICE_RESET_NODE_METERS = "reset_node_meters"
+SERVICE_UPDATE_CONFIG = "update_config"
 
 EVENT_SCENE_ACTIVATED = "zwave.scene_activated"
 EVENT_NODE_EVENT = "zwave.node_event"
@@ -343,7 +345,6 @@ DISC_SPECIFIC_DEVICE_CLASS = "specific_device_class"
 DISC_TYPE = "type"
 DISC_VALUES = "values"
 
-# noqa
 # https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L49
 # See also:
 # https://github.com/OpenZWave/open-zwave/blob/67f180eb565f0054f517ff395c71ecd706f6a837/cpp/src/command_classes/Alarm.cpp#L275

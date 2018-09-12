@@ -15,13 +15,13 @@ import homeassistant.util.color as color_util
 DEPENDENCIES = ['hive']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive light devices."""
     if discovery_info is None:
         return
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveDeviceLight(session, discovery_info)])
+    add_entities([HiveDeviceLight(session, discovery_info)])
 
 
 class HiveDeviceLight(Light):
@@ -34,6 +34,7 @@ class HiveDeviceLight(Light):
         self.device_type = hivedevice["HA_DeviceType"]
         self.light_device_type = hivedevice["Hive_Light_DeviceType"]
         self.session = hivesession
+        self.attributes = {}
         self.data_updatesource = '{}.{}'.format(self.device_type,
                                                 self.node_id)
         self.session.entities.append(self)
@@ -47,6 +48,11 @@ class HiveDeviceLight(Light):
     def name(self):
         """Return the display name of this light."""
         return self.node_name
+
+    @property
+    def device_state_attributes(self):
+        """Show Device Attributes."""
+        return self.attributes
 
     @property
     def brightness(self):
@@ -136,3 +142,5 @@ class HiveDeviceLight(Light):
     def update(self):
         """Update all Node data from Hive."""
         self.session.core.update_data(self.node_id)
+        self.attributes = self.session.attributes.state_attributes(
+            self.node_id)

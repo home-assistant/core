@@ -19,12 +19,12 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['beautifulsoup4==4.6.0']
+REQUIREMENTS = ['beautifulsoup4==4.6.3']
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_SELECT = 'select'
 CONF_ATTR = 'attribute'
+CONF_SELECT = 'select'
 
 DEFAULT_NAME = 'Web scrape'
 DEFAULT_VERIFY_SSL = True
@@ -44,7 +44,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Web scrape sensor."""
     name = config.get(CONF_NAME)
     resource = config.get(CONF_RESOURCE)
@@ -74,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Unable to fetch data from %s", resource)
         return False
 
-    add_devices([
+    add_entities([
         ScrapeSensor(rest, name, select, attr, value_template, unit)], True)
 
 

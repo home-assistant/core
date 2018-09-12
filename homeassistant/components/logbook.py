@@ -4,45 +4,49 @@ Event parser and human readable log generator.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/logbook/
 """
-import asyncio
-import logging
 from datetime import timedelta
 from itertools import groupby
+import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.components import sun
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, EVENT_STATE_CHANGED,
-    STATE_NOT_HOME, STATE_OFF, STATE_ON, ATTR_HIDDEN, HTTP_BAD_REQUEST,
-    EVENT_LOGBOOK_ENTRY)
-from homeassistant.core import State, split_entity_id, DOMAIN as HA_DOMAIN
-
-DOMAIN = 'logbook'
-DEPENDENCIES = ['recorder', 'frontend']
+    ATTR_DOMAIN, ATTR_ENTITY_ID, ATTR_HIDDEN, ATTR_NAME, CONF_EXCLUDE,
+    CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED, HTTP_BAD_REQUEST, STATE_NOT_HOME,
+    STATE_OFF, STATE_ON)
+from homeassistant.core import DOMAIN as HA_DOMAIN
+from homeassistant.core import State, callback, split_entity_id
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_EXCLUDE = 'exclude'
-CONF_INCLUDE = 'include'
-CONF_ENTITIES = 'entities'
+ATTR_MESSAGE = 'message'
+
 CONF_DOMAINS = 'domains'
+CONF_ENTITIES = 'entities'
+CONTINUOUS_DOMAINS = ['proximity', 'sensor']
+
+DEPENDENCIES = ['recorder', 'frontend']
+
+DOMAIN = 'logbook'
+
+GROUP_BY_MINUTES = 15
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         CONF_EXCLUDE: vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
-                                                            [cv.string])
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
         }),
         CONF_INCLUDE: vol.Schema({
             vol.Optional(CONF_ENTITIES, default=[]): cv.entity_ids,
-            vol.Optional(CONF_DOMAINS, default=[]): vol.All(cv.ensure_list,
-                                                            [cv.string])
+            vol.Optional(CONF_DOMAINS, default=[]):
+                vol.All(cv.ensure_list, [cv.string])
         })
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -51,15 +55,6 @@ ALL_EVENT_TYPES = [
     EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 ]
-
-GROUP_BY_MINUTES = 15
-
-CONTINUOUS_DOMAINS = ['proximity', 'sensor']
-
-ATTR_NAME = 'name'
-ATTR_MESSAGE = 'message'
-ATTR_DOMAIN = 'domain'
-ATTR_ENTITY_ID = 'entity_id'
 
 LOG_MESSAGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_NAME): cv.string,
@@ -88,8 +83,7 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
 
 
-@asyncio.coroutine
-def setup(hass, config):
+async def async_setup(hass, config):
     """Listen for download events to download files."""
     @callback
     def log_message(service):
@@ -105,8 +99,8 @@ def setup(hass, config):
 
     hass.http.register_view(LogbookView(config.get(DOMAIN, {})))
 
-    yield from hass.components.frontend.async_register_built_in_panel(
-        'logbook', 'logbook', 'mdi:format-list-bulleted-type')
+    await hass.components.frontend.async_register_built_in_panel(
+        'logbook', 'logbook', 'hass:format-list-bulleted-type')
 
     hass.services.async_register(
         DOMAIN, 'log', log_message, schema=LOG_MESSAGE_SCHEMA)
@@ -124,8 +118,7 @@ class LogbookView(HomeAssistantView):
         """Initialize the logbook view."""
         self.config = config
 
-    @asyncio.coroutine
-    def get(self, request, datetime=None):
+    async def get(self, request, datetime=None):
         """Retrieve logbook entries."""
         if datetime:
             datetime = dt_util.parse_datetime(datetime)
@@ -144,11 +137,10 @@ class LogbookView(HomeAssistantView):
             return self.json(list(
                 _get_events(hass, self.config, start_day, end_day)))
 
-        response = yield from hass.async_add_job(json_events)
-        return response
+        return await hass.async_add_job(json_events)
 
 
-class Entry(object):
+class Entry:
     """A human readable version of the log."""
 
     def __init__(self, when=None, name=None, message=None, domain=None,
@@ -380,7 +372,6 @@ def _exclude_events(events, config):
     return filtered_events
 
 
-# pylint: disable=too-many-return-statements
 def _entry_message_from_state(domain, state):
     """Convert a state to a message for the logbook."""
     # We pass domain in so we don't have to split entity_id again
@@ -389,16 +380,16 @@ def _entry_message_from_state(domain, state):
             return 'is away'
         return 'is at {}'.format(state.state)
 
-    elif domain == 'sun':
+    if domain == 'sun':
         if state.state == sun.STATE_ABOVE_HORIZON:
             return 'has risen'
         return 'has set'
 
-    elif state.state == STATE_ON:
+    if state.state == STATE_ON:
         # Future: combine groups and its entity entries ?
         return "turned on"
 
-    elif state.state == STATE_OFF:
+    if state.state == STATE_OFF:
         return "turned off"
 
     return "changed to {}".format(state.state)

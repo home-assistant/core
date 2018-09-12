@@ -16,11 +16,11 @@ DEPENDENCIES = ['vera']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vera covers."""
-    add_devices(
-        VeraCover(device, hass.data[VERA_CONTROLLER]) for
-        device in hass.data[VERA_DEVICES]['cover'])
+    add_entities(
+        [VeraCover(device, hass.data[VERA_CONTROLLER]) for
+         device in hass.data[VERA_DEVICES]['cover']], True)
 
 
 class VeraCover(VeraDevice, CoverDevice):

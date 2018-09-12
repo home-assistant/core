@@ -45,7 +45,7 @@ class TestMQTTComponent(unittest.TestCase):
     """Test the MQTT component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
         self.calls = []
@@ -56,7 +56,7 @@ class TestMQTTComponent(unittest.TestCase):
 
     @callback
     def record_calls(self, *args):
-        """Helper for recording calls."""
+        """Record calls."""
         self.calls.append(args)
 
     def aiohttp_client_stops_on_home_assistant_start(self):
@@ -131,10 +131,56 @@ class TestMQTTComponent(unittest.TestCase):
             self.hass.data['mqtt'].async_publish.call_args[0][2], 2)
         self.assertFalse(self.hass.data['mqtt'].async_publish.call_args[0][3])
 
-    def test_invalid_mqtt_topics(self):
-        """Test invalid topics."""
+    def test_validate_topic(self):
+        """Test topic name/filter validation."""
+        # Invalid UTF-8, must not contain U+D800 to U+DFFF.
+        self.assertRaises(vol.Invalid, mqtt.valid_topic, '\ud800')
+        self.assertRaises(vol.Invalid, mqtt.valid_topic, '\udfff')
+        # Topic MUST NOT be empty
+        self.assertRaises(vol.Invalid, mqtt.valid_topic, '')
+        # Topic MUST NOT be longer than 65535 encoded bytes.
+        self.assertRaises(vol.Invalid, mqtt.valid_topic, 'ü' * 32768)
+        # UTF-8 MUST NOT include null character
+        self.assertRaises(vol.Invalid, mqtt.valid_topic, 'bad\0one')
+
+        # Topics "SHOULD NOT" include these special characters
+        # (not MUST NOT, RFC2119). The receiver MAY close the connection.
+        mqtt.valid_topic('\u0001')
+        mqtt.valid_topic('\u001F')
+        mqtt.valid_topic('\u009F')
+        mqtt.valid_topic('\u009F')
+        mqtt.valid_topic('\uffff')
+
+    def test_validate_subscribe_topic(self):
+        """Test invalid subscribe topics."""
+        mqtt.valid_subscribe_topic('#')
+        mqtt.valid_subscribe_topic('sport/#')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'sport/#/')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'foo/bar#')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'foo/#/bar')
+
+        mqtt.valid_subscribe_topic('+')
+        mqtt.valid_subscribe_topic('+/tennis/#')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'sport+')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'sport+/')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'sport/+1')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'sport/+#')
+        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad+topic')
+        mqtt.valid_subscribe_topic('sport/+/player1')
+        mqtt.valid_subscribe_topic('/finance')
+        mqtt.valid_subscribe_topic('+/+')
+        mqtt.valid_subscribe_topic('$SYS/#')
+
+    def test_validate_publish_topic(self):
+        """Test invalid publish topics."""
+        self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'pub+')
+        self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'pub/+')
+        self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, '1#')
         self.assertRaises(vol.Invalid, mqtt.valid_publish_topic, 'bad+topic')
-        self.assertRaises(vol.Invalid, mqtt.valid_subscribe_topic, 'bad\0one')
+        mqtt.valid_publish_topic('//')
+
+        # Topic names beginning with $ SHOULD NOT be used, but can
+        mqtt.valid_publish_topic('$SYS/')
 
 
 # pylint: disable=invalid-name
@@ -142,7 +188,7 @@ class TestMQTTCallbacks(unittest.TestCase):
     """Test the MQTT callbacks."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_client(self.hass)
         self.calls = []
@@ -153,7 +199,7 @@ class TestMQTTCallbacks(unittest.TestCase):
 
     @callback
     def record_calls(self, *args):
-        """Helper for recording calls."""
+        """Record calls."""
         self.calls.append(args)
 
     def aiohttp_client_starts_on_home_assistant_mqtt_setup(self):
@@ -227,6 +273,15 @@ class TestMQTTCallbacks(unittest.TestCase):
         mqtt.subscribe(self.hass, 'test-topic/+/on', self.record_calls)
 
         fire_mqtt_message(self.hass, 'test-topic/bier', 'test-payload')
+
+        self.hass.block_till_done()
+        self.assertEqual(0, len(self.calls))
+
+    def test_subscribe_topic_level_wildcard_root_topic_no_subtree_match(self):
+        """Test the subscription of wildcard topics."""
+        mqtt.subscribe(self.hass, 'test-topic/#', self.record_calls)
+
+        fire_mqtt_message(self.hass, 'test-topic-123', 'test-payload')
 
         self.hass.block_till_done()
         self.assertEqual(0, len(self.calls))

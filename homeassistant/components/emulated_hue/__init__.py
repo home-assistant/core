@@ -6,6 +6,7 @@ https://home-assistant.io/components/emulated_hue/
 """
 import logging
 
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import util
@@ -13,14 +14,13 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.components.http import REQUIREMENTS  # NOQA
-from homeassistant.components.http import HomeAssistantHTTP
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.deprecation import get_deprecated
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 from .hue_api import (
     HueUsernameView, HueAllLightsStateView, HueOneLightStateView,
-    HueOneLightChangeView)
+    HueOneLightChangeView, HueGroupView)
 from .upnp import DescriptionXmlView, UPNPResponderThread
 
 DOMAIN = 'emulated_hue'
@@ -85,25 +85,17 @@ def setup(hass, yaml_config):
     """Activate the emulated_hue component."""
     config = Config(hass, yaml_config.get(DOMAIN, {}))
 
-    server = HomeAssistantHTTP(
-        hass,
-        server_host=config.host_ip_addr,
-        server_port=config.listen_port,
-        api_password=None,
-        ssl_certificate=None,
-        ssl_key=None,
-        cors_origins=None,
-        use_x_forwarded_for=False,
-        trusted_networks=[],
-        login_threshold=0,
-        is_ban_enabled=False
-    )
+    app = web.Application()
+    app['hass'] = hass
+    handler = None
+    server = None
 
-    server.register_view(DescriptionXmlView(config))
-    server.register_view(HueUsernameView)
-    server.register_view(HueAllLightsStateView(config))
-    server.register_view(HueOneLightStateView(config))
-    server.register_view(HueOneLightChangeView(config))
+    DescriptionXmlView(config).register(app, app.router)
+    HueUsernameView().register(app, app.router)
+    HueAllLightsStateView(config).register(app, app.router)
+    HueOneLightStateView(config).register(app, app.router)
+    HueOneLightChangeView(config).register(app, app.router)
+    HueGroupView(config).register(app, app.router)
 
     upnp_listener = UPNPResponderThread(
         config.host_ip_addr, config.listen_port,
@@ -113,21 +105,38 @@ def setup(hass, yaml_config):
     async def stop_emulated_hue_bridge(event):
         """Stop the emulated hue bridge."""
         upnp_listener.stop()
-        await server.stop()
+        if server:
+            server.close()
+            await server.wait_closed()
+        await app.shutdown()
+        if handler:
+            await handler.shutdown(10)
+        await app.cleanup()
 
     async def start_emulated_hue_bridge(event):
         """Start the emulated hue bridge."""
         upnp_listener.start()
-        await server.start()
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
+        nonlocal handler
+        nonlocal server
+
+        handler = app.make_handler(loop=hass.loop)
+
+        try:
+            server = await hass.loop.create_server(
+                handler, config.host_ip_addr, config.listen_port)
+        except OSError as error:
+            _LOGGER.error("Failed to create HTTP server at port %d: %s",
+                          config.listen_port, error)
+        else:
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, stop_emulated_hue_bridge)
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_emulated_hue_bridge)
 
     return True
 
 
-class Config(object):
+class Config:
     """Hold configuration variables for the emulated hue bridge."""
 
     def __init__(self, hass, conf):
@@ -157,10 +166,6 @@ class Config(object):
             _LOGGER.info(
                 "Listen port not specified, defaulting to %s",
                 self.listen_port)
-
-        if self.type == TYPE_GOOGLE and self.listen_port != 80:
-            _LOGGER.warning("When targeting Google Home, listening port has "
-                            "to be port 80")
 
         # Get whether or not UPNP binds to multicast address (239.255.255.250)
         # or to the unicast address (host_ip_addr)

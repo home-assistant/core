@@ -11,7 +11,7 @@ import random
 
 import async_timeout
 
-import homeassistant.components.hue as hue
+from homeassistant.components import hue
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
     ATTR_TRANSITION, ATTR_HS_COLOR, EFFECT_COLORLOOP, EFFECT_RANDOM,
@@ -47,13 +47,19 @@ ATTR_IS_HUE_GROUP = 'is_hue_group'
 GROUP_MIN_API_VERSION = (1, 13, 0)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the Hue lights."""
-    if discovery_info is None:
-        return
+    """Old way of setting up Hue lights.
 
-    bridge = hass.data[hue.DOMAIN][discovery_info['host']]
+    Can only be called when a user accidentally mentions hue platform in their
+    config. But even in that case it would have been ignored.
+    """
+    pass
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the Hue lights from a config entry."""
+    bridge = hass.data[hue.DOMAIN][config_entry.data['host']]
     cur_lights = {}
     cur_groups = {}
 
@@ -131,13 +137,13 @@ async def async_setup_platform(hass, config, async_add_devices,
         """
         tasks = []
         tasks.append(async_update_items(
-            hass, bridge, async_add_devices, request_update,
+            hass, bridge, async_add_entities, request_update,
             False, cur_lights, light_progress
         ))
 
         if allow_groups:
             tasks.append(async_update_items(
-                hass, bridge, async_add_devices, request_update,
+                hass, bridge, async_add_entities, request_update,
                 True, cur_groups, group_progress
             ))
 
@@ -146,7 +152,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     await update_bridge()
 
 
-async def async_update_items(hass, bridge, async_add_devices,
+async def async_update_items(hass, bridge, async_add_entities,
                              request_bridge_update, is_group, current,
                              progress_waiting):
     """Update either groups or lights from the bridge."""
@@ -189,7 +195,7 @@ async def async_update_items(hass, bridge, async_add_devices,
             current[item_id].async_schedule_update_ha_state()
 
     if new_lights:
-        async_add_devices(new_lights)
+        async_add_entities(new_lights)
 
 
 class HueLight(Light):
@@ -236,26 +242,13 @@ class HueLight(Light):
     @property
     def hs_color(self):
         """Return the hs color value."""
-        # pylint: disable=redefined-outer-name
         mode = self._color_mode
-
-        if mode not in ('hs', 'xy'):
-            return
-
         source = self.light.action if self.is_group else self.light.state
 
-        hue = source.get('hue')
-        sat = source.get('sat')
+        if mode in ('xy', 'hs') and 'xy' in source:
+            return color.color_xy_to_hs(*source['xy'])
 
-        # Sometimes the state will not include valid hue/sat values.
-        # Reported as issue 13434
-        if hue is not None and sat is not None:
-            return hue / 65535 * 360, sat / 255 * 100
-
-        if 'xy' not in source:
-            return None
-
-        return color.color_xy_to_hs(*source['xy'])
+        return None
 
     @property
     def color_temp(self):
@@ -292,6 +285,25 @@ class HueLight(Light):
         """Return the list of supported effects."""
         return [EFFECT_COLORLOOP, EFFECT_RANDOM]
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+        if self.light.type in ('LightGroup', 'Room'):
+            return None
+
+        return {
+            'identifiers': {
+                (hue.DOMAIN, self.unique_id)
+            },
+            'name': self.name,
+            'manufacturer': self.light.manufacturername,
+            # productname added in Hue Bridge API 1.24
+            # (published 03/05/2018)
+            'model': self.light.productname or self.light.modelid,
+            # Not yet exposed as properties in aiohue
+            'sw_version': self.light.raw['swversion'],
+        }
+
     async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         command = {'on': True}
@@ -300,8 +312,14 @@ class HueLight(Light):
             command['transitiontime'] = int(kwargs[ATTR_TRANSITION] * 10)
 
         if ATTR_HS_COLOR in kwargs:
-            command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
-            command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+            if self.is_osram:
+                command['hue'] = int(kwargs[ATTR_HS_COLOR][0] / 360 * 65535)
+                command['sat'] = int(kwargs[ATTR_HS_COLOR][1] / 100 * 255)
+            else:
+                # Philips hue bulb models respond differently to hue/sat
+                # requests, so we convert to XY first to ensure a consistent
+                # color.
+                command['xy'] = color.color_hs_to_xy(*kwargs[ATTR_HS_COLOR])
         elif ATTR_COLOR_TEMP in kwargs:
             temp = kwargs[ATTR_COLOR_TEMP]
             command['ct'] = max(self.min_mireds, min(temp, self.max_mireds))

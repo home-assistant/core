@@ -6,6 +6,7 @@ https://home-assistant.io/components/google_assistant/
 """
 import asyncio
 import logging
+from typing import Dict, Any
 
 import aiohttp
 import async_timeout
@@ -13,9 +14,7 @@ import async_timeout
 import voluptuous as vol
 
 # Typing imports
-# pylint: disable=using-constant-test,unused-import,ungrouped-imports
-from homeassistant.core import HomeAssistant  # NOQA
-from typing import Dict, Any  # NOQA
+from homeassistant.core import HomeAssistant
 
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
@@ -70,8 +69,7 @@ def request_sync(hass):
     hass.services.call(DOMAIN, SERVICE_REQUEST_SYNC)
 
 
-@asyncio.coroutine
-def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
+async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     """Activate Google Actions component."""
     config = yaml_config.get(DOMAIN, {})
     agent_user_id = config.get(CONF_AGENT_USER_ID)
@@ -79,20 +77,19 @@ def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
     hass.http.register_view(GoogleAssistantAuthView(hass, config))
     async_register_http(hass, config)
 
-    @asyncio.coroutine
-    def request_sync_service_handler(call):
+    async def request_sync_service_handler(call):
         """Handle request sync service calls."""
         websession = async_get_clientsession(hass)
         try:
             with async_timeout.timeout(5, loop=hass.loop):
-                res = yield from websession.post(
+                res = await websession.post(
                     REQUEST_SYNC_BASE_URL,
                     params={'key': api_key},
                     json={'agent_user_id': agent_user_id})
                 _LOGGER.info("Submitted request_sync request to Google")
                 res.raise_for_status()
         except aiohttp.ClientResponseError:
-            body = yield from res.read()
+            body = await res.read()
             _LOGGER.error(
                 'request_sync request failed: %d %s', res.status, body)
         except (asyncio.TimeoutError, aiohttp.ClientError):

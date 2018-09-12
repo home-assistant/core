@@ -23,7 +23,7 @@ from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.event import async_track_state_change
 from homeassistant.util import utcnow
 
-REQUIREMENTS = ['numpy==1.14.2']
+REQUIREMENTS = ['numpy==1.15.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,8 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the trend sensors."""
     sensors = []
 
@@ -81,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not sensors:
         _LOGGER.error("No sensors added")
         return False
-    add_devices(sensors)
+    add_entities(sensors)
     return True
 
 

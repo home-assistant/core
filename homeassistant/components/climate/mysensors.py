@@ -26,24 +26,36 @@ DICT_MYS_TO_HA = {
     'Off': STATE_OFF,
 }
 
-SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_TARGET_TEMPERATURE_HIGH |
-                 SUPPORT_TARGET_TEMPERATURE_LOW | SUPPORT_FAN_MODE |
-                 SUPPORT_OPERATION_MODE)
+FAN_LIST = ['Auto', 'Min', 'Normal', 'Max']
+OPERATION_LIST = [STATE_OFF, STATE_AUTO, STATE_COOL, STATE_HEAT]
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Set up the MySensors climate."""
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the mysensors climate."""
     mysensors.setup_mysensors_platform(
-        hass, DOMAIN, discovery_info, MySensorsHVAC, add_devices=add_devices)
+        hass, DOMAIN, discovery_info, MySensorsHVAC,
+        async_add_entities=async_add_entities)
 
 
-class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
+class MySensorsHVAC(mysensors.device.MySensorsEntity, ClimateDevice):
     """Representation of a MySensors HVAC."""
 
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return SUPPORT_FLAGS
+        features = SUPPORT_OPERATION_MODE
+        set_req = self.gateway.const.SetReq
+        if set_req.V_HVAC_SPEED in self._values:
+            features = features | SUPPORT_FAN_MODE
+        if (set_req.V_HVAC_SETPOINT_COOL in self._values and
+                set_req.V_HVAC_SETPOINT_HEAT in self._values):
+            features = (
+                features | SUPPORT_TARGET_TEMPERATURE_HIGH |
+                SUPPORT_TARGET_TEMPERATURE_LOW)
+        else:
+            features = features | SUPPORT_TARGET_TEMPERATURE
+        return features
 
     @property
     def assumed_state(self):
@@ -101,7 +113,7 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
     @property
     def operation_list(self):
         """List of available operation modes."""
-        return [STATE_OFF, STATE_AUTO, STATE_COOL, STATE_HEAT]
+        return OPERATION_LIST
 
     @property
     def current_fan_mode(self):
@@ -111,9 +123,9 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
     @property
     def fan_list(self):
         """List of available fan modes."""
-        return ['Auto', 'Min', 'Normal', 'Max']
+        return FAN_LIST
 
-    def set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -141,9 +153,9 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
             if self.gateway.optimistic:
                 # Optimistically assume that device has changed state
                 self._values[value_type] = value
-                self.schedule_update_ha_state()
+                self.async_schedule_update_ha_state()
 
-    def set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode):
         """Set new target temperature."""
         set_req = self.gateway.const.SetReq
         self.gateway.set_child_value(
@@ -151,9 +163,9 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
             self._values[set_req.V_HVAC_SPEED] = fan_mode
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def set_operation_mode(self, operation_mode):
+    async def async_set_operation_mode(self, operation_mode):
         """Set new target temperature."""
         self.gateway.set_child_value(
             self.node_id, self.child_id, self.value_type,
@@ -161,10 +173,10 @@ class MySensorsHVAC(mysensors.MySensorsEntity, ClimateDevice):
         if self.gateway.optimistic:
             # Optimistically assume that device has changed state
             self._values[self.value_type] = operation_mode
-            self.schedule_update_ha_state()
+            self.async_schedule_update_ha_state()
 
-    def update(self):
+    async def async_update(self):
         """Update the controller with the latest value from a sensor."""
-        super().update()
+        await super().async_update()
         self._values[self.value_type] = DICT_MYS_TO_HA[
             self._values[self.value_type]]

@@ -19,38 +19,53 @@ DENSITY = 'density'
 ATTR_DENSITY = 'Density'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
         for device in gateway.devices['binary_sensor']:
             model = device['model']
-            if model in ['motion', 'sensor_motion.aq2']:
+            if model in ['motion', 'sensor_motion', 'sensor_motion.aq2']:
                 devices.append(XiaomiMotionSensor(device, hass, gateway))
-            elif model in ['magnet', 'sensor_magnet.aq2']:
+            elif model in ['magnet', 'sensor_magnet', 'sensor_magnet.aq2']:
                 devices.append(XiaomiDoorSensor(device, gateway))
             elif model == 'sensor_wleak.aq1':
                 devices.append(XiaomiWaterLeakSensor(device, gateway))
-            elif model == 'smoke':
+            elif model in ['smoke', 'sensor_smoke']:
                 devices.append(XiaomiSmokeSensor(device, gateway))
-            elif model == 'natgas':
+            elif model in ['natgas', 'sensor_natgas']:
                 devices.append(XiaomiNatgasSensor(device, gateway))
-            elif model in ['switch', 'sensor_switch.aq2', 'sensor_switch.aq3']:
-                devices.append(XiaomiButton(device, 'Switch', 'status',
+            elif model in ['switch', 'sensor_switch',
+                           'sensor_switch.aq2', 'sensor_switch.aq3']:
+                if 'proto' not in device or int(device['proto'][0:1]) == 1:
+                    data_key = 'status'
+                else:
+                    data_key = 'button_0'
+                devices.append(XiaomiButton(device, 'Switch', data_key,
                                             hass, gateway))
-            elif model == '86sw1':
-                devices.append(XiaomiButton(device, 'Wall Switch', 'channel_0',
+            elif model in ['86sw1', 'sensor_86sw1', 'sensor_86sw1.aq1']:
+                if 'proto' not in device or int(device['proto'][0:1]) == 1:
+                    data_key = 'channel_0'
+                else:
+                    data_key = 'button_0'
+                devices.append(XiaomiButton(device, 'Wall Switch', data_key,
                                             hass, gateway))
-            elif model == '86sw2':
+            elif model in ['86sw2', 'sensor_86sw2', 'sensor_86sw2.aq1']:
+                if 'proto' not in device or int(device['proto'][0:1]) == 1:
+                    data_key_left = 'channel_0'
+                    data_key_right = 'channel_1'
+                else:
+                    data_key_left = 'button_0'
+                    data_key_right = 'button_1'
                 devices.append(XiaomiButton(device, 'Wall Switch (Left)',
-                                            'channel_0', hass, gateway))
+                                            data_key_left, hass, gateway))
                 devices.append(XiaomiButton(device, 'Wall Switch (Right)',
-                                            'channel_1', hass, gateway))
+                                            data_key_right, hass, gateway))
                 devices.append(XiaomiButton(device, 'Wall Switch (Both)',
                                             'dual_channel', hass, gateway))
-            elif model == 'cube':
+            elif model in ['cube', 'sensor_cube', 'sensor_cube.aqgl01']:
                 devices.append(XiaomiCube(device, hass, gateway))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
@@ -110,12 +125,12 @@ class XiaomiNatgasSensor(XiaomiBinarySensor):
         if value is None:
             return False
 
-        if value == '1':
+        if value in ('1', '2'):
             if self._state:
                 return False
             self._state = True
             return True
-        elif value == '0':
+        if value == '0':
             if self._state:
                 self._state = False
                 return True
@@ -129,8 +144,12 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
         """Initialize the XiaomiMotionSensor."""
         self._hass = hass
         self._no_motion_since = 0
+        if 'proto' not in device or int(device['proto'][0:1]) == 1:
+            data_key = 'status'
+        else:
+            data_key = 'motion_status'
         XiaomiBinarySensor.__init__(self, device, 'Motion Sensor', xiaomi_hub,
-                                    'status', 'motion')
+                                    data_key, 'motion')
 
     @property
     def device_state_attributes(self):
@@ -171,7 +190,7 @@ class XiaomiMotionSensor(XiaomiBinarySensor):
                 return False
             self._state = True
             return True
-        elif value == NO_MOTION:
+        if value == NO_MOTION:
             if not self._state:
                 return False
             self._state = False
@@ -184,8 +203,12 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
     def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiDoorSensor."""
         self._open_since = 0
+        if 'proto' not in device or int(device['proto'][0:1]) == 1:
+            data_key = 'status'
+        else:
+            data_key = 'window_status'
         XiaomiBinarySensor.__init__(self, device, 'Door Window Sensor',
-                                    xiaomi_hub, 'status', 'opening')
+                                    xiaomi_hub, data_key, 'opening')
 
     @property
     def device_state_attributes(self):
@@ -211,7 +234,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor):
                 return False
             self._state = True
             return True
-        elif value == 'close':
+        if value == 'close':
             self._open_since = 0
             if self._state:
                 self._state = False
@@ -224,8 +247,12 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
 
     def __init__(self, device, xiaomi_hub):
         """Initialize the XiaomiWaterLeakSensor."""
+        if 'proto' not in device or int(device['proto'][0:1]) == 1:
+            data_key = 'status'
+        else:
+            data_key = 'wleak_status'
         XiaomiBinarySensor.__init__(self, device, 'Water Leak Sensor',
-                                    xiaomi_hub, 'status', 'moisture')
+                                    xiaomi_hub, data_key, 'moisture')
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -241,7 +268,7 @@ class XiaomiWaterLeakSensor(XiaomiBinarySensor):
                 return False
             self._state = True
             return True
-        elif value == 'no_leak':
+        if value == 'no_leak':
             if self._state:
                 self._state = False
                 return True
@@ -272,12 +299,12 @@ class XiaomiSmokeSensor(XiaomiBinarySensor):
         if value is None:
             return False
 
-        if value == '1':
+        if value in ('1', '2'):
             if self._state:
                 return False
             self._state = True
             return True
-        elif value == '0':
+        if value == '0':
             if self._state:
                 self._state = False
                 return True
@@ -321,6 +348,8 @@ class XiaomiButton(XiaomiBinarySensor):
             click_type = 'both'
         elif value == 'shake':
             click_type = 'shake'
+        elif value in ['long_click', 'long_both_click']:
+            return False
         else:
             _LOGGER.warning("Unsupported click_type detected: %s", value)
             return False
@@ -344,8 +373,12 @@ class XiaomiCube(XiaomiBinarySensor):
         self._hass = hass
         self._last_action = None
         self._state = False
+        if 'proto' not in device or int(device['proto'][0:1]) == 1:
+            data_key = 'status'
+        else:
+            data_key = 'cube_status'
         XiaomiBinarySensor.__init__(self, device, 'Cube', xiaomi_hub,
-                                    None, None)
+                                    data_key, None)
 
     @property
     def device_state_attributes(self):
@@ -356,12 +389,12 @@ class XiaomiCube(XiaomiBinarySensor):
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
-        if 'status' in data:
+        if self._data_key in data:
             self._hass.bus.fire('cube_action', {
                 'entity_id': self.entity_id,
-                'action_type': data['status']
+                'action_type': data[self._data_key]
             })
-            self._last_action = data['status']
+            self._last_action = data[self._data_key]
 
         if 'rotate' in data:
             self._hass.bus.fire('cube_action', {

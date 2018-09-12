@@ -25,6 +25,7 @@ from homeassistant.util import convert, dt
 
 REQUIREMENTS = [
     'google-api-python-client==1.6.4',
+    'httplib2==0.10.3',
     'oauth2client==4.0.0',
 ]
 
@@ -44,6 +45,7 @@ CONF_ENTITIES = 'entities'
 CONF_TRACK = 'track'
 CONF_SEARCH = 'search'
 CONF_OFFSET = 'offset'
+CONF_IGNORE_AVAILABILITY = 'ignore_availability'
 
 DEFAULT_CONF_TRACK_NEW = True
 DEFAULT_CONF_OFFSET = '!!'
@@ -74,8 +76,9 @@ _SINGLE_CALSEARCH_CONFIG = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_DEVICE_ID): cv.string,
     vol.Optional(CONF_TRACK): cv.boolean,
-    vol.Optional(CONF_SEARCH): vol.Any(cv.string, None),
+    vol.Optional(CONF_SEARCH): cv.string,
     vol.Optional(CONF_OFFSET): cv.string,
+    vol.Optional(CONF_IGNORE_AVAILABILITY, default=True): cv.boolean,
 })
 
 DEVICE_SCHEMA = vol.Schema({
@@ -195,7 +198,7 @@ def setup_services(hass, track_new_found_calendars, calendar_service):
     def _scan_for_calendars(service):
         """Scan for new calendars."""
         service = calendar_service.get()
-        cal_list = service.calendarList()  # pylint: disable=no-member
+        cal_list = service.calendarList()
         calendars = cal_list.list().execute()['items']
         for calendar in calendars:
             calendar['track'] = track_new_found_calendars
@@ -228,7 +231,7 @@ def do_setup(hass, config):
     return True
 
 
-class GoogleCalendarService(object):
+class GoogleCalendarService:
     """Calendar service interface to Google."""
 
     def __init__(self, token_file):

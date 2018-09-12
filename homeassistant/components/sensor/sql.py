@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.sql/
 """
 import decimal
+import datetime
 import logging
 
 import voluptuous as vol
@@ -19,11 +20,11 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['sqlalchemy==1.2.5']
+REQUIREMENTS = ['sqlalchemy==1.2.11']
 
+CONF_COLUMN_NAME = 'column'
 CONF_QUERIES = 'queries'
 CONF_QUERY = 'query'
-CONF_COLUMN_NAME = 'column'
 
 
 def validate_sql_select(value):
@@ -34,9 +35,9 @@ def validate_sql_select(value):
 
 
 _QUERY_SCHEME = vol.Schema({
+    vol.Required(CONF_COLUMN_NAME): cv.string,
     vol.Required(CONF_NAME): cv.string,
     vol.Required(CONF_QUERY): vol.All(cv.string, validate_sql_select),
-    vol.Required(CONF_COLUMN_NAME): cv.string,
     vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
 })
@@ -47,8 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the sensor platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the SQL sensor platform."""
     db_url = config.get(CONF_DB_URL, None)
     if not db_url:
         db_url = DEFAULT_URL.format(
@@ -61,7 +62,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         engine = sqlalchemy.create_engine(db_url)
         sessionmaker = scoped_session(sessionmaker(bind=engine))
 
-        # run a dummy query just to test the db_url
+        # Run a dummy query just to test the db_url
         sess = sessionmaker()
         sess.execute("SELECT 1;")
 
@@ -86,14 +87,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             )
         queries.append(sensor)
 
-    add_devices(queries, True)
+    add_entities(queries, True)
 
 
 class SQLSensor(Entity):
-    """An SQL sensor."""
+    """Representation of an SQL sensor."""
 
     def __init__(self, name, sessmaker, query, column, unit, value_template):
-        """Initialize SQL sensor."""
+        """Initialize the SQL sensor."""
         self._name = name
         if "LIMIT" in query:
             self._query = query
@@ -145,6 +146,8 @@ class SQLSensor(Entity):
                 for key, value in res.items():
                     if isinstance(value, decimal.Decimal):
                         value = float(value)
+                    if isinstance(value, datetime.date):
+                        value = str(value)
                     self._attributes[key] = value
         except sqlalchemy.exc.SQLAlchemyError as err:
             _LOGGER.error("Error executing query %s: %s", self._query, err)

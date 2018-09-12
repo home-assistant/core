@@ -12,7 +12,8 @@ from requests.exceptions import (
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, ATTR_FORECAST_CONDITION,
+    PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
     CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, TEMP_CELSIUS,
     TEMP_FAHRENHEIT)
@@ -25,8 +26,21 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTRIBUTION = "Powered by Dark Sky"
 
-ATTR_DAILY_FORECAST_SUMMARY = 'daily_forecast_summary'
-ATTR_HOURLY_FORECAST_SUMMARY = 'hourly_forecast_summary'
+MAP_CONDITION = {
+    'clear-day': 'sunny',
+    'clear-night': 'clear-night',
+    'rain': 'rainy',
+    'snow': 'snowy',
+    'sleet': 'snowy-rainy',
+    'wind': 'windy',
+    'fog': 'fog',
+    'cloudy': 'cloudy',
+    'partly-cloudy-day': 'partlycloudy',
+    'partly-cloudy-night': 'partlycloudy',
+    'hail': 'hail',
+    'thunderstorm': 'lightning',
+    'tornado': None,
+}
 
 CONF_UNITS = 'units'
 
@@ -43,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=3)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dark Sky weather."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -56,7 +70,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     dark_sky = DarkSkyData(
         config.get(CONF_API_KEY), latitude, longitude, units)
 
-    add_devices([DarkSkyWeather(name, dark_sky)], True)
+    add_entities([DarkSkyWeather(name, dark_sky)], True)
 
 
 class DarkSkyWeather(WeatherEntity):
@@ -111,7 +125,7 @@ class DarkSkyWeather(WeatherEntity):
     @property
     def condition(self):
         """Return the weather condition."""
-        return self._ds_currently.get('summary')
+        return MAP_CONDITION.get(self._ds_currently.get('icon'))
 
     @property
     def forecast(self):
@@ -119,27 +133,11 @@ class DarkSkyWeather(WeatherEntity):
         return [{
             ATTR_FORECAST_TIME:
                 datetime.fromtimestamp(entry.d.get('time')).isoformat(),
-            ATTR_FORECAST_TEMP: entry.d.get('temperature')}
-                for entry in self._ds_hourly.data]
-
-    @property
-    def hourly_forecast_summary(self):
-        """Return a summary of the hourly forecast."""
-        return self._ds_hourly.summary
-
-    @property
-    def daily_forecast_summary(self):
-        """Return a summary of the daily forecast."""
-        return self._ds_daily.summary
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = {
-            ATTR_DAILY_FORECAST_SUMMARY: self.daily_forecast_summary,
-            ATTR_HOURLY_FORECAST_SUMMARY: self.hourly_forecast_summary
-        }
-        return attrs
+            ATTR_FORECAST_TEMP:
+                entry.d.get('temperature'),
+            ATTR_FORECAST_CONDITION:
+                MAP_CONDITION.get(entry.d.get('icon'))
+        } for entry in self._ds_hourly.data]
 
     def update(self):
         """Get the latest data from Dark Sky."""
@@ -151,7 +149,7 @@ class DarkSkyWeather(WeatherEntity):
         self._ds_daily = self._dark_sky.daily
 
 
-class DarkSkyData(object):
+class DarkSkyData:
     """Get the latest data from Dark Sky."""
 
     def __init__(self, api_key, latitude, longitude, units):

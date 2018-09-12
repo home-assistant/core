@@ -17,21 +17,22 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['holidays==0.9.4']
+REQUIREMENTS = ['holidays==0.9.6']
 
 # List of all countries currently supported by holidays
 # There seems to be no way to get the list out at runtime
-ALL_COUNTRIES = ['Australia', 'AU', 'Austria', 'AT', 'Belgium', 'BE', 'Canada',
-                 'CA', 'Colombia', 'CO', 'Czech', 'CZ', 'Denmark', 'DK',
-                 'England', 'EuropeanCentralBank', 'ECB', 'TAR', 'Finland',
-                 'FI', 'France', 'FRA', 'Germany', 'DE', 'Ireland',
+ALL_COUNTRIES = ['Argentina', 'AR', 'Australia', 'AU', 'Austria', 'AT',
+                 'Belgium', 'BE', 'Canada', 'CA', 'Colombia', 'CO', 'Czech',
+                 'CZ', 'Denmark', 'DK', 'England', 'EuropeanCentralBank',
+                 'ECB', 'TAR', 'Finland', 'FI', 'France', 'FRA', 'Germany',
+                 'DE', 'Hungary', 'HU', 'India', 'IND', 'Ireland',
                  'Isle of Man', 'Italy', 'IT', 'Japan', 'JP', 'Mexico', 'MX',
                  'Netherlands', 'NL', 'NewZealand', 'NZ', 'Northern Ireland',
                  'Norway', 'NO', 'Polish', 'PL', 'Portugal', 'PT',
                  'PortugalExt', 'PTE', 'Scotland', 'Slovenia', 'SI',
                  'Slovakia', 'SK', 'South Africa', 'ZA', 'Spain', 'ES',
-                 'Sweden', 'SE', 'UnitedKingdom', 'UK', 'UnitedStates', 'US',
-                 'Wales']
+                 'Sweden', 'SE', 'Switzerland', 'CH', 'UnitedKingdom', 'UK',
+                 'UnitedStates', 'US', 'Wales']
 CONF_COUNTRY = 'country'
 CONF_PROVINCE = 'province'
 CONF_WORKDAYS = 'workdays'
@@ -47,17 +48,17 @@ DEFAULT_OFFSET = 0
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_COUNTRY): vol.In(ALL_COUNTRIES),
-    vol.Optional(CONF_PROVINCE): cv.string,
+    vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES):
+        vol.All(cv.ensure_list, [vol.In(ALLOWED_DAYS)]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_OFFSET, default=DEFAULT_OFFSET): vol.Coerce(int),
+    vol.Optional(CONF_PROVINCE): cv.string,
     vol.Optional(CONF_WORKDAYS, default=DEFAULT_WORKDAYS):
-        vol.All(cv.ensure_list, [vol.In(ALLOWED_DAYS)]),
-    vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES):
         vol.All(cv.ensure_list, [vol.In(ALLOWED_DAYS)]),
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Workday sensor."""
     import holidays
 
@@ -74,14 +75,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if province:
         # 'state' and 'prov' are not interchangeable, so need to make
         # sure we use the right one
-        if (hasattr(obj_holidays, "PROVINCES") and
+        if (hasattr(obj_holidays, 'PROVINCES') and
                 province in obj_holidays.PROVINCES):
-            obj_holidays = getattr(holidays, country)(prov=province,
-                                                      years=year)
-        elif (hasattr(obj_holidays, "STATES") and
+            obj_holidays = getattr(holidays, country)(
+                prov=province, years=year)
+        elif (hasattr(obj_holidays, 'STATES') and
               province in obj_holidays.STATES):
-            obj_holidays = getattr(holidays, country)(state=province,
-                                                      years=year)
+            obj_holidays = getattr(holidays, country)(
+                state=province, years=year)
         else:
             _LOGGER.error("There is no province/state %s in country %s",
                           province, country)
@@ -91,7 +92,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for date, name in sorted(obj_holidays.items()):
         _LOGGER.debug("%s %s", date, name)
 
-    add_devices([IsWorkdaySensor(
+    add_entities([IsWorkdaySensor(
         obj_holidays, workdays, excludes, days_offset, sensor_name)], True)
 
 
@@ -134,7 +135,7 @@ class IsWorkdaySensor(BinarySensorDevice):
         """Check if given day is in the includes list."""
         if day in self._workdays:
             return True
-        elif 'holiday' in self._workdays and now in self._obj_holidays:
+        if 'holiday' in self._workdays and now in self._obj_holidays:
             return True
 
         return False
@@ -143,7 +144,7 @@ class IsWorkdaySensor(BinarySensorDevice):
         """Check if given day is in the excludes list."""
         if day in self._excludes:
             return True
-        elif 'holiday' in self._excludes and now in self._obj_holidays:
+        if 'holiday' in self._excludes and now in self._obj_holidays:
             return True
 
         return False

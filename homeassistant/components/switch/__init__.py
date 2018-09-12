@@ -4,7 +4,6 @@ Component to interface with various switches that can be controlled remotely.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/switch/
 """
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -95,47 +94,41 @@ def toggle(hass, entity_id=None):
 
 async def async_setup(hass, config):
     """Track states and offer events for switches."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_SWITCHES)
     await component.async_setup(config)
 
-    async def async_handle_switch_service(service):
-        """Handle calls to the switch services."""
-        target_switches = component.async_extract_from_service(service)
+    component.async_register_entity_service(
+        SERVICE_TURN_OFF, SWITCH_SERVICE_SCHEMA,
+        'async_turn_off'
+    )
 
-        update_tasks = []
-        for switch in target_switches:
-            if service.service == SERVICE_TURN_ON:
-                await switch.async_turn_on()
-            elif service.service == SERVICE_TOGGLE:
-                await switch.async_toggle()
-            else:
-                await switch.async_turn_off()
+    component.async_register_entity_service(
+        SERVICE_TURN_ON, SWITCH_SERVICE_SCHEMA,
+        'async_turn_on'
+    )
 
-            if not switch.should_poll:
-                continue
-            update_tasks.append(switch.async_update_ha_state(True))
-
-        if update_tasks:
-            await asyncio.wait(update_tasks, loop=hass.loop)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_OFF, async_handle_switch_service,
-        schema=SWITCH_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TURN_ON, async_handle_switch_service,
-        schema=SWITCH_SERVICE_SCHEMA)
-    hass.services.async_register(
-        DOMAIN, SERVICE_TOGGLE, async_handle_switch_service,
-        schema=SWITCH_SERVICE_SCHEMA)
+    component.async_register_entity_service(
+        SERVICE_TOGGLE, SWITCH_SERVICE_SCHEMA,
+        'async_toggle'
+    )
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class SwitchDevice(ToggleEntity):
     """Representation of a switch."""
 
-    # pylint: disable=no-self-use
     @property
     def current_power_w(self):
         """Return the current power usage in W."""

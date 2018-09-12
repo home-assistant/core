@@ -10,7 +10,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.weather import (
-    ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
+    ATTR_FORECAST_CONDITION, ATTR_FORECAST_TEMP, ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_TIME, PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN, TEMP_CELSIUS
 import homeassistant.helpers.config_validation as cv
 
@@ -20,10 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 
 DATA_CONDITION = 'yahoo_condition'
 
-ATTR_FORECAST_CONDITION = 'condition'
 ATTRIBUTION = "Weather details provided by Yahoo! Inc."
 
-ATTR_FORECAST_TEMP_LOW = 'templow'
 
 CONF_WOEID = 'woeid'
 
@@ -32,6 +31,7 @@ DEFAULT_NAME = 'Yweather'
 SCAN_INTERVAL = timedelta(minutes=10)
 
 CONDITION_CLASSES = {
+    'clear-night': [31],
     'cloudy': [26, 27, 28, 29, 30],
     'fog': [19, 20, 21, 22, 23],
     'hail': [17, 18, 35],
@@ -55,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yahoo! weather platform."""
     from yahooweather import get_woeid, UNIT_C, UNIT_F
 
@@ -85,7 +85,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for condi in condlst:
                 hass.data[DATA_CONDITION][condi] = cond
 
-    add_devices([YahooWeatherWeather(yahoo_api, name, unit)], True)
+    add_entities([YahooWeatherWeather(yahoo_api, name, unit)], True)
 
 
 class YahooWeatherWeather(WeatherEntity):
@@ -175,7 +175,7 @@ class YahooWeatherWeather(WeatherEntity):
             return
 
 
-class YahooWeatherData(object):
+class YahooWeatherData:
     """Handle the Yahoo! API object and limit updates."""
 
     def __init__(self, woeid, temp_unit):

@@ -156,6 +156,8 @@ def async_setup(hass, config):
             DOMAIN, platform_name_slug, async_notify_message,
             schema=NOTIFY_SERVICE_SCHEMA)
 
+        hass.config.components.add('{}.{}'.format(DOMAIN, p_type))
+
         return True
 
     setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
@@ -174,7 +176,7 @@ def async_setup(hass, config):
     return True
 
 
-class BaseNotificationService(object):
+class BaseNotificationService:
     """An abstract class for notification services."""
 
     hass = None

@@ -10,14 +10,15 @@ import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_NAME, CONF_ENTITY_ID)
+    ATTR_ENTITY_ID, ATTR_NAME, CONF_ENTITY_ID, CONF_NAME)
+from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.loader import bind_hass
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.loader import get_component
+from homeassistant.loader import bind_hass
+from homeassistant.util.async_ import run_callback_threadsafe
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +35,15 @@ DEVICE_CLASSES = [
 
 SERVICE_SCAN = 'scan'
 
+EVENT_DETECT_FACE = 'image_processing.detect_face'
+
+ATTR_AGE = 'age'
 ATTR_CONFIDENCE = 'confidence'
+ATTR_FACES = 'faces'
+ATTR_GENDER = 'gender'
+ATTR_GLASSES = 'glasses'
+ATTR_MOTION = 'motion'
+ATTR_TOTAL_FACES = 'total_faces'
 
 CONF_SOURCE = 'source'
 CONF_CONFIDENCE = 'confidence'
@@ -50,7 +59,7 @@ SOURCE_SCHEMA = vol.Schema({
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_SOURCE): vol.All(cv.ensure_list, [SOURCE_SCHEMA]),
     vol.Optional(CONF_CONFIDENCE, default=DEFAULT_CONFIDENCE):
-        vol.All(vol.Coerce(float), vol.Range(min=0, max=100))
+        vol.All(vol.Coerce(float), vol.Range(min=0, max=100)),
 })
 
 SERVICE_SCAN_SCHEMA = vol.Schema({
@@ -60,27 +69,32 @@ SERVICE_SCAN_SCHEMA = vol.Schema({
 
 @bind_hass
 def scan(hass, entity_id=None):
-    """Force process an image."""
+    """Force process of all cameras or given entity."""
+    hass.add_job(async_scan, hass, entity_id)
+
+
+@callback
+@bind_hass
+def async_scan(hass, entity_id=None):
+    """Force process of all cameras or given entity."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.services.call(DOMAIN, SERVICE_SCAN, data)
+    hass.async_add_job(hass.services.async_call(DOMAIN, SERVICE_SCAN, data))
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
-    """Set up image processing."""
+async def async_setup(hass, config):
+    """Set up the image processing."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
-    @asyncio.coroutine
-    def async_scan_service(service):
+    async def async_scan_service(service):
         """Service handler for scan."""
         image_entities = component.async_extract_from_service(service)
 
         update_task = [entity.async_update_ha_state(True) for
                        entity in image_entities]
         if update_task:
-            yield from asyncio.wait(update_task, loop=hass.loop)
+            await asyncio.wait(update_task, loop=hass.loop)
 
     hass.services.async_register(
         DOMAIN, SERVICE_SCAN, async_scan_service,
@@ -115,22 +129,108 @@ class ImageProcessingEntity(Entity):
         """
         return self.hass.async_add_job(self.process_image, image)
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update image and process it.
 
         This method is a coroutine.
         """
-        camera = get_component('camera')
+        camera = self.hass.components.camera
         image = None
 
         try:
-            image = yield from camera.async_get_image(
-                self.hass, self.camera_entity, timeout=self.timeout)
+            image = await camera.async_get_image(
+                self.camera_entity, timeout=self.timeout)
 
         except HomeAssistantError as err:
             _LOGGER.error("Error on receive image from entity: %s", err)
             return
 
         # process image data
-        yield from self.async_process_image(image)
+        await self.async_process_image(image.content)
+
+
+class ImageProcessingFaceEntity(ImageProcessingEntity):
+    """Base entity class for face image processing."""
+
+    def __init__(self):
+        """Initialize base face identify/verify entity."""
+        self.faces = []
+        self.total_faces = 0
+
+    @property
+    def state(self):
+        """Return the state of the entity."""
+        confidence = 0
+        state = None
+
+        # No confidence support
+        if not self.confidence:
+            return self.total_faces
+
+        # Search high confidence
+        for face in self.faces:
+            if ATTR_CONFIDENCE not in face:
+                continue
+
+            f_co = face[ATTR_CONFIDENCE]
+            if f_co > confidence:
+                confidence = f_co
+                for attr in [ATTR_NAME, ATTR_MOTION]:
+                    if attr in face:
+                        state = face[attr]
+                        break
+
+        return state
+
+    @property
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return 'face'
+
+    @property
+    def state_attributes(self):
+        """Return device specific state attributes."""
+        attr = {
+            ATTR_FACES: self.faces,
+            ATTR_TOTAL_FACES: self.total_faces,
+        }
+
+        return attr
+
+    def process_faces(self, faces, total):
+        """Send event with detected faces and store data."""
+        run_callback_threadsafe(
+            self.hass.loop, self.async_process_faces, faces, total).result()
+
+    @callback
+    def async_process_faces(self, faces, total):
+        """Send event with detected faces and store data.
+
+        known are a dict in follow format:
+         [
+           {
+              ATTR_CONFIDENCE: 80,
+              ATTR_NAME: 'Name',
+              ATTR_AGE: 12.0,
+              ATTR_GENDER: 'man',
+              ATTR_MOTION: 'smile',
+              ATTR_GLASSES: 'sunglasses'
+           },
+         ]
+
+        This method must be run in the event loop.
+        """
+        # Send events
+        for face in faces:
+            if ATTR_CONFIDENCE in face and self.confidence:
+                if face[ATTR_CONFIDENCE] < self.confidence:
+                    continue
+
+            face.update({ATTR_ENTITY_ID: self.entity_id})
+            self.hass.async_add_job(
+                self.hass.bus.async_fire, EVENT_DETECT_FACE, face
+            )
+
+        # Update entity store
+        self.faces = faces
+        self.total_faces = total
