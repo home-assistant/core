@@ -336,6 +336,7 @@ class Entity(entity.Entity):
         self._in_listeners = {}
         self._out_listeners = {}
 
+        self._initialized = False
         application_listener.register_entity(ieee, self)
 
     async def async_added_to_hass(self):
@@ -347,6 +348,8 @@ class Entity(entity.Entity):
             cluster.add_listener(self._in_listeners.get(cluster_id, self))
         for cluster_id, cluster in self._out_clusters.items():
             cluster.add_listener(self._out_listeners.get(cluster_id, self))
+
+        self._initialized = True
 
     @property
     def unique_id(self) -> str:

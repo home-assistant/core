@@ -57,7 +57,6 @@ class Light(zha.Entity, light.Light):
         self._color_temp = None
         self._hs_color = None
         self._brightness = None
-        self._only_cache = True
 
         import zigpy.zcl.clusters as zcl_clusters
         if zcl_clusters.general.LevelControl.cluster_id in self._in_clusters:
@@ -157,22 +156,21 @@ class Light(zha.Entity, light.Light):
         """Retrieve latest state."""
         result = await zha.safe_read(self._endpoint.on_off, ['on_off'],
                                      allow_cache=False,
-                                     only_cache=self._only_cache)
+                                     only_cache=(not self._initialized))
         self._state = result.get('on_off', self._state)
 
         if self._supported_features & light.SUPPORT_BRIGHTNESS:
             result = await zha.safe_read(self._endpoint.level,
                                          ['current_level'],
                                          allow_cache=False,
-                                         only_cache=self._only_cache)
+                                         only_cache=(not self._initialized))
             self._brightness = result.get('current_level', self._brightness)
 
         if self._supported_features & light.SUPPORT_COLOR_TEMP:
             result = await zha.safe_read(self._endpoint.light_color,
                                          ['color_temperature'],
                                          allow_cache=False,
-                                         only_cache=self._only_cache)
-
+                                         only_cache=(not self._initialized))
             self._color_temp = result.get('color_temperature',
                                           self._color_temp)
 
@@ -180,12 +178,11 @@ class Light(zha.Entity, light.Light):
             result = await zha.safe_read(self._endpoint.light_color,
                                          ['current_x', 'current_y'],
                                          allow_cache=False,
-                                         only_cache=self._only_cache)
+                                         only_cache=(not self._initialized))
             if 'current_x' in result and 'current_y' in result:
                 xy_color = (round(result['current_x']/65535, 3),
                             round(result['current_y']/65535, 3))
                 self._hs_color = color_util.color_xy_to_hs(*xy_color)
-        self._only_cache = False
 
     @property
     def should_poll(self) -> bool:
