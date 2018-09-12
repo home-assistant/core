@@ -246,8 +246,17 @@ class HangoutsBot:
                         )
                     )
                     image_file = None
-            else:
-                image_file = open(uri, 'rb')
+            else if self.hass.config.is_allowed_path(uri):
+                try:
+                    image_file = open(uri, 'rb')
+                except IOError as e:
+                    _LOGGER.error('Image file I/O error({}): {}'.format(
+                        e.errno, e.strerror
+                    )
+                except:
+                    _LOGGER.error('Unexpected error reading image file')
+            else
+                _LOGGER.error('Path "{}" not allowed'.format(uri))
 
         if not messages:
             return False
