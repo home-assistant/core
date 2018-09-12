@@ -203,7 +203,6 @@ class AuthStore:
         refresh_token.last_used_at = dt_util.utcnow()
         refresh_token.last_used_ip = remote_ip
         self._async_schedule_save()
-        return refresh_token
 
     async def _async_load(self) -> None:
         """Load the users."""
