@@ -71,8 +71,8 @@ class AsteriskData:
 
     @callback
     def _discover_platform(self, component):
-        _LOGGER.debug("Adding mailbox")
-        self.hass.async_add_job(discovery.async_load_platform(
+        _LOGGER.debug("Adding mailbox %s", component)
+        self.hass.async_create_task(discovery.async_load_platform(
             self.hass, "mailbox", component, {}, self.config))
 
     @callback
@@ -83,7 +83,8 @@ class AsteriskData:
                                             CMD_MESSAGE_CDR)
 
         if command == CMD_MESSAGE_LIST:
-            _LOGGER.debug("AsteriskVM sent updated message list")
+            _LOGGER.debug("AsteriskVM sent updated message list: Len %d",
+                          len(msg))
             old_messages = self.messages
             self.messages = sorted(
                 msg, key=lambda item: item['info']['origtime'], reverse=True)
@@ -93,15 +94,20 @@ class AsteriskData:
             async_dispatcher_send(self.hass, SIGNAL_MESSAGE_UPDATE,
                                   self.messages)
         elif command == CMD_MESSAGE_CDR:
-            _LOGGER.info("AsteriskVM sent updated CDR list")
+            _LOGGER.debug("AsteriskVM sent updated CDR list: Len %d",
+                          len(msg.get('entries', [])))
             self.cdr = msg['entries']
             async_dispatcher_send(self.hass, SIGNAL_CDR_UPDATE, self.cdr)
         elif command == CMD_MESSAGE_CDR_AVAILABLE:
             if not isinstance(self.cdr, list):
+                _LOGGER.debug("AsteriskVM adding CDR platform")
                 self.cdr = []
                 async_dispatcher_send(self.hass, SIGNAL_DISCOVER_PLATFORM,
                                       "asterisk_cdr")
             async_dispatcher_send(self.hass, SIGNAL_CDR_REQUEST)
+        else:
+            _LOGGER.debug("AsteriskVM sent unknown message '%d' len: %d",
+                          command, len(msg))
 
     @callback
     def _request_messages(self):
@@ -112,5 +118,5 @@ class AsteriskData:
     @callback
     def _request_cdr(self):
         """Handle changes to the CDR."""
-        _LOGGER.info("Requesting CDR list")
+        _LOGGER.debug("Requesting CDR list")
         self.client.get_cdr()

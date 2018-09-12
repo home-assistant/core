@@ -39,6 +39,11 @@ class AsteriskCDR(Mailbox):
     @callback
     def _update_callback(self, msg):
         """Update the message count in HA, if needed."""
+        self._build_message()
+        self.async_update()
+
+    def _build_message(self):
+        """Build message structure"""
         cdr = []
         for entry in self.hass.data[MBOX_DOMAIN].cdr:
             timestamp = datetime.datetime.strptime(
@@ -53,9 +58,10 @@ class AsteriskCDR(Mailbox):
                 entry['dest'], entry['application'], entry['context'])
             cdr.append({'info': info, 'sha': sha, 'text': msg})
         self.cdr = cdr
-        self.async_update()
 
     @asyncio.coroutine
     def async_get_messages(self):
         """Return a list of the current messages."""
+        if not self.cdr:
+            self._build_message()
         return self.cdr
