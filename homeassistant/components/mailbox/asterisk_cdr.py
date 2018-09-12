@@ -4,7 +4,6 @@ Asterisk CDR interface.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/mailbox.asteriskvm/
 """
-import asyncio
 import logging
 import hashlib
 import datetime
@@ -20,8 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "asterisk_cdr"
 
 
-@asyncio.coroutine
-def async_get_handler(hass, config, async_add_devices, discovery_info=None):
+async def async_get_handler(hass, config, async_add_devices, discovery_info=None):
     """Set up the Asterix CDR platform."""
     return AsteriskCDR(hass, DOMAIN)
 
@@ -59,8 +57,7 @@ class AsteriskCDR(Mailbox):
             cdr.append({'info': info, 'sha': sha, 'text': msg})
         self.cdr = cdr
 
-    @asyncio.coroutine
-    def async_get_messages(self):
+    async def async_get_messages(self):
         """Return a list of the current messages."""
         if not self.cdr:
             self._build_message()

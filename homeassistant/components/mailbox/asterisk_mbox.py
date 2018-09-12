@@ -4,7 +4,6 @@ Asterisk Voicemail interface.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/mailbox.asteriskvm/
 """
-import asyncio
 import logging
 
 from homeassistant.components.asterisk_mbox import DOMAIN
@@ -21,8 +20,7 @@ SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
 
 
-@asyncio.coroutine
-def async_get_handler(hass, config, async_add_entities, discovery_info=None):
+async def async_get_handler(hass, config, async_add_entities, discovery_info=None):
     """Set up the Asterix VM platform."""
     return AsteriskMailbox(hass, DOMAIN)
 
@@ -56,8 +54,7 @@ class AsteriskMailbox(Mailbox):
         """Return if messages have attached media files."""
         return True
 
-    @asyncio.coroutine
-    def async_get_media(self, msgid):
+    async def async_get_media(self, msgid):
         """Return the media blob for the msgid."""
         from asterisk_mbox import ServerError
         client = self.hass.data[DOMAIN].client
@@ -66,8 +63,7 @@ class AsteriskMailbox(Mailbox):
         except ServerError as err:
             raise StreamError(err)
 
-    @asyncio.coroutine
-    def async_get_messages(self):
+    async def async_get_messages(self):
         """Return a list of the current messages."""
         return self.hass.data[DOMAIN].messages
 
