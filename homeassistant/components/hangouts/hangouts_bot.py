@@ -2,9 +2,9 @@
 import io
 import logging
 import asyncio
+from urllib.parse import urlparse
 import aiohttp
 import async_timeout
-from urllib.parse import urlparse
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import dispatcher, intent
 
@@ -136,7 +136,8 @@ class HangoutsBot:
                     is_error and conv_id in self._error_suppressed_conv_ids):
                 await self._async_send_message(
                     [{'text': message, 'parse_str': True}],
-                    [{CONF_CONVERSATION_ID: conv_id}])
+                    [{CONF_CONVERSATION_ID: conv_id}],
+                    None)
 
     async def _async_process(self, intents, text):
         """Detect a matching intent."""
@@ -220,7 +221,7 @@ class HangoutsBot:
                                                SEGMENT_TYPE_LINE_BREAK))
 
         image_file = None
-        if data.get('image') is not None:
+        if data and data.get('image') is not None:
             uri = data.get('image')
             validate = urlparse(uri)
             if validate.scheme:
@@ -230,9 +231,9 @@ class HangoutsBot:
                         response = await websession.get(uri)
                         if response.status != 200:
                             _LOGGER.error(
-                                'Fetch image failed, {}, {}'.format(
-                                    response.status, response
-                                )
+                                'Fetch image failed, %s, %s',
+                                response.status, 
+                                response
                             )
                             image_file = None
                         else:
@@ -241,9 +242,8 @@ class HangoutsBot:
                             image_file.name = "image.png"
                 except (asyncio.TimeoutError, aiohttp.ClientError) as error:
                     _LOGGER.error(
-                        'Failed to fetch image, {}'.format(
-                            type(error)
-                        )
+                        'Failed to fetch image, %s',
+                        type(error)
                     )
                     image_file = None
             elif self.hass.config.is_allowed_path(uri):
@@ -251,14 +251,12 @@ class HangoutsBot:
                     image_file = open(uri, 'rb')
                 except IOError as e:
                     _LOGGER.error(
-                        'Image file I/O error({}): {}'.format(
-                            e.errno, e.strerror
-                        )
+                        'Image file I/O error(%s): %s',
+                        e.errno, 
+                        e.strerror
                     )
-                except Exception:
-                    _LOGGER.error('Unexpected error reading image file')
             else:
-                _LOGGER.error('Path "{}" not allowed'.format(uri))
+                _LOGGER.error('Path "%s" not allowed', uri)
 
         if not messages:
             return False
