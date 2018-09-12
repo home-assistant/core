@@ -23,6 +23,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass, config, add_devices,
                                discovery_info=None):
+    """Set up the motion sensors for the Plum Lightpad  platform."""
     plum = hass.data['plum']
 
     @callback
@@ -41,6 +42,7 @@ class PlumMotionSensor(BinarySensorDevice):
     """Representation of a Lightpad's motion detection."""
 
     def __init__(self, hass, lightpad):
+        """Init Plum Motion Sensor."""
         self._hass = hass
         self._lightpad = lightpad
         self.off_delay = 10  # TODO establish by config
@@ -50,6 +52,7 @@ class PlumMotionSensor(BinarySensorDevice):
         lightpad.add_event_listener('pirSignal', self.motion_detected)
 
     def motion_detected(self, event):
+        """Motion Detected handler."""
         self._signal = event['signal']
         self._latest_motion = dt_util.utcnow()
         self.schedule_update_ha_state()
@@ -65,10 +68,12 @@ class PlumMotionSensor(BinarySensorDevice):
 
     @property
     def lpid(self):
+        """Return the LightPad ID (lpid) which is attached to the sensor."""
         return self._lightpad.lpid
 
     @property
     def name(self):
+        """Return the friendly name associated with the lightpad."""
         return self._lightpad.friendly_name
 
     @property
