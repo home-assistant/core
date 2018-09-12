@@ -17,29 +17,23 @@ DEPENDENCIES = ['zha']
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Zigbee Home Automation switches."""
+    from zigpy.zcl.clusters.general import OnOff
+
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
-    sensor = await make_sensor(discovery_info)
-    async_add_entities([sensor], update_before_add=True)
-
-
-async def make_sensor(discovery_info):
-    """Create ZHA sensors factory."""
-    from zigpy.zcl.clusters.general import OnOff
-
-    sensor = Switch(**discovery_info)
+    switch = Switch(**discovery_info)
 
     if discovery_info['new_join']:
         in_clusters = discovery_info['in_clusters']
         cluster = in_clusters[OnOff.cluster_id]
         await zha.configure_reporting(
-            sensor.entity_id, cluster, sensor.value_attribute,
+            switch.entity_id, cluster, switch.value_attribute,
             min_report=0, max_report=600, reportable_change=1
         )
 
-    return sensor
+    async_add_entities([switch], update_before_add=True)
 
 
 class Switch(zha.Entity, SwitchDevice):
