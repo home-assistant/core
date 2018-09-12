@@ -198,7 +198,7 @@ class AuthStore:
     @callback
     def async_log_refresh_token_usage(
             self, refresh_token: models.RefreshToken,
-            remote_ip: Optional[str] = None) -> models.RefreshToken:
+            remote_ip: Optional[str] = None) -> None:
         """Update refresh token last used information."""
         refresh_token.last_used_at = dt_util.utcnow()
         refresh_token.last_used_ip = remote_ip
