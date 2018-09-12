@@ -21,13 +21,23 @@ async def async_setup_platform(hass, config, async_add_entities,
     if discovery_info is None:
         return
 
-    from zigpy.zcl.clusters.general import OnOff
-    in_clusters = discovery_info['in_clusters']
-    cluster = in_clusters[OnOff.cluster_id]
-    await cluster.bind()
-    await cluster.configure_reporting(0, 0, 600, 1,)
+    sensor = await make_sensor(discovery_info)
+    async_add_entities([sensor], update_before_add=True)
 
-    async_add_entities([Switch(**discovery_info)], update_before_add=True)
+
+async def make_sensor(discovery_info):
+    """Create ZHA sensors factory."""
+    from zigpy.zcl.clusters.general import OnOff
+
+    sensor = Switch(**discovery_info)
+
+    if discovery_info['new_join']:
+        in_clusters = discovery_info['in_clusters']
+        cluster = in_clusters[OnOff.cluster_id]
+        await cluster.bind()
+        await cluster.configure_reporting(sensor.value_attribute, 0, 600, 1)
+
+    return sensor
 
 
 class Switch(zha.Entity, SwitchDevice):
