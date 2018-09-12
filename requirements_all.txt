@@ -839,7 +839,7 @@ pydukeenergy==0.0.6
 pyebox==1.1.4
 
 # homeassistant.components.climate.econet
-pyeconet==0.0.5
+pyeconet==0.0.6
 
 # homeassistant.components.switch.edimax
 pyedimax==0.1
