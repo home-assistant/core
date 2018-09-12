@@ -3,19 +3,31 @@ Support for Pioneer Network Receivers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.pioneer/
+
+
+basic mode supports only these queries
+?P   Power
+?V   Volume
+?M   Mute status
+?F   Input number
+
+Commands NOT supported
+VL (volume set) - use VU/VD
+MZ (mute toggle) - use MO/MF
 """
 import logging
 import telnetlib
+import time
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    MediaPlayerDevice)
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT, STATE_OFF, STATE_ON,
-    STATE_UNKNOWN)
+    CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT, CONF_MODE,
+    STATE_OFF, STATE_ON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,10 +35,23 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Pioneer AVR'
 DEFAULT_PORT = 23   # telnet default. Some Pioneer AVRs use 8102
 DEFAULT_TIMEOUT = None
+DEFAULT_MODE = None # Switch to "basic" for older receivers
 
 SUPPORT_PIONEER = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
                   SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+
+SUPPORT_PIONEER_BASIC = SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | \
+                        SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
+                        SUPPORT_SELECT_SOURCE
+
+PIONEER_BASIC_INPUTS = {
+    "00":"Phono", "01":"CD", "02":"Tuner", "03":"Tape", "04":"DVD",
+    "05":"TV/SAT", "10":"Video 1", "12":"Multi CH", "14":"Video 2",
+    "15":"DVR/BDR", "17":"iPod/USB", "19":"HDMI 1", "20":"HDMI 2",
+    "21":"HDMI 3", "22":"HDMI 4","23":"HDMI 5", "24":"HDMI 6", "25":"BD",
+    "26":"Internet Radio", "27":"SiriusXM", "31":"HDMI", "33":"Adapter"}
+
 
 MAX_VOLUME = 185
 MAX_SOURCE_NUMBERS = 60
@@ -36,6 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
+    vol.Optional(CONF_MODE, default=DEFAULT_MODE): cv.string,
 })
 
 
@@ -43,7 +69,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pioneer platform."""
     pioneer = PioneerDevice(
         config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(CONF_TIMEOUT))
+        config.get(CONF_TIMEOUT), config.get(CONF_MODE))
 
     if pioneer.update():
         add_entities([pioneer])
@@ -52,18 +78,27 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PioneerDevice(MediaPlayerDevice):
     """Representation of a Pioneer device."""
 
-    def __init__(self, name, host, port, timeout):
+    def __init__(self, name, host, port, timeout, mode):
         """Initialize the Pioneer device."""
         self._name = name
         self._host = host
         self._port = port
         self._timeout = timeout
+        self._mode = mode
         self._pwstate = 'PWR1'
         self._volume = 0
         self._muted = False
         self._selected_source = ''
         self._source_name_to_number = {}
         self._source_number_to_name = {}
+
+        if self._mode == "basic":
+            # If running in basic mode, we can set static input names now
+            self._source_number_to_name = PIONEER_BASIC_INPUTS
+            self._source_name_to_number = {v:k for k,v in \
+                PIONEER_BASIC_INPUTS.items()}
+            # Off is PWR2
+            self._pwstate = 'PWR2'
 
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
@@ -86,6 +121,7 @@ class PioneerDevice(MediaPlayerDevice):
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends command."""
+        _LOGGER.debug("Sending command %s to %s", command, self.name)
         try:
             try:
                 telnet = telnetlib.Telnet(
@@ -96,12 +132,18 @@ class PioneerDevice(MediaPlayerDevice):
             telnet.write(command.encode("ASCII") + b"\r")
             telnet.read_very_eager()  # skip response
             telnet.close()
+
+            # Wait a bit before returning.  HA will immediately poll
+            # and get rejected if it's too soon.
+            time.sleep(0.5)
         except telnetlib.socket.timeout:
             _LOGGER.debug(
                 "Pioneer %s command %s timed out", self._name, command)
 
     def update(self):
         """Get the latest details from the device."""
+        _LOGGER.debug("Doing status update on %s", self._name)
+
         try:
             telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
         except (ConnectionRefusedError, OSError):
@@ -119,29 +161,44 @@ class PioneerDevice(MediaPlayerDevice):
         self._muted = (muted_value == "MUT0") if muted_value else None
 
         # Build the source name dictionaries if necessary
-        if not self._source_name_to_number:
-            for i in range(MAX_SOURCE_NUMBERS):
-                result = self.telnet_request(
-                    telnet, "?RGB" + str(i).zfill(2), "RGB")
+        if self._mode != "basic":
+            if not self._source_name_to_number:
+                for i in range(MAX_SOURCE_NUMBERS):
+                    result = self.telnet_request(
+                        telnet, "?RGB" + str(i).zfill(2), "RGB")
 
-                if not result:
-                    continue
+                    if not result:
+                        continue
 
-                source_name = result[6:]
-                source_number = str(i).zfill(2)
+                    source_name = result[6:]
+                    source_number = str(i).zfill(2)
 
-                self._source_name_to_number[source_name] = source_number
-                self._source_number_to_name[source_number] = source_name
+                    self._source_name_to_number[source_name] = source_number
+                    self._source_number_to_name[source_number] = source_name
 
-        source_number = self.telnet_request(telnet, "?F", "FN")
+            source_number = self.telnet_request(telnet, "?F", "FN")
 
-        if source_number:
-            self._selected_source = self._source_number_to_name \
-                .get(source_number[2:])
+            if source_number:
+                self._selected_source = self._source_number_to_name \
+                    .get(source_number[2:])
+            else:
+                self._selected_source = None
+
+        # basic does not support RGB command for input names.
+        # - Can get input number but names are static
         else:
-            self._selected_source = None
+            source_number = self.telnet_request(telnet, "?F", "FN")
+
+            if source_number:
+                self._selected_source = self._source_number_to_name \
+                    .get(source_number[2:])
+            else:
+                self._selected_source = None
 
         telnet.close()
+
+        _LOGGER.debug("Pwr:%s Mut:%s Vol:%0.3f Src:%s", self._pwstate, self._muted, self._volume, self._selected_source)
+
         return True
 
     @property
@@ -152,10 +209,16 @@ class PioneerDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._pwstate == "PWR1":
-            return STATE_OFF
-        if self._pwstate == "PWR0":
-            return STATE_ON
+        if self._mode == "basic":
+            if self._pwstate == "PWR2":
+                return STATE_OFF
+            if self._pwstate == "PWR0":
+                return STATE_ON
+        else:
+            if self._pwstate == "PWR1":
+                return STATE_OFF
+            if self._pwstate == "PWR0":
+                return STATE_ON
 
         return STATE_UNKNOWN
 
@@ -172,7 +235,10 @@ class PioneerDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_PIONEER
+        if self._mode == "basic":
+            return SUPPORT_PIONEER_BASIC
+        else:
+            return SUPPORT_PIONEER
 
     @property
     def source(self):
