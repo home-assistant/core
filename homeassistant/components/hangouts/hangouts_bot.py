@@ -255,9 +255,9 @@ class HangoutsBot:
                             e.errno, e.strerror
                         )
                     )
-                except:
+                except Exception:
                     _LOGGER.error('Unexpected error reading image file')
-            else
+            else:
                 _LOGGER.error('Path "{}" not allowed'.format(uri))
 
         if not messages:
