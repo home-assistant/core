@@ -489,6 +489,8 @@ def websocket_refresh_tokens(
         'type': refresh.token_type,
         'created_at': refresh.created_at,
         'is_current': refresh.id == current_id,
+        'last_used_at': refresh.last_used_at,
+        'last_used_ip': refresh.last_used_ip,
     } for refresh in connection.user.refresh_tokens.values()]))
 
 
