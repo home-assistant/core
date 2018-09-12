@@ -3,7 +3,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET, ATTR_DATA
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger('homeassistant.components.hangouts')
@@ -53,10 +53,14 @@ MESSAGE_SEGMENT_SCHEMA = vol.Schema({
     vol.Optional('parse_str'): cv.boolean,
     vol.Optional('link_target'): cv.string
 })
+MESSAGE_DATA_SCHEMA = vol.Schema({
+    vol.Optional('image'): cv.string
+})
 
 MESSAGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_TARGET): [TARGETS_SCHEMA],
-    vol.Required(ATTR_MESSAGE): [MESSAGE_SEGMENT_SCHEMA]
+    vol.Required(ATTR_MESSAGE): [MESSAGE_SEGMENT_SCHEMA],
+    vol.Optional(ATTR_DATA): MESSAGE_DATA_SCHEMA
 })
 
 INTENT_SCHEMA = vol.All(
