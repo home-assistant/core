@@ -201,7 +201,8 @@ class MqttLight(MqttAvailability, Light):
         self._white_value = None
         self._supported_features = 0
         self._supported_features |= (
-            topic[CONF_RGB_COMMAND_TOPIC] is not None and SUPPORT_COLOR and SUPPORT_BRIGHTNESS)
+            topic[CONF_RGB_COMMAND_TOPIC] is not None and 
+            SUPPORT_COLOR and SUPPORT_BRIGHTNESS)
         self._supported_features |= (
             topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None and
             SUPPORT_BRIGHTNESS)
