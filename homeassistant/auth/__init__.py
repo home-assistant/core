@@ -309,8 +309,11 @@ class AuthManager:
 
     @callback
     def async_create_access_token(self,
-                                  refresh_token: models.RefreshToken) -> str:
+                                  refresh_token: models.RefreshToken,
+                                  remote_ip: Optional[str] = None) -> str:
         """Create a new access token."""
+        self._store.async_log_refresh_token_usage(refresh_token, remote_ip)
+
         # pylint: disable=no-self-use
         now = dt_util.utcnow()
         return jwt.encode({

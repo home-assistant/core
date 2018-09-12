@@ -129,6 +129,7 @@ import voluptuous as vol
 from homeassistant.auth.models import User, Credentials, \
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
@@ -236,10 +237,12 @@ class TokenView(HomeAssistantView):
             return await self._async_handle_revoke_token(hass, data)
 
         if grant_type == 'authorization_code':
-            return await self._async_handle_auth_code(hass, data)
+            return await self._async_handle_auth_code(
+                hass, data, str(request[KEY_REAL_IP]))
 
         if grant_type == 'refresh_token':
-            return await self._async_handle_refresh_token(hass, data)
+            return await self._async_handle_refresh_token(
+                hass, data, str(request[KEY_REAL_IP]))
 
         return self.json({
             'error': 'unsupported_grant_type',
@@ -264,7 +267,7 @@ class TokenView(HomeAssistantView):
         await hass.auth.async_remove_refresh_token(refresh_token)
         return web.Response(status=200)
 
-    async def _async_handle_auth_code(self, hass, data):
+    async def _async_handle_auth_code(self, hass, data, remote_addr):
         """Handle authorization code request."""
         client_id = data.get('client_id')
         if client_id is None or not indieauth.verify_client_id(client_id):
@@ -300,7 +303,8 @@ class TokenView(HomeAssistantView):
 
         refresh_token = await hass.auth.async_create_refresh_token(user,
                                                                    client_id)
-        access_token = hass.auth.async_create_access_token(refresh_token)
+        access_token = hass.auth.async_create_access_token(
+            refresh_token, remote_addr)
 
         return self.json({
             'access_token': access_token,
@@ -310,7 +314,7 @@ class TokenView(HomeAssistantView):
                 int(refresh_token.access_token_expiration.total_seconds()),
         })
 
-    async def _async_handle_refresh_token(self, hass, data):
+    async def _async_handle_refresh_token(self, hass, data, remote_addr):
         """Handle authorization code request."""
         client_id = data.get('client_id')
         if client_id is not None and not indieauth.verify_client_id(client_id):
@@ -338,7 +342,8 @@ class TokenView(HomeAssistantView):
                 'error': 'invalid_request',
             }, status_code=400)
 
-        access_token = hass.auth.async_create_access_token(refresh_token)
+        access_token = hass.auth.async_create_access_token(
+            refresh_token, remote_addr)
 
         return self.json({
             'access_token': access_token,
@@ -484,6 +489,8 @@ def websocket_refresh_tokens(
         'type': refresh.token_type,
         'created_at': refresh.created_at,
         'is_current': refresh.id == current_id,
+        'last_used_at': refresh.last_used_at,
+        'last_used_ip': refresh.last_used_ip,
     } for refresh in connection.user.refresh_tokens.values()]))
 
 
