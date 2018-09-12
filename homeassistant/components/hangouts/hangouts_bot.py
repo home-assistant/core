@@ -250,8 +250,10 @@ class HangoutsBot:
                 try:
                     image_file = open(uri, 'rb')
                 except IOError as e:
-                    _LOGGER.error('Image file I/O error({}): {}'.format(
-                        e.errno, e.strerror
+                    _LOGGER.error(
+                        'Image file I/O error({}): {}'.format(
+                            e.errno, e.strerror
+                        )
                     )
                 except:
                     _LOGGER.error('Unexpected error reading image file')
