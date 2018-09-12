@@ -249,11 +249,11 @@ class HangoutsBot:
             elif self.hass.config.is_allowed_path(uri):
                 try:
                     image_file = open(uri, 'rb')
-                except IOError as e:
+                except IOError as error:
                     _LOGGER.error(
                         'Image file I/O error(%s): %s',
-                        e.errno,
-                        e.strerror
+                        error.errno,
+                        error.strerror
                     )
             else:
                 _LOGGER.error('Path "%s" not allowed', uri)
