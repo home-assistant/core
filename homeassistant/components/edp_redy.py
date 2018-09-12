@@ -52,6 +52,7 @@ async def async_setup(hass, config):
 
         if update_success:
             nonlocal platform_loaded
+            # pylint: disable=used-before-assignment
             if not platform_loaded:
                 for component in ['sensor', 'switch']:
                     await discovery.async_load_platform(hass, component,
