@@ -140,6 +140,7 @@ FLOWS = [
     'deconz',
     'homematicip_cloud',
     'hue',
+    'ios',
     'nest',
     'openuv',
     'sonos',
