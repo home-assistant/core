@@ -232,7 +232,7 @@ class HangoutsBot:
                         if response.status != 200:
                             _LOGGER.error(
                                 'Fetch image failed, %s, %s',
-                                response.status, 
+                                response.status,
                                 response
                             )
                             image_file = None
@@ -252,7 +252,7 @@ class HangoutsBot:
                 except IOError as e:
                     _LOGGER.error(
                         'Image file I/O error(%s): %s',
-                        e.errno, 
+                        e.errno,
                         e.strerror
                     )
             else:
