@@ -45,7 +45,7 @@ class PlumMotionSensor(BinarySensorDevice):
         """Init Plum Motion Sensor."""
         self._hass = hass
         self._lightpad = lightpad
-        self.off_delay = 10  # TODO establish by config
+        self.off_delay = 10
         self._signal = None
         self._latest_motion = None
 
