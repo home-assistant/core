@@ -360,6 +360,7 @@ class ActiveConnection:
                     authenticated = refresh_token is not None
                     if authenticated:
                         request['hass_user'] = refresh_token.user
+                        request['refresh_token_id'] = refresh_token.id
 
                 elif ((not self.hass.auth.active or
                        self.hass.auth.support_legacy) and
