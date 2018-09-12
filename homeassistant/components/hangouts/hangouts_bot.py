@@ -246,7 +246,7 @@ class HangoutsBot:
                         )
                     )
                     image_file = None
-            else if self.hass.config.is_allowed_path(uri):
+            elif self.hass.config.is_allowed_path(uri):
                 try:
                     image_file = open(uri, 'rb')
                 except IOError as e:
