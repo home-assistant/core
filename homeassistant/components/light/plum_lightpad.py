@@ -28,6 +28,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     @callback
     async def new_load(logical_load):
+        """Callback handler when a new logical load is discovered."""
         async_add_entities([
             PlumLight(load=logical_load)
         ])
@@ -39,6 +40,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     @callback
     async def new_lightpad(lightpad):
+        """Callback when a new Lightpad is discovered."""
         async_add_entities([
             GlowRing(lightpad=lightpad)
         ])
@@ -60,11 +62,13 @@ class PlumLight(Light):
         self._load.add_event_listener('dimmerchange', self.dimmerchange)
 
     def dimmerchange(self, event):
+        """Change event handler updating the brightness."""
         self._brightness = event['level']
         self.schedule_update_ha_state()
 
     @property
     def llid(self):
+        """Return the Logical Load ID (llid) associated with the load."""
         return self._load.llid
 
     @property
@@ -89,10 +93,12 @@ class PlumLight(Light):
 
     @property
     def dimmable(self):
+        """Return whether the load is configured as dimmable."""
         return self._load.dimmable
 
     @property
     def device_state_attributes(self):
+        """Additional State attributes."""
         return {
             'llid': self.llid,
             'brightness': self.brightness,
@@ -134,6 +140,7 @@ class GlowRing(Light):
         lightpad.add_event_listener('configchange', self.configchange_event)
 
     def configchange_event(self, event):
+        """Configuration change event handling."""
         config = event['changes']
         self._red = config['glowColor']['red']
         self._green = config['glowColor']['green']
@@ -144,22 +151,27 @@ class GlowRing(Light):
 
     @property
     def red(self):
+        """Return the Red value 0..255."""
         return self._red
 
     @property
     def green(self):
+        """Return the Green value 0..255."""
         return self._green
 
     @property
     def blue(self):
+        """Return the Blue value 0..255."""
         return self._blue
 
     @property
     def white_value(self):
+        """White Color value from 0..255."""
         return self._white
 
     @property
     def rgb_color(self):
+        """RGB Property."""
         return self.red, self.green, self.blue
 
     @property
@@ -184,6 +196,7 @@ class GlowRing(Light):
 
     @property
     def glow_intensity(self):
+        """Brightness in float form."""
         return self._brightness / 255.0
 
     @property
@@ -193,6 +206,7 @@ class GlowRing(Light):
 
     @property
     def icon(self):
+        """The crop-portait icon works like the glow ring."""
         return 'mdi:crop-portrait'
 
     @property
@@ -202,6 +216,7 @@ class GlowRing(Light):
 
     @property
     def device_state_attributes(self):
+        """Additional attributes listed for the device."""
         return {
             'red': self._red,
             'green': self._green,

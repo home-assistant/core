@@ -28,6 +28,7 @@ async def async_setup_platform(hass, config, add_devices,
 
     @callback
     async def new_lightpad(lightpad):
+        """Callback when a new lightpad is discovered."""
         add_devices([
             PlumMotionSensor(lightpad=lightpad, hass=hass),
         ])
