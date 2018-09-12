@@ -5,14 +5,14 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/plum_lightpad
 """
 import logging
+
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
 
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
-)
+    CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers import discovery
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['plumlightpad==0.0.9']
 

@@ -5,10 +5,11 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.plum_lightpad
 """
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
+
 from homeassistant.components.light import PLATFORM_SCHEMA
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['plum_lightpad']

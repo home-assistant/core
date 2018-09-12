@@ -5,13 +5,14 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.plum_lightpad
 """
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
+
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.light import PLATFORM_SCHEMA
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
 
 DEPENDENCIES = ['plum_lightpad']
 

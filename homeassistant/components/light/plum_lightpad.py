@@ -5,13 +5,14 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.plum_lightpad
 """
 import voluptuous as vol
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.light import (Light, PLATFORM_SCHEMA,
-                                            SUPPORT_BRIGHTNESS, SUPPORT_COLOR,
-                                            ATTR_HS_COLOR, ATTR_BRIGHTNESS)
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD
-import homeassistant.util.color as color_util
+
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS, ATTR_HS_COLOR, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
+    SUPPORT_COLOR, Light)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+import homeassistant.helpers.config_validation as cv
+import homeassistant.util.color as color_util
 
 DEPENDENCIES = ['plum_lightpad']
 
