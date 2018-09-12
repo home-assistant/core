@@ -62,6 +62,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
 })
 
+CONNECTION_RETRY = 3
+CONNECTION_RETRY_WAIT = 2
+CONNECTION_TIMEOUT = 10
+
 
 @attr.s(slots=True, frozen=True)
 class ChromecastInfo:
@@ -369,15 +373,13 @@ class CastDevice(MediaPlayerDevice):
                 return
             await self._async_disconnect()
 
-        # Failed connection will unfortunately never raise an exception, it
-        # will instead just try connecting indefinitely.
         # pylint: disable=protected-access
         _LOGGER.debug("Connecting to cast device %s", cast_info)
         chromecast = await self.hass.async_add_job(
             pychromecast._get_chromecast_from_host, (
                 cast_info.host, cast_info.port, cast_info.uuid,
                 cast_info.model_name, cast_info.friendly_name
-            ))
+            ), CONNECTION_RETRY, CONNECTION_RETRY_WAIT, CONNECTION_TIMEOUT)
         self._chromecast = chromecast
         self._status_listener = CastStatusListener(self, chromecast)
         # Initialise connection status as connected because we can only
