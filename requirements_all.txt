@@ -1480,7 +1480,7 @@ websocket-client==0.37.0
 
 # homeassistant.components.spc
 # homeassistant.components.media_player.webostv
-websockets==3.2
+websockets==6.0
 
 # homeassistant.components.wirelesstag
 wirelesstagpy==0.3.0
