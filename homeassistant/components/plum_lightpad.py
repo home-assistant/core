@@ -32,9 +32,6 @@ def setup(hass, config):
     """Setup the Plum Lightpad component."""
     from plumlightpad import Plum
 
-    # hass.loop.set_debug(True)
-    # hass.loop.slow_callback_duration = 0.03
-    # warnings.simplefilter('always', ResourceWarning)
     conf = config[DOMAIN]
     plum = Plum(conf.get(CONF_USERNAME), conf.get(CONF_PASSWORD))
 
