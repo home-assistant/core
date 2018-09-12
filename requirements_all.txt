@@ -1500,6 +1500,7 @@ xknx==0.8.5
 # homeassistant.components.sensor.ted5000
 # homeassistant.components.sensor.yr
 # homeassistant.components.sensor.zestimate
+# homeassistant.components.weather.met
 xmltodict==0.11.0
 
 # homeassistant.components.sensor.yahoo_finance
