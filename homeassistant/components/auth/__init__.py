@@ -475,6 +475,7 @@ def websocket_create_long_lived_access_token(
 def websocket_refresh_tokens(
         hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return metadata of users refresh tokens."""
+    current_id = connection.request.get('refresh_token_id')
     connection.to_write.put_nowait(websocket_api.result_message(msg['id'], [{
         'id': refresh.id,
         'client_id': refresh.client_id,
@@ -482,6 +483,7 @@ def websocket_refresh_tokens(
         'client_icon': refresh.client_icon,
         'type': refresh.token_type,
         'created_at': refresh.created_at,
+        'is_current': refresh.id == current_id,
     } for refresh in connection.user.refresh_tokens.values()]))
 
 
