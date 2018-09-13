@@ -35,7 +35,6 @@ def websocket_list_devices(hass, connection, msg):
             msg['id'], [{
                 'config_entries': list(entry.config_entries),
                 'connections': list(entry.connections),
-                'identifiers': list(entry.identifiers),
                 'manufacturer': entry.manufacturer,
                 'model': entry.model,
                 'name': entry.name,
