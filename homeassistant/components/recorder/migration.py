@@ -10,7 +10,7 @@ PROGRESS_FILE = '.migration_progress'
 
 def migrate_schema(instance):
     """Check if the schema needs to be upgraded."""
-    from .models import SchemaChanges, SCHEMA_VERSION
+    from .models import SchemaChanges, SCHEMA_VERSION, COLUMN_EVENT_TYPE_SIZE
 
     progress_path = instance.hass.config.path(PROGRESS_FILE)
 
@@ -218,6 +218,12 @@ def _apply_update(engine, new_version, old_version):
         ])
         _create_index(engine, "states", "ix_states_context_id")
         _create_index(engine, "states", "ix_states_context_user_id")
+    elif new_version == 7:
+        _drop_index(engine, "events", "event_type")
+
+        _create_index(engine, "events", [
+            'event_type CHARACTER({})'.format(COLUMN_EVENT_TYPE_SIZE),
+        ])
     else:
         raise ValueError("No schema migration defined for version {}"
                          .format(new_version))
