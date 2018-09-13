@@ -132,7 +132,8 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
 
         result = await zha.safe_read(self._endpoint.ias_zone,
                                      ['zone_status'],
-                                     allow_cache=False)
+                                     allow_cache=False,
+                                     only_cache=(not self._initialized))
         state = result.get('zone_status', self._state)
         if isinstance(state, (int, uint16_t)):
             self._state = result.get('zone_status', self._state) & 3
