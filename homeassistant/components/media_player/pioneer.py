@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
     CONF_HOST, CONF_NAME, CONF_PORT, CONF_TIMEOUT, CONF_MODE,
-    STATE_OFF, STATE_ON, STATE_UNKNOWN)
+    CONF_ENTITIES, STATE_OFF, STATE_ON, STATE_UNKNOWN, CONF_ZONE)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,9 +52,15 @@ PIONEER_VSX822_INPUTS = {
     "49": "Game"
 }
 
+CONF_ZONES = 'zones'
+
 MAX_VOLUME = 185
 MAX_VOLUME_VSX822 = 155
 MAX_SOURCE_NUMBERS = 60
+
+ZONE_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string
+})
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -62,14 +68,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
     vol.Optional(CONF_MODE, default=DEFAULT_MODE): cv.string,
+    vol.Optional(CONF_ZONES): {vol.Coerce(str): ZONE_SCHEMA},
 })
+
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pioneer platform."""
     pioneer = PioneerDevice(
         config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(CONF_TIMEOUT), config.get(CONF_MODE))
+        config.get(CONF_TIMEOUT), config.get(CONF_MODE), config.get(CONF_ZONES)
+    )
 
     if pioneer.update():
         add_entities([pioneer])
@@ -78,13 +87,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PioneerDevice(MediaPlayerDevice):
     """Representation of a Pioneer device."""
 
-    def __init__(self, name, host, port, timeout, mode):
+    def __init__(self, name, host, port, timeout, mode, zones):
         """Initialize the Pioneer device."""
+        _LOGGER.debug("Intializing device %s", name)
         self._name = name
         self._host = host
         self._port = port
         self._timeout = timeout
         self._mode = mode
+        self._zones = zones
         self._pwstate = 'PWR1'
         self._volume = 0
         self._muted = False
@@ -92,17 +103,30 @@ class PioneerDevice(MediaPlayerDevice):
         self._source_name_to_number = {}
         self._source_number_to_name = {}
 
+        print("Zones: ", self._zones['4']['name'])
+
         if self._mode == "vsx_822":
             # If running in vsx_822 mode, we can set static input names now
-            self._source_number_to_name = PIONEER_VSX822_INPUTS
-            self._source_name_to_number = {v:k for k,v in \
-                PIONEER_VSX822_INPUTS.items()}
+#            self._source_number_to_name = PIONEER_VSX822_INPUTS
+#            self._source_name_to_number = {v:k for k,v in \
+#                PIONEER_VSX822_INPUTS.items()}
             # Off is PWR2
             self._pwstate = 'PWR2'
+
+            # Build input list from config
+            for k,v in self._zones.items():
+#                print(k)
+#                print(v['name'])
+                self._source_number_to_name[str(k).zfill(2)] = v['name']
+                self._source_name_to_number[v['name']] = str(k).zfill(2)
+
+#            self._source_number_to_name = {str(k):str(v) for k,v in zones.items()}
+#            self._source_name_to_number = {str(v):str(k) for k,v in zones.items()}
 
     @classmethod
     def telnet_request(cls, telnet, command, expected_prefix):
         """Execute `command` and return the response."""
+        _LOGGER.debug("Sending request: %s", command)
         try:
             telnet.write(command.encode("ASCII") + b"\r")
         except telnetlib.socket.timeout:
