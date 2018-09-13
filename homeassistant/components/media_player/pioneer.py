@@ -43,7 +43,9 @@ POWERED_ON = 'PWR0'
 POWERED_OFF_STD = 'PWR1'
 POWERED_OFF_BASIC = 'PWR2'
 
-ZONE_SCHEMA = vol.Schema({
+CONF_INPUT = 'input'
+
+INPUT_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string
 })
 
@@ -53,7 +55,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.socket_timeout,
-    vol.Optional(CONF_ZONE): {vol.Coerce(str): ZONE_SCHEMA},
+    vol.Optional(CONF_INPUT): {vol.Coerce(str): INPUT_SCHEMA},
 })
 
 
@@ -61,7 +63,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pioneer platform."""
     pioneer = PioneerDevice(
         config.get(CONF_NAME), config.get(CONF_HOST), config.get(CONF_PORT),
-        config.get(CONF_TIMEOUT), config.get(CONF_MODE), config.get(CONF_ZONE)
+        config.get(CONF_TIMEOUT), config.get(CONF_MODE), config.get(CONF_INPUT)
     )
 
     if pioneer.update():
@@ -71,7 +73,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class PioneerDevice(MediaPlayerDevice):
     """Representation of a Pioneer device."""
 
-    def __init__(self, name, host, port, timeout, mode, zones):
+    def __init__(self, name, host, port, timeout, mode, inputs):
         """Initialize the Pioneer device."""
         _LOGGER.debug("Intializing device %s", name)
         self._name = name
@@ -91,11 +93,11 @@ class PioneerDevice(MediaPlayerDevice):
         if self._mode == 'basic':
             self._poweredoff = POWERED_OFF_BASIC
             self._maxvolume = MAX_VOLUME_BASIC
-            if zones:
-                # If inputs were defined via zones, set them up now.
+            if inputs:
+                # If inputs were defined via inputs, set them up now.
                 # These need to be set before 'update' gets called.
-                self._zones = zones
-                for k, v in self._zones.items():
+                self._inputs = inputs
+                for k, v in self._inputs.items():
                     self._source_number_to_name[str(k).zfill(2)] = v[CONF_NAME]
                     self._source_name_to_number[v[CONF_NAME]] = str(k).zfill(2)
 
@@ -162,7 +164,7 @@ class PioneerDevice(MediaPlayerDevice):
 
         # For standard receivers, query source names via RGB command.
         # Basic receivers do not support this command, and source names are
-        # static (defined via zones in config).
+        # static (defined via inputs in config).
         if self._mode != 'basic':
             if not self._source_name_to_number:
                 for i in range(MAX_SOURCE_NUMBERS):
@@ -179,7 +181,7 @@ class PioneerDevice(MediaPlayerDevice):
                     self._source_number_to_name[source_number] = source_name
 
         # Basic receivers can get a list of valid inputs with RGF command.
-        # This will be queried if no inputs are already defined via zones.
+        # This will be queried if no inputs are already defined via inputs.
         if self._mode == 'basic':
             if not self._source_name_to_number:
                 result = self.telnet_request(telnet, "?RGF", "RGF")
