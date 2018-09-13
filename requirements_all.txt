@@ -58,7 +58,7 @@ PyRMVtransport==0.1
 PySwitchbot==0.3
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.9.5
+PyXiaomiGateway==0.10.0
 
 # homeassistant.components.rpi_gpio
 # RPi.GPIO==0.6.1
