@@ -44,7 +44,6 @@ async def test_list_devices(hass, client, registry):
         {
             'config_entries': ['1234'],
             'connections': [['ethernet', '12:34:56:78:90:AB:CD:EF']],
-            'identifiers': [['bridgeid', '0123']],
             'manufacturer': 'manufacturer',
             'model': 'model',
             'name': None,
@@ -53,7 +52,6 @@ async def test_list_devices(hass, client, registry):
         {
             'config_entries': ['1234'],
             'connections': [],
-            'identifiers': [['bridgeid', '1234']],
             'manufacturer': 'manufacturer',
             'model': 'model',
             'name': None,
