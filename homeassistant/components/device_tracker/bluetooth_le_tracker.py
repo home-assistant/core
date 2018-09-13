@@ -67,7 +67,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
             _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
         except RuntimeError as error:
             _LOGGER.error("Error during Bluetooth LE scan: %s", error)
-            return None
+            return {}
         return devices
 
     yaml_path = hass.config.path(YAML_DEVICES)
