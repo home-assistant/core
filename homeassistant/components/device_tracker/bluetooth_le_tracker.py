@@ -6,14 +6,12 @@ https://home-assistant.io/components/device_tracker.bluetooth_le_tracker/
 """
 import logging
 
-import voluptuous as vol
 from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.components.device_tracker import (
     YAML_DEVICES, CONF_TRACK_NEW, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL,
     PLATFORM_SCHEMA, load_config, SOURCE_TYPE_BLUETOOTH_LE
 )
 import homeassistant.util.dt as dt_util
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
