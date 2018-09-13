@@ -336,6 +336,7 @@ class Entity(entity.Entity):
         self._in_listeners = {}
         self._out_listeners = {}
 
+        self._initialized = False
         application_listener.register_entity(ieee, self)
 
     async def async_added_to_hass(self):
@@ -347,6 +348,8 @@ class Entity(entity.Entity):
             cluster.add_listener(self._in_listeners.get(cluster_id, self))
         for cluster_id, cluster in self._out_clusters.items():
             cluster.add_listener(self._out_listeners.get(cluster_id, self))
+
+        self._initialized = True
 
     @property
     def unique_id(self) -> str:
@@ -384,7 +387,7 @@ def get_discovery_info(hass, discovery_info):
     return all_discovery_info.get(discovery_key, None)
 
 
-async def safe_read(cluster, attributes, allow_cache=True):
+async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
     """Swallow all exceptions from network read.
 
     If we throw during initialization, setup fails. Rather have an entity that
@@ -395,6 +398,7 @@ async def safe_read(cluster, attributes, allow_cache=True):
         result, _ = await cluster.read_attributes(
             attributes,
             allow_cache=allow_cache,
+            only_cache=only_cache
         )
         return result
     except Exception:  # pylint: disable=broad-except
