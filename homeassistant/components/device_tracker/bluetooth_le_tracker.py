@@ -21,13 +21,6 @@ REQUIREMENTS = ['pygatt==3.2.0']
 
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5
-CONF_SCAN_DURATION = 'scan_duration'
-CONF_BLUETOOTH_DEVICE = 'device_id'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_SCAN_DURATION, default=10): cv.positive_int,
-    vol.Optional(CONF_BLUETOOTH_DEVICE, default='hci0'): cv.string
-})
 
 
 def setup_scanner(hass, config, see, discovery_info=None):
