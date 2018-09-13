@@ -57,9 +57,9 @@ def make_sensor(discovery_info):
 
     if discovery_info['new_join']:
         cluster = list(in_clusters.values())[0]
-        yield from cluster.bind()
-        yield from cluster.configure_reporting(
-            sensor.value_attribute, 300, 600, sensor.min_reportable_change,
+        yield from zha.configure_reporting(
+            sensor.entity_id, cluster, sensor.value_attribute,
+            reportable_change=sensor.min_reportable_change
         )
 
     return sensor

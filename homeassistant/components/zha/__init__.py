@@ -399,3 +399,42 @@ async def safe_read(cluster, attributes, allow_cache=True):
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
+
+
+async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
+                              min_report=300, max_report=900,
+                              reportable_change=1):
+    """Configure attribute reporting for a cluster.
+
+    while swallowing the DeliverError exceptions in case of unreachable
+    devices.
+    """
+    from zigpy.exceptions import DeliveryError
+
+    attr_name = cluster.attributes.get(attr, [attr])[0]
+    cluster_name = cluster.ep_attribute
+    if not skip_bind:
+        try:
+            res = await cluster.bind()
+            _LOGGER.debug(
+                "%s: bound  '%s' cluster: %s", entity_id, cluster_name, res[0]
+            )
+        except DeliveryError as ex:
+            _LOGGER.debug(
+                "%s: Failed to bind '%s' cluster: %s",
+                entity_id, cluster_name, str(ex)
+            )
+
+    try:
+        res = await cluster.configure_reporting(attr, min_report,
+                                                max_report, reportable_change)
+        _LOGGER.debug(
+            "%s: reporting '%s' attr on '%s' cluster: %d/%d/%d: Status: %s",
+            entity_id, attr_name, cluster_name, min_report, max_report,
+            reportable_change, res[0][0].status
+        )
+    except DeliveryError as ex:
+        _LOGGER.debug(
+            "%s: failed to set reporting for '%s' attr on '%s' cluster: %s",
+            entity_id, attr_name, cluster_name, str(ex)
+        )
