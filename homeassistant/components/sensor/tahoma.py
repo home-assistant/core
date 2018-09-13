@@ -17,7 +17,7 @@ DEPENDENCIES = ['tahoma']
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=60)
 
 ATTR_RSSI_LEVEL = 'rssi_level'
 
@@ -69,7 +69,6 @@ class TahomaSensor(TahomaDevice, Entity):
                 'core:LuminanceState']
             self._available = bool(self.tahoma_device.active_states.get(
                 'core:StatusState') == 'available')
-
         if self.tahoma_device.type == 'io:SomfyContactIOSystemSensor':
             self.current_value = self.tahoma_device.active_states[
                 'core:ContactState']
@@ -83,7 +82,6 @@ class TahomaSensor(TahomaDevice, Entity):
             self.current_value = self.tahoma_device.active_states[
                 'core:OccupancyState']
             self._available = True
-
 
         _LOGGER.debug("Update %s, value: %d", self._name, self.current_value)
 
