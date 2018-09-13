@@ -2,7 +2,7 @@
 Support for Logi Circle cameras.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/logi/
+https://home-assistant.io/components/logi_circle/
 """
 import logging
 
@@ -18,12 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 CONF_ATTRIBUTION = "Data provided by circle.logi.com"
 
 NOTIFICATION_ID = 'logi_notification'
-NOTIFICATION_TITLE = 'Logi Setup'
+NOTIFICATION_TITLE = 'Logi Circle Setup'
 
-DATA_LOGI = 'logi'
-DOMAIN = 'logi'
+DOMAIN = 'logi_circle'
 DEFAULT_CACHEDB = '.logi_cache.pickle'
-DEFAULT_ENTITY_NAMESPACE = 'logi'
+DEFAULT_ENTITY_NAMESPACE = 'logi_circle'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -34,7 +33,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 async def async_setup(hass, config):
-    """Set up the Logi component."""
+    """Set up the Logi Circle component."""
     conf = config[DOMAIN]
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
@@ -50,9 +49,9 @@ async def async_setup(hass, config):
 
         if not logi.is_connected:
             return False
-        hass.data['logi'] = await logi.cameras
+        hass.data[DOMAIN] = await logi.cameras
     except (BadLogin, ClientResponseError) as ex:
-        _LOGGER.error('Unable to connect to Logi API: %s', str(ex))
+        _LOGGER.error('Unable to connect to Logi Circle API: %s', str(ex))
         hass.components.persistent_notification.create(
             'Error: {}<br />'
             'You will need to restart hass after fixing.'

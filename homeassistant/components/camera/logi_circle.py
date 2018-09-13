@@ -2,7 +2,7 @@
 This component provides support to the Logi Circle camera.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/camera.logi/
+https://home-assistant.io/components/camera.logi_circle/
 """
 import logging
 import asyncio
@@ -11,23 +11,23 @@ from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
-from homeassistant.components.logi import (
-    DATA_LOGI, CONF_ATTRIBUTION)
+from homeassistant.components.logi_circle import (
+    DOMAIN, CONF_ATTRIBUTION)
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF,
-    ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN)
+    ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN as CAMERA_DOMAIN)
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL
 
-DEPENDENCIES = ['logi']
+DEPENDENCIES = ['logi_circle']
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
-SERVICE_SET_CONFIG = 'logi_set_config'
-SERVICE_LIVESTREAM_SNAPSHOT = 'logi_livestream_snapshot'
-SERVICE_LIVESTREAM_RECORD = 'logi_livestream_record'
-DATA_KEY = 'camera.logi'
+SERVICE_SET_CONFIG = 'logi_circle_set_config'
+SERVICE_LIVESTREAM_SNAPSHOT = 'logi_circle_livestream_snapshot'
+SERVICE_LIVESTREAM_RECORD = 'logi_circle_livestream_record'
+DATA_KEY = 'camera.logi_circle'
 
 BATTERY_SAVING_MODE_KEY = 'BATTERY_SAVING'
 PRIVACY_MODE_KEY = 'PRIVACY_MODE'
@@ -42,17 +42,17 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         cv.time_period,
 })
 
-LOGI_SERVICE_SET_CONFIG = CAMERA_SERVICE_SCHEMA.extend({
+LOGI_CIRCLE_SERVICE_SET_CONFIG = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_MODE): vol.In([BATTERY_SAVING_MODE_KEY, LED_MODE_KEY,
                                      PRIVACY_MODE_KEY]),
     vol.Required(ATTR_VALUE): cv.boolean
 })
 
-LOGI_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
+LOGI_CIRCLE_SERVICE_SNAPSHOT = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_FILENAME): cv.template
 })
 
-LOGI_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend({
+LOGI_CIRCLE_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend({
     vol.Required(ATTR_FILENAME): cv.template,
     vol.Required(ATTR_DURATION): cv.positive_int
 })
@@ -63,7 +63,7 @@ async def async_setup_platform(hass,
                                async_add_entities,
                                discovery_info=None):
     """Set up a Logi Circle Camera."""
-    devices = hass.data[DATA_LOGI]
+    devices = hass.data[DOMAIN]
 
     cameras = []
     for device in devices:
@@ -91,23 +91,23 @@ async def async_setup_platform(hass,
                 await target_device.download_livestream(**params)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_SET_CONFIG, service_handler,
-        schema=LOGI_SERVICE_SET_CONFIG)
+        CAMERA_DOMAIN, SERVICE_SET_CONFIG, service_handler,
+        schema=LOGI_CIRCLE_SERVICE_SET_CONFIG)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_LIVESTREAM_SNAPSHOT, service_handler,
-        schema=LOGI_SERVICE_SNAPSHOT)
+        CAMERA_DOMAIN, SERVICE_LIVESTREAM_SNAPSHOT, service_handler,
+        schema=LOGI_CIRCLE_SERVICE_SNAPSHOT)
 
     hass.services.async_register(
-        DOMAIN, SERVICE_LIVESTREAM_RECORD, service_handler,
-        schema=LOGI_SERVICE_RECORD)
+        CAMERA_DOMAIN, SERVICE_LIVESTREAM_RECORD, service_handler,
+        schema=LOGI_CIRCLE_SERVICE_RECORD)
 
 
 class LogiCam(Camera):
     """An implementation of a Logi Circle camera."""
 
     def __init__(self, hass, camera, device_info):
-        """Initialize Logi camera."""
+        """Initialize Logi Circle camera."""
         super(LogiCam, self).__init__()
         self._camera = camera
         self._name = self._camera.name

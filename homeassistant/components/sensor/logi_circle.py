@@ -2,7 +2,7 @@
 This component provides HA sensor support for Logi Circle cameras.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.logi/
+https://home-assistant.io/components/sensor.logi_circle/
 """
 from datetime import timedelta
 import logging
@@ -10,8 +10,8 @@ import logging
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.logi import (
-    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DATA_LOGI)
+from homeassistant.components.logi_circle import (
+    CONF_ATTRIBUTION, DEFAULT_ENTITY_NAMESPACE, DOMAIN)
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS,
@@ -20,7 +20,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.util.dt import as_local
 
-DEPENDENCIES = ['logi']
+DEPENDENCIES = ['logi_circle']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up a sensor for a Logi Circle device."""
-    devices = hass.data[DATA_LOGI]
+    devices = hass.data[DOMAIN]
 
     sensors = []
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):

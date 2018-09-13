@@ -64,7 +64,7 @@ onvif_ptz:
       description: "Zoom. Allowed values: ZOOM_IN, ZOOM_OUT"
       example: "ZOOM_IN"
 
-logi_set_config:
+logi_circle_set_config:
   description: Set a configuration property.
   fields:
     entity_id:
@@ -77,7 +77,7 @@ logi_set_config:
       description: "Operation value. Allowed values: true, false"
       example: true
 
-logi_livestream_snapshot:
+logi_circle_livestream_snapshot:
   description: Take a snapshot from the camera's livestream. Will wake the camera from sleep if required.
   fields:
     entity_id:
@@ -87,7 +87,7 @@ logi_livestream_snapshot:
       description: Template of a Filename. Variable is entity_id.
       example: "/tmp/snapshot_{{ entity_id }}.jpg"
 
-logi_livestream_record:
+logi_circle_livestream_record:
   description: Take a video recording from the camera's livestream.
   fields:
     entity_id:
