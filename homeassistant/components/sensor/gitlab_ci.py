@@ -70,6 +70,7 @@ class GitLabSensor(Entity):
     def __init__(self, gitlab_id, priv_token, gitlab_data):
         """Initialize the sensor."""
         self._state = None
+        self._available = False
         self._gitlab_data = gitlab_data
         self.update()
 
@@ -86,7 +87,7 @@ class GitLabSensor(Entity):
     @property
     def available(self):
         """Return True if entity is available."""
-        pass
+        return self._available
 
     @property
     def device_state_attributes(self):
@@ -125,6 +126,7 @@ class GitLabSensor(Entity):
         self._build_id = self._gitlab_data.build_id
         self._branch = self._gitlab_data.branch
         self._state = self._gitlab_data.status
+        self._available = self._gitlab_data.available
 
 
 class GitLabData():
@@ -157,21 +159,23 @@ class GitLabData():
         import gitlab
         import requests
         try:
-            _gitlab = gitlab.Gitlab(self._url, private_token=self._priv_token)
+            _gitlab = gitlab.Gitlab(
+                self._url, private_token=self._priv_token)
             _gitlab.auth()
             _projects = _gitlab.projects.get(self._gitlab_id)
             _last_pipeline = _projects.pipelines.list()[0]
             _last_job = _last_pipeline.jobs.list()[0]
-            self.available = True
-            self.status = _last_pipeline.attributes['status']
-            self.started_at = _last_job['started_at']
-            self.finished_at = _last_job['finished_at']
-            self.duration = _last_job['duration']
-            self.commit_id = _last_job['commit']['id']
-            self.commit_date = _last_job['commit']['committed_date']
-            self.build_id = _last_job['id']
-            self.branch = _last_job['ref']
+            self.status = _last_pipeline.attributes.get('status')
+            self.started_at = _last_job.attributes.get('started_at')
+            self.finished_at = _last_job.attributes.get('finished_at')
+            self.duration = _last_job.attributes.get('duration')
+            _commit = _last_job.attributes.get('commit')
+            self.commit_id = _commit.get('id')
+            self.commit_date = _commit.get('committed_date')
+            self.build_id = _last_job.attributes.get('id')
+            self.branch = _last_job.attributes.get('ref')
             self.state = self.status
+            self.available = True
         except gitlab.exceptions.GitlabAuthenticationError as erra:
             _logger.error("Authentication Error: %s", erra)
             self.available = False
