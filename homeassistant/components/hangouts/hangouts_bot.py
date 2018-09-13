@@ -4,7 +4,6 @@ import logging
 import asyncio
 from urllib.parse import urlparse
 import aiohttp
-import async_timeout
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers import dispatcher, intent
 
