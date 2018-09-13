@@ -95,7 +95,9 @@ class Sensor(zha.Entity):
         """Retrieve latest state."""
         result = await zha.safe_read(
             list(self._in_clusters.values())[0],
-            [self.value_attribute]
+            [self.value_attribute],
+            allow_cache=False,
+            only_cache=(not self._initialized)
         )
         self._state = result.get(self.value_attribute, self._state)
 
@@ -224,7 +226,6 @@ class ElectricalMeasurementSensor(Sensor):
         _LOGGER.debug("%s async_update", self.entity_id)
 
         result = await zha.safe_read(
-            self._endpoint.electrical_measurement,
-            ['active_power'],
-            allow_cache=False)
+            self._endpoint.electrical_measurement, ['active_power'],
+            allow_cache=False, only_cache=(not self._initialized))
         self._state = result.get('active_power', self._state)
