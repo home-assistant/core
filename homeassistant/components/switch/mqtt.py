@@ -11,9 +11,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_COMMAND_TOPIC, CONF_AVAILABILITY_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
-    MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
+    CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
+    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, MqttAvailability)
+from homeassistant.components.mqtt.discovery import (
+    ALREADY_DISCOVERED)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
@@ -56,7 +58,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     if value_template is not None:
         value_template.hass = hass
 
-    async_add_entities([MqttSwitch(
+    newswitch = MqttSwitch(
         config.get(CONF_NAME),
         config.get(CONF_ICON),
         config.get(CONF_STATE_TOPIC),
@@ -73,7 +75,13 @@ async def async_setup_platform(hass, config, async_add_entities,
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         config.get(CONF_UNIQUE_ID),
         value_template,
-    )])
+    )
+
+    async_add_entities([newswitch])
+
+    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
+        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
+        hass.data[ALREADY_DISCOVERED][discovery_hash] = newswitch
 
 
 class MqttSwitch(MqttAvailability, SwitchDevice):
