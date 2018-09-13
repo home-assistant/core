@@ -1,4 +1,6 @@
 """Test entity_registry API."""
+from collections import OrderedDict
+
 import pytest
 
 from homeassistant.helpers.entity_registry import RegistryEntry
@@ -15,19 +17,20 @@ def client(hass, hass_ws_client):
 
 async def test_list_entities(hass, client):
     """Test list entries."""
-    mock_registry(hass, {
-        'test_domain.name': RegistryEntry(
-            entity_id='test_domain.name',
-            unique_id='1234',
-            platform='test_platform',
-            name='Hello World'
-        ),
-        'test_domain.no_name': RegistryEntry(
-            entity_id='test_domain.no_name',
-            unique_id='6789',
-            platform='test_platform',
-        ),
-    })
+    entities = OrderedDict()
+    entities['test_domain.name'] = RegistryEntry(
+        entity_id='test_domain.name',
+        unique_id='1234',
+        platform='test_platform',
+        name='Hello World'
+    )
+    entities['test_domain.no_name'] = RegistryEntry(
+        entity_id='test_domain.no_name',
+        unique_id='6789',
+        platform='test_platform',
+    )
+
+    mock_registry(hass, entities)
 
     await client.send_json({
         'id': 5,
