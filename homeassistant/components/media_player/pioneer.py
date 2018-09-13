@@ -97,9 +97,11 @@ class PioneerDevice(MediaPlayerDevice):
                 # If inputs were defined via inputs, set them up now.
                 # These need to be set before 'update' gets called.
                 self._inputs = inputs
-                for k, v in self._inputs.items():
-                    self._source_number_to_name[str(k).zfill(2)] = v[CONF_NAME]
-                    self._source_name_to_number[v[CONF_NAME]] = str(k).zfill(2)
+                for key, val in self._inputs.items():
+                    self._source_number_to_name[str(key).zfill(2)] = \
+                        val[CONF_NAME]
+                    self._source_name_to_number[val[CONF_NAME]] = \
+                        str(key).zfill(2)
 
         self._pwstate = self._poweredoff
 
@@ -189,7 +191,7 @@ class PioneerDevice(MediaPlayerDevice):
                     source_list = result[3:]
                     for i in range(MAX_SOURCE_NUMBERS):
                         if source_list[i] != '0':
-                            _LOGGER.debug("Found input: %0.2d" % i)
+                            _LOGGER.debug("Found input: %0.2d", i)
                             source_name = "Input " + str(i).zfill(2)
                             source_number = str(i).zfill(2)
 
