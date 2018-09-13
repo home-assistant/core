@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL, CONF_TOKEN, STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_URL, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -30,9 +30,12 @@ ATTR_BUILD_BRANCH = 'master'
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
     vol.Required(CONF_GITLAB_ID): cv.string,
+    vol.Optional(CONF_URL, default='https://gitlab.com'): cv.string,
     vol.Optional(CONF_SCAN_INTERVAL,
                  default=timedelta(seconds=300)): cv.time_period,
 })
+
+REQUIREMENTS = ['python-gitlab==1.6.0']
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
@@ -42,6 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _priv_token = config.get(CONF_TOKEN)
     _gitlab_id = config.get(CONF_GITLAB_ID)
     _interval = config.get(CONF_SCAN_INTERVAL)
+    _url = config.get(CONF_URL)
 
     if _priv_token is None:
         _logger.error('No private access token specified')
@@ -53,7 +57,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     _gitlab_data = GitLabData(
         priv_token=_priv_token,
         gitlab_id=_gitlab_id,
-        interval=_interval
+        interval=_interval,
+        url=_url
     )
 
     add_devices([GitLabSensor(_gitlab_id, _priv_token, _gitlab_data)])
@@ -77,6 +82,11 @@ class GitLabSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         return self._state
+
+    @property
+    def available(self):
+        """Return True if entity is available."""
+        pass
 
     @property
     def device_state_attributes(self):
@@ -120,17 +130,17 @@ class GitLabSensor(Entity):
 class GitLabData():
     """GitLab Data object."""
 
-    def __init__(self, gitlab_id, priv_token, interval):
-        """Fetch json data from GitLab API for most recent CI job."""
+    def __init__(self, gitlab_id, priv_token, interval, url):
+        """Fetch data from GitLab API for most recent CI job."""
         self._gitlab_id = gitlab_id
-        self._private_access_token = {'PRIVATE-TOKEN': priv_token}
-        self._url = ("https://gitlab.com/api/v4/projects/" +
-                     self._gitlab_id + "/jobs?per_page=1&page=1")
+        self._priv_token = priv_token
         self._interval = interval
+        self._url = url
         self.update = Throttle(interval)(self._update)
 
         self._response = None
         self._response_json = None
+        self.available = False
         self.status = STATE_UNKNOWN
         self.started_at = STATE_UNKNOWN
         self.finished_at = STATE_UNKNOWN
@@ -144,39 +154,30 @@ class GitLabData():
     def _update(self):
         _logger = logging.getLogger(__name__)
         _logger.debug(self._interval)
+        import gitlab
         import requests
-        import json
         try:
-            response = requests.get(self._url,
-                                    headers=self._private_access_token)
-            response.raise_for_status()
-            self._response = response.text[1:-1]
-            self._response_json = json.loads(self._response)
-            self._response_json = json.loads(self._response)
-
-            self.status = self._response_json['status']
-            self.started_at = self._response_json['started_at']
-            self.finished_at = self._response_json['finished_at']
-            self.duration = self._response_json['duration']
-            self.commit_id = self._response_json['commit']['id']
-            self.commit_date = self._response_json['commit']['committed_date']
-            self.build_id = self._response_json['id']
-            self.branch = self._response_json['ref']
+            _gitlab = gitlab.Gitlab(self._url, private_token=self._priv_token)
+            _gitlab.auth()
+            _projects = _gitlab.projects.get(self._gitlab_id)
+            _last_pipeline = _projects.pipelines.list()[0]
+            _last_job = _last_pipeline.jobs.list()[0]
+            self.available = True
+            self.status = _last_pipeline.attributes['status']
+            self.started_at = _last_job['started_at']
+            self.finished_at = _last_job['finished_at']
+            self.duration = _last_job['duration']
+            self.commit_id = _last_job['commit']['id']
+            self.commit_date = _last_job['commit']['committed_date']
+            self.build_id = _last_job['id']
+            self.branch = _last_job['ref']
             self.state = self.status
-        except requests.exceptions.HTTPError as errh:
-            _logger.error("Http Error: %s", errh)
+        except gitlab.exceptions.GitlabAuthenticationError as erra:
+            _logger.error("Authentication Error: %s", erra)
+            self.available = False
+        except gitlab.exceptions.GitlabGetError as errg:
+            _logger.error("Project Not Found: %s", errg)
+            self.available = False
         except requests.exceptions.ConnectionError as errc:
             _logger.error("Error Connecting: %s", errc)
-        except requests.exceptions.Timeout as errt:
-            _logger.error("Timeout Error: %s", errt)
-        except requests.exceptions.RequestException as err:
-            _logger.error("Request Exception: %s", err)
-            self.status = STATE_UNKNOWN
-            self.started_at = STATE_UNKNOWN
-            self.finished_at = STATE_UNKNOWN
-            self.duration = STATE_UNKNOWN
-            self.commit_id = STATE_UNKNOWN
-            self.commit_date = STATE_UNKNOWN
-            self.build_id = STATE_UNKNOWN
-            self.branch = STATE_UNKNOWN
-            self.state = self.status
+            self.available = False
