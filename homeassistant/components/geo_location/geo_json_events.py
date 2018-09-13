@@ -10,9 +10,9 @@ https://home-assistant.io/components/geo_location/geo_json_events/
 """
 import logging
 from datetime import timedelta
+from typing import Optional
 
 import voluptuous as vol
-from typing import Optional
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.geo_location import GeoLocationEvent
@@ -221,18 +221,18 @@ class GeoJsonDistanceHelper:
         """Extract the best geometry from the provided feature for display."""
         from geojson import Point, GeometryCollection, Polygon
         latitude = longitude = None
-        if type(geometry) is Point:
+        if isinstance(geometry, Point):
             # Just extract latitude and longitude directly.
             latitude, longitude = geometry.coordinates[1], \
                                   geometry.coordinates[0]
-        elif type(geometry) is GeometryCollection:
+        elif isinstance(geometry, GeometryCollection):
             # Go through the collection, and extract the first suitable
             # geometry.
-            for geometry in geometry.geometries:
-                latitude, longitude = self.extract_coordinates(geometry)
+            for entry in geometry.geometries:
+                latitude, longitude = self.extract_coordinates(entry)
                 if latitude is not None and longitude is not None:
                     break
-        elif type(geometry) is Polygon:
+        elif isinstance(geometry, Polygon):
             # Find the polygon's centroid as a best approximation for the map.
             longitudes_list = [point[0] for point in geometry.coordinates[0]]
             latitudes_list = [point[1] for point in geometry.coordinates[0]]
@@ -249,11 +249,11 @@ class GeoJsonDistanceHelper:
         """Calculate the distance between home coordinates and geometry."""
         from geojson import Point, GeometryCollection, Polygon
         distance = float("inf")
-        if type(geometry) is Point:
+        if isinstance(geometry, Point):
             distance = self._distance_to_point(geometry)
-        elif type(geometry) is GeometryCollection:
+        elif isinstance(geometry, GeometryCollection):
             distance = self._distance_to_geometry_collection(geometry)
-        elif type(geometry) is Polygon:
+        elif isinstance(geometry, Polygon):
             distance = self._distance_to_polygon(geometry.coordinates[0])
         else:
             _LOGGER.debug("Not implemented: %s", type(geometry))
