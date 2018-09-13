@@ -8,9 +8,9 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 from homeassistant.components import auth
 
-from . import async_setup_auth
-
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, MockUser
+
+from . import async_setup_auth
 
 
 async def test_login_new_user_and_trying_refresh_token(hass, aiohttp_client):
@@ -267,3 +267,83 @@ async def test_revoking_refresh_token(hass, aiohttp_client):
     })
 
     assert resp.status == 400
+
+
+async def test_ws_long_lived_access_token(hass, hass_ws_client,
+                                          hass_access_token):
+    """Test generate long-lived access token."""
+    assert await async_setup_component(hass, 'auth', {'http': {}})
+
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    # verify create long-lived access token
+    await ws_client.send_json({
+        'id': 5,
+        'type': auth.WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
+        'client_name': 'GPS Logger',
+        'lifespan': 365,
+    })
+
+    result = await ws_client.receive_json()
+    assert result['success'], result
+
+    long_lived_access_token = result['result']
+    assert long_lived_access_token is not None
+
+    refresh_token = await hass.auth.async_validate_access_token(
+        long_lived_access_token)
+    assert refresh_token.client_id is None
+    assert refresh_token.client_name == 'GPS Logger'
+    assert refresh_token.client_icon is None
+
+
+async def test_ws_refresh_tokens(hass, hass_ws_client, hass_access_token):
+    """Test fetching refresh token metadata."""
+    assert await async_setup_component(hass, 'auth', {'http': {}})
+
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    await ws_client.send_json({
+        'id': 5,
+        'type': auth.WS_TYPE_REFRESH_TOKENS,
+    })
+
+    result = await ws_client.receive_json()
+    assert result['success'], result
+    assert len(result['result']) == 1
+    token = result['result'][0]
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    assert token['id'] == refresh_token.id
+    assert token['type'] == refresh_token.token_type
+    assert token['client_id'] == refresh_token.client_id
+    assert token['client_name'] == refresh_token.client_name
+    assert token['client_icon'] == refresh_token.client_icon
+    assert token['created_at'] == refresh_token.created_at.isoformat()
+    assert token['is_current'] is True
+    assert token['last_used_at'] == refresh_token.last_used_at.isoformat()
+    assert token['last_used_ip'] == refresh_token.last_used_ip
+
+
+async def test_ws_delete_refresh_token(hass, hass_ws_client,
+                                       hass_access_token):
+    """Test deleting a refresh token."""
+    assert await async_setup_component(hass, 'auth', {'http': {}})
+
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+
+    ws_client = await hass_ws_client(hass, hass_access_token)
+
+    # verify create long-lived access token
+    await ws_client.send_json({
+        'id': 5,
+        'type': auth.WS_TYPE_DELETE_REFRESH_TOKEN,
+        'refresh_token_id': refresh_token.id
+    })
+
+    result = await ws_client.receive_json()
+    assert result['success'], result
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    assert refresh_token is None

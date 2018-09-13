@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyTibber==0.4.1']
+REQUIREMENTS = ['pyTibber==0.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 

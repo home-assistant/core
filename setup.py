@@ -32,7 +32,7 @@ PROJECT_URLS = {
 PACKAGES = find_packages(exclude=['tests', 'tests.*'])
 
 REQUIRES = [
-    'aiohttp==3.4.0',
+    'aiohttp==3.4.4',
     'astral==1.6.1',
     'async_timeout==3.0.0',
     'attrs==18.2.0',
@@ -47,6 +47,7 @@ REQUIRES = [
     'pyyaml>=3.13,<4',
     'requests==2.19.1',
     'voluptuous==0.11.5',
+    'voluptuous-serialize==2.0.0',
 ]
 
 MIN_PY_VERSION = '.'.join(map(str, hass_const.REQUIRED_PYTHON_VER))

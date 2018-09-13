@@ -123,6 +123,7 @@ omit =
     homeassistant/components/hangouts/const.py
     homeassistant/components/hangouts/hangouts_bot.py
     homeassistant/components/hangouts/hangups_utils.py
+    homeassistant/components/hangouts/intents.py
     homeassistant/components/*/hangouts.py
 
     homeassistant/components/hdmi_cec.py
@@ -139,6 +140,9 @@ omit =
 
     homeassistant/components/homematicip_cloud.py
     homeassistant/components/*/homematicip_cloud.py
+
+    homeassistant/components/huawei_lte.py
+    homeassistant/components/*/huawei_lte.py
 
     homeassistant/components/hydrawise.py
     homeassistant/components/*/hydrawise.py
@@ -377,6 +381,7 @@ omit =
     homeassistant/components/alarm_control_panel/nx584.py
     homeassistant/components/alarm_control_panel/simplisafe.py
     homeassistant/components/alarm_control_panel/totalconnect.py
+    homeassistant/components/alarm_control_panel/yale_smart_alarm.py
     homeassistant/components/apiai.py
     homeassistant/components/binary_sensor/arest.py
     homeassistant/components/binary_sensor/concord232.py
@@ -414,6 +419,7 @@ omit =
     homeassistant/components/climate/honeywell.py
     homeassistant/components/climate/knx.py
     homeassistant/components/climate/oem.py
+    homeassistant/components/climate/opentherm_gw.py
     homeassistant/components/climate/proliphix.py
     homeassistant/components/climate/radiotherm.py
     homeassistant/components/climate/sensibo.py
@@ -666,6 +672,7 @@ omit =
     homeassistant/components/sensor/fritzbox_netmonitor.py
     homeassistant/components/sensor/gearbest.py
     homeassistant/components/sensor/geizhals.py
+    homeassistant/components/sensor/gitlab_ci.py
     homeassistant/components/sensor/gitter.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
@@ -793,6 +800,7 @@ omit =
     homeassistant/components/switch/rest.py
     homeassistant/components/switch/rpi_rf.py
     homeassistant/components/switch/snmp.py
+    homeassistant/components/switch/switchbot.py
     homeassistant/components/switch/switchmate.py
     homeassistant/components/switch/telnet.py
     homeassistant/components/switch/tplink.py

@@ -9,24 +9,24 @@ import logging
 import threading
 from typing import Optional, Tuple
 
-import voluptuous as vol
 import attr
+import voluptuous as vol
 
-from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import (dispatcher_send,
-                                              async_dispatcher_connect)
 from homeassistant.components.cast import DOMAIN as CAST_DOMAIN
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_MOVIE, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_STOP, SUPPORT_PLAY, MediaPlayerDevice, PLATFORM_SCHEMA)
+    MEDIA_TYPE_MOVIE, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING)
+from homeassistant.core import callback
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.dt as dt_util
 
 DEPENDENCIES = ('cast',)
@@ -57,9 +57,13 @@ SIGNAL_CAST_DISCOVERED = 'cast_discovered'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
-    vol.Optional(CONF_IGNORE_CEC, default=[]): vol.All(cv.ensure_list,
-                                                       [cv.string])
+    vol.Optional(CONF_IGNORE_CEC, default=[]):
+        vol.All(cv.ensure_list, [cv.string]),
 })
+
+CONNECTION_RETRY = 3
+CONNECTION_RETRY_WAIT = 2
+CONNECTION_TIMEOUT = 10
 
 
 @attr.s(slots=True, frozen=True)
@@ -368,15 +372,13 @@ class CastDevice(MediaPlayerDevice):
                 return
             await self._async_disconnect()
 
-        # Failed connection will unfortunately never raise an exception, it
-        # will instead just try connecting indefinitely.
         # pylint: disable=protected-access
         _LOGGER.debug("Connecting to cast device %s", cast_info)
         chromecast = await self.hass.async_add_job(
             pychromecast._get_chromecast_from_host, (
                 cast_info.host, cast_info.port, cast_info.uuid,
                 cast_info.model_name, cast_info.friendly_name
-            ))
+            ), CONNECTION_RETRY, CONNECTION_RETRY_WAIT, CONNECTION_TIMEOUT)
         self._chromecast = chromecast
         self._status_listener = CastStatusListener(self, chromecast)
         # Initialise connection status as connected because we can only

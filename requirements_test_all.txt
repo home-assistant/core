@@ -13,8 +13,8 @@ pylint==2.1.1
 pytest-aiohttp==0.3.0
 pytest-cov==2.5.1
 pytest-sugar==0.9.1
-pytest-timeout==1.3.1
-pytest==3.7.2
+pytest-timeout==1.3.2
+pytest==3.8.0
 requests_mock==1.5.2
 
 
@@ -22,7 +22,7 @@ requests_mock==1.5.2
 HAP-python==2.2.2
 
 # homeassistant.components.sensor.rmvtransport
-PyRMVtransport==0.0.7
+PyRMVtransport==0.1
 
 # homeassistant.components.sonos
 SoCo==0.16
@@ -84,7 +84,7 @@ hbmqtt==0.9.4
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180903.0
+home-assistant-frontend==20180912.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -215,9 +215,6 @@ statsd==3.2.1
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
 
-# homeassistant.components.config.config_entries
-voluptuous-serialize==2.0.0
-
 # homeassistant.components.vultr
 vultr==0.1.2
 
@@ -225,7 +222,7 @@ vultr==0.1.2
 # homeassistant.components.media_player.panasonic_viera
 # homeassistant.components.media_player.samsungtv
 # homeassistant.components.switch.wake_on_lan
-wakeonlan==1.0.0
+wakeonlan==1.1.6
 
 # homeassistant.components.cloud
 warrant==0.6.1
