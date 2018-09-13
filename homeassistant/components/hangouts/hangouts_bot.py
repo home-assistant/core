@@ -227,8 +227,7 @@ class HangoutsBot:
             if validate.scheme:
                 try:
                     websession = async_get_clientsession(self.hass)
-                    with async_timeout.timeout(5, loop=self.hass.loop):
-                        response = await websession.get(uri)
+                    async with websession.get(uri, timeout=5) as response:
                         if response.status != 200:
                             _LOGGER.error(
                                 'Fetch image failed, %s, %s',
