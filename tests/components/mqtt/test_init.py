@@ -9,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.setup import async_setup_component
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.const import (EVENT_CALL_SERVICE, ATTR_DOMAIN, ATTR_SERVICE,
                                  EVENT_HOMEASSISTANT_STOP)
 
@@ -671,3 +671,8 @@ def test_mqtt_subscribes_topics_on_connect(hass):
     }
     calls = {call[1][1]: call[1][2] for call in hass.add_job.mock_calls}
     assert calls == expected
+
+
+async def test_setup_fails_without_config(hass):
+    """Test if the MQTT component fails to load with no config."""
+    assert not await async_setup_component(hass, mqtt.DOMAIN, {})

@@ -85,22 +85,6 @@ class TestMQTT:
         assert mock_mqtt.mock_calls[1][1][5] == 'homeassistant'
         assert mock_mqtt.mock_calls[1][1][6] == password
 
-    @patch('passlib.apps.custom_app_context', Mock(return_value=''))
-    @patch('tempfile.NamedTemporaryFile', Mock(return_value=MagicMock()))
-    @patch('hbmqtt.broker.Broker', Mock(return_value=MagicMock()))
-    @patch('hbmqtt.broker.Broker.start', Mock(return_value=mock_coro()))
-    @patch('homeassistant.components.mqtt.MQTT')
-    def test_creating_config_without_pass(self, mock_mqtt):
-        """Test if the MQTT server gets started without password."""
-        mock_mqtt().async_connect.return_value = mock_coro(True)
-        self.hass.bus.listen_once = MagicMock()
-
-        self.hass.config.api = MagicMock(api_password=None)
-        assert setup_component(self.hass, mqtt.DOMAIN, {})
-        assert mock_mqtt.called
-        assert mock_mqtt.mock_calls[1][1][5] is None
-        assert mock_mqtt.mock_calls[1][1][6] is None
-
     @patch('tempfile.NamedTemporaryFile', Mock(return_value=MagicMock()))
     @patch('hbmqtt.broker.Broker.start', return_value=mock_coro())
     def test_broker_config_fails(self, mock_run):

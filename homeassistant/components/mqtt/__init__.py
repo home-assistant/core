@@ -32,6 +32,9 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_VALUE_TEMPLATE, CONF_USERNAME,
     CONF_PASSWORD, CONF_PORT, CONF_PROTOCOL, CONF_PAYLOAD)
 
+# Loading the config flow file will register the flow
+from . import config_flow  # noqa  # pylint: disable=unused-import
+from .const import CONF_BROKER
 from .server import HBMQTT_CONFIG_SCHEMA
 
 REQUIREMENTS = ['paho-mqtt==1.3.1']
@@ -45,7 +48,7 @@ DATA_MQTT = 'mqtt'
 SERVICE_PUBLISH = 'publish'
 
 CONF_EMBEDDED = 'embedded'
-CONF_BROKER = 'broker'
+
 CONF_CLIENT_ID = 'client_id'
 CONF_DISCOVERY = 'discovery'
 CONF_DISCOVERY_PREFIX = 'discovery_prefix'
@@ -311,6 +314,7 @@ async def _async_setup_server(hass: HomeAssistantType,
 
     if not success:
         return None
+
     return broker_config
 
 
@@ -340,8 +344,8 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     conf = config.get(DOMAIN)  # type: Optional[ConfigType]
 
     if conf is None:
-        conf = CONFIG_SCHEMA({DOMAIN: {}})[DOMAIN]
-    conf = cast(ConfigType, conf)
+        # If we have a config entry, setup is done by config entry.
+        return bool(hass.config_entries.async_entries(DOMAIN))
 
     client_id = conf.get(CONF_CLIENT_ID)  # type: Optional[str]
     keepalive = conf.get(CONF_KEEPALIVE)  # type: int
@@ -421,14 +425,58 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         else:
             tls_version = ssl.PROTOCOL_TLSv1
 
-    try:
-        hass.data[DATA_MQTT] = MQTT(
-            hass, broker, port, client_id, keepalive, username, password,
-            certificate, client_key, client_cert, tls_insecure, protocol,
-            will_message, birth_message, tls_version)
-    except socket.error:
-        _LOGGER.exception("Can't connect to the broker. "
-                          "Please check your settings and the broker itself")
+    hass.data[DATA_MQTT] = MQTT(
+        hass, broker, port, client_id, keepalive, username, password,
+        certificate, client_key, client_cert, tls_insecure, protocol,
+        will_message, birth_message, tls_version)
+
+    success = await _async_finish_setup(hass)
+
+    if not success:
+        return False
+
+    if conf.get(CONF_DISCOVERY):
+        await _async_setup_discovery(hass, config)
+
+    return True
+
+
+async def async_setup_entry(hass, entry):
+    """Load a config entry."""
+    if DATA_MQTT in hass.data:
+        _LOGGER.warning(
+            'Not setting up MQTT config entry because manual config is used.')
+        return False
+
+    conf = CONFIG_SCHEMA({
+        DOMAIN: entry.data
+    })[DOMAIN]
+
+    hass.data[DATA_MQTT] = MQTT(
+        hass,
+        broker=entry.data[CONF_BROKER],
+        port=entry.data[CONF_PORT],
+        client_id=conf.get(CONF_CLIENT_ID),
+        keepalive=conf[CONF_KEEPALIVE],
+        username=conf.get(CONF_USERNAME),
+        password=conf.get(CONF_PASSWORD),
+        certificate=conf.get(CONF_CERTIFICATE),
+        client_key=conf.get(CONF_CLIENT_KEY),
+        client_cert=conf.get(CONF_CLIENT_CERT),
+        tls_insecure=conf.get(CONF_TLS_INSECURE),
+        protocol=conf[CONF_PROTOCOL],
+        will_message=conf.get(CONF_WILL_MESSAGE),
+        birth_message=conf.get(CONF_BIRTH_MESSAGE),
+        tls_version=conf[CONF_TLS_VERSION],
+    )
+
+    return await _async_finish_setup(hass)
+
+
+async def _async_finish_setup(hass):
+    """Finish the setup."""
+    success = await hass.data[DATA_MQTT].async_connect()  # type: bool
+    if not success:
         return False
 
     async def async_stop_mqtt(event: Event):
@@ -436,10 +484,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
         await hass.data[DATA_MQTT].async_disconnect()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_stop_mqtt)
-
-    success = await hass.data[DATA_MQTT].async_connect()  # type: bool
-    if not success:
-        return False
 
     async def async_publish_service(call: ServiceCall):
         """Handle MQTT publish service calls."""
@@ -465,9 +509,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service,
         schema=MQTT_PUBLISH_SCHEMA)
-
-    if conf.get(CONF_DISCOVERY):
-        await _async_setup_discovery(hass, config)
 
     return True
 
@@ -501,7 +542,8 @@ class MQTT:
                  certificate: Optional[str], client_key: Optional[str],
                  client_cert: Optional[str], tls_insecure: Optional[bool],
                  protocol: Optional[str], will_message: Optional[Message],
-                 birth_message: Optional[Message], tls_version) -> None:
+                 birth_message: Optional[Message],
+                 tls_version: Optional[int]) -> None:
         """Initialize Home Assistant MQTT client."""
         import paho.mqtt.client as mqtt
 
