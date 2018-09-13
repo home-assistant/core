@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Pioneer AVR'
 DEFAULT_PORT = 23   # telnet default. Some Pioneer AVRs use 8102
 DEFAULT_TIMEOUT = None
-DEFAULT_MODE = None # Use "basic" for older receivers.
+DEFAULT_MODE = None   # Use "basic" for older receivers.
 
 SUPPORT_PIONEER = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
@@ -95,7 +95,7 @@ class PioneerDevice(MediaPlayerDevice):
                 # If inputs were defined via zones, set them up now.
                 # These need to be set before 'update' gets called.
                 self._zones = zones
-                for k,v in self._zones.items():
+                for k, v in self._zones.items():
                     self._source_number_to_name[str(k).zfill(2)] = v[CONF_NAME]
                     self._source_name_to_number[v[CONF_NAME]] = str(k).zfill(2)
 
@@ -191,8 +191,10 @@ class PioneerDevice(MediaPlayerDevice):
                             source_name = "Input " + str(i).zfill(2)
                             source_number = str(i).zfill(2)
 
-                            self._source_name_to_number[source_name] = source_number
-                            self._source_number_to_name[source_number] = source_name
+                            self._source_name_to_number[source_name] = \
+                                source_number
+                            self._source_number_to_name[source_number] = \
+                                source_name
 
         source_number = self.telnet_request(telnet, "?F", "FN")
 
@@ -268,7 +270,8 @@ class PioneerDevice(MediaPlayerDevice):
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
         # 60dB max
-        self.telnet_command(str(round(volume * MAX_VOLUME)).zfill(3) + "VL")
+        self.telnet_command(
+            str(round(volume * self._maxvolume)).zfill(3) + "VL")
 
     def mute_volume(self, mute):
         """Mute (true) or unmute (false) media player."""
