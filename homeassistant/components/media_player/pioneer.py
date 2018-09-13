@@ -81,6 +81,7 @@ class PioneerDevice(MediaPlayerDevice):
         self._mode = mode
         self._poweredon = POWERED_ON
         self._poweredoff = POWERED_OFF_STD
+        self._maxvolume = MAX_VOLUME_STD
         self._volume = 0
         self._muted = False
         self._selected_source = ''
@@ -89,6 +90,7 @@ class PioneerDevice(MediaPlayerDevice):
 
         if self._mode == 'basic':
             self._poweredoff = POWERED_OFF_BASIC
+            self._maxvolume = MAX_VOLUME_BASIC
             if zones:
                 # If inputs were defined via zones, set them up now.
                 # These need to be set before 'update' gets called.
@@ -152,12 +154,8 @@ class PioneerDevice(MediaPlayerDevice):
             self._pwstate = pwstate
 
         volume_str = self.telnet_request(telnet, "?V", "VOL")
-        if self._mode == "basic":
-            self._volume = int(volume_str[3:]) / MAX_VOLUME_BASIC \
-                if volume_str else None
-        else:
-            self._volume = int(volume_str[3:]) / MAX_VOLUME_STD \
-                if volume_str else None
+        self._volume = int(volume_str[3:]) / self._maxvolume \
+            if volume_str else None
 
         muted_value = self.telnet_request(telnet, "?M", "MUT")
         self._muted = (muted_value == "MUT0") if muted_value else None
