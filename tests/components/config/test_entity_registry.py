@@ -13,6 +13,48 @@ def client(hass, hass_ws_client):
     yield hass.loop.run_until_complete(hass_ws_client(hass))
 
 
+async def test_list_entities(hass, client):
+    """Test list entries."""
+    mock_registry(hass, {
+        'test_domain.name': RegistryEntry(
+            entity_id='test_domain.name',
+            unique_id='1234',
+            platform='test_platform',
+            name='Hello World'
+        ),
+        'test_domain.no_name': RegistryEntry(
+            entity_id='test_domain.no_name',
+            unique_id='6789',
+            platform='test_platform',
+        ),
+    })
+
+    await client.send_json({
+        'id': 5,
+        'type': 'config/entity_registry/list',
+    })
+    msg = await client.receive_json()
+
+    assert msg['result'] == [
+        {
+            'config_entry_id': None,
+            'device_id': None,
+            'disabled_by': None,
+            'entity_id': 'test_domain.name',
+            'name': 'Hello World',
+            'platform': 'test_platform',
+        },
+        {
+            'config_entry_id': None,
+            'device_id': None,
+            'disabled_by': None,
+            'entity_id': 'test_domain.no_name',
+            'name': None,
+            'platform': 'test_platform',
+        }
+    ]
+
+
 async def test_get_entity(hass, client):
     """Test get entry."""
     mock_registry(hass, {
