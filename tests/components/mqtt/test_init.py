@@ -552,7 +552,8 @@ async def test_setup_fails_if_no_connect_broker(hass):
         assert not await mqtt.async_setup_entry(hass, entry)
 
 
-async def test_setup_uses_certificate_on_certificate_set_to_auto(hass, mock_MQTT):
+async def test_setup_uses_certificate_on_certificate_set_to_auto(
+        hass, mock_MQTT):
     """Test setup uses bundled certs when certificate is set to auto."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={
         mqtt.CONF_BROKER: 'test-broker',
@@ -585,7 +586,8 @@ async def test_setup_does_not_use_certificate_on_mqtts_port(hass, mock_MQTT):
     assert mock_MQTT.mock_calls[0][2]['port'] != mqttsCertificateBundle
 
 
-async def test_setup_without_tls_config_uses_tlsv1_under_python36(hass, mock_MQTT):
+async def test_setup_without_tls_config_uses_tlsv1_under_python36(
+        hass, mock_MQTT):
     """Test setup defaults to TLSv1 under python3.6."""
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={
         mqtt.CONF_BROKER: 'test-broker',
