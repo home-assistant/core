@@ -97,6 +97,8 @@ homeassistant/components/*/eight_sleep.py @mezz64
 homeassistant/components/hive.py @Rendili @KJonline
 homeassistant/components/*/hive.py @Rendili @KJonline
 homeassistant/components/homekit/* @cdce8p
+homeassistant/components/huawei_lte.py @scop
+homeassistant/components/*/huawei_lte.py @scop
 homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
 homeassistant/components/konnected.py @heythisisnate
