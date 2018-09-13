@@ -1,0 +1,65 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          150.123,
+          -31.456
+        ]
+      },
+      "properties": {
+        "title": "Title 1",
+        "category": "Category 1",
+        "guid": "guid 1",
+        "description": "Entry - same as before"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          150.235,
+          -31.568
+        ]
+      },
+      "properties": {
+        "title": "Title 2 Changed",
+        "category": "Category 2",
+        "id": "id 2",
+        "description": "Entry with changed properties"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          150.345,
+          -31.678
+        ]
+      },
+      "properties": {
+        "title": "Title 4",
+        "guid": "guid 4",
+        "description": "New entry in range"
+      }
+    },
+    {
+      "type": "Feature",
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          150.012,
+          -31.345
+        ]
+      },
+      "properties": {
+        "description": "Entry within range, defined by Point, but without ID/GUID/Title"
+      }
+    }
+  ]
+}

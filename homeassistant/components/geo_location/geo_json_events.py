@@ -14,8 +14,6 @@ from datetime import timedelta
 import voluptuous as vol
 from typing import Optional
 
-from geojson import Polygon
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.geo_location import GeoLocationEvent
 from homeassistant.components.sensor.rest import RestData
@@ -32,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_CATEGORY = 'category'
 ATTR_DISTANCE = 'distance'
+ATTR_EXTERNAL_ID = 'external_id'
 ATTR_FEATURE = 'feature'
 ATTR_GEOMETRY = 'geometry'
 ATTR_GUID = 'guid'
@@ -98,7 +97,7 @@ class GeoJsonFeedManager:
             # Remove all devices.
             self._update_or_remove_devices([])
         else:
-            _LOGGER.warning("Data retrieved %s", value)
+            _LOGGER.debug("Data retrieved %s", value)
             filtered_entries = self._filter_entries(geojson.loads(value))
             keep_entries = self._update_or_remove_devices(filtered_entries)
             self._generate_new_devices(keep_entries)
@@ -125,8 +124,8 @@ class GeoJsonFeedManager:
     def _matches_category(self, feature):
         """Check if the provided feature matches any of the categories."""
         if self._categories:
-            if 'category' in feature.properties:
-                return feature.properties.category in self._categories
+            if ATTR_CATEGORY in feature.properties:
+                return feature.properties[ATTR_CATEGORY] in self._categories
             # Entry has no category.
             return False
         # No categories defined - always match.
@@ -158,6 +157,7 @@ class GeoJsonFeedManager:
                     device.longitude = longitude
                     device.name = name
                     device.category = category
+                    self._hass.add_job(device.async_update_ha_state())
                     break
             else:
                 # Remove obsolete device.
@@ -196,17 +196,18 @@ class GeoJsonFeedManager:
             feature.properties[ATTR_CATEGORY]
         return latitude, longitude, self._external_id(feature), title, category
 
-    @staticmethod
-    def _external_id(feature):
+    def _external_id(self, feature):
         """Find a suitable ID for the provided entry."""
-        if hasattr(feature, ATTR_ID):
-            return feature.id
+        if ATTR_ID in feature.properties:
+            return feature.properties[ATTR_ID]
         if ATTR_GUID in feature.properties:
             return feature.properties[ATTR_GUID]
         if ATTR_TITLE in feature.properties:
             return feature.properties[ATTR_TITLE]
         # Use geometry as ID as a fallback.
-        return id(feature.geometry)
+        latitude, longitude = self._geo_distance_helper.extract_coordinates(
+            feature.geometry)
+        return hash((latitude, longitude))
 
 
 class GeoJsonDistanceHelper:
@@ -218,7 +219,7 @@ class GeoJsonDistanceHelper:
 
     def extract_coordinates(self, geometry):
         """Extract the best geometry from the provided feature for display."""
-        from geojson import Point, GeometryCollection
+        from geojson import Point, GeometryCollection, Polygon
         latitude = longitude = None
         if type(geometry) is Point:
             # Just extract latitude and longitude directly.
@@ -246,7 +247,7 @@ class GeoJsonDistanceHelper:
 
     def distance_to_geometry(self, geometry):
         """Calculate the distance between home coordinates and geometry."""
-        from geojson import Point, GeometryCollection
+        from geojson import Point, GeometryCollection, Polygon
         distance = float("inf")
         if type(geometry) is Point:
             distance = self._distance_to_point(geometry)
@@ -372,9 +373,9 @@ class GeoJsonLocationEvent(GeoLocationEvent):
     @property
     def device_state_attributes(self):
         """Return the device state attributes."""
-        attributes = {'name': self.name}
+        attributes = {}
         if self.category:
-            attributes['category'] = self.category
+            attributes[ATTR_CATEGORY] = self.category
         if self.external_id:
-            attributes['external id'] = self.external_id
+            attributes[ATTR_EXTERNAL_ID] = self.external_id
         return attributes
