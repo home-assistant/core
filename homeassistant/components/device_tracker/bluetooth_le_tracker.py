@@ -71,8 +71,6 @@ def setup_scanner(hass, config, see, discovery_info=None):
         return devices
 
     yaml_path = hass.config.path(YAML_DEVICES)
-    duration = config.get(CONF_SCAN_DURATION)
-    ble_dev_id = config.get(CONF_BLUETOOTH_DEVICE)
     devs_to_track = []
     devs_donot_track = []
 
