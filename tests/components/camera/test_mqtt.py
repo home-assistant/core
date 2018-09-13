@@ -30,6 +30,7 @@ def test_run_camera_setup(hass, aiohttp_client):
     body = yield from resp.text()
     assert body == 'beer'
 
+
 @asyncio.coroutine
 def test_unique_id(hass):
     """Test unique id option only creates one camera per unique_id."""
