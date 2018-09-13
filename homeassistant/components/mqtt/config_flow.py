@@ -54,6 +54,22 @@ class FlowHandler(config_entries.ConfigFlow):
             errors=errors,
         )
 
+    async def async_step_import(self, user_input):
+        """Import a config entry.
+
+        Special type of import, we're not actually going to store any data.
+        Instead, we're going to rely on the values that are in config file.
+        """
+        if self._async_current_entries():
+            return self.async_abort(
+                reason='single_instance_allowed'
+            )
+
+        return self.async_create_entry(
+            title='configuration.yaml',
+            data={}
+        )
+
 
 def try_connection(broker, port, username, password):
     """Test if we can connect to an MQTT broker."""

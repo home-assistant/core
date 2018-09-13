@@ -11,7 +11,7 @@ from tests.common import mock_coro
 @pytest.fixture(autouse=True)
 def mock_finish_setup():
     """Mock out the finish setup method."""
-    with patch('homeassistant.components.mqtt._async_finish_setup',
+    with patch('homeassistant.components.mqtt.MQTT.async_connect',
                return_value=mock_coro(True)) as mock_finish:
         yield mock_finish
 
@@ -82,15 +82,4 @@ async def test_manual_config_set(hass, mock_try_connection,
 
     result = await hass.config_entries.flow.async_init(
         'mqtt', context={'source': 'user'})
-    assert result['type'] == 'form'
-
-    result = await hass.config_entries.flow.async_configure(
-        result['flow_id'], {
-            'broker': '127.0.0.1',
-        }
-    )
-
-    assert result['type'] == 'create_entry'
-
-    # Entry did not setup because normal config was already done
-    assert len(mock_finish_setup.mock_calls) == 1
+    assert result['type'] == 'abort'
