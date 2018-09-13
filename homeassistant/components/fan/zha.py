@@ -101,7 +101,9 @@ class ZhaFan(zha.Entity, FanEntity):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await zha.safe_read(self._endpoint.fan, ['fan_mode'])
+        result = await zha.safe_read(self._endpoint.fan, ['fan_mode'],
+                                     allow_cache=False,
+                                     only_cache=(not self._initialized))
         new_value = result.get('fan_mode', None)
         self._state = VALUE_TO_SPEED.get(new_value, None)
 

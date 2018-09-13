@@ -86,5 +86,7 @@ class Switch(zha.Entity, SwitchDevice):
     async def async_update(self):
         """Retrieve latest state."""
         result = await zha.safe_read(self._endpoint.on_off,
-                                     ['on_off'])
+                                     ['on_off'],
+                                     allow_cache=False,
+                                     only_cache=(not self._initialized))
         self._state = result.get('on_off', self._state)
