@@ -29,7 +29,7 @@ class AsteriskCDR(Mailbox):
     """Asterisk VM Call Data Record mailbox."""
 
     def __init__(self, hass, name):
-        """Initialie Asterisk CDR."""
+        """Initialize Asterisk CDR."""
         super().__init__(hass, name)
         self.cdr = []
         async_dispatcher_connect(
