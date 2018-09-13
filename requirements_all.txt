@@ -1485,7 +1485,7 @@ websocket-client==0.37.0
 websockets==6.0
 
 # homeassistant.components.wirelesstag
-wirelesstagpy==0.3.0
+wirelesstagpy==0.4.0
 
 # homeassistant.components.zigbee
 xbee-helper==0.0.7
