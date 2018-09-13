@@ -64,7 +64,7 @@ def brightness_state(value):
 
 
 def byte_to_zwave_brightness(value):
-    """Converts brightness in 0-255 scale to 0-99 scale.
+    """Convert brightness in 0-255 scale to 0-99 scale.
 
     `value` -- (int) Brightness byte value from 0-255.
     """
