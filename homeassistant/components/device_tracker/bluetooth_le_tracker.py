@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['gattlib==0.20150805']
+REQUIREMENTS = ['pygatt==3.2.0']
 
 BLE_PREFIX = 'BLE_'
 MIN_SEEN_NEW = 5
@@ -33,8 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_scanner(hass, config, see, discovery_info=None):
     """Set up the Bluetooth LE Scanner."""
     # pylint: disable=import-error
-    from gattlib import DiscoveryService
-
+    import pygatt
     new_devices = {}
 
     def see_device(address, name, new_device=False):
@@ -61,12 +60,14 @@ def setup_scanner(hass, config, see, discovery_info=None):
         """Discover Bluetooth LE devices."""
         _LOGGER.debug("Discovering Bluetooth LE devices")
         try:
-            service = DiscoveryService(ble_dev_id)
-            devices = service.discover(duration)
+            adapter = pygatt.GATTToolBackend()
+            devs = adapter.scan()
+
+            devices = {x['address']: x['name'] for x in devs}
             _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
         except RuntimeError as error:
             _LOGGER.error("Error during Bluetooth LE scan: %s", error)
-            devices = []
+            return None
         return devices
 
     yaml_path = hass.config.path(YAML_DEVICES)
@@ -101,12 +102,12 @@ def setup_scanner(hass, config, see, discovery_info=None):
     def update_ble(now):
         """Lookup Bluetooth LE devices and update status."""
         devs = discover_ble_devices()
-        for mac in devs_to_track:
-            _LOGGER.debug("Checking %s", mac)
-            result = mac in devs
-            if not result:
-                # Could not lookup device name
+        for mac in devs_to_track:   
+            if mac not in devs:
                 continue
+
+            if devs[mac] is None:
+                devs[mac] = mac
             see_device(mac, devs[mac])
 
         if track_new:
@@ -119,5 +120,4 @@ def setup_scanner(hass, config, see, discovery_info=None):
         track_point_in_utc_time(hass, update_ble, dt_util.utcnow() + interval)
 
     update_ble(dt_util.utcnow())
-
     return True
