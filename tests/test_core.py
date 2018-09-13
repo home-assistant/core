@@ -862,21 +862,29 @@ def test_create_timer(mock_monotonic, loop):
 
     with patch.object(ha, 'callback', mock_callback), \
             patch('homeassistant.core.dt_util.utcnow',
-                  return_value=sentinel.mock_date):
+                  return_value=datetime(2018, 12, 31, 3, 4, 5, 333333)):
         ha._async_create_timer(hass)
+
+    assert len(hass.loop.call_later.mock_calls) == 1
+    slp_seconds, action = hass.loop.call_later.mock_calls[0][1]
+    assert abs(slp_seconds - 0.666667) < 0.001
+
+    with patch('homeassistant.core.dt_util.utcnow',
+               return_value=sentinel.mock_date):
+        action()
 
         assert len(funcs) == 2
         fire_time_event, stop_timer = funcs
 
     assert len(hass.bus.async_listen_once.mock_calls) == 1
     assert len(hass.bus.async_fire.mock_calls) == 1
-    assert len(hass.loop.call_later.mock_calls) == 1
+    assert len(hass.loop.call_later.mock_calls) == 2
 
     event_type, callback = hass.bus.async_listen_once.mock_calls[0][1]
     assert event_type == EVENT_HOMEASSISTANT_STOP
     assert callback is stop_timer
 
-    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[0][1]
+    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[1][1]
     assert abs(slp_seconds - 0.9) < 0.001
     assert callback is fire_time_event
     assert abs(nxt - 11.2) < 0.001
@@ -901,15 +909,21 @@ def test_timer_out_of_sync(mock_monotonic, loop):
 
     with patch.object(ha, 'callback', mock_callback), \
             patch('homeassistant.core.dt_util.utcnow',
-                  return_value=sentinel.mock_date):
+                  return_value=datetime(2018, 12, 31, 3, 4, 5, 333333)):
         ha._async_create_timer(hass)
+
+    _, action = hass.loop.call_later.mock_calls[0][1]
+
+    with patch('homeassistant.core.dt_util.utcnow',
+               return_value=sentinel.mock_date):
+        action()
 
         assert len(funcs) == 2
         fire_time_event, stop_timer = funcs
 
-    assert len(hass.loop.call_later.mock_calls) == 1
+    assert len(hass.loop.call_later.mock_calls) == 2
 
-    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[0][1]
+    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[1][1]
     assert slp_seconds == 1
     assert callback is fire_time_event
     assert abs(nxt - 12.3) < 0.001
