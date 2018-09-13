@@ -3,17 +3,6 @@ Support for Pioneer Network Receivers.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.pioneer/
-
-
-basic mode supports only these queries
-?P   Power
-?V   Volume
-?M   Mute status
-?F   Input number
-
-Commands NOT supported
-VL (volume set) - use VU/VD
-MZ (mute toggle) - use MO/MF
 """
 import logging
 import telnetlib
@@ -35,25 +24,36 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_NAME = 'Pioneer AVR'
 DEFAULT_PORT = 23   # telnet default. Some Pioneer AVRs use 8102
 DEFAULT_TIMEOUT = None
-DEFAULT_MODE = None # Switch to "basic" for older receivers
+DEFAULT_MODE = None # Switch to "vsx_822" for older receivers
 
 SUPPORT_PIONEER = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
                   SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
 
-SUPPORT_PIONEER_BASIC = SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | \
+SUPPORT_PIONEER_VSX822 = SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | \
                         SUPPORT_TURN_OFF | SUPPORT_VOLUME_STEP | \
                         SUPPORT_SELECT_SOURCE
 
-PIONEER_BASIC_INPUTS = {
-    "00":"Phono", "01":"CD", "02":"Tuner", "03":"Tape", "04":"DVD",
-    "05":"TV/SAT", "10":"Video 1", "12":"Multi CH", "14":"Video 2",
-    "15":"DVR/BDR", "17":"iPod/USB", "19":"HDMI 1", "20":"HDMI 2",
-    "21":"HDMI 3", "22":"HDMI 4","23":"HDMI 5", "24":"HDMI 6", "25":"BD",
-    "26":"Internet Radio", "27":"SiriusXM", "31":"HDMI", "33":"Adapter"}
-
+PIONEER_VSX822_INPUTS = {
+    "01": "CD",
+    "02": "Tuner",
+    "04": "DVD",
+    "05": "TV",
+    "06": "SAT/CBL",
+    "10": "Video",
+    "15": "DVR/BDR",
+    "17": "iPod/USB",
+    "25": "BD",
+    "33": "Adapter",
+    "38": "Network: Netradio",
+    "41": "Network: Pandora",
+    "44": "Network: Media Server",
+    "45": "Network: Favorites",
+    "49": "Game"
+}
 
 MAX_VOLUME = 185
+MAX_VOLUME_VSX822 = 155
 MAX_SOURCE_NUMBERS = 60
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -92,11 +92,11 @@ class PioneerDevice(MediaPlayerDevice):
         self._source_name_to_number = {}
         self._source_number_to_name = {}
 
-        if self._mode == "basic":
-            # If running in basic mode, we can set static input names now
-            self._source_number_to_name = PIONEER_BASIC_INPUTS
+        if self._mode == "vsx_822":
+            # If running in vsx_822 mode, we can set static input names now
+            self._source_number_to_name = PIONEER_VSX822_INPUTS
             self._source_name_to_number = {v:k for k,v in \
-                PIONEER_BASIC_INPUTS.items()}
+                PIONEER_VSX822_INPUTS.items()}
             # Off is PWR2
             self._pwstate = 'PWR2'
 
@@ -121,7 +121,6 @@ class PioneerDevice(MediaPlayerDevice):
 
     def telnet_command(self, command):
         """Establish a telnet connection and sends command."""
-        _LOGGER.debug("Sending command %s to %s", command, self.name)
         try:
             try:
                 telnet = telnetlib.Telnet(
@@ -129,12 +128,12 @@ class PioneerDevice(MediaPlayerDevice):
             except (ConnectionRefusedError, OSError):
                 _LOGGER.warning("Pioneer %s refused connection", self._name)
                 return
+            _LOGGER.debug("Sending command %s to %s", command, self.name)
             telnet.write(command.encode("ASCII") + b"\r")
             telnet.read_very_eager()  # skip response
             telnet.close()
-
-            # Wait a bit before returning.  HA will immediately poll
-            # and get rejected if it's too soon.
+            # Give the connection time to close.  HA will poll immediately
+            # after this and will fail if the connection is still open.
             time.sleep(0.5)
         except telnetlib.socket.timeout:
             _LOGGER.debug(
@@ -142,8 +141,6 @@ class PioneerDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        _LOGGER.debug("Doing status update on %s", self._name)
-
         try:
             telnet = telnetlib.Telnet(self._host, self._port, self._timeout)
         except (ConnectionRefusedError, OSError):
@@ -155,13 +152,27 @@ class PioneerDevice(MediaPlayerDevice):
             self._pwstate = pwstate
 
         volume_str = self.telnet_request(telnet, "?V", "VOL")
-        self._volume = int(volume_str[3:]) / MAX_VOLUME if volume_str else None
+        if self._mode == "vsx_822":
+            self._volume = int(volume_str[3:]) / MAX_VOLUME_VSX822 if volume_str else None
+        else:
+            self._volume = int(volume_str[3:]) / MAX_VOLUME if volume_str else None
 
         muted_value = self.telnet_request(telnet, "?M", "MUT")
         self._muted = (muted_value == "MUT0") if muted_value else None
 
         # Build the source name dictionaries if necessary
-        if self._mode != "basic":
+        if self._mode == "vsx_822":
+            # vsx_822 does not support RGB command for input names.
+            # - Can get input number but names are static
+            source_number = self.telnet_request(telnet, "?F", "FN")
+
+            if source_number:
+                self._selected_source = self._source_number_to_name \
+                    .get(source_number[2:])
+            else:
+                self._selected_source = None
+
+        else:
             if not self._source_name_to_number:
                 for i in range(MAX_SOURCE_NUMBERS):
                     result = self.telnet_request(
@@ -184,21 +195,7 @@ class PioneerDevice(MediaPlayerDevice):
             else:
                 self._selected_source = None
 
-        # basic does not support RGB command for input names.
-        # - Can get input number but names are static
-        else:
-            source_number = self.telnet_request(telnet, "?F", "FN")
-
-            if source_number:
-                self._selected_source = self._source_number_to_name \
-                    .get(source_number[2:])
-            else:
-                self._selected_source = None
-
         telnet.close()
-
-        _LOGGER.debug("Pwr:%s Mut:%s Vol:%0.3f Src:%s", self._pwstate, self._muted, self._volume, self._selected_source)
-
         return True
 
     @property
@@ -209,7 +206,7 @@ class PioneerDevice(MediaPlayerDevice):
     @property
     def state(self):
         """Return the state of the device."""
-        if self._mode == "basic":
+        if self._mode == "vsx_822":
             if self._pwstate == "PWR2":
                 return STATE_OFF
             if self._pwstate == "PWR0":
@@ -235,8 +232,8 @@ class PioneerDevice(MediaPlayerDevice):
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        if self._mode == "basic":
-            return SUPPORT_PIONEER_BASIC
+        if self._mode == "vsx_822":
+            return SUPPORT_PIONEER_VSX822
         else:
             return SUPPORT_PIONEER
 
