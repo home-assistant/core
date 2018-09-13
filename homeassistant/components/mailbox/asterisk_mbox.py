@@ -20,8 +20,7 @@ SIGNAL_MESSAGE_REQUEST = 'asterisk_mbox.message_request'
 SIGNAL_MESSAGE_UPDATE = 'asterisk_mbox.message_updated'
 
 
-async def async_get_handler(hass, config, async_add_entities,
-                            discovery_info=None):
+async def async_get_handler(hass, config, discovery_info=None):
     """Set up the Asterix VM platform."""
     return AsteriskMailbox(hass, DOMAIN)
 

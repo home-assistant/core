@@ -19,8 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "asterisk_cdr"
 
 
-async def async_get_handler(hass, config, async_add_devices,
-                            discovery_info=None):
+async def async_get_handler(hass, config, discovery_info=None):
     """Set up the Asterix CDR platform."""
     return AsteriskCDR(hass, DOMAIN)
 
