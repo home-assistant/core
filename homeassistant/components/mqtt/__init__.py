@@ -347,10 +347,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     conf = config.get(DOMAIN)  # type: Optional[ConfigType]
 
     if conf is None:
-        # If we have a config entry, setup is done by config entry.
+        # If we have a config entry, setup is done by that config entry.
+        # If there is no config entry, this should fail.
         return bool(hass.config_entries.async_entries(DOMAIN))
-    else:
-        conf = dict(conf)
+
+    conf = dict(conf)
 
     if CONF_EMBEDDED in conf or CONF_BROKER not in conf:
         if (conf.get(CONF_PASSWORD) is None and
@@ -403,14 +404,15 @@ async def async_setup_entry(hass, entry):
     """Load a config entry."""
     conf = hass.data.get(DATA_MQTT_CONFIG)
 
-    # Config entry was created because user had configuratoin.yaml entry
+    # Config entry was created because user had configuration.yaml entry
     # They removed that, so remove entry.
     if conf is None and entry.source == config_entries.SOURCE_IMPORT:
         hass.async_create_task(
             hass.config_entries.async_remove(entry.entry_id))
         return False
+
     # If user didn't have configuration.yaml config, generate defaults
-    elif conf is None:
+    if conf is None:
         conf = CONFIG_SCHEMA({
             DOMAIN: entry.data
         })[DOMAIN]
@@ -437,7 +439,7 @@ async def async_setup_entry(hass, entry):
             19999 < conf[CONF_PORT] < 30000 and
             conf[CONF_BROKER].endswith('.cloudmqtt.com')):
         certificate = os.path.join(os.path.dirname(__file__),
-                                              'addtrustexternalcaroot.crt')
+                                   'addtrustexternalcaroot.crt')
 
     # When the certificate is set to auto, use bundled certs from requests
     elif conf.get(CONF_CERTIFICATE) == 'auto':
