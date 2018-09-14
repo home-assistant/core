@@ -385,9 +385,6 @@ fritzhome==1.0.4
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
 
-# homeassistant.components.device_tracker.bluetooth_le_tracker
-# gattlib==0.20150805
-
 # homeassistant.components.sensor.gearbest
 gearbest_parser==1.0.7
 
@@ -874,6 +871,7 @@ pyfritzhome==0.3.7
 # homeassistant.components.ifttt
 pyfttt==0.3
 
+# homeassistant.components.device_tracker.bluetooth_le_tracker
 # homeassistant.components.sensor.skybeacon
 pygatt==3.2.0
 
