@@ -1,28 +1,14 @@
 """Tests for the Device Registry."""
 import pytest
 
-from collections import OrderedDict
-
 from homeassistant.helpers import device_registry
-
-
-def mock_registry(hass, mock_entries=None):
-    """Mock the Device Registry."""
-    registry = device_registry.DeviceRegistry(hass)
-    registry.devices = mock_entries or OrderedDict()
-
-    async def _get_reg():
-        return registry
-
-    hass.data[device_registry.DATA_REGISTRY] = \
-        hass.loop.create_task(_get_reg())
-    return registry
+from tests.common import mock_device_registry
 
 
 @pytest.fixture
 def registry(hass):
     """Return an empty, loaded, registry."""
-    return mock_registry(hass)
+    return mock_device_registry(hass)
 
 
 async def test_get_or_create_returns_same_entry(registry):
