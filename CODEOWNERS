@@ -119,6 +119,8 @@ homeassistant/components/*/tesla.py @zabuldon
 homeassistant/components/tellduslive.py @molobrakos @fredrike
 homeassistant/components/*/tellduslive.py @molobrakos @fredrike
 homeassistant/components/*/tradfri.py @ggravlingen
+homeassistant/components/upcloud.py @scop
+homeassistant/components/*/upcloud.py @scop
 homeassistant/components/velux.py @Julius2342
 homeassistant/components/*/velux.py @Julius2342
 homeassistant/components/*/xiaomi_aqara.py @danielhiversen @syssi
