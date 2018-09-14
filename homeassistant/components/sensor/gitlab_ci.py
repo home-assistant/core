@@ -140,6 +140,7 @@ class GitLabData():
         self._gitlab = gitlab.Gitlab(
             self._url, private_token=self._priv_token, per_page=1)
         self._gitlab.auth()
+        self._gitlab_exceptions = gitlab.exceptions
         self.update = Throttle(interval)(self._update)
 
         self._response = None
@@ -158,8 +159,6 @@ class GitLabData():
     def _update(self):
         _logger = logging.getLogger(__name__)
         _logger.debug(self._interval)
-        import gitlab
-        import requests
         try:
             _projects = self._gitlab.projects.get(self._gitlab_id)
             _last_pipeline = _projects.pipelines.list(page=1)[0]
@@ -175,12 +174,9 @@ class GitLabData():
             self.branch = _last_job.attributes.get('ref')
             self.state = self.status
             self.available = True
-        except gitlab.exceptions.GitlabAuthenticationError as erra:
+        except self._gitlab_exceptions.GitlabAuthenticationError as erra:
             _logger.error("Authentication Error: %s", erra)
             self.available = False
-        except gitlab.exceptions.GitlabGetError as errg:
+        except self._gitlab_exceptions.GitlabGetError as errg:
             _logger.error("Project Not Found: %s", errg)
-            self.available = False
-        except requests.exceptions.ConnectionError as errc:
-            _logger.error("Error Connecting: %s", errc)
             self.available = False
