@@ -240,9 +240,10 @@ class PioneerDevice(MediaPlayerDevice):
     def supported_features(self):
         """Flag media player features that are supported."""
         if self._mode == "basic":
-            return SUPPORT_PIONEER_BASIC
+            return_val = SUPPORT_PIONEER_BASIC
         else:
-            return SUPPORT_PIONEER
+            return_val = SUPPORT_PIONEER
+        return return_val
 
     @property
     def source(self):
