@@ -33,7 +33,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     monitors = zm.get_monitors()
     if not monitors:
-        _LOGGER.warning("Could not fetch monitors from ZoneMinder")
+        _LOGGER.warning('Could not fetch monitors from ZoneMinder')
         return
 
     switches = []
@@ -71,8 +71,8 @@ class ZMSwitchMonitors(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the entity on."""
-        self._monitor.set_function(self._on_state)
+        self._monitor.function(self._on_state)
 
     def turn_off(self, **kwargs):
         """Turn the entity off."""
-        self._monitor.set_function(self._off_state)
+        self._monitor.function(self._off_state)

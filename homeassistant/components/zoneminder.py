@@ -24,8 +24,6 @@ DEFAULT_TIMEOUT = 10
 DEFAULT_VERIFY_SSL = True
 DOMAIN = 'zoneminder'
 
-LOGIN_RETRIES = 2
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_HOST): cv.string,
@@ -58,14 +56,3 @@ def setup(hass, config):
                                    conf.get(CONF_VERIFY_SSL))
 
     return hass.data[DOMAIN].login()
-
-
-def get_state(hass, api_url):
-    """Get a state from the ZoneMinder API service."""
-    return hass.data[DOMAIN]._zm_request('get', api_url)
-
-
-def change_state(hass, api_url, post_data):
-    """Update a state using the Zoneminder API.
-    """
-    return hass.data[DOMAIN]._zm_request('post', api_url, data=post_data)
