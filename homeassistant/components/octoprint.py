@@ -26,7 +26,9 @@ ENTITY_ID_FORMAT = 'octoprint.{}'
 CONF_NUMBER_OF_TOOLS = 'number_of_tools'
 CONF_BED = 'bed'
 
+# pylint: disable=invalid-name
 T = TypeVar('T')
+# pylint: enable=invalid-name
 
 
 # This version of ensure_list interprets an empty dict as no value
