@@ -55,7 +55,8 @@ MESSAGE_SEGMENT_SCHEMA = vol.Schema({
     vol.Optional('link_target'): cv.string
 })
 MESSAGE_DATA_SCHEMA = vol.Schema({
-    vol.Optional('image'): cv.string
+    vol.Optional('image_file'): cv.string,
+    vol.Optional('image_url'): cv.string
 })
 
 MESSAGE_SCHEMA = vol.Schema({

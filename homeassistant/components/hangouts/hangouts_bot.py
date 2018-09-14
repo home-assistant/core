@@ -220,10 +220,9 @@ class HangoutsBot:
                                                SEGMENT_TYPE_LINE_BREAK))
 
         image_file = None
-        if data and data.get('image') is not None:
-            uri = data.get('image')
-            validate = urlparse(uri)
-            if validate.scheme:
+        if data:
+            if data.get('image_url'):
+                uri = data.get('image_url')
                 try:
                     websession = async_get_clientsession(self.hass)
                     async with websession.get(uri, timeout=5) as response:
@@ -244,18 +243,20 @@ class HangoutsBot:
                         type(error)
                     )
                     image_file = None
-            elif self.hass.config.is_allowed_path(uri):
-                try:
-                    image_file = open(uri, 'rb')
-                except IOError as error:
-                    _LOGGER.error(
-                        'Image file I/O error(%s): %s',
-                        error.errno,
-                        error.strerror
-                    )
-            else:
-                _LOGGER.error('Path "%s" not allowed', uri)
-
+            elif data.get('image_file'):
+                uri = data.get('image_file')
+                if self.hass.config.is_allowed_path(uri):
+                    try:
+                        image_file = open(uri, 'rb')
+                    except IOError as error:
+                        _LOGGER.error(
+                            'Image file I/O error(%s): %s',
+                            error.errno,
+                            error.strerror
+                        )
+                else:
+                    _LOGGER.error('Path "%s" not allowed', uri)
+                    
         if not messages:
             return False
         for conv in conversations:
