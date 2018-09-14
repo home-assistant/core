@@ -55,6 +55,7 @@ class ZoneMinderCamera(MjpegCamera):
         super().__init__(hass, device_info)
         self._monitor_id = monitor.id
         self._is_recording = None
+        self._monitor = monitor
 
     @property
     def should_poll(self):
@@ -64,14 +65,7 @@ class ZoneMinderCamera(MjpegCamera):
     def update(self):
         """Update our recording state from the ZM API."""
         _LOGGER.debug("Updating camera state for monitor %i", self._monitor_id)
-        status = self.hass.data[DOMAIN].is_recording(self._monitor_id)
-
-        if status is None:
-            _LOGGER.warning("Could not get status for monitor %i",
-                            self._monitor_id)
-            return
-
-        self._is_recording = status
+        self._is_recording = self._monitor.is_recording
 
     @property
     def is_recording(self):
