@@ -21,7 +21,7 @@ def ensure_domain_data(hass):
         'active': False,
         'port_forward': False,
         'sensors': False,
-        'ports': {},
+        'ports': {'hass': 'hass'},
     })
 
 
