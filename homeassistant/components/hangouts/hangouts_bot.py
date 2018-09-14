@@ -256,7 +256,7 @@ class HangoutsBot:
                         )
                 else:
                     _LOGGER.error('Path "%s" not allowed', uri)
-                    
+
         if not messages:
             return False
         for conv in conversations:
