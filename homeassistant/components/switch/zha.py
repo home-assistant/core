@@ -71,6 +71,7 @@ class Switch(zha.Entity, SwitchDevice):
             return
 
         self._state = 1
+        self.async_schedule_update_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
@@ -82,6 +83,7 @@ class Switch(zha.Entity, SwitchDevice):
             return
 
         self._state = 0
+        self.async_schedule_update_ha_state()
 
     async def async_update(self):
         """Retrieve latest state."""
