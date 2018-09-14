@@ -90,9 +90,10 @@ class OctoPrintBinarySensor(BinarySensorDevice):
     def name(self):
         """Return the name of the sensor."""
         if self.friendly_name:
-            return self.friendly_name.title()
+            name = self.friendly_name.title()
         else:
-            return self._name
+            name = self._name
+        return name
 
     @property
     def is_on(self):

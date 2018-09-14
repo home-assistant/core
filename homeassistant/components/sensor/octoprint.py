@@ -42,58 +42,59 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint sensors."""
     name = config.get(CONF_NAME)
-    if name in hass.data[DOMAIN]:
-        if "api" in hass.data[DOMAIN][name]:
-            _LOGGER.debug("Getting Octoprint sensor %s", name)
-            octoprint_api = hass.data[DOMAIN][name]["api"]
-            monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
-            tools = octoprint_api.get_tools()
-
-            if "Temperatures" in monitored_conditions:
-                if not tools:
-                    hass.components.persistent_notification.create(
-                        'Your printer appears to be offline.<br />'
-                        'If you do not want to have your printer on <br />'
-                        ' at all times, and you would like to monitor <br /> '
-                        'temperatures, please add <br />'
-                        'bed and/or number&#95of&#95tools to your config<br />'
-                        'and restart.',
-                        title=NOTIFICATION_TITLE,
-                        notification_id=NOTIFICATION_ID)
-
-            devices = []
-            types = ["actual", "target"]
-            for octo_type in monitored_conditions:
-                if octo_type == "Temperatures":
-                    for tool in tools:
-                        for temp_type in types:
-                            new_sensor = OctoPrintSensor(
-                                octoprint_api,
-                                temp_type,
-                                temp_type,
-                                name,
-                                SENSOR_TYPES[octo_type][3],
-                                SENSOR_TYPES[octo_type][0],
-                                SENSOR_TYPES[octo_type][1],
-                                tool
-                            )
-                            devices.append(new_sensor)
-                else:
-                    new_sensor = OctoPrintSensor(
-                        octoprint_api,
-                        octo_type,
-                        SENSOR_TYPES[octo_type][2],
-                        name,
-                        SENSOR_TYPES[octo_type][3],
-                        SENSOR_TYPES[octo_type][0],
-                        SENSOR_TYPES[octo_type][1]
-                    )
-                    devices.append(new_sensor)
-            add_entities(devices, True)
-        else:
-            _LOGGER.error("No Octoprint API exists for %s", name)
-    else:
+    if name not in hass.data[DOMAIN]:
         _LOGGER.error("No Octoprint %s exists", name)
+        return
+
+    if "api" in hass.data[DOMAIN][name]:
+        _LOGGER.debug("Getting Octoprint sensor %s", name)
+        octoprint_api = hass.data[DOMAIN][name]["api"]
+        monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
+        tools = octoprint_api.get_tools()
+
+        if "Temperatures" in monitored_conditions:
+            if not tools:
+                hass.components.persistent_notification.create(
+                    'Your printer appears to be offline.<br />'
+                    'If you do not want to have your printer on <br />'
+                    ' at all times, and you would like to monitor <br /> '
+                    'temperatures, please add <br />'
+                    'bed and/or number&#95of&#95tools to your config<br />'
+                    'and restart.',
+                    title=NOTIFICATION_TITLE,
+                    notification_id=NOTIFICATION_ID)
+
+        devices = []
+        types = ["actual", "target"]
+        for octo_type in monitored_conditions:
+            if octo_type == "Temperatures":
+                for tool in tools:
+                    for temp_type in types:
+                        new_sensor = OctoPrintSensor(
+                            octoprint_api,
+                            temp_type,
+                            temp_type,
+                            name,
+                            SENSOR_TYPES[octo_type][3],
+                            SENSOR_TYPES[octo_type][0],
+                            SENSOR_TYPES[octo_type][1],
+                            tool
+                        )
+                        devices.append(new_sensor)
+            else:
+                new_sensor = OctoPrintSensor(
+                    octoprint_api,
+                    octo_type,
+                    SENSOR_TYPES[octo_type][2],
+                    name,
+                    SENSOR_TYPES[octo_type][3],
+                    SENSOR_TYPES[octo_type][0],
+                    SENSOR_TYPES[octo_type][1]
+                )
+                devices.append(new_sensor)
+        add_entities(devices, True)
+    else:
+        _LOGGER.error("No Octoprint API exists for %s", name)
 
 
 class OctoPrintSensor(Entity):
@@ -130,9 +131,10 @@ class OctoPrintSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         if self.friendly_name:
-            return self.friendly_name.title()
+            name = self.friendly_name.title()
         else:
-            return self._name
+            name = self._name
+        return name
 
     @property
     def state(self):
