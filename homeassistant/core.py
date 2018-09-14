@@ -1256,4 +1256,5 @@ def _async_create_timer(hass: HomeAssistant) -> None:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
 
     _LOGGER.info("Timer:starting")
-    fire_time_event(monotonic())
+    slp_seconds = 1 - (dt_util.utcnow().microsecond / 10**6)
+    hass.loop.call_later(slp_seconds, lambda: fire_time_event(monotonic()))
