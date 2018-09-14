@@ -10,13 +10,11 @@ import logging
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera.mjpeg import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera)
-
-from homeassistant.components import zoneminder
+from homeassistant.components.zoneminder import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zoneminder']
-DOMAIN = 'zoneminder'
 
 
 @asyncio.coroutine
