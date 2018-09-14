@@ -19,7 +19,7 @@ from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.config import async_process_component_config
 from homeassistant.helpers import (
     intent, entity, restore_state, entity_registry,
-    entity_platform, storage)
+    entity_platform, storage, device_registry)
 from homeassistant.util.unit_system import METRIC_SYSTEM
 import homeassistant.util.dt as date_util
 import homeassistant.util.yaml as yaml
@@ -328,6 +328,19 @@ def mock_registry(hass, mock_entries=None):
         return registry
 
     hass.data[entity_registry.DATA_REGISTRY] = \
+        hass.loop.create_task(_get_reg())
+    return registry
+
+
+def mock_device_registry(hass, mock_entries=None):
+    """Mock the Device Registry."""
+    registry = device_registry.DeviceRegistry(hass)
+    registry.devices = mock_entries or OrderedDict()
+
+    async def _get_reg():
+        return registry
+
+    hass.data[device_registry.DATA_REGISTRY] = \
         hass.loop.create_task(_get_reg())
     return registry
 
