@@ -4,7 +4,6 @@ Sensors on Zigbee Home Automation networks.
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/sensor.zha/
 """
-import asyncio
 import logging
 
 from homeassistant.components.sensor import DOMAIN
@@ -17,20 +16,18 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['zha']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up Zigbee Home Automation sensors."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
-    sensor = yield from make_sensor(discovery_info)
+    sensor = await make_sensor(discovery_info)
     async_add_entities([sensor], update_before_add=True)
 
 
-@asyncio.coroutine
-def make_sensor(discovery_info):
+async def make_sensor(discovery_info):
     """Create ZHA sensors factory."""
     from zigpy.zcl.clusters.measurement import (
         RelativeHumidity, TemperatureMeasurement, PressureMeasurement,
@@ -57,7 +54,7 @@ def make_sensor(discovery_info):
 
     if discovery_info['new_join']:
         cluster = list(in_clusters.values())[0]
-        yield from zha.configure_reporting(
+        await zha.configure_reporting(
             sensor.entity_id, cluster, sensor.value_attribute,
             reportable_change=sensor.min_reportable_change
         )
