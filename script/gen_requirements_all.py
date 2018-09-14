@@ -19,7 +19,6 @@ COMMENT_REQUIREMENTS = (
     'bluepy',
     'opencv-python',
     'python-lirc',
-    'gattlib',
     'pyuserinput',
     'evdev',
     'pycups',
