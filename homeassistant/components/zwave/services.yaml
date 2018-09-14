@@ -69,6 +69,20 @@ set_config_parameter:
     size:
       description: (Optional) Set the size of the parameter value. Only needed if no parameters are available.
 
+set_indicator:
+  description: Set the indicator value for a Z-Wave device if available.
+  fields:
+    node_id:
+      description: Node id of the device to set indicator value for (integer).
+    value:
+      description: Value to set (integer).
+
+refresh_indicator:
+  description: Refresh the indicator value for a Z-Wave device if available.
+  fields:
+    node_id:
+      description: Node id of the device to refresh indicator value from (integer).
+
 set_poll_intensity:
   description: Set the polling interval to a nodes value
   fields:

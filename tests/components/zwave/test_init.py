@@ -1359,6 +1359,51 @@ class TestZWaveServices(unittest.TestCase):
         assert node.refresh_info.called
         assert len(node.refresh_info.mock_calls) == 1
 
+    def test_set_indicator(self):
+        """Test zwave set_indicator service."""
+        value = MockValue(
+            index=12,
+            command_class=const.COMMAND_CLASS_INDICATOR,
+            data=4
+        )
+        node = MockNode(node_id=14,
+                        command_classes=[const.COMMAND_CLASS_INDICATOR])
+        node.values = {12: value}
+        node.get_values.return_value = node.values
+        self.zwave_network.nodes = {14: node}
+
+        self.hass.services.call('zwave', 'set_indicator', {
+            const.ATTR_NODE_ID: 14,
+            const.ATTR_CONFIG_VALUE: 2,
+        })
+        self.hass.block_till_done()
+
+        assert self.zwave_network.nodes[14].values[12].data == 2
+
+    def test_refresh_indicator(self):
+        """Test zwave refresh_indicator service."""
+        node = MockNode(node_id=14,
+                        command_classes=[const.COMMAND_CLASS_INDICATOR],
+                        network=self.zwave_network)
+        value = MockValue(
+            node=node,
+            index=12,
+            command_class=const.COMMAND_CLASS_INDICATOR,
+            data=2
+        )
+        value.refresh = MagicMock()
+
+        node.values = {12: value}
+        node.get_values.return_value = node.values
+        self.zwave_network.nodes = {14: node}
+
+        self.hass.services.call('zwave', 'refresh_indicator', {
+            const.ATTR_NODE_ID: 14,
+        })
+        self.hass.block_till_done()
+
+        assert value.refresh.called
+
     def test_heal_node(self):
         """Test zwave heal_node service."""
         node = MockNode(node_id=19)
