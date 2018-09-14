@@ -1,26 +1,28 @@
 """Helpers for data entry flows for config entries."""
 from functools import partial
 
-from homeassistant.core import callback
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 
 
-def register_discovery_flow(domain, title, discovery_function):
+def register_discovery_flow(domain, title, discovery_function,
+                            connection_class):
     """Register flow for discovered integrations that not require auth."""
     config_entries.HANDLERS.register(domain)(
-        partial(DiscoveryFlowHandler, domain, title, discovery_function))
+        partial(DiscoveryFlowHandler, domain, title, discovery_function,
+                connection_class))
 
 
-class DiscoveryFlowHandler(data_entry_flow.FlowHandler):
+class DiscoveryFlowHandler(config_entries.ConfigFlow):
     """Handle a discovery config flow."""
 
     VERSION = 1
 
-    def __init__(self, domain, title, discovery_function):
+    def __init__(self, domain, title, discovery_function, connection_class):
         """Initialize the discovery config flow."""
         self._domain = domain
         self._title = title
         self._discovery_function = discovery_function
+        self.CONNECTION_CLASS = connection_class  # pylint: disable=C0103
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
@@ -83,15 +85,3 @@ class DiscoveryFlowHandler(data_entry_flow.FlowHandler):
             title=self._title,
             data={},
         )
-
-    @callback
-    def _async_current_entries(self):
-        """Return current entries."""
-        return self.hass.config_entries.async_entries(self._domain)
-
-    @callback
-    def _async_in_progress(self):
-        """Return other in progress flows for current domain."""
-        return [flw for flw in self.hass.config_entries.flow.async_progress()
-                if flw['handler'] == self._domain and
-                flw['flow_id'] != self.flow_id]
