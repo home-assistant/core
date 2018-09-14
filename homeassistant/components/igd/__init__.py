@@ -43,9 +43,22 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_ENABLE_SENSORS, default=True): cv.boolean,
         vol.Optional(CONF_LOCAL_IP): vol.All(ip_address, cv.string),
         vol.Optional(CONF_PORTS):
-            vol.Schema({vol.Any(CONF_HASS, cv.positive_int): cv.positive_int})
+            vol.Schema({
+                vol.Any(CONF_HASS, cv.positive_int):
+                    vol.Any(CONF_HASS, cv.positive_int)
+            })
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+
+def _substitute_hass_ports(ports, hass_port):
+    # substitute 'hass' for hass_port, both sides
+    if CONF_HASS in ports:
+        ports[hass_port] = ports[CONF_HASS]
+        del ports[CONF_HASS]
+    for port in ports:
+        if ports[port] == CONF_HASS:
+            ports[port] = hass_port
 
 
 # config
@@ -62,19 +75,16 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         _LOGGER.warning('IGD needs discovery, please enable it')
         return False
 
+    # overridden local ip
     igd_config = config[DOMAIN]
     if CONF_LOCAL_IP in igd_config:
         hass.data[DOMAIN]['local_ip'] = igd_config[CONF_LOCAL_IP]
 
     # determine ports
-    ports = {}
+    ports = {CONF_HASS: CONF_HASS}  # default, port_forward disabled by default
     if CONF_PORTS in igd_config:
+        # copy from config
         ports = igd_config[CONF_PORTS]
-
-        if CONF_HASS in ports:
-            internal_port = hass.http.server_port
-            ports[internal_port] = ports[CONF_HASS]
-            del ports[CONF_HASS]
 
     hass.data[DOMAIN]['auto_config'] = {
         'active': True,
@@ -108,6 +118,9 @@ async def async_setup_entry(hass: HomeAssistantType,
         local_ip = hass.data[DOMAIN].get('local_ip')
         ports = hass.data[DOMAIN]['auto_config']['ports']
         _LOGGER.debug('Enabling port mappings: %s', ports)
+
+        hass_port = hass.http.server_port
+        _substitute_hass_ports(ports, hass_port)
         await device.async_add_port_mappings(ports, local_ip=local_ip)
 
     # sensors
