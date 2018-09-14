@@ -15,13 +15,14 @@ from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, MqttAvailability)
 from homeassistant.components.mqtt.discovery import (
-    ALREADY_DISCOVERED)
+    ALREADY_DISCOVERED, MQTT_DISCOVERY_UPDATED)
 from homeassistant.components.switch import SwitchDevice
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_OFF,
     CONF_PAYLOAD_ON, CONF_ICON, STATE_ON)
 from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import async_get_last_state
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,6 +59,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     if value_template is not None:
         value_template.hass = hass
 
+    discovery_hash = None
+    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
+        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
+
     newswitch = MqttSwitch(
         config.get(CONF_NAME),
         config.get(CONF_ICON),
@@ -75,13 +80,10 @@ async def async_setup_platform(hass, config, async_add_entities,
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         config.get(CONF_UNIQUE_ID),
         value_template,
+        discovery_hash,
     )
 
     async_add_entities([newswitch])
-
-    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
-        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
-        hass.data[ALREADY_DISCOVERED][discovery_hash] = newswitch
 
 
 class MqttSwitch(MqttAvailability, SwitchDevice):
@@ -92,7 +94,7 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
                  qos, retain, payload_on, payload_off, state_on,
                  state_off, optimistic, payload_available,
                  payload_not_available, unique_id: Optional[str],
-                 value_template):
+                 value_template, discovery_hash):
         """Initialize the MQTT switch."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
@@ -110,6 +112,7 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
         self._optimistic = optimistic
         self._template = value_template
         self._unique_id = unique_id
+        self._discovery_hash = discovery_hash
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
@@ -141,6 +144,24 @@ class MqttSwitch(MqttAvailability, SwitchDevice):
                                                     self.entity_id)
             if last_state:
                 self._state = last_state.state == STATE_ON
+
+        @callback
+        def discovery_callback(payload):
+            """Handle discovery update."""
+            _LOGGER.info("Got update for entity with hash: %s '%s'",
+                         self._discovery_hash, payload)
+            if not payload:
+                # Empty payload: Remove component
+                _LOGGER.info("Removing component: %s", self.entity_id)
+                self.hass.async_add_job(self.async_remove())
+                del self.hass.data[ALREADY_DISCOVERED][self._discovery_hash]
+                self._remove_signal()
+
+        if self._discovery_hash:
+            self._remove_signal = async_dispatcher_connect(
+                self.hass,
+                MQTT_DISCOVERY_UPDATED.format(self._discovery_hash),
+                discovery_callback)
 
     @property
     def should_poll(self):

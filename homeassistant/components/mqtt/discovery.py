@@ -12,6 +12,7 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONF_STATE_TOPIC, ATTR_DISCOVERY_HASH
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ ALLOWED_PLATFORMS = {
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
 
+MQTT_DISCOVERY_UPDATED = 'mqtt_discovery_updated_{}'
 
 async def async_start(hass, discovery_topic, hass_config):
     """Initialize of MQTT Discovery."""
@@ -63,12 +65,18 @@ async def async_start(hass, discovery_topic, hass_config):
 
         discovery_hash = (component, discovery_id)
 
-        if payload:
+        if discovery_hash in hass.data[ALREADY_DISCOVERED]:
+            _LOGGER.info(
+                "Component has already been discovered: %s %s, sending update",
+                component, discovery_id)
+            async_dispatcher_send(
+                hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload)
+        elif payload:
             # Add component
             try:
                 payload = json.loads(payload)
             except ValueError:
-                _LOGGER.warning("Unable to parse JSON %s: %s",
+                _LOGGER.warning("Unable to parse JSON %s: '%s'",
                                 object_id, payload)
                 return
 
@@ -85,11 +93,6 @@ async def async_start(hass, discovery_topic, hass_config):
                     discovery_topic, component,
                     '%s/' % node_id if node_id else '', object_id)
 
-            if discovery_hash in hass.data[ALREADY_DISCOVERED]:
-                _LOGGER.info("Component has already been discovered: %s %s",
-                             component, discovery_id)
-                return
-
             hass.data[ALREADY_DISCOVERED][discovery_hash] = None
             payload[ATTR_DISCOVERY_HASH] = discovery_hash
 
@@ -97,18 +100,6 @@ async def async_start(hass, discovery_topic, hass_config):
 
             await async_load_platform(
                 hass, component, platform, payload, hass_config)
-
-        else:
-            # Remove component
-            if discovery_hash in hass.data[ALREADY_DISCOVERED]:
-                _LOGGER.info("Removing component: %s %s",
-                             component, discovery_id)
-
-                if hass.data[ALREADY_DISCOVERED][discovery_hash] is not None:
-                    entity = hass.data[ALREADY_DISCOVERED][discovery_hash]
-                    hass.states.async_remove(entity.entity_id)
-
-                del hass.data[ALREADY_DISCOVERED][discovery_hash]
 
     await mqtt.async_subscribe(
         hass, discovery_topic + '/#', async_device_message_received, 0)
