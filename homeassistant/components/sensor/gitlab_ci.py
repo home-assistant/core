@@ -40,19 +40,10 @@ REQUIREMENTS = ['python-gitlab==1.6.0']
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
     """Sensor platform setup."""
-    _logger = logging.getLogger(__name__)
-
     _priv_token = config.get(CONF_TOKEN)
     _gitlab_id = config.get(CONF_GITLAB_ID)
     _interval = config.get(CONF_SCAN_INTERVAL)
     _url = config.get(CONF_URL)
-
-    if _priv_token is None:
-        _logger.error('No private access token specified')
-        return False
-    if _gitlab_id is None:
-        _logger.error('No GitLab ID specified')
-        return False
 
     _gitlab_data = GitLabData(
         priv_token=_priv_token,
@@ -61,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         url=_url
     )
 
-    add_devices([GitLabSensor(_gitlab_id, _priv_token, _gitlab_data)])
+    add_devices([GitLabSensor(_gitlab_id, _priv_token, _gitlab_data)], True)
 
 
 class GitLabSensor(Entity):
@@ -71,8 +62,15 @@ class GitLabSensor(Entity):
         """Initialize the sensor."""
         self._state = None
         self._available = False
+        self._status = None
+        self._started_at = None
+        self._finished_at = None
+        self._duration = None
+        self._commit_id = None
+        self._commit_date = None
+        self._build_id = None
+        self._branch = None
         self._gitlab_data = gitlab_data
-        self.update()
 
     @property
     def name(self):
@@ -134,10 +132,14 @@ class GitLabData():
 
     def __init__(self, gitlab_id, priv_token, interval, url):
         """Fetch data from GitLab API for most recent CI job."""
+        import gitlab
         self._gitlab_id = gitlab_id
         self._priv_token = priv_token
         self._interval = interval
         self._url = url
+        self._gitlab = gitlab.Gitlab(
+            self._url, private_token=self._priv_token, per_page=1)
+        self._gitlab.auth()
         self.update = Throttle(interval)(self._update)
 
         self._response = None
@@ -159,12 +161,9 @@ class GitLabData():
         import gitlab
         import requests
         try:
-            _gitlab = gitlab.Gitlab(
-                self._url, private_token=self._priv_token)
-            _gitlab.auth()
-            _projects = _gitlab.projects.get(self._gitlab_id)
-            _last_pipeline = _projects.pipelines.list()[0]
-            _last_job = _last_pipeline.jobs.list()[0]
+            _projects = self._gitlab.projects.get(self._gitlab_id)
+            _last_pipeline = _projects.pipelines.list(page=1)[0]
+            _last_job = _last_pipeline.jobs.list(page=1)[0]
             self.status = _last_pipeline.attributes.get('status')
             self.started_at = _last_job.attributes.get('started_at')
             self.finished_at = _last_job.attributes.get('finished_at')
