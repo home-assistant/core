@@ -17,7 +17,10 @@ def async_register_signal_handling(hass: HomeAssistant) -> None:
     if sys.platform != 'win32':
         @callback
         def async_signal_handle(exit_code):
-            """Wrap signal handling: queue shutdown code, re-instate default handler."""
+            """Wrap signal handling:
+            * queue shutdown code
+            * re-instate default handler
+            """
             hass.loop.remove_signal_handler(signal.SIGTERM)
             hass.loop.remove_signal_handler(signal.SIGINT)
             hass.async_create_task(hass.async_stop(exit_code))

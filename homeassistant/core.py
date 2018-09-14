@@ -195,7 +195,8 @@ class HomeAssistant:
 
         await self.async_start()
         if attach_signals:
-            from homeassistant.helpers.signal import async_register_signal_handling
+            from homeassistant.helpers.signal \
+                    import async_register_signal_handling
             async_register_signal_handling(self)
 
         await self._stopped.wait()
