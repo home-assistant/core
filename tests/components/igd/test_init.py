@@ -54,7 +54,7 @@ async def test_async_setup_no_auto_config(hass):
     assert hass.data[igd.DOMAIN]['auto_config'] == {
         'active': False,
         'port_forward': False,
-        'ports': {},
+        'ports': {'hass': 'hass'},
         'sensors': False,
     }
 
@@ -67,7 +67,7 @@ async def test_async_setup_auto_config(hass):
     assert hass.data[igd.DOMAIN]['auto_config'] == {
         'active': True,
         'port_forward': False,
-        'ports': {},
+        'ports': {'hass': 'hass'},
         'sensors': True,
     }
 
@@ -76,13 +76,16 @@ async def test_async_setup_auto_config_port_forward(hass):
     """Test async_setup."""
     # setup component, enable auto_config
     await async_setup_component(hass, 'igd', {
-        'igd': {'port_forward': True, 'ports': {8123: 8123}},
+        'igd': {
+            'port_forward': True,
+            'ports': {'hass': 'hass'},
+        },
         'discovery': {}})
 
     assert hass.data[igd.DOMAIN]['auto_config'] == {
         'active': True,
         'port_forward': True,
-        'ports': {8123: 8123},
+        'ports': {'hass': 'hass'},
         'sensors': True,
     }
 
@@ -97,7 +100,7 @@ async def test_async_setup_auto_config_no_sensors(hass):
     assert hass.data[igd.DOMAIN]['auto_config'] == {
         'active': True,
         'port_forward': False,
-        'ports': {},
+        'ports': {'hass': 'hass'},
         'sensors': False,
     }
 
@@ -153,8 +156,12 @@ async def test_async_setup_entry_port_forward(hass):
 
     # ensure hass.http is available
     await async_setup_component(hass, 'igd', {
-        'igd': {'port_forward': True, 'ports': {8123: 8123}},
-        'discovery': {}})
+        'igd': {
+            'port_forward': True,
+            'ports': {'hass': 'hass'},
+        },
+        'discovery': {},
+    })
 
     mock_device = MockDevice(udn)
     with patch.object(Device, 'async_create_device') as mock_create_device:
