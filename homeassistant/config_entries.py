@@ -141,6 +141,7 @@ FLOWS = [
     'homematicip_cloud',
     'hue',
     'ios',
+    'mqtt',
     'nest',
     'openuv',
     'sonos',
@@ -463,3 +464,19 @@ class ConfigEntries:
 async def _old_conf_migrator(old_config):
     """Migrate the pre-0.73 config format to the latest version."""
     return {'entries': old_config}
+
+
+class ConfigFlow(data_entry_flow.FlowHandler):
+    """Base class for config flows with some helpers."""
+
+    @callback
+    def _async_current_entries(self):
+        """Return current entries."""
+        return self.hass.config_entries.async_entries(self.handler)
+
+    @callback
+    def _async_in_progress(self):
+        """Return other in progress flows for current domain."""
+        return [flw for flw in self.hass.config_entries.flow.async_progress()
+                if flw['handler'] == self.handler and
+                flw['flow_id'] != self.flow_id]
