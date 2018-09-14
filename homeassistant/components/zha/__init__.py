@@ -179,8 +179,6 @@ class ApplicationListener:
             if endpoint_id == 0:  # ZDO
                 continue
 
-            discovered_info = await _discover_endpoint_info(endpoint)
-
             component = None
             profile_clusters = ([], [])
             device_key = "{}-{}".format(device.ieee, endpoint_id)
@@ -212,10 +210,11 @@ class ApplicationListener:
                     'endpoint': endpoint,
                     'in_clusters': {c.cluster_id: c for c in in_clusters},
                     'out_clusters': {c.cluster_id: c for c in out_clusters},
+                    'manufacturer': endpoint.manufacturer,
+                    'model': endpoint.model,
                     'new_join': join,
                     'unique_id': device_key,
                 }
-                discovery_info.update(discovered_info)
                 self._hass.data[DISCOVERY_KEY][device_key] = discovery_info
 
                 await discovery.async_load_platform(
@@ -234,7 +233,6 @@ class ApplicationListener:
                     device_key,
                     zha_const.SINGLE_INPUT_CLUSTER_DEVICE_CLASS,
                     'in_clusters',
-                    discovered_info,
                     join,
                 )
 
@@ -246,7 +244,6 @@ class ApplicationListener:
                     device_key,
                     zha_const.SINGLE_OUTPUT_CLUSTER_DEVICE_CLASS,
                     'out_clusters',
-                    discovered_info,
                     join,
                 )
 
@@ -257,7 +254,7 @@ class ApplicationListener:
     async def _attempt_single_cluster_device(self, endpoint, cluster,
                                              profile_clusters, device_key,
                                              device_classes, discovery_attr,
-                                             entity_info, is_new_join):
+                                             is_new_join):
         """Try to set up an entity from a "bare" cluster."""
         if cluster.cluster_id in profile_clusters:
             return
@@ -277,12 +274,13 @@ class ApplicationListener:
             'endpoint': endpoint,
             'in_clusters': {},
             'out_clusters': {},
+            'manufacturer': endpoint.manufacturer,
+            'model': endpoint.model,
             'new_join': is_new_join,
             'unique_id': cluster_key,
             'entity_suffix': '_{}'.format(cluster.cluster_id),
         }
         discovery_info[discovery_attr] = {cluster.cluster_id: cluster}
-        discovery_info.update(entity_info)
         self._hass.data[DISCOVERY_KEY][cluster_key] = discovery_info
 
         await discovery.async_load_platform(
@@ -338,6 +336,7 @@ class Entity(entity.Entity):
         self._in_listeners = {}
         self._out_listeners = {}
 
+        self._initialized = False
         application_listener.register_entity(ieee, self)
 
     async def async_added_to_hass(self):
@@ -349,6 +348,8 @@ class Entity(entity.Entity):
             cluster.add_listener(self._in_listeners.get(cluster_id, self))
         for cluster_id, cluster in self._out_clusters.items():
             cluster.add_listener(self._out_listeners.get(cluster_id, self))
+
+        self._initialized = True
 
     @property
     def unique_id(self) -> str:
@@ -369,40 +370,6 @@ class Entity(entity.Entity):
         pass
 
 
-async def _discover_endpoint_info(endpoint):
-    """Find some basic information about an endpoint."""
-    extra_info = {
-        'manufacturer': None,
-        'model': None,
-    }
-    if 0 not in endpoint.in_clusters:
-        return extra_info
-
-    async def read(attributes):
-        """Read attributes and update extra_info convenience function."""
-        result, _ = await endpoint.in_clusters[0].read_attributes(
-            attributes,
-            allow_cache=True,
-        )
-        extra_info.update(result)
-
-    await read(['manufacturer', 'model'])
-    if extra_info['manufacturer'] is None or extra_info['model'] is None:
-        # Some devices fail at returning multiple results. Attempt separately.
-        await read(['manufacturer'])
-        await read(['model'])
-
-    for key, value in extra_info.items():
-        if isinstance(value, bytes):
-            try:
-                extra_info[key] = value.decode('ascii').strip()
-            except UnicodeDecodeError:
-                # Unsure what the best behaviour here is. Unset the key?
-                pass
-
-    return extra_info
-
-
 def get_discovery_info(hass, discovery_info):
     """Get the full discovery info for a device.
 
@@ -420,7 +387,7 @@ def get_discovery_info(hass, discovery_info):
     return all_discovery_info.get(discovery_key, None)
 
 
-async def safe_read(cluster, attributes, allow_cache=True):
+async def safe_read(cluster, attributes, allow_cache=True, only_cache=False):
     """Swallow all exceptions from network read.
 
     If we throw during initialization, setup fails. Rather have an entity that
@@ -431,7 +398,47 @@ async def safe_read(cluster, attributes, allow_cache=True):
         result, _ = await cluster.read_attributes(
             attributes,
             allow_cache=allow_cache,
+            only_cache=only_cache
         )
         return result
     except Exception:  # pylint: disable=broad-except
         return {}
+
+
+async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
+                              min_report=300, max_report=900,
+                              reportable_change=1):
+    """Configure attribute reporting for a cluster.
+
+    while swallowing the DeliverError exceptions in case of unreachable
+    devices.
+    """
+    from zigpy.exceptions import DeliveryError
+
+    attr_name = cluster.attributes.get(attr, [attr])[0]
+    cluster_name = cluster.ep_attribute
+    if not skip_bind:
+        try:
+            res = await cluster.bind()
+            _LOGGER.debug(
+                "%s: bound  '%s' cluster: %s", entity_id, cluster_name, res[0]
+            )
+        except DeliveryError as ex:
+            _LOGGER.debug(
+                "%s: Failed to bind '%s' cluster: %s",
+                entity_id, cluster_name, str(ex)
+            )
+
+    try:
+        res = await cluster.configure_reporting(attr, min_report,
+                                                max_report, reportable_change)
+        _LOGGER.debug(
+            "%s: reporting '%s' attr on '%s' cluster: %d/%d/%d: Status: %s",
+            entity_id, attr_name, cluster_name, min_report, max_report,
+            reportable_change, res[0][0].status
+        )
+    except DeliveryError as ex:
+        _LOGGER.debug(
+            "%s: failed to set reporting for '%s' attr on '%s' cluster: %s",
+            entity_id, attr_name, cluster_name, str(ex)
+        )

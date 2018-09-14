@@ -97,6 +97,8 @@ homeassistant/components/*/eight_sleep.py @mezz64
 homeassistant/components/hive.py @Rendili @KJonline
 homeassistant/components/*/hive.py @Rendili @KJonline
 homeassistant/components/homekit/* @cdce8p
+homeassistant/components/huawei_lte.py @scop
+homeassistant/components/*/huawei_lte.py @scop
 homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
 homeassistant/components/konnected.py @heythisisnate
@@ -117,6 +119,8 @@ homeassistant/components/*/tesla.py @zabuldon
 homeassistant/components/tellduslive.py @molobrakos @fredrike
 homeassistant/components/*/tellduslive.py @molobrakos @fredrike
 homeassistant/components/*/tradfri.py @ggravlingen
+homeassistant/components/upcloud.py @scop
+homeassistant/components/*/upcloud.py @scop
 homeassistant/components/velux.py @Julius2342
 homeassistant/components/*/velux.py @Julius2342
 homeassistant/components/*/xiaomi_aqara.py @danielhiversen @syssi

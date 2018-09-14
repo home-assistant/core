@@ -154,23 +154,31 @@ class Light(zha.Entity, light.Light):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await zha.safe_read(self._endpoint.on_off, ['on_off'])
+        result = await zha.safe_read(self._endpoint.on_off, ['on_off'],
+                                     allow_cache=False,
+                                     only_cache=(not self._initialized))
         self._state = result.get('on_off', self._state)
 
         if self._supported_features & light.SUPPORT_BRIGHTNESS:
             result = await zha.safe_read(self._endpoint.level,
-                                         ['current_level'])
+                                         ['current_level'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
             self._brightness = result.get('current_level', self._brightness)
 
         if self._supported_features & light.SUPPORT_COLOR_TEMP:
             result = await zha.safe_read(self._endpoint.light_color,
-                                         ['color_temperature'])
+                                         ['color_temperature'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
             self._color_temp = result.get('color_temperature',
                                           self._color_temp)
 
         if self._supported_features & light.SUPPORT_COLOR:
             result = await zha.safe_read(self._endpoint.light_color,
-                                         ['current_x', 'current_y'])
+                                         ['current_x', 'current_y'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
             if 'current_x' in result and 'current_y' in result:
                 xy_color = (round(result['current_x']/65535, 3),
                             round(result['current_y']/65535, 3))
