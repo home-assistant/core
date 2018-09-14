@@ -14,7 +14,8 @@ import voluptuous as vol
 from aiohttp.hdrs import CONTENT_TYPE
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, CONTENT_TYPE_JSON, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT, CONF_SSL, \
+    CONTENT_TYPE_JSON, CONF_NAME
 
 # from homeassistant.helpers.entity import Entity, async_generate_entity_id
 
@@ -66,7 +67,10 @@ def async_setup(hass, config):
                 schema = 'https'
 
         if CONF_PORT in octo_config:
-            url = '{}:{}'.format(octo_config[CONF_HOST], octo_config[CONF_PORT])
+            url = '{}:{}'.format(
+                octo_config[CONF_HOST],
+                octo_config[CONF_PORT]
+            )
         else:
             url = '{}'.format(octo_config[CONF_HOST])
 
@@ -76,13 +80,23 @@ def async_setup(hass, config):
         bed = octo_config[CONF_BED]
 
         try:
-            octoprint_api = OctoPrintAPI(name, base_url, api_key, bed, number_of_tools)
+            octoprint_api = OctoPrintAPI(
+                name,
+                base_url,
+                api_key,
+                bed,
+                number_of_tools
+            )
             octoprint_api.get('printer')
             octoprint_api.get('job')
             octoprints[name] = {"api": octoprint_api}
             _LOGGER.debug("Setup Octoprint %r", octoprints[name])
         except requests.exceptions.RequestException as conn_err:
-            _LOGGER.error("Error setting up OctoPrint %s API: %r", name, conn_err)
+            _LOGGER.error(
+                "Error setting up OctoPrint %s API: %r",
+                name,
+                conn_err
+            )
 
     tasks = [async_setup_octoprint(conf) for conf in config[DOMAIN]]
     if tasks:

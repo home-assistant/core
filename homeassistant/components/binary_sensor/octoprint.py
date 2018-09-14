@@ -47,9 +47,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             devices = []
             for octo_type in monitored_conditions:
                 new_sensor = OctoPrintBinarySensor(
-                    octoprint_api, octo_type, SENSOR_TYPES[octo_type][2],
-                    name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
-                    SENSOR_TYPES[octo_type][1], 'flags')
+                    octoprint_api,
+                    octo_type, SENSOR_TYPES[octo_type][2],
+                    name,
+                    SENSOR_TYPES[octo_type][3],
+                    SENSOR_TYPES[octo_type][0],
+                    SENSOR_TYPES[octo_type][1],
+                    'flags'
+                )
                 devices.append(new_sensor)
             add_entities(devices, True)
         else:

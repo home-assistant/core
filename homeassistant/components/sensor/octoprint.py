@@ -56,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                         'If you do not want to have your printer on <br />'
                         ' at all times, and you would like to monitor <br /> '
                         'temperatures, please add <br />'
-                        'bed and/or number&#95of&#95tools to your config <br />'
+                        'bed and/or number&#95of&#95tools to your config<br />'
                         'and restart.',
                         title=NOTIFICATION_TITLE,
                         notification_id=NOTIFICATION_ID)
@@ -68,15 +68,26 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     for tool in tools:
                         for temp_type in types:
                             new_sensor = OctoPrintSensor(
-                                octoprint_api, temp_type, temp_type, name,
-                                SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
-                                SENSOR_TYPES[octo_type][1], tool)
+                                octoprint_api,
+                                temp_type,
+                                temp_type,
+                                name,
+                                SENSOR_TYPES[octo_type][3],
+                                SENSOR_TYPES[octo_type][0],
+                                SENSOR_TYPES[octo_type][1],
+                                tool
+                            )
                             devices.append(new_sensor)
                 else:
                     new_sensor = OctoPrintSensor(
-                        octoprint_api, octo_type, SENSOR_TYPES[octo_type][2],
-                        name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
-                        SENSOR_TYPES[octo_type][1])
+                        octoprint_api,
+                        octo_type,
+                        SENSOR_TYPES[octo_type][2],
+                        name,
+                        SENSOR_TYPES[octo_type][3],
+                        SENSOR_TYPES[octo_type][0],
+                        SENSOR_TYPES[octo_type][1]
+                    )
                     devices.append(new_sensor)
             add_entities(devices, True)
         else:
@@ -96,7 +107,12 @@ class OctoPrintSensor(Entity):
             self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
             self.friendly_name = condition
         else:
-            self._name = '{} {} {} {}'.format(sensor_name, condition, tool, 'temp')
+            self._name = '{} {} {} {}'.format(
+                sensor_name,
+                condition,
+                tool,
+                'temp'
+            )
             self.entity_id = ENTITY_ID_FORMAT.format(slugify(self._name))
             self.friendly_name = '{} {} {}'.format(condition, tool, 'temp')
 
