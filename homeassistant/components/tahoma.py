@@ -54,6 +54,8 @@ TAHOMA_TYPES = {
     'io:HorizontalAwningIOComponent': 'cover',
     'io:OnOffLightIOComponent': 'switch',
     'rtds:RTDSSmokeSensor': 'smoke',
+    'rtds:RTDSContactSensor': 'sensor',
+    'rtds:RTDSMotionSensor': 'sensor'
 }
 
 
