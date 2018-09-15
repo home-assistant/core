@@ -70,8 +70,8 @@ class ZMSwitchMonitors(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the entity on."""
-        self._monitor.function(self._on_state)
+        self._monitor.function = self._on_state
 
     def turn_off(self, **kwargs):
         """Turn the entity off."""
-        self._monitor.function(self._off_state)
+        self._monitor.function = self._off_state
