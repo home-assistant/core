@@ -28,21 +28,21 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     cameras = []
     for monitor in monitors:
         _LOGGER.info("Initializing camera %s", monitor.id)
-        cameras.append(ZoneMinderCamera(hass, monitor))
+        cameras.append(ZoneMinderCamera(monitor))
     add_entities(cameras)
 
 
 class ZoneMinderCamera(MjpegCamera):
     """Representation of a ZoneMinder Monitor Stream."""
 
-    def __init__(self, hass, monitor):
+    def __init__(self, monitor):
         """Initialize as a subclass of MjpegCamera."""
         device_info = {
             CONF_NAME: monitor.name,
             CONF_MJPEG_URL: monitor.mjpeg_image_url,
             CONF_STILL_IMAGE_URL: monitor.still_image_url
         }
-        super().__init__(hass, device_info)
+        super().__init__(device_info)
         self._is_recording = None
         self._monitor = monitor
 
