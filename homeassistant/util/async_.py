@@ -20,6 +20,7 @@ except AttributeError:
     _T = TypeVar('_T')
 
     def asyncio_run(main: Awaitable[_T], *, debug: bool = False) -> _T:
+        """Minimal re-implementation of asyncio.run (since 3.7)."""
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         loop.set_debug(debug)
