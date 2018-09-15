@@ -125,5 +125,7 @@ homeassistant/components/velux.py @Julius2342
 homeassistant/components/*/velux.py @Julius2342
 homeassistant/components/*/xiaomi_aqara.py @danielhiversen @syssi
 homeassistant/components/*/xiaomi_miio.py @rytilahti @syssi
+homeassistant/components/zoneminder.py @rohankapoorcom
+homeassistant/components/*/zoneminder.py @rohankapoorcom
 
 homeassistant/scripts/check_config.py @kellerza
