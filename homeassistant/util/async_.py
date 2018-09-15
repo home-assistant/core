@@ -6,6 +6,7 @@ from asyncio import coroutines
 from asyncio.events import AbstractEventLoop
 from asyncio.futures import Future
 
+import asyncio
 from asyncio import ensure_future
 from typing import Any, Union, Coroutine, Callable, Generator
 

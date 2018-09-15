@@ -21,11 +21,13 @@ from homeassistant.const import (
 
 def attempt_use_uvloop() -> None:
     """Attempt to use uvloop."""
+    import asyncio
     try:
         import uvloop
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
     except ImportError:
         pass
+    else:
+        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 def validate_python() -> None:
