@@ -280,9 +280,9 @@ async def setup_and_run_hass(config_dir: str,
 
         def open_browser(_: Any) -> None:
             """Open the web interface in a browser."""
-            if hass.config.api is not None:  # type: ignore
+            if hass.config.api is not None:
                 import webbrowser
-                webbrowser.open(hass.config.api.base_url)  # type: ignore
+                webbrowser.open(hass.config.api.base_url)
 
         run_callback_threadsafe(
             hass.loop,
@@ -369,7 +369,7 @@ def main() -> int:
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
 
-    return exit_code
+    return exit_code  # type: ignore # mypy cannot yet infer it
 
 
 if __name__ == "__main__":
