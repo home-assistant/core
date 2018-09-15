@@ -55,8 +55,12 @@ class RouterData:
         such as device_information, device_signal etc, and the remaining
         path points to a value in the member's data structure.
         """
-        cat, *path_ = path.split(".")
-        return reduce(operator.getitem, path_, getattr(self, cat))
+        root, *rest = path.split(".")
+        try:
+            data = getattr(self, root)
+        except AttributeError as err:
+            raise KeyError from err
+        return reduce(operator.getitem, rest, data)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self) -> None:

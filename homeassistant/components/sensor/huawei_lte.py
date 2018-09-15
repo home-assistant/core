@@ -113,7 +113,7 @@ class HuaweiLteSensor(Entity):
     @property
     def unique_id(self) -> str:
         """Return unique ID for sensor."""
-        return "%s_%s" % (
+        return "{}_{}".format(
             self.path,
             self.data["device_information.SerialNumber"],
         )
