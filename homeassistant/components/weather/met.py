@@ -129,7 +129,6 @@ class MetWeather(WeatherEntity):
 
     async def _fetching_data(self, *_):
         """Get the latest data from met.no."""
-
         if not await self._weather_data.fetching_data():
             # Retry in 15 to 20 minutes.
             minutes = 15 + randrange(6)
