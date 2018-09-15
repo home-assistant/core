@@ -97,7 +97,7 @@ class HomematicipSmokeDetector(HomematicipGenericDevice, BinarySensorDevice):
 
 
 class HomematicipWaterDetector(HomematicipGenericDevice, BinarySensorDevice):
-    """Representation of a HomematicIP Cloud water detector detector."""
+    """Representation of a HomematicIP Cloud water detector."""
 
     @property
     def device_class(self):
