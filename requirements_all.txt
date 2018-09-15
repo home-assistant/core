@@ -311,6 +311,9 @@ dsmr_parser==0.11
 # homeassistant.components.sensor.dweet
 dweepy==0.3.0
 
+# homeassistant.components.edp_redy
+edp_redy==0.0.2
+
 # homeassistant.components.media_player.horizon
 einder==0.3.1
 
