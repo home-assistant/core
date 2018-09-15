@@ -15,6 +15,12 @@ def routerdata():
     return rd
 
 
+async def test_routerdata_get_nonexistent_root(routerdata):
+    """Test that accessing a nonexistent root element raises KeyError."""
+    with pytest.raises(KeyError):  # NOT AttributeError
+        routerdata["nonexistent_root.foo"]
+
+
 async def test_routerdata_get_nonexistent_leaf(routerdata):
     """Test that accessing a nonexistent leaf element raises KeyError."""
     with pytest.raises(KeyError):
