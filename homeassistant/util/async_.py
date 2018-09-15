@@ -13,6 +13,15 @@ from typing import Any, Union, Coroutine, Callable, Generator
 _LOGGER = logging.getLogger(__name__)
 
 
+try:
+    asyncio_run = asyncio.run
+except AttributeError:
+    def asyncio_run(main, *, debug=False):
+        loop = asyncio.new_event_loop()
+        loop.set_debug(debug)
+        return loop.run(main)
+
+
 def _set_result_unless_cancelled(fut: Future, result: Any) -> None:
     """Set the result only if the Future was not cancelled."""
     if fut.cancelled():

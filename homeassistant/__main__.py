@@ -360,7 +360,7 @@ def main() -> int:
     if args.pid_file:
         write_pid(args.pid_file)
 
-    from homeassistant.util import asyncio_run
+    from homeassistant.util.async_ import asyncio_run
     exit_code = asyncio_run(setup_and_run_hass(config_dir, args))
     if exit_code == RESTART_EXIT_CODE and not args.runner:
         try_to_restart()
