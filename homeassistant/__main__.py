@@ -284,7 +284,11 @@ async def setup_and_run_hass(config_dir: str,
                 import webbrowser
                 webbrowser.open(hass.config.api.base_url)  # type: ignore
 
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, open_browser)
+        run_callback_threadsafe(
+            hass.loop,
+            hass.bus.async_listen_once,
+            EVENT_HOMEASSISTANT_START, open_browser
+        )
 
     return await hass.run()
 
