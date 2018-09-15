@@ -10,9 +10,8 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.zoneminder import DOMAIN
+from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
 from homeassistant.const import CONF_MONITORED_CONDITIONS
-from homeassistant.const import STATE_UNKNOWN
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +42,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder sensor platform."""
     include_archived = config.get(CONF_INCLUDE_ARCHIVED)
 
-    zm = hass.data[DOMAIN]
+    zm = hass.data[ZONEMINDER_DOMAIN]
     monitors = zm.get_monitors()
     if not monitors:
         _LOGGER.warning('Could not fetch any monitors from ZoneMinder')
@@ -80,7 +79,7 @@ class ZMSensorMonitors(Entity):
         """Update the sensor."""
         state = self._monitor.function
         if not state:
-            self._state = STATE_UNKNOWN
+            self._state = None
         else:
             self._state = state.value
 
@@ -113,9 +112,5 @@ class ZMSensorEvents(Entity):
 
     def update(self):
         """Update the sensor."""
-        events = self._monitor.get_events(
+        self._state = self._monitor.get_events(
             self.time_period, self._include_archived)
-        if not events:
-            self._state = 0
-        else:
-            self._state = events

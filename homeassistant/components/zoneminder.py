@@ -15,6 +15,8 @@ import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
+REQUIREMENTS = ['zm-py==0.0.1']
+
 CONF_PATH_ZMS = 'path_zms'
 
 DEFAULT_PATH = '/zm/'
@@ -49,8 +51,8 @@ def setup(hass, config):
 
     server_origin = '{}://{}'.format(schema, conf[CONF_HOST])
     hass.data[DOMAIN] = ZoneMinder(server_origin,
-                                   conf.get(CONF_USERNAME, None),
-                                   conf.get(CONF_PASSWORD, None),
+                                   conf.get(CONF_USERNAME),
+                                   conf.get(CONF_PASSWORD),
                                    conf.get(CONF_PATH),
                                    conf.get(CONF_PATH_ZMS),
                                    conf.get(CONF_VERIFY_SSL))

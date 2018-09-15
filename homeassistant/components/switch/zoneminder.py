@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.switch import (SwitchDevice, PLATFORM_SCHEMA)
-from homeassistant.components.zoneminder import DOMAIN
+from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
 from homeassistant.const import (CONF_COMMAND_ON, CONF_COMMAND_OFF)
 import homeassistant.helpers.config_validation as cv
 
@@ -29,7 +29,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     on_state = MonitorState(config.get(CONF_COMMAND_ON))
     off_state = MonitorState(config.get(CONF_COMMAND_OFF))
 
-    zm = hass.data[DOMAIN]
+    zm = hass.data[ZONEMINDER_DOMAIN]
 
     monitors = zm.get_monitors()
     if not monitors:
@@ -57,12 +57,11 @@ class ZMSwitchMonitors(SwitchDevice):
     @property
     def name(self):
         """Return the name of the switch."""
-        return "%s State" % self._monitor.name
+        return '{}\'s State'.format(self._monitor.name)
 
     def update(self):
         """Update the switch value."""
-        current_state = self._monitor.function
-        self._state = True if current_state == self._on_state else False
+        self._state = self._monitor.function == self._on_state
 
     @property
     def is_on(self):

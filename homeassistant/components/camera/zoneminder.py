@@ -10,18 +10,16 @@ import logging
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera.mjpeg import (
     CONF_MJPEG_URL, CONF_STILL_IMAGE_URL, MjpegCamera)
-from homeassistant.components.zoneminder import DOMAIN
+from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['zoneminder']
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder cameras."""
-    zm = hass.data[DOMAIN]
+    zm = hass.data[ZONEMINDER_DOMAIN]
 
     monitors = zm.get_monitors()
     if not monitors:
@@ -32,12 +30,7 @@ def async_setup_platform(hass, config, async_add_entities,
     for monitor in monitors:
         _LOGGER.info("Initializing camera %s", monitor.id)
         cameras.append(ZoneMinderCamera(hass, monitor))
-
-    if not cameras:
-        _LOGGER.warning("No active cameras found")
-        return
-
-    async_add_entities(cameras)
+    add_entities(cameras)
 
 
 class ZoneMinderCamera(MjpegCamera):
@@ -51,7 +44,6 @@ class ZoneMinderCamera(MjpegCamera):
             CONF_STILL_IMAGE_URL: monitor.still_image_url
         }
         super().__init__(hass, device_info)
-        self._monitor_id = monitor.id
         self._is_recording = None
         self._monitor = monitor
 
@@ -62,7 +54,7 @@ class ZoneMinderCamera(MjpegCamera):
 
     def update(self):
         """Update our recording state from the ZM API."""
-        _LOGGER.debug("Updating camera state for monitor %i", self._monitor_id)
+        _LOGGER.debug("Updating camera state for monitor %i", self._monitor.id)
         self._is_recording = self._monitor.is_recording
 
     @property
