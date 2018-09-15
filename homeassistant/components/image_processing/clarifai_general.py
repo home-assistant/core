@@ -68,10 +68,10 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     entities = []
     for camera in config[CONF_SOURCE]:
         entities.append(ClarifaiClassifier(
-            camera.get(CONF_NAME),
             app,
             config[CONF_CONCEPTS],
             camera[CONF_ENTITY_ID],
+            camera.get(CONF_NAME),
         ))
     add_devices(entities)
 
@@ -79,7 +79,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 class ClarifaiClassifier(ImageProcessingEntity):
     """Perform a classification via Clarifai."""
 
-    def __init__(self, name, app, concepts, camera_entity):
+    def __init__(self, app, concepts, camera_entity, name=None):
         """Init with the API key."""
         model = 'general-v1.3'
         self.model = app.models.get(model)
