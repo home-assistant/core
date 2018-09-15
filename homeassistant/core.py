@@ -367,7 +367,7 @@ class HomeAssistant:
             return
         if self.state == CoreState.starting:
             # This may not work
-            _LOGGER.warn("async_stop called before startup is complete")
+            _LOGGER.warning("async_stop called before startup is complete")
 
         # stage 1
         self.state = CoreState.stopping
