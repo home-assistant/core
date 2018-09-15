@@ -2,7 +2,7 @@
 Websocket based API for Home Assistant.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/developers/websocket_api/
+https://developers.home-assistant.io/docs/external_api_websocket.html
 """
 import asyncio
 from concurrent import futures
