@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyRFXtrx==0.22.1']
+REQUIREMENTS = ['pyRFXtrx==0.23']
 
 DOMAIN = 'rfxtrx'
 
@@ -162,11 +162,11 @@ def get_pt2262_cmd(device_id, data_bits):
     return hex(data[-1] & mask)
 
 
-# pylint: disable=unused-variable
 def get_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for device in RFX_DEVICES.values():
         if (hasattr(device, 'is_lighting4') and
+                device.masked_id is not None and
                 device.masked_id == get_pt2262_deviceid(device_id,
                                                         device.data_bits)):
             _LOGGER.debug("rfxtrx: found matching device %s for %s",
@@ -176,7 +176,6 @@ def get_pt2262_device(device_id):
     return None
 
 
-# pylint: disable=unused-variable
 def find_possible_pt2262_device(device_id):
     """Look for the device which id matches the given device_id parameter."""
     for dev_id, device in RFX_DEVICES.items():

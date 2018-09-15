@@ -24,7 +24,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BOM weather platform."""
     station = config.get(CONF_STATION) or closest_station(
         config.get(CONF_LATITUDE),
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except ValueError as err:
         _LOGGER.error("Received error from BOM_Current: %s", err)
         return False
-    add_devices([BOMWeather(bom_data, config.get(CONF_NAME))], True)
+    add_entities([BOMWeather(bom_data, config.get(CONF_NAME))], True)
 
 
 class BOMWeather(WeatherEntity):

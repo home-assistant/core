@@ -5,23 +5,24 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.deconz/
 """
 from homeassistant.components.binary_sensor import BinarySensorDevice
-from homeassistant.components.deconz import (
-    CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ, DATA_DECONZ_ID,
-    DATA_DECONZ_UNSUB)
+from homeassistant.components.deconz.const import (
+    ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old way of setting up deCONZ binary sensors."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ binary sensor."""
     @callback
     def async_add_sensor(sensors):
@@ -33,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             if sensor.type in DECONZ_BINARY_SENSOR and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
                 entities.append(DeconzBinarySensor(sensor))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
@@ -53,6 +54,11 @@ class DeconzBinarySensor(BinarySensorDevice):
         self._sensor.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect sensor object when removed."""
+        self._sensor.remove_callback(self.async_update_callback)
+        self._sensor = None
+
     @callback
     def async_update_callback(self, reason):
         """Update the sensor's state.
@@ -62,7 +68,8 @@ class DeconzBinarySensor(BinarySensorDevice):
         """
         if reason['state'] or \
            'reachable' in reason['attr'] or \
-           'battery' in reason['attr']:
+           'battery' in reason['attr'] or \
+           'on' in reason['attr']:
             self.async_schedule_update_ha_state()
 
     @property
@@ -107,6 +114,24 @@ class DeconzBinarySensor(BinarySensorDevice):
         attr = {}
         if self._sensor.battery:
             attr[ATTR_BATTERY_LEVEL] = self._sensor.battery
+        if self._sensor.on is not None:
+            attr[ATTR_ON] = self._sensor.on
         if self._sensor.type in PRESENCE and self._sensor.dark is not None:
-            attr['dark'] = self._sensor.dark
+            attr[ATTR_DARK] = self._sensor.dark
         return attr
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if (self._sensor.uniqueid is None or
+                self._sensor.uniqueid.count(':') != 7):
+            return None
+        serial = self._sensor.uniqueid.split('-', 1)[0]
+        return {
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'name': self._sensor.name,
+            'sw_version': self._sensor.swversion,
+        }

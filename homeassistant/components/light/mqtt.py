@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_HS_COLOR,
     ATTR_WHITE_VALUE, Light, SUPPORT_BRIGHTNESS, SUPPORT_COLOR_TEMP,
@@ -54,6 +54,7 @@ CONF_WHITE_VALUE_SCALE = 'white_value_scale'
 CONF_WHITE_VALUE_STATE_TOPIC = 'white_value_state_topic'
 CONF_WHITE_VALUE_TEMPLATE = 'white_value_template'
 CONF_ON_COMMAND_TYPE = 'on_command_type'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_BRIGHTNESS_SCALE = 255
 DEFAULT_NAME = 'MQTT Light'
@@ -79,6 +80,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_EFFECT_STATE_TOPIC): mqtt.valid_subscribe_topic,
     vol.Optional(CONF_EFFECT_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
     vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
@@ -100,7 +102,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up a MQTT Light."""
     if discovery_info is not None:
@@ -109,8 +111,9 @@ async def async_setup_platform(hass, config, async_add_devices,
     config.setdefault(
         CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
 
-    async_add_devices([MqttLight(
+    async_add_entities([MqttLight(
         config.get(CONF_NAME),
+        config.get(CONF_UNIQUE_ID),
         config.get(CONF_EFFECT_LIST),
         {
             key: config.get(key) for key in (
@@ -159,14 +162,15 @@ async def async_setup_platform(hass, config, async_add_devices,
 class MqttLight(MqttAvailability, Light):
     """Representation of a MQTT light."""
 
-    def __init__(self, name, effect_list, topic, templates, qos,
-                 retain, payload, optimistic, brightness_scale,
+    def __init__(self, name, unique_id, effect_list, topic, templates,
+                 qos, retain, payload, optimistic, brightness_scale,
                  white_value_scale, on_command_type, availability_topic,
                  payload_available, payload_not_available):
         """Initialize MQTT light."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
         self._name = name
+        self._unique_id = unique_id
         self._effect_list = effect_list
         self._topic = topic
         self._qos = qos
@@ -205,7 +209,7 @@ class MqttLight(MqttAvailability, Light):
             topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None and
             SUPPORT_COLOR_TEMP)
         self._supported_features |= (
-            topic[CONF_EFFECT_STATE_TOPIC] is not None and
+            topic[CONF_EFFECT_COMMAND_TOPIC] is not None and
             SUPPORT_EFFECT)
         self._supported_features |= (
             topic[CONF_WHITE_VALUE_COMMAND_TOPIC] is not None and
@@ -393,6 +397,11 @@ class MqttLight(MqttAvailability, Light):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
@@ -442,8 +451,15 @@ class MqttLight(MqttAvailability, Light):
            self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
 
             hs_color = kwargs[ATTR_HS_COLOR]
-            brightness = kwargs.get(
-                ATTR_BRIGHTNESS, self._brightness if self._brightness else 255)
+
+            # If there's a brightness topic set, we don't want to scale the RGB
+            # values given using the brightness.
+            if self._topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None:
+                brightness = 255
+            else:
+                brightness = kwargs.get(
+                    ATTR_BRIGHTNESS, self._brightness if self._brightness else
+                    255)
             rgb = color_util.color_hsv_to_RGB(
                 hs_color[0], hs_color[1], brightness / 255 * 100)
             tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]

@@ -39,16 +39,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Skybeacon sensor."""
-    # pylint: disable=unreachable
     name = config.get(CONF_NAME)
     mac = config.get(CONF_MAC)
     _LOGGER.debug("Setting up...")
 
     mon = Monitor(hass, mac, name)
-    add_devices([SkybeaconTemp(name, mon)])
-    add_devices([SkybeaconHumid(name, mon)])
+    add_entities([SkybeaconTemp(name, mon)])
+    add_entities([SkybeaconHumid(name, mon)])
 
     def monitor_stop(_service_or_event):
         """Stop the monitor thread."""
@@ -139,7 +138,7 @@ class Monitor(threading.Thread):
 
     def run(self):
         """Thread that keeps connection alive."""
-        # pylint: disable=import-error, no-name-in-module, no-member
+        # pylint: disable=import-error
         import pygatt
         from pygatt.backends import Characteristic
         from pygatt.exceptions import (

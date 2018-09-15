@@ -56,14 +56,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Loop Energy sensors."""
     import pyloopenergy
 
     elec_config = config.get(CONF_ELEC)
     gas_config = config.get(CONF_GAS, {})
 
-    # pylint: disable=too-many-function-args
     controller = pyloopenergy.LoopEnergy(
         elec_config.get(CONF_ELEC_SERIAL),
         elec_config.get(CONF_ELEC_SECRET),
@@ -85,7 +84,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if gas_config.get(CONF_GAS_SERIAL):
         sensors.append(LoopEnergyGas(controller))
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class LoopEnergyDevice(Entity):

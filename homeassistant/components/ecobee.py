@@ -84,7 +84,7 @@ def setup_ecobee(hass, network, config):
     discovery.load_platform(hass, 'weather', DOMAIN, {}, config)
 
 
-class EcobeeData(object):
+class EcobeeData:
     """Get the latest data and update the states."""
 
     def __init__(self, config_file):
@@ -105,7 +105,6 @@ def setup(hass, config):
     Will automatically load thermostat and sensor components to support
     devices discovered on the network.
     """
-    # pylint: disable=import-error
     global NETWORK
 
     if 'ecobee' in _CONFIGURING:

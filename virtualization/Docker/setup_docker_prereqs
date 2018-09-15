@@ -7,7 +7,6 @@ set -e
 INSTALL_TELLSTICK="${INSTALL_TELLSTICK:-yes}"
 INSTALL_OPENALPR="${INSTALL_OPENALPR:-yes}"
 INSTALL_LIBCEC="${INSTALL_LIBCEC:-yes}"
-INSTALL_PHANTOMJS="${INSTALL_PHANTOMJS:-yes}"
 INSTALL_SSOCR="${INSTALL_SSOCR:-yes}"
 
 # Required debian packages for running hass or components
@@ -46,7 +45,7 @@ apt-get install -y --no-install-recommends ${PACKAGES[@]} ${PACKAGES_DEV[@]}
 # This is a list of scripts that install additional dependencies. If you only
 # need to install a package from the official debian repository, just add it
 # to the list above. Only create a script if you need compiling, manually
-# downloading or a 3th party repository.
+# downloading or a 3rd party repository.
 if [ "$INSTALL_TELLSTICK" == "yes" ]; then
   virtualization/Docker/scripts/tellstick
 fi
@@ -57,10 +56,6 @@ fi
 
 if [ "$INSTALL_LIBCEC" == "yes" ]; then
   virtualization/Docker/scripts/libcec
-fi
-
-if [ "$INSTALL_PHANTOMJS" == "yes" ]; then
-  virtualization/Docker/scripts/phantomjs
 fi
 
 if [ "$INSTALL_SSOCR" == "yes" ]; then

@@ -11,7 +11,7 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.components.binary_sensor import (
     BinarySensorDevice, DEVICE_CLASSES_SCHEMA)
 from homeassistant.const import (
@@ -45,7 +45,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the MQTT binary sensor."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -54,7 +55,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
 
-    async_add_devices([MqttBinarySensor(
+    async_add_entities([MqttBinarySensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_AVAILABILITY_TOPIC),

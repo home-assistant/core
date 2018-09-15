@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.buienradar/
 """
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 
 import async_timeout
@@ -141,7 +141,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Create the buienradar sensor."""
     from homeassistant.components.weather.buienradar import DEFAULT_TIMEFRAME
 
@@ -163,7 +164,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     for sensor_type in config[CONF_MONITORED_CONDITIONS]:
         dev.append(BrSensor(sensor_type, config.get(CONF_NAME, 'br'),
                             coordinates))
-    async_add_devices(dev)
+    async_add_entities(dev)
 
     data = BrData(hass, coordinates, timeframe, dev)
     # schedule the first update in 1 minute from now:
@@ -262,13 +263,13 @@ class BrSensor(Entity):
                         self._entity_picture = img
                         return True
                 return False
-            else:
-                try:
-                    self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
-                    return True
-                except IndexError:
-                    _LOGGER.warning("No forecast for fcday=%s...", fcday)
-                    return False
+
+            try:
+                self._state = data.get(FORECAST)[fcday].get(self.type[:-3])
+                return True
+            except IndexError:
+                _LOGGER.warning("No forecast for fcday=%s...", fcday)
+                return False
 
         if self.type == SYMBOL or self.type.startswith(CONDITION):
             # update weather symbol & status text
@@ -287,7 +288,6 @@ class BrSensor(Entity):
 
                 img = condition.get(IMAGE, None)
 
-                # pylint: disable=protected-access
                 if new_state != self._state or img != self._entity_picture:
                     self._state = new_state
                     self._entity_picture = img
@@ -299,12 +299,10 @@ class BrSensor(Entity):
             # update nested precipitation forecast sensors
             nested = data.get(PRECIPITATION_FORECAST)
             self._timeframe = nested.get(TIMEFRAME)
-            # pylint: disable=protected-access
             self._state = nested.get(self.type[len(PRECIPITATION_FORECAST)+1:])
             return True
 
         # update all other sensors
-        # pylint: disable=protected-access
         self._state = data.get(self.type)
         return True
 
@@ -329,7 +327,7 @@ class BrSensor(Entity):
         return self._state
 
     @property
-    def should_poll(self):  # pylint: disable=no-self-use
+    def should_poll(self):
         """No polling needed."""
         return False
 
@@ -377,7 +375,7 @@ class BrSensor(Entity):
         return self._force_update
 
 
-class BrData(object):
+class BrData:
     """Get the latest data and updates the states."""
 
     def __init__(self, hass, coordinates, timeframe, devices):
@@ -484,9 +482,10 @@ class BrData(object):
 
         _LOGGER.debug("Buienradar parsed data: %s", result)
         if result.get(SUCCESS) is not True:
-            _LOGGER.warning("Unable to parse data from Buienradar."
-                            "(Msg: %s)",
-                            result.get(MESSAGE),)
+            if int(datetime.now().strftime('%H')) > 0:
+                _LOGGER.warning("Unable to parse data from Buienradar."
+                                "(Msg: %s)",
+                                result.get(MESSAGE),)
             yield from self.schedule_update(SCHEDULE_NOK)
             return
 

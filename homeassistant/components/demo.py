@@ -7,7 +7,7 @@ https://home-assistant.io/components/demo/
 import asyncio
 import time
 
-import homeassistant.bootstrap as bootstrap
+from homeassistant import bootstrap
 import homeassistant.core as ha
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM
 

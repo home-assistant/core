@@ -4,17 +4,17 @@ Support for Anthem Network Receivers and Processors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.anthemav/
 """
-import logging
 import asyncio
+import logging
 
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_SELECT_SOURCE,
+    PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON, STATE_UNKNOWN,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_NAME, CONF_PORT, EVENT_HOMEASSISTANT_STOP, STATE_OFF,
+    STATE_ON, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['anthemav==1.1.8']
@@ -32,11 +32,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    })
+})
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up our socket to the AVR."""
     import anthemav
 
@@ -63,7 +64,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     _LOGGER.debug("dump_rawdata: %s", avr.protocol.dump_rawdata)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, device.avr.close)
-    async_add_devices([device])
+    async_add_entities([device])
 
 
 class AnthemAVR(MediaPlayerDevice):
@@ -100,7 +101,7 @@ class AnthemAVR(MediaPlayerDevice):
 
         if pwrstate is True:
             return STATE_ON
-        elif pwrstate is False:
+        if pwrstate is False:
             return STATE_OFF
         return STATE_UNKNOWN
 

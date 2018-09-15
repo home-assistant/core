@@ -71,7 +71,7 @@ def test_frontend_and_static(mock_http_client):
 
     # Test we can retrieve frontend.js
     frontendjs = re.search(
-        r'(?P<app>\/frontend_es5\/app-[A-Za-z0-9]{32}.js)', text)
+        r'(?P<app>\/frontend_es5\/app-[A-Za-z0-9]{8}.js)', text)
 
     assert frontendjs is not None
     resp = yield from mock_http_client.get(frontendjs.groups(0)[0])
@@ -226,7 +226,7 @@ def test_extra_urls(mock_http_client_with_urls):
     resp = yield from mock_http_client_with_urls.get('/states?latest')
     assert resp.status == 200
     text = yield from resp.text()
-    assert text.find('href="https://domain.com/my_extra_url.html"') >= 0
+    assert text.find("href='https://domain.com/my_extra_url.html'") >= 0
 
 
 @asyncio.coroutine
@@ -235,7 +235,7 @@ def test_extra_urls_es5(mock_http_client_with_urls):
     resp = yield from mock_http_client_with_urls.get('/states?es5')
     assert resp.status == 200
     text = yield from resp.text()
-    assert text.find('href="https://domain.com/my_extra_url_es5.html"') >= 0
+    assert text.find("href='https://domain.com/my_extra_url_es5.html'") >= 0
 
 
 async def test_get_panels(hass, hass_ws_client):
@@ -336,3 +336,26 @@ async def test_lovelace_ui_load_err(hass, hass_ws_client):
     assert msg['type'] == wapi.TYPE_RESULT
     assert msg['success'] is False
     assert msg['error']['code'] == 'load_error'
+
+
+async def test_auth_load(mock_http_client):
+    """Test auth component loaded by default."""
+    resp = await mock_http_client.get('/auth/providers')
+    assert resp.status == 200
+
+
+async def test_onboarding_load(mock_http_client):
+    """Test onboarding component loaded by default."""
+    resp = await mock_http_client.get('/api/onboarding')
+    assert resp.status == 200
+
+
+async def test_auth_authorize(mock_http_client):
+    """Test the authorize endpoint works."""
+    resp = await mock_http_client.get('/auth/authorize?hello=world')
+    assert resp.url.query_string == 'hello=world'
+    assert resp.url.path == '/frontend_es5/authorize.html'
+
+    resp = await mock_http_client.get('/auth/authorize?latest&hello=world')
+    assert resp.url.query_string == 'latest&hello=world'
+    assert resp.url.path == '/frontend_latest/authorize.html'

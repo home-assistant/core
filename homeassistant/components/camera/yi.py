@@ -41,9 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up a Yi Camera."""
-    async_add_devices([YiCamera(hass, config)], True)
+    async_add_entities([YiCamera(hass, config)], True)
 
 
 class YiCamera(Camera):
@@ -53,18 +53,16 @@ class YiCamera(Camera):
         """Initialize."""
         super().__init__()
         self._extra_arguments = config.get(CONF_FFMPEG_ARGUMENTS)
-        self._ftp = None
         self._last_image = None
         self._last_url = None
         self._manager = hass.data[DATA_FFMPEG]
         self._name = config[CONF_NAME]
+        self._is_on = True
         self.host = config[CONF_HOST]
         self.port = config[CONF_PORT]
         self.path = config[CONF_PATH]
         self.user = config[CONF_USERNAME]
         self.passwd = config[CONF_PASSWORD]
-
-        hass.async_add_job(self._connect_to_client)
 
     @property
     def brand(self):
@@ -72,47 +70,50 @@ class YiCamera(Camera):
         return DEFAULT_BRAND
 
     @property
+    def is_on(self):
+        """Determine whether the camera is on."""
+        return self._is_on
+
+    @property
     def name(self):
         """Return the name of this camera."""
         return self._name
 
-    async def _connect_to_client(self):
-        """Attempt to establish a connection via FTP."""
+    async def _get_latest_video_url(self):
+        """Retrieve the latest video file from the customized Yi FTP server."""
         from aioftp import Client, StatusCodeError
 
-        ftp = Client()
+        ftp = Client(loop=self.hass.loop)
         try:
             await ftp.connect(self.host)
             await ftp.login(self.user, self.passwd)
-            self._ftp = ftp
-        except StatusCodeError as err:
+        except (ConnectionRefusedError, StatusCodeError) as err:
             raise PlatformNotReady(err)
 
-    async def _get_latest_video_url(self):
-        """Retrieve the latest video file from the customized Yi FTP server."""
-        from aioftp import StatusCodeError
-
         try:
-            await self._ftp.change_directory(self.path)
+            await ftp.change_directory(self.path)
             dirs = []
-            for path, attrs in await self._ftp.list():
+            for path, attrs in await ftp.list():
                 if attrs['type'] == 'dir' and '.' not in str(path):
                     dirs.append(path)
             latest_dir = dirs[-1]
-            await self._ftp.change_directory(latest_dir)
+            await ftp.change_directory(latest_dir)
 
             videos = []
-            for path, _ in await self._ftp.list():
+            for path, _ in await ftp.list():
                 videos.append(path)
             if not videos:
                 _LOGGER.info('Video folder "%s" empty; delaying', latest_dir)
                 return None
 
+            await ftp.quit()
+            self._is_on = True
             return 'ftp://{0}:{1}@{2}:{3}{4}/{5}/{6}'.format(
                 self.user, self.passwd, self.host, self.port, self.path,
                 latest_dir, videos[-1])
         except (ConnectionRefusedError, StatusCodeError) as err:
             _LOGGER.error('Error while fetching video: %s', err)
+            self._is_on = False
             return None
 
     async def async_camera_image(self):
@@ -120,7 +121,7 @@ class YiCamera(Camera):
         from haffmpeg import ImageFrame, IMAGE_JPEG
 
         url = await self._get_latest_video_url()
-        if url != self._last_url:
+        if url and url != self._last_url:
             ffmpeg = ImageFrame(self._manager.binary, loop=self.hass.loop)
             self._last_image = await asyncio.shield(
                 ffmpeg.get_image(
@@ -135,6 +136,9 @@ class YiCamera(Camera):
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
+
+        if not self._is_on:
+            return
 
         stream = CameraMjpeg(self._manager.binary, loop=self.hass.loop)
         await stream.open_camera(

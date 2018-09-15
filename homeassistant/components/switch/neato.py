@@ -10,11 +10,12 @@ import requests
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.components.neato import NEATO_ROBOTS, NEATO_LOGIN
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['neato']
+
+SCAN_INTERVAL = timedelta(minutes=10)
 
 SWITCH_TYPE_SCHEDULE = 'schedule'
 
@@ -23,14 +24,14 @@ SWITCH_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato switches."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         for type_name in SWITCH_TYPES:
             dev.append(NeatoConnectedSwitch(hass, robot, type_name))
     _LOGGER.debug("Adding switches %s", dev)
-    add_devices(dev)
+    add_entities(dev)
 
 
 class NeatoConnectedSwitch(ToggleEntity):
@@ -52,7 +53,6 @@ class NeatoConnectedSwitch(ToggleEntity):
         self._schedule_state = None
         self._clean_state = None
 
-    @Throttle(timedelta(seconds=60))
     def update(self):
         """Update the states of Neato switches."""
         _LOGGER.debug("Running switch update")
@@ -67,7 +67,7 @@ class NeatoConnectedSwitch(ToggleEntity):
         _LOGGER.debug('self._state=%s', self._state)
         if self.type == SWITCH_TYPE_SCHEDULE:
             _LOGGER.debug("State: %s", self._state)
-            if self.robot.schedule_enabled:
+            if self._state['details']['isScheduleEnabled']:
                 self._schedule_state = STATE_ON
             else:
                 self._schedule_state = STATE_OFF

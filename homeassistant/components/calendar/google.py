@@ -2,9 +2,8 @@
 Support for Google Calendar Search binary sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/binary_sensor.google_calendar/
+https://home-assistant.io/components/calendar.google/
 """
-# pylint: disable=import-error
 import logging
 from datetime import timedelta
 
@@ -26,7 +25,7 @@ DEFAULT_GOOGLE_SEARCH_PARAMS = {
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-def setup_platform(hass, config, add_devices, disc_info=None):
+def setup_platform(hass, config, add_entities, disc_info=None):
     """Set up the calendar platform for event devices."""
     if disc_info is None:
         return
@@ -35,9 +34,9 @@ def setup_platform(hass, config, add_devices, disc_info=None):
         return
 
     calendar_service = GoogleCalendarService(hass.config.path(TOKEN_FILE))
-    add_devices([GoogleCalendarEventDevice(hass, calendar_service,
-                                           disc_info[CONF_CAL_ID], data)
-                 for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
+    add_entities([GoogleCalendarEventDevice(hass, calendar_service,
+                                            disc_info[CONF_CAL_ID], data)
+                  for data in disc_info[CONF_ENTITIES] if data[CONF_TRACK]])
 
 
 class GoogleCalendarEventDevice(CalendarEventDevice):
@@ -56,7 +55,7 @@ class GoogleCalendarEventDevice(CalendarEventDevice):
         return await self.data.async_get_events(hass, start_date, end_date)
 
 
-class GoogleCalendarData(object):
+class GoogleCalendarData:
     """Class to utilize calendar service object to get next event."""
 
     def __init__(self, calendar_service, calendar_id, search,
@@ -89,9 +88,7 @@ class GoogleCalendarData(object):
         params['timeMin'] = start_date.isoformat('T')
         params['timeMax'] = end_date.isoformat('T')
 
-        # pylint: disable=no-member
         events = await hass.async_add_job(service.events)
-        # pylint: enable=no-member
         result = await hass.async_add_job(events.list(**params).execute)
 
         items = result.get('items', [])
@@ -111,7 +108,7 @@ class GoogleCalendarData(object):
         service, params = self._prepare_query()
         params['timeMin'] = dt.now().isoformat('T')
 
-        events = service.events()  # pylint: disable=no-member
+        events = service.events()
         result = events.list(**params).execute()
 
         items = result.get('items', [])

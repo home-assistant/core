@@ -8,7 +8,7 @@ https://home-assistant.io/components/binary_sensor.isy994/
 import asyncio
 import logging
 from datetime import timedelta
-from typing import Callable  # noqa
+from typing import Callable
 
 from homeassistant.core import callback
 from homeassistant.components.binary_sensor import BinarySensorDevice, DOMAIN
@@ -29,7 +29,7 @@ ISY_DEVICE_TYPES = {
 
 
 def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+                   add_entities: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 binary sensor platform."""
     devices = []
     devices_by_nid = {}
@@ -55,7 +55,7 @@ def setup_platform(hass, config: ConfigType,
         else:
             device_type = _detect_device_type(node)
             subnode_id = int(node.nid[-1])
-            if (device_type == 'opening' or device_type == 'moisture'):
+            if device_type in ('opening', 'moisture'):
                 # These sensors use an optional "negative" subnode 2 to snag
                 # all state changes
                 if subnode_id == 2:
@@ -75,7 +75,7 @@ def setup_platform(hass, config: ConfigType,
     for name, status, _ in hass.data[ISY994_PROGRAMS][DOMAIN]:
         devices.append(ISYBinarySensorProgram(name, status))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 def _detect_device_type(node) -> str:

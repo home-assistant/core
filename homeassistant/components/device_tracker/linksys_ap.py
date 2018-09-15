@@ -19,7 +19,7 @@ from homeassistant.const import (
 INTERFACES = 2
 DEFAULT_TIMEOUT = 10
 
-REQUIREMENTS = ['beautifulsoup4==4.6.0']
+REQUIREMENTS = ['beautifulsoup4==4.6.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,6 @@ class LinksysAPDeviceScanner(DeviceScanner):
 
         return self.last_results
 
-    # pylint: disable=no-self-use
     def get_device_name(self, device):
         """
         Return the name (if known) of the device.

@@ -24,10 +24,14 @@ PROTECT_SENSOR_TYPES = ['co_status',
                         # color_status: "gray", "green", "yellow", "red"
                         'color_status']
 
-STRUCTURE_SENSOR_TYPES = ['eta', 'security_state']
+STRUCTURE_SENSOR_TYPES = ['eta']
+
+# security_state is structure level sensor, but only meaningful when
+# Nest Cam exist
+STRUCTURE_CAMERA_SENSOR_TYPES = ['security_state']
 
 _VALID_SENSOR_TYPES = SENSOR_TYPES + TEMP_SENSOR_TYPES + PROTECT_SENSOR_TYPES \
-                      + STRUCTURE_SENSOR_TYPES
+                      + STRUCTURE_SENSOR_TYPES + STRUCTURE_CAMERA_SENSOR_TYPES
 
 SENSOR_UNITS = {'humidity': '%'}
 
@@ -51,14 +55,14 @@ _SENSOR_TYPES_DEPRECATED = SENSOR_TYPES_DEPRECATED + DEPRECATED_WEATHER_VARS
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nest Sensor.
 
     No longer used.
     """
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(hass, entry, async_add_entities):
     """Set up a Nest sensor based on a config entry."""
     nest = hass.data[DATA_NEST]
 
@@ -105,9 +109,17 @@ async def async_setup_entry(hass, entry, async_add_devices):
                             for variable in conditions
                             if variable in PROTECT_SENSOR_TYPES]
 
+        structures_has_camera = {}
+        for structure, device in nest.cameras():
+            structures_has_camera[structure] = True
+        for structure in structures_has_camera:
+            all_sensors += [NestBasicSensor(structure, None, variable)
+                            for variable in conditions
+                            if variable in STRUCTURE_CAMERA_SENSOR_TYPES]
+
         return all_sensors
 
-    async_add_devices(await hass.async_add_job(get_sensors), True)
+    async_add_entities(await hass.async_add_job(get_sensors), True)
 
 
 class NestBasicSensor(NestSensorDevice):
@@ -133,7 +145,8 @@ class NestBasicSensor(NestSensorDevice):
         elif self.variable in PROTECT_SENSOR_TYPES \
                 and self.variable != 'color_status':
             # keep backward compatibility
-            self._state = getattr(self.device, self.variable).capitalize()
+            state = getattr(self.device, self.variable)
+            self._state = state.capitalize() if state is not None else None
         else:
             self._state = getattr(self.device, self.variable)
 

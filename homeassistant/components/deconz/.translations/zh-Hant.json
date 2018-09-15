@@ -22,7 +22,8 @@
             },
             "options": {
                 "data": {
-                    "allow_clip_sensor": "\u5141\u8a31\u532f\u5165\u865b\u64ec\u611f\u61c9\u5668"
+                    "allow_clip_sensor": "\u5141\u8a31\u532f\u5165\u865b\u64ec\u611f\u61c9\u5668",
+                    "allow_deconz_groups": "\u5141\u8a31\u532f\u5165 deCONZ \u7fa4\u7d44"
                 },
                 "title": "deCONZ \u9644\u52a0\u8a2d\u5b9a\u9078\u9805"
             }

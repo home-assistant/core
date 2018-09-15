@@ -19,7 +19,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP, CONF_LIGHTS, CONF_EXCLUDE)
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['pyvera==0.2.43']
+REQUIREMENTS = ['pyvera==0.2.44']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,7 +53,6 @@ VERA_COMPONENTS = [
 ]
 
 
-# pylint: disable=too-many-function-args
 def setup(hass, base_config):
     """Set up for Vera devices."""
     import pyvera as veraApi

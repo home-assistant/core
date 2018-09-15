@@ -83,7 +83,7 @@ def async_log_entry(hass, name, message, domain=None, entity_id=None):
     hass.bus.async_fire(EVENT_LOGBOOK_ENTRY, data)
 
 
-async def setup(hass, config):
+async def async_setup(hass, config):
     """Listen for download events to download files."""
     @callback
     def log_message(service):
@@ -140,7 +140,7 @@ class LogbookView(HomeAssistantView):
         return await hass.async_add_job(json_events)
 
 
-class Entry(object):
+class Entry:
     """A human readable version of the log."""
 
     def __init__(self, when=None, name=None, message=None, domain=None,
@@ -380,16 +380,16 @@ def _entry_message_from_state(domain, state):
             return 'is away'
         return 'is at {}'.format(state.state)
 
-    elif domain == 'sun':
+    if domain == 'sun':
         if state.state == sun.STATE_ABOVE_HORIZON:
             return 'has risen'
         return 'has set'
 
-    elif state.state == STATE_ON:
+    if state.state == STATE_ON:
         # Future: combine groups and its entity entries ?
         return "turned on"
 
-    elif state.state == STATE_OFF:
+    if state.state == STATE_OFF:
         return "turned off"
 
     return "changed to {}".format(state.state)

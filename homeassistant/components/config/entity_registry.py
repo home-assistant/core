@@ -8,6 +8,11 @@ from homeassistant.helpers import config_validation as cv
 
 DEPENDENCIES = ['websocket_api']
 
+WS_TYPE_LIST = 'config/entity_registry/list'
+SCHEMA_WS_LIST = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_LIST,
+})
+
 WS_TYPE_GET = 'config/entity_registry/get'
 SCHEMA_WS_GET = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_GET,
@@ -20,11 +25,16 @@ SCHEMA_WS_UPDATE = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('entity_id'): cv.entity_id,
     # If passed in, we update value. Passing None will remove old value.
     vol.Optional('name'): vol.Any(str, None),
+    vol.Optional('new_entity_id'): str,
 })
 
 
 async def async_setup(hass):
     """Enable the Entity Registry views."""
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_LIST, websocket_list_entities,
+        SCHEMA_WS_LIST
+    )
     hass.components.websocket_api.async_register_command(
         WS_TYPE_GET, websocket_get_entity,
         SCHEMA_WS_GET
@@ -34,6 +44,29 @@ async def async_setup(hass):
         SCHEMA_WS_UPDATE
     )
     return True
+
+
+@callback
+def websocket_list_entities(hass, connection, msg):
+    """Handle list registry entries command.
+
+    Async friendly.
+    """
+    async def retrieve_entities():
+        """Get entities from registry."""
+        registry = await async_get_registry(hass)
+        connection.send_message_outside(websocket_api.result_message(
+            msg['id'], [{
+                'config_entry_id': entry.config_entry_id,
+                'device_id': entry.device_id,
+                'disabled_by': entry.disabled_by,
+                'entity_id': entry.entity_id,
+                'name': entry.name,
+                'platform': entry.platform,
+            } for entry in registry.entities.values()]
+        ))
+
+    hass.async_add_job(retrieve_entities())
 
 
 @callback
@@ -74,18 +107,33 @@ def websocket_update_entity(hass, connection, msg):
                 msg['id'], websocket_api.ERR_NOT_FOUND, 'Entity not found'))
             return
 
-        entry = registry.async_update_entity(
-            msg['entity_id'], name=msg['name'])
-        connection.send_message_outside(websocket_api.result_message(
-            msg['id'], _entry_dict(entry)
-        ))
+        changes = {}
 
-    hass.async_add_job(update_entity())
+        if 'name' in msg:
+            changes['name'] = msg['name']
+
+        if 'new_entity_id' in msg:
+            changes['new_entity_id'] = msg['new_entity_id']
+
+        try:
+            if changes:
+                entry = registry.async_update_entity(
+                    msg['entity_id'], **changes)
+        except ValueError as err:
+            connection.send_message_outside(websocket_api.error_message(
+                msg['id'], 'invalid_info', str(err)
+            ))
+        else:
+            connection.send_message_outside(websocket_api.result_message(
+                msg['id'], _entry_dict(entry)
+            ))
+
+    hass.async_create_task(update_entity())
 
 
 @callback
 def _entry_dict(entry):
-    """Helper to convert entry to API format."""
+    """Convert entry to API format."""
     return {
         'entity_id': entry.entity_id,
         'name': entry.name

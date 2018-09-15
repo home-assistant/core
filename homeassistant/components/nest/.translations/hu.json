@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "invalid_code": "\u00c9rv\u00e9nytelen k\u00f3d"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "flow_impl": "Szolg\u00e1ltat\u00f3"
+                }
+            },
+            "link": {
+                "data": {
+                    "code": "PIN-k\u00f3d"
+                }
+            }
+        },
+        "title": "Nest"
+    }
+}

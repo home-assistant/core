@@ -23,7 +23,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     return True
 
 
-class TeslaDeviceTracker(object):
+class TeslaDeviceTracker:
     """A class representing a Tesla device."""
 
     def __init__(self, hass, config, see, tesla_devices):

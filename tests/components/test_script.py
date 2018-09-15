@@ -3,7 +3,7 @@
 import unittest
 from unittest.mock import patch
 
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 from homeassistant.setup import setup_component
 from homeassistant.components import script
 
@@ -18,7 +18,7 @@ class TestScriptComponent(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -134,6 +134,7 @@ class TestScriptComponent(unittest.TestCase):
     def test_passing_variables(self):
         """Test different ways of passing in variables."""
         calls = []
+        context = Context()
 
         @callback
         def record_call(service):
@@ -157,21 +158,23 @@ class TestScriptComponent(unittest.TestCase):
 
         script.turn_on(self.hass, ENTITY_ID, {
             'greeting': 'world'
-        })
+        }, context=context)
 
         self.hass.block_till_done()
 
         assert len(calls) == 1
-        assert calls[-1].data['hello'] == 'world'
+        assert calls[0].context is context
+        assert calls[0].data['hello'] == 'world'
 
         self.hass.services.call('script', 'test', {
             'greeting': 'universe',
-        })
+        }, context=context)
 
         self.hass.block_till_done()
 
         assert len(calls) == 2
-        assert calls[-1].data['hello'] == 'universe'
+        assert calls[1].context is context
+        assert calls[1].data['hello'] == 'universe'
 
     def test_reload_service(self):
         """Verify that the turn_on service."""
@@ -199,8 +202,10 @@ class TestScriptComponent(unittest.TestCase):
                             }
                         }]
                     }}}):
-            script.reload(self.hass)
-            self.hass.block_till_done()
+            with patch('homeassistant.config.find_config_file',
+                       return_value=''):
+                script.reload(self.hass)
+                self.hass.block_till_done()
 
         assert self.hass.states.get(ENTITY_ID) is None
         assert not self.hass.services.has_service(script.DOMAIN, 'test')

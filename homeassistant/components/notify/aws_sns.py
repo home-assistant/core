@@ -35,7 +35,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_service(hass, config, discovery_info=None):
     """Get the AWS SNS notification service."""
-    # pylint: disable=import-error
     import boto3
 
     aws_config = config.copy()

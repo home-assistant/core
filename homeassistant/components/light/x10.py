@@ -39,7 +39,7 @@ def get_unit_status(code):
     return int(output.decode('utf-8')[0])
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the x10 Light platform."""
     try:
         x10_command('info')
@@ -47,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error(err.output)
         return False
 
-    add_devices(X10Light(light) for light in config[CONF_DEVICES])
+    add_entities(X10Light(light) for light in config[CONF_DEVICES])
 
 
 class X10Light(Light):

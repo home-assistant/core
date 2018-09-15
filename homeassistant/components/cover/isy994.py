@@ -5,7 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.isy994/
 """
 import logging
-from typing import Callable  # noqa
+from typing import Callable
 
 from homeassistant.components.cover import CoverDevice, DOMAIN
 from homeassistant.components.isy994 import (ISY994_NODES, ISY994_PROGRAMS,
@@ -26,7 +26,7 @@ VALUE_TO_STATE = {
 
 
 def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+                   add_entities: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 cover platform."""
     devices = []
     for node in hass.data[ISY994_NODES][DOMAIN]:
@@ -35,7 +35,7 @@ def setup_platform(hass, config: ConfigType,
     for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
         devices.append(ISYCoverProgram(name, status, actions))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class ISYCoverDevice(ISYDevice, CoverDevice):

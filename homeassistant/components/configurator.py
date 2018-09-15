@@ -128,7 +128,7 @@ def async_setup(hass, config):
     return True
 
 
-class Configurator(object):
+class Configurator:
     """The class to keep track of current configuration requests."""
 
     def __init__(self, hass):

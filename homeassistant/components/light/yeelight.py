@@ -120,7 +120,7 @@ def _cmd(func):
     return _wrap
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yeelight bulbs."""
     from yeelight.enums import PowerMode
 
@@ -150,7 +150,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             lights.append(light)
             hass.data[DATA_KEY][host] = light
 
-    add_devices(lights, True)
+    add_entities(lights, True)
 
     def service_handler(service):
         """Dispatch service calls to target entities."""
@@ -310,7 +310,7 @@ class YeelightLight(Light):
 
             bright = self._properties.get('bright', None)
             if bright:
-                self._brightness = 255 * (int(bright) / 100)
+                self._brightness = round(255 * (int(bright) / 100))
 
             temp_in_k = self._properties.get('ct', None)
             if temp_in_k:

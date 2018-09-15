@@ -9,12 +9,15 @@ from datetime import timedelta
 
 import voluptuous as vol
 import attr
+import aiohttp
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD
-import homeassistant.helpers.config_validation as cv
+from homeassistant.const import (
+    CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['eternalegypt==0.0.1']
+REQUIREMENTS = ['eternalegypt==0.0.3']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
@@ -30,33 +33,36 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 @attr.s
-class LTEData:
-    """Class for LTE state."""
+class ModemData:
+    """Class for modem state."""
 
-    eternalegypt = attr.ib()
+    modem = attr.ib()
+    serial_number = attr.ib(init=False)
     unread_count = attr.ib(init=False)
     usage = attr.ib(init=False)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Call the API to update the data."""
-        information = await self.eternalegypt.information()
+        information = await self.modem.information()
+        self.serial_number = information.serial_number
         self.unread_count = sum(1 for x in information.sms if x.unread)
         self.usage = information.usage
 
 
 @attr.s
-class LTEHostData:
-    """Container for LTE states."""
+class LTEData:
+    """Shared state."""
 
-    hostdata = attr.ib(init=False, factory=dict)
+    websession = attr.ib()
+    modem_data = attr.ib(init=False, factory=dict)
 
-    def get(self, config):
-        """Get the requested or the only hostdata value."""
+    def get_modem_data(self, config):
+        """Get the requested or the only modem_data value."""
         if CONF_HOST in config:
-            return self.hostdata.get(config[CONF_HOST])
-        elif len(self.hostdata) == 1:
-            return next(iter(self.hostdata.values()))
+            return self.modem_data.get(config[CONF_HOST])
+        if len(self.modem_data) == 1:
+            return next(iter(self.modem_data.values()))
 
         return None
 
@@ -64,7 +70,9 @@ class LTEHostData:
 async def async_setup(hass, config):
     """Set up Netgear LTE component."""
     if DATA_KEY not in hass.data:
-        hass.data[DATA_KEY] = LTEHostData()
+        websession = async_create_clientsession(
+            hass, cookie_jar=aiohttp.CookieJar(unsafe=True))
+        hass.data[DATA_KEY] = LTEData(websession)
 
     tasks = [_setup_lte(hass, conf) for conf in config.get(DOMAIN, [])]
     if tasks:
@@ -80,7 +88,17 @@ async def _setup_lte(hass, lte_config):
     host = lte_config[CONF_HOST]
     password = lte_config[CONF_PASSWORD]
 
-    eternalegypt = eternalegypt.LB2120(host, password)
-    lte_data = LTEData(eternalegypt)
-    await lte_data.async_update()
-    hass.data[DATA_KEY].hostdata[host] = lte_data
+    websession = hass.data[DATA_KEY].websession
+
+    modem = eternalegypt.Modem(hostname=host, websession=websession)
+    await modem.login(password=password)
+
+    modem_data = ModemData(modem)
+    await modem_data.async_update()
+    hass.data[DATA_KEY].modem_data[host] = modem_data
+
+    async def cleanup(event):
+        """Clean up resources."""
+        await modem.logout()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)

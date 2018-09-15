@@ -10,7 +10,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 
 from homeassistant.components.climate import (
     STATE_HEAT, STATE_COOL, STATE_DRY, STATE_FAN_ONLY, ClimateDevice,
@@ -127,8 +127,12 @@ PLATFORM_SCHEMA = SCHEMA_BASE.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the MQTT climate devices."""
+    if discovery_info is not None:
+        config = PLATFORM_SCHEMA(discovery_info)
+
     template_keys = (
         CONF_POWER_STATE_TEMPLATE,
         CONF_MODE_STATE_TEMPLATE,
@@ -149,7 +153,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         value_templates[key] = config.get(key)
         value_templates[key].hass = hass
 
-    async_add_devices([
+    async_add_entities([
         MqttClimate(
             hass,
             config.get(CONF_NAME),
@@ -635,11 +639,9 @@ class MqttClimate(MqttAvailability, ClimateDevice):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        # pylint: disable=no-member
         return self._min_temp
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        # pylint: disable=no-member
         return self._max_temp

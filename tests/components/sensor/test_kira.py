@@ -22,7 +22,7 @@ class TestKiraSensor(unittest.TestCase):
     # pylint: disable=invalid-name
     DEVICES = []
 
-    def add_devices(self, devices):
+    def add_entities(self, devices):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -41,7 +41,7 @@ class TestKiraSensor(unittest.TestCase):
     # pylint: disable=protected-access
     def test_kira_sensor_callback(self):
         """Ensure Kira sensor properly updates its attributes from callback."""
-        kira.setup_platform(self.hass, TEST_CONFIG, self.add_devices,
+        kira.setup_platform(self.hass, TEST_CONFIG, self.add_entities,
                             DISCOVERY_INFO)
         assert len(self.DEVICES) == 1
         sensor = self.DEVICES[0]

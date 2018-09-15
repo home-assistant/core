@@ -18,7 +18,7 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyowm==2.8.0']
+REQUIREMENTS = ['pyowm==2.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the OpenWeatherMap weather platform."""
     import pyowm
 
@@ -78,7 +78,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data = WeatherData(owm, latitude, longitude, mode)
 
-    add_devices([OpenWeatherMapWeather(
+    add_entities([OpenWeatherMapWeather(
         name, data, hass.config.units.temperature_unit, mode)], True)
 
 
@@ -131,7 +131,7 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def wind_speed(self):
         """Return the wind speed."""
-        return self.data.get_wind().get('speed')
+        return round(self.data.get_wind().get('speed') * 3.6, 2)
 
     @property
     def wind_bearing(self):
@@ -156,6 +156,8 @@ class OpenWeatherMapWeather(WeatherEntity):
                         entry.get_temperature('celsius').get('day'),
                     ATTR_FORECAST_TEMP_LOW:
                         entry.get_temperature('celsius').get('night'),
+                    ATTR_FORECAST_PRECIPITATION:
+                        entry.get_rain().get('all'),
                     ATTR_FORECAST_WIND_SPEED:
                         entry.get_wind().get('speed'),
                     ATTR_FORECAST_WIND_BEARING:
@@ -171,7 +173,10 @@ class OpenWeatherMapWeather(WeatherEntity):
                     ATTR_FORECAST_TEMP:
                         entry.get_temperature('celsius').get('temp'),
                     ATTR_FORECAST_PRECIPITATION:
-                        entry.get_rain().get('3h'),
+                        (round(entry.get_rain().get('3h'), 1)
+                         if entry.get_rain().get('3h') is not None
+                         and (round(entry.get_rain().get('3h'), 1) > 0)
+                         else None),
                     ATTR_FORECAST_CONDITION:
                         [k for k, v in CONDITION_CLASSES.items()
                          if entry.get_weather_code() in v][0]
@@ -193,7 +198,7 @@ class OpenWeatherMapWeather(WeatherEntity):
         self.forecast_data = self._owm.forecast_data
 
 
-class WeatherData(object):
+class WeatherData:
     """Get the latest data from OpenWeatherMap."""
 
     def __init__(self, owm, latitude, longitude, mode):
@@ -223,12 +228,10 @@ class WeatherData(object):
         try:
             if self._mode == 'daily':
                 fcd = self.owm.daily_forecast_at_coords(
-                    self.latitude, self.longitude, 15
-                )
+                    self.latitude, self.longitude, 15)
             else:
                 fcd = self.owm.three_hours_forecast_at_coords(
-                    self.latitude, self.longitude
-                )
+                    self.latitude, self.longitude)
         except APICallError:
             _LOGGER.error("Exception when calling OWM web API "
                           "to update forecast")

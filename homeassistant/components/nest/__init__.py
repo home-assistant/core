@@ -4,26 +4,28 @@ Support for Nest devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/nest/
 """
-from concurrent.futures import ThreadPoolExecutor
 import logging
 import socket
 from datetime import datetime, timedelta
+import threading
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_STRUCTURE, CONF_FILENAME, CONF_BINARY_SENSORS, CONF_SENSORS,
     CONF_MONITORED_CONDITIONS,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send, \
+from homeassistant.helpers.dispatcher import dispatcher_send, \
     async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
 from . import local_auth
 
-REQUIREMENTS = ['python-nest==4.0.2']
+REQUIREMENTS = ['python-nest==4.0.3']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -70,29 +72,31 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-async def async_nest_update_event_broker(hass, nest):
+def nest_update_event_broker(hass, nest):
     """
     Dispatch SIGNAL_NEST_UPDATE to devices when nest stream API received data.
 
-    nest.update_event.wait will block the thread in most of time,
-    so specific an executor to save default thread pool.
+    Runs in its own thread.
     """
     _LOGGER.debug("listening nest.update_event")
-    with ThreadPoolExecutor(max_workers=1) as executor:
-        while True:
-            await hass.loop.run_in_executor(executor, nest.update_event.wait)
-            if hass.is_running:
-                nest.update_event.clear()
-                _LOGGER.debug("dispatching nest data update")
-                async_dispatcher_send(hass, SIGNAL_NEST_UPDATE)
-            else:
-                return
+
+    while hass.is_running:
+        nest.update_event.wait()
+
+        if not hass.is_running:
+            break
+
+        nest.update_event.clear()
+        _LOGGER.debug("dispatching nest data update")
+        dispatcher_send(hass, SIGNAL_NEST_UPDATE)
+
+    _LOGGER.debug("stop listening nest.update_event")
 
 
 async def async_setup(hass, config):
     """Set up Nest components."""
     if DOMAIN not in config:
-        return
+        return True
 
     conf = config[DOMAIN]
 
@@ -102,7 +106,8 @@ async def async_setup(hass, config):
     access_token_cache_file = hass.config.path(filename)
 
     hass.async_add_job(hass.config_entries.flow.async_init(
-        DOMAIN, source='import', data={
+        DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+        data={
             'nest_conf_path': access_token_cache_file,
         }
     ))
@@ -114,7 +119,7 @@ async def async_setup(hass, config):
 
 
 async def async_setup_entry(hass, entry):
-    """Setup Nest from a config entry."""
+    """Set up Nest from a config entry."""
     from nest import Nest
 
     nest = Nest(access_token=entry.data['tokens']['access_token'])
@@ -122,10 +127,11 @@ async def async_setup_entry(hass, entry):
     _LOGGER.debug("proceeding with setup")
     conf = hass.data.get(DATA_NEST_CONFIG, {})
     hass.data[DATA_NEST] = NestDevice(hass, conf, nest)
-    await hass.async_add_job(hass.data[DATA_NEST].initialize)
+    if not await hass.async_add_job(hass.data[DATA_NEST].initialize):
+        return False
 
     for component in 'climate', 'camera', 'sensor', 'binary_sensor':
-        hass.async_add_job(hass.config_entries.async_forward_entry_setup(
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             entry, component))
 
     def set_mode(service):
@@ -163,16 +169,21 @@ async def async_setup_entry(hass, entry):
     hass.services.async_register(
         DOMAIN, 'set_mode', set_mode, schema=AWAY_SCHEMA)
 
+    @callback
     def start_up(event):
         """Start Nest update event listener."""
-        hass.async_add_job(async_nest_update_event_broker, hass, nest)
+        threading.Thread(
+            name='Nest update listener',
+            target=nest_update_event_broker,
+            args=(hass, nest)
+        ).start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_up)
 
+    @callback
     def shut_down(event):
         """Stop Nest update event listener."""
-        if nest:
-            nest.update_event.set()
+        nest.update_event.set()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shut_down)
 
@@ -181,7 +192,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-class NestDevice(object):
+class NestDevice:
     """Structure Nest functions for hass."""
 
     def __init__(self, hass, conf, nest):
@@ -192,63 +203,73 @@ class NestDevice(object):
 
     def initialize(self):
         """Initialize Nest."""
-        if self.local_structure is None:
-            self.local_structure = [s.name for s in self.nest.structures]
+        from nest.nest import AuthorizationError, APIError
+        try:
+            # Do not optimize next statement, it is here for initialize
+            # persistence Nest API connection.
+            structure_names = [s.name for s in self.nest.structures]
+            if self.local_structure is None:
+                self.local_structure = structure_names
+
+        except (AuthorizationError, APIError, socket.error) as err:
+            _LOGGER.error(
+                "Connection error while access Nest web service: %s", err)
+            return False
+        return True
 
     def structures(self):
         """Generate a list of structures."""
+        from nest.nest import AuthorizationError, APIError
         try:
             for structure in self.nest.structures:
-                if structure.name in self.local_structure:
-                    yield structure
-                else:
+                if structure.name not in self.local_structure:
                     _LOGGER.debug("Ignoring structure %s, not in %s",
                                   structure.name, self.local_structure)
-        except socket.error:
+                    continue
+                yield structure
+
+        except (AuthorizationError, APIError, socket.error) as err:
             _LOGGER.error(
-                "Connection error logging into the nest web service.")
+                "Connection error while access Nest web service: %s", err)
 
     def thermostats(self):
-        """Generate a list of thermostats and their location."""
-        try:
-            for structure in self.nest.structures:
-                if structure.name in self.local_structure:
-                    for device in structure.thermostats:
-                        yield (structure, device)
-                else:
-                    _LOGGER.debug("Ignoring structure %s, not in %s",
-                                  structure.name, self.local_structure)
-        except socket.error:
-            _LOGGER.error(
-                "Connection error logging into the nest web service.")
+        """Generate a list of thermostats."""
+        return self._devices('thermostats')
 
     def smoke_co_alarms(self):
         """Generate a list of smoke co alarms."""
-        try:
-            for structure in self.nest.structures:
-                if structure.name in self.local_structure:
-                    for device in structure.smoke_co_alarms:
-                        yield (structure, device)
-                else:
-                    _LOGGER.debug("Ignoring structure %s, not in %s",
-                                  structure.name, self.local_structure)
-        except socket.error:
-            _LOGGER.error(
-                "Connection error logging into the nest web service.")
+        return self._devices('smoke_co_alarms')
 
     def cameras(self):
         """Generate a list of cameras."""
+        return self._devices('cameras')
+
+    def _devices(self, device_type):
+        """Generate a list of Nest devices."""
+        from nest.nest import AuthorizationError, APIError
         try:
             for structure in self.nest.structures:
-                if structure.name in self.local_structure:
-                    for device in structure.cameras:
-                        yield (structure, device)
-                else:
+                if structure.name not in self.local_structure:
                     _LOGGER.debug("Ignoring structure %s, not in %s",
                                   structure.name, self.local_structure)
-        except socket.error:
+                    continue
+
+                for device in getattr(structure, device_type, []):
+                    try:
+                        # Do not optimize next statement,
+                        # it is here for verify Nest API permission.
+                        device.name_long
+                    except KeyError:
+                        _LOGGER.warning("Cannot retrieve device name for [%s]"
+                                        ", please check your Nest developer "
+                                        "account permission settings.",
+                                        device.serial)
+                        continue
+                    yield (structure, device)
+
+        except (AuthorizationError, APIError, socket.error) as err:
             _LOGGER.error(
-                "Connection error logging into the nest web service.")
+                "Connection error while access Nest web service: %s", err)
 
 
 class NestSensorDevice(Entity):

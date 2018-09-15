@@ -50,7 +50,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Template Lights."""
     lights = []
 
@@ -103,7 +104,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("No lights added")
         return False
 
-    async_add_devices(lights)
+    async_add_entities(lights)
     return True
 
 
@@ -248,8 +249,7 @@ class LightTemplate(Light):
                 self._state = state in ('true', STATE_ON)
             else:
                 _LOGGER.error(
-                    'Received invalid light is_on state: %s. ' +
-                    'Expected: %s',
+                    'Received invalid light is_on state: %s. Expected: %s',
                     state, ', '.join(_VALID_STATES))
                 self._state = None
 
@@ -264,8 +264,7 @@ class LightTemplate(Light):
                 self._brightness = int(brightness)
             else:
                 _LOGGER.error(
-                    'Received invalid brightness : %s' +
-                    'Expected: 0-255',
+                    'Received invalid brightness : %s. Expected: 0-255',
                     brightness)
                 self._brightness = None
 

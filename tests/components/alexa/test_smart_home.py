@@ -5,9 +5,10 @@ from uuid import uuid4
 
 import pytest
 
+from homeassistant.core import Context, callback
 from homeassistant.const import (
-    TEMP_FAHRENHEIT, STATE_LOCKED, STATE_UNLOCKED,
-    STATE_UNKNOWN)
+    TEMP_CELSIUS, TEMP_FAHRENHEIT, STATE_LOCKED,
+    STATE_UNLOCKED, STATE_UNKNOWN)
 from homeassistant.setup import async_setup_component
 from homeassistant.components import alexa
 from homeassistant.components.alexa import smart_home
@@ -16,6 +17,17 @@ from homeassistant.helpers import entityfilter
 from tests.common import async_mock_service
 
 DEFAULT_CONFIG = smart_home.Config(should_expose=lambda entity_id: True)
+
+
+@pytest.fixture
+def events(hass):
+    """Fixture that catches alexa events."""
+    events = []
+    hass.bus.async_listen(
+        smart_home.EVENT_ALEXA_SMART_HOME,
+        callback(lambda e: events.append(e))
+    )
+    yield events
 
 
 def get_new_request(namespace, name, endpoint=None):
@@ -124,7 +136,7 @@ def discovery_test(device, hass, expected_endpoints=1):
 
     if expected_endpoints == 1:
         return endpoints[0]
-    elif expected_endpoints > 1:
+    if expected_endpoints > 1:
         return endpoints
     return None
 
@@ -145,7 +157,7 @@ def assert_endpoint_capabilities(endpoint, *interfaces):
 
 
 @asyncio.coroutine
-def test_switch(hass):
+def test_switch(hass, events):
     """Test switch discovery."""
     device = ('switch.test', 'on', {'friendly_name': "Test switch"})
     appliance = yield from discovery_test(device, hass)
@@ -695,6 +707,7 @@ def test_unknown_sensor(hass):
 
 async def test_thermostat(hass):
     """Test thermostat discovery."""
+    hass.config.units.temperature_unit = TEMP_FAHRENHEIT
     device = (
         'climate.test_thermostat',
         'cool',
@@ -709,7 +722,6 @@ async def test_thermostat(hass):
             'operation_list': ['heat', 'cool', 'auto', 'off'],
             'min_temp': 50,
             'max_temp': 90,
-            'unit_of_measurement': TEMP_FAHRENHEIT,
         }
     )
     appliance = await discovery_test(device, hass)
@@ -826,6 +838,7 @@ async def test_thermostat(hass):
         payload={'thermostatMode': {'value': 'INVALID'}}
     )
     assert msg['event']['payload']['type'] == 'UNSUPPORTED_THERMOSTAT_MODE'
+    hass.config.units.temperature_unit = TEMP_CELSIUS
 
 
 @asyncio.coroutine
@@ -963,23 +976,26 @@ def assert_request_calls_service(
         response_type='Response',
         payload=None):
     """Assert an API request calls a hass service."""
+    context = Context()
     request = get_new_request(namespace, name, endpoint)
     if payload:
         request['directive']['payload'] = payload
 
     domain, service_name = service.split('.')
-    call = async_mock_service(hass, domain, service_name)
+    calls = async_mock_service(hass, domain, service_name)
 
     msg = yield from smart_home.async_handle_message(
-        hass, DEFAULT_CONFIG, request)
+        hass, DEFAULT_CONFIG, request, context)
     yield from hass.async_block_till_done()
 
-    assert len(call) == 1
+    assert len(calls) == 1
+    call = calls[0]
     assert 'event' in msg
-    assert call[0].data['entity_id'] == endpoint.replace('#', '.')
+    assert call.data['entity_id'] == endpoint.replace('#', '.')
     assert msg['event']['header']['name'] == response_type
+    assert call.context == context
 
-    return call[0], msg
+    return call, msg
 
 
 @asyncio.coroutine
@@ -1225,7 +1241,7 @@ def reported_properties(hass, endpoint):
     return _ReportedProperties(msg['context']['properties'])
 
 
-class _ReportedProperties(object):
+class _ReportedProperties:
     def __init__(self, properties):
         self.properties = properties
 
@@ -1372,3 +1388,53 @@ def test_api_select_input(hass, domain, payload, source_list, idx):
         hass,
         payload={'input': payload})
     assert call.data['source'] == source_list[idx]
+
+
+async def test_logging_request(hass, events):
+    """Test that we log requests."""
+    context = Context()
+    request = get_new_request('Alexa.Discovery', 'Discover')
+    await smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request, context)
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    event = events[0]
+
+    assert event.data['request'] == {
+        'namespace': 'Alexa.Discovery',
+        'name': 'Discover',
+    }
+    assert event.data['response'] == {
+        'namespace': 'Alexa.Discovery',
+        'name': 'Discover.Response'
+    }
+    assert event.context == context
+
+
+async def test_logging_request_with_entity(hass, events):
+    """Test that we log requests."""
+    context = Context()
+    request = get_new_request('Alexa.PowerController', 'TurnOn', 'switch#xy')
+    await smart_home.async_handle_message(
+        hass, DEFAULT_CONFIG, request, context)
+
+    # To trigger event listener
+    await hass.async_block_till_done()
+
+    assert len(events) == 1
+    event = events[0]
+
+    assert event.data['request'] == {
+        'namespace': 'Alexa.PowerController',
+        'name': 'TurnOn',
+        'entity_id': 'switch.xy'
+    }
+    # Entity doesn't exist
+    assert event.data['response'] == {
+        'namespace': 'Alexa',
+        'name': 'ErrorResponse'
+    }
+    assert event.context == context

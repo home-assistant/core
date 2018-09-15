@@ -22,7 +22,7 @@ class DiscoveryFlowHandler(data_entry_flow.FlowHandler):
         self._title = title
         self._discovery_function = discovery_function
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(
@@ -71,6 +71,18 @@ class DiscoveryFlowHandler(data_entry_flow.FlowHandler):
             )
 
         return await self.async_step_confirm()
+
+    async def async_step_import(self, _):
+        """Handle a flow initialized by import."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(
+                reason='single_instance_allowed'
+            )
+
+        return self.async_create_entry(
+            title=self._title,
+            data={},
+        )
 
     @callback
     def _async_current_entries(self):

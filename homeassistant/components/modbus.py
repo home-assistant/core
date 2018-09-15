@@ -75,7 +75,6 @@ HUB = None
 def setup(hass, config):
     """Set up Modbus component."""
     # Modbus connection type
-    # pylint: disable=import-error
     client_type = config[DOMAIN][CONF_TYPE]
 
     # Connect to Modbus network
@@ -158,7 +157,7 @@ def setup(hass, config):
     return True
 
 
-class ModbusHub(object):
+class ModbusHub:
     """Thread safe wrapper class for pymodbus."""
 
     def __init__(self, modbus_client):

@@ -49,7 +49,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the DSMR sensor."""
     # Suppress logging
     logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
@@ -160,7 +161,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         DerivativeDSMREntity('Hourly Gas Consumption', gas_obis),
     ]
 
-    async_add_devices(devices)
+    async_add_entities(devices)
 
     def update_entities_telegram(telegram):
         """Update entities with latest telegram and trigger state update."""
@@ -255,7 +256,7 @@ class DSMREntity(Entity):
             return ICON_POWER_FAILURE
         if 'Power' in self._name:
             return ICON_POWER
-        elif 'Gas' in self._name:
+        if 'Gas' in self._name:
             return ICON_GAS
 
     @property
@@ -285,7 +286,7 @@ class DSMREntity(Entity):
         # used for normal rate.
         if value == '0002':
             return 'normal'
-        elif value == '0001':
+        if value == '0001':
             return 'low'
 
         return STATE_UNKNOWN

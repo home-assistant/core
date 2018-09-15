@@ -289,7 +289,7 @@ class MicrosoftFaceGroupEntity(Entity):
         return attr
 
 
-class MicrosoftFace(object):
+class MicrosoftFace:
     """Microsoft Face api for HomeAssistant."""
 
     def __init__(self, hass, server_loc, api_key, timeout, entities):

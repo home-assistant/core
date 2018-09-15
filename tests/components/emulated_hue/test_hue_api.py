@@ -26,7 +26,7 @@ JSON_HEADERS = {CONTENT_TYPE: const.CONTENT_TYPE_JSON}
 
 @pytest.fixture
 def hass_hue(loop, hass):
-    """Setup a Home Assistant instance for these tests."""
+    """Set up a Home Assistant instance for these tests."""
     # We need to do this to get access to homeassistant/turn_(on,off)
     loop.run_until_complete(
         core_components.async_setup(hass, {core.DOMAIN: {}}))
@@ -130,10 +130,10 @@ def hue_client(loop, hass_hue, aiohttp_client):
         }
     })
 
-    HueUsernameView().register(web_app.router)
-    HueAllLightsStateView(config).register(web_app.router)
-    HueOneLightStateView(config).register(web_app.router)
-    HueOneLightChangeView(config).register(web_app.router)
+    HueUsernameView().register(web_app, web_app.router)
+    HueAllLightsStateView(config).register(web_app, web_app.router)
+    HueOneLightStateView(config).register(web_app, web_app.router)
+    HueOneLightChangeView(config).register(web_app, web_app.router)
 
     return loop.run_until_complete(aiohttp_client(web_app))
 

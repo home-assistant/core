@@ -151,7 +151,6 @@ class KeyboardRemoteThread(threading.Thread):
             if not event:
                 continue
 
-            # pylint: disable=no-member
             if event.type is ecodes.EV_KEY and event.value is self.key_value:
                 _LOGGER.debug(categorize(event))
                 self.hass.bus.fire(
@@ -164,7 +163,7 @@ class KeyboardRemoteThread(threading.Thread):
                 )
 
 
-class KeyboardRemote(object):
+class KeyboardRemote:
     """Sets up one thread per device."""
 
     def __init__(self, hass, config):

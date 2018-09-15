@@ -7,7 +7,7 @@ import unittest.mock as mock
 from collections import OrderedDict
 
 import pytest
-from voluptuous import MultipleInvalid
+from voluptuous import MultipleInvalid, Invalid
 
 from homeassistant.core import DOMAIN, HomeAssistantError, Config
 import homeassistant.config as config_util
@@ -15,7 +15,8 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME, ATTR_HIDDEN, ATTR_ASSUMED_STATE,
     CONF_LATITUDE, CONF_LONGITUDE, CONF_UNIT_SYSTEM, CONF_NAME,
     CONF_TIME_ZONE, CONF_ELEVATION, CONF_CUSTOMIZE, __version__,
-    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT)
+    CONF_UNIT_SYSTEM_METRIC, CONF_UNIT_SYSTEM_IMPERIAL, CONF_TEMPERATURE_UNIT,
+    CONF_AUTH_PROVIDERS, CONF_AUTH_MFA_MODULES)
 from homeassistant.util import location as location_util, dt as dt_util
 from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.util.async_ import run_coroutine_threadsafe
@@ -790,3 +791,177 @@ def test_merge_customize(hass):
 
     assert hass.data[config_util.DATA_CUSTOMIZE].get('b.b') == \
         {'friendly_name': 'BB'}
+
+
+async def test_auth_provider_config(hass):
+    """Test loading auth provider config onto hass object."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_PROVIDERS: [
+            {'type': 'homeassistant'},
+            {'type': 'legacy_api_password'},
+        ],
+        CONF_AUTH_MFA_MODULES: [
+            {'type': 'totp'},
+            {'type': 'totp', 'id': 'second'},
+        ]
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config)
+
+    assert len(hass.auth.auth_providers) == 2
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.auth_providers[1].type == 'legacy_api_password'
+    assert hass.auth.active is True
+    assert len(hass.auth.auth_mfa_modules) == 2
+    assert hass.auth.auth_mfa_modules[0].id == 'totp'
+    assert hass.auth.auth_mfa_modules[1].id == 'second'
+
+
+async def test_auth_provider_config_default(hass):
+    """Test loading default auth provider config."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config)
+
+    assert len(hass.auth.auth_providers) == 1
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.active is True
+    assert len(hass.auth.auth_mfa_modules) == 1
+    assert hass.auth.auth_mfa_modules[0].id == 'totp'
+
+
+async def test_auth_provider_config_default_api_password(hass):
+    """Test loading default auth provider config with api password."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config, True)
+
+    assert len(hass.auth.auth_providers) == 2
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.auth_providers[1].type == 'legacy_api_password'
+    assert hass.auth.active is True
+
+
+async def test_auth_provider_config_default_trusted_networks(hass):
+    """Test loading default auth provider config with trusted networks."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+    }
+    if hasattr(hass, 'auth'):
+        del hass.auth
+    await config_util.async_process_ha_core_config(hass, core_config,
+                                                   has_trusted_networks=True)
+
+    assert len(hass.auth.auth_providers) == 2
+    assert hass.auth.auth_providers[0].type == 'homeassistant'
+    assert hass.auth.auth_providers[1].type == 'trusted_networks'
+    assert hass.auth.active is True
+
+
+async def test_disallowed_auth_provider_config(hass):
+    """Test loading insecure example auth provider is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_PROVIDERS: [{
+            'type': 'insecure_example',
+            'users': [{
+                'username': 'test-user',
+                'password': 'test-pass',
+                'name': 'Test Name'
+            }],
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
+
+
+async def test_disallowed_duplicated_auth_provider_config(hass):
+    """Test loading insecure example auth provider is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_PROVIDERS: [{
+            'type': 'homeassistant',
+        }, {
+            'type': 'homeassistant',
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
+
+
+async def test_disallowed_auth_mfa_module_config(hass):
+    """Test loading insecure example auth mfa module is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_MFA_MODULES: [{
+            'type': 'insecure_example',
+            'data': [{
+                'user_id': 'mock-user',
+                'pin': 'test-pin'
+            }]
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
+
+
+async def test_disallowed_duplicated_auth_mfa_module_config(hass):
+    """Test loading insecure example auth mfa module is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_MFA_MODULES: [{
+            'type': 'totp',
+        }, {
+            'type': 'totp',
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)

@@ -10,13 +10,13 @@ from homeassistant.components.hive import DATA_HIVE
 DEPENDENCIES = ['hive']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive switches."""
     if discovery_info is None:
         return
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveDevicePlug(session, discovery_info)])
+    add_entities([HiveDevicePlug(session, discovery_info)])
 
 
 class HiveDevicePlug(SwitchDevice):

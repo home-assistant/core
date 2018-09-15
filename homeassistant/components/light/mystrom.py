@@ -41,7 +41,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the myStrom Light platform."""
     from pymystrom.bulb import MyStromBulb
     from pymystrom.exceptions import MyStromConnectionError
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except MyStromConnectionError:
         _LOGGER.warning("No route to device: %s", host)
 
-    add_devices([MyStromLight(bulb, name)], True)
+    add_entities([MyStromLight(bulb, name)], True)
 
 
 class MyStromLight(Light):
@@ -155,7 +155,11 @@ class MyStromLight(Light):
             self._state = self._bulb.get_status()
 
             colors = self._bulb.get_color()['color']
-            color_h, color_s, color_v = colors.split(';')
+            try:
+                color_h, color_s, color_v = colors.split(';')
+            except ValueError:
+                color_s, color_v = colors.split(';')
+                color_h = 0
 
             self._color_h = int(color_h)
             self._color_s = int(color_s)

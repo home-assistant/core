@@ -11,7 +11,7 @@ from datetime import timedelta
 
 import voluptuous as vol
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.mqtt import CONF_STATE_TOPIC
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -53,9 +53,10 @@ MQTT_PAYLOAD = vol.Schema(vol.All(json.loads, vol.Schema({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up MQTT room Sensor."""
-    async_add_devices([MQTTRoomSensor(
+    async_add_entities([MQTTRoomSensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_DEVICE_ID),

@@ -5,8 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.homematic/
 """
 import logging
+
+from homeassistant.components.homematic import ATTR_DISCOVER_DEVICES, HMDevice
 from homeassistant.components.switch import SwitchDevice
-from homeassistant.components.homematic import HMDevice, ATTR_DISCOVER_DEVICES
 from homeassistant.const import STATE_UNKNOWN
 
 _LOGGER = logging.getLogger(__name__)
@@ -14,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['homematic']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HomeMatic switch platform."""
     if discovery_info is None:
         return
@@ -24,7 +25,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         new_device = HMSwitch(conf)
         devices.append(new_device)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class HMSwitch(HMDevice, SwitchDevice):
