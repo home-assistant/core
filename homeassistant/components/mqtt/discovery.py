@@ -39,8 +39,8 @@ ALLOWED_PLATFORMS = {
 }
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
-
 MQTT_DISCOVERY_UPDATED = 'mqtt_discovery_updated_{}'
+
 
 async def async_start(hass, discovery_topic, hass_config):
     """Initialize of MQTT Discovery."""
