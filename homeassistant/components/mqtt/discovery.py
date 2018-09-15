@@ -55,6 +55,23 @@ CONFIG_ENTRY_IS_SETUP = 'mqtt_config_entry_is_setup'
 MQTT_DISCOVERY_UPDATED = 'mqtt_discovery_updated_{}'
 MQTT_DISCOVERY_NEW = 'mqtt_discovery_new_{}_{}'
 
+ABBREVIATIONS = {
+    'avail': 'available',
+    'cmd': 'command',
+    'tmp': 'template',
+    'val': 'value',
+    'stat': ' state',
+    'pl': 'payload',
+    't': 'topic',
+    'attr': 'attributes',
+    'bri': 'brightness',
+    'opt': 'optimistic',
+    'meas': 'measurement',
+    'osc': 'oscillation',
+    'avty': 'availability',
+    'fx': 'effect',
+}
+
 
 async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                       config_entry=None) -> bool:
@@ -71,6 +88,23 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
         if component not in SUPPORTED_COMPONENTS:
             _LOGGER.warning("Component %s is not supported", component)
             return
+
+        payload = dict(payload)
+        for key in list(payload.keys()):
+            abbreviated_key = key
+            # Pattern to match one ore or word characters, excluding _, and:
+            # - at beginning of string or prefixed by _
+            # - at end of string or suffixed by _
+            pattern = r'(?:(?<=^)|(?<=_))[^\W_]+(?=_|$)'
+
+            def expand(matchobj):
+                abbreviation = matchobj.group(0)
+                if abbreviation in ABBREVIATIONS:
+                    return ABBREVIATIONS[abbreviation]
+                return abbreviation
+
+            key = re.sub(pattern, expand, key)
+            payload[key] = payload.pop(abbreviated_key)
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = '_'.join((node_id, object_id)) if node_id else object_id
