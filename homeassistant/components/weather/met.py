@@ -69,6 +69,7 @@ CONDITIONS = {1: 'sunny',
               49: 'snowy',
               50: 'snowy',
               }
+URL = 'https://aa015h6buqvih86i1.api.met.no/weatherapi/locationforecast/1.9/'
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -99,7 +100,8 @@ async def async_setup_platform(hass, config, async_add_entities,
         'msl': str(elevation),
     }
 
-    async_add_entities([MetWeather(name, coordinates, async_get_clientsession(hass))])
+    async_add_entities([MetWeather(name, coordinates,
+                                   async_get_clientsession(hass))])
 
 
 class MetWeather(WeatherEntity):
@@ -112,8 +114,7 @@ class MetWeather(WeatherEntity):
         self._urlparams = coordinates
         self._weather_data = metno.MetWeatherData(coordinates,
                                                   clientsession,
-                                                  'https://aa015h6buqvih86i1.api.met.no/'
-                                                  'weatherapi/locationforecast/1.9/'
+                                                  URL
                                                   )
         self._temperature = None
         self._condition = None
@@ -171,7 +172,8 @@ class MetWeather(WeatherEntity):
         self._pressure = metno.get_forecast('pressure', ordered_entries)
         self._humidity = metno.get_forecast('humidity', ordered_entries)
         self._wind_speed = metno.get_forecast('windSpeed', ordered_entries)
-        self._wind_bearing = metno.get_forecast('windDirection', ordered_entries)
+        self._wind_bearing = metno.get_forecast('windDirection',
+                                                ordered_entries)
 
     @property
     def name(self):
