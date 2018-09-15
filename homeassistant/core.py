@@ -180,7 +180,7 @@ class HomeAssistant:
             self.loop.close()
         return self.exit_code
 
-    async def run(self, *, attach_signals: bool = True):
+    async def run(self, *, attach_signals: bool = True) -> int:
         """Home Assistant main entry point.
 
         Start Home Assistant and block until stopped.
@@ -200,6 +200,7 @@ class HomeAssistant:
             async_register_signal_handling(self)
 
         await self._stopped.wait()
+        return self.exit_code
 
     async def async_start(self) -> None:
         """Finalize startup from inside the event loop.

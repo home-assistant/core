@@ -8,18 +8,26 @@ from asyncio.futures import Future
 
 import asyncio
 from asyncio import ensure_future
-from typing import Any, Union, Coroutine, Callable, Generator
+from typing import Any, Union, Coroutine, Callable, Generator, TypeVar, \
+                   Awaitable
 
 _LOGGER = logging.getLogger(__name__)
 
 
 try:
-    asyncio_run = asyncio.run
+    asyncio_run = asyncio.run  # type: ignore
 except AttributeError:
-    def asyncio_run(main, *, debug=False):
+    _T = TypeVar('_T')
+
+    def asyncio_run(main: Awaitable[_T], *, debug: bool = False) -> _T:
         loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
         loop.set_debug(debug)
-        return loop.run(main)
+        try:
+            return loop.run_until_complete(main)
+        finally:
+            asyncio.set_event_loop(None)  # type: ignore # not a bug
+            loop.close()
 
 
 def _set_result_unless_cancelled(fut: Future, result: Any) -> None:
