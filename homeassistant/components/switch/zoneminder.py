@@ -29,9 +29,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     on_state = MonitorState(config.get(CONF_COMMAND_ON))
     off_state = MonitorState(config.get(CONF_COMMAND_OFF))
 
-    zm = hass.data[ZONEMINDER_DOMAIN]
+    zm_client = hass.data[ZONEMINDER_DOMAIN]
 
-    monitors = zm.get_monitors()
+    monitors = zm_client.get_monitors()
     if not monitors:
         _LOGGER.warning('Could not fetch monitors from ZoneMinder')
         return

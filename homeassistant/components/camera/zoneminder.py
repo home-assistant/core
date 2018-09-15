@@ -4,7 +4,6 @@ Support for ZoneMinder camera streaming.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.zoneminder/
 """
-import asyncio
 import logging
 
 from homeassistant.const import CONF_NAME
@@ -19,9 +18,9 @@ DEPENDENCIES = ['zoneminder']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder cameras."""
-    zm = hass.data[ZONEMINDER_DOMAIN]
+    zm_client = hass.data[ZONEMINDER_DOMAIN]
 
-    monitors = zm.get_monitors()
+    monitors = zm_client.get_monitors()
     if not monitors:
         _LOGGER.warning("Could not fetch monitors from ZoneMinder")
         return
