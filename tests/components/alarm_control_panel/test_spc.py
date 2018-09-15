@@ -17,7 +17,7 @@ def hass(loop):
     hass.data['spc_registry'] = SpcRegistry()
     hass.data['spc_api'] = None
     yield hass
-    loop.run_until_complete(hass.async_stop())
+    loop.run_until_complete(hass.async_stop(force=True))
 
 
 @asyncio.coroutine

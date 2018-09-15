@@ -355,19 +355,27 @@ class HomeAssistant:
             return
         fire_coroutine_threadsafe(self.async_stop(), self.loop)
 
-    async def async_stop(self, exit_code: int = 0) -> None:
+    async def async_stop(self, exit_code: int = 0, *,
+                         force: bool = False) -> None:
         """Stop Home Assistant and shuts down all threads.
+
+        The "force" flag commands async_stop to proceed regardless of
+        Home Assistan't current state. You should not set this flag
+        unless you're testing.
 
         This method is a coroutine.
         """
-        if self.state == CoreState.not_running:  # just ignore
-            return
-        if self.state == CoreState.stopping:
-            _LOGGER.info("async_stop called twice: ignored")
-            return
-        if self.state == CoreState.starting:
-            # This may not work
-            _LOGGER.warning("async_stop called before startup is complete")
+        if not force:
+            # Some tests require async_stop to run,
+            # regardless of the state of the loop.
+            if self.state == CoreState.not_running:  # just ignore
+                return
+            if self.state == CoreState.stopping:
+                _LOGGER.info("async_stop called twice: ignored")
+                return
+            if self.state == CoreState.starting:
+                # This may not work
+                _LOGGER.warning("async_stop called before startup is complete")
 
         # stage 1
         self.state = CoreState.stopping
