@@ -80,14 +80,12 @@ class JewishCalSensor(Entity):
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
         self.type = sensor_type
-        self._date = dt_util.now().date()
         self._hebrew = (language == 'hebrew')
         self._state = None
         self.latitude = latitude
         self.longitude = longitude
         self.diaspora = diaspora
-        _LOGGER.debug("Sensor %s initialized with date %s",
-                      self.type, self._date)
+        _LOGGER.debug("Sensor %s initialized", self.type)
 
     @property
     def name(self):
@@ -108,10 +106,10 @@ class JewishCalSensor(Entity):
         """Update the state of the sensor."""
         import hdate
 
-        self._date = dt_util.now().date()
+        today = dt_util.now().date()
 
         date = hdate.HDate(
-            self._date, diaspora=self.diaspora, hebrew=self._hebrew)
+            today, diaspora=self.diaspora, hebrew=self._hebrew)
 
         if self.type == 'date':
             self._state = hdate.date.get_hebrew_date(
@@ -131,7 +129,7 @@ class JewishCalSensor(Entity):
             self._state = hdate.date.get_holyday_type(date.get_holyday())
         else:
             times = hdate.Zmanim(
-                date=self._date,
+                date=today,
                 latitude=self.latitude, longitude=self.longitude,
                 hebrew=self._hebrew).zmanim
             self._state = times[self.type].time()
