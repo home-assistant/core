@@ -618,6 +618,27 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
             if self._optimistic_brightness:
                 self._brightness = kwargs[ATTR_BRIGHTNESS]
                 should_update = True
+        elif ATTR_BRIGHTNESS in kwargs and \
+                self._topic[CONF_RGB_COMMAND_TOPIC] is not None:
+            rgb = color_util.color_hsv_to_RGB(
+                self._hs[0], self._hs[1], kwargs[ATTR_BRIGHTNESS] / 255 * 100)
+            tpl = self._templates[CONF_RGB_COMMAND_TEMPLATE]
+            if tpl:
+                rgb_color_str = tpl.async_render({
+                    'red': rgb[0],
+                    'green': rgb[1],
+                    'blue': rgb[2],
+                })
+            else:
+                rgb_color_str = '{},{},{}'.format(*rgb)
+
+            mqtt.async_publish(
+                self.hass, self._topic[CONF_RGB_COMMAND_TOPIC],
+                rgb_color_str, self._qos, self._retain)
+
+            if self._optimistic_brightness:
+                self._brightness = kwargs[ATTR_BRIGHTNESS]
+                should_update = True
 
         if ATTR_COLOR_TEMP in kwargs and \
            self._topic[CONF_COLOR_TEMP_COMMAND_TOPIC] is not None:
