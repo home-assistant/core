@@ -4,7 +4,7 @@ import asyncio
 import logging
 import os
 import unittest
-from unittest.mock import patch, MagicMock, sentinel
+from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 from tempfile import TemporaryDirectory
 
@@ -858,23 +858,24 @@ def test_create_timer(mock_monotonic, loop):
         funcs.append(func)
         return orig_callback(func)
 
-    mock_monotonic.side_effect = 10.2, 10.3
+    mock_monotonic.side_effect = 10.2, 10.8, 11.3
 
     with patch.object(ha, 'callback', mock_callback), \
             patch('homeassistant.core.dt_util.utcnow',
                   return_value=datetime(2018, 12, 31, 3, 4, 5, 333333)):
         ha._async_create_timer(hass)
 
+    assert len(funcs) == 2
+    fire_time_event, stop_timer = funcs
+
     assert len(hass.loop.call_later.mock_calls) == 1
-    slp_seconds, action = hass.loop.call_later.mock_calls[0][1]
-    assert abs(slp_seconds - 0.666667) < 0.001
+    delay, callback = hass.loop.call_later.mock_calls[0][1]
+    assert abs(delay - 0.666667) < 0.001
+    assert callback is fire_time_event
 
     with patch('homeassistant.core.dt_util.utcnow',
-               return_value=sentinel.mock_date):
-        action()
-
-        assert len(funcs) == 2
-        fire_time_event, stop_timer = funcs
+               return_value=datetime(2018, 12, 31, 3, 4, 6, 100000)):
+        callback()
 
     assert len(hass.bus.async_listen_once.mock_calls) == 1
     assert len(hass.bus.async_fire.mock_calls) == 1
@@ -884,14 +885,13 @@ def test_create_timer(mock_monotonic, loop):
     assert event_type == EVENT_HOMEASSISTANT_STOP
     assert callback is stop_timer
 
-    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[1][1]
-    assert abs(slp_seconds - 0.9) < 0.001
+    delay, callback = hass.loop.call_later.mock_calls[1][1]
+    assert abs(delay - 0.9) < 0.001
     assert callback is fire_time_event
-    assert abs(nxt - 11.2) < 0.001
 
     event_type, event_data = hass.bus.async_fire.mock_calls[0][1]
     assert event_type == EVENT_TIME_CHANGED
-    assert event_data[ATTR_NOW] is sentinel.mock_date
+    assert event_data[ATTR_NOW] == datetime(2018, 12, 31, 3, 4, 6, 100000)
 
 
 @patch('homeassistant.core.monotonic')
@@ -905,28 +905,27 @@ def test_timer_out_of_sync(mock_monotonic, loop):
         funcs.append(func)
         return orig_callback(func)
 
-    mock_monotonic.side_effect = 10.2, 11.3, 11.3
+    mock_monotonic.side_effect = 10.2, 13.3, 13.4
 
     with patch.object(ha, 'callback', mock_callback), \
             patch('homeassistant.core.dt_util.utcnow',
                   return_value=datetime(2018, 12, 31, 3, 4, 5, 333333)):
         ha._async_create_timer(hass)
 
-    _, action = hass.loop.call_later.mock_calls[0][1]
+    delay, callback = hass.loop.call_later.mock_calls[0][1]
 
     with patch('homeassistant.core.dt_util.utcnow',
-               return_value=sentinel.mock_date):
-        action()
+               return_value=datetime(2018, 12, 31, 3, 4, 8, 200000)):
+        callback()
 
         assert len(funcs) == 2
         fire_time_event, stop_timer = funcs
 
     assert len(hass.loop.call_later.mock_calls) == 2
 
-    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[1][1]
-    assert slp_seconds == 1
+    delay, callback = hass.loop.call_later.mock_calls[1][1]
+    assert abs(delay - 0.8) < 0.001
     assert callback is fire_time_event
-    assert abs(nxt - 12.3) < 0.001
 
 
 @asyncio.coroutine
