@@ -129,6 +129,7 @@ import voluptuous as vol
 from homeassistant.auth.models import User, Credentials, \
     TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN
 from homeassistant.components import websocket_api
+from homeassistant.components.http import KEY_REAL_IP
 from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
@@ -156,6 +157,19 @@ SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN = \
         vol.Optional('client_icon'): str,
     })
 
+WS_TYPE_REFRESH_TOKENS = 'auth/refresh_tokens'
+SCHEMA_WS_REFRESH_TOKENS = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_REFRESH_TOKENS,
+    })
+
+WS_TYPE_DELETE_REFRESH_TOKEN = 'auth/delete_refresh_token'
+SCHEMA_WS_DELETE_REFRESH_TOKEN = \
+    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+        vol.Required('type'): WS_TYPE_DELETE_REFRESH_TOKEN,
+        vol.Required('refresh_token_id'): str,
+    })
+
 RESULT_TYPE_CREDENTIALS = 'credentials'
 RESULT_TYPE_USER = 'user'
 
@@ -177,6 +191,16 @@ async def async_setup(hass, config):
         WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
         websocket_create_long_lived_access_token,
         SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_REFRESH_TOKENS,
+        websocket_refresh_tokens,
+        SCHEMA_WS_REFRESH_TOKENS
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_DELETE_REFRESH_TOKEN,
+        websocket_delete_refresh_token,
+        SCHEMA_WS_DELETE_REFRESH_TOKEN
     )
 
     await login_flow.async_setup(hass, store_result)
@@ -213,10 +237,12 @@ class TokenView(HomeAssistantView):
             return await self._async_handle_revoke_token(hass, data)
 
         if grant_type == 'authorization_code':
-            return await self._async_handle_auth_code(hass, data)
+            return await self._async_handle_auth_code(
+                hass, data, str(request[KEY_REAL_IP]))
 
         if grant_type == 'refresh_token':
-            return await self._async_handle_refresh_token(hass, data)
+            return await self._async_handle_refresh_token(
+                hass, data, str(request[KEY_REAL_IP]))
 
         return self.json({
             'error': 'unsupported_grant_type',
@@ -241,7 +267,7 @@ class TokenView(HomeAssistantView):
         await hass.auth.async_remove_refresh_token(refresh_token)
         return web.Response(status=200)
 
-    async def _async_handle_auth_code(self, hass, data):
+    async def _async_handle_auth_code(self, hass, data, remote_addr):
         """Handle authorization code request."""
         client_id = data.get('client_id')
         if client_id is None or not indieauth.verify_client_id(client_id):
@@ -277,7 +303,8 @@ class TokenView(HomeAssistantView):
 
         refresh_token = await hass.auth.async_create_refresh_token(user,
                                                                    client_id)
-        access_token = hass.auth.async_create_access_token(refresh_token)
+        access_token = hass.auth.async_create_access_token(
+            refresh_token, remote_addr)
 
         return self.json({
             'access_token': access_token,
@@ -287,7 +314,7 @@ class TokenView(HomeAssistantView):
                 int(refresh_token.access_token_expiration.total_seconds()),
         })
 
-    async def _async_handle_refresh_token(self, hass, data):
+    async def _async_handle_refresh_token(self, hass, data, remote_addr):
         """Handle authorization code request."""
         client_id = data.get('client_id')
         if client_id is not None and not indieauth.verify_client_id(client_id):
@@ -315,7 +342,8 @@ class TokenView(HomeAssistantView):
                 'error': 'invalid_request',
             }, status_code=400)
 
-        access_token = hass.auth.async_create_access_token(refresh_token)
+        access_token = hass.auth.async_create_access_token(
+            refresh_token, remote_addr)
 
         return self.json({
             'access_token': access_token,
@@ -445,3 +473,44 @@ def websocket_create_long_lived_access_token(
 
     hass.async_create_task(
         async_create_long_lived_access_token(connection.user))
+
+
+@websocket_api.ws_require_user()
+@callback
+def websocket_refresh_tokens(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
+    """Return metadata of users refresh tokens."""
+    current_id = connection.request.get('refresh_token_id')
+    connection.to_write.put_nowait(websocket_api.result_message(msg['id'], [{
+        'id': refresh.id,
+        'client_id': refresh.client_id,
+        'client_name': refresh.client_name,
+        'client_icon': refresh.client_icon,
+        'type': refresh.token_type,
+        'created_at': refresh.created_at,
+        'is_current': refresh.id == current_id,
+        'last_used_at': refresh.last_used_at,
+        'last_used_ip': refresh.last_used_ip,
+    } for refresh in connection.user.refresh_tokens.values()]))
+
+
+@websocket_api.ws_require_user()
+@callback
+def websocket_delete_refresh_token(
+        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
+    """Handle a delete refresh token request."""
+    async def async_delete_refresh_token(user, refresh_token_id):
+        """Delete a refresh token."""
+        refresh_token = connection.user.refresh_tokens.get(refresh_token_id)
+
+        if refresh_token is None:
+            return websocket_api.error_message(
+                msg['id'], 'invalid_token_id', 'Received invalid token')
+
+        await hass.auth.async_remove_refresh_token(refresh_token)
+
+        connection.send_message_outside(
+            websocket_api.result_message(msg['id'], {}))
+
+    hass.async_create_task(
+        async_delete_refresh_token(connection.user, msg['refresh_token_id']))

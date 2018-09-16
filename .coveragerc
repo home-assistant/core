@@ -92,6 +92,9 @@ omit =
     homeassistant/components/ecobee.py
     homeassistant/components/*/ecobee.py
 
+    homeassistant/components/edp_redy.py
+    homeassistant/components/*/edp_redy.py
+
     homeassistant/components/egardia.py
     homeassistant/components/*/egardia.py
 
@@ -126,6 +129,7 @@ omit =
     homeassistant/components/hangouts/const.py
     homeassistant/components/hangouts/hangouts_bot.py
     homeassistant/components/hangouts/hangups_utils.py
+    homeassistant/components/hangouts/intents.py
     homeassistant/components/*/hangouts.py
 
     homeassistant/components/hdmi_cec.py
@@ -142,6 +146,9 @@ omit =
 
     homeassistant/components/homematicip_cloud.py
     homeassistant/components/*/homematicip_cloud.py
+
+    homeassistant/components/huawei_lte.py
+    homeassistant/components/*/huawei_lte.py
 
     homeassistant/components/hydrawise.py
     homeassistant/components/*/hydrawise.py

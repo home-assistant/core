@@ -149,10 +149,10 @@ class TotpAuthModule(MultiFactorAuthModule):
         if ota_secret is None:
             # even we cannot find user, we still do verify
             # to make timing the same as if user was found.
-            pyotp.TOTP(DUMMY_SECRET).verify(code)
+            pyotp.TOTP(DUMMY_SECRET).verify(code, valid_window=1)
             return False
 
-        return bool(pyotp.TOTP(ota_secret).verify(code))
+        return bool(pyotp.TOTP(ota_secret).verify(code, valid_window=1))
 
 
 class TotpSetupFlow(SetupFlow):
