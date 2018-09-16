@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.helpers import discovery, aiohttp_client
-from homeassistant.helpers.dispatcher import dispatcher_send
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyspcwebgw==0.4.0']
@@ -45,9 +45,11 @@ async def async_setup(hass, config):
         from pyspcwebgw.zone import Zone
 
         if isinstance(spc_object, Area):
-            dispatcher_send(hass, SIGNAL_UPDATE_ALARM.format(spc_object.id))
+            async_dispatcher_send(hass,
+                                  SIGNAL_UPDATE_ALARM.format(spc_object.id))
         elif isinstance(spc_object, Zone):
-            dispatcher_send(hass, SIGNAL_UPDATE_SENSOR.format(spc_object.id))
+            async_dispatcher_send(hass,
+                                  SIGNAL_UPDATE_SENSOR.format(spc_object.id))
 
     session = aiohttp_client.async_get_clientsession(hass)
 

@@ -8,6 +8,7 @@ import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import callback
 from homeassistant.components.spc import (
     ATTR_DISCOVER_DEVICES, SIGNAL_UPDATE_SENSOR)
 
@@ -20,7 +21,7 @@ def _get_device_class(zone_type):
         ZoneType.ALARM: 'motion',
         ZoneType.ENTRY_EXIT: 'opening',
         ZoneType.FIRE: 'smoke',
-    }.get(zone_type, None)
+    }.get(zone_type)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -44,13 +45,14 @@ class SpcBinarySensor(BinarySensorDevice):
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
-        async def async_update_callback():
-            """Call update method."""
-            self.async_schedule_update_ha_state(True)
-
         async_dispatcher_connect(self.hass,
                                  SIGNAL_UPDATE_SENSOR.format(self._zone.id),
-                                 async_update_callback)
+                                 self._update_callback)
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
 
     @property
     def name(self):

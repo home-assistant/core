@@ -8,6 +8,7 @@ import logging
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.core import callback
 from homeassistant.components.spc import (
     ATTR_DISCOVER_AREAS, DATA_API, SIGNAL_UPDATE_ALARM)
 from homeassistant.const import (
@@ -30,7 +31,7 @@ def _get_alarm_state(area):
         AreaMode.PART_SET_B: STATE_ALARM_ARMED_NIGHT,
         AreaMode.FULL_SET: STATE_ALARM_ARMED_AWAY,
     }
-    return mode_to_state.get(area.mode, None)
+    return mode_to_state.get(area.mode)
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -54,13 +55,14 @@ class SpcAlarm(alarm.AlarmControlPanel):
 
     async def async_added_to_hass(self):
         """Call for adding new entities."""
-        async def async_update_callback():
-            """Call update method."""
-            self.async_schedule_update_ha_state(True)
-
         async_dispatcher_connect(self.hass,
                                  SIGNAL_UPDATE_ALARM.format(self._area.id),
-                                 async_update_callback)
+                                 self._update_callback)
+
+    @callback
+    def _update_callback(self):
+        """Call update method."""
+        self.async_schedule_update_ha_state(True)
 
     @property
     def should_poll(self):
