@@ -235,6 +235,8 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
         self._supported_features |= (
             topic[CONF_RGB_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
         self._supported_features |= (
+            topic[CONF_RGB_COMMAND_TOPIC] is not None and SUPPORT_BRIGHTNESS)
+        self._supported_features |= (
             topic[CONF_BRIGHTNESS_COMMAND_TOPIC] is not None and
             SUPPORT_BRIGHTNESS)
         self._supported_features |= (
