@@ -37,8 +37,7 @@ CONF_LANGUAGE = 'language'
 CONF_SENSORS = 'sensors'
 
 DEFAULT_NAME = 'Jewish Calendar'
-DEFAULT_LATITUDE = 31.778
-DEFAULT_LONGITUDE = 35.235
+
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -76,8 +75,7 @@ class JewishCalSensor(Entity):
     """Representation of an Jewish calendar sensor."""
 
     def __init__(self, name, language, sensor_type,
-                 latitude=DEFAULT_LATITUDE, longitude=DEFAULT_LONGITUDE,
-                 diaspora=False):
+                 latitude, longitude, diaspora):
         """Initialize the Jewish calendar sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
