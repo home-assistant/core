@@ -752,7 +752,7 @@ pyHS100==0.3.3
 pyRFXtrx==0.23
 
 # homeassistant.components.switch.switchmate
-pySwitchmate==0.3
+pySwitchmate==0.4.1
 
 # homeassistant.components.sensor.tibber
 pyTibber==0.5.0

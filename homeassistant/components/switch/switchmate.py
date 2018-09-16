@@ -13,10 +13,11 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
 from homeassistant.const import CONF_NAME, CONF_MAC
 
-REQUIREMENTS = ['pySwitchmate==0.3']
+REQUIREMENTS = ['pySwitchmate==0.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_FLIP_ON_OFF = 'flip_on_off'
 DEFAULT_NAME = 'Switchmate'
 
 SCAN_INTERVAL = timedelta(minutes=30)
@@ -24,6 +25,7 @@ SCAN_INTERVAL = timedelta(minutes=30)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MAC): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_FLIP_ON_OFF, default=False): cv.boolean,
 })
 
 
@@ -31,18 +33,19 @@ def setup_platform(hass, config, add_entities, discovery_info=None) -> None:
     """Perform the setup for Switchmate devices."""
     name = config.get(CONF_NAME)
     mac_addr = config[CONF_MAC]
-    add_entities([Switchmate(mac_addr, name)], True)
+    flip_on_off = config[CONF_FLIP_ON_OFF]
+    add_entities([Switchmate(mac_addr, name, flip_on_off)], True)
 
 
 class Switchmate(SwitchDevice):
     """Representation of a Switchmate."""
 
-    def __init__(self, mac, name) -> None:
+    def __init__(self, mac, name, flip_on_off) -> None:
         """Initialize the Switchmate."""
         import switchmate
-        self._name = name
         self._mac = mac
-        self._device = switchmate.Switchmate(mac=mac)
+        self._name = name
+        self._device = switchmate.Switchmate(mac=mac, flip_on_off=flip_on_off)
 
     @property
     def unique_id(self) -> str:
