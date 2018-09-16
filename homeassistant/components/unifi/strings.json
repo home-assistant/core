@@ -1,0 +1,25 @@
+{
+    "config": {
+        "title": "Unifi Controller",
+        "step": {
+            "init": {
+                "title": "Set up Unifi Controller",
+                "data": {
+                    "host": "Host",
+                    "username": "User name",
+                    "password": "Password",
+                    "port": "Port (default value: '8443')",
+                    "site": "Site id (default value: 'default')"
+                }
+            }
+        },
+        "error": {
+            "no_key": "Couldn't get an API key"
+        },
+        "abort": {
+            "already_configured": "Bridge is already configured",
+            "no_bridges": "No deCONZ bridges discovered",
+            "one_instance_only": "Component only supports one deCONZ instance"
+        }
+    }
+}
