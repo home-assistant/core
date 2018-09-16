@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['pyhomematic==0.1.48']
+REQUIREMENTS = ['pyhomematic==0.1.49']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,6 +108,7 @@ HM_ATTRIBUTE_SUPPORT = {
     'ERROR': ['sabotage', {0: 'No', 1: 'Yes'}],
     'SABOTAGE': ['sabotage', {0: 'No', 1: 'Yes'}],
     'RSSI_PEER': ['rssi', {}],
+    'RSSI_DEVICE': ['rssi', {}],
     'VALVE_STATE': ['valve', {}],
     'BATTERY_STATE': ['battery', {}],
     'CONTROL_MODE': ['mode', {
