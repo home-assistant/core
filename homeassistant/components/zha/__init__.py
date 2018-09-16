@@ -459,40 +459,6 @@ class ZhaDeviceEntity(entity.Entity):
                 self._state = 'online'
 
 
-async def _discover_endpoint_info(endpoint):
-    """Find some basic information about an endpoint."""
-    extra_info = {
-        'manufacturer': None,
-        'model': None,
-    }
-    if 0 not in endpoint.in_clusters:
-        return extra_info
-
-    async def read(attributes):
-        """Read attributes and update extra_info convenience function."""
-        result, _ = await endpoint.in_clusters[0].read_attributes(
-            attributes,
-            allow_cache=True,
-        )
-        extra_info.update(result)
-
-    await read(['manufacturer', 'model'])
-    if extra_info['manufacturer'] is None or extra_info['model'] is None:
-        # Some devices fail at returning multiple results. Attempt separately.
-        await read(['manufacturer'])
-        await read(['model'])
-
-    for key, value in extra_info.items():
-        if isinstance(value, bytes):
-            try:
-                extra_info[key] = value.decode('ascii').strip()
-            except UnicodeDecodeError:
-                # Unsure what the best behaviour here is. Unset the key?
-                pass
-
-    return extra_info
-
-
 def get_discovery_info(hass, discovery_info):
     """Get the full discovery info for a device.
 
