@@ -184,6 +184,11 @@ class ApplicationListener:
             if endpoint_id == 0:  # ZDO
                 continue
 
+            if endpoint.manufacturer is not None:
+                device_manufacturer = endpoint.manufacturer
+            if endpoint.model is not None:
+                device_model = endpoint.model
+
             component = None
             profile_clusters = ([], [])
             device_key = "{}-{}".format(device.ieee, endpoint_id)
@@ -392,7 +397,6 @@ class ZhaDeviceEntity(entity.Entity):
         self._device_state_attributes = {
             'nwk': '0x{0:04x}'.format(device.nwk),
             'ieee': str(device.ieee),
-            'last_seen': None,
             'lqi': device.lqi,
             'rssi': device.rssi,
         }
@@ -432,10 +436,13 @@ class ZhaDeviceEntity(entity.Entity):
     def device_state_attributes(self):
         """Return device specific state attributes."""
         update_time = None
-        if self._device.last_seen is not None:
+        if self._device.last_seen is not None and self._state == 'offline':
             time_struct = time.localtime(self._device.last_seen)
             update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
-        self._device_state_attributes['last_seen'] = update_time
+            self._device_state_attributes['last_seen'] = update_time
+        if ('last_seen' in self._device_state_attributes and
+                self._state != 'offline'):
+            del self._device_state_attributes['last_seen']
         self._device_state_attributes['lqi'] = self._device.lqi
         self._device_state_attributes['rssi'] = self._device.rssi
         return self._device_state_attributes
