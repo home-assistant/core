@@ -111,7 +111,6 @@ class MetWeather(WeatherEntity):
         """Initialise the platform with a data instance and site."""
         import metno
         self._name = name
-        self._urlparams = coordinates
         self._weather_data = metno.MetWeatherData(coordinates,
                                                   clientsession,
                                                   URL
@@ -125,18 +124,18 @@ class MetWeather(WeatherEntity):
 
     async def async_added_to_hass(self):
         """Start unavailability tracking."""
-        await self._fetching_data()
+        await self._fetch_data()
 
-    async def _fetching_data(self, *_):
+    async def _fetch_data(self, *_):
         """Get the latest data from met.no."""
         if not await self._weather_data.fetching_data():
             # Retry in 15 to 20 minutes.
             minutes = 15 + randrange(6)
             _LOGGER.error("Retrying in %i minutes", minutes)
-            async_call_later(self.hass, minutes*60, self._fetching_data)
+            async_call_later(self.hass, minutes*60, self._fetch_data)
             return
 
-        async_call_later(self.hass, 60*60, self._fetching_data)
+        async_call_later(self.hass, 60*60, self._fetch_data)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
