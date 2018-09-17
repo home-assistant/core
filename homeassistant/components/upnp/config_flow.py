@@ -89,6 +89,8 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_user(self, user_input=None):
         """Manual set up."""
+        ensure_domain_data(self.hass)
+
         # if user input given, handle it
         user_input = user_input or {}
         if 'name' in user_input:
@@ -126,10 +128,14 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_import(self, import_info):
         """Import a new UPnP/IGD as a config entry."""
+        ensure_domain_data(self.hass)
+
         return await self._async_save_entry(import_info)
 
     async def _async_save_entry(self, import_info):
         """Store UPNP/IGD as new entry."""
+        ensure_domain_data(self.hass)
+
         # ensure we know the host
         name = import_info['name']
         discovery_infos = [info
