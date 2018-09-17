@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-CONF_GROUP = 'group'
+CONF_GROUP = 'data_group'
 CONF_ELEMENT = 'element'
 
 DEFAULT_HOST = 'localhost'
