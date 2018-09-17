@@ -80,6 +80,9 @@ haversine==0.4.5
 # homeassistant.components.mqtt.server
 hbmqtt==0.9.4
 
+# homeassistant.components.sensor.jewish_calendar
+hdate==0.6.3
+
 # homeassistant.components.binary_sensor.workday
 holidays==0.9.7
 
