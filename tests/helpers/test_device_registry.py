@@ -2,7 +2,7 @@
 import pytest
 
 from homeassistant.helpers import device_registry
-from tests.common import mock_device_registry
+from tests.common import mock_device_registry, flush_store
 
 
 @pytest.fixture
@@ -200,3 +200,35 @@ async def test_specifying_hub_device_update(registry):
         via_hub=('hue', '0123'))
 
     assert light.hub_device_id == hub.id
+
+
+async def test_loading_saving_data(hass, registry):
+    """Test that we load/save data correctly."""
+    orig_hub = registry.async_get_or_create(
+        config_entry_id='123',
+        connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
+        identifiers={('hue', '0123')},
+        manufacturer='manufacturer', model='hub')
+
+    orig_light = registry.async_get_or_create(
+        config_entry_id='456',
+        connections=set(),
+        identifiers={('hue', '456')},
+        manufacturer='manufacturer', model='light',
+        via_hub=('hue', '0123'))
+
+    assert len(registry.devices) == 2
+
+    # Now load written data in new registry
+    registry2 = device_registry.DeviceRegistry(hass)
+    await flush_store(registry._store)
+    await registry2.async_load()
+
+    # Ensure same order
+    assert list(registry.devices) == list(registry2.devices)
+
+    new_hub = registry2.async_get_device({('hue', '0123')}, set())
+    new_light = registry2.async_get_device({('hue', '456')}, set())
+
+    assert orig_hub == new_hub
+    assert orig_light == new_light

@@ -129,22 +129,26 @@ class DeviceRegistry:
 
     async def async_load(self):
         """Load the device registry."""
-        devices = await self._store.async_load()
+        data = await self._store.async_load()
 
-        if devices is None:
-            self.devices = OrderedDict()
-            return
+        devices = OrderedDict()
 
-        self.devices = {device['id']: DeviceEntry(
-            config_entries=device['config_entries'],
-            connections={tuple(conn) for conn in device['connections']},
-            identifiers={tuple(iden) for iden in device['identifiers']},
-            manufacturer=device['manufacturer'],
-            model=device['model'],
-            name=device['name'],
-            sw_version=device['sw_version'],
-            id=device['id'],
-        ) for device in devices['devices']}
+        if data is not None:
+            for device in data['devices']:
+                devices[device['id']] = DeviceEntry(
+                    config_entries=set(device['config_entries']),
+                    connections={tuple(conn) for conn in device['connections']},
+                    identifiers={tuple(iden) for iden in device['identifiers']},
+                    manufacturer=device['manufacturer'],
+                    model=device['model'],
+                    name=device['name'],
+                    sw_version=device['sw_version'],
+                    id=device['id'],
+                    # Introduced in 0.79
+                    hub_device_id=device.get('hub_device_id'),
+                )
+
+        self.devices = devices
 
     @callback
     def async_schedule_save(self):
@@ -166,6 +170,7 @@ class DeviceRegistry:
                 'name': entry.name,
                 'sw_version': entry.sw_version,
                 'id': entry.id,
+                'hub_device_id': entry.hub_device_id,
             } for entry in self.devices.values()
         ]
 
