@@ -1230,22 +1230,26 @@ def _async_create_timer(hass: HomeAssistant) -> None:
     """Create a timer that will start on HOMEASSISTANT_START."""
     handle = None
 
-    @callback
-    def fire_time_event(nxt: float) -> None:
-        """Fire next time event."""
+    def schedule_tick(now: datetime.datetime) -> None:
+        """Schedule a timer tick when the next second rolls around."""
         nonlocal handle
 
+        slp_seconds = 1 - (now.microsecond / 10**6)
+        target = monotonic() + slp_seconds
+        handle = hass.loop.call_later(slp_seconds, fire_time_event, target)
+
+    @callback
+    def fire_time_event(target: float) -> None:
+        """Fire next time event."""
+        now = dt_util.utcnow()
+
         hass.bus.async_fire(EVENT_TIME_CHANGED,
-                            {ATTR_NOW: dt_util.utcnow()})
-        nxt += 1
-        slp_seconds = nxt - monotonic()
+                            {ATTR_NOW: now})
 
-        if slp_seconds < 0:
+        if monotonic() > target + 1:
             _LOGGER.error('Timer got out of sync. Resetting')
-            nxt = monotonic() + 1
-            slp_seconds = 1
 
-        handle = hass.loop.call_later(slp_seconds, fire_time_event, nxt)
+        schedule_tick(now)
 
     @callback
     def stop_timer(_: Event) -> None:
@@ -1256,5 +1260,4 @@ def _async_create_timer(hass: HomeAssistant) -> None:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
 
     _LOGGER.info("Timer:starting")
-    slp_seconds = 1 - (dt_util.utcnow().microsecond / 10**6)
-    hass.loop.call_later(slp_seconds, lambda: fire_time_event(monotonic()))
+    schedule_tick(dt_util.utcnow())
