@@ -10,18 +10,18 @@ import datetime
 
 from homeassistant.core import callback
 from homeassistant.components.asterisk_mbox import SIGNAL_CDR_UPDATE
-from homeassistant.components.asterisk_mbox import DOMAIN as MBOX_DOMAIN
+from homeassistant.components.asterisk_mbox import DOMAIN
 from homeassistant.components.mailbox import Mailbox
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['asterisk_mbox']
 _LOGGER = logging.getLogger(__name__)
-DOMAIN = "asterisk_cdr"
+MAILBOX_NAME = "asterisk_cdr"
 
 
 async def async_get_handler(hass, config, discovery_info=None):
     """Set up the Asterix CDR platform."""
-    return AsteriskCDR(hass, DOMAIN)
+    return AsteriskCDR(hass, MAILBOX_NAME)
 
 
 class AsteriskCDR(Mailbox):
@@ -43,7 +43,7 @@ class AsteriskCDR(Mailbox):
     def _build_message(self):
         """Build message structure."""
         cdr = []
-        for entry in self.hass.data[MBOX_DOMAIN].cdr:
+        for entry in self.hass.data[DOMAIN].cdr:
             timestamp = datetime.datetime.strptime(
                 entry['time'], "%Y-%m-%d %H:%M:%S").timestamp()
             info = {
