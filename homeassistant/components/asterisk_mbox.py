@@ -13,7 +13,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
-    async_dispatcher_connect, async_dispatcher_send)
+    async_dispatcher_send, dispatcher_connect)
 
 REQUIREMENTS = ['asterisk_mbox==0.5.0']
 
@@ -55,19 +55,19 @@ class AsteriskData:
     def __init__(self, hass, host, port, password, config):
         """Init the Asterisk data object."""
         from asterisk_mbox import Client as asteriskClient
-
         self.hass = hass
         self.config = config
-        self.client = asteriskClient(host, port, password, self.handle_data)
         self.messages = None
         self.cdr = None
 
-        async_dispatcher_connect(
+        dispatcher_connect(
             self.hass, SIGNAL_MESSAGE_REQUEST, self._request_messages)
-        async_dispatcher_connect(
+        dispatcher_connect(
             self.hass, SIGNAL_CDR_REQUEST, self._request_cdr)
-        async_dispatcher_connect(
+        dispatcher_connect(
             self.hass, SIGNAL_DISCOVER_PLATFORM, self._discover_platform)
+        # Only connect after signal connection to ensure we don't miss any
+        self.client = asteriskClient(host, port, password, self.handle_data)
 
     @callback
     def _discover_platform(self, component):

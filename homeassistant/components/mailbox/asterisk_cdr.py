@@ -2,7 +2,7 @@
 Asterisk CDR interface.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/mailbox.asteriskvm/
+https://home-assistant.io/components/mailbox.asterisk_cdr/
 """
 import logging
 import hashlib
@@ -10,7 +10,7 @@ import datetime
 
 from homeassistant.core import callback
 from homeassistant.components.asterisk_mbox import SIGNAL_CDR_UPDATE
-from homeassistant.components.asterisk_mbox import DOMAIN
+from homeassistant.components.asterisk_mbox import DOMAIN as ASTERISK_DOMAIN
 from homeassistant.components.mailbox import Mailbox
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -43,7 +43,7 @@ class AsteriskCDR(Mailbox):
     def _build_message(self):
         """Build message structure."""
         cdr = []
-        for entry in self.hass.data[DOMAIN].cdr:
+        for entry in self.hass.data[ASTERISK_DOMAIN].cdr:
             timestamp = datetime.datetime.strptime(
                 entry['time'], "%Y-%m-%d %H:%M:%S").timestamp()
             info = {

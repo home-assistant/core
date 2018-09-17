@@ -64,7 +64,7 @@ async def async_setup(hass, config):
                 mailbox = await \
                     platform.async_get_handler(hass, p_config, discovery_info)
             elif hasattr(platform, 'get_handler'):
-                mailbox = await hass.async_add_job(
+                mailbox = await hass.async_add_executor_job(
                     platform.get_handler, hass, p_config, discovery_info)
             else:
                 raise HomeAssistantError("Invalid mailbox platform.")
