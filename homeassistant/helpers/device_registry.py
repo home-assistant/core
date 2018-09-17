@@ -137,8 +137,10 @@ class DeviceRegistry:
             for device in data['devices']:
                 devices[device['id']] = DeviceEntry(
                     config_entries=set(device['config_entries']),
-                    connections={tuple(conn) for conn in device['connections']},
-                    identifiers={tuple(iden) for iden in device['identifiers']},
+                    connections={tuple(conn) for conn
+                                 in device['connections']},
+                    identifiers={tuple(iden) for iden
+                                 in device['identifiers']},
                     manufacturer=device['manufacturer'],
                     model=device['model'],
                     name=device['name'],
