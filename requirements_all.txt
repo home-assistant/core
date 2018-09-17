@@ -448,7 +448,7 @@ hipnotify==1.0.8
 hole==0.3.0
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.6
+holidays==0.9.7
 
 # homeassistant.components.frontend
 home-assistant-frontend==20180912.0
