@@ -1,5 +1,4 @@
-"""Hass representation of an IGD."""
-
+"""Hass representation of an UPnP/IGD."""
 import asyncio
 from ipaddress import IPv4Address
 
@@ -13,7 +12,7 @@ from .const import LOGGER as _LOGGER
 
 
 class Device:
-    """Hass representation of an IGD."""
+    """Hass representation of an UPnP/IGD."""
 
     def __init__(self, igd_device):
         """Initializer."""
@@ -24,7 +23,7 @@ class Device:
     async def async_create_device(cls,
                                   hass: HomeAssistantType,
                                   ssdp_description: str):
-        """Create IGD device."""
+        """Create UPnP/IGD device."""
         # build async_upnp_client requester
         from async_upnp_client.aiohttp import AiohttpSessionRequester
         session = async_get_clientsession(hass)
