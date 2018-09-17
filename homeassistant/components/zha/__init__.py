@@ -433,9 +433,9 @@ async def configure_reporting(entity_id, cluster, attr, skip_bind=False,
         res = await cluster.configure_reporting(attr, min_report,
                                                 max_report, reportable_change)
         _LOGGER.debug(
-            "%s: reporting '%s' attr on '%s' cluster: %d/%d/%d: Status: %s",
+            "%s: reporting '%s' attr on '%s' cluster: %d/%d/%d: Result: '%s'",
             entity_id, attr_name, cluster_name, min_report, max_report,
-            reportable_change, res[0][0].status
+            reportable_change, res
         )
     except DeliveryError as ex:
         _LOGGER.debug(
