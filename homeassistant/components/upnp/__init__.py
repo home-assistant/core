@@ -63,7 +63,6 @@ def _substitute_hass_ports(ports, hass_port):
 # config
 async def async_setup(hass: HomeAssistantType, config: ConfigType):
     """Register a port mapping for Home Assistant via UPnP."""
-    _LOGGER.debug('async_setup: %s', config.get(DOMAIN))
     ensure_domain_data(hass)
 
     # ensure sane config
