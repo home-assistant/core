@@ -5,6 +5,7 @@
             "connection_aborted": "Impossibile connettersi al server HMIP"
         },
         "error": {
+            "invalid_pin": "PIN non valido, riprova.",
             "press_the_button": "Si prega di premere il pulsante blu.",
             "register_failed": "Registrazione fallita, si prega di riprovare."
         },

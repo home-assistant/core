@@ -251,6 +251,14 @@ class GenericThermostat(ClimateDevice):
         # Ensure we update the current operation after changing the mode
         self.schedule_update_ha_state()
 
+    async def async_turn_on(self):
+        """Turn thermostat on."""
+        await self.async_set_operation_mode(self.operation_list[0])
+
+    async def async_turn_off(self):
+        """Turn thermostat off."""
+        await self.async_set_operation_mode(STATE_OFF)
+
     async def async_set_temperature(self, **kwargs):
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
