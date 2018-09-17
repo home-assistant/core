@@ -1,4 +1,4 @@
-"""Config flow for IGD."""
+"""Config flow for UPNP."""
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -26,13 +26,13 @@ def ensure_domain_data(hass):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class IgdFlowHandler(data_entry_flow.FlowHandler):
+class UpnpFlowHandler(data_entry_flow.FlowHandler):
     """Handle a Hue config flow."""
 
     VERSION = 1
 
     @property
-    def _configured_igds(self):
+    def _configured_upnp_igds(self):
         """Get all configured IGDs."""
         return {
             entry.data[CONF_UDN]: {
@@ -42,7 +42,7 @@ class IgdFlowHandler(data_entry_flow.FlowHandler):
         }
 
     @property
-    def _discovered_igds(self):
+    def _discovered_upnp_igds(self):
         """Get all discovered entries."""
         return self.hass.data[DOMAIN]['discovered']
 
@@ -57,7 +57,7 @@ class IgdFlowHandler(data_entry_flow.FlowHandler):
 
     async def async_step_discovery(self, discovery_info):
         """
-        Handle a discovered IGD.
+        Handle a discovered UPnP/IGD.
 
         This flow is triggered by the discovery component. It will check if the
         host is already configured and delegate to the import step if not.
@@ -71,7 +71,7 @@ class IgdFlowHandler(data_entry_flow.FlowHandler):
 
         # ensure not already discovered/configured
         udn = discovery_info['udn']
-        if udn in self._configured_igds:
+        if udn in self._configured_upnp_igds:
             return self.async_abort(reason='already_configured')
 
         # auto config?
@@ -98,19 +98,19 @@ class IgdFlowHandler(data_entry_flow.FlowHandler):
             # ensure not already configured
             configured_names = [
                 entry['friendly_name']
-                for udn, entry in self._discovered_igds.items()
-                if udn in self._configured_igds
+                for udn, entry in self._discovered_upnp_igds.items()
+                if udn in self._configured_upnp_igds
             ]
             if user_input['name'] in configured_names:
                 return self.async_abort(reason='already_configured')
 
             return await self._async_save_entry(user_input)
 
-        # let user choose from all discovered, non-configured, IGDs
+        # let user choose from all discovered, non-configured, UPnP/IGDs
         names = [
             entry['friendly_name']
-            for udn, entry in self._discovered_igds.items()
-            if udn not in self._configured_igds
+            for udn, entry in self._discovered_upnp_igds.items()
+            if udn not in self._configured_upnp_igds
         ]
         if not names:
             return self.async_abort(reason='no_devices_discovered')
@@ -125,15 +125,15 @@ class IgdFlowHandler(data_entry_flow.FlowHandler):
         )
 
     async def async_step_import(self, import_info):
-        """Import a new IGD as a config entry."""
+        """Import a new UPnP/IGD as a config entry."""
         return await self._async_save_entry(import_info)
 
     async def _async_save_entry(self, import_info):
-        """Store IGD as new entry."""
+        """Store UPNP/IGD as new entry."""
         # ensure we know the host
         name = import_info['name']
         discovery_infos = [info
-                           for info in self._discovered_igds.values()
+                           for info in self._discovered_upnp_igds.values()
                            if info['friendly_name'] == name]
         if not discovery_infos:
             return self.async_abort(reason='host_not_found')

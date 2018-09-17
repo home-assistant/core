@@ -143,7 +143,7 @@ FLOWS = [
     'nest',
     'sonos',
     'zone',
-    'igd',
+    'upnp',
 ]
 
 
