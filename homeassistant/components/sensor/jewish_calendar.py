@@ -10,11 +10,9 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
-
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 import homeassistant.util.dt as dt_util
-
 
 REQUIREMENTS = ['hdate==0.6.3']
 
@@ -37,7 +35,6 @@ CONF_LANGUAGE = 'language'
 CONF_SENSORS = 'sensors'
 
 DEFAULT_NAME = 'Jewish Calendar'
-
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -62,20 +59,20 @@ async def async_setup_platform(
 
     if None in (latitude, longitude):
         _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return False
+        return
 
     dev = []
     for sensor_type in config[CONF_SENSORS]:
         dev.append(JewishCalSensor(
             name, language, sensor_type, latitude, longitude, diaspora))
-    async_add_entities(dev)
+    async_add_entities(dev, True)
 
 
 class JewishCalSensor(Entity):
     """Representation of an Jewish calendar sensor."""
 
-    def __init__(self, name, language, sensor_type,
-                 latitude, longitude, diaspora):
+    def __init__(
+            self, name, language, sensor_type, latitude, longitude, diaspora):
         """Initialize the Jewish calendar sensor."""
         self.client_name = name
         self._name = SENSOR_TYPES[sensor_type][0]
@@ -124,7 +121,7 @@ class JewishCalSensor(Entity):
                     for x in hdate.htables.HOLIDAYS
                     if x.index == date.get_holyday())
             except StopIteration:
-                self._state = ""
+                self._state = None
         elif self.type == 'holyness':
             self._state = hdate.date.get_holyday_type(date.get_holyday())
         else:
