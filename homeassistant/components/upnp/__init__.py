@@ -2,9 +2,8 @@
 Will open a port in your router for Home Assistant and provide statistics.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/components/igd/
+https://home-assistant.io/components/upnp/
 """
-
 import asyncio
 from ipaddress import ip_address
 
@@ -34,7 +33,7 @@ from .device import Device
 REQUIREMENTS = ['async-upnp-client==0.12.4']
 DEPENDENCIES = ['http']
 
-NOTIFICATION_ID = 'igd_notification'
+NOTIFICATION_ID = 'upnp_notification'
 NOTIFICATION_TITLE = 'UPnP/IGD Setup'
 
 CONFIG_SCHEMA = vol.Schema({
@@ -72,25 +71,25 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         return True
 
     if DISCOVERY_DOMAIN not in config:
-        _LOGGER.warning('IGD needs discovery, please enable it')
+        _LOGGER.warning('UPNP needs discovery, please enable it')
         return False
 
     # overridden local ip
-    igd_config = config[DOMAIN]
-    if CONF_LOCAL_IP in igd_config:
-        hass.data[DOMAIN]['local_ip'] = igd_config[CONF_LOCAL_IP]
+    upnp_config = config[DOMAIN]
+    if CONF_LOCAL_IP in upnp_config:
+        hass.data[DOMAIN]['local_ip'] = upnp_config[CONF_LOCAL_IP]
 
     # determine ports
     ports = {CONF_HASS: CONF_HASS}  # default, port_forward disabled by default
-    if CONF_PORTS in igd_config:
+    if CONF_PORTS in upnp_config:
         # copy from config
-        ports = igd_config[CONF_PORTS]
+        ports = upnp_config[CONF_PORTS]
 
     hass.data[DOMAIN]['auto_config'] = {
         'active': True,
-        'port_forward': igd_config[CONF_ENABLE_PORT_MAPPING],
+        'port_forward': upnp_config[CONF_ENABLE_PORT_MAPPING],
         'ports': ports,
-        'sensors': igd_config[CONF_ENABLE_SENSORS],
+        'sensors': upnp_config[CONF_ENABLE_SENSORS],
     }
 
     return True
@@ -104,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistantType,
     ensure_domain_data(hass)
     data = config_entry.data
 
-    # build IGD device
+    # build UPnP/IGD device
     ssdp_description = data[CONF_SSDP_DESCRIPTION]
     try:
         device = await Device.async_create_device(hass, ssdp_description)

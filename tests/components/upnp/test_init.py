@@ -1,11 +1,11 @@
-"""Test IGD setup process."""
+"""Test UPnP/IGD setup process."""
 
 from ipaddress import ip_address
 from unittest.mock import patch, MagicMock
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components import igd
-from homeassistant.components.igd.device import Device
+from homeassistant.components import upnp
+from homeassistant.components.upnp.device import Device
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 
 from tests.common import MockConfigEntry
@@ -49,9 +49,9 @@ class MockDevice(Device):
 async def test_async_setup_no_auto_config(hass):
     """Test async_setup."""
     # setup component, enable auto_config
-    await async_setup_component(hass, 'igd')
+    await async_setup_component(hass, 'upnp')
 
-    assert hass.data[igd.DOMAIN]['auto_config'] == {
+    assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': False,
         'port_forward': False,
         'ports': {'hass': 'hass'},
@@ -62,9 +62,9 @@ async def test_async_setup_no_auto_config(hass):
 async def test_async_setup_auto_config(hass):
     """Test async_setup."""
     # setup component, enable auto_config
-    await async_setup_component(hass, 'igd', {'igd': {}, 'discovery': {}})
+    await async_setup_component(hass, 'upnp', {'upnp': {}, 'discovery': {}})
 
-    assert hass.data[igd.DOMAIN]['auto_config'] == {
+    assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': True,
         'port_forward': False,
         'ports': {'hass': 'hass'},
@@ -75,14 +75,14 @@ async def test_async_setup_auto_config(hass):
 async def test_async_setup_auto_config_port_forward(hass):
     """Test async_setup."""
     # setup component, enable auto_config
-    await async_setup_component(hass, 'igd', {
-        'igd': {
+    await async_setup_component(hass, 'upnp', {
+        'upnp': {
             'port_forward': True,
             'ports': {'hass': 'hass'},
         },
         'discovery': {}})
 
-    assert hass.data[igd.DOMAIN]['auto_config'] == {
+    assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': True,
         'port_forward': True,
         'ports': {'hass': 'hass'},
@@ -93,11 +93,11 @@ async def test_async_setup_auto_config_port_forward(hass):
 async def test_async_setup_auto_config_no_sensors(hass):
     """Test async_setup."""
     # setup component, enable auto_config
-    await async_setup_component(hass, 'igd', {
-        'igd': {'sensors': False},
+    await async_setup_component(hass, 'upnp', {
+        'upnp': {'sensors': False},
         'discovery': {}})
 
-    assert hass.data[igd.DOMAIN]['auto_config'] == {
+    assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': True,
         'port_forward': False,
         'ports': {'hass': 'hass'},
@@ -108,7 +108,7 @@ async def test_async_setup_auto_config_no_sensors(hass):
 async def test_async_setup_entry_default(hass):
     """Test async_setup_entry."""
     udn = 'uuid:device_1'
-    entry = MockConfigEntry(domain=igd.DOMAIN, data={
+    entry = MockConfigEntry(domain=upnp.DOMAIN, data={
         'ssdp_description': 'http://192.168.1.1/desc.xml',
         'udn': udn,
         'sensors': True,
@@ -116,9 +116,9 @@ async def test_async_setup_entry_default(hass):
     })
 
     # ensure hass.http is available
-    await async_setup_component(hass, 'igd')
+    await async_setup_component(hass, 'upnp')
 
-    # mock homeassistant.components.igd.device.Device
+    # mock homeassistant.components.upnp.device.Device
     mock_device = MagicMock()
     mock_device.udn = udn
     mock_device.async_add_port_mappings.return_value = mock_coro()
@@ -126,18 +126,18 @@ async def test_async_setup_entry_default(hass):
     with patch.object(Device, 'async_create_device') as mock_create_device:
         mock_create_device.return_value = mock_coro(
             return_value=mock_device)
-        with patch('homeassistant.components.igd.device.get_local_ip',
+        with patch('homeassistant.components.upnp.device.get_local_ip',
                    return_value='192.168.1.10'):
-            assert await igd.async_setup_entry(hass, entry) is True
+            assert await upnp.async_setup_entry(hass, entry) is True
 
             # ensure device is stored/used
-            assert hass.data[igd.DOMAIN]['devices'][udn] == mock_device
+            assert hass.data[upnp.DOMAIN]['devices'][udn] == mock_device
 
             hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
             await hass.async_block_till_done()
 
     # ensure cleaned up
-    assert udn not in hass.data[igd.DOMAIN]['devices']
+    assert udn not in hass.data[upnp.DOMAIN]['devices']
 
     # ensure no port-mapping-methods called
     assert len(mock_device.async_add_port_mappings.mock_calls) == 0
@@ -147,7 +147,7 @@ async def test_async_setup_entry_default(hass):
 async def test_async_setup_entry_port_forward(hass):
     """Test async_setup_entry."""
     udn = 'uuid:device_1'
-    entry = MockConfigEntry(domain=igd.DOMAIN, data={
+    entry = MockConfigEntry(domain=upnp.DOMAIN, data={
         'ssdp_description': 'http://192.168.1.1/desc.xml',
         'udn': udn,
         'sensors': False,
@@ -155,8 +155,8 @@ async def test_async_setup_entry_port_forward(hass):
     })
 
     # ensure hass.http is available
-    await async_setup_component(hass, 'igd', {
-        'igd': {
+    await async_setup_component(hass, 'upnp', {
+        'upnp': {
             'port_forward': True,
             'ports': {'hass': 'hass'},
         },
@@ -166,12 +166,12 @@ async def test_async_setup_entry_port_forward(hass):
     mock_device = MockDevice(udn)
     with patch.object(Device, 'async_create_device') as mock_create_device:
         mock_create_device.return_value = mock_coro(return_value=mock_device)
-        with patch('homeassistant.components.igd.device.get_local_ip',
+        with patch('homeassistant.components.upnp.device.get_local_ip',
                    return_value='192.168.1.10'):
-            assert await igd.async_setup_entry(hass, entry) is True
+            assert await upnp.async_setup_entry(hass, entry) is True
 
             # ensure device is stored/used
-            assert hass.data[igd.DOMAIN]['devices'][udn] == mock_device
+            assert hass.data[upnp.DOMAIN]['devices'][udn] == mock_device
 
             # ensure add-port-mapping-methods called
             assert mock_device.added_port_mappings == [
@@ -182,7 +182,7 @@ async def test_async_setup_entry_port_forward(hass):
             await hass.async_block_till_done()
 
     # ensure cleaned up
-    assert udn not in hass.data[igd.DOMAIN]['devices']
+    assert udn not in hass.data[upnp.DOMAIN]['devices']
 
     # ensure delete-port-mapping-methods called
     assert mock_device.removed_port_mappings == [8123]
