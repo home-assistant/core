@@ -17,10 +17,9 @@
         "error": {
         },
         "abort": {
-            "no_devices_discovered": "No IGDs discovered",
-            "already_configured": "IGD is already configured",
-            "no_sensors_or_port_forward": "Enable at least sensors or Port forward",
-            "no_igds": "No IGDs discovered"
+            "no_devices_discovered": "No UPnP/IGDs discovered",
+            "already_configured": "UPnP/IGD is already configured",
+            "no_sensors_or_port_forward": "Enable at least sensors or port forward"
         }
     }
 }
