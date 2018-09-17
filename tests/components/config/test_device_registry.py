@@ -40,7 +40,6 @@ async def test_list_devices(hass, client, registry):
 
     dev1, dev2 = [entry.pop('id') for entry in msg['result']]
 
-
     assert msg['result'] == [
         {
             'config_entries': ['1234'],
