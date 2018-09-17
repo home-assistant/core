@@ -449,7 +449,7 @@ hipnotify==1.0.8
 hole==0.3.0
 
 # homeassistant.components.binary_sensor.workday
-holidays==0.9.6
+holidays==0.9.7
 
 # homeassistant.components.frontend
 home-assistant-frontend==20180912.0
@@ -753,7 +753,7 @@ pyHS100==0.3.3
 pyRFXtrx==0.23
 
 # homeassistant.components.switch.switchmate
-pySwitchmate==0.3
+pySwitchmate==0.4.1
 
 # homeassistant.components.sensor.tibber
 pyTibber==0.5.0
@@ -900,7 +900,7 @@ pyhik==0.1.8
 pyhiveapi==0.2.14
 
 # homeassistant.components.homematic
-pyhomematic==0.1.48
+pyhomematic==0.1.49
 
 # homeassistant.components.sensor.hydroquebec
 pyhydroquebec==2.2.2
@@ -1532,7 +1532,7 @@ youtube_dl==2018.09.10
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.20.0
+zeroconf==0.21.0
 
 # homeassistant.components.climate.zhong_hong
 zhong_hong_hvac==1.0.9
