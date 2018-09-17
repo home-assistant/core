@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_URL, STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_URL )
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -143,15 +143,15 @@ class GitLabData():
         self._response = None
         self._response_json = None
         self.available = False
-        self.status = STATE_UNKNOWN
-        self.started_at = STATE_UNKNOWN
-        self.finished_at = STATE_UNKNOWN
-        self.duration = STATE_UNKNOWN
-        self.commit_id = STATE_UNKNOWN
-        self.commit_date = STATE_UNKNOWN
-        self.build_id = STATE_UNKNOWN
-        self.branch = STATE_UNKNOWN
-        self.state = STATE_UNKNOWN
+        self.status = None
+        self.started_at = None
+        self.finished_at = None
+        self.duration = None
+        self.commit_id = None
+        self.commit_date = None
+        self.build_id = None
+        self.branch = None
+        self.state = None
 
     def _update(self):
         _logger = logging.getLogger(__name__)
