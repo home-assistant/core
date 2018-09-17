@@ -763,6 +763,11 @@ class MockEntity(entity.Entity):
         """Return True if entity is available."""
         return self._handle('available')
 
+    @property
+    def device_info(self):
+        """Info how it links to a device."""
+        return self._handle('device_info')
+
     def _handle(self, attr):
         """Return attribute value."""
         if attr in self._values:
