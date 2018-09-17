@@ -21,15 +21,16 @@ def registry(hass):
 async def test_list_devices(hass, client, registry):
     """Test list entries."""
     registry.async_get_or_create(
-        config_entry='1234',
+        config_entry_id='1234',
         connections={('ethernet', '12:34:56:78:90:AB:CD:EF')},
         identifiers={('bridgeid', '0123')},
         manufacturer='manufacturer', model='model')
     registry.async_get_or_create(
-        config_entry='1234',
+        config_entry_id='1234',
         connections={},
         identifiers={('bridgeid', '1234')},
-        manufacturer='manufacturer', model='model')
+        manufacturer='manufacturer', model='model',
+        via_hub=('bridgeid', '0123'))
 
     await client.send_json({
         'id': 5,
@@ -37,8 +38,7 @@ async def test_list_devices(hass, client, registry):
     })
     msg = await client.receive_json()
 
-    for entry in msg['result']:
-        entry.pop('id')
+    dev1, dev2 = [entry.pop('id') for entry in msg['result']]
 
     assert msg['result'] == [
         {
@@ -47,7 +47,8 @@ async def test_list_devices(hass, client, registry):
             'manufacturer': 'manufacturer',
             'model': 'model',
             'name': None,
-            'sw_version': None
+            'sw_version': None,
+            'hub_device_id': None,
         },
         {
             'config_entries': ['1234'],
@@ -55,6 +56,7 @@ async def test_list_devices(hass, client, registry):
             'manufacturer': 'manufacturer',
             'model': 'model',
             'name': None,
-            'sw_version': None
+            'sw_version': None,
+            'hub_device_id': dev1,
         }
     ]

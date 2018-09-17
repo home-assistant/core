@@ -40,6 +40,7 @@ def websocket_list_devices(hass, connection, msg):
                 'name': entry.name,
                 'sw_version': entry.sw_version,
                 'id': entry.id,
+                'hub_device_id': entry.hub_device_id,
             } for entry in registry.devices.values()]
         ))
 
