@@ -34,4 +34,5 @@ async def _async_has_devices(hass):
     return await hass.async_add_executor_job(soco.discover)
 
 
-config_entry_flow.register_discovery_flow(DOMAIN, 'Sonos', _async_has_devices)
+config_entry_flow.register_discovery_flow(
+    DOMAIN, 'Sonos', _async_has_devices, config_entries.CONN_CLASS_LOCAL_PUSH)
