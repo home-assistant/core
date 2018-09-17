@@ -54,6 +54,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
             'title': entry.title,
             'source': entry.source,
             'state': entry.state,
+            'connection_class': entry.connection_class,
         } for entry in hass.config_entries.async_entries()])
 
 
