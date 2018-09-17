@@ -78,13 +78,13 @@ hangups==0.4.5
 haversine==0.4.5
 
 # homeassistant.components.mqtt.server
-hbmqtt==0.9.2
+hbmqtt==0.9.4
 
 # homeassistant.components.binary_sensor.workday
 holidays==0.9.6
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180903.0
+home-assistant-frontend==20180916.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -139,7 +139,7 @@ py-canary==0.5.0
 pyblackbird==0.5
 
 # homeassistant.components.deconz
-pydeconz==44
+pydeconz==47
 
 # homeassistant.components.zwave
 pydispatcher==2.0.5
@@ -153,6 +153,9 @@ pymonoprice==0.3
 # homeassistant.components.alarm_control_panel.nx584
 # homeassistant.components.binary_sensor.nx584
 pynx584==0.4
+
+# homeassistant.components.openuv
+pyopenuv==1.0.4
 
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.sensor.otp
@@ -178,7 +181,7 @@ pytradfri[async]==5.5.1
 pyunifi==2.13
 
 # homeassistant.components.upnp
-pyupnp-async==0.1.1.0
+pyupnp-async==0.1.1.1
 
 # homeassistant.components.notify.html5
 pywebpush==1.6.0
@@ -204,16 +207,13 @@ somecomfort==0.5.2
 # homeassistant.components.recorder
 # homeassistant.scripts.db_migrator
 # homeassistant.components.sensor.sql
-sqlalchemy==1.2.10
+sqlalchemy==1.2.11
 
 # homeassistant.components.statsd
 statsd==3.2.1
 
 # homeassistant.components.camera.uvc
 uvcclient==0.10.1
-
-# homeassistant.components.config.config_entries
-voluptuous-serialize==2.0.0
 
 # homeassistant.components.vultr
 vultr==0.1.2

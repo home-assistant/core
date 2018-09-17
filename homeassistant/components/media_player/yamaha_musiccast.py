@@ -1,28 +1,26 @@
-"""Example for configuration.yaml.
-
-media_player:
-  - platform: yamaha_musiccast
-    host: 192.168.xxx.xx
-    port: 5005
-
 """
+Support for Yamaha MusicCast Receivers.
 
+For more details about this platform, please refer to the documentation at
+https://www.home-assistant.io/components/media_player.yamaha_musiccast/
+"""
 import logging
+
 import voluptuous as vol
+
+from homeassistant.components.media_player import (
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    MediaPlayerDevice)
+from homeassistant.const import (
+    CONF_HOST, CONF_PORT, STATE_IDLE, STATE_ON, STATE_PAUSED, STATE_PLAYING,
+    STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT,
-    STATE_UNKNOWN, STATE_ON, STATE_PLAYING, STATE_PAUSED, STATE_IDLE
-)
-from homeassistant.components.media_player import (
-    MediaPlayerDevice, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
-    SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_NEXT_TRACK,
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_MUTE,
-    SUPPORT_SELECT_SOURCE, SUPPORT_STOP
-)
+REQUIREMENTS = ['pymusiccast==0.1.6']
+
 _LOGGER = logging.getLogger(__name__)
 
 SUPPORTED_FEATURES = (
@@ -35,8 +33,6 @@ SUPPORTED_FEATURES = (
 
 KNOWN_HOSTS_KEY = 'data_yamaha_musiccast'
 INTERVAL_SECONDS = 'interval_seconds'
-
-REQUIREMENTS = ['pymusiccast==0.1.6']
 
 DEFAULT_PORT = 5005
 DEFAULT_INTERVAL = 480
@@ -71,11 +67,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     if [item for item in known_hosts if item[0] == ipaddr]:
-        _LOGGER.warning("Host %s:%d already registered.", host, port)
+        _LOGGER.warning("Host %s:%d already registered", host, port)
         return
 
     if [item for item in known_hosts if item[1] == port]:
-        _LOGGER.warning("Port %s:%d already registered.", host, port)
+        _LOGGER.warning("Port %s:%d already registered", host, port)
         return
 
     reg_host = (ipaddr, port)
@@ -91,11 +87,9 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     if receiver:
         for zone in receiver.zones:
             _LOGGER.debug(
-                "receiver: %s / Port: %d / Zone: %s",
-                receiver, port, zone)
+                "Receiver: %s / Port: %d / Zone: %s", receiver, port, zone)
             add_entities(
-                [YamahaDevice(receiver, receiver.zones[zone])],
-                True)
+                [YamahaDevice(receiver, receiver.zones[zone])], True)
     else:
         known_hosts.remove(reg_host)
 
