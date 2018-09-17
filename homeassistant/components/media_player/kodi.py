@@ -8,27 +8,29 @@ import asyncio
 from collections import OrderedDict
 from functools import wraps
 import logging
+import re
 import socket
 import urllib
-import re
 
 import aiohttp
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, SUPPORT_SHUFFLE_SET,
-    MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
-    MEDIA_TYPE_MOVIE, MEDIA_TYPE_VIDEO, MEDIA_TYPE_CHANNEL,
-    MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN, SUPPORT_TURN_ON)
+    DOMAIN, MEDIA_PLAYER_SCHEMA, MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MOVIE,
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_PLAYLIST, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO,
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_SHUFFLE_SET, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
-    CONF_PORT, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
-    CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, CONF_PROXY_SSL,
+    CONF_TIMEOUT, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE,
+    STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import script
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers import script, config_validation as cv
 from homeassistant.helpers.template import Template
 from homeassistant.util.yaml import dump
 
@@ -310,6 +312,8 @@ class KodiDevice(MediaPlayerDevice):
             # Register notification listeners
             self._ws_server.Player.OnPause = self.async_on_speed_event
             self._ws_server.Player.OnPlay = self.async_on_speed_event
+            self._ws_server.Player.OnAVStart = self.async_on_speed_event
+            self._ws_server.Player.OnAVChange = self.async_on_speed_event
             self._ws_server.Player.OnResume = self.async_on_speed_event
             self._ws_server.Player.OnSpeedChanged = self.async_on_speed_event
             self._ws_server.Player.OnStop = self.async_on_stop

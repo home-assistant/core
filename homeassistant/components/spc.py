@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['websockets==3.2']
+REQUIREMENTS = ['websockets==6.0']
 
 _LOGGER = logging.getLogger(__name__)
 

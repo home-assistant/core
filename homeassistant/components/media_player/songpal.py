@@ -9,31 +9,29 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_SET,
-    SUPPORT_TURN_ON, MediaPlayerDevice, DOMAIN)
-from homeassistant.const import (
-    CONF_NAME, STATE_ON, STATE_OFF, ATTR_ENTITY_ID)
+    DOMAIN, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, STATE_OFF, STATE_ON
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-songpal==0.0.7']
+REQUIREMENTS = ['python-songpal==0.0.8']
+
+_LOGGER = logging.getLogger(__name__)
+
+CONF_ENDPOINT = 'endpoint'
+
+PARAM_NAME = 'name'
+PARAM_VALUE = 'value'
+
+PLATFORM = 'songpal'
+
+SET_SOUND_SETTING = 'songpal_set_sound_setting'
 
 SUPPORT_SONGPAL = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
                   SUPPORT_VOLUME_MUTE | SUPPORT_SELECT_SOURCE | \
                   SUPPORT_TURN_ON | SUPPORT_TURN_OFF
-
-_LOGGER = logging.getLogger(__name__)
-
-
-PLATFORM = "songpal"
-
-SET_SOUND_SETTING = "songpal_set_sound_setting"
-
-PARAM_NAME = "name"
-PARAM_VALUE = "value"
-
-CONF_ENDPOINT = "endpoint"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME): cv.string,
@@ -43,13 +41,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SET_SOUND_SCHEMA = vol.Schema({
     vol.Optional(ATTR_ENTITY_ID): cv.entity_id,
     vol.Required(PARAM_NAME): cv.string,
-    vol.Required(PARAM_VALUE): cv.string})
+    vol.Required(PARAM_VALUE): cv.string,
+})
 
 
-async def async_setup_platform(hass, config,
-                               async_add_entities, discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Songpal platform."""
     from songpal import SongpalException
+
     if PLATFORM not in hass.data:
         hass.data[PLATFORM] = {}
 
@@ -85,8 +85,8 @@ async def async_setup_platform(hass, config,
                 _LOGGER.debug("Calling %s (entity: %s) with params %s",
                               service, entity_id, params)
 
-                await device.async_set_sound_setting(params[PARAM_NAME],
-                                                     params[PARAM_VALUE])
+                await device.async_set_sound_setting(
+                    params[PARAM_NAME], params[PARAM_VALUE])
 
     hass.services.async_register(
         DOMAIN, SET_SOUND_SETTING, async_service_handler,
@@ -151,8 +151,8 @@ class SongpalDevice(MediaPlayerDevice):
                 return
 
             if len(volumes) > 1:
-                _LOGGER.debug("Got %s volume controls, using the first one",
-                              volumes)
+                _LOGGER.debug(
+                    "Got %s volume controls, using the first one", volumes)
 
             volume = volumes[0]
             _LOGGER.debug("Current volume: %s", volume)
