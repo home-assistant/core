@@ -293,4 +293,5 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
 
 config_entry_flow.register_discovery_flow(
-    DOMAIN, 'Home Assistant iOS', lambda *_: True)
+    DOMAIN, 'Home Assistant iOS', lambda *_: True,
+    config_entries.CONN_CLASS_CLOUD_PUSH)

@@ -42,7 +42,8 @@ async def setup_bridge(hass, data, allow_clip_sensor=True):
     hass.data[deconz.DATA_DECONZ_ID] = {}
     config_entry = config_entries.ConfigEntry(
         1, deconz.DOMAIN, 'Mock Title',
-        {'host': 'mock-host', 'allow_clip_sensor': allow_clip_sensor}, 'test')
+        {'host': 'mock-host', 'allow_clip_sensor': allow_clip_sensor}, 'test',
+        config_entries.CONN_CLASS_LOCAL_PUSH)
     await hass.config_entries.async_forward_entry_setup(
         config_entry, 'binary_sensor')
     # To flush out the service call to update the group
