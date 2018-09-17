@@ -327,6 +327,10 @@ class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
 
             rgb = [int(val) for val in payload.split(',')]
             self._hs = color_util.color_RGB_to_hs(*rgb)
+            if self._topic[CONF_BRIGHTNESS_STATE_TOPIC] is None:
+                percent_bright = \
+                    float(color_util.color_RGB_to_hsv(*rgb)[2]) / 100.0
+                self._brightness = int(percent_bright * 255)
             self.async_schedule_update_ha_state()
 
         if self._topic[CONF_RGB_STATE_TOPIC] is not None:
