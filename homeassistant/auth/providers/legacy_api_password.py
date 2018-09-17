@@ -24,7 +24,7 @@ USER_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)
 
-LEGACY_USER = 'homeassistant'
+LEGACY_USER_NAME = 'Legacy API password user'
 
 
 class InvalidAuthError(HomeAssistantError):
@@ -52,23 +52,21 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
 
     async def async_get_or_create_credentials(
             self, flow_result: Dict[str, str]) -> Credentials:
-        """Return LEGACY_USER always."""
-        for credential in await self.async_credentials():
-            if credential.data['username'] == LEGACY_USER:
-                return credential
+        """Return credentials for this login."""
+        credentials = await self.async_credentials()
+        if credentials:
+            return credentials[0]
 
-        return self.async_create_credentials({
-            'username': LEGACY_USER
-        })
+        return self.async_create_credentials({})
 
     async def async_user_meta_for_credentials(
             self, credentials: Credentials) -> UserMeta:
         """
-        Set name as LEGACY_USER always.
+        Return info for the user.
 
         Will be used to populate info when creating a new user.
         """
-        return UserMeta(name=LEGACY_USER, is_active=True)
+        return UserMeta(name=LEGACY_USER_NAME, is_active=True)
 
 
 class LegacyLoginFlow(LoginFlow):

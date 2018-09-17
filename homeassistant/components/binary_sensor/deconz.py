@@ -54,6 +54,11 @@ class DeconzBinarySensor(BinarySensorDevice):
         self._sensor.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect sensor object when removed."""
+        self._sensor.remove_callback(self.async_update_callback)
+        self._sensor = None
+
     @callback
     def async_update_callback(self, reason):
         """Update the sensor's state.
