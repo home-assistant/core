@@ -2,7 +2,7 @@
 Support for Ecovacs Ecovacs Vaccums.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/vacuum.neato/
+https://home-assistant.io/components/vacuum.ecovacs/
 """
 import logging
 
