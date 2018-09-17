@@ -10,7 +10,7 @@
                 "data":{
                     "igd": "IGD",
                     "sensors": "Verkeer sensors toevoegen",
-                    "port_forward": "Maak port-forward voor Home Assistant"
+                    "port_forward": "Maak port forward voor Home Assistant"
                 }
             }
         },
@@ -19,7 +19,7 @@
         "abort": {
             "no_devices_discovered": "Geen IGDs gevonden",
             "already_configured": "IGD is reeds geconfigureerd",
-            "no_sensors_or_port_forward": "Kies ten minste sensors of Port forward",
+            "no_sensors_or_port_forward": "Kies ten minste sensors of port forward",
             "no_igds": "Geen IGDs gevonden"
         }
     }
