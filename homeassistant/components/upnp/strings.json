@@ -1,14 +1,14 @@
 {
     "config": {
-        "title": "IGD",
+        "title": "UPnP/IGD",
         "step": {
             "init": {
-                "title": "IGD"
+                "title": "UPnP/IGD"
             },
             "user": {
-                "title": "Configuration options for the IGD",
+                "title": "Configuration options for the UPnP/IGD",
                 "data":{
-                    "igd": "IGD",
+                    "igd": "UPnP/IGD",
                     "sensors": "Add traffic sensors",
                     "port_forward": "Enable port forward for Home Assistant"
                 }

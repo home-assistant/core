@@ -49,7 +49,7 @@ CONFIG_ENTRY_HANDLERS = {
     'google_cast': 'cast',
     SERVICE_HUE: 'hue',
     'sonos': 'sonos',
-    'igd': 'igd',
+    'upnp': 'igd',
 }
 
 SERVICE_HANDLERS = {

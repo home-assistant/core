@@ -1,20 +1,20 @@
 """
-Support for IGD Sensors.
+Support for UPnP/IGD Sensors.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/sensor.igd/
+https://home-assistant.io/components/sensor.upnp/
 """
 # pylint: disable=invalid-name
 from datetime import datetime
 import logging
 
-from homeassistant.components.igd import DOMAIN
+from homeassistant.components.upnp import DOMAIN
 from homeassistant.helpers.entity import Entity
 
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['igd']
+DEPENDENCIES = ['upnp']
 
 BYTES_RECEIVED = 'bytes_received'
 BYTES_SENT = 'bytes_sent'
@@ -47,7 +47,7 @@ KBYTE = 1024
 
 async def async_setup_platform(hass, config, async_add_devices,
                                discovery_info=None):
-    """Set up the IGD sensors."""
+    """Set up the UPnP/IGD sensors."""
     if discovery_info is None:
         return
 
@@ -56,25 +56,25 @@ async def async_setup_platform(hass, config, async_add_devices,
 
     # raw sensors + per-second sensors
     sensors = [
-        RawIGDSensor(device, name, sensor_type)
+        RawUPnPIGDSensor(device, name, sensor_type)
         for name, sensor_type in SENSOR_TYPES.items()
     ]
     sensors += [
-        KBytePerSecondIGDSensor(device, IN),
-        KBytePerSecondIGDSensor(device, OUT),
-        PacketsPerSecondIGDSensor(device, IN),
-        PacketsPerSecondIGDSensor(device, OUT),
+        KBytePerSecondUPnPIGDSensor(device, IN),
+        KBytePerSecondUPnPIGDSensor(device, OUT),
+        PacketsPerSecondUPnPIGDSensor(device, IN),
+        PacketsPerSecondUPnPIGDSensor(device, OUT),
     ]
     hass.data[DOMAIN]['sensors'][udn] = sensors
     async_add_devices(sensors, True)
     return True
 
 
-class RawIGDSensor(Entity):
-    """Representation of a UPnP IGD sensor."""
+class RawUPnPIGDSensor(Entity):
+    """Representation of a UPnP/IGD sensor."""
 
     def __init__(self, device, sensor_type_name, sensor_type):
-        """Initialize the IGD sensor."""
+        """Initialize the UPnP/IGD sensor."""
         self._device = device
         self._type_name = sensor_type_name
         self._type = sensor_type
@@ -118,7 +118,7 @@ class RawIGDSensor(Entity):
             self._state = await self._device.async_get_total_packets_sent()
 
 
-class PerSecondIGDSensor(Entity):
+class PerSecondUPnPIGDSensor(Entity):
     """Abstract representation of a X Sent/Received per second sensor."""
 
     def __init__(self, device, direction):
@@ -169,7 +169,7 @@ class PerSecondIGDSensor(Entity):
         return new_value < self._last_value
 
     async def async_update(self):
-        """Get the latest information from the IGD."""
+        """Get the latest information from the UPnP/IGD."""
         new_value = await self._async_fetch_value()
 
         if self._last_value is None:
@@ -189,7 +189,7 @@ class PerSecondIGDSensor(Entity):
         self._last_update_time = now
 
 
-class KBytePerSecondIGDSensor(PerSecondIGDSensor):
+class KBytePerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
     """Representation of a KBytes Sent/Received per second sensor."""
 
     @property
@@ -213,7 +213,7 @@ class KBytePerSecondIGDSensor(PerSecondIGDSensor):
         return format(float(self._state / KBYTE), '.1f')
 
 
-class PacketsPerSecondIGDSensor(PerSecondIGDSensor):
+class PacketsPerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
     """Representation of a Packets Sent/Received per second sensor."""
 
     @property
