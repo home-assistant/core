@@ -77,8 +77,10 @@ async def async_setup(hass, config):
     service = None
     resp = await pyupnp_async.msearch_first(search_target=IGD_DEVICE)
     if not resp:
+        _LOGGER.warning("Could not find any UPnP IGD")
         return False
 
+    cic_found = False
     try:
         device = await resp.get_device()
         hass.data[DATA_UPNP] = device
@@ -90,6 +92,7 @@ async def async_setup(hass, config):
             if _service['serviceType'] == IP_SERVICE2:
                 service = device.find_first_service(IP_SERVICE2)
             if _service['serviceType'] == CIC_SERVICE:
+                cic_found = True
                 unit = config[CONF_UNITS]
                 hass.async_create_task(discovery.async_load_platform(
                     hass, 'sensor', DOMAIN, {'unit': unit}, config))
@@ -97,13 +100,13 @@ async def async_setup(hass, config):
         _LOGGER.error(error)
         return False
 
-    if not service:
-        _LOGGER.warning("Could not find any UPnP IGD")
-        return False
-
     port_mapping = config[CONF_ENABLE_PORT_MAPPING]
     if not port_mapping:
         return True
+
+    if not service:
+        _LOGGER.warning("Could not find UPnP service for port mapping")
+        return cic_found
 
     internal_port = hass.http.server_port
 
