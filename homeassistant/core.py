@@ -180,7 +180,7 @@ class HomeAssistant:
             self.loop.close()
         return self.exit_code
 
-    async def run(self, *, attach_signals: bool = True) -> int:
+    async def async_run(self, *, attach_signals: bool = True) -> int:
         """Home Assistant main entry point.
 
         Start Home Assistant and block until stopped.

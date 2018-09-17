@@ -290,7 +290,7 @@ async def setup_and_run_hass(config_dir: str,
             EVENT_HOMEASSISTANT_START, open_browser
         )
 
-    return await hass.run()
+    return await hass.async_run()
 
 
 def try_to_restart() -> None:
