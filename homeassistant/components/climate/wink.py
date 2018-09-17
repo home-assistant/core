@@ -118,7 +118,7 @@ class WinkThermostat(WinkDevice, ClimateDevice):
                 self.hass, self.target_temperature_low, self.temperature_unit,
                 PRECISION_TENTHS)
 
-        if self.external_temperature:
+        if self.external_temperature is not None:
             data[ATTR_EXTERNAL_TEMPERATURE] = show_temp(
                 self.hass, self.external_temperature, self.temperature_unit,
                 PRECISION_TENTHS)
@@ -126,16 +126,16 @@ class WinkThermostat(WinkDevice, ClimateDevice):
         if self.smart_temperature:
             data[ATTR_SMART_TEMPERATURE] = self.smart_temperature
 
-        if self.occupied:
+        if self.occupied is not None:
             data[ATTR_OCCUPIED] = self.occupied
 
-        if self.eco_target:
+        if self.eco_target is not None:
             data[ATTR_ECO_TARGET] = self.eco_target
 
-        if self.heat_on:
+        if self.heat_on is not None:
             data[ATTR_HEAT_ON] = self.heat_on
 
-        if self.cool_on:
+        if self.cool_on is not None:
             data[ATTR_COOL_ON] = self.cool_on
 
         current_humidity = self.current_humidity

@@ -2,7 +2,7 @@
 Websocket based API for Home Assistant.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/developers/websocket_api/
+https://developers.home-assistant.io/docs/external_api_websocket.html
 """
 import asyncio
 from concurrent import futures
@@ -360,6 +360,7 @@ class ActiveConnection:
                     authenticated = refresh_token is not None
                     if authenticated:
                         request['hass_user'] = refresh_token.user
+                        request['refresh_token_id'] = refresh_token.id
 
                 elif ((not self.hass.auth.active or
                        self.hass.auth.support_legacy) and

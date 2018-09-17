@@ -2,7 +2,6 @@
 from datetime import datetime
 import json
 import logging
-
 from typing import Any
 
 _LOGGER = logging.getLogger(__name__)

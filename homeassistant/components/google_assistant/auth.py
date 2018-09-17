@@ -1,11 +1,11 @@
 """Google Assistant OAuth View."""
 
 import logging
+from typing import Dict, Any
 
 # Typing imports
 # if False:
 from aiohttp.web import Request, Response
-from typing import Dict, Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.components.http import HomeAssistantView

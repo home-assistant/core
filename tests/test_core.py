@@ -20,9 +20,10 @@ from homeassistant.util.unit_system import (METRIC_SYSTEM)
 from homeassistant.const import (
     __version__, EVENT_STATE_CHANGED, ATTR_FRIENDLY_NAME, CONF_UNIT_SYSTEM,
     ATTR_NOW, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
-    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED)
+    EVENT_HOMEASSISTANT_CLOSE, EVENT_SERVICE_REGISTERED, EVENT_SERVICE_REMOVED,
+    EVENT_SERVICE_EXECUTED)
 
-from tests.common import get_test_home_assistant
+from tests.common import get_test_home_assistant, async_mock_service
 
 PST = pytz.timezone('America/Los_Angeles')
 
@@ -861,21 +862,29 @@ def test_create_timer(mock_monotonic, loop):
 
     with patch.object(ha, 'callback', mock_callback), \
             patch('homeassistant.core.dt_util.utcnow',
-                  return_value=sentinel.mock_date):
+                  return_value=datetime(2018, 12, 31, 3, 4, 5, 333333)):
         ha._async_create_timer(hass)
+
+    assert len(hass.loop.call_later.mock_calls) == 1
+    slp_seconds, action = hass.loop.call_later.mock_calls[0][1]
+    assert abs(slp_seconds - 0.666667) < 0.001
+
+    with patch('homeassistant.core.dt_util.utcnow',
+               return_value=sentinel.mock_date):
+        action()
 
         assert len(funcs) == 2
         fire_time_event, stop_timer = funcs
 
     assert len(hass.bus.async_listen_once.mock_calls) == 1
     assert len(hass.bus.async_fire.mock_calls) == 1
-    assert len(hass.loop.call_later.mock_calls) == 1
+    assert len(hass.loop.call_later.mock_calls) == 2
 
     event_type, callback = hass.bus.async_listen_once.mock_calls[0][1]
     assert event_type == EVENT_HOMEASSISTANT_STOP
     assert callback is stop_timer
 
-    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[0][1]
+    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[1][1]
     assert abs(slp_seconds - 0.9) < 0.001
     assert callback is fire_time_event
     assert abs(nxt - 11.2) < 0.001
@@ -900,15 +909,21 @@ def test_timer_out_of_sync(mock_monotonic, loop):
 
     with patch.object(ha, 'callback', mock_callback), \
             patch('homeassistant.core.dt_util.utcnow',
-                  return_value=sentinel.mock_date):
+                  return_value=datetime(2018, 12, 31, 3, 4, 5, 333333)):
         ha._async_create_timer(hass)
+
+    _, action = hass.loop.call_later.mock_calls[0][1]
+
+    with patch('homeassistant.core.dt_util.utcnow',
+               return_value=sentinel.mock_date):
+        action()
 
         assert len(funcs) == 2
         fire_time_event, stop_timer = funcs
 
-    assert len(hass.loop.call_later.mock_calls) == 1
+    assert len(hass.loop.call_later.mock_calls) == 2
 
-    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[0][1]
+    slp_seconds, callback, nxt = hass.loop.call_later.mock_calls[1][1]
     assert slp_seconds == 1
     assert callback is fire_time_event
     assert abs(nxt - 12.3) < 0.001
@@ -969,3 +984,27 @@ def test_track_task_functions(loop):
         assert hass._track_task
     finally:
         yield from hass.async_stop()
+
+
+async def test_service_executed_with_subservices(hass):
+    """Test we block correctly till all services done."""
+    calls = async_mock_service(hass, 'test', 'inner')
+
+    async def handle_outer(call):
+        """Handle outer service call."""
+        calls.append(call)
+        call1 = hass.services.async_call('test', 'inner', blocking=True,
+                                         context=call.context)
+        call2 = hass.services.async_call('test', 'inner', blocking=True,
+                                         context=call.context)
+        await asyncio.wait([call1, call2])
+        calls.append(call)
+
+    hass.services.async_register('test', 'outer', handle_outer)
+
+    await hass.services.async_call('test', 'outer', blocking=True)
+
+    assert len(calls) == 4
+    assert [call.service for call in calls] == [
+        'outer', 'inner', 'inner', 'outer']
+    assert len(hass.bus.async_listeners().get(EVENT_SERVICE_EXECUTED, [])) == 0

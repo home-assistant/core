@@ -6,7 +6,6 @@ https://home-assistant.io/components/apple_tv/
 """
 import asyncio
 import logging
-
 from typing import Sequence, TypeVar, Union
 
 import voluptuous as vol

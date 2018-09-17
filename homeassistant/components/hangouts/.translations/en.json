@@ -14,6 +14,7 @@
                 "data": {
                     "2fa": "2FA Pin"
                 },
+                "description": "",
                 "title": "2-Factor-Authentication"
             },
             "user": {
@@ -21,6 +22,7 @@
                     "email": "E-Mail Address",
                     "password": "Password"
                 },
+                "description": "",
                 "title": "Google Hangouts Login"
             }
         },
