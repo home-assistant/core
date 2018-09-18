@@ -630,7 +630,7 @@ class EvoController(EvoEntity, ClimateDevice):
                  for zone in self._status['zones']]
         avg_temp = sum(temps) / len(temps) if temps else None
 
-        _LOGGER.debug("current_temperature(%s) = %s", self._id, avg_temp)
+        _LOGGER.debug("target_temperature(%s) = %s", self._id, avg_temp)
         return avg_temp
 
     @property
