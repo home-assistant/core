@@ -77,8 +77,9 @@ PARALLEL_UPDATES = 0
 ATTR_UNTIL = 'until'
 
 DOMAIN = 'evohome'
-DATA_EVOHOME = 'data_evohome'
-DISPATCHER_EVOHOME = 'dispatcher_evohome'
+DATA_EVOHOME = 'data_' + DOMAIN
+DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
+
 MIN_TEMP = 5
 MAX_TEMP = 35
 MIN_SCAN_INTERVAL = 180
