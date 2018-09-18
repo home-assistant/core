@@ -14,12 +14,12 @@ from homeassistant.util import dt
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "DemoMailbox"
+MAILBOX_NAME = "DemoMailbox"
 
 
 async def async_get_handler(hass, config, discovery_info=None):
     """Set up the Demo mailbox."""
-    return DemoMailbox(hass, DOMAIN)
+    return DemoMailbox(hass, MAILBOX_NAME)
 
 
 class DemoMailbox(Mailbox):
