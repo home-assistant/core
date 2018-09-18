@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     client = hass.data[DATA_EVOHOME]['client']
     loc_idx = hass.data[DATA_EVOHOME]['params'][CONF_LOCATION_IDX]
 
-# 1/3: Collect the (master) controller - evohomeclient has no defined way of
+# Collect the (master) controller - evohomeclient has no defined way of
 # accessing non-default location other than using the protected member
     tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
 

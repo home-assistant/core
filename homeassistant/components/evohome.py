@@ -24,10 +24,6 @@ https://home-assistant.io/components/evohome/
 #   0-12 Heating zones (a.k.a. Zone), and
 #   0-1 DHW controller, (a.k.a. Boiler)
 
-# List of future features
-# Replace AutoWithEco: mode that allows a delta of +/-0.5, +/-1.0, +/-1.5, etc.
-# Improve heuristics: detect TRV Off, and OpenWindow (or remove altogether?)
-
 import logging
 from datetime import datetime, timedelta
 import requests
@@ -68,20 +64,17 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 from homeassistant.helpers.entity import Entity
 
-# these are specific to this component
-ATTR_UNTIL = 'until'
+REQUIREMENTS = ['evohomeclient==0.2.7']
 
-# only the controller does client api I/O during update() to get current state
-# however, any entity can call methdos that will change state
+_LOGGER = logging.getLogger(__name__)
+
+# Usually, only the controller does client api I/O during update() to pull
+# current state - the exception is when zones pull their own schedules.
+# However, any entity can call methods that will (eventually) change state.
 PARALLEL_UPDATES = 0
 
 # these are specific to this component
-CONF_LOCATION_IDX = 'location_idx'
-
-REQUIREMENTS = ['evohomeclient==0.2.7']
-
-# https://www.home-assistant.io/components/logger/
-_LOGGER = logging.getLogger(__name__)
+ATTR_UNTIL = 'until'
 
 DOMAIN = 'evohome'
 DATA_EVOHOME = 'data_evohome'
@@ -89,6 +82,8 @@ DISPATCHER_EVOHOME = 'dispatcher_evohome'
 MIN_TEMP = 5
 MAX_TEMP = 35
 MIN_SCAN_INTERVAL = 180
+
+CONF_LOCATION_IDX = 'location_idx'
 
 # Validation of the user's configuration.
 CV_FLOAT = vol.All(vol.Coerce(float), vol.Range(min=MIN_TEMP, max=MAX_TEMP))
@@ -146,13 +141,13 @@ def setup(hass, config):
     One controller with 0+ heating zones (e.g. TRVs, relays) and, optionally, a
     DHW controller.  Does not work for US-based systems.
     """
-# 0. internal data, such as installation, state & timers...
+    # Used for internal data, such as installation, state & timers...
     hass.data[DATA_EVOHOME] = {}
 
     domain_data = hass.data[DATA_EVOHOME]
     domain_data['timers'] = {}
 
-# 1. pull the configuration parameters...
+    # Pull the configuration parameters...
     domain_data['params'] = dict(config[DOMAIN])
     # scan_interval - rounded up to nearest 60 secs, with a minimum value
     domain_data['params'][CONF_SCAN_INTERVAL] \
@@ -167,7 +162,6 @@ def setup(hass, config):
 
         _LOGGER.debug("setup(): Configuration parameters: %s", tmp)
 
-# 2. instantiate the client
     from evohomeclient2 import EvohomeClient
 
     _LOGGER.debug("setup(): API call [4 request(s)]: client.__init__()...")
@@ -182,7 +176,7 @@ def setup(hass, config):
             domain_data['params'][CONF_PASSWORD],
             debug=False
         )
-        # ...then restore the it to what it was before instantiating the client
+        # ...then restore it to what it was before instantiating the client
         logging.getLogger().setLevel(log_level)
 
     except requests.RequestException as err:
@@ -195,17 +189,16 @@ def setup(hass, config):
                 domain_data['params'][CONF_USERNAME]
             )
         else:
-            # back off and try again later
+            # Otherwise, it may be enough to back off and try again later.
             raise PlatformNotReady(err)
 
-    finally:  # redact username, password as no longer needed
-        del domain_data['params'][CONF_USERNAME]  # = 'REDACTED'
-        del domain_data['params'][CONF_PASSWORD]  # = 'REDACTED'
+    finally:  # Redact username, password as no longer needed.
+        domain_data['params'][CONF_USERNAME] = 'REDACTED'
+        domain_data['params'][CONF_PASSWORD] = 'REDACTED'
 
     domain_data['client'] = client
 
-
-# 3. REDACT any installation data we'll never need
+    # Redact any installation data we'll never need.
     if client.installation_info[0]['locationInfo']['locationId'] != 'REDACTED':
         for loc in client.installation_info:
             loc['locationInfo']['locationId'] = 'REDACTED'
@@ -214,13 +207,13 @@ def setup(hass, config):
             loc['locationInfo']['locationOwner'] = 'REDACTED'
             loc[GWS][0]['gatewayInfo'] = 'REDACTED'
 
-# 3a.
+    # Pull down the installation configuration...
     loc_idx = domain_data['params'][CONF_LOCATION_IDX]
 
     try:
         domain_data['config'] = client.installation_info[loc_idx]
 
-    # IndexError: configured location index is outside the range this login
+    # IndexError: configured location index is outside the range
     except IndexError:
         _LOGGER.warning(
             "setup(): Config parameter, '%s'= %s , is out of range (0-%s), "
@@ -236,24 +229,22 @@ def setup(hass, config):
 
     domain_data['status'] = {}
 
-# 3. Finished - do we need to output debgging info? If so...
     if _LOGGER.isEnabledFor(logging.DEBUG):
         _LOGGER.debug(
             "setup(): Location/TCS (temp. control system) used is: %s [%s]",
             domain_data['config'][GWS][0][TCS][0]['systemId'],
             domain_data['config']['locationInfo']['name']
         )
-        # Some of this data needs further redaction before being logged
+        # Some platform data needs further redaction before being logged.
         tmp = dict(domain_data['config'])
         tmp['locationInfo']['postcode'] = 'REDACTED'
 
         _LOGGER.debug("setup(): domain_data['config']: %s", tmp)
 
-
-# Now we're ready to go, but we have no state as yet, so...
+    # We have the platofrom configuration, but no state as yet, so...
     def _first_update(event):
         """Let the controller know it can obtain it's first update."""
-    # send a message to the master to do its first update
+    # Send a message to the hub to do its first update()
         pkt = {
             'sender': 'setup()',
             'signal': 'update',
@@ -264,10 +255,8 @@ def setup(hass, config):
             pkt
         )
 
-# create a listener for the above...
     hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
 
-# ... then finally, load the platform...
     load_platform(hass, 'climate', DOMAIN)
 
     return True
@@ -282,27 +271,27 @@ class EvoEntity(Entity):                                                        
         Most read-only properties are set here.  SOe are pseudo read-only,
         for example name (which can change).
         """
-# set the usual object references
+        # Set the usual object references
         self.hass = hass
         self.client = client
         domain_data = hass.data[DATA_EVOHOME]
 
-# set the entity's own object reference & identifier
+        # Set the entity's own object reference & identifier
         self._id = obj_ref.systemId
 
-# set the entity's configuration shortcut (considered static)
+        # Set the entity's configuration shortcut (considered static)
         self._config = domain_data['config'][GWS][0][TCS][0]
         self._params = domain_data['params']
 
-# set the entity's name & icon (treated as static vales)
+        # Set the entity's name & icon (treated as static vales)
         self._name = domain_data['config']['locationInfo']['name']
         self._icon = "mdi:thermostat"
 
-# set the entity's supported features
+        # Set the entity's supported features
         self._supported_features = SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
 
-# set the entity's operation list (hard-coded so for a particular order)
-        # lf._config['allowedSystemModes']
+        # Set the entity's operation list - hard-coded for a particular order,
+        # instead of using self._config['allowedSystemModes']
         self._op_list = [
             EVO_RESET,
             EVO_AUTO,
@@ -313,18 +302,18 @@ class EvoEntity(Entity):                                                        
             EVO_HEATOFF
         ]
 
-# create timers, etc. here, but they're maintained in update(), schedule()
+        # Create timers, etc. - they're maintained in update(), or schedule()
         self._status = {}
         self._timers = domain_data['timers']
 
         self._timers['statusUpdated'] = datetime.min
         domain_data['schedules'] = {}
 
-# set the entity's (initial) behaviour
+        # Set the entity's (initial) behaviour
         self._available = False  # will be True after first update()
         self._should_poll = True
 
-# create a listener for (internal) update packets...
+        # Create a listener for (internal) update packets...
         hass.helpers.dispatcher.async_dispatcher_connect(
             DISPATCHER_EVOHOME,
             self._connect
@@ -334,12 +323,13 @@ class EvoEntity(Entity):                                                        
 
         domain_data = self.hass.data[DATA_EVOHOME]
 
-# evohomeclient1 (<=0.2.7) does not have a requests exceptions handler:
+# evohomeclient1 (<=0.2.7) does not have a requests exceptions handler, but
+# they will manifest as:
 #     File ".../evohomeclient/__init__.py", line 33, in _populate_full_data
 #       userId = self.user_data['userInfo']['userID']
 #   TypeError: list indices must be integers or slices, not str
 
-# but we can (sometimes) extract the response, which may be like this:
+# ...we can extract the response, which may be like this:
 # {
 #   'code':    'TooManyRequests',
 #   'message': 'Request count limitation exceeded, please try again later.'
@@ -399,23 +389,18 @@ class EvoEntity(Entity):                                                        
     @callback
     def _connect(self, packet):
         """Process a dispatcher connect."""
-#       _LOGGER.debug("_connect(%s): got packet %s", self._id, packet)
-
         if packet['to'] & self._type:
             if packet['signal'] == 'update':
-                # for all entity types this must have force_refresh=True
                 self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self):
         """Return the name to use in the frontend UI."""
-#       _LOGGER.debug("name(%s) = %s", self._id, self._name)
         return self._name
 
     @property
     def icon(self):
         """Return the icon to use in the frontend UI."""
-#       _LOGGER.debug("icon(%s) = %s", self._id, self._icon)
         return self._icon
 
     @property
@@ -446,7 +431,7 @@ class EvoEntity(Entity):                                                        
 
         if not self._available and \
                 self._timers['statusUpdated'] != datetime.min:
-            # this isn't the first (un)available (i.e. after STARTUP)
+            # this isn't the first (un)available (i.e. after STARTUP), so...
             _LOGGER.warning(
                 "available(%s) = %s (debug code %s), "
                 "self._status = %s, self._timers = %s",
@@ -474,7 +459,6 @@ class EvoEntity(Entity):                                                        
         Note that, for evohome, the operating mode is determined by - but not
         equivalent to - the last operation (from the operation list).
         """
-#       _LOGGER.debug("operation_list(%s) = %s", self._id, self._op_list)
         return self._op_list
 
     @property
@@ -527,7 +511,7 @@ class EvoController(EvoEntity, ClimateDevice):
         """
         if self._status['systemModeStatus']['mode'] == EVO_RESET:
             state = EVO_AUTO
-        else:  # usually = self.current_operation
+        else:
             state = self.current_operation
 
         _LOGGER.debug("state(%s) = %s", self._id, state)
@@ -556,7 +540,6 @@ class EvoController(EvoEntity, ClimateDevice):
             self._status['systemModeStatus']['mode']
         )
 
-# PART 1: Call the api
         if operation_mode in TCS_MODES:
             _LOGGER.debug(
                 "set_operation_mode(): API call [1 request(s)]: "
@@ -586,7 +569,7 @@ class EvoController(EvoEntity, ClimateDevice):
         client = domain_data['client']
         loc_idx = domain_data['params'][CONF_LOCATION_IDX]
 
-        # Obtain latest state data (e.g. temps)...
+        # Obtain latest state data (e.g. temperatures)...
         _LOGGER.debug(
             "_update_state_data(): API call [1 request(s)]: "
             "client.locations[loc_idx].status()..."
@@ -627,8 +610,8 @@ class EvoController(EvoEntity, ClimateDevice):
         if not expired:  # timer not expired, so exit
             return True
 
-# it is time to update state data
-# NB: unlike all other config/state data, zones maintain their own schedules
+        # If we reached here, then it is time to update state data.  NB: unlike
+        # all other config/state data, zones maintain their own schedules.
         self._update_state_data(domain_data)
         self._status = domain_data['status']
 
@@ -643,13 +626,9 @@ class EvoController(EvoEntity, ClimateDevice):
     @property
     def target_temperature(self):
         """Return the average target temperature of the Heating/DHW zones."""
-        num_temps = total_temp = 0
-        for zone in self._status['zones']:
-            num_temps = num_temps + 1
-            total_temp = total_temp + \
-                zone['setpointStatus']['targetHeatTemperature']
-
-        avg_temp = total_temp / num_temps if num_temps > 0 else None
+        temps = [zone['setpointStatus']['targetHeatTemperature']
+                 for zone in self._status['zones']]
+        avg_temp = sum(temps) / len(temps) if temps else None
 
         _LOGGER.debug("current_temperature(%s) = %s", self._id, avg_temp)
         return avg_temp
@@ -657,14 +636,11 @@ class EvoController(EvoEntity, ClimateDevice):
     @property
     def current_temperature(self):
         """Return the average current temperature of the Heating/DHW zones."""
-        num_temps = total_temp = 0
-        for zone in self._status['zones']:
-            if zone['temperatureStatus']['isAvailable'] is True:
-                num_temps = num_temps + 1
-                total_temp = total_temp + \
-                    zone['temperatureStatus']['temperature']
+        tmp_dict = [x for x in self._status['zones']
+                    if x['temperatureStatus']['isAvailable'] is True]
 
-        avg_temp = total_temp / num_temps if num_temps > 0 else None
+        temps = [zone['temperatureStatus']['temperature'] for zone in tmp_dict]
+        avg_temp = sum(temps) / len(temps) if temps else None
 
         _LOGGER.debug("current_temperature(%s) = %s", self._id, avg_temp)
         return avg_temp
