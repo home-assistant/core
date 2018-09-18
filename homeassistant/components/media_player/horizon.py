@@ -4,27 +4,26 @@ Support for the Unitymedia Horizon HD Recorder.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/media_player.horizon/
 """
-
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 
+from homeassistant import util
 from homeassistant.components.media_player import (
-    MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_CHANNEL,
-    SUPPORT_NEXT_TRACK, SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PAUSE,
-    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK)
-from homeassistant.const import (CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF,
-                                 STATE_PAUSED, STATE_PLAYING)
+    MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, MediaPlayerDevice)
+from homeassistant.const import (
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_PAUSED, STATE_PLAYING)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant import util
 
 REQUIREMENTS = ['einder==0.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = "Horizon"
+DEFAULT_NAME = 'Horizon'
 DEFAULT_PORT = 5900
 
 MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)

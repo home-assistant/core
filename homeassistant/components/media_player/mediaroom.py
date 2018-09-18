@@ -8,45 +8,41 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components.media_player import (
-    MEDIA_TYPE_CHANNEL, SUPPORT_PAUSE, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_STOP, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY, SUPPORT_VOLUME_STEP,
-    SUPPORT_VOLUME_MUTE, MediaPlayerDevice,
-)
-from homeassistant.helpers.dispatcher import (
-    dispatcher_send, async_dispatcher_connect
-)
+    MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_OPTIMISTIC, STATE_OFF,
-    CONF_TIMEOUT, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
-    STATE_UNAVAILABLE, EVENT_HOMEASSISTANT_STOP
-)
+    CONF_HOST, CONF_NAME, CONF_OPTIMISTIC, CONF_TIMEOUT,
+    EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_PAUSED, STATE_PLAYING,
+    STATE_STANDBY, STATE_UNAVAILABLE)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, dispatcher_send)
 
 REQUIREMENTS = ['pymediaroom==0.6.4']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'Mediaroom STB'
+DATA_MEDIAROOM = 'mediaroom_known_stb'
+DEFAULT_NAME = "Mediaroom STB"
 DEFAULT_TIMEOUT = 9
-DATA_MEDIAROOM = "mediaroom_known_stb"
-DISCOVERY_MEDIAROOM = "mediaroom_discovery_installed"
+DISCOVERY_MEDIAROOM = 'mediaroom_discovery_installed'
+
 SIGNAL_STB_NOTIFY = 'mediaroom_stb_discovered'
 SUPPORT_MEDIAROOM = SUPPORT_PAUSE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF \
     | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | SUPPORT_PLAY_MEDIA \
     | SUPPORT_STOP | SUPPORT_NEXT_TRACK | SUPPORT_PREVIOUS_TRACK \
     | SUPPORT_PLAY
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
-        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    }
-)
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
+})
 
 
 async def async_setup_platform(hass, config, async_add_entities,
@@ -57,10 +53,9 @@ async def async_setup_platform(hass, config, async_add_entities,
         known_hosts = hass.data[DATA_MEDIAROOM] = []
     host = config.get(CONF_HOST, None)
     if host:
-        async_add_entities([MediaroomDevice(host=host,
-                                            device_id=None,
-                                            optimistic=config[CONF_OPTIMISTIC],
-                                            timeout=config[CONF_TIMEOUT])])
+        async_add_entities([MediaroomDevice(
+            host=host, device_id=None, optimistic=config[CONF_OPTIMISTIC],
+            timeout=config[CONF_TIMEOUT])])
         hass.data[DATA_MEDIAROOM].append(host)
 
     _LOGGER.debug("Trying to discover Mediaroom STB")
@@ -75,8 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities,
         hass.data[DATA_MEDIAROOM].append(notify.ip_address)
         new_stb = MediaroomDevice(
             host=notify.ip_address, device_id=notify.device_uuid,
-            optimistic=False
-        )
+            optimistic=False)
         async_add_entities([new_stb])
 
     if not config[CONF_OPTIMISTIC]:
@@ -90,11 +84,11 @@ async def async_setup_platform(hass, config, async_add_entities,
             @callback
             def stop_discovery(event):
                 """Stop discovery of new mediaroom STB's."""
-                _LOGGER.debug("Stopping internal pymediaroom discovery.")
+                _LOGGER.debug("Stopping internal pymediaroom discovery")
                 hass.data[DISCOVERY_MEDIAROOM].close()
 
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
-                                       stop_discovery)
+            hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, stop_discovery)
 
             _LOGGER.debug("Auto discovery installed")
 
@@ -118,8 +112,8 @@ class MediaroomDevice(MediaPlayerDevice):
 
         self._state = state_map[mediaroom_state]
 
-    def __init__(self, host, device_id, optimistic=False,
-                 timeout=DEFAULT_TIMEOUT):
+    def __init__(
+            self, host, device_id, optimistic=False, timeout=DEFAULT_TIMEOUT):
         """Initialize the device."""
         from pymediaroom import Remote
 
@@ -160,8 +154,8 @@ class MediaroomDevice(MediaPlayerDevice):
             self._available = True
             self.async_schedule_update_ha_state()
 
-        async_dispatcher_connect(self.hass, SIGNAL_STB_NOTIFY,
-                                 async_notify_received)
+        async_dispatcher_connect(
+            self.hass, SIGNAL_STB_NOTIFY, async_notify_received)
 
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play media."""
