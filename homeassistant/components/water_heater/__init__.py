@@ -82,7 +82,7 @@ SET_OPERATION_MODE_SCHEMA = vol.Schema({
 
 @bind_hass
 def set_away_mode(hass, away_mode, entity_id=None):
-    """Turn all or specified climate devices away mode on."""
+    """Turn all or specified water_heater devices away mode on."""
     data = {
         ATTR_AWAY_MODE: away_mode
     }
@@ -118,7 +118,7 @@ def set_operation_mode(hass, operation_mode, entity_id=None):
 
 
 async def async_setup(hass, config):
-    """Set up climate devices."""
+    """Set up water_heater devices."""
     component = hass.data[DOMAIN] = \
         EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)

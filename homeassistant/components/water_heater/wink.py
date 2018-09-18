@@ -128,6 +128,11 @@ class WinkWaterHeater(WinkDevice, WaterHeaterDevice):
         """Return the temperature we try to reach."""
         return self.wink.current_set_point()
 
+    @property
+    def is_away_mode_on(self):
+        """Return if the water heater is in vacation mode."""
+        return self.wink.vacation_mode_enabled()
+
     def turn_away_mode_on(self):
         """Turn away on."""
         self.wink.set_vacation_mode(True)
