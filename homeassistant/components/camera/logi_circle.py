@@ -12,11 +12,13 @@ import voluptuous as vol
 
 from homeassistant.helpers import config_validation as cv
 from homeassistant.components.logi_circle import (
-    DOMAIN, CONF_ATTRIBUTION)
+    DOMAIN as LOGI_CIRCLE_DOMAIN, CONF_ATTRIBUTION)
 from homeassistant.components.camera import (
     Camera, PLATFORM_SCHEMA, CAMERA_SERVICE_SCHEMA, SUPPORT_ON_OFF,
-    ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN as CAMERA_DOMAIN)
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL
+    ATTR_ENTITY_ID, ATTR_FILENAME, DOMAIN)
+from homeassistant.const import (
+    ATTR_ATTRIBUTION, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL,
+    CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF)
 
 DEPENDENCIES = ['logi_circle']
 
@@ -58,16 +60,14 @@ LOGI_CIRCLE_SERVICE_RECORD = CAMERA_SERVICE_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass,
-                               config,
-                               async_add_entities,
-                               discovery_info=None):
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up a Logi Circle Camera."""
-    devices = hass.data[DOMAIN]
+    devices = hass.data[LOGI_CIRCLE_DOMAIN]
 
     cameras = []
     for device in devices:
-        cameras.append(LogiCam(hass, device, config))
+        cameras.append(LogiCam(device, config))
 
     async_add_entities(cameras, True)
 
@@ -91,26 +91,33 @@ async def async_setup_platform(hass,
                 await target_device.download_livestream(**params)
 
     hass.services.async_register(
-        CAMERA_DOMAIN, SERVICE_SET_CONFIG, service_handler,
+        DOMAIN, SERVICE_SET_CONFIG, service_handler,
         schema=LOGI_CIRCLE_SERVICE_SET_CONFIG)
 
     hass.services.async_register(
-        CAMERA_DOMAIN, SERVICE_LIVESTREAM_SNAPSHOT, service_handler,
+        DOMAIN, SERVICE_LIVESTREAM_SNAPSHOT, service_handler,
         schema=LOGI_CIRCLE_SERVICE_SNAPSHOT)
 
     hass.services.async_register(
-        CAMERA_DOMAIN, SERVICE_LIVESTREAM_RECORD, service_handler,
+        DOMAIN, SERVICE_LIVESTREAM_RECORD, service_handler,
         schema=LOGI_CIRCLE_SERVICE_RECORD)
 
 
 class LogiCam(Camera):
     """An implementation of a Logi Circle camera."""
 
-    def __init__(self, hass, camera, device_info):
+    def __init__(self, camera, device_info):
         """Initialize Logi Circle camera."""
-        super(LogiCam, self).__init__()
+        super().__init__()
         self._camera = camera
         self._name = self._camera.name
+        self._id = self._camera.mac_address
+        self._has_battery = self._camera.supports_feature('battery_level')
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._id
 
     @property
     def name(self):
@@ -125,21 +132,20 @@ class LogiCam(Camera):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {
+        state = {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            'battery_saving_mode': ('on' if self._camera.battery_saving
-                                    else 'off'),
-            'firmware': self._camera.firmware,
-            'generation': self._camera.model_generation,
+            'battery_saving_mode': (
+                STATE_ON if self._camera.battery_saving else STATE_OFF),
             'ip_address': self._camera.ip_address,
-            'mac_address': self._camera.mac_address,
-            'microphone_gain': self._camera.microphone_gain,
-            'model': self._camera.model,
-            'mount': self._camera.mount,
-            'plan': self._camera.plan_name,
-            'speaker_volume': self._camera.speaker_volume,
-            'timezone': self._camera.timezone
+            'microphone_gain': self._camera.microphone_gain
         }
+
+        # Add battery attributes if camera is battery-powered
+        if self._has_battery:
+            state[ATTR_BATTERY_CHARGING] = self._camera.is_charging
+            state[ATTR_BATTERY_LEVEL] = self._camera.battery_level
+
+        return state
 
     async def async_camera_image(self):
         """Return a still image from the camera."""

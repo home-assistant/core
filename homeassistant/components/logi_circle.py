@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/logi_circle/
 """
 import logging
+import asyncio
 
 import voluptuous as vol
 
@@ -38,6 +39,10 @@ async def async_setup(hass, config):
     username = conf[CONF_USERNAME]
     password = conf[CONF_PASSWORD]
 
+    async def login():
+        await logi.login()
+        hass.data[DOMAIN] = await logi.cameras
+
     try:
         from logi_circle import Logi
         from logi_circle.exception import BadLogin
@@ -45,12 +50,12 @@ async def async_setup(hass, config):
 
         cache = hass.config.path(DEFAULT_CACHEDB)
         logi = Logi(username=username, password=password, cache_file=cache)
-        await logi.login()
+
+        await asyncio.wait_for(login(), 15)
 
         if not logi.is_connected:
             return False
-        hass.data[DOMAIN] = await logi.cameras
-    except (BadLogin, ClientResponseError) as ex:
+    except (BadLogin, ClientResponseError, asyncio.TimeoutError) as ex:
         _LOGGER.error('Unable to connect to Logi Circle API: %s', str(ex))
         hass.components.persistent_notification.create(
             'Error: {}<br />'
