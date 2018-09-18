@@ -1218,6 +1218,10 @@ def _process_command_from_frame(hass, service):
     elif service.data["topic"] == 'ais/speech_text':
         _say_it(hass, service.data["payload"], callback)
         return
+    elif service.data["topic"] == 'ais/speech_status':
+        # TODO pause/resume, service.data["payload"] can be: START -> DONE/ERROR
+        _LOGGER.info('speech_status: ' + str(service.data["payload"]))
+        return
     elif service.data["topic"] == 'ais/player_speed':
         speed = json.loads(service.data["payload"])
         # _say_it(hass, "prędkość odtwarzania: " + str(speed["currentSpeed"]), callback)
@@ -1385,6 +1389,7 @@ def _say_it(hass, message, caller_ip=None):
     # sent the tts message to the panel via http api
     global GLOBAL_TTS_TEXT
     _post_message(message, 'localhost')
+
     # check if we should inform other speaker
     player_name = hass.states.get('input_select.tts_player').state
     device_ip = None

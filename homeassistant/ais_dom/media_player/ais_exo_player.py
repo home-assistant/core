@@ -6,6 +6,7 @@ import asyncio
 import logging
 import json
 import os
+import homeassistant.util.dt as dt_util
 from homeassistant.core import callback
 import homeassistant.components.mqtt as mqtt
 import homeassistant.ais_dom.ais_global as ais_global
@@ -72,6 +73,10 @@ class ExoPlayerDevice(MediaPlayerDevice):
                            ais_global.G_AN_NEWS,
                            ais_global.G_AN_LOCAL]
         self._currentplaylist = None
+        self._media_status_received_time = None
+        self._media_position = 0
+        self._duration = 0
+        self._media_content_id = None
 
     @asyncio.coroutine
     def async_added_to_hass(self):
@@ -79,10 +84,13 @@ class ExoPlayerDevice(MediaPlayerDevice):
         @callback
         def message_received(topic, payload, qos):
             """Handle new MQTT messages."""
+            self._media_status_received_time = dt_util.utcnow()
             message = json.loads(payload.decode('utf8').replace("'", '"'))
             self._status = message.get("currentStatus", 0)
             self._playing = message.get("playing", False)
             self._currentsong = message.get("currentMedia", "...")
+            self._media_position = message.get("currentPosition", 0)
+            self._duration = message.get("duration", 0)
             _LOGGER.debug(str.format("message_received: {0}", message))
             if ("giveMeNextOne" in message):
                 play_next = message.get("giveMeNextOne", False)
@@ -99,17 +107,15 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def _fetch_status(self):
         """Fetch status from ExoPlayer."""
         _LOGGER.debug("_fetch_status")
-        # we have onPlayerStateChanged in java - no need to ask about status
-        # but maybe we should do this for other players in network...
-        # TODO
-        # self.hass.services.call(
-        #     'ais_ai_service',
-        #     'publish_command_to_frame', {
-        #         "key": 'getAudioStatus',
-        #         "val": True,
-        #         "ip": self._device_ip
-        #         }
-        #     )
+        # TODO maybe we should do this for other players in network...
+        self.hass.services.call(
+            'ais_ai_service',
+            'publish_command_to_frame', {
+                "key": 'getAudioStatus',
+                "val": True,
+                "ip": self._device_ip
+                }
+            )
 
     @property
     def source(self):
@@ -131,7 +137,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         """Return the duration of current playing media in seconds."""
         # Time does not exist for streams
         # TODO
-        return 100
+        return self._duration
 
     def media_seek(self, position):
         """Seek the media to a specific location."""
@@ -237,6 +243,16 @@ class ExoPlayerDevice(MediaPlayerDevice):
         return self._device_ip
 
     @property
+    def media_content_id(self):
+        """The media content id"""
+        return self._media_content_id
+
+    @property
+    def media_position(self):
+        """Position of current playing media in seconds."""
+        return self._media_position
+
+    @property
     def device_state_attributes(self):
         """Return the specific state attributes of the player."""
         attr = {}
@@ -248,6 +264,13 @@ class ExoPlayerDevice(MediaPlayerDevice):
     def unique_id(self) -> Optional[str]:
         """Return a unique ID."""
         return self._device_mac
+
+    @property
+    def media_position_updated_at(self):
+        """When was the position of the current playing media valid.
+        Returns value from homeassistant.util.dt.utcnow().
+        """
+        return self._media_status_received_time
 
     def media_play(self):
         """Service to send the ExoPlayer the command for play/pause."""
@@ -272,6 +295,15 @@ class ExoPlayerDevice(MediaPlayerDevice):
                 "ip": self._device_ip
                 }
             )
+
+        #
+        if self._device_ip == 'localhost':
+            self.hass.services.call('ais_bookmarks', 'add_bookmark',
+                                    {"attr": {"media_title": self.media_title,
+                                              "source": self._media_source,
+                                              "media_position": self._media_position,
+                                              "media_content_id": self._media_content_id}})
+
         self._playing = False
 
     def media_stop(self):
@@ -369,6 +401,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._media_source = j_info["MEDIA_SOURCE"]
             self._currentplaylist = j_info["MEDIA_SOURCE"]
         else:
+            self._media_content_id = media_content_id
             self.hass.services.call(
                 'ais_ai_service',
                 'publish_command_to_frame', {

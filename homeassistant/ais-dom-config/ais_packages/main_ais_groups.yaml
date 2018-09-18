@@ -9,21 +9,22 @@ group:
       - sun.sun
       - group.ais_wyszukiwarka
       - media_player.wbudowany_glosnik
-      - sensor.pogoda_symbol
+      - sensor.yweather_condition
       - group.all_switches
       - group.all_lights
       - group.all_automations
       - group.all_ais_sensors
       - group.all_fans
+      - group.bookmarks
   pogoda:
     name: Pogoda
     view: yes
     icon: mdi:weather-partlycloudy
     entities:
-      - group.day_info
-      - group.ais_pogoda
-      - group.ais_pogoda_48
-      # - weather.pogoda_z_openweathermap
+      - weather.pogoda
+      # - group.day_info
+      # - group.ais_pogoda
+      # - group.ais_pogoda_48
       # - sensor.airly_aqi
       # - sensor.airly_pm10
       # - sensor.airly_pm25

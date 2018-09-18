@@ -2,8 +2,8 @@ homeassistant:
   name: Asystent domowy
   unit_system: metric
   time_zone: Europe/Warsaw
-  latitude: 51.2483
-  longitude: 16.933
+  latitude: 52.298519
+  longitude: 20.838871
   elevation: 134
   customize: !include customize.yaml
   packages: !include_dir_named ais_packages/
@@ -60,6 +60,8 @@ recorder:
       - input_select.book_name
       - input_select.book_chapter
       - input_select.book_player
+      - input_select.ais_bookmark_last_played
+      - input_select.ais_bookmark_favorites
 history:
   include:
     domains:
@@ -88,7 +90,10 @@ history:
       - input_select.book_name
       - input_select.book_chapter
       - input_select.book_player
-
+      - input_select.book_player
+      - input_select.book_player
+      - input_select.ais_bookmark_last_played
+      - input_select.ais_bookmark_favorites
 media_extractor:
 
 # Enables the frontend
@@ -166,3 +171,6 @@ http:
 mqtt: !include mqtt.yaml
 automation:  !include automations.yaml
 script: !include scripts.yaml
+
+# bookmarks and favorites
+ais_bookmarks:

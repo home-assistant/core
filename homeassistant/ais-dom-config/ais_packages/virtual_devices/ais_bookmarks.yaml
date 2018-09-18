@@ -1,0 +1,21 @@
+input_select:
+  ais_bookmark_last_played:
+    name: 'Ostatnio odtwarzane:'
+    options:
+      - "-"
+    initial: "-"
+    icon: mdi:bookmark-music
+  ais_bookmark_favorites:
+    name: 'Ulubione:'
+    options:
+    - "-"
+    initial: "-"
+    icon: mdi:heart-outline
+
+group:
+  bookmarks:
+    control: hidden
+    name: Zakładki
+    entities:
+      - input_select.ais_bookmark_last_played
+      - input_select.ais_bookmark_favorites

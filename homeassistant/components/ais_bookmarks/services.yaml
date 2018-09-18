@@ -1,0 +1,22 @@
+# Describes the format for available ADS services
+
+add_bookmark:
+  description: Dodanie zakładki na aktualnie odtwarzanym audio
+  fields:
+    attr:
+      description: Atrybuty statusu odtwarzacza
+      example: '{
+                  "media_duration": 1245500,
+                  "media_title": "Home Assistant Podcast 33 – 0.77 and the new Authentication with Paulus",
+                  "source": "Podcast"
+                }'
+
+add_favorite:
+  description: Dodanie aktualnie odtwarzanego audio do ulubionych
+  fields:
+    attr:
+      description: Atrybuty statusu odtwarzacza
+      example: '{ "media_duration": 1245500,
+                  "media_title": "Home Assistant Podcast 33 – 0.77 and the new Authentication with Paulus",
+                  "source": "Podcast"
+                }'
