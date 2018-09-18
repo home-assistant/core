@@ -45,6 +45,7 @@ CONF_TILT_MIN = 'tilt_min'
 CONF_TILT_MAX = 'tilt_max'
 CONF_TILT_STATE_OPTIMISTIC = 'tilt_optimistic'
 CONF_TILT_INVERT_STATE = 'tilt_invert_state'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Cover'
 DEFAULT_PAYLOAD_OPEN = 'OPEN'
@@ -71,6 +72,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_PAYLOAD_OPEN, default=DEFAULT_PAYLOAD_OPEN): cv.string,
     vol.Optional(CONF_PAYLOAD_CLOSE, default=DEFAULT_PAYLOAD_CLOSE): cv.string,
     vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
@@ -107,6 +109,7 @@ async def async_setup_platform(hass, config, async_add_entities,
 
     async_add_entities([MqttCover(
         config.get(CONF_NAME),
+        config.get(CONF_UNIQUE_ID),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
         config.get(CONF_AVAILABILITY_TOPIC),
@@ -137,19 +140,21 @@ async def async_setup_platform(hass, config, async_add_entities,
 class MqttCover(MqttAvailability, CoverDevice):
     """Representation of a cover that can be controlled using MQTT."""
 
-    def __init__(self, name, state_topic, command_topic, availability_topic,
-                 tilt_command_topic, tilt_status_topic, qos, retain,
-                 state_open, state_closed, payload_open, payload_close,
-                 payload_stop, payload_available, payload_not_available,
-                 optimistic, value_template, tilt_open_position,
-                 tilt_closed_position, tilt_min, tilt_max, tilt_optimistic,
-                 tilt_invert, position_topic, set_position_template):
+    def __init__(self, name, unique_id, state_topic, command_topic,
+                 availability_topic, tilt_command_topic, tilt_status_topic,
+                 qos, retain, state_open, state_closed, payload_open,
+                 payload_close, payload_stop, payload_available,
+                 payload_not_available, optimistic, value_template,
+                 tilt_open_position, tilt_closed_position, tilt_min, tilt_max,
+                 tilt_optimistic, tilt_invert, position_topic,
+                 set_position_template):
         """Initialize the cover."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
         self._position = None
         self._state = None
         self._name = name
+        self._unique_id = unique_id
         self._state_topic = state_topic
         self._command_topic = command_topic
         self._tilt_command_topic = tilt_command_topic
@@ -242,6 +247,11 @@ class MqttCover(MqttAvailability, CoverDevice):
     def name(self):
         """Return the name of the cover."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @property
     def is_closed(self):
