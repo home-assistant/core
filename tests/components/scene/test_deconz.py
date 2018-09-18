@@ -33,6 +33,7 @@ async def setup_bridge(hass, data):
                return_value=mock_coro(data)):
         await bridge.async_load_parameters()
     hass.data[deconz.DOMAIN] = bridge
+    hass.data[deconz.DATA_DECONZ_UNSUB] = []
     hass.data[deconz.DATA_DECONZ_ID] = {}
     config_entry = config_entries.ConfigEntry(
         1, deconz.DOMAIN, 'Mock Title', {'host': 'mock-host'}, 'test')

@@ -9,11 +9,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
-    SUPPORT_SELECT_SOURCE, PLATFORM_SCHEMA, MediaPlayerDevice)
+    PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_ON, CONF_HOST,
-    CONF_NAME, CONF_PASSWORD, CONF_PORT)
+    CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pypjlink2==1.2.0']
@@ -87,8 +86,8 @@ class PjLinkDevice(MediaPlayerDevice):
     def projector(self):
         """Create PJLink Projector instance."""
         from pypjlink import Projector
-        projector = Projector.from_address(self._host, self._port,
-                                           self._encoding)
+        projector = Projector.from_address(
+            self._host, self._port, self._encoding)
         projector.authenticate(self._password)
         return projector
 

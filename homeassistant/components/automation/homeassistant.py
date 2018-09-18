@@ -32,12 +32,12 @@ def async_trigger(hass, config, action):
         @callback
         def hass_shutdown(event):
             """Execute when Home Assistant is shutting down."""
-            hass.async_run_job(action, {
+            hass.async_run_job(action({
                 'trigger': {
                     'platform': 'homeassistant',
                     'event': event,
                 },
-            })
+            }, context=event.context))
 
         return hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP,
                                           hass_shutdown)
@@ -45,11 +45,11 @@ def async_trigger(hass, config, action):
     # Automation are enabled while hass is starting up, fire right away
     # Check state because a config reload shouldn't trigger it.
     if hass.state == CoreState.starting:
-        hass.async_run_job(action, {
+        hass.async_run_job(action({
             'trigger': {
                 'platform': 'homeassistant',
                 'event': event,
             },
-        })
+        }))
 
     return lambda: None
