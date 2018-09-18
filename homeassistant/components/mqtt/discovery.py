@@ -55,6 +55,8 @@ CONFIG_ENTRY_IS_SETUP = 'mqtt_config_entry_is_setup'
 MQTT_DISCOVERY_UPDATED = 'mqtt_discovery_updated_{}'
 MQTT_DISCOVERY_NEW = 'mqtt_discovery_new_{}_{}'
 
+TOPIC_PREFIX = '~'
+
 ABBREVIATIONS = {
     'aft': 'after',
     'arm': 'arm',
@@ -151,6 +153,12 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
             return
 
         payload = dict(payload)
+
+        if TOPIC_PREFIX in payload:
+            prefix = payload[TOPIC_PREFIX]
+            for key in payload.keys():
+                payload[key] = payload[key].replace(TOPIC_PREFIX, prefix)
+
         for key in list(payload.keys()):
             abbreviated_key = key
             # Pattern to match one ore or word characters, excluding _, and:
