@@ -5,7 +5,7 @@ import queue
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PORT
+from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
 from .const import CONF_BROKER
 
@@ -20,14 +20,12 @@ class FlowHandler(config_entries.ConfigFlow):
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
-            return self.async_abort(
-                reason='single_instance_allowed'
-            )
+            return self.async_abort(reason='single_instance_allowed')
 
         return await self.async_step_broker()
 
     async def async_step_broker(self, user_input=None):
-        """Confirm setup."""
+        """Confirm the setup."""
         errors = {}
 
         if user_input is not None:
@@ -37,9 +35,7 @@ class FlowHandler(config_entries.ConfigFlow):
 
             if can_connect:
                 return self.async_create_entry(
-                    title=user_input[CONF_BROKER],
-                    data=user_input
-                )
+                    title=user_input[CONF_BROKER], data=user_input)
 
             errors['base'] = 'cannot_connect'
 
@@ -50,10 +46,7 @@ class FlowHandler(config_entries.ConfigFlow):
         fields[vol.Optional(CONF_PASSWORD)] = str
 
         return self.async_show_form(
-            step_id='broker',
-            data_schema=vol.Schema(fields),
-            errors=errors,
-        )
+            step_id='broker', data_schema=vol.Schema(fields), errors=errors)
 
     async def async_step_import(self, user_input):
         """Import a config entry.
@@ -62,14 +55,9 @@ class FlowHandler(config_entries.ConfigFlow):
         Instead, we're going to rely on the values that are in config file.
         """
         if self._async_current_entries():
-            return self.async_abort(
-                reason='single_instance_allowed'
-            )
+            return self.async_abort(reason='single_instance_allowed')
 
-        return self.async_create_entry(
-            title='configuration.yaml',
-            data={}
-        )
+        return self.async_create_entry(title='configuration.yaml', data={})
 
 
 def try_connection(broker, port, username, password):
