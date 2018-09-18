@@ -629,7 +629,7 @@ class EvoController(EvoEntity, ClimateDevice):
         """Return the average target temperature of the Heating/DHW zones."""
         temps = [zone['setpointStatus']['targetHeatTemperature']
                  for zone in self._status['zones']]
-        avg_temp = sum(temps) / len(temps) if temps else None
+        avg_temp = round(sum(temps) / len(temps), 1) if temps else None
 
         _LOGGER.debug("target_temperature(%s) = %s", self._id, avg_temp)
         return avg_temp
@@ -641,7 +641,7 @@ class EvoController(EvoEntity, ClimateDevice):
                     if x['temperatureStatus']['isAvailable'] is True]
 
         temps = [zone['temperatureStatus']['temperature'] for zone in tmp_dict]
-        avg_temp = sum(temps) / len(temps) if temps else None
+        avg_temp = round(sum(temps) / len(temps), 1) if temps else None
 
         _LOGGER.debug("current_temperature(%s) = %s", self._id, avg_temp)
         return avg_temp
