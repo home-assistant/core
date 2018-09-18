@@ -43,9 +43,9 @@ class EcovacsVacuum(VacuumDevice):
         """Initialize the Ecovacs Vacuum."""
         self.device = device
         self.device.connect_and_wait_until_ready()
-        try:
+        if self.device.vacuum.get('nick', None) is not None:
             self._name = '{}'.format(self.device.vacuum['nick'])
-        except KeyError:
+        else:
             # In case there is no nickname defined, use the device id
             self._name = '{}'.format(self.device.vacuum['did'])
 

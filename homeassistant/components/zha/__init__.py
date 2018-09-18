@@ -7,6 +7,7 @@ https://home-assistant.io/components/zha/
 import collections
 import enum
 import logging
+import time
 
 import voluptuous as vol
 
@@ -14,6 +15,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant import const as ha_const
 from homeassistant.helpers import discovery, entity
 from homeassistant.util import slugify
+from homeassistant.helpers.entity_component import EntityComponent
 
 REQUIREMENTS = [
     'bellows==0.7.0',
@@ -139,6 +141,7 @@ class ApplicationListener:
         """Initialize the listener."""
         self._hass = hass
         self._config = config
+        self._component = EntityComponent(_LOGGER, DOMAIN, hass)
         self._device_registry = collections.defaultdict(list)
         hass.data[DISCOVERY_KEY] = hass.data.get(DISCOVERY_KEY, {})
 
@@ -175,9 +178,16 @@ class ApplicationListener:
         import homeassistant.components.zha.const as zha_const
         zha_const.populate_data()
 
+        device_manufacturer = device_model = None
+
         for endpoint_id, endpoint in device.endpoints.items():
             if endpoint_id == 0:  # ZDO
                 continue
+
+            if endpoint.manufacturer is not None:
+                device_manufacturer = endpoint.manufacturer
+            if endpoint.model is not None:
+                device_model = endpoint.model
 
             component = None
             profile_clusters = ([], [])
@@ -246,6 +256,14 @@ class ApplicationListener:
                     'out_clusters',
                     join,
                 )
+
+        endpoint_entity = ZhaDeviceEntity(
+            device,
+            device_manufacturer,
+            device_model,
+            self,
+        )
+        await self._component.async_add_entities([endpoint_entity])
 
     def register_entity(self, ieee, entity_obj):
         """Record the creation of a hass entity associated with ieee."""
@@ -368,6 +386,77 @@ class Entity(entity.Entity):
     def zdo_command(self, tsn, command_id, args):
         """Handle a ZDO command received on this cluster."""
         pass
+
+
+class ZhaDeviceEntity(entity.Entity):
+    """A base class for ZHA devices."""
+
+    def __init__(self, device, manufacturer, model, application_listener,
+                 keepalive_interval=7200, **kwargs):
+        """Init ZHA endpoint entity."""
+        self._device_state_attributes = {
+            'nwk': '0x{0:04x}'.format(device.nwk),
+            'ieee': str(device.ieee),
+            'lqi': device.lqi,
+            'rssi': device.rssi,
+        }
+
+        ieee = device.ieee
+        ieeetail = ''.join(['%02x' % (o, ) for o in ieee[-4:]])
+        if manufacturer is not None and model is not None:
+            self._unique_id = "{}_{}_{}".format(
+                slugify(manufacturer),
+                slugify(model),
+                ieeetail,
+            )
+            self._device_state_attributes['friendly_name'] = "{} {}".format(
+                manufacturer,
+                model,
+            )
+        else:
+            self._unique_id = str(ieeetail)
+
+        self._device = device
+        self._state = 'offline'
+        self._keepalive_interval = keepalive_interval
+
+        application_listener.register_entity(ieee, self)
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
+    def state(self) -> str:
+        """Return the state of the entity."""
+        return self._state
+
+    @property
+    def device_state_attributes(self):
+        """Return device specific state attributes."""
+        update_time = None
+        if self._device.last_seen is not None and self._state == 'offline':
+            time_struct = time.localtime(self._device.last_seen)
+            update_time = time.strftime("%Y-%m-%dT%H:%M:%S", time_struct)
+            self._device_state_attributes['last_seen'] = update_time
+        if ('last_seen' in self._device_state_attributes and
+                self._state != 'offline'):
+            del self._device_state_attributes['last_seen']
+        self._device_state_attributes['lqi'] = self._device.lqi
+        self._device_state_attributes['rssi'] = self._device.rssi
+        return self._device_state_attributes
+
+    async def async_update(self):
+        """Handle polling."""
+        if self._device.last_seen is None:
+            self._state = 'offline'
+        else:
+            difference = time.time() - self._device.last_seen
+            if difference > self._keepalive_interval:
+                self._state = 'offline'
+            else:
+                self._state = 'online'
 
 
 def get_discovery_info(hass, discovery_info):

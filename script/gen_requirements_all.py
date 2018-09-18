@@ -55,6 +55,7 @@ TEST_REQUIREMENTS = (
     'ha-ffmpeg',
     'haversine',
     'hbmqtt',
+    'hdate',
     'holidays',
     'home-assistant-frontend',
     'homematicip',
