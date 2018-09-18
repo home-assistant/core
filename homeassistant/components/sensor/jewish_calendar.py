@@ -126,8 +126,7 @@ class JewishCalSensor(Entity):
             self._state = hdate.date.get_holyday_type(date.get_holyday())
         else:
             times = hdate.Zmanim(
-                date=today,
-                latitude=self.latitude, longitude=self.longitude,
+                date=today, latitude=self.latitude, longitude=self.longitude,
                 hebrew=self._hebrew).zmanim
             self._state = times[self.type].time()
 
