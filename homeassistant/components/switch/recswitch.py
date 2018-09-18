@@ -93,8 +93,8 @@ class RecSwitchSwitch(SwitchDevice):
         try:
             ret = await self.device.set_gpio_status(status)
             self.gpio_state = ret.state
-        except RSNetworkError as e:
-            _LOGGER.error('Setting status to {}: {!r}'.format(self.name, e))
+        except RSNetworkError as error:
+            _LOGGER.error('Setting status to %s: %r', self.name, error)
 
     async def async_update(self):
         """Update the current switch status."""
@@ -102,8 +102,8 @@ class RecSwitchSwitch(SwitchDevice):
         try:
             ret = await self.device.get_gpio_status()
             self.gpio_state = ret.state
-        except RSNetworkError as e:
-            _LOGGER.error('Reading status from {}: {!r}'.format(self.name, e))
+        except RSNetworkError as error:
+            _LOGGER.error('Reading status from %s: %r', self.name, error)
 
     async def report_gpio_change(self, ret):
         """Callback on switch status change."""
