@@ -23,12 +23,6 @@ class TestJewishCalenderSensor(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def checkForLoggingErrors(self):
-        """Check whether logger spitted out errors."""
-        errors = [rec for rec in self.cm.records if rec.levelname == "ERROR"]
-        self.assertFalse(errors, ("Logger reported error(s): ",
-                                  [err.getMessage() for err in errors]))
-
     def test_jewish_calendar_min_config(self):
         """Test minimum jewish calendar configuration."""
         config = {
@@ -36,9 +30,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
                 'platform': 'jewish_calendar'
             }
         }
-        with self.assertLogs() as self.cm:
-            assert setup_component(self.hass, 'sensor', config)
-        self.checkForLoggingErrors()
+        assert setup_component(self.hass, 'sensor', config)
 
     def test_jewish_calendar_hebrew(self):
         """Test jewish calendar sensor with language set to hebrew."""
@@ -48,9 +40,8 @@ class TestJewishCalenderSensor(unittest.TestCase):
                 'language': 'hebrew',
             }
         }
-        with self.assertLogs() as self.cm:
-            assert setup_component(self.hass, 'sensor', config)
-        self.checkForLoggingErrors()
+
+        assert setup_component(self.hass, 'sensor', config)
 
     def test_jewish_calendar_multiple_sensors(self):
         """Test jewish calendar sensor with multiple sensors setup."""
@@ -64,9 +55,8 @@ class TestJewishCalenderSensor(unittest.TestCase):
                 ]
             }
         }
-        with self.assertLogs() as self.cm:
-            assert setup_component(self.hass, 'sensor', config)
-        self.checkForLoggingErrors()
+
+        assert setup_component(self.hass, 'sensor', config)
 
     def test_jewish_calendar_sensor_date_output(self):
         """Test Jewish calendar sensor date output."""
@@ -90,8 +80,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
             diaspora=False)
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
-                sensor.async_update(),
-                self.hass.loop).result()
+                sensor.async_update(), self.hass.loop).result()
             self.assertEqual(sensor.state, "כ\"ג באלול ה\' תשע\"ח")
 
     def test_jewish_calendar_sensor_holiday_name(self):
@@ -103,8 +92,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
             diaspora=False)
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
-                sensor.async_update(),
-                self.hass.loop).result()
+                sensor.async_update(), self.hass.loop).result()
             self.assertEqual(sensor.state, "א\' ראש השנה")
 
     def test_jewish_calendar_sensor_holyness(self):
@@ -116,8 +104,7 @@ class TestJewishCalenderSensor(unittest.TestCase):
             diaspora=False)
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
-                sensor.async_update(),
-                self.hass.loop).result()
+                sensor.async_update(), self.hass.loop).result()
             self.assertEqual(sensor.state, 1)
 
     def test_jewish_calendar_sensor_torah_reading(self):
@@ -129,6 +116,5 @@ class TestJewishCalenderSensor(unittest.TestCase):
             diaspora=False)
         with patch('homeassistant.util.dt.now', return_value=test_time):
             run_coroutine_threadsafe(
-                sensor.async_update(),
-                self.hass.loop).result()
+                sensor.async_update(), self.hass.loop).result()
             self.assertEqual(sensor.state, "פרשת נצבים")
