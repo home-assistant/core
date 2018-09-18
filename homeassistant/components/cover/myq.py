@@ -99,11 +99,6 @@ class MyQDevice(CoverDevice):
         return MYQ_TO_HASS[self._status] == STATE_CLOSED
 
     @property
-    def is_open(self):
-        """Return true if cover is open, else False."""
-        return MYQ_TO_HASS[self._status] == STATE_OPEN
-
-    @property
     def is_closing(self):
         """Return if the cover is closing or not."""
         return MYQ_TO_HASS[self._status] == STATE_CLOSING
