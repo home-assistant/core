@@ -476,7 +476,7 @@ class EventBus:
         event = Event(event_type, event_data, origin, None, context)
 
         if event_type != EVENT_TIME_CHANGED:
-            _LOGGER.info("Bus:Handling %s", event)
+            _LOGGER.debug("Bus:Handling %s", event)
 
         if not listeners:
             return
