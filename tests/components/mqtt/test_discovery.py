@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start, \
                                                     ALREADY_DISCOVERED
+from homeassistant.const import STATE_ON, STATE_OFF
 
 from tests.common import async_fire_mqtt_message, mock_coro, MockConfigEntry
 
@@ -218,9 +219,10 @@ def test_discovery_expansion(hass, mqtt_mock, caplog):
     yield from async_start(hass, 'homeassistant', {}, entry)
 
     data = (
-        '{ "name": "DiscoveryExpansionTest",'
-        '  "stat_t": "test_topic",'
-        '  "cmd_t": "test_topic" }'
+        '{ "~": "some/prefix",'
+        '  "name": "DiscoveryExpansionTest",'
+        '  "stat_t": "~/test_topic",'
+        '  "cmd_t": "~/test_topic" }'
     )
 
     async_fire_mqtt_message(
@@ -228,7 +230,14 @@ def test_discovery_expansion(hass, mqtt_mock, caplog):
     yield from hass.async_block_till_done()
 
     state = hass.states.get('switch.DiscoveryExpansionTest')
-
     assert state is not None
     assert state.name == 'DiscoveryExpansionTest'
     assert ('switch', 'bla') in hass.data[ALREADY_DISCOVERED]
+    assert state.state == STATE_OFF
+
+    async_fire_mqtt_message(hass, 'some/prefix/test_topic', 'ON')
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('switch.DiscoveryExpansionTest')
+    assert state.state == STATE_ON
