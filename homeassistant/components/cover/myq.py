@@ -11,8 +11,8 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN)
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_OPEN, STATE_CLOSING,
-    STATE_OPENING)
+    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_OPEN,
+    STATE_CLOSING, STATE_OPENING)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pymyq==0.0.15']
