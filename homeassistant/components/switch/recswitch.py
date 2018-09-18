@@ -55,14 +55,9 @@ class RecSwitchSwitch(SwitchDevice):
         self.gpio_state = False
         self.device = device
         self.device_name = device_name
-        self.device.report_gpio_change = None
         self.mac_address = mac_address
         if not self.device_name:
             self.device_name = DEFAULT_NAME.format(self.mac_address)
-
-    async def async_added_to_hass(self):
-        """Assign callback for gpio change notification."""
-        self.device.report_gpio_change = self.report_gpio_change
 
     @property
     def unique_id(self):
@@ -104,8 +99,3 @@ class RecSwitchSwitch(SwitchDevice):
             self.gpio_state = ret.state
         except RSNetworkError as error:
             _LOGGER.error('Reading status from %s: %r', self.name, error)
-
-    async def report_gpio_change(self, ret):
-        """Callback on switch status change."""
-        self.gpio_state = ret.state
-        self.async_schedule_update_ha_state()
