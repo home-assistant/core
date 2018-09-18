@@ -12,7 +12,8 @@ import voluptuous as vol
 from homeassistant.components.water_heater import (
     DOMAIN, PLATFORM_SCHEMA, STATE_ECO, STATE_ELECTRIC, STATE_GAS,
     STATE_HEAT_PUMP, STATE_HIGH_DEMAND, STATE_OFF, STATE_PERFORMANCE,
-    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, WaterHeaterDevice)
+    SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE, SUPPORT_AWAY_MODE,
+    WaterHeaterDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, CONF_PASSWORD, CONF_USERNAME,
     TEMP_FAHRENHEIT)
@@ -31,7 +32,7 @@ ATTR_IN_USE = 'in_use'
 ATTR_START_DATE = 'start_date'
 ATTR_END_DATE = 'end_date'
 
-SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE)
+SUPPORT_FLAGS_HEATER = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE)
 
 SERVICE_ADD_VACATION = 'econet_add_vacation'
 SERVICE_DELETE_VACATION = 'econet_delete_vacation'
@@ -222,10 +223,13 @@ class EcoNetWaterHeater(WaterHeaterDevice):
         return self.water_heater.max_set_point
 
     def turn_away_mode_on(self):
-        pass
+        """Set a vacation for 1 year."""
+        self.add_vacation(None, datetime.datetime.now() + datetime.timedelta(days=365))
 
     def turn_away_mode_off(self):
-        pass
+        """Remove all vacations."""
+        for vacation in self.water_heater.get_vacations():
+            vacation.delete()
 
 
 

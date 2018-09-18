@@ -176,8 +176,7 @@ DIAL_STATE_SCHEMA = vol.Schema({
 })
 
 WINK_COMPONENTS = [
-    'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
-    'fan', 'alarm_control_panel', 'scene'
+    'water_heater'
 ]
 
 WINK_HUBS = []
@@ -526,6 +525,7 @@ def setup(hass, config):
         discovery.load_platform(hass, wink_component, DOMAIN, {}, config)
 
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+    return True
 
     sirens = []
     has_dome_or_wink_siren = False
