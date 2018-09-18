@@ -674,7 +674,7 @@ omit =
     homeassistant/components/sensor/haveibeenpwned.py
     homeassistant/components/sensor/hp_ilo.py
     homeassistant/components/sensor/htu21d.py
-    homeassistant/components/sensor/igd.py
+    homeassistant/components/sensor/upnp.py
     homeassistant/components/sensor/imap_email_content.py
     homeassistant/components/sensor/imap.py
     homeassistant/components/sensor/influxdb.py
