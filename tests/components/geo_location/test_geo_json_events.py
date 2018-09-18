@@ -51,8 +51,7 @@ class TestGeoJsonPlatform(unittest.TestCase):
     @mock.patch('geojson_client.generic_feed.GenericFeed')
     def test_setup(self, mock_feed):
         """Test the general setup of the platform."""
-
-        # Set up some mock feed entries for this tets.
+        # Set up some mock feed entries for this test.
         mock_entry_1 = self._generate_mock_feed_entry('1234', 'Title 1', 15.5,
                                                       (-31.0, 150.0))
         mock_entry_2 = self._generate_mock_feed_entry('2345', 'Title 2', 20.5,
