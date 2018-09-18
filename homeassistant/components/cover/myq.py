@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.components.cover import (
     CoverDevice, SUPPORT_CLOSE, SUPPORT_OPEN)
 from homeassistant.const import (
-    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_CLOSING,
+    CONF_PASSWORD, CONF_TYPE, CONF_USERNAME, STATE_CLOSED, STATE_OPEN, STATE_CLOSING,
     STATE_OPENING)
 import homeassistant.helpers.config_validation as cv
 
@@ -23,6 +23,7 @@ DEFAULT_NAME = 'myq'
 
 MYQ_TO_HASS = {
     'closed': STATE_CLOSED,
+    'open': STATE_OPEN,
     'closing': STATE_CLOSING,
     'opening': STATE_OPENING
 }
@@ -96,6 +97,11 @@ class MyQDevice(CoverDevice):
     def is_closed(self):
         """Return true if cover is closed, else False."""
         return MYQ_TO_HASS[self._status] == STATE_CLOSED
+
+    @property
+    def is_open(self):
+        """Return true if cover is open, else False."""
+        return MYQ_TO_HASS[self._status] == STATE_OPEN
 
     @property
     def is_closing(self):
