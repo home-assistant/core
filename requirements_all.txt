@@ -394,7 +394,7 @@ gearbest_parser==1.0.7
 geizhals==0.0.7
 
 # homeassistant.components.geo_location.geo_json_events
-geojson==2.4.0
+geojson_client==0.1
 
 # homeassistant.components.sensor.gitter
 gitterpy==0.1.7

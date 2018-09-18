@@ -8,6 +8,7 @@ location.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/geo_location/geo_json_events/
 """
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Optional
@@ -16,68 +17,51 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.geo_location import GeoLocationEvent
-from homeassistant.components.sensor.rest import RestData
 from homeassistant.const import CONF_RADIUS, CONF_URL, CONF_SCAN_INTERVAL, \
-    EVENT_HOMEASSISTANT_START, ATTR_ID, LENGTH_KILOMETERS, LENGTH_METERS
-from homeassistant.helpers.config_validation import PLATFORM_SCHEMA
+    EVENT_HOMEASSISTANT_START
+from homeassistant.components.geo_location import PLATFORM_SCHEMA
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.util import distance as util_distance
-from homeassistant.util import location as util_location
 
-REQUIREMENTS = ['geojson==2.4.0']
+REQUIREMENTS = ['geojson_client==0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_CATEGORY = 'category'
-ATTR_DISTANCE = 'distance'
 ATTR_EXTERNAL_ID = 'external_id'
-ATTR_FEATURE = 'feature'
-ATTR_GEOMETRY = 'geometry'
-ATTR_GUID = 'guid'
-ATTR_TITLE = 'title'
-
-CONF_CATEGORIES = 'categories'
 
 DEFAULT_RADIUS_IN_KM = 20.0
-DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 DEFAULT_UNIT_OF_MEASUREMENT = "km"
+
+SCAN_INTERVAL = timedelta(minutes=5)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_URL): cv.string,
     vol.Optional(CONF_RADIUS, default=DEFAULT_RADIUS_IN_KM):
         vol.Coerce(float),
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL):
-        cv.time_period,
-    vol.Optional(CONF_CATEGORIES, default=[]):
-        vol.All(cv.ensure_list, [cv.string]),
 })
 
 
-def setup_platform(hass, config, add_entities, disc_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GeoJSON Events platform."""
     url = config.get(CONF_URL)
-    scan_interval = config.get(CONF_SCAN_INTERVAL)
+    scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     radius_in_km = config.get(CONF_RADIUS)
-    categories = config.get(CONF_CATEGORIES)
-    # Initialize the device manager.
-    GeoJsonFeedManager(hass, add_entities, url, scan_interval, radius_in_km,
-                       categories)
+    # Initialize the entity manager.
+    GeoJsonFeedManager(hass, add_entities, scan_interval, url, radius_in_km)
 
 
 class GeoJsonFeedManager:
     """Feed Manager for GeoJSON feeds."""
 
-    def __init__(self, hass, add_entities, url, scan_interval, radius_in_km,
-                 categories):
+    def __init__(self, hass, add_entities, scan_interval, url, radius_in_km):
         """Initialize the GeoJSON Feed Manager."""
+        from geojson_client.generic_feed import GenericFeed
         self._hass = hass
-        self._rest = RestData('GET', url, None, '', '', True)
-        self._scan_interval = scan_interval
+        self._feed = GenericFeed((hass.config.latitude, hass.config.longitude),
+                                 filter_radius=radius_in_km, url=url)
         self._add_entities = add_entities
-        self._geo_distance_helper = GeoJsonDistanceHelper(hass)
-        self._radius_in_km = radius_in_km
-        self._categories = categories
-        self._managed_devices = []
+        self._scan_interval = scan_interval
+        self._feed_entries = []
+        self._managed_entities = []
         hass.bus.listen_once(
             EVENT_HOMEASSISTANT_START, lambda _: self._update())
         self._init_regular_updates()
@@ -88,267 +72,117 @@ class GeoJsonFeedManager:
                             self._scan_interval)
 
     def _update(self):
-        """Update the feed and then update connected devices."""
-        import geojson
-        self._rest.update()
-        value = self._rest.data
-        if value is None:
-            _LOGGER.warning("No data retrieved from %s", self._rest)
-            # Remove all devices.
-            self._update_or_remove_devices([])
+        """Update the feed and then update connected entities."""
+        import geojson_client
+        status, feed_entries = self._feed.update()
+        if status == geojson_client.UPDATE_OK:
+            _LOGGER.debug("Data retrieved %s", feed_entries)
+            # Keep a copy of all feed entries for future lookups by entities.
+            self._feed_entries = feed_entries.copy()
+            keep_entries = self._update_or_remove_entities(feed_entries)
+            self._generate_new_entities(keep_entries)
+        elif status == geojson_client.UPDATE_OK_NO_DATA:
+            _LOGGER.debug("Update successful, but no data received from %s",
+                          self._feed)
         else:
-            _LOGGER.debug("Data retrieved %s", value)
-            filtered_entries = self._filter_entries(geojson.loads(value))
-            keep_entries = self._update_or_remove_devices(filtered_entries)
-            self._generate_new_devices(keep_entries)
+            _LOGGER.warning("Update not successful, no data received from %s",
+                            self._feed)
+            # Remove all entities.
+            self._update_or_remove_entities([])
 
-    def _filter_entries(self, feature_collection):
-        """Filter entries by distance from home coordinates."""
-        keep_entries = []
-        for feature in feature_collection.features:
-            # Filter by category.
-            if self._matches_category(feature):
-                # Filter by distance.
-                distance = self._geo_distance_helper.distance_to_geometry(
-                    feature.geometry)
-                _LOGGER.debug("Entry %s has distance %s", feature, distance)
-                if distance and distance <= self._radius_in_km:
-                    # Add distance value as a new attribute
-                    entry = {ATTR_FEATURE: feature,
-                             ATTR_DISTANCE: distance}
-                    keep_entries.append(entry)
-        _LOGGER.debug("%s entries found nearby after filtering",
-                      len(keep_entries))
-        return keep_entries
-
-    def _matches_category(self, feature):
-        """Check if the provided feature matches any of the categories."""
-        if self._categories:
-            if ATTR_CATEGORY in feature.properties:
-                return feature.properties[ATTR_CATEGORY] in self._categories
-            # Entry has no category.
-            return False
-        # No categories defined - always match.
-        return True
-
-    def _update_or_remove_devices(self, entries):
-        """Update existing devices and remove obsolete devices."""
-        _LOGGER.debug("Entries for updating: %s", entries)
+    def _update_or_remove_entities(self, feed_entries):
+        """Update existing entries and remove obsolete entities."""
+        _LOGGER.debug("Entries for updating: %s", feed_entries)
         remove_entry = None
         # Remove obsolete entities for events that have disappeared
-        managed_devices = self._managed_devices.copy()
-        for device in managed_devices:
+        managed_entities = self._managed_entities.copy()
+        for entity in managed_entities:
             # Remove entry from previous iteration - if applicable.
             if remove_entry:
-                entries.remove(remove_entry)
+                feed_entries.remove(remove_entry)
                 remove_entry = None
-            for entry in entries:
-                feature = entry[ATTR_FEATURE]
-                entry_id = self._external_id(feature)
-                if device.external_id == entry_id:
-                    # Existing device - update details.
-                    _LOGGER.debug("Existing device found %s", device)
+            for entry in feed_entries:
+                if entity.external_id == entry.external_id:
+                    # Existing entity - update details.
+                    _LOGGER.debug("Existing entity found %s", entity)
                     remove_entry = entry
-                    # Update existing device's details with event data.
-                    latitude, longitude, _, name, category = \
-                        self._extract_data(feature)
-                    device.distance = entry[ATTR_DISTANCE]
-                    device.latitude = latitude
-                    device.longitude = longitude
-                    device.name = name
-                    device.category = category
-                    self._hass.add_job(device.async_update_ha_state())
+                    entity.schedule_update_ha_state(True)
                     break
             else:
-                # Remove obsolete device.
-                _LOGGER.debug("Device not current anymore %s", device)
-                self._managed_devices.remove(device)
-                self._hass.add_job(device.async_remove())
+                # Remove obsolete entity.
+                _LOGGER.debug("Entity not current anymore %s", entity)
+                self._managed_entities.remove(entity)
+                self._hass.add_job(entity.async_remove())
         # Remove entry from very last iteration - if applicable.
         if remove_entry:
-            entries.remove(remove_entry)
-        # Return the remaining entries that new devices must be created for.
-        return entries
+            feed_entries.remove(remove_entry)
+        # Return the remaining entries that new entities must be created for.
+        return feed_entries
 
-    def _generate_new_devices(self, entries):
+    def _generate_new_entities(self, entries):
         """Generate new entities for events."""
-        new_devices = []
+        new_entities = []
         for entry in entries:
-            feature = entry[ATTR_FEATURE]
-            latitude, longitude, external_id, name, category = \
-                self._extract_data(feature)
-            new_device = GeoJsonLocationEvent(entry[ATTR_DISTANCE], latitude,
-                                              longitude, external_id, name,
-                                              category)
-            _LOGGER.debug("New device added %s", new_device)
-            new_devices.append(new_device)
-        # Add new devices to HA and keep track of them in this manager.
-        self._add_entities(new_devices)
-        self._managed_devices.extend(new_devices)
+            new_entity = GeoJsonLocationEvent(self, entry)
+            _LOGGER.debug("New entity added %s", new_entity)
+            new_entities.append(new_entity)
+        # Add new entities to HA and keep track of them in this manager.
+        self._add_entities(new_entities, True)
+        self._managed_entities.extend(new_entities)
 
-    def _extract_data(self, feature):
-        """Extract relevant data from the external event."""
-        latitude, longitude = self._geo_distance_helper.extract_coordinates(
-            feature.geometry)
-        title = None if ATTR_TITLE not in feature.properties else \
-            feature.properties[ATTR_TITLE]
-        category = None if ATTR_CATEGORY not in feature.properties else \
-            feature.properties[ATTR_CATEGORY]
-        return latitude, longitude, self._external_id(feature), title, category
-
-    def _external_id(self, feature):
-        """Find a suitable ID for the provided entry."""
-        if ATTR_ID in feature.properties:
-            return feature.properties[ATTR_ID]
-        if ATTR_GUID in feature.properties:
-            return feature.properties[ATTR_GUID]
-        if ATTR_TITLE in feature.properties:
-            return feature.properties[ATTR_TITLE]
-        # Use geometry as ID as a fallback.
-        latitude, longitude = self._geo_distance_helper.extract_coordinates(
-            feature.geometry)
-        return hash((latitude, longitude))
-
-
-class GeoJsonDistanceHelper:
-    """Helper to calculate distances between GeoJSON geometries."""
-
-    def __init__(self, hass):
-        """Initialize the geo distance helper."""
-        self._hass = hass
-
-    def extract_coordinates(self, geometry):
-        """Extract the best geometry from the provided feature for display."""
-        from geojson import Point, GeometryCollection, Polygon
-        latitude = longitude = None
-        if isinstance(geometry, Point):
-            # Just extract latitude and longitude directly.
-            latitude, longitude = geometry.coordinates[1], \
-                                  geometry.coordinates[0]
-        elif isinstance(geometry, GeometryCollection):
-            # Go through the collection, and extract the first suitable
-            # geometry.
-            for entry in geometry.geometries:
-                latitude, longitude = self.extract_coordinates(entry)
-                if latitude is not None and longitude is not None:
-                    break
-        elif isinstance(geometry, Polygon):
-            # Find the polygon's centroid as a best approximation for the map.
-            longitudes_list = [point[0] for point in geometry.coordinates[0]]
-            latitudes_list = [point[1] for point in geometry.coordinates[0]]
-            number_of_points = len(geometry.coordinates[0])
-            longitude = sum(longitudes_list) / number_of_points
-            latitude = sum(latitudes_list) / number_of_points
-            _LOGGER.debug("Centroid of %s is %s", geometry.coordinates[0],
-                          (latitude, longitude))
-        else:
-            _LOGGER.debug("Not implemented: %s", type(geometry))
-        return latitude, longitude
-
-    def distance_to_geometry(self, geometry):
-        """Calculate the distance between home coordinates and geometry."""
-        from geojson import Point, GeometryCollection, Polygon
-        distance = float("inf")
-        if isinstance(geometry, Point):
-            distance = self._distance_to_point(geometry)
-        elif isinstance(geometry, GeometryCollection):
-            distance = self._distance_to_geometry_collection(geometry)
-        elif isinstance(geometry, Polygon):
-            distance = self._distance_to_polygon(geometry.coordinates[0])
-        else:
-            _LOGGER.debug("Not implemented: %s", type(geometry))
-        return distance
-
-    def _distance_to_point(self, point):
-        """Calculate the distance between HA and the provided point."""
-        # Swap coordinates to match: (latitude, longitude).
-        return self._distance_to_coordinates(point.coordinates[1],
-                                             point.coordinates[0])
-
-    def _distance_to_geometry_collection(self, geometry_collection):
-        """Calculate the distance between HA and the provided geometries."""
-        distance = float("inf")
-        for geometry in geometry_collection.geometries:
-            distance = min(distance, self.distance_to_geometry(geometry))
-        return distance
-
-    def _distance_to_polygon(self, polygon):
-        """Calculate the distance between HA and the provided polygon."""
-        distance = float("inf")
-        # Calculate distance from polygon by calculating the distance
-        # to each point of the polygon but not to each edge of the
-        # polygon; should be good enough
-        for polygon_point in polygon:
-            distance = min(distance,
-                           self._distance_to_coordinates(polygon_point[1],
-                                                         polygon_point[0]))
-        return distance
-
-    def _distance_to_coordinates(self, latitude, longitude):
-        """Calculate the distance between HA and the provided coordinates."""
-        # Expecting coordinates in format: (latitude, longitude).
-        return util_distance.convert(util_location.distance(
-            self._hass.config.latitude, self._hass.config.longitude, latitude,
-            longitude), LENGTH_METERS, LENGTH_KILOMETERS)
+    def get_feed_entry(self, external_id):
+        """Return a feed entry identified by external id."""
+        return next((entry for entry in self._feed_entries
+                     if entry.external_id == external_id), None)
 
 
 class GeoJsonLocationEvent(GeoLocationEvent):
     """This represents an external event with GeoJSON data."""
 
-    def __init__(self, distance, latitude, longitude, external_id, name,
-                 category):
-        """Initialize entity with data provided."""
-        self._distance = distance
-        self._latitude = latitude
-        self._longitude = longitude
-        self._external_id = external_id
-        self._name = name
-        self._category = category
+    def __init__(self, feed_manager, feed_entry):
+        """Initialize entity with data from feed entry."""
+        self._feed_manager = feed_manager
+        self._update_from_feed(feed_entry)
 
     @property
     def should_poll(self):
         """No polling needed for GeoJSON location events."""
         return False
 
+    @asyncio.coroutine
+    def async_update(self):
+        """Update this entity from the data held in the feed manager."""
+        feed_entry = self._feed_manager.get_feed_entry(self.external_id)
+        if feed_entry:
+            self._update_from_feed(feed_entry)
+
+    def _update_from_feed(self, feed_entry):
+        """Update the internal state from the provided feed entry."""
+        self._name = feed_entry.title
+        self._distance = feed_entry.distance_to_home
+        self._latitude = feed_entry.coordinates[0]
+        self._longitude = feed_entry.coordinates[1]
+        self.external_id = feed_entry.external_id
+
     @property
     def name(self) -> Optional[str]:
         """Return the name of the entity."""
         return self._name
-
-    @name.setter
-    def name(self, value):
-        """Set event's name."""
-        self._name = value
 
     @property
     def distance(self) -> Optional[float]:
         """Return distance value of this external event."""
         return self._distance
 
-    @distance.setter
-    def distance(self, value):
-        """Set event's distance."""
-        self._distance = value
-
     @property
     def latitude(self) -> Optional[float]:
         """Return latitude value of this external event."""
         return self._latitude
 
-    @latitude.setter
-    def latitude(self, value):
-        """Set event's latitude."""
-        self._latitude = value
-
     @property
     def longitude(self) -> Optional[float]:
         """Return longitude value of this external event."""
         return self._longitude
-
-    @longitude.setter
-    def longitude(self, value):
-        """Set event's longitude."""
-        self._longitude = value
 
     @property
     def unit_of_measurement(self):
@@ -356,26 +190,9 @@ class GeoJsonLocationEvent(GeoLocationEvent):
         return DEFAULT_UNIT_OF_MEASUREMENT
 
     @property
-    def external_id(self):
-        """Return external id of this event."""
-        return self._external_id
-
-    @property
-    def category(self):
-        """Return the category of the event."""
-        return self._category
-
-    @category.setter
-    def category(self, value):
-        """Set event's category."""
-        self._category = value
-
-    @property
     def device_state_attributes(self):
         """Return the device state attributes."""
         attributes = {}
-        if self.category:
-            attributes[ATTR_CATEGORY] = self.category
         if self.external_id:
             attributes[ATTR_EXTERNAL_ID] = self.external_id
         return attributes

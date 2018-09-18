@@ -50,7 +50,7 @@ TEST_REQUIREMENTS = (
     'feedparser',
     'foobot_async',
     'gTTS-token',
-    'geojson',
+    'geojson_client',
     'hangups',
     'HAP-python',
     'ha-ffmpeg',
