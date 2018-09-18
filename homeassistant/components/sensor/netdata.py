@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 
-CONF_GROUP = 'data_group'
+CONF_DATA_GROUP = 'data_group'
 CONF_ELEMENT = 'element'
 
 DEFAULT_HOST = 'localhost'
@@ -34,7 +34,7 @@ DEFAULT_PORT = 19999
 DEFAULT_ICON = 'mdi:desktop-classic'
 
 RESOURCE_SCHEMA = vol.Any({
-    vol.Required(CONF_GROUP): cv.string,
+    vol.Required(CONF_DATA_GROUP): cv.string,
     vol.Required(CONF_ELEMENT): cv.string,
     vol.Optional(CONF_ICON, default=DEFAULT_ICON): cv.icon,
 })
@@ -66,8 +66,8 @@ async def async_setup_platform(
 
     dev = []
     for entry, data in resources.items():
-        icon = data.get(CONF_ICON)
-        sensor = data[CONF_GROUP]
+        icon = data[CONF_ICON]
+        sensor = data[CONF_DATA_GROUP]
         element = data[CONF_ELEMENT]
         sensor_name = entry
         try:
