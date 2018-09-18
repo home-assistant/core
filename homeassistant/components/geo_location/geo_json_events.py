@@ -8,7 +8,6 @@ location.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/geo_location/geo_json_events/
 """
-import asyncio
 import logging
 from datetime import timedelta
 from typing import Optional
@@ -42,9 +41,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the GeoJSON Events platform."""
-    url = config.get(CONF_URL)
+    url = config[CONF_URL]
     scan_interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-    radius_in_km = config.get(CONF_RADIUS)
+    radius_in_km = config[CONF_RADIUS]
     # Initialize the entity manager.
     GeoJsonFeedManager(hass, add_entities, scan_interval, url, radius_in_km)
 
@@ -149,8 +148,7 @@ class GeoJsonLocationEvent(GeoLocationEvent):
         """No polling needed for GeoJSON location events."""
         return False
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update this entity from the data held in the feed manager."""
         feed_entry = self._feed_manager.get_feed_entry(self.external_id)
         if feed_entry:
