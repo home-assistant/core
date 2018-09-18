@@ -5,70 +5,61 @@ For more details about this platform, please refer to the documentation at
 https://www.home-assistant.io/components/sensor.starlingbank/
 """
 import logging
-import voluptuous as vol
-import requests
 
-from homeassistant.helpers.entity import Entity
+import requests
+import voluptuous as vol
+
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN, CONF_NAME
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['starlingbank==1.2']
 
 _LOGGER = logging.getLogger(__name__)
 
 BALANCE_TYPES = ['cleared_balance', 'effective_balance']
-DEFAULT_ACCOUNT_NAME = 'Starling'
-ICON = 'mdi:currency-gbp'
 
 CONF_ACCOUNTS = 'accounts'
 CONF_BALANCE_TYPES = 'balance_types'
 CONF_SANDBOX = 'sandbox'
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_ACCOUNTS): vol.All([{
-            vol.Optional(CONF_NAME, default=DEFAULT_ACCOUNT_NAME): cv.string,
-            vol.Required(CONF_ACCESS_TOKEN): cv.string,
-            vol.Optional(
-                CONF_BALANCE_TYPES, default=BALANCE_TYPES
-                ): vol.All(
-                    cv.ensure_list,  # Wraps value in a list if it is not one.
-                    [vol.In(BALANCE_TYPES)]
-                ),
-            vol.Optional(CONF_SANDBOX, default=False): cv.boolean
-        }], cv.ensure_list)
-    }
-)
+DEFAULT_SANDBOX = False
+DEFAULT_ACCOUNT_NAME = 'Starling'
+
+ICON = 'mdi:currency-gbp'
+
+ACCOUNT_SCHEMA = vol.Schema({
+    vol.Required(CONF_ACCESS_TOKEN): cv.string,
+    vol.Optional(CONF_BALANCE_TYPES, default=BALANCE_TYPES):
+        vol.All(cv.ensure_list, [vol.In(BALANCE_TYPES)]),
+    vol.Optional(CONF_NAME, default=DEFAULT_ACCOUNT_NAME): cv.string,
+    vol.Optional(CONF_SANDBOX, default=DEFAULT_SANDBOX): cv.boolean,
+})
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_ACCOUNTS): vol.Schema([ACCOUNT_SCHEMA]),
+})
 
 
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Sensor platform setup."""
+    """Set up the Sterling Bank sensor platform."""
     from starlingbank import StarlingAccount
 
     sensors = []
     for account in config[CONF_ACCOUNTS]:
         try:
             starling_account = StarlingAccount(
-                account[CONF_ACCESS_TOKEN],
-                sandbox=account[CONF_SANDBOX]
-            )
+                account[CONF_ACCESS_TOKEN], sandbox=account[CONF_SANDBOX])
             for balance_type in account[CONF_BALANCE_TYPES]:
                 sensors.append(StarlingBalanceSensor(
-                    starling_account,
-                    account[CONF_NAME],
-                    balance_type
-                ))
+                    starling_account, account[CONF_NAME], balance_type))
         except requests.exceptions.HTTPError as error:
             _LOGGER.error(
                 "Unable to set up Starling account '%s': %s",
-                account[CONF_NAME],
-                error
-            )
+                account[CONF_NAME], error)
 
-    add_devices(sensors, True)  # True forces update upon platform setup.
+    add_devices(sensors, True)
 
 
 class StarlingBalanceSensor(Entity):
@@ -84,11 +75,9 @@ class StarlingBalanceSensor(Entity):
     @property
     def name(self):
         """Return the name of the sensor."""
-        if self._balance_data_type == 'effective_balance':
-            name = "Effective Balance"
-        else:
-            name = "Cleared Balance"
-        return "{0} {1}".format(self._account_name, name)
+        return "{0} {1}".format(
+            self._account_name,
+            self._balance_data_type.replace('_', ' ').capitalize())
 
     @property
     def state(self):
