@@ -253,5 +253,9 @@ class Remote(zha.Entity, BinarySensorDevice):
         """Retrieve latest state."""
         from zigpy.zcl.clusters.general import OnOff
         result = await zha.safe_read(
-            self._endpoint.out_clusters[OnOff.cluster_id], ['on_off'])
+            self._endpoint.out_clusters[OnOff.cluster_id],
+            ['on_off'],
+            allow_cache=False,
+            only_cache=(not self._initialized)
+        )
         self._state = result.get('on_off', self._state)
