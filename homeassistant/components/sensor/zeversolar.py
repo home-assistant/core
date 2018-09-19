@@ -121,7 +121,7 @@ class ZeverzolarSensor(Entity):
 
 
 class ZeverzolarData:
-    'Get data from ZeverSolar.'
+    """Get data from ZeverSolar."""
 
     def __init__(self, resource):
         """Initialize the data object."""
