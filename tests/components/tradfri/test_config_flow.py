@@ -11,7 +11,7 @@ from tests.common import mock_coro
 
 @pytest.fixture
 def mock_auth():
-    """Mock get_gateway_info."""
+    """Mock authenticate."""
     with patch('homeassistant.components.tradfri.config_flow.'
                'authenticate') as mock_auth:
         yield mock_auth
@@ -126,7 +126,7 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
 
 
 async def test_import_connection(hass, mock_gateway_info, mock_entry_setup):
-    """Test a connection via discovery."""
+    """Test a connection via import."""
     mock_gateway_info.side_effect = \
         lambda hass, host, identity, key: mock_coro({
             'host': host,

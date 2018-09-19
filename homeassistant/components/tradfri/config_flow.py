@@ -40,7 +40,7 @@ class FlowHandler(config_entries.ConfigFlow):
         return await self.async_step_auth()
 
     async def async_step_auth(self, user_input=None):
-        """Handle a flow initialized by the user."""
+        """Handle the authentication with a gateway."""
         errors = {}
 
         if user_input is not None:
