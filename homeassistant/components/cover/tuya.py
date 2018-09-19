@@ -50,8 +50,7 @@ class TuyaCover(TuyaDevice, CoverDevice):
             return False
         elif state == 2:
             return True
-        else:
-            return None
+        return None
 
     def open_cover(self, **kwargs):
         """Open the cover."""
