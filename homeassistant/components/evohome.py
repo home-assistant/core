@@ -346,7 +346,7 @@ class EvoEntity(Entity):                                                        
     def _connect(self, packet):
         """Process a dispatcher connect."""
         if packet['to'] & self._type and packet['signal'] == 'update':
-            self.schedule_update_ha_state(force_refresh=True)
+            self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self):
@@ -368,35 +368,6 @@ class EvoEntity(Entity):                                                        
 
         However, evohome entities can become unavailable for other reasons.
         """
-        no_recent_updates = self._timers['statusUpdated'] < datetime.now() - \
-            timedelta(seconds=self._params[CONF_SCAN_INTERVAL] * 3.1)
-
-        if no_recent_updates:
-            # unavailable because no successful update()s (but why?)
-            self._available = False
-            debug_code = '0x01'
-
-        elif not self._status:  # self._status == {}
-            # unavailable because no status (but how? other than at startup?)
-            self._available = False
-            debug_code = '0x02'
-
-        else:  # is available
-            self._available = True
-
-        if not self._available and \
-                self._timers['statusUpdated'] != datetime.min:
-            # this isn't the first (un)available (i.e. after STARTUP), so...
-            _LOGGER.warning(
-                "available(%s) = %s (debug code %s), "
-                "self._status = %s, self._timers = %s",
-                self._id,
-                self._available,
-                debug_code,
-                self._status,
-                self._timers
-            )
-
         return self._available
 
     @property
@@ -434,22 +405,26 @@ class EvoController(EvoEntity, ClimateDevice):
         super().__init__(hass, client, obj_ref)
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
+            tmp_dict = dict(self._config)
+            if 'zones' in tmp_dict:
+                tmp_dict['zones'] = '...'
+            if 'dhw' in tmp_dict:
+                tmp_dict['dhw'] = '...'
+
             _LOGGER.debug(
-                "__init__(%s), self._params = %s",
+                "__init__(%s), self._config = %s",
                 self._id + " [" + self._name + "]",
-                self._params
+                tmp_dict
             )
             _LOGGER.debug(
                 "__init__(%s), self._timers = %s",
                 self._id + " [" + self._name + "]",
                 self._timers
             )
-            config = dict(self._config)
-            config['zones'] = '...'
             _LOGGER.debug(
-                "__init__(%s), self.config = %s",
+                "__init__(%s), self._params = %s",
                 self._id + " [" + self._name + "]",
-                config
+                self._params
             )
 
     @property
@@ -479,13 +454,6 @@ class EvoController(EvoEntity, ClimateDevice):
         'HeatingOff' doesn't turn off heating, instead: it simply sets
         setpoints to a minimum value (i.e. FrostProtect mode).
         """
-        _LOGGER.debug(
-            "set_operation_mode(%s, operation_mode=%s), current mode = %s",
-            self._id,
-            operation_mode,
-            self._status['systemModeStatus']['mode']
-        )
-
         if operation_mode in TCS_MODES:
             _LOGGER.debug(
                 "set_operation_mode(): API call [1 request(s)]: "
@@ -503,12 +471,10 @@ class EvoController(EvoEntity, ClimateDevice):
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
-        _LOGGER.debug("turn_away_mode_on(%s)", self._id)
         self.set_operation_mode(EVO_AWAY)
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
-        _LOGGER.debug("turn_away_mode_off(%s)", self._id)
         self.set_operation_mode(EVO_AUTO)
 
     def _update_state_data(self, domain_data):
@@ -561,6 +527,50 @@ class EvoController(EvoEntity, ClimateDevice):
         # all other config/state data, zones maintain their own schedules.
         self._update_state_data(domain_data)
         self._status = domain_data['status']
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            tmp_dict = dict(self._status)
+            if 'zones' in tmp_dict:
+                tmp_dict['zones'] = '...'
+            if 'dhw' in tmp_dict:
+                tmp_dict['dhw'] = '...'
+
+            _LOGGER.debug(
+                "update(%s), self._status = %s",
+                self._id + " [" + self._name + "]",
+                tmp_dict
+            )
+            _LOGGER.debug(
+                "update(%s), self._timers = %s",
+                self._id + " [" + self._name + "]",
+                self._timers
+            )
+
+        no_recent_updates = self._timers['statusUpdated'] < datetime.now() - \
+            timedelta(seconds=self._params[CONF_SCAN_INTERVAL] * 3.1)
+
+        if no_recent_updates:
+            # unavailable because no successful update()s (but why?)
+            self._available = False
+            debug_code = '0x01'
+
+        elif not self._status:  # self._status == {}
+            # unavailable because no status (but how? other than at startup?)
+            self._available = False
+            debug_code = '0x02'
+
+        else:  # is available
+            self._available = True
+
+        if not self._available and \
+                self._timers['statusUpdated'] != datetime.min:
+            # this isn't the first (un)available (i.e. after STARTUP), so...
+            _LOGGER.warning(
+                "The entity, %s, is unavailable "
+                "(i.e. self.available() = False), debug code is: %s",
+                self._id + " [" + self._name + "]",
+                debug_code
+            )
 
         return True
 
