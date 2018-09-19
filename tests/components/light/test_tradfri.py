@@ -5,12 +5,10 @@ from unittest.mock import Mock, MagicMock, patch, PropertyMock
 
 import pytest
 from pytradfri.device import Device, LightControl, Light
-from pytradfri import RequestError
 
 from homeassistant.components import tradfri
-from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, mock_coro
+from tests.common import MockConfigEntry
 
 
 DEFAULT_TEST_FEATURES = {'can_set_dimmer': False,

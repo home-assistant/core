@@ -158,4 +158,3 @@ async def test_import_connection(hass, mock_gateway_info, mock_entry_setup):
 
     assert len(mock_gateway_info.mock_calls) == 1
     assert len(mock_entry_setup.mock_calls) == 1
-
