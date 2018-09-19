@@ -127,7 +127,7 @@ class SwissPublicTransportSensor(Entity):
         from opendata_transport.exceptions import OpendataTransportError
 
         try:
-            if self._remaining_time.total_seconds()<0:
+            if self._remaining_time.total_seconds() < 0:
                 await self._opendata.async_get_data()
         except OpendataTransportError:
             _LOGGER.error("Unable to retrieve data from transport.opendata.ch")
