@@ -50,7 +50,9 @@ class FlowHandler(config_entries.ConfigFlow):
                     self.hass, host,
                     user_input[KEY_SECURITY_CODE])
 
-                auth[CONF_IMPORT_GROUPS] = user_input[KEY_IMPORT_GROUPS]
+                # We don't ask for import group anymore as group state
+                # is not reliable, don't want to show that to the user.
+                auth[CONF_IMPORT_GROUPS] = False
 
                 return await self._entry_from_data(auth)
 
@@ -66,7 +68,6 @@ class FlowHandler(config_entries.ConfigFlow):
             fields[vol.Required(KEY_HOST)] = str
 
         fields[vol.Required(KEY_SECURITY_CODE)] = str
-        fields[vol.Optional(KEY_IMPORT_GROUPS, default=True)] = bool
 
         return self.async_show_form(
             step_id='auth',

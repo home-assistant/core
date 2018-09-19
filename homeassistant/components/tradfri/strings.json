@@ -7,8 +7,7 @@
         "description": "You can find the security code on the back of your gateway.",
         "data": {
           "host": "Host",
-          "security_code": "Security Code",
-          "import_groups": "Import groups"
+          "security_code": "Security Code"
         }
       }
     },

@@ -47,7 +47,6 @@ async def test_user_connection_successful(hass, mock_auth, mock_entry_setup):
     result = await hass.config_entries.flow.async_configure(flow['flow_id'], {
         'host': '123.123.123.123',
         'security_code': 'abcd',
-        'import_groups': False,
     })
 
     assert len(mock_entry_setup.mock_calls) == 1
@@ -70,7 +69,6 @@ async def test_user_connection_timeout(hass, mock_auth, mock_entry_setup):
     result = await hass.config_entries.flow.async_configure(flow['flow_id'], {
         'host': '127.0.0.1',
         'security_code': 'abcd',
-        'import_groups': False,
     })
 
     assert len(mock_entry_setup.mock_calls) == 0
@@ -91,7 +89,6 @@ async def test_user_connection_bad_key(hass, mock_auth, mock_entry_setup):
     result = await hass.config_entries.flow.async_configure(flow['flow_id'], {
         'host': '127.0.0.1',
         'security_code': 'abcd',
-        'import_groups': False,
     })
 
     assert len(mock_entry_setup.mock_calls) == 0
@@ -116,7 +113,6 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
 
     result = await hass.config_entries.flow.async_configure(flow['flow_id'], {
         'security_code': 'abcd',
-        'import_groups': False,
     })
 
     assert len(mock_entry_setup.mock_calls) == 1

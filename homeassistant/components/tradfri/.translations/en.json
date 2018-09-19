@@ -12,7 +12,6 @@
             "auth": {
                 "data": {
                     "host": "Host",
-                    "import_groups": "Import groups",
                     "security_code": "Security Code"
                 },
                 "description": "You can find the security code on the back of your gateway.",
