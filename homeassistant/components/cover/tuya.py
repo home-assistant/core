@@ -48,7 +48,7 @@ class TuyaCover(TuyaDevice, CoverDevice):
         state = self.tuya.state()
         if state == 1:
             return False
-        elif state == 2:
+        if state == 2:
             return True
         return None
 
