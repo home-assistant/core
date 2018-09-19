@@ -232,7 +232,7 @@ def setup(hass, config):
             'signal': 'update',
             'to': EVO_MASTER
         }
-        hass.helpers.dispatcher.async_dispatcher_send(
+        hass.helpers.dispatcher.dispatcher_send(
             DISPATCHER_EVOHOME,
             pkt
         )
@@ -288,7 +288,7 @@ class EvoEntity(Entity):                                                        
         self._should_poll = True
 
         # Create a listener for (internal) update packets...
-        hass.helpers.dispatcher.async_dispatcher_connect(
+        hass.helpers.dispatcher.dispatcher_connect(
             DISPATCHER_EVOHOME,
             self._connect
         )  # for: def async_dispatcher_connect(signal, target)
@@ -346,7 +346,7 @@ class EvoEntity(Entity):                                                        
     def _connect(self, packet):
         """Process a dispatcher connect."""
         if packet['to'] & self._type and packet['signal'] == 'update':
-            self.async_schedule_update_ha_state(force_refresh=True)
+            self.schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self):
