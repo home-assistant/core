@@ -146,6 +146,7 @@ FLOWS = [
     'nest',
     'openuv',
     'sonos',
+    'tradfri',
     'zone',
 ]
 
