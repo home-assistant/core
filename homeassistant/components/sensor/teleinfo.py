@@ -99,7 +99,7 @@ class TeleinfoSensor(Entity):
                     self._attributes[info['name']] = int(info['value'])
                 else:
                     self._attributes[info['name']] = info['value']
-                if 'ADCO' == info['name']:
+                if info['name'] == "ADCO":
                     self._state = self._attributes['ADCO']
 
 
@@ -137,4 +137,4 @@ class TeleinfoData(object):
         if self._teleinfo is not None:
             self._teleinfo.close()
             self._teleinfo = None
-        return
+
