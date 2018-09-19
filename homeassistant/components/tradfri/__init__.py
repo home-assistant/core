@@ -74,29 +74,23 @@ async def async_setup_entry(hass, entry):
     from pytradfri import Gateway, RequestError  # pylint: disable=import-error
     from pytradfri.api.aiocoap_api import APIFactory
 
+    factory = APIFactory(
+        entry.data[CONF_HOST],
+        psk_id=entry.data[CONF_IDENTITY],
+        psk=entry.data[CONF_KEY],
+        loop=hass.loop
+    )
+    api = factory.request
+    gateway = Gateway()
+
     try:
-        factory = APIFactory(
-            entry.data[CONF_HOST],
-            psk_id=entry.data[CONF_IDENTITY],
-            psk=entry.data[CONF_KEY],
-            loop=hass.loop
-        )
-        api = factory.request
-        gateway = Gateway()
-        gateway_info_result = await api(gateway.get_gateway_info())
+        await api(gateway.get_gateway_info())
     except RequestError:
         _LOGGER.error("Tradfri setup failed.")
         return False
 
-    gateway_id = gateway_info_result.id
-    gateways = hass.data.setdefault(KEY_GATEWAY, {})
     hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
-
-    # Check if already set up
-    if gateway_id in gateways:
-        return True
-
-    gateways[entry.entry_id] = gateway
+    hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = gateway
 
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'light'
