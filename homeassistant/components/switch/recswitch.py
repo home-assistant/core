@@ -34,8 +34,8 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the device."""
     from pyrecswitch import RSNetwork
 
-    host = config.get(CONF_HOST)
-    mac_address = config.get(CONF_MAC)
+    host = config[CONF_HOST]
+    mac_address = config[CONF_MAC]
     device_name = config.get(CONF_NAME)
 
     if not hass.data.get(DATA_RSN):
@@ -51,7 +51,7 @@ class RecSwitchSwitch(SwitchDevice):
     """Representation of a recswitch device."""
 
     def __init__(self, device, device_name, mac_address):
-        """Initialize an recswitch device."""
+        """Initialize a recswitch device."""
         self.gpio_state = False
         self.device = device
         self.device_name = device_name
