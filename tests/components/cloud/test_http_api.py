@@ -375,8 +375,8 @@ async def test_websocket_subscription(hass, hass_ws_client, aioclient_mock,
     }
 
 
-async def test_websocket_subscription(hass, hass_ws_client, aioclient_mock,
-                                      mock_auth):
+async def test_websocket_subscription_fail(hass, hass_ws_client,
+                                           aioclient_mock, mock_auth):
     """Test querying the status."""
     aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=500)
     hass.data[DOMAIN].id_token = jwt.encode({
