@@ -17,7 +17,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_DEVICE, CONF_NAME, STATE_UNKNOWN)
+    ATTR_ATTRIBUTION, CONF_DEVICE, CONF_NAME)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
@@ -68,7 +68,7 @@ class TeleinfoSensor(Entity):
         """Initialize the sensor."""
         self._name = name
         self._unit_of_measurement = None
-        self._state = STATE_UNKNOWN
+        self._state = None
         self._attributes = {
             ATTR_ATTRIBUTION: ATTRIBUTION,
         }
