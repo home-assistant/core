@@ -87,8 +87,6 @@ MIN_SCAN_INTERVAL = 180
 CONF_LOCATION_IDX = 'location_idx'
 
 # Validation of the user's configuration.
-CV_FLOAT = vol.All(vol.Coerce(float), vol.Range(min=MIN_TEMP, max=MAX_TEMP))
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
@@ -109,11 +107,6 @@ EVO_AWAY = 'Away'
 EVO_DAYOFF = 'DayOff'
 EVO_CUSTOM = 'Custom'
 EVO_HEATOFF = 'HeatingOff'
-# these are for zones' opmode, and state
-EVO_FOLLOW = 'FollowSchedule'
-EVO_TEMPOVER = 'TemporaryOverride'
-EVO_PERMOVER = 'PermanentOverride'
-EVO_FROSTMODE = 'FrostProtect'
 
 # bit masks for dispatcher packets
 EVO_MASTER = 0x01
@@ -390,9 +383,8 @@ class EvoEntity(Entity):                                                        
     @callback
     def _connect(self, packet):
         """Process a dispatcher connect."""
-        if packet['to'] & self._type:
-            if packet['signal'] == 'update':
-                self.async_schedule_update_ha_state(force_refresh=True)
+        if packet['to'] & self._type and packet['signal'] == 'update':
+            self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self):
@@ -449,8 +441,6 @@ class EvoEntity(Entity):                                                        
     @property
     def supported_features(self):
         """Get the list of supported features of the Controller."""
-        feats = self._supported_features
-        _LOGGER.debug("supported_features(%s) = %s", self._id, feats)
         return self._supported_features
 
     @property
@@ -465,9 +455,7 @@ class EvoEntity(Entity):                                                        
     @property
     def current_operation(self):
         """Return the operation mode of the evohome entity."""
-        curr_op = self._status['systemModeStatus']['mode']
-        _LOGGER.debug("current_operation(%s) = %s", self._id, curr_op)
-        return curr_op
+        return self._status['systemModeStatus']['mode']
 
 
 class EvoController(EvoEntity, ClimateDevice):
@@ -514,16 +502,12 @@ class EvoController(EvoEntity, ClimateDevice):
             state = EVO_AUTO
         else:
             state = self.current_operation
-
-        _LOGGER.debug("state(%s) = %s", self._id, state)
         return state
 
     @property
     def is_away_mode_on(self):
         """Return true if away mode is on."""
-        away_mode = self._status['systemModeStatus']['mode'] == EVO_AWAY
-        _LOGGER.debug("is_away_mode_on(%s) = %s", self._id, away_mode)
-        return away_mode
+        return self._status['systemModeStatus']['mode'] == EVO_AWAY
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode for the TCS.
@@ -616,12 +600,6 @@ class EvoController(EvoEntity, ClimateDevice):
         self._update_state_data(domain_data)
         self._status = domain_data['status']
 
-        _LOGGER.debug(
-            "update(%s), self._status = %s",
-            self._id,
-            self._status
-        )
-
         return True
 
     @property
@@ -629,22 +607,19 @@ class EvoController(EvoEntity, ClimateDevice):
         """Return the average target temperature of the Heating/DHW zones."""
         temps = [zone['setpointStatus']['targetHeatTemperature']
                  for zone in self._status['zones']]
-        avg_temp = round(sum(temps) / len(temps), 1) if temps else None
 
-        _LOGGER.debug("target_temperature(%s) = %s", self._id, avg_temp)
-        return avg_temp
+        avg_temp = sum(temps) / len(temps) if temps else None
+        return round(avg_temp, 1)
 
     @property
     def current_temperature(self):
         """Return the average current temperature of the Heating/DHW zones."""
-        tmp_dict = [x for x in self._status['zones']
+        tmp_list = [x for x in self._status['zones']
                     if x['temperatureStatus']['isAvailable'] is True]
+        temps = [zone['temperatureStatus']['temperature'] for zone in tmp_list]
 
-        temps = [zone['temperatureStatus']['temperature'] for zone in tmp_dict]
-        avg_temp = round(sum(temps) / len(temps), 1) if temps else None
-
-        _LOGGER.debug("current_temperature(%s) = %s", self._id, avg_temp)
-        return avg_temp
+        avg_temp = sum(temps) / len(temps) if temps else None
+        return round(avg_temp, 1)
 
     @property
     def temperature_unit(self):
