@@ -397,7 +397,6 @@ class EvoEntity(Entity):                                                        
                 self._timers
             )
 
-        _LOGGER.debug("available(%s) = %s", self._id, self._available)
         return self._available
 
     @property
@@ -527,6 +526,7 @@ class EvoController(EvoEntity, ClimateDevice):
                 client.locations[loc_idx].status()[GWS][0][TCS][0])
 
         except requests.exceptions.HTTPError as err:
+            # check if we've exceeded the api rate limit
             self._handle_requests_exceptions("HTTPError", err)
 
         else:
@@ -595,10 +595,10 @@ class EvoController(EvoEntity, ClimateDevice):
 
     @property
     def min_temp(self):
-        """Return the minimum target temp (setpoint) of a zone."""
+        """Return the minimum target temp (setpoint) of a evohome entity."""
         return MIN_TEMP
 
     @property
     def max_temp(self):
-        """Return the maximum target temp (setpoint) of a zone."""
+        """Return the maximum target temp (setpoint) of a evohome entity."""
         return MAX_TEMP
