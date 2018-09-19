@@ -44,19 +44,11 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     PRECISION_TENTHS,
 
-    STATE_OFF,
-    STATE_ON,
     TEMP_CELSIUS,
 
     HTTP_BAD_REQUEST,
     HTTP_TOO_MANY_REQUESTS,
-    HTTP_SERVICE_UNAVAILABLE,
 )
-
-# These are HTTP codes commonly seen with this component
-#   HTTP_BAD_REQUEST = 400          # usually, bad user credentials
-#   HTTP_TOO_MANY_REQUESTS = 429    # usually, api limit exceeded
-#   HTTP_SERVICE_UNAVAILABLE = 503  # this is common with Honeywell's websites
 
 from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
@@ -74,8 +66,6 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 # these are specific to this component
-ATTR_UNTIL = 'until'
-
 DOMAIN = 'evohome'
 DATA_EVOHOME = 'data_' + DOMAIN
 DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
@@ -108,15 +98,6 @@ EVO_DAYOFF = 'DayOff'
 EVO_CUSTOM = 'Custom'
 EVO_HEATOFF = 'HeatingOff'
 
-# bit masks for dispatcher packets
-EVO_MASTER = 0x01
-EVO_SLAVE = 0x02
-
-# these are used to help prevent E501 (line too long) violations
-GWS = 'gateways'
-TCS = 'temperatureControlSystems'
-
-# other stuff
 TCS_MODES = [
     EVO_RESET,
     EVO_AUTO,
@@ -126,7 +107,14 @@ TCS_MODES = [
     EVO_CUSTOM,
     EVO_HEATOFF
 ]
-DHW_STATES = {STATE_ON: 'On', STATE_OFF: 'Off'}
+
+# bit masks for dispatcher packets
+EVO_MASTER = 0x01
+EVO_SLAVE = 0x02
+
+# these are used to help prevent E501 (line too long) violations
+GWS = 'gateways'
+TCS = 'temperatureControlSystems'
 
 
 def setup(hass, config):
@@ -286,15 +274,7 @@ class EvoEntity(Entity):                                                        
 
         # Set the entity's operation list - hard-coded for a particular order,
         # instead of using self._config['allowedSystemModes']
-        self._op_list = [
-            EVO_RESET,
-            EVO_AUTO,
-            EVO_AUTOECO,
-            EVO_AWAY,
-            EVO_DAYOFF,
-            EVO_CUSTOM,
-            EVO_HEATOFF
-        ]
+        self._op_list = TCS_MODES
 
         # Create timers, etc. - they're maintained in update(), or schedule()
         self._status = {}
@@ -313,72 +293,54 @@ class EvoEntity(Entity):                                                        
             self._connect
         )  # for: def async_dispatcher_connect(signal, target)
 
-    def _handle_requests_exceptions(self, err_type, err):
+    def _handle_requests_exceptions(self, err_hint, err):
+        # evohomeclient v1 api (<=0.2.7) does not handle requests exceptions,
+        # but we can catch them and extract the r.response, incl.:
+        # {
+        #   'code':    'TooManyRequests',
+        #   'message': 'Request count limitation exceeded, ...'
+        # }
+        if err_hint == "TooManyRequests":  # not actually from requests library
+            api_rate_limit_exceeded = True
+            api_ver = "v1"
 
-        domain_data = self.hass.data[DATA_EVOHOME]
+        # evohomeclient v2 api (>=0.2.7) exposes requests exceptions, incl.:
+        # - HTTP_BAD_REQUEST, is usually Bad user credentials
+        # - HTTP_TOO_MANY_REQUESTS, is api usuage limit exceeded
+        # - HTTP_SERVICE_UNAVAILABLE, is often Vendor's fault
+        elif err_hint == "HTTPError" and \
+                str(HTTP_TOO_MANY_REQUESTS) in str(err):
+            api_rate_limit_exceeded = True
+            api_ver = "v2"
 
-# evohomeclient1 (<=0.2.7) does not have a requests exceptions handler, but
-# they will manifest as:
-#     File ".../evohomeclient/__init__.py", line 33, in _populate_full_data
-#       userId = self.user_data['userInfo']['userID']
-#   TypeError: list indices must be integers or slices, not str
+        # we can't handle any other exceptions here
+        else:
+            api_rate_limit_exceeded = False
 
-# ...we can extract the response, which may be like this:
-# {
-#   'code':    'TooManyRequests',
-#   'message': 'Request count limitation exceeded, please try again later.'
-# }
-
-        if err_type == "TooManyRequests":  # not actually from requests library
-            # v1 api limit has been exceeded
-            old_scan_interval = domain_data['params'][CONF_SCAN_INTERVAL]
+        # do we need to back off?
+        if api_rate_limit_exceeded is True:
+            # so increase the scan_interval
+            old_scan_interval = self._params[CONF_SCAN_INTERVAL]
             new_scan_interval = min(old_scan_interval * 2, 300)
-            domain_data['params'][CONF_SCAN_INTERVAL] = new_scan_interval
+            self._params[CONF_SCAN_INTERVAL] = new_scan_interval
 
             _LOGGER.warning(
-                "v1 API rate limit has been exceeded, suspending polling "
-                "for %s seconds, & increasing '%s' from %s to %s seconds.",
-                new_scan_interval * 3,
+                "API rate limit has been exceeded (for %s api), "
+                "increasing '%s' from %s to %s seconds, and "
+                "suspending polling for (at least) %s seconds.",
+                api_ver,
                 CONF_SCAN_INTERVAL,
                 old_scan_interval,
-                new_scan_interval
+                new_scan_interval,
+                new_scan_interval * 3
             )
 
-            domain_data['timers']['statusUpdated'] = datetime.now() + \
+            # and also wait for a short while - 3 scan_intervals
+            self._timers['statusUpdated'] = datetime.now() + \
                 timedelta(seconds=new_scan_interval * 3)
 
-# evohomeclient2 (>=0.2.7) now exposes requests exceptions, e.g.:
-# - "Connection reset by peer"
-# - "Max retries exceeded with url", caused by "Connection timed out"
-#       elif err_type == "ConnectionError":  # seems common with evohome
-#           pass
-
-# evohomeclient2 (>=0.2.7) now exposes requests exceptions, e.g.:
-# - "400 Client Error: Bad Request for url" (e.g. Bad credentials)
-# - "429 Client Error: Too Many Requests for url" (api usuage limit exceeded)
-# - "503 Client Error: Service Unavailable for url" (e.g. website down)
-        elif err_type == "HTTPError":
-            if str(HTTP_TOO_MANY_REQUESTS) in str(err):
-                # v2 api limit has been exceeded
-                old_scan_interval = domain_data['params'][CONF_SCAN_INTERVAL]
-                new_scan_interval = max(old_scan_interval * 2, 300)
-                domain_data['params'][CONF_SCAN_INTERVAL] = new_scan_interval
-
-                _LOGGER.warning(
-                    "v2 API rate limit has been exceeded, suspending polling "
-                    "for %s seconds, & increasing '%s' from %s to %s seconds.",
-                    new_scan_interval * 3,
-                    CONF_SCAN_INTERVAL,
-                    old_scan_interval,
-                    new_scan_interval
-                )
-
-                domain_data['timers']['statusUpdated'] = datetime.now() + \
-                    timedelta(seconds=new_scan_interval * 3)
-
-            elif str(HTTP_SERVICE_UNAVAILABLE) in str(err):
-                # this appears to be common with Honeywell servers
-                pass
+        else:
+            raise err
 
     @callback
     def _connect(self, packet):
