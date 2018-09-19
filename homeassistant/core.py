@@ -154,6 +154,8 @@ class HomeAssistant:
         self.state = CoreState.not_running
         self.exit_code = 0  # type: int
         self.config_entries = None  # type: Optional[ConfigEntries]
+        # If not None, use to signal end-of-loop
+        self._stopped = None  # type: Optional[asyncio.Event]
 
     @property
     def is_running(self) -> bool:
@@ -161,21 +163,43 @@ class HomeAssistant:
         return self.state in (CoreState.starting, CoreState.running)
 
     def start(self) -> int:
-        """Start home assistant."""
+        """Start home assistant.
+
+        Note: This function is only used for testing.
+        For regular use, use "await hass.run()".
+        """
         # Register the async start
         fire_coroutine_threadsafe(self.async_start(), self.loop)
 
-        # Run forever and catch keyboard interrupt
+        # Run forever
         try:
             # Block until stopped
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
-        except KeyboardInterrupt:
-            self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.async_stop())
-            self.loop.run_forever()
         finally:
             self.loop.close()
+        return self.exit_code
+
+    async def async_run(self, *, attach_signals: bool = True) -> int:
+        """Home Assistant main entry point.
+
+        Start Home Assistant and block until stopped.
+
+        This method is a coroutine.
+        """
+        if self.state != CoreState.not_running:
+            raise RuntimeError("HASS is already running")
+
+        # _async_stop will set this instead of stopping the loop
+        self._stopped = asyncio.Event()
+
+        await self.async_start()
+        if attach_signals:
+            from homeassistant.helpers.signal \
+                    import async_register_signal_handling
+            async_register_signal_handling(self)
+
+        await self._stopped.wait()
         return self.exit_code
 
     async def async_start(self) -> None:
@@ -203,6 +227,13 @@ class HomeAssistant:
 
         # Allow automations to set up the start triggers before changing state
         await asyncio.sleep(0)
+
+        if self.state != CoreState.starting:
+            _LOGGER.warning(
+                'Home Assistant startup has been interrupted. '
+                'Its state may be inconsistent.')
+            return
+
         self.state = CoreState.running
         _async_create_timer(self)
 
@@ -321,13 +352,32 @@ class HomeAssistant:
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
+        if self.state == CoreState.not_running:  # just ignore
+            return
         fire_coroutine_threadsafe(self.async_stop(), self.loop)
 
-    async def async_stop(self, exit_code: int = 0) -> None:
+    async def async_stop(self, exit_code: int = 0, *,
+                         force: bool = False) -> None:
         """Stop Home Assistant and shuts down all threads.
+
+        The "force" flag commands async_stop to proceed regardless of
+        Home Assistan't current state. You should not set this flag
+        unless you're testing.
 
         This method is a coroutine.
         """
+        if not force:
+            # Some tests require async_stop to run,
+            # regardless of the state of the loop.
+            if self.state == CoreState.not_running:  # just ignore
+                return
+            if self.state == CoreState.stopping:
+                _LOGGER.info("async_stop called twice: ignored")
+                return
+            if self.state == CoreState.starting:
+                # This may not work
+                _LOGGER.warning("async_stop called before startup is complete")
+
         # stage 1
         self.state = CoreState.stopping
         self.async_track_tasks()
@@ -341,7 +391,11 @@ class HomeAssistant:
         self.executor.shutdown()
 
         self.exit_code = exit_code
-        self.loop.stop()
+
+        if self._stopped is not None:
+            self._stopped.set()
+        else:
+            self.loop.stop()
 
 
 @attr.s(slots=True, frozen=True)
