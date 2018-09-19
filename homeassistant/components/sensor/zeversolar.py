@@ -120,8 +120,8 @@ class ZeverzolarSensor(Entity):
                 self._unit_of_measurement = value['Power']['unit']
 
 
-class ZeverzolarData(object):
-    """Get data from ZeverSolar."""
+class ZeverzolarData:
+    'Get data from ZeverSolar.'
 
     def __init__(self, resource):
         """Initialize the data object."""
