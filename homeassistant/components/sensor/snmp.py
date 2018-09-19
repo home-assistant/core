@@ -182,7 +182,7 @@ class SnmpSensor(Entity):
         if value is None:
             value = STATE_UNKNOWN
         elif self._value_template is not None:
-            value = self._value_template.render_with_possible_json_value(
+            value = self._value_template.async_render_with_possible_json_value(
                 value, STATE_UNKNOWN)
 
         self._state = value
