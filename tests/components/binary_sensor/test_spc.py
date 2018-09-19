@@ -14,7 +14,7 @@ def hass(loop):
     hass = loop.run_until_complete(async_test_home_assistant(loop))
     hass.data['spc_registry'] = SpcRegistry()
     yield hass
-    loop.run_until_complete(hass.async_stop())
+    loop.run_until_complete(hass.async_stop(force=True))
 
 
 @asyncio.coroutine
