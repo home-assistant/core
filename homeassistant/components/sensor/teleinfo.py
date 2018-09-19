@@ -89,11 +89,6 @@ class TeleinfoSensor(Entity):
         """Return the state attributes of the device."""
         return self._attributes
 
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit_of_measurement
-
     def update(self):
         """Get the latest data from Teleinfo device and updates the state."""
         self._data.update()
