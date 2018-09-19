@@ -297,6 +297,15 @@ class ActiveConnection:
                     _LOGGER.error('Unable to serialize to JSON: %s\n%s',
                                   err, message)
 
+    async def create_response(self, msg_id, coroutine):
+        """Create a response and handle exception."""
+        try:
+            await coroutine
+        except Exception as err:
+            _LOGGER.exception("Unexpected exception")
+            self.send_message(error_message(
+                msg_id, 'unknown', 'Unexpected error occurred'))
+
     @callback
     def send_message_outside(self, message):
         """Send a message to the client.
