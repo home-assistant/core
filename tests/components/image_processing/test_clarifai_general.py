@@ -8,6 +8,7 @@ from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME
 from homeassistant.setup import async_setup_component
 import homeassistant.components.image_processing as ip
 import homeassistant.components.image_processing.clarifai_general as cg
+from tests.common import MockDependency
 
 
 # Mock data returned by the Clarifai API.
@@ -89,12 +90,14 @@ def test_invalid_api_key(caplog, mock_app):
     # assert "Clarifai error: Key not found" in caplog.text
 
 
+@MockDependency('clarifai')
 async def test_setup_platform(hass, mock_app, mock_image):
     """Set up platform with one entity."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
     assert hass.states.get(VALID_ENTITY_ID)
 
 
+@MockDependency('clarifai')
 async def test_process_image(hass, mock_app, mock_image, mock_response):
     """Test successful processing of an image."""
     await async_setup_component(hass, ip.DOMAIN, VALID_CONFIG)
@@ -115,6 +118,7 @@ async def test_process_image(hass, mock_app, mock_image, mock_response):
     await hass.async_block_till_done()
 
 
+@MockDependency('clarifai')
 async def test_setup_platform_with_name(hass, mock_app):
     """Set up platform with one entity and a name."""
     named_entity_id = 'image_processing.{}'.format(MOCK_NAME)
