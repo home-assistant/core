@@ -240,6 +240,7 @@ class EntityRegistry:
                 'unique_id': entry.unique_id,
                 'platform': entry.platform,
                 'name': entry.name,
+                'disabled_by': entry.disabled_by,
             } for entry in self.entities.values()
         ]
 
