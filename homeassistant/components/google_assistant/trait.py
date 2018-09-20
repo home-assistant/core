@@ -317,7 +317,9 @@ class ColorTemperatureTrait(_Trait):
         response = {}
 
         temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
-        if temp is not None:
+        # not checking specifically for `None` because some faulty
+        # integration might put 0 in here, raising exception.
+        if temp:
             response['color'] = {
                 'temperature':
                     color_util.color_temperature_mired_to_kelvin(temp)
