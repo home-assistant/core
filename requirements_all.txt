@@ -66,9 +66,6 @@ PyXiaomiGateway==0.10.0
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.0
 
-# homeassistant.components.sonos
-SoCo==0.16
-
 # homeassistant.components.sensor.travisci
 TravisPy==0.3.5
 
@@ -1059,6 +1056,9 @@ pysma==0.2
 # homeassistant.components.sensor.snmp
 # homeassistant.components.switch.snmp
 pysnmp==4.4.5
+
+# homeassistant.components.sonos
+pysonos==0.0.1
 
 # homeassistant.components.notify.stride
 pystride==0.1.7
