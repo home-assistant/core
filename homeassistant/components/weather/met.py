@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/weather.met/
 """
 import logging
-from datetime import timedelta
 from random import randrange
 
 import voluptuous as vol
@@ -124,7 +123,8 @@ class MetWeather(WeatherEntity):
     async def async_added_to_hass(self):
         """Start fetching data."""
         await self._fetch_data()
-        async_track_utc_time_change(self.hass, self._update, minute=31, second=0)
+        async_track_utc_time_change(self.hass, self._update,
+                                    minute=31, second=0)
 
     async def _fetch_data(self, *_):
         """Get the latest data from met.no."""
