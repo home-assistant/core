@@ -54,7 +54,6 @@ from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
-from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['evohomeclient==0.2.7']
 
@@ -244,9 +243,9 @@ def setup(hass, config):
     return True
 
 
-class EvoEntity(Entity):                                                        # noqa: D204,E501
+class EvoEntity(ClimateDevice):
     """Base for Honeywell evohome slave devices (Heating/DHW zones)."""
-                                                                                # noqa: E116,E501; pylint: disable=no-member
+
     def __init__(self, hass, client, obj_ref):
         """Initialize the evohome entity.
 
@@ -345,7 +344,7 @@ class EvoEntity(Entity):                                                        
     @callback
     def _connect(self, packet):
         """Process a dispatcher connect."""
-        if packet['to'] & self._type and packet['signal'] == 'update':
+        if packet['to'] & self._type and packet['signal'] == 'update':          # noqa: E501; pylint: disable=no-member
             self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
@@ -389,8 +388,28 @@ class EvoEntity(Entity):                                                        
         """Return the operation mode of the evohome entity."""
         return self._status['systemModeStatus']['mode']
 
+    @property
+    def temperature_unit(self):
+        """Return the temperature unit to use in the frontend UI."""
+        return TEMP_CELSIUS
 
-class EvoController(EvoEntity, ClimateDevice):
+    @property
+    def precision(self):
+        """Return the temperature precision to use in the frontend UI."""
+        return PRECISION_TENTHS
+
+    @property
+    def min_temp(self):
+        """Return the minimum target temp (setpoint) of a evohome entity."""
+        return MIN_TEMP
+
+    @property
+    def max_temp(self):
+        """Return the maximum target temp (setpoint) of a evohome entity."""
+        return MAX_TEMP
+
+
+class EvoController(EvoEntity):
     """Base for a Honeywell evohome hub/Controller device.
 
     The Controller (aka TCS, temperature control system) is the master of all
@@ -592,23 +611,3 @@ class EvoController(EvoEntity, ClimateDevice):
 
         avg_temp = sum(temps) / len(temps) if temps else None
         return round(avg_temp, 1)
-
-    @property
-    def temperature_unit(self):
-        """Return the temperature unit to use in the frontend UI."""
-        return TEMP_CELSIUS
-
-    @property
-    def precision(self):
-        """Return the temperature precision to use in the frontend UI."""
-        return PRECISION_TENTHS
-
-    @property
-    def min_temp(self):
-        """Return the minimum target temp (setpoint) of a evohome entity."""
-        return MIN_TEMP
-
-    @property
-    def max_temp(self):
-        """Return the maximum target temp (setpoint) of a evohome entity."""
-        return MAX_TEMP
