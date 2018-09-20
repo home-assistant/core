@@ -15,7 +15,7 @@ from homeassistant.components.emulated_hue import Config
 from homeassistant.components.emulated_hue.hue_api import (
     HUE_API_STATE_ON, HUE_API_STATE_BRI, HueUsernameView, HueOneLightStateView,
     HueAllLightsStateView, HueOneLightChangeView)
-from homeassistant.const import STATE_ON, STATE_OFF
+from homeassistant.const import STATE_ON, STATE_OFF, ATTR_SUPPORTED_FEATURES
 
 HTTP_SERVER_PORT = get_test_instance_port()
 BRIDGE_SERVER_PORT = get_test_instance_port()
@@ -123,14 +123,6 @@ def hass_hue(loop, hass):
         script_entity.entity_id, script_entity.state, attributes=attrs
     )
 
-    # Expose cover
-    cover_entity = hass.states.get('cover.living_room_window')
-    attrs = dict(cover_entity.attributes)
-    attrs[emulated_hue.ATTR_EMULATED_HUE] = True
-    hass.states.async_set(
-        cover_entity.entity_id, cover_entity.state, attributes=attrs
-    )
-
     return hass
 
 
@@ -147,6 +139,7 @@ def hue_client(loop, hass_hue, aiohttp_client):
             'cover.living_room_window': {
                 emulated_hue.CONF_ENTITY_HIDDEN: False
             }
+
         }
     })
 
@@ -181,7 +174,6 @@ def test_discover_lights(hue_client):
     assert 'media_player.lounge_room' in devices
     assert 'fan.living_room_fan' in devices
     assert 'fan.ceiling_fan' not in devices
-    assert 'cover.living_room_window' in devices
 
 
 @asyncio.coroutine
@@ -338,13 +330,20 @@ def test_put_light_state_media_player(hass_hue, hue_client):
 @asyncio.coroutine
 def test_put_light_state_cover(hass_hue, hue_client):
     """Test setting cover level."""
+
     COVER_ID = "cover.living_room_window"
 
-    # open cover first
-    yield from hass_hue.services.async_call(
-        cover.DOMAIN, const.SERVICE_OPEN_COVER,
-        {const.ATTR_ENTITY_ID: COVER_ID},
-        blocking=True)
+    hass_hue.states.async_set(
+        COVER_ID, const.STATE_ON,
+        {ATTR_SUPPORTED_FEATURES: 4, cover.ATTR_CURRENT_POSITION: 100, 
+        emulated_hue.ATTR_EMULATED_HUE: True})
+
+    cover_state = hass_hue.states.get(COVER_ID)
+    assert cover_state
+    assert cover_state.attributes.get(ATTR_SUPPORTED_FEATURES) == 4
+    assert cover_state.attributes.get(emulated_hue.ATTR_EMULATED_HUE) == True
+    assert cover_state.attributes.get(cover.ATTR_CURRENT_POSITION) == 100
+
 
     level = 69
     brightness = round(level * 255 / 100)
@@ -357,11 +356,15 @@ def test_put_light_state_cover(hass_hue, hue_client):
 
     assert cover_result.status == 200
     assert len(cover_result_json) == 2
+    assert cover_result_json[0]['success']['/lights/cover.living_room_window/state/on'] == True
+    assert cover_result_json[1]['success']['/lights/cover.living_room_window/state/bri'] == brightness
 
-    hall_window_cover = hass_hue.states.get(COVER_ID)
 
-    #assert hall_window_cover.state == 'open'
-    assert hall_window_cover.attributes[cover.ATTR_CURRENT_POSITION] == level
+    # hass_hue.async_block_till_done()
+
+    read_brightness = yield from perform_get_light_state(hue_client, COVER_ID, 200)
+    assert read_brightness['state']['on'] == True
+    assert read_brightness['state']['bri'] == brightness
 
 
 @asyncio.coroutine
