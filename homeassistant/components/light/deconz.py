@@ -34,7 +34,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
         for light in lights:
             if light.type not in SWITCH_TYPES:
-                entities.append(DeconzLight(light))
+                bridgeid = hass.data[DATA_DECONZ].config.bridgeid
+                entities.append(DeconzLight(light, bridgeid))
         async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
@@ -47,7 +48,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         allow_group = config_entry.data.get(CONF_ALLOW_DECONZ_GROUPS, True)
         for group in groups:
             if group.lights and allow_group:
-                entities.append(DeconzLight(group))
+                bridgeid = hass.data[DATA_DECONZ].config.bridgeid
+                entities.append(DeconzLight(group, bridgeid))
         async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
@@ -60,9 +62,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzLight(Light):
     """Representation of a deCONZ light."""
 
-    def __init__(self, light):
+    def __init__(self, light, bridgeid):
         """Set up light and add update callback to get data from websocket."""
         self._light = light
+        self._bridgeid = bridgeid
 
         self._features = SUPPORT_BRIGHTNESS
         self._features |= SUPPORT_FLASH
@@ -220,4 +223,5 @@ class DeconzLight(Light):
             'model': self._light.modelid,
             'name': self._light.name,
             'sw_version': self._light.swversion,
+            'via_hub': (DECONZ_DOMAIN, self._bridgeid),
         }
