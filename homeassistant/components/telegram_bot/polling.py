@@ -57,17 +57,17 @@ def process_error(bot, update, error):
         _LOGGER.error('Update "%s" caused error "%s"', update, error)
 
 
-def message_handler(cb):
-    """Creates messages handler."""
+def message_handler(handler):
+    """Create messages handler."""
     from telegram import Update
     from telegram.ext import Handler
 
     class MessageHandler(Handler):
-        """Telegram bot message handler"""
+        """Telegram bot message handler."""
 
         def __init__(self):
             """Initialize the messages handler instance."""
-            super(MessageHandler, self).__init__(cb)
+            super(MessageHandler, self).__init__(handler)
 
         def check_update(self, update):
             """Check is update valid."""
