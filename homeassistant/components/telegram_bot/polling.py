@@ -62,7 +62,6 @@ def message_handler(cb):
     from telegram import Update
     from telegram.ext import Handler
 
-
     class MessageHandler(Handler):
         """Telegram bot message handler"""
 
