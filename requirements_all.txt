@@ -751,6 +751,9 @@ pyCEC==0.4.13
 # homeassistant.components.switch.tplink
 pyHS100==0.3.3
 
+# homeassistant.components.weather.met
+pyMetno==0.2.0
+
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.23
 
