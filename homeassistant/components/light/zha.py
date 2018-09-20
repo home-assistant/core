@@ -114,7 +114,7 @@ class Light(zha.Entity, light.Light):
         try:
             await self._endpoint.on_off.on()
         except DeliveryError as ex:
-            _LOGGER.error("Unable to turn the light on: %s", ex)
+            _LOGGER.error("Unable to turn the light (%s) on: %s", self.entity_id, ex)
             return
 
         self._state = 1
@@ -126,7 +126,7 @@ class Light(zha.Entity, light.Light):
         try:
             await self._endpoint.on_off.off()
         except DeliveryError as ex:
-            _LOGGER.error("Unable to turn the light off: %s", ex)
+            _LOGGER.error("Unable to turn the light (%s) off: %s", self.entity_id, ex)
             return
 
         self._state = 0
