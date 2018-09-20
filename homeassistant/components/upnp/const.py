@@ -2,7 +2,7 @@
 import logging
 
 
-CONF_ENABLE_PORT_MAPPING = 'port_forward'
+CONF_ENABLE_PORT_MAPPING = 'port_mapping'
 CONF_ENABLE_SENSORS = 'sensors'
 CONF_HASS = 'hass'
 CONF_LOCAL_IP = 'local_ip'
