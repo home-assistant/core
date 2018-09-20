@@ -368,7 +368,8 @@ class CastDevice(MediaPlayerDevice):
 
         if self._chromecast is not None:
             if old_cast_info.host_port == cast_info.host_port:
-                # Nothing connection-related updated
+                _LOGGER.debug("No connection related update: %s",
+                              cast_info.host_port)
                 return
             await self._async_disconnect()
 
@@ -402,7 +403,12 @@ class CastDevice(MediaPlayerDevice):
 
         await self.hass.async_add_job(self._chromecast.disconnect)
 
-        # Invalidate some attributes
+        self._invalidate()
+
+        self.async_schedule_update_ha_state()
+
+    def _invalidate(self):
+        """Invalidate some attributes."""
         self._chromecast = None
         self.cast_status = None
         self.media_status = None
@@ -410,8 +416,6 @@ class CastDevice(MediaPlayerDevice):
         if self._status_listener is not None:
             self._status_listener.invalidate()
             self._status_listener = None
-
-        self.async_schedule_update_ha_state()
 
     # ========== Callbacks ==========
     def new_cast_status(self, cast_status):
@@ -427,7 +431,16 @@ class CastDevice(MediaPlayerDevice):
 
     def new_connection_status(self, connection_status):
         """Handle updates of connection status."""
-        from pychromecast.socket_client import CONNECTION_STATUS_CONNECTED
+        from pychromecast.socket_client import CONNECTION_STATUS_CONNECTED, \
+            CONNECTION_STATUS_DISCONNECTED
+
+        _LOGGER.debug("Received cast device connection status: %s",
+                      connection_status.status)
+        if connection_status.status == CONNECTION_STATUS_DISCONNECTED:
+            self._available = False
+            self._invalidate()
+            self.schedule_update_ha_state()
+            return
 
         new_available = connection_status.status == CONNECTION_STATUS_CONNECTED
         if new_available != self._available:
