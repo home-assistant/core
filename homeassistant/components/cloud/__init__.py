@@ -27,8 +27,13 @@ from . import http_api, iot, auth_api
 from .const import CONFIG_DIR, DOMAIN, SERVERS
 
 REQUIREMENTS = ['warrant==0.6.1']
+STORAGE_KEY = DOMAIN
+STORAGE_VERSION = 1
+STORAGE_ENABLE_ALEXA = 'alexa_enabled'
+STORAGE_ENABLE_GOOGLE = 'google_enabled'
 
 _LOGGER = logging.getLogger(__name__)
+_UNDEF = object()
 
 CONF_ALEXA = 'alexa'
 CONF_ALIASES = 'aliases'
@@ -124,11 +129,13 @@ class Cloud:
         self.alexa_config = alexa
         self._google_actions = google_actions
         self._gactions_config = None
+        self._prefs = None
         self.jwt_keyset = None
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
         self.iot = iot.CloudIoT(self)
+        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
 
         if mode == MODE_DEV:
             self.cognito_client_id = cognito_client_id
@@ -193,6 +200,16 @@ class Cloud:
 
         return self._gactions_config
 
+    @property
+    def alexa_enabled(self):
+        """Return if Alexa is enabled."""
+        return self._prefs[STORAGE_ENABLE_ALEXA]
+
+    @property
+    def google_enabled(self):
+        """Return if Google is enabled."""
+        return self._prefs[STORAGE_ENABLE_GOOGLE]
+
     def path(self, *parts):
         """Get config path inside cloud dir.
 
@@ -231,10 +248,23 @@ class Cloud:
                 'refresh_token': self.refresh_token,
             }, indent=4))
 
-    @asyncio.coroutine
-    def async_start(self, _):
+    async def async_start(self, _):
         """Start the cloud component."""
-        success = yield from self._fetch_jwt_keyset()
+        prefs = await self._store.async_load()
+        if prefs is None:
+            prefs = {}
+        if self.mode not in prefs:
+            # Default to True if already logged in to make this not a
+            # breaking change.
+            enabled = await self.hass.async_add_executor_job(
+                os.path.isfile, self.user_info_path)
+            prefs = {
+                STORAGE_ENABLE_ALEXA: enabled,
+                STORAGE_ENABLE_GOOGLE: enabled,
+            }
+        self._prefs = prefs
+
+        success = await self._fetch_jwt_keyset()
 
         # Fetching keyset can fail if internet is not up yet.
         if not success:
@@ -255,7 +285,7 @@ class Cloud:
             with open(user_info, 'rt') as file:
                 return json.loads(file.read())
 
-        info = yield from self.hass.async_add_job(load_config)
+        info = await self.hass.async_add_job(load_config)
 
         if info is None:
             return
@@ -273,6 +303,15 @@ class Cloud:
         self.refresh_token = info['refresh_token']
 
         self.hass.add_job(self.iot.connect())
+
+    async def update_preferences(self, *, google_enabled=_UNDEF,
+                                 alexa_enabled=_UNDEF):
+        """Update user preferences."""
+        if google_enabled is not _UNDEF:
+            self._prefs[STORAGE_ENABLE_GOOGLE] = google_enabled
+        if alexa_enabled is not _UNDEF:
+            self._prefs[STORAGE_ENABLE_ALEXA] = alexa_enabled
+        await self._store.async_save(self._prefs)
 
     @asyncio.coroutine
     def _fetch_jwt_keyset(self):
