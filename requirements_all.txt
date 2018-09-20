@@ -619,7 +619,7 @@ ndms2_client==0.0.4
 netdata==0.1.2
 
 # homeassistant.components.discovery
-netdisco==2.0.0
+netdisco==2.1.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
