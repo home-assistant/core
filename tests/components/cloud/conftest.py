@@ -9,5 +9,3 @@ def mock_cloud_fixture(hass):
     """Fixture for cloud component."""
     mock_cloud(hass)
     return mock_cloud_prefs(hass)
-
-
