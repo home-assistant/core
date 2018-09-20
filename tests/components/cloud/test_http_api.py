@@ -12,25 +12,40 @@ from tests.common import mock_coro
 
 
 GOOGLE_ACTIONS_SYNC_URL = 'https://api-test.hass.io/google_actions_sync'
+SUBSCRIPTION_INFO_URL = 'https://api-test.hass.io/subscription_info'
+
+
+@pytest.fixture()
+def mock_auth():
+    """Mock check token."""
+    with patch('homeassistant.components.cloud.auth_api.check_token'):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def setup_api(hass):
+    """Initialize HTTP API."""
+    with patch('homeassistant.components.cloud.Cloud.async_start',
+               return_value=mock_coro()):
+        assert hass.loop.run_until_complete(async_setup_component(
+            hass, 'cloud', {
+                'cloud': {
+                    'mode': 'development',
+                    'cognito_client_id': 'cognito_client_id',
+                    'user_pool_id': 'user_pool_id',
+                    'region': 'region',
+                    'relayer': 'relayer',
+                    'google_actions_sync_url': GOOGLE_ACTIONS_SYNC_URL,
+                    'subscription_info_url': SUBSCRIPTION_INFO_URL,
+                }
+            }))
+    hass.data['cloud']._decode_claims = \
+        lambda token: jwt.get_unverified_claims(token)
 
 
 @pytest.fixture
 def cloud_client(hass, aiohttp_client):
     """Fixture that can fetch from the cloud client."""
-    with patch('homeassistant.components.cloud.Cloud.async_start',
-               return_value=mock_coro()):
-        hass.loop.run_until_complete(async_setup_component(hass, 'cloud', {
-            'cloud': {
-                'mode': 'development',
-                'cognito_client_id': 'cognito_client_id',
-                'user_pool_id': 'user_pool_id',
-                'region': 'region',
-                'relayer': 'relayer',
-                'google_actions_sync_url': GOOGLE_ACTIONS_SYNC_URL,
-            }
-        }))
-    hass.data['cloud']._decode_claims = \
-        lambda token: jwt.get_unverified_claims(token)
     with patch('homeassistant.components.cloud.Cloud.write_user_info'):
         yield hass.loop.run_until_complete(aiohttp_client(hass.http.app))
 
@@ -58,31 +73,6 @@ async def test_google_actions_sync_fails(mock_cognito, cloud_client,
 
 
 @asyncio.coroutine
-def test_account_view_no_account(cloud_client):
-    """Test fetching account if no account available."""
-    req = yield from cloud_client.get('/api/cloud/account')
-    assert req.status == 400
-
-
-@asyncio.coroutine
-def test_account_view(hass, cloud_client):
-    """Test fetching account if no account available."""
-    hass.data[DOMAIN].id_token = jwt.encode({
-        'email': 'hello@home-assistant.io',
-        'custom:sub-exp': '2018-01-03'
-    }, 'test')
-    hass.data[DOMAIN].iot.state = iot.STATE_CONNECTED
-    req = yield from cloud_client.get('/api/cloud/account')
-    assert req.status == 200
-    result = yield from req.json()
-    assert result == {
-        'email': 'hello@home-assistant.io',
-        'sub_exp': '2018-01-03',
-        'cloud': iot.STATE_CONNECTED,
-    }
-
-
-@asyncio.coroutine
 def test_login_view(hass, cloud_client, mock_cognito):
     """Test logging in."""
     mock_cognito.id_token = jwt.encode({
@@ -103,8 +93,7 @@ def test_login_view(hass, cloud_client, mock_cognito):
 
     assert req.status == 200
     result = yield from req.json()
-    assert result['email'] == 'hello@home-assistant.io'
-    assert result['sub_exp'] == '2018-01-03'
+    assert result == {'success': True}
 
     assert len(mock_connect.mock_calls) == 1
 
@@ -330,3 +319,91 @@ def test_resend_confirm_view_unknown_error(mock_cognito, cloud_client):
         'email': 'hello@bla.com',
     })
     assert req.status == 502
+
+
+async def test_websocket_status(hass, hass_ws_client):
+    """Test querying the status."""
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    hass.data[DOMAIN].iot.state = iot.STATE_CONNECTED
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'cloud/status'
+    })
+    response = await client.receive_json()
+    assert response['result'] == {
+        'logged_in': True,
+        'email': 'hello@home-assistant.io',
+        'cloud': 'connected',
+    }
+
+
+async def test_websocket_status_not_logged_in(hass, hass_ws_client):
+    """Test querying the status."""
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'cloud/status'
+    })
+    response = await client.receive_json()
+    assert response['result'] == {
+        'logged_in': False,
+        'cloud': 'disconnected'
+    }
+
+
+async def test_websocket_subscription(hass, hass_ws_client, aioclient_mock,
+                                      mock_auth):
+    """Test querying the status."""
+    aioclient_mock.get(SUBSCRIPTION_INFO_URL, json={'return': 'value'})
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'cloud/subscription'
+    })
+    response = await client.receive_json()
+
+    assert response['result'] == {
+        'return': 'value'
+    }
+
+
+async def test_websocket_subscription_fail(hass, hass_ws_client,
+                                           aioclient_mock, mock_auth):
+    """Test querying the status."""
+    aioclient_mock.get(SUBSCRIPTION_INFO_URL, status=500)
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'cloud/subscription'
+    })
+    response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'request_failed'
+
+
+async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
+    """Test querying the status."""
+    client = await hass_ws_client(hass)
+    with patch('homeassistant.components.cloud.Cloud.fetch_subscription_info',
+               return_value=mock_coro({'return': 'value'})):
+        await client.send_json({
+            'id': 5,
+            'type': 'cloud/subscription'
+        })
+        response = await client.receive_json()
+
+    assert not response['success']
+    assert response['error']['code'] == 'not_logged_in'

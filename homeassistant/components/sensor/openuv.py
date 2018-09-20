@@ -6,13 +6,12 @@ https://home-assistant.io/components/sensor.openuv/
 """
 import logging
 
-from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.components.openuv import (
-    DATA_UV, DOMAIN, SENSORS, TOPIC_UPDATE, TYPE_CURRENT_OZONE_LEVEL,
-    TYPE_CURRENT_UV_INDEX, TYPE_CURRENT_UV_LEVEL, TYPE_MAX_UV_INDEX,
-    TYPE_SAFE_EXPOSURE_TIME_1, TYPE_SAFE_EXPOSURE_TIME_2,
+    DATA_OPENUV_CLIENT, DATA_UV, DOMAIN, SENSORS, TOPIC_UPDATE,
+    TYPE_CURRENT_OZONE_LEVEL, TYPE_CURRENT_UV_INDEX, TYPE_CURRENT_UV_LEVEL,
+    TYPE_MAX_UV_INDEX, TYPE_SAFE_EXPOSURE_TIME_1, TYPE_SAFE_EXPOSURE_TIME_2,
     TYPE_SAFE_EXPOSURE_TIME_3, TYPE_SAFE_EXPOSURE_TIME_4,
     TYPE_SAFE_EXPOSURE_TIME_5, TYPE_SAFE_EXPOSURE_TIME_6, OpenUvEntity)
 from homeassistant.util.dt import as_local, parse_datetime
@@ -40,16 +39,20 @@ UV_LEVEL_LOW = "Low"
 
 async def async_setup_platform(
         hass, config, async_add_entities, discovery_info=None):
-    """Set up the OpenUV binary sensor platform."""
-    if discovery_info is None:
-        return
+    """Set up an OpenUV sensor based on existing config."""
+    pass
 
-    openuv = hass.data[DOMAIN]
+
+async def async_setup_entry(hass, entry, async_add_entities):
+    """Set up a Nest sensor based on a config entry."""
+    openuv = hass.data[DOMAIN][DATA_OPENUV_CLIENT][entry.entry_id]
 
     sensors = []
-    for sensor_type in discovery_info[CONF_MONITORED_CONDITIONS]:
+    for sensor_type in openuv.sensor_conditions:
         name, icon, unit = SENSORS[sensor_type]
-        sensors.append(OpenUvSensor(openuv, sensor_type, name, icon, unit))
+        sensors.append(
+            OpenUvSensor(
+                openuv, sensor_type, name, icon, unit, entry.entry_id))
 
     async_add_entities(sensors, True)
 
@@ -57,10 +60,12 @@ async def async_setup_platform(
 class OpenUvSensor(OpenUvEntity):
     """Define a binary sensor for OpenUV."""
 
-    def __init__(self, openuv, sensor_type, name, icon, unit):
+    def __init__(self, openuv, sensor_type, name, icon, unit, entry_id):
         """Initialize the sensor."""
         super().__init__(openuv)
 
+        self._dispatch_remove = None
+        self._entry_id = entry_id
         self._icon = icon
         self._latitude = openuv.client.latitude
         self._longitude = openuv.client.longitude
@@ -102,7 +107,9 @@ class OpenUvSensor(OpenUvEntity):
 
     async def async_added_to_hass(self):
         """Register callbacks."""
-        async_dispatcher_connect(self.hass, TOPIC_UPDATE, self._update_data)
+        self._dispatch_remove = async_dispatcher_connect(
+            self.hass, TOPIC_UPDATE, self._update_data)
+        self.async_on_remove(self._dispatch_remove)
 
     async def async_update(self):
         """Update the state."""
@@ -125,8 +132,7 @@ class OpenUvSensor(OpenUvEntity):
         elif self._sensor_type == TYPE_MAX_UV_INDEX:
             self._state = data['uv_max']
             self._attrs.update({
-                ATTR_MAX_UV_TIME: as_local(
-                    parse_datetime(data['uv_max_time']))
+                ATTR_MAX_UV_TIME: as_local(parse_datetime(data['uv_max_time']))
             })
         elif self._sensor_type in (TYPE_SAFE_EXPOSURE_TIME_1,
                                    TYPE_SAFE_EXPOSURE_TIME_2,

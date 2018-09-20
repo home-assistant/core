@@ -15,33 +15,32 @@ from random import SystemRandom
 from urllib.parse import urlparse
 
 from aiohttp import web
-from aiohttp.hdrs import CONTENT_TYPE, CACHE_CONTROL
+from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.core import callback
+from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.const import (
-    STATE_OFF, STATE_IDLE, STATE_PLAYING, STATE_UNKNOWN, ATTR_ENTITY_ID,
-    SERVICE_TOGGLE, SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_VOLUME_UP,
-    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP,
-    SERVICE_VOLUME_SET, SERVICE_MEDIA_PAUSE, SERVICE_SHUFFLE_SET,
-    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, SERVICE_MEDIA_NEXT_TRACK,
-    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK)
+    ATTR_ENTITY_ID, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP, SERVICE_SHUFFLE_SET,
+    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP, STATE_IDLE,
+    STATE_OFF, STATE_PLAYING, STATE_UNKNOWN)
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.loader import bind_hass
-from homeassistant.components import websocket_api
 
 _LOGGER = logging.getLogger(__name__)
 _RND = SystemRandom()
 
 DOMAIN = 'media_player'
 DEPENDENCIES = ['http']
-SCAN_INTERVAL = timedelta(seconds=10)
 
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
@@ -96,6 +95,8 @@ MEDIA_TYPE_EPISODE = 'episode'
 MEDIA_TYPE_CHANNEL = 'channel'
 MEDIA_TYPE_PLAYLIST = 'playlist'
 MEDIA_TYPE_URL = 'url'
+
+SCAN_INTERVAL = timedelta(seconds=10)
 
 SUPPORT_PAUSE = 1
 SUPPORT_SEEK = 2

@@ -3,6 +3,7 @@ from unittest.mock import Mock
 
 import base64
 import pytest
+import voluptuous as vol
 
 from homeassistant import data_entry_flow
 from homeassistant.auth import auth_manager_from_config, auth_store
@@ -111,11 +112,11 @@ async def test_saving_loading(data, hass):
 async def test_not_allow_set_id():
     """Test we are not allowed to set an ID in config."""
     hass = Mock()
-    provider = await auth_provider_from_config(hass, None, {
-        'type': 'homeassistant',
-        'id': 'invalid',
-    })
-    assert provider is None
+    with pytest.raises(vol.Invalid):
+        await auth_provider_from_config(hass, None, {
+            'type': 'homeassistant',
+            'id': 'invalid',
+        })
 
 
 async def test_new_users_populate_values(hass, data):

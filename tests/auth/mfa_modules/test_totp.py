@@ -121,7 +121,7 @@ async def test_login_flow_validates_mfa(hass):
             result['flow_id'], {'code': 'invalid-code'})
         assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
         assert result['step_id'] == 'mfa'
-        assert result['errors']['base'] == 'invalid_auth'
+        assert result['errors']['base'] == 'invalid_code'
 
     with patch('pyotp.TOTP.verify', return_value=True):
         result = await hass.auth.login_flow.async_configure(

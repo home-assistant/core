@@ -33,9 +33,11 @@ async def setup_bridge(hass, data):
                return_value=mock_coro(data)):
         await bridge.async_load_parameters()
     hass.data[deconz.DOMAIN] = bridge
+    hass.data[deconz.DATA_DECONZ_UNSUB] = []
     hass.data[deconz.DATA_DECONZ_ID] = {}
     config_entry = config_entries.ConfigEntry(
-        1, deconz.DOMAIN, 'Mock Title', {'host': 'mock-host'}, 'test')
+        1, deconz.DOMAIN, 'Mock Title', {'host': 'mock-host'}, 'test',
+        config_entries.CONN_CLASS_LOCAL_PUSH)
     await hass.config_entries.async_forward_entry_setup(config_entry, 'scene')
     # To flush out the service call to update the group
     await hass.async_block_till_done()

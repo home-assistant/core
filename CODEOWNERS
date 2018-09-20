@@ -52,6 +52,8 @@ homeassistant/components/cover/template.py @PhracturedBlue
 homeassistant/components/device_tracker/automatic.py @armills
 homeassistant/components/device_tracker/tile.py @bachya
 homeassistant/components/history_graph.py @andrey-git
+homeassistant/components/light/lifx.py @amelchio
+homeassistant/components/light/lifx_legacy.py @amelchio
 homeassistant/components/light/tplink.py @rytilahti
 homeassistant/components/light/yeelight.py @rytilahti
 homeassistant/components/lock/nello.py @pschmitt
@@ -65,10 +67,12 @@ homeassistant/components/media_player/sonos.py @amelchio
 homeassistant/components/media_player/xiaomi_tv.py @fattdev
 homeassistant/components/media_player/yamaha_musiccast.py @jalmeroth
 homeassistant/components/plant.py @ChristianKuehnel
+homeassistant/components/scene/lifx_cloud.py @amelchio
 homeassistant/components/sensor/airvisual.py @bachya
 homeassistant/components/sensor/filter.py @dgomes
 homeassistant/components/sensor/gearbest.py @HerrHofrat
 homeassistant/components/sensor/irish_rail_transport.py @ttroy50
+homeassistant/components/sensor/jewish_calendar.py @tsvi
 homeassistant/components/sensor/miflora.py @danielhiversen @ChristianKuehnel
 homeassistant/components/sensor/nsw_fuel_station.py @nickw444
 homeassistant/components/sensor/pollen.py @bachya
@@ -94,6 +98,8 @@ homeassistant/components/*/eight_sleep.py @mezz64
 homeassistant/components/hive.py @Rendili @KJonline
 homeassistant/components/*/hive.py @Rendili @KJonline
 homeassistant/components/homekit/* @cdce8p
+homeassistant/components/huawei_lte.py @scop
+homeassistant/components/*/huawei_lte.py @scop
 homeassistant/components/knx.py @Julius2342
 homeassistant/components/*/knx.py @Julius2342
 homeassistant/components/konnected.py @heythisisnate
@@ -114,9 +120,13 @@ homeassistant/components/*/tesla.py @zabuldon
 homeassistant/components/tellduslive.py @molobrakos @fredrike
 homeassistant/components/*/tellduslive.py @molobrakos @fredrike
 homeassistant/components/*/tradfri.py @ggravlingen
+homeassistant/components/upcloud.py @scop
+homeassistant/components/*/upcloud.py @scop
 homeassistant/components/velux.py @Julius2342
 homeassistant/components/*/velux.py @Julius2342
 homeassistant/components/*/xiaomi_aqara.py @danielhiversen @syssi
 homeassistant/components/*/xiaomi_miio.py @rytilahti @syssi
+homeassistant/components/zoneminder.py @rohankapoorcom
+homeassistant/components/*/zoneminder.py @rohankapoorcom
 
 homeassistant/scripts/check_config.py @kellerza

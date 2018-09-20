@@ -895,9 +895,73 @@ async def test_disallowed_auth_provider_config(hass):
         'name': 'Huis',
         CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
         'time_zone': 'GMT',
-        CONF_AUTH_PROVIDERS: [
-            {'type': 'insecure_example'},
-        ]
+        CONF_AUTH_PROVIDERS: [{
+            'type': 'insecure_example',
+            'users': [{
+                'username': 'test-user',
+                'password': 'test-pass',
+                'name': 'Test Name'
+            }],
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
+
+
+async def test_disallowed_duplicated_auth_provider_config(hass):
+    """Test loading insecure example auth provider is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_PROVIDERS: [{
+            'type': 'homeassistant',
+        }, {
+            'type': 'homeassistant',
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
+
+
+async def test_disallowed_auth_mfa_module_config(hass):
+    """Test loading insecure example auth mfa module is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_MFA_MODULES: [{
+            'type': 'insecure_example',
+            'data': [{
+                'user_id': 'mock-user',
+                'pin': 'test-pin'
+            }]
+        }]
+    }
+    with pytest.raises(Invalid):
+        await config_util.async_process_ha_core_config(hass, core_config)
+
+
+async def test_disallowed_duplicated_auth_mfa_module_config(hass):
+    """Test loading insecure example auth mfa module is disallowed."""
+    core_config = {
+        'latitude': 60,
+        'longitude': 50,
+        'elevation': 25,
+        'name': 'Huis',
+        CONF_UNIT_SYSTEM: CONF_UNIT_SYSTEM_IMPERIAL,
+        'time_zone': 'GMT',
+        CONF_AUTH_MFA_MODULES: [{
+            'type': 'totp',
+        }, {
+            'type': 'totp',
+        }]
     }
     with pytest.raises(Invalid):
         await config_util.async_process_ha_core_config(hass, core_config)

@@ -119,7 +119,7 @@ async def test_login(hass):
     result = await hass.auth.login_flow.async_configure(
         result['flow_id'], {'pin': 'invalid-code'})
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
-    assert result['errors']['base'] == 'invalid_auth'
+    assert result['errors']['base'] == 'invalid_code'
 
     result = await hass.auth.login_flow.async_configure(
         result['flow_id'], {'pin': '123456'})

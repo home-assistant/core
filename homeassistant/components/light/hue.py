@@ -285,6 +285,26 @@ class HueLight(Light):
         """Return the list of supported effects."""
         return [EFFECT_COLORLOOP, EFFECT_RANDOM]
 
+    @property
+    def device_info(self):
+        """Return the device info."""
+        if self.light.type in ('LightGroup', 'Room'):
+            return None
+
+        return {
+            'identifiers': {
+                (hue.DOMAIN, self.unique_id)
+            },
+            'name': self.name,
+            'manufacturer': self.light.manufacturername,
+            # productname added in Hue Bridge API 1.24
+            # (published 03/05/2018)
+            'model': self.light.productname or self.light.modelid,
+            # Not yet exposed as properties in aiohue
+            'sw_version': self.light.raw['swversion'],
+            'via_hub': (hue.DOMAIN, self.bridge.api.config.bridgeid),
+        }
+
     async def async_turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
         command = {'on': True}

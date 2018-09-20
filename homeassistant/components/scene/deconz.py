@@ -5,8 +5,10 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/scene.deconz/
 """
 from homeassistant.components.deconz import (
-    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID)
+    DOMAIN as DATA_DECONZ, DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
 from homeassistant.components.scene import Scene
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 DEPENDENCIES = ['deconz']
 
@@ -19,12 +21,17 @@ async def async_setup_platform(hass, config, async_add_entities,
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up scenes for deCONZ component."""
-    scenes = hass.data[DATA_DECONZ].scenes
-    entities = []
+    @callback
+    def async_add_scene(scenes):
+        """Add scene from deCONZ."""
+        entities = []
+        for scene in scenes:
+            entities.append(DeconzScene(scene))
+        async_add_entities(entities)
+    hass.data[DATA_DECONZ_UNSUB].append(
+        async_dispatcher_connect(hass, 'deconz_new_scene', async_add_scene))
 
-    for scene in scenes.values():
-        entities.append(DeconzScene(scene))
-    async_add_entities(entities)
+    async_add_scene(hass.data[DATA_DECONZ].scenes.values())
 
 
 class DeconzScene(Scene):
@@ -37,6 +44,10 @@ class DeconzScene(Scene):
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._scene.deconz_id
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect scene object when removed."""
+        self._scene = None
 
     async def async_activate(self):
         """Activate the scene."""

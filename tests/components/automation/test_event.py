@@ -1,7 +1,7 @@
 """The tests for the Event automation."""
 import unittest
 
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 from homeassistant.setup import setup_component
 import homeassistant.components.automation as automation
 
@@ -31,6 +31,8 @@ class TestAutomationEvent(unittest.TestCase):
 
     def test_if_fires_on_event(self):
         """Test the firing of events."""
+        context = Context()
+
         assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
@@ -43,9 +45,10 @@ class TestAutomationEvent(unittest.TestCase):
             }
         })
 
-        self.hass.bus.fire('test_event')
+        self.hass.bus.fire('test_event', context=context)
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
+        assert self.calls[0].context is context
 
         automation.turn_off(self.hass)
         self.hass.block_till_done()

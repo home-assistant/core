@@ -2,11 +2,13 @@
 import asyncio
 import logging
 from collections import OrderedDict
+from datetime import timedelta
 from typing import Any, Dict, List, Optional, Tuple, cast
 
 import jwt
 
 from homeassistant import data_entry_flow
+from homeassistant.auth.const import ACCESS_TOKEN_EXPIRATION
 from homeassistant.core import callback, HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -24,7 +26,11 @@ async def auth_manager_from_config(
         hass: HomeAssistant,
         provider_configs: List[Dict[str, Any]],
         module_configs: List[Dict[str, Any]]) -> 'AuthManager':
-    """Initialize an auth manager from config."""
+    """Initialize an auth manager from config.
+
+    CORE_CONFIG_SCHEMA will make sure do duplicated auth providers or
+    mfa modules exist in configs.
+    """
     store = auth_store.AuthStore(hass)
     if provider_configs:
         providers = await asyncio.gather(
@@ -35,17 +41,7 @@ async def auth_manager_from_config(
     # So returned auth providers are in same order as config
     provider_hash = OrderedDict()  # type: _ProviderDict
     for provider in providers:
-        if provider is None:
-            continue
-
         key = (provider.type, provider.id)
-
-        if key in provider_hash:
-            _LOGGER.error(
-                'Found duplicate provider: %s. Please add unique IDs if you '
-                'want to have the same provider twice.', key)
-            continue
-
         provider_hash[key] = provider
 
     if module_configs:
@@ -57,15 +53,6 @@ async def auth_manager_from_config(
     # So returned auth modules are in same order as config
     module_hash = OrderedDict()  # type: _MfaModuleDict
     for module in modules:
-        if module is None:
-            continue
-
-        if module.id in module_hash:
-            _LOGGER.error(
-                'Found duplicate multi-factor module: %s. Please add unique '
-                'IDs if you want to have the same module twice.', module.id)
-            continue
-
         module_hash[module.id] = module
 
     manager = AuthManager(hass, store, provider_hash, module_hash)
@@ -257,8 +244,12 @@ class AuthManager:
                 modules[module_id] = module.name
         return modules
 
-    async def async_create_refresh_token(self, user: models.User,
-                                         client_id: Optional[str] = None) \
+    async def async_create_refresh_token(
+            self, user: models.User, client_id: Optional[str] = None,
+            client_name: Optional[str] = None,
+            client_icon: Optional[str] = None,
+            token_type: Optional[str] = None,
+            access_token_expiration: timedelta = ACCESS_TOKEN_EXPIRATION) \
             -> models.RefreshToken:
         """Create a new refresh token for a user."""
         if not user.is_active:
@@ -269,10 +260,36 @@ class AuthManager:
                 'System generated users cannot have refresh tokens connected '
                 'to a client.')
 
-        if not user.system_generated and client_id is None:
+        if token_type is None:
+            if user.system_generated:
+                token_type = models.TOKEN_TYPE_SYSTEM
+            else:
+                token_type = models.TOKEN_TYPE_NORMAL
+
+        if user.system_generated != (token_type == models.TOKEN_TYPE_SYSTEM):
+            raise ValueError(
+                'System generated users can only have system type '
+                'refresh tokens')
+
+        if token_type == models.TOKEN_TYPE_NORMAL and client_id is None:
             raise ValueError('Client is required to generate a refresh token.')
 
-        return await self._store.async_create_refresh_token(user, client_id)
+        if (token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN and
+                client_name is None):
+            raise ValueError('Client_name is required for long-lived access '
+                             'token')
+
+        if token_type == models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN:
+            for token in user.refresh_tokens.values():
+                if (token.client_name == client_name and token.token_type ==
+                        models.TOKEN_TYPE_LONG_LIVED_ACCESS_TOKEN):
+                    # Each client_name can only have one
+                    # long_lived_access_token type of refresh token
+                    raise ValueError('{} already exists'.format(client_name))
+
+        return await self._store.async_create_refresh_token(
+            user, client_id, client_name, client_icon,
+            token_type, access_token_expiration)
 
     async def async_get_refresh_token(
             self, token_id: str) -> Optional[models.RefreshToken]:
@@ -292,13 +309,17 @@ class AuthManager:
 
     @callback
     def async_create_access_token(self,
-                                  refresh_token: models.RefreshToken) -> str:
+                                  refresh_token: models.RefreshToken,
+                                  remote_ip: Optional[str] = None) -> str:
         """Create a new access token."""
+        self._store.async_log_refresh_token_usage(refresh_token, remote_ip)
+
         # pylint: disable=no-self-use
+        now = dt_util.utcnow()
         return jwt.encode({
             'iss': refresh_token.id,
-            'iat': dt_util.utcnow(),
-            'exp': dt_util.utcnow() + refresh_token.access_token_expiration,
+            'iat': now,
+            'exp': now + refresh_token.access_token_expiration,
         }, refresh_token.jwt_key, algorithm='HS256').decode()
 
     async def async_validate_access_token(
