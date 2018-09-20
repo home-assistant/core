@@ -223,33 +223,26 @@ def websocket_cloud_status(hass, connection, msg):
         websocket_api.result_message(msg['id'], _account_data(cloud)))
 
 
-@callback
-def websocket_subscription(hass, connection, msg):
-    """Handle request for account info.
-
-    Async friendly.
-    """
+@websocket_api.async_response
+async def websocket_subscription(hass, connection, msg):
+    """Handle request for account info."""
     cloud = hass.data[DOMAIN]
 
-    async def send_subscription_info():
-        """Get available services and fire complete message."""
-        with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
-            response = await cloud.fetch_subscription_info()
-
-        if response.status != 200:
-            connection.send_message_outside(websocket_api.error_message(
-                msg['id'], 'request_failed', 'Failed to request subscription'))
-
-        connection.send_message_outside(websocket_api.result_message(
-            msg['id'], await response.json()))
-
-    if cloud.is_logged_in:
-        hass.async_create_task(connection.create_response(
-            msg['id'], send_subscription_info()))
-    else:
+    if not cloud.is_logged_in:
         connection.to_write.put_nowait(websocket_api.error_message(
             msg['id'], 'not_logged_in',
             'You need to be logged in to the cloud.'))
+        return
+
+    with async_timeout.timeout(REQUEST_TIMEOUT, loop=hass.loop):
+        response = await cloud.fetch_subscription_info()
+
+    if response.status == 200:
+        connection.send_message_outside(websocket_api.result_message(
+            msg['id'], await response.json()))
+    else:
+        connection.send_message_outside(websocket_api.error_message(
+            msg['id'], 'request_failed', 'Failed to request subscription'))
 
 
 def _account_data(cloud):
