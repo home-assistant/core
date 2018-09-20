@@ -10,13 +10,14 @@ https://home-assistant.io/components/sensor.transport_nsw/
 import logging
 from datetime import timedelta, datetime
 
-import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, ATTR_ATTRIBUTION
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (CONF_NAME, ATTR_ATTRIBUTION)
+
+#REQUIREMENTS = ['TransportNSW==0.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,118 +125,10 @@ class PublicTransportData(object):
                       ATTR_REALTIME: 'n/a'}]
 
     def update(self):
-        """Get the latest data from Transport NSW."""
-        url = ("https://api.transport.nsw.gov.au/v1/tp/departure_mon?"
-               "outputFormat=rapidJSON&"
-               "coordOutputFormat=EPSG%3A4326&"
-               "mode=direct&"
-               "type_dm=stop&"
-               "name_dm="+self.stopid+"&"
-               "departureMonitorMacro=true&"
-               "TfNSWDM=true&"
-               "version=10.2.1.42")
-        auth = 'apikey ' + self.apikey
-        header = {'Accept': 'application/json',
-                  'Authorization': auth}
-        response = requests.get(url, headers=header, timeout=10)
+        """Get the next leave time"""
+        self.info = [{ATTR_ROUTE: self.route,
+                      ATTR_DUE_IN: 'n/a',
+                      ATTR_DELAY: 'n/a',
+                      ATTR_REALTIME: 'n/a'}]
+        return
 
-        _LOGGER.debug(response)
-
-        # No valid request, set to default
-        if response.status_code != 200:
-            _LOGGER.error(response.status_code)
-            self.info = [{ATTR_ROUTE: self.route,
-                          ATTR_DUE_IN: 'n/a',
-                          ATTR_DELAY: 'n/a',
-                          ATTR_REALTIME: 'n/a'}]
-            return
-
-        # Parse the result as a JSON object
-        result = response.json()
-
-        # No stop events for the query
-        if result['stopEvents']:
-            _LOGGER.error("No stop events for this query")
-            self.info = [{ATTR_ROUTE: self.route,
-                          ATTR_DUE_IN: 'n/a',
-                          ATTR_DELAY: 'n/a',
-                          ATTR_REALTIME: 'n/a'}]
-            return
-
-        # Set timestamp format and variables
-        fmt = "%Y-%m-%dT%H:%M:%SZ"
-        maxresults = 3
-        monitor = []
-
-        if self.route != '':
-            # No route defined, find any route leaving next
-            for i in range(len(result['stopEvents'])):
-                number = result['stopEvents'][i]['transportation']['number']
-                if number == self.route:
-                    planned = datetime.strptime(
-                        result['stopEvents'][i]['departureTimePlanned'],
-                        fmt)
-
-                    realtime = 'n'
-                    estimated = planned
-                    delay = 0
-                    if 'isRealtimeControlled' in result['stopEvents'][i]:
-                        realtime = 'y'
-                        estimated = datetime.strptime(
-                            result['stopEvents'][i]['departureTimeEstimated'],
-                            fmt)
-
-                    if estimated > datetime.utcnow():
-                        due = round((estimated - datetime.utcnow()).seconds/60)
-                        if estimated >= planned:
-                            delay = round((estimated-planned).seconds/60)
-                        else:
-                            delay = round((planned-estimated).seconds/60) * -1
-
-                        monitor.append(
-                            [number, due, delay, planned, estimated, realtime])
-
-                    if len(monitor) >= maxresults:
-                        # We found enough results, lets stop
-                        break
-        else:
-            # Find the next stop events for a specific route
-            for i in range(0, maxresults):
-                number = result['stopEvents'][i]['transportation']['number']
-
-                planned = datetime.strptime(
-                    result['stopEvents'][i]['departureTimePlanned'],
-                    fmt)
-
-                realtime = 'n'
-                estimated = planned
-                delay = 0
-                if 'isRealtimeControlled' in result['stopEvents'][i]:
-                    realtime = 'y'
-                    estimated = datetime.strptime(
-                        result['stopEvents'][i]['departureTimeEstimated'],
-                        fmt)
-
-                if estimated > datetime.utcnow():
-                    due = round((estimated - datetime.utcnow()).seconds/60)
-                    if estimated >= planned:
-                        delay = round((estimated-planned).seconds/60)
-                    else:
-                        delay = round((planned-estimated).seconds/60) * -1
-
-                    monitor.append(
-                        [number, due, delay, planned, estimated, realtime])
-
-        if monitor:
-            self.info = [{ATTR_ROUTE: monitor[0][0],
-                          ATTR_DUE_IN: monitor[0][1],
-                          ATTR_DELAY: monitor[0][2],
-                          ATTR_REALTIME: monitor[0][5]}]
-            return
-        else:
-            # _LOGGER.error("No stop events for this route.")
-            self.info = [{ATTR_ROUTE: self.route,
-                          ATTR_DUE_IN: 'n/a',
-                          ATTR_DELAY: 'n/a',
-                          ATTR_REALTIME: 'n/a'}]
-            return
