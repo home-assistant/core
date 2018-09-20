@@ -23,7 +23,7 @@ from homeassistant.components.alexa import smart_home as alexa_sh
 from homeassistant.components.google_assistant import helpers as ga_h
 from homeassistant.components.google_assistant import const as ga_c
 
-from . import http_api, iot
+from . import http_api, iot, auth_api
 from .const import CONFIG_DIR, DOMAIN, SERVERS
 
 REQUIREMENTS = ['warrant==0.6.1']
@@ -39,6 +39,7 @@ CONF_GOOGLE_ACTIONS = 'google_actions'
 CONF_RELAYER = 'relayer'
 CONF_USER_POOL_ID = 'user_pool_id'
 CONF_GOOGLE_ACTIONS_SYNC_URL = 'google_actions_sync_url'
+CONF_SUBSCRIPTION_INFO_URL = 'subscription_info_url'
 
 DEFAULT_MODE = 'production'
 DEPENDENCIES = ['http']
@@ -79,6 +80,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_REGION): str,
         vol.Optional(CONF_RELAYER): str,
         vol.Optional(CONF_GOOGLE_ACTIONS_SYNC_URL): str,
+        vol.Optional(CONF_SUBSCRIPTION_INFO_URL): str,
         vol.Optional(CONF_ALEXA): ALEXA_SCHEMA,
         vol.Optional(CONF_GOOGLE_ACTIONS): GACTIONS_SCHEMA,
     }),
@@ -114,7 +116,8 @@ class Cloud:
 
     def __init__(self, hass, mode, alexa, google_actions,
                  cognito_client_id=None, user_pool_id=None, region=None,
-                 relayer=None, google_actions_sync_url=None):
+                 relayer=None, google_actions_sync_url=None,
+                 subscription_info_url=None):
         """Create an instance of Cloud."""
         self.hass = hass
         self.mode = mode
@@ -133,6 +136,7 @@ class Cloud:
             self.region = region
             self.relayer = relayer
             self.google_actions_sync_url = google_actions_sync_url
+            self.subscription_info_url = subscription_info_url
 
         else:
             info = SERVERS[mode]
@@ -142,6 +146,7 @@ class Cloud:
             self.region = info['region']
             self.relayer = info['relayer']
             self.google_actions_sync_url = info['google_actions_sync_url']
+            self.subscription_info_url = info['subscription_info_url']
 
     @property
     def is_logged_in(self):
@@ -194,6 +199,15 @@ class Cloud:
         Async friendly.
         """
         return self.hass.config.path(CONFIG_DIR, *parts)
+
+    async def fetch_subscription_info(self):
+        """Fetch subscription info."""
+        await self.hass.async_add_executor_job(auth_api.check_token, self)
+        websession = self.hass.helpers.aiohttp_client.async_get_clientsession()
+        return await websession.get(
+            self.subscription_info_url, headers={
+                'authorization': self.id_token
+            })
 
     @asyncio.coroutine
     def logout(self):
