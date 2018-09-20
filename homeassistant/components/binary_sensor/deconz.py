@@ -33,8 +33,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in sensors:
             if sensor.type in DECONZ_BINARY_SENSOR and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
-                bridgeid = hass.data[DATA_DECONZ].config.bridgeid
-                entities.append(DeconzBinarySensor(sensor, bridgeid))
+                entities.append(DeconzBinarySensor(sensor))
         async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
@@ -46,10 +45,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzBinarySensor(BinarySensorDevice):
     """Representation of a binary sensor."""
 
-    def __init__(self, sensor, bridgeid):
+    def __init__(self, sensor):
         """Set up sensor and add update callback to get data from websocket."""
         self._sensor = sensor
-        self._bridgeid = bridgeid
 
     async def async_added_to_hass(self):
         """Subscribe sensors events."""
@@ -129,6 +127,7 @@ class DeconzBinarySensor(BinarySensorDevice):
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -136,5 +135,5 @@ class DeconzBinarySensor(BinarySensorDevice):
             'model': self._sensor.modelid,
             'name': self._sensor.name,
             'sw_version': self._sensor.swversion,
-            'via_hub': (DECONZ_DOMAIN, self._bridgeid),
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }

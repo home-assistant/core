@@ -31,11 +31,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add switch from deCONZ."""
         entities = []
         for light in lights:
-            bridgeid = hass.data[DATA_DECONZ].config.bridgeid
             if light.type in POWER_PLUGS:
-                entities.append(DeconzPowerPlug(light, bridgeid))
+                entities.append(DeconzPowerPlug(light))
             elif light.type in SIRENS:
-                entities.append(DeconzSiren(light, bridgeid))
+                entities.append(DeconzSiren(light))
         async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
@@ -47,10 +46,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzSwitch(SwitchDevice):
     """Representation of a deCONZ switch."""
 
-    def __init__(self, switch, bridgeid):
+    def __init__(self, switch):
         """Set up switch and add update callback to get data from websocket."""
         self._switch = switch
-        self._bridgeid = bridgeid
 
     async def async_added_to_hass(self):
         """Subscribe to switches events."""
@@ -94,6 +92,7 @@ class DeconzSwitch(SwitchDevice):
                 self._switch.uniqueid.count(':') != 7):
             return None
         serial = self._switch.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -101,7 +100,7 @@ class DeconzSwitch(SwitchDevice):
             'model': self._switch.modelid,
             'name': self._switch.name,
             'sw_version': self._switch.swversion,
-            'via_hub': (DECONZ_DOMAIN, self._bridgeid),
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
 
 

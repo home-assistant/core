@@ -39,12 +39,11 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         for sensor in sensors:
             if sensor.type in DECONZ_SENSOR and \
                not (not allow_clip_sensor and sensor.type.startswith('CLIP')):
-                bridgeid = hass.data[DATA_DECONZ].config.bridgeid
                 if sensor.type in DECONZ_REMOTE:
                     if sensor.battery:
-                        entities.append(DeconzBattery(sensor, bridgeid))
+                        entities.append(DeconzBattery(sensor))
                 else:
-                    entities.append(DeconzSensor(sensor, bridgeid))
+                    entities.append(DeconzSensor(sensor))
         async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
@@ -56,10 +55,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzSensor(Entity):
     """Representation of a sensor."""
 
-    def __init__(self, sensor, bridgeid):
+    def __init__(self, sensor):
         """Set up sensor and add update callback to get data from websocket."""
         self._sensor = sensor
-        self._bridgeid = bridgeid
 
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
@@ -149,6 +147,7 @@ class DeconzSensor(Entity):
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -156,17 +155,16 @@ class DeconzSensor(Entity):
             'model': self._sensor.modelid,
             'name': self._sensor.name,
             'sw_version': self._sensor.swversion,
-            'via_hub': (DECONZ_DOMAIN, self._bridgeid),
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
 
 
 class DeconzBattery(Entity):
     """Battery class for when a device is only represented as an event."""
 
-    def __init__(self, sensor, bridgeid):
+    def __init__(self, sensor):
         """Register dispatcher callback for update of battery state."""
         self._sensor = sensor
-        self._bridgeid = bridgeid
         self._name = '{} {}'.format(self._sensor.name, 'Battery Level')
         self._unit_of_measurement = "%"
 
@@ -231,6 +229,7 @@ class DeconzBattery(Entity):
                 self._sensor.uniqueid.count(':') != 7):
             return None
         serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -238,5 +237,5 @@ class DeconzBattery(Entity):
             'model': self._sensor.modelid,
             'name': self._sensor.name,
             'sw_version': self._sensor.swversion,
-            'via_hub': (DECONZ_DOMAIN, self._bridgeid),
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }

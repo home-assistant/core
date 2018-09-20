@@ -34,8 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         entities = []
         for light in lights:
             if light.type not in SWITCH_TYPES:
-                bridgeid = hass.data[DATA_DECONZ].config.bridgeid
-                entities.append(DeconzLight(light, bridgeid))
+                entities.append(DeconzLight(light))
         async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
@@ -48,8 +47,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         allow_group = config_entry.data.get(CONF_ALLOW_DECONZ_GROUPS, True)
         for group in groups:
             if group.lights and allow_group:
-                bridgeid = hass.data[DATA_DECONZ].config.bridgeid
-                entities.append(DeconzLight(group, bridgeid))
+                entities.append(DeconzLight(group))
         async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
@@ -62,10 +60,9 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class DeconzLight(Light):
     """Representation of a deCONZ light."""
 
-    def __init__(self, light, bridgeid):
+    def __init__(self, light):
         """Set up light and add update callback to get data from websocket."""
         self._light = light
-        self._bridgeid = bridgeid
 
         self._features = SUPPORT_BRIGHTNESS
         self._features |= SUPPORT_FLASH
@@ -216,6 +213,7 @@ class DeconzLight(Light):
                 self._light.uniqueid.count(':') != 7):
             return None
         serial = self._light.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -223,5 +221,5 @@ class DeconzLight(Light):
             'model': self._light.modelid,
             'name': self._light.name,
             'sw_version': self._light.swversion,
-            'via_hub': (DECONZ_DOMAIN, self._bridgeid),
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
