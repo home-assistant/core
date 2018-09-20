@@ -24,9 +24,6 @@ HAP-python==2.2.2
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.1
 
-# homeassistant.components.sonos
-SoCo==0.16
-
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
 
@@ -166,6 +163,9 @@ pyotp==2.2.6
 
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
+
+# homeassistant.components.sonos
+pysonos==0.0.1
 
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky
