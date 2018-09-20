@@ -15,10 +15,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 
-from telegram import Update
-from telegram.ext import (Updater, Handler)
-from telegram.error import (TelegramError, TimedOut, NetworkError, RetryAfter)
-
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = TELEGRAM_PLATFORM_SCHEMA
@@ -44,19 +40,41 @@ def async_setup_platform(hass, config):
 
     return True
 
+@callback
+def process_error(bot, update, error):
+    """Telegram bot error handler."""
+    from telegram.error import (TelegramError, TimedOut, NetworkError, RetryAfter)
 
-class MessageHandler(Handler):
-    """Telegram bot message handler"""
+    try:
+        raise error
+    except (TimedOut, NetworkError, RetryAfter):
+        # Long polling timeout or connection problem. Nothing serious.
+        pass
+    except TelegramError:
+        _LOGGER.error('Update "%s" caused error "%s"', update, error)
 
-    def __init__(self, callback):
-        super(MessageHandler, self).__init__(callback)
+def message_handler(cb):
+    """Creates messages handler."""
+    from telegram import Update
+    from telegram.ext import Handler
 
-    def check_update(self, update):
-        return isinstance(update, Update)
+    class MessageHandler(Handler):
+        """Telegram bot message handler"""
 
-    def handle_update(self, update, dispatcher):
-        optional_args = self.collect_optional_args(dispatcher, update)
-        return self.callback(dispatcher.bot, update, **optional_args)
+        def __init__(self):
+            """Initialize the messages handler instance."""
+            super(MessageHandler, self).__init__(cb)
+
+        def check_update(self, update):
+            """Check is update valid."""
+            return isinstance(update, Update)
+
+        def handle_update(self, update, dispatcher):
+            """Handle update."""
+            optional_args = self.collect_optional_args(dispatcher, update)
+            return self.callback(dispatcher.bot, update, **optional_args)
+
+    return MessageHandler()
 
 
 class TelegramPoll(BaseTelegramBotEntity):
@@ -64,13 +82,15 @@ class TelegramPoll(BaseTelegramBotEntity):
 
     def __init__(self, bot, hass, allowed_chat_ids):
         """Initialize the polling instance."""
+        from telegram.ext import Updater
+
         BaseTelegramBotEntity.__init__(self, hass, allowed_chat_ids)
 
-        self.updater = Updater(bot=bot, workers=4)  # updater
-        self.dispatcher = self.updater.dispatcher  # dispatcher
+        self.updater = Updater(bot=bot, workers=4)
+        self.dispatcher = self.updater.dispatcher
 
-        self.dispatcher.add_handler(MessageHandler(self.process_update))
-        self.dispatcher.add_error_handler(self.process_error)
+        self.dispatcher.add_handler(message_handler(self.process_update))
+        self.dispatcher.add_error_handler(process_error)
 
     def start_polling(self):
         """Start the polling task."""
@@ -80,18 +100,6 @@ class TelegramPoll(BaseTelegramBotEntity):
         """Stop the polling task."""
         self.updater.stop()
 
-    @callback
     def process_update(self, bot, update):
+        """Process incoming message."""
         self.process_message(update.to_dict())
-
-    @callback
-    def process_error(self, bot, update, error):
-        try:
-            raise error
-        except (TimedOut, NetworkError, RetryAfter):
-            # Long polling timeout or connection problem. Nothing serious.
-            pass
-        except TelegramError:
-            _LOGGER.error('Update "%s" caused error "%s"', update, error)
-            pass
-        return
