@@ -5,11 +5,12 @@ from unittest.mock import patch, MagicMock
 import pytest
 from jose import jwt
 
-from homeassistant.bootstrap import async_setup_component
-from homeassistant.components.cloud import DOMAIN, auth_api, iot
+from homeassistant.components.cloud import (
+    DOMAIN, auth_api, iot, STORAGE_ENABLE_GOOGLE, STORAGE_ENABLE_ALEXA)
 
 from tests.common import mock_coro
 
+from . import mock_cloud, mock_cloud_prefs
 
 GOOGLE_ACTIONS_SYNC_URL = 'https://api-test.hass.io/google_actions_sync'
 SUBSCRIPTION_INFO_URL = 'https://api-test.hass.io/subscription_info'
@@ -25,22 +26,16 @@ def mock_auth():
 @pytest.fixture(autouse=True)
 def setup_api(hass):
     """Initialize HTTP API."""
-    with patch('homeassistant.components.cloud.Cloud.async_start',
-               return_value=mock_coro()):
-        assert hass.loop.run_until_complete(async_setup_component(
-            hass, 'cloud', {
-                'cloud': {
-                    'mode': 'development',
-                    'cognito_client_id': 'cognito_client_id',
-                    'user_pool_id': 'user_pool_id',
-                    'region': 'region',
-                    'relayer': 'relayer',
-                    'google_actions_sync_url': GOOGLE_ACTIONS_SYNC_URL,
-                    'subscription_info_url': SUBSCRIPTION_INFO_URL,
-                }
-            }))
-    hass.data['cloud']._decode_claims = \
-        lambda token: jwt.get_unverified_claims(token)
+    mock_cloud(hass, {
+        'mode': 'development',
+        'cognito_client_id': 'cognito_client_id',
+        'user_pool_id': 'user_pool_id',
+        'region': 'region',
+        'relayer': 'relayer',
+        'google_actions_sync_url': GOOGLE_ACTIONS_SYNC_URL,
+        'subscription_info_url': SUBSCRIPTION_INFO_URL,
+    })
+    return mock_cloud_prefs(hass)
 
 
 @pytest.fixture
@@ -321,7 +316,7 @@ def test_resend_confirm_view_unknown_error(mock_cognito, cloud_client):
     assert req.status == 502
 
 
-async def test_websocket_status(hass, hass_ws_client):
+async def test_websocket_status(hass, hass_ws_client, mock_cloud_fixture):
     """Test querying the status."""
     hass.data[DOMAIN].id_token = jwt.encode({
         'email': 'hello@home-assistant.io',
@@ -338,6 +333,8 @@ async def test_websocket_status(hass, hass_ws_client):
         'logged_in': True,
         'email': 'hello@home-assistant.io',
         'cloud': 'connected',
+        'alexa_enabled': True,
+        'google_enabled': True,
     }
 
 
@@ -407,3 +404,26 @@ async def test_websocket_subscription_not_logged_in(hass, hass_ws_client):
 
     assert not response['success']
     assert response['error']['code'] == 'not_logged_in'
+
+
+async def test_websocket_update_preferences(hass, hass_ws_client,
+                                            aioclient_mock, setup_api):
+    """Test updating preference."""
+    assert setup_api[STORAGE_ENABLE_GOOGLE]
+    assert setup_api[STORAGE_ENABLE_ALEXA]
+    hass.data[DOMAIN].id_token = jwt.encode({
+        'email': 'hello@home-assistant.io',
+        'custom:sub-exp': '2018-01-03'
+    }, 'test')
+    client = await hass_ws_client(hass)
+    await client.send_json({
+        'id': 5,
+        'type': 'cloud/update_prefs',
+        'alexa_enabled': False,
+        'google_enabled': False,
+    })
+    response = await client.receive_json()
+
+    assert response['success']
+    assert not setup_api[STORAGE_ENABLE_GOOGLE]
+    assert not setup_api[STORAGE_ENABLE_ALEXA]
