@@ -12,3 +12,11 @@ class CannotConnect(UnifiException):
 
 class AuthenticationRequired(UnifiException):
     """Unknown error occurred."""
+
+
+class UserLevel(UnifiException):
+    """User level too low."""
+
+
+class LoginRequired(UnifiException):
+    """Component got logged out."""

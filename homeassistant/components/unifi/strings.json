@@ -9,17 +9,18 @@
                     "username": "User name",
                     "password": "Password",
                     "port": "Port (default value: '8443')",
-                    "site": "Site id (default value: 'default')"
+                    "site": "Site id (default value: 'default')",
+                    "verify_ssl": "Controller using proper certificate"
                 }
             }
         },
         "error": {
-            "no_key": "Couldn't get an API key"
+            "faulty_credentials": "Bad user credentials",
+            "user_privilege": "User needs to be administrator",
+            "service_unavailable": "No service available"
         },
         "abort": {
-            "already_configured": "Bridge is already configured",
-            "no_bridges": "No deCONZ bridges discovered",
-            "one_instance_only": "Component only supports one deCONZ instance"
+            "already_configured": "Controller site is already configured"
         }
     }
 }
