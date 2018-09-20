@@ -136,9 +136,12 @@ class PushoverNotificationService(BaseNotificationService):
 
                 # Make the request and raise an error if necessary
                 try:
-                    response = requests.get(url, auth=auth, timeout=CONF_TIMEOUT)
+                    if auth:
+                        response = requests.get(url, auth=auth, timeout=CONF_TIMEOUT)
+                    else:
+                        response = requests.get(url, timeout=CONF_TIMEOUT)
+
                     response.raise_for_status()
-                
                 except requests.exceptions.RequestException as request_error:
                     _LOGGER.error("Can't load from url: %s", request_error)
 
