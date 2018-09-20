@@ -15,8 +15,9 @@ from homeassistant.const import (CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE,
                                  CONF_NAME, TEMP_CELSIUS)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.event import async_call_later
-from homeassistant.util import dt as dt_util, Throttle
+from homeassistant.helpers.event import (async_track_utc_time_change,
+                                         async_call_later)
+from homeassistant.util import dt as dt_util
 
 REQUIREMENTS = ['pyMetno==0.2.0']
 
@@ -79,8 +80,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                   'Latitude and longitude must exist together'): cv.longitude,
 })
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
-
 
 async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
@@ -123,8 +122,9 @@ class MetWeather(WeatherEntity):
         self._wind_bearing = None
 
     async def async_added_to_hass(self):
-        """Start unavailability tracking."""
+        """Start fetching data."""
         await self._fetch_data()
+        async_track_utc_time_change(self.hass, self._update, minute=31, second=0)
 
     async def _fetch_data(self, *_):
         """Get the latest data from met.no."""
@@ -136,9 +136,14 @@ class MetWeather(WeatherEntity):
             return
 
         async_call_later(self.hass, 60*60, self._fetch_data)
+        await self._update()
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def update(self):
+    @property
+    def should_poll(self):
+        """No polling needed."""
+        return False
+
+    async def _update(self, *_):
         """Get the latest data from Met.no."""
         import metno
         if self._weather_data is None:
@@ -172,6 +177,7 @@ class MetWeather(WeatherEntity):
         self._wind_speed = metno.get_forecast('windSpeed', ordered_entries)
         self._wind_bearing = metno.get_forecast('windDirection',
                                                 ordered_entries)
+        self.async_schedule_update_ha_state()
 
     @property
     def name(self):
