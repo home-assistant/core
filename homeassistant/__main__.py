@@ -19,15 +19,19 @@ from homeassistant.const import (
 )
 
 
-def attempt_use_uvloop() -> None:
+def set_loop() -> None:
     """Attempt to use uvloop."""
     import asyncio
-    try:
-        import uvloop
-    except ImportError:
-        pass
+
+    if sys.platform == 'win32':
+        asyncio.set_event_loop(asyncio.ProactorEventLoop())
     else:
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        try:
+            import uvloop
+        except ImportError:
+            pass
+        else:
+            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 def validate_python() -> None:
@@ -345,7 +349,7 @@ def main() -> int:
             monkey_patch.disable_c_asyncio()
         monkey_patch.patch_weakref_tasks()
 
-    attempt_use_uvloop()
+    set_loop()
 
     args = get_arguments()
 
