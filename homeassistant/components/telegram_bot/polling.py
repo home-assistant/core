@@ -19,6 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORM_SCHEMA = TELEGRAM_PLATFORM_SCHEMA
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config):
     """Set up the Telegram polling platform."""
@@ -40,10 +41,12 @@ def async_setup_platform(hass, config):
 
     return True
 
+
 @callback
 def process_error(bot, update, error):
     """Telegram bot error handler."""
-    from telegram.error import (TelegramError, TimedOut, NetworkError, RetryAfter)
+    from telegram.error import (
+        TelegramError, TimedOut, NetworkError, RetryAfter)
 
     try:
         raise error
@@ -53,10 +56,12 @@ def process_error(bot, update, error):
     except TelegramError:
         _LOGGER.error('Update "%s" caused error "%s"', update, error)
 
+
 def message_handler(cb):
     """Creates messages handler."""
     from telegram import Update
     from telegram.ext import Handler
+
 
     class MessageHandler(Handler):
         """Telegram bot message handler"""
