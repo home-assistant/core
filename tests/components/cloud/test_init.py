@@ -48,6 +48,7 @@ def test_constructor_loads_info_from_constant():
     assert cl.google_actions_sync_url == 'test-google_actions_sync_url'
     assert cl.subscription_info_url == 'test-subscription-info-url'
 
+
 @asyncio.coroutine
 def test_constructor_loads_info_from_config():
     """Test non-dev mode loads info from SERVERS constant."""

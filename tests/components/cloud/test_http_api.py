@@ -24,7 +24,7 @@ def mock_auth():
 
 @pytest.fixture(autouse=True)
 def setup_api(hass):
-    """Setup HTTP API."""
+    """Initialize HTTP API."""
     with patch('homeassistant.components.cloud.Cloud.async_start',
                return_value=mock_coro()):
         assert hass.loop.run_until_complete(async_setup_component(
