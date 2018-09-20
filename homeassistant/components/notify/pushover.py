@@ -122,41 +122,40 @@ class PushoverNotificationService(BaseNotificationService):
     def load_file(self, url=None, local_path=None, username=None,
                   password=None, auth=None):
         """Load image/document/etc from a local path or URL."""
-        try:
             # Load the file from URL
-            if url is not None:
+            if url:
                 # Check whether authentication parameters are provided
-                if username is not None and password is not None:
+                if username:
                     # Use digest or basic authentication
                     if ATTR_FILE_AUTH_DIGEST == auth:
-                        auth_ = HTTPDigestAuth(username, password)
+                        auth = HTTPDigestAuth(username, password)
                     else:
-                        auth_ = HTTPBasicAuth(username, password)
-                    # Load file from URL with authentication
-                    response = requests.get(
-                        url, auth=auth_, timeout=CONF_TIMEOUT)
+                        auth = HTTPBasicAuth(username, password)
                 else:
-                    # Load file from URL without authentication
-                    response = requests.get(url, timeout=CONF_TIMEOUT)
+                    auth = None
 
                 # Make the request and raise an error if necessary
-                response.raise_for_status()
+                try:
+                    response = requests.get(url, auth=auth, timeout=CONF_TIMEOUT)
+                    response.raise_for_status()
+                
+                except requests.exceptions.RequestException as request_error:
+                    _LOGGER.error("Can't load from url: %s", request_error)
 
                 downloaded_file = (
                     tempfile.NamedTemporaryFile(delete=False)
                 )
 
-                filename = downloaded_file.name
-                downloaded_file.write(response.content)
+                try:
+                    filename = downloaded_file.name
+                    downloaded_file.write(response.content)
+                except OSError as error:
+                    _LOGGER.error("Can't load from url or local path: %s", error)
 
                 return filename
 
             # Load the file from the filesystem
-            elif local_path is not None:
-                # Change the path if the file is in the local www directory
-                regex = re.compile('^/local/')
-                local_path = regex.sub(self._local_www_path + "/", local_path)
-
+            elif local_path:
                 # Check whether path is whitelisted in configuration.yaml
                 if self._is_allowed_path(local_path):
                     return local_path
@@ -164,11 +163,5 @@ class PushoverNotificationService(BaseNotificationService):
                                 local_path)
             else:
                 _LOGGER.warning("Neither URL nor local path found in params!")
-
-        except requests.exceptions.RequestException as request_error:
-            _LOGGER.error("Can't load from url: %s", request_error)
-
-        except OSError as error:
-            _LOGGER.error("Can't load from url or local path: %s", error)
 
         return None
