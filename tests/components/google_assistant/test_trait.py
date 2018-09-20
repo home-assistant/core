@@ -457,7 +457,7 @@ async def test_color_temperature_light(hass):
     }
 
 
-async def test_color_temperature_light(hass):
+async def test_color_temperature_light_bad_temp(hass):
     """Test ColorTemperature trait support for light domain."""
     assert not trait.ColorTemperatureTrait.supported(light.DOMAIN, 0)
     assert trait.ColorTemperatureTrait.supported(light.DOMAIN,
