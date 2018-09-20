@@ -324,3 +324,11 @@ async def handle_devices_execute(hass, config, payload):
         })
 
     return {'commands': final_results}
+
+
+def turned_off_response(message):
+    """Return a device turned off response."""
+    return {
+        'requestId': message.get('requestId'),
+        'payload': {'errorCode': 'deviceTurnedOff'}
+    }

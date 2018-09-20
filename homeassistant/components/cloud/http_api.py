@@ -25,6 +25,14 @@ SCHEMA_WS_STATUS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 })
 
 
+WS_TYPE_UPDATE_PREFS = 'cloud/update_prefs'
+SCHEMA_WS_UPDATE_PREFS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
+    vol.Required('type'): WS_TYPE_UPDATE_PREFS,
+    vol.Optional('google_enabled'): bool,
+    vol.Optional('alexa_enabled'): bool,
+})
+
+
 WS_TYPE_SUBSCRIPTION = 'cloud/subscription'
 SCHEMA_WS_SUBSCRIPTION = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
     vol.Required('type'): WS_TYPE_SUBSCRIPTION,
@@ -40,6 +48,10 @@ async def async_setup(hass):
     hass.components.websocket_api.async_register_command(
         WS_TYPE_SUBSCRIPTION, websocket_subscription,
         SCHEMA_WS_SUBSCRIPTION
+    )
+    hass.components.websocket_api.async_register_command(
+        WS_TYPE_UPDATE_PREFS, websocket_update_prefs,
+        SCHEMA_WS_UPDATE_PREFS
     )
     hass.http.register_view(GoogleActionsSyncView)
     hass.http.register_view(CloudLoginView)
@@ -245,6 +257,26 @@ async def websocket_subscription(hass, connection, msg):
             msg['id'], 'request_failed', 'Failed to request subscription'))
 
 
+@websocket_api.async_response
+async def websocket_update_prefs(hass, connection, msg):
+    """Handle request for account info."""
+    cloud = hass.data[DOMAIN]
+
+    if not cloud.is_logged_in:
+        connection.to_write.put_nowait(websocket_api.error_message(
+            msg['id'], 'not_logged_in',
+            'You need to be logged in to the cloud.'))
+        return
+
+    changes = dict(msg)
+    changes.pop('id')
+    changes.pop('type')
+    await cloud.update_preferences(**changes)
+
+    connection.send_message_outside(websocket_api.result_message(
+        msg['id'], {'success': True}))
+
+
 def _account_data(cloud):
     """Generate the auth data JSON response."""
     if not cloud.is_logged_in:
@@ -259,4 +291,6 @@ def _account_data(cloud):
         'logged_in': True,
         'email': claims['email'],
         'cloud': cloud.iot.state,
+        'google_enabled': cloud.google_enabled,
+        'alexa_enabled': cloud.alexa_enabled,
     }
