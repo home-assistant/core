@@ -1260,7 +1260,7 @@ raincloudy==0.0.5
 regenmaschine==1.0.2
 
 # homeassistant.components.python_script
-restrictedpython==4.0b4
+restrictedpython==4.0b5
 
 # homeassistant.components.rflink
 rflink==0.0.37
