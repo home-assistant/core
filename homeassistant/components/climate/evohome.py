@@ -190,8 +190,7 @@ class EvoController(ClimateDevice):
         # - HTTP_BAD_REQUEST, is usually Bad user credentials
         # - HTTP_TOO_MANY_REQUESTS, is api usuage limit exceeded
         # - HTTP_SERVICE_UNAVAILABLE, is often Vendor's fault
-        elif err_hint == "HTTPError" and \
-                str(HTTP_TOO_MANY_REQUESTS) in str(err):
+        if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
             api_rate_limit_exceeded = True
             api_ver = "v2"
 
