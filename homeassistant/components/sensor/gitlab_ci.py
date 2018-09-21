@@ -66,9 +66,8 @@ class GitLabSensor(Entity):
 
     def __init__(self, gitlab_data, name):
         """Initialize the sensor."""
-        self._state = None
         self._available = False
-        self._status = None
+        self._state = None
         self._started_at = None
         self._finished_at = None
         self._duration = None
@@ -99,7 +98,7 @@ class GitLabSensor(Entity):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
-            ATTR_BUILD_STATUS: self._status,
+            ATTR_BUILD_STATUS: self._state,
             ATTR_BUILD_STARTED: self._started_at,
             ATTR_BUILD_FINISHED: self._finished_at,
             ATTR_BUILD_DURATION: self._duration,
@@ -112,9 +111,9 @@ class GitLabSensor(Entity):
     @property
     def icon(self):
         """Return the icon to use in the frontend."""
-        if self._status == 'success':
+        if self._state == 'success':
             return ICON_HAPPY
-        if self._status == 'failed':
+        if self._state == 'failed':
             return ICON_SAD
         return ICON_OTHER
 
@@ -122,7 +121,7 @@ class GitLabSensor(Entity):
         """Collect updated data from GitLab API."""
         self._gitlab_data.update()
 
-        self._status = self._gitlab_data.status
+        self._state = self._gitlab_data.status
         self._started_at = self._gitlab_data.started_at
         self._finished_at = self._gitlab_data.finished_at
         self._duration = self._gitlab_data.duration
@@ -130,7 +129,6 @@ class GitLabSensor(Entity):
         self._commit_date = self._gitlab_data.commit_date
         self._build_id = self._gitlab_data.build_id
         self._branch = self._gitlab_data.branch
-        self._state = self._gitlab_data.status
         self._available = self._gitlab_data.available
 
 
