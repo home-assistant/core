@@ -9,9 +9,7 @@ evohome:
   username: !secret evohome_username
   password: !secret evohome_password
 
-These config parameters are presented with their default values:
-
-# scan_interval: 180     # seconds, you can probably get away with 60
+# This config parameter is presented with its default value:
 # location_idx: 0        # if you have more than 1 location, use this
 
 For more details about this platform, please refer to the documentation at
@@ -71,7 +69,8 @@ DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
 
 MIN_TEMP = 5
 MAX_TEMP = 35
-MIN_SCAN_INTERVAL = 180
+SCAN_INTERVAL_DEFAULT = 180
+SCAN_INTERVAL_MAX = 300
 
 CONF_LOCATION_IDX = 'location_idx'
 
@@ -80,9 +79,6 @@ CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL,
-                     default=MIN_SCAN_INTERVAL): cv.positive_int,
-
         vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
     }),
 }, extra=vol.ALLOW_EXTRA)
@@ -130,11 +126,8 @@ def setup(hass, config):
 
     # Pull the configuration parameters...
     domain_data['params'] = dict(config[DOMAIN])
-    # scan_interval - rounded up to nearest 60 secs, with a minimum value
-    domain_data['params'][CONF_SCAN_INTERVAL] \
-        = (int((config[DOMAIN][CONF_SCAN_INTERVAL] - 1) / 60) + 1) * 60
-    domain_data['params'][CONF_SCAN_INTERVAL] = \
-        max(domain_data['params'][CONF_SCAN_INTERVAL], MIN_SCAN_INTERVAL)
+    # scan_interval - start with default value
+    domain_data['params'][CONF_SCAN_INTERVAL] = SCAN_INTERVAL_DEFAULT
 
     if _LOGGER.isEnabledFor(logging.DEBUG):  # then redact username, password
         tmp = dict(domain_data['params'])
@@ -320,7 +313,7 @@ class EvoEntity(ClimateDevice):
         if api_rate_limit_exceeded is True:
             # so increase the scan_interval
             old_scan_interval = self._params[CONF_SCAN_INTERVAL]
-            new_scan_interval = min(old_scan_interval * 2, 300)
+            new_scan_interval = min(old_scan_interval * 2, SCAN_INTERVAL_MAX)
             self._params[CONF_SCAN_INTERVAL] = new_scan_interval
 
             _LOGGER.warning(
