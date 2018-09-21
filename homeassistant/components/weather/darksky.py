@@ -14,7 +14,6 @@ import voluptuous as vol
 from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP, ATTR_FORECAST_TIME, ATTR_FORECAST_CONDITION,
     ATTR_FORECAST_WIND_SPEED, ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_DEW_POINT, ATTR_FORECAST_PRESSURE,
     ATTR_FORECAST_TEMP_LOW, ATTR_FORECAST_PRECIPITATION,
     PLATFORM_SCHEMA, WeatherEntity)
 from homeassistant.const import (
@@ -178,10 +177,6 @@ class DarkSkyWeather(WeatherEntity):
                     entry.d.get('windSpeed'),
                 ATTR_FORECAST_WIND_BEARING:
                     entry.d.get('windBearing'),
-                ATTR_FORECAST_DEW_POINT:
-                    entry.d.get('dewPoint'),
-                ATTR_FORECAST_PRESSURE:
-                    entry.d.get('pressure'),
                 ATTR_FORECAST_CONDITION:
                     MAP_CONDITION.get(entry.d.get('icon'))
             } for entry in self._ds_daily.data]
@@ -193,10 +188,6 @@ class DarkSkyWeather(WeatherEntity):
                     entry.d.get('temperature'),
                 ATTR_FORECAST_PRECIPITATION:
                     calc_precipitation(entry.d.get('precipIntensity'), 1),
-                ATTR_FORECAST_DEW_POINT:
-                    entry.d.get('dewPoint'),
-                ATTR_FORECAST_PRESSURE:
-                    entry.d.get('pressure'),
                 ATTR_FORECAST_CONDITION:
                     MAP_CONDITION.get(entry.d.get('icon'))
             } for entry in self._ds_hourly.data]
