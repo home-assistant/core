@@ -427,6 +427,8 @@ class EvoController(ClimateDevice):
         no_recent_updates = self._timers['statusUpdated'] < datetime.now() - \
             timedelta(seconds=self._params[CONF_SCAN_INTERVAL] * 3.1)
 
+        was_available = self._available
+
         if no_recent_updates:
             # unavailable because no successful update()s (but why?)
             self._available = False
@@ -440,14 +442,22 @@ class EvoController(ClimateDevice):
         else:  # is available
             self._available = True
 
-        if not self._available and \
-                self._timers['statusUpdated'] != datetime.min:
-            # this isn't the first (un)available (i.e. after STARTUP), so...
+        if not self._available and was_available:
+            # only warn if available from False to True
             _LOGGER.warning(
-                "The entity, %s, is unavailable "
+                "The entity, %s, is now unavailable "
                 "(i.e. self.available() = False), debug code is: %s",
                 self._id + " [" + self._name + "]",
                 debug_code
+            )
+
+        elif self._available and not was_available and \
+                self._timers['statusUpdated'] != datetime.min:
+            # this isn't the first re-available (e.g. _after_ STARTUP)
+            _LOGGER.debug(
+                "The entity, %s, is now available "
+                "(i.e. self.available() = True)",
+                self._id + " [" + self._name + "]"
             )
 
         return True
