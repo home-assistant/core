@@ -4,16 +4,17 @@ Support for French FAI Bouygues Bbox routers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.bbox/
 """
+
+from collections import namedtuple
+import logging
+from datetime import timedelta
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, DOMAIN, DeviceScanner)
 from homeassistant.const import CONF_HOST
-
-from collections import namedtuple
-import logging
-from datetime import timedelta
 
 import homeassistant.util.dt as dt_util
 from homeassistant.util import Throttle
