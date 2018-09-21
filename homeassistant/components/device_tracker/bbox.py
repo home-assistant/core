@@ -8,7 +8,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN, DeviceScanner)
+    PLATFORM_SCHEMA, DOMAIN, DeviceScanner)
 from homeassistant.const import CONF_HOST
 
 from collections import namedtuple
