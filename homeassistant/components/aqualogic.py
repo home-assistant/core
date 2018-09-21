@@ -104,4 +104,4 @@ class AquaLogicProcessor(threading.Thread):
    
     @property
     def panel(self):
-        return self._panel;
+        return self._panel

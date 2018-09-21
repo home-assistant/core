@@ -86,9 +86,9 @@ class AquaLogicSwitch(SwitchDevice):
     def is_on(self):
         """Return true if device is on."""
         panel = self._component.panel
-        if panel == None:
+        if panel is None:
             return False
-        state = panel.get_state(self._stateName);
+        state = panel.get_state(self._stateName)
         return state
 
     def turn_on(self):
@@ -96,19 +96,19 @@ class AquaLogicSwitch(SwitchDevice):
         if self.is_on:
             return
         panel = self._component.panel
-        if panel == None:
+        if panel is None:
             return
         panel.set_state(self._stateName, True)
-        
+
     def turn_off(self):
         """Turn the device off."""
         if not self.is_on:
             return
         panel = self._component.panel
-        if panel == None:
+        if panel is None:
             return
         panel.set_state(self._stateName, False)
-    
+
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""

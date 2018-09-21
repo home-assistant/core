@@ -10,8 +10,8 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_MONITORED_CONDITIONS, 
-    TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.const import (CONF_MONITORED_CONDITIONS,
+        TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
 import homeassistant.components.aqualogic as aqualogic
@@ -43,7 +43,7 @@ SENSOR_TYPES = {
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
-        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
 @asyncio.coroutine
@@ -79,7 +79,7 @@ class AquaLogicSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement the value is expressed in."""
-        panel = self._component.panel;
+        panel = self._component.panel
         if panel == None:
             return None
         if panel.is_metric:
