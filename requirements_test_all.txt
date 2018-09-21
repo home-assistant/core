@@ -65,6 +65,9 @@ foobot_async==0.3.1
 # homeassistant.components.tts.google
 gTTS-token==1.1.1
 
+# homeassistant.components.geo_location.geo_json_events
+geojson_client==0.1
+
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.9
 
