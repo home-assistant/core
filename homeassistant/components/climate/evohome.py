@@ -146,7 +146,6 @@ class EvoController(ClimateDevice):
 
         # Set the entity's (initial) behaviour
         self._available = False  # will be True after first update()
-        self._should_poll = True
 
         # Create a listener for (internal) update packets...
         hass.helpers.dispatcher.dispatcher_connect(
@@ -272,6 +271,25 @@ class EvoController(ClimateDevice):
     def current_operation(self):
         """Return the operation mode of the evohome entity."""
         return self._status['systemModeStatus']['mode']
+
+    @property
+    def target_temperature(self):
+        """Return the average target temperature of the Heating/DHW zones."""
+        temps = [zone['setpointStatus']['targetHeatTemperature']
+                 for zone in self._status['zones']]
+
+        avg_temp = sum(temps) / len(temps) if temps else None
+        return round(avg_temp, 1)
+
+    @property
+    def current_temperature(self):
+        """Return the average current temperature of the Heating/DHW zones."""
+        tmp_list = [x for x in self._status['zones']
+                    if x['temperatureStatus']['isAvailable'] is True]
+        temps = [zone['temperatureStatus']['temperature'] for zone in tmp_list]
+
+        avg_temp = sum(temps) / len(temps) if temps else None
+        return round(avg_temp, 1)
 
     @property
     def temperature_unit(self):
@@ -439,22 +457,3 @@ class EvoController(ClimateDevice):
             )
 
         return True
-
-    @property
-    def target_temperature(self):
-        """Return the average target temperature of the Heating/DHW zones."""
-        temps = [zone['setpointStatus']['targetHeatTemperature']
-                 for zone in self._status['zones']]
-
-        avg_temp = sum(temps) / len(temps) if temps else None
-        return round(avg_temp, 1)
-
-    @property
-    def current_temperature(self):
-        """Return the average current temperature of the Heating/DHW zones."""
-        tmp_list = [x for x in self._status['zones']
-                    if x['temperatureStatus']['isAvailable'] is True]
-        temps = [zone['temperatureStatus']['temperature'] for zone in tmp_list]
-
-        avg_temp = sum(temps) / len(temps) if temps else None
-        return round(avg_temp, 1)
