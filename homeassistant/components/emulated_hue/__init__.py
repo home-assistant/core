@@ -44,6 +44,7 @@ CONF_ENTITY_HIDDEN = 'hidden'
 
 TYPE_ALEXA = 'alexa'
 TYPE_GOOGLE = 'google_home'
+TYPE_SLEEPCYCLE = 'sleep_cycle'
 
 DEFAULT_LISTEN_PORT = 8300
 DEFAULT_UPNP_BIND_MULTICAST = True
@@ -70,7 +71,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_EXPOSE_BY_DEFAULT): cv.boolean,
         vol.Optional(CONF_EXPOSED_DOMAINS): cv.ensure_list,
         vol.Optional(CONF_TYPE, default=DEFAULT_TYPE):
-            vol.Any(TYPE_ALEXA, TYPE_GOOGLE),
+            vol.Any(TYPE_ALEXA, TYPE_GOOGLE, TYPE_SLEEPCYCLE),
         vol.Optional(CONF_ENTITIES):
             vol.Schema({cv.entity_id: CONFIG_ENTITY_SCHEMA})
     })
@@ -274,6 +275,14 @@ class Config:
             domain_exposed_by_default and expose is not False
 
         return is_default_exposed or expose
+
+    def json_response_dummy_wrapper(self, json_response):
+        """Wrapper, adds dummy mac address for sleepcycle."""
+        if self.type == TYPE_SLEEPCYCLE:
+            return {'lights': json_response,
+                    'config': {'mac': '00:00:00:00:00:00'}}
+
+        return json_response
 
 
 def _load_json(filename):
