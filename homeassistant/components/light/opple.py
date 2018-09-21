@@ -1,5 +1,6 @@
 """
 Support for the Opple light.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.opple/
 """
@@ -39,6 +40,7 @@ class OppleLight(Light):
     """Opple light device."""
 
     def __init__(self, name, host):
+        """Initialize an Opple light."""
         from pyoppleio.OppleLightDevice import OppleLightDevice
         self._device = OppleLightDevice(host)
 
@@ -51,37 +53,46 @@ class OppleLight(Light):
 
     @property
     def available(self):
+        """Return True if light is available."""
         return self._device.is_online
 
     @property
     def name(self):
+        """Return the display name of this light."""
         return self._name
 
     @property
     def is_on(self):
+        """Return true if light is on."""
         return self._is_on
 
     @property
     def brightness(self):
+        """Return the brightness of the light."""
         return self._brightness
 
     @property
     def color_temp(self):
+        """Return the color temperature of this light."""
         return kelvin_to_mired(self._color_temp)
 
     @property
     def min_mireds(self):
+        """Return minimum supported color temperature."""
         return 175
 
     @property
     def max_mireds(self):
+        """Return maximum supported color temperature."""
         return 333
 
     @property
     def supported_features(self):
+        """Flag supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP
 
     def turn_on(self, **kwargs):
+        """Instruct the light to turn on."""
         _LOGGER.debug("Turn on light %s %s", self._device.ip, kwargs)
         if not self.is_on:
             self._is_on = self._device.power_on = True
@@ -97,10 +108,12 @@ class OppleLight(Light):
             self._color_temp = self._device.color_temperature = color_temp
 
     def turn_off(self, **kwargs):
+        """Instruct the light to turn off."""
         self._device.power_on = False
         _LOGGER.debug("Turn off light %s", self._device.ip)
 
     def update(self):
+        """Synchronize state with light."""
         self._device.update()
         self._is_on = self._device.power_on
         self._brightness = self._device.brightness
@@ -112,6 +125,6 @@ class OppleLight(Light):
             _LOGGER.debug("Update light %s success: power off",
                           self._device.ip)
         else:
-            _LOGGER.debug("Update light %s success: power on " +
-                          "brightness %s color temperature %s",
+            _LOGGER.debug("Update light %s success: power on brightness %s "
+                          "color temperature %s",
                           self._device.ip, self._brightness, self._color_temp)
