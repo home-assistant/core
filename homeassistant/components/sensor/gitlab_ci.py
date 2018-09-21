@@ -35,9 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
     vol.Required(CONF_GITLAB_ID): cv.string,
     vol.Optional(CONF_NAME, default='GitLab CI Status'): cv.string,
-    vol.Optional(CONF_URL, default='https://gitlab.com'): cv.string,
-    vol.Optional(CONF_SCAN_INTERVAL,
-                 default=SCAN_INTERVAL): cv.time_period,
+    vol.Optional(CONF_URL, default='https://gitlab.com'): cv.string
 })
 
 REQUIREMENTS = ['python-gitlab==1.6.0']
