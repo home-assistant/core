@@ -18,6 +18,11 @@ from homeassistant.components.evohome import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# Usually, only the controller does client api I/O during update()s to pull
+# current state - the exception is when zones pull their own schedules during
+# their own update()s. It is safe for them to do so concurrently.
+PARALLEL_UPDATES = 0
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create a Honeywell (EMEA/EU) evohome CH/DHW system.

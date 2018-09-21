@@ -10,7 +10,7 @@ evohome:
   password: !secret evohome_password
 
 # This config parameter is presented with its default value:
-# location_idx: 0        # if you have more than 1 location, use this
+# location_idx: 0        # if you have more than 1 location, use this index
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/evohome/
@@ -56,11 +56,6 @@ from homeassistant.helpers.discovery import load_platform
 REQUIREMENTS = ['evohomeclient==0.2.7']
 
 _LOGGER = logging.getLogger(__name__)
-
-# Usually, only the controller does client api I/O during update() to pull
-# current state - the exception is when zones pull their own schedules.
-# However, any entity can call methods that will (eventually) change state.
-PARALLEL_UPDATES = 0
 
 # these are specific to this component
 DOMAIN = 'evohome'
