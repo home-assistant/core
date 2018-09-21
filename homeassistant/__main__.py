@@ -255,6 +255,8 @@ async def setup_and_run_hass(config_dir: str,
             try:
                 subprocess.check_call(nt_args)
                 sys.exit(0)
+            except KeyboardInterrupt:
+                sys.exit(0)
             except subprocess.CalledProcessError as exc:
                 if exc.returncode != RESTART_EXIT_CODE:
                     sys.exit(exc.returncode)
