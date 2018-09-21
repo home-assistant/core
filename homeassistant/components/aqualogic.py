@@ -92,11 +92,11 @@ class AquaLogicProcessor(threading.Thread):
                 if self._shutdown:
                     return
 
-                _LOGGER.error("Connection to %s:%d lost", 
-                        self._host, self._port)
+                _LOGGER.error("Connection to %s:%d lost",
+                              self._host, self._port)
             except socket.timeout:
-                _LOGGER.error("Connection to %s:%d timed out", 
-                        self._host, self._port)
+                _LOGGER.error("Connection to %s:%d timed out",
+                              self._host, self._port)
             except Exception:
                 _LOGGER.exception("Error")
                 time.sleep(RECONNECT_INTERVAL.seconds)
