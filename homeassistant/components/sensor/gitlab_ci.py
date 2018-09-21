@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_URL)
+    ATTR_ATTRIBUTION, CONF_NAME, CONF_SCAN_INTERVAL, CONF_TOKEN, CONF_URL)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -29,9 +29,12 @@ ATTR_BUILD_BRANCH = 'master'
 
 SCAN_INTERVAL = timedelta(seconds=300)
 
+_LOGGER = logging.getLogger(__name__)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
     vol.Required(CONF_GITLAB_ID): cv.string,
+    vol.Optional(CONF_NAME, default='GitLab CI Status'): cv.string,
     vol.Optional(CONF_URL, default='https://gitlab.com'): cv.string,
     vol.Optional(CONF_SCAN_INTERVAL,
                  default=SCAN_INTERVAL): cv.time_period,
@@ -44,7 +47,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Sensor platform setup."""
     _priv_token = config.get(CONF_TOKEN)
     _gitlab_id = config.get(CONF_GITLAB_ID)
-    _interval = config.get(CONF_SCAN_INTERVAL)
+    _name = config.get(CONF_NAME)
+    _interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     _url = config.get(CONF_URL)
 
     _gitlab_data = GitLabData(
@@ -54,13 +58,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         url=_url
     )
 
-    add_entities([GitLabSensor(_gitlab_id, _priv_token, _gitlab_data)], True)
+    add_entities([GitLabSensor(_gitlab_data, _name)], True)
 
 
 class GitLabSensor(Entity):
     """Representation of a Sensor."""
 
-    def __init__(self, gitlab_id, priv_token, gitlab_data):
+    def __init__(self, gitlab_data, name):
         """Initialize the sensor."""
         self._state = None
         self._available = False
@@ -73,11 +77,12 @@ class GitLabSensor(Entity):
         self._build_id = None
         self._branch = None
         self._gitlab_data = gitlab_data
+        self._name = name
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return 'GitLab CI Status'
+        return self._name
 
     @property
     def state(self):
@@ -145,8 +150,6 @@ class GitLabData():
         self._gitlab_exceptions = gitlab.exceptions
         self.update = Throttle(interval)(self._update)
 
-        self._response = None
-        self._response_json = None
         self.available = False
         self.status = None
         self.started_at = None
@@ -156,11 +159,8 @@ class GitLabData():
         self.commit_date = None
         self.build_id = None
         self.branch = None
-        self.state = None
 
     def _update(self):
-        _logger = logging.getLogger(__name__)
-        _logger.debug(self._interval)
         try:
             _projects = self._gitlab.projects.get(self._gitlab_id)
             _last_pipeline = _projects.pipelines.list(page=1)[0]
@@ -174,11 +174,10 @@ class GitLabData():
             self.commit_date = _commit.get('committed_date')
             self.build_id = _last_job.attributes.get('id')
             self.branch = _last_job.attributes.get('ref')
-            self.state = self.status
             self.available = True
         except self._gitlab_exceptions.GitlabAuthenticationError as erra:
-            _logger.error("Authentication Error: %s", erra)
+            _LOGGER.error("Authentication Error: %s", erra)
             self.available = False
         except self._gitlab_exceptions.GitlabGetError as errg:
-            _logger.error("Project Not Found: %s", errg)
+            _LOGGER.error("Project Not Found: %s", errg)
             self.available = False
