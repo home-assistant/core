@@ -213,6 +213,7 @@ class DeconzLight(Light):
                 self._light.uniqueid.count(':') != 7):
             return None
         serial = self._light.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -220,4 +221,5 @@ class DeconzLight(Light):
             'model': self._light.modelid,
             'name': self._light.name,
             'sw_version': self._light.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
