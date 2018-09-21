@@ -13,11 +13,11 @@ DEPENDENCIES = ['eufy']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Eufy switches."""
     if discovery_info is None:
         return
-    add_devices([EufySwitch(discovery_info)], True)
+    add_entities([EufySwitch(discovery_info)], True)
 
 
 class EufySwitch(SwitchDevice):
@@ -25,7 +25,6 @@ class EufySwitch(SwitchDevice):
 
     def __init__(self, device):
         """Initialize the light."""
-        # pylint: disable=import-error
         import lakeside
 
         self._state = None

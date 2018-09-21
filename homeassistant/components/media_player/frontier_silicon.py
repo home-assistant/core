@@ -10,17 +10,17 @@ import logging
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_PLAY, SUPPORT_SELECT_SOURCE, MediaPlayerDevice, PLATFORM_SCHEMA,
-    MEDIA_TYPE_MUSIC)
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_SELECT_SOURCE, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN,
-    CONF_HOST, CONF_PORT, CONF_PASSWORD)
+    CONF_HOST, CONF_PASSWORD, CONF_PORT, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['afsapi==0.0.3']
+REQUIREMENTS = ['afsapi==0.0.4']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,17 +41,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Frontier Silicon platform."""
     import requests
 
     if discovery_info is not None:
-        async_add_devices(
-            [AFSAPIDevice(discovery_info['ssdp_description'],
-                          DEFAULT_PASSWORD)],
-            update_before_add=True)
+        async_add_entities(
+            [AFSAPIDevice(
+                discovery_info['ssdp_description'], DEFAULT_PASSWORD)], True)
         return True
 
     host = config.get(CONF_HOST)
@@ -59,9 +58,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     try:
-        async_add_devices(
-            [AFSAPIDevice(DEVICE_URL.format(host, port), password)],
-            update_before_add=True)
+        async_add_entities(
+            [AFSAPIDevice(DEVICE_URL.format(host, port), password)], True)
         _LOGGER.debug("FSAPI device %s:%s -> %s", host, port, password)
         return True
     except requests.exceptions.RequestException:
@@ -78,7 +76,7 @@ class AFSAPIDevice(MediaPlayerDevice):
         """Initialize the Frontier Silicon API device."""
         self._device_url = device_url
         self._password = password
-        self._state = STATE_UNKNOWN
+        self._state = None
 
         self._name = None
         self._title = None

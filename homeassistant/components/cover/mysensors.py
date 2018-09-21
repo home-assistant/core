@@ -10,14 +10,14 @@ from homeassistant.const import STATE_OFF, STATE_ON
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the mysensors platform for covers."""
     mysensors.setup_mysensors_platform(
         hass, DOMAIN, discovery_info, MySensorsCover,
-        async_add_devices=async_add_devices)
+        async_add_entities=async_add_entities)
 
 
-class MySensorsCover(mysensors.MySensorsEntity, CoverDevice):
+class MySensorsCover(mysensors.device.MySensorsEntity, CoverDevice):
     """Representation of the value of a MySensors Cover child node."""
 
     @property

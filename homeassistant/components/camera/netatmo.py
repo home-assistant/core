@@ -29,13 +29,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up access to Netatmo cameras."""
     netatmo = hass.components.netatmo
     home = config.get(CONF_HOME)
     verify_ssl = config.get(CONF_VERIFY_SSL, True)
-    import lnetatmo
+    import pyatmo
     try:
         data = CameraData(netatmo.NETATMO_AUTH, home)
         for camera_name in data.get_camera_names():
@@ -44,9 +43,9 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if config[CONF_CAMERAS] != [] and \
                    camera_name not in config[CONF_CAMERAS]:
                     continue
-            add_devices([NetatmoCamera(data, camera_name, home,
-                                       camera_type, verify_ssl)])
-    except lnetatmo.NoDevice:
+            add_entities([NetatmoCamera(data, camera_name, home,
+                                        camera_type, verify_ssl)])
+    except pyatmo.NoDevice:
         return None
 
 
@@ -106,6 +105,6 @@ class NetatmoCamera(Camera):
         """Return the camera model."""
         if self._cameratype == "NOC":
             return "Presence"
-        elif self._cameratype == "NACamera":
+        if self._cameratype == "NACamera":
             return "Welcome"
         return None

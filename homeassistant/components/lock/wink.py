@@ -66,14 +66,14 @@ ADD_KEY_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
     import pywink
 
     for lock in pywink.get_locks():
         _id = lock.object_id() + lock.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkLockDevice(lock, hass)])
+            add_entities([WinkLockDevice(lock, hass)])
 
     def service_handle(service):
         """Handle for services."""

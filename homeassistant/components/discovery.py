@@ -13,7 +13,7 @@ import os
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 import homeassistant.helpers.config_validation as cv
@@ -21,7 +21,7 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.discovery import async_load_platform, async_discover
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['netdisco==1.4.1']
+REQUIREMENTS = ['netdisco==2.1.0']
 
 DOMAIN = 'discovery'
 
@@ -46,14 +46,16 @@ SERVICE_HOMEKIT = 'homekit'
 
 CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
+    'google_cast': 'cast',
     SERVICE_HUE: 'hue',
+    SERVICE_IKEA_TRADFRI: 'tradfri',
+    'sonos': 'sonos',
 }
 
 SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
-    SERVICE_IKEA_TRADFRI: ('tradfri', None),
     SERVICE_HASSIO: ('hassio', None),
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),
@@ -64,11 +66,9 @@ SERVICE_HANDLERS = {
     SERVICE_SABNZBD: ('sabnzbd', None),
     SERVICE_SAMSUNG_PRINTER: ('sensor', 'syncthru'),
     SERVICE_KONNECTED: ('konnected', None),
-    'google_cast': ('media_player', 'cast'),
     'panasonic_viera': ('media_player', 'panasonic_viera'),
     'plex_mediaserver': ('media_player', 'plex'),
     'roku': ('media_player', 'roku'),
-    'sonos': ('media_player', 'sonos'),
     'yamaha': ('media_player', 'yamaha'),
     'logitech_mediaserver': ('media_player', 'squeezebox'),
     'directv': ('media_player', 'directv'),
@@ -83,10 +83,13 @@ SERVICE_HANDLERS = {
     'songpal': ('media_player', 'songpal'),
     'kodi': ('media_player', 'kodi'),
     'volumio': ('media_player', 'volumio'),
+    'nanoleaf_aurora': ('light', 'nanoleaf_aurora'),
+    'freebox': ('device_tracker', 'freebox'),
 }
 
 OPTIONAL_SERVICE_HANDLERS = {
     SERVICE_HOMEKIT: ('homekit_controller', None),
+    'dlna_dmr': ('media_player', 'dlna_dmr'),
 }
 
 CONF_IGNORE = 'ignore'
@@ -135,7 +138,7 @@ async def async_setup(hass, config):
         if service in CONFIG_ENTRY_HANDLERS:
             await hass.config_entries.flow.async_init(
                 CONFIG_ENTRY_HANDLERS[service],
-                source=data_entry_flow.SOURCE_DISCOVERY,
+                context={'source': config_entries.SOURCE_DISCOVERY},
                 data=info
             )
             return

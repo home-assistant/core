@@ -36,7 +36,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-variable
 def get_service(hass, config, discovery_info=None):
     """Get the LaMetric notification service."""
     hlmn = hass.data.get(LAMETRIC_DOMAIN)
@@ -59,7 +58,6 @@ class LaMetricNotificationService(BaseNotificationService):
         self._priority = priority
         self._devices = []
 
-    # pylint: disable=broad-except
     def send_message(self, message="", **kwargs):
         """Send a message to some LaMetric device."""
         from lmnotify import SimpleFrame, Sound, Model

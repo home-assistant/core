@@ -9,7 +9,7 @@ import json
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
     ATTR_TRANSITION, ATTR_WHITE_VALUE, ATTR_HS_COLOR,
@@ -53,6 +53,7 @@ CONF_EFFECT_LIST = 'effect_list'
 CONF_FLASH_TIME_LONG = 'flash_time_long'
 CONF_FLASH_TIME_SHORT = 'flash_time_short'
 CONF_HS = 'hs'
+CONF_UNIQUE_ID = 'unique_id'
 
 # Stealing some of these from the base MQTT configs.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -67,6 +68,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_FLASH_TIME_LONG, default=DEFAULT_FLASH_TIME_LONG):
         cv.positive_int,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_QOS, default=mqtt.DEFAULT_QOS):
         vol.All(vol.Coerce(int), vol.In([0, 1, 2])),
@@ -81,12 +83,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None):
+                               async_add_entities, discovery_info=None):
     """Set up a MQTT JSON Light."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
-    async_add_devices([MqttJson(
+    async_add_entities([MqttJson(
         config.get(CONF_NAME),
+        config.get(CONF_UNIQUE_ID),
         config.get(CONF_EFFECT_LIST),
         {
             key: config.get(key) for key in (
@@ -120,14 +123,15 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
 class MqttJson(MqttAvailability, Light):
     """Representation of a MQTT JSON light."""
 
-    def __init__(self, name, effect_list, topic, qos, retain, optimistic,
-                 brightness, color_temp, effect, rgb, white_value, xy, hs,
-                 flash_times, availability_topic, payload_available,
+    def __init__(self, name, unique_id, effect_list, topic, qos, retain,
+                 optimistic, brightness, color_temp, effect, rgb, white_value,
+                 xy, hs, flash_times, availability_topic, payload_available,
                  payload_not_available, brightness_scale):
         """Initialize MQTT JSON light."""
         super().__init__(availability_topic, qos, payload_available,
                          payload_not_available)
         self._name = name
+        self._unique_id = unique_id
         self._effect_list = effect_list
         self._topic = topic
         self._qos = qos
@@ -317,6 +321,11 @@ class MqttJson(MqttAvailability, Light):
         return self._name
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
+
+    @property
     def is_on(self):
         """Return true if device is on."""
         return self._state
@@ -345,9 +354,14 @@ class MqttJson(MqttAvailability, Light):
             hs_color = kwargs[ATTR_HS_COLOR]
             message['color'] = {}
             if self._rgb:
-                brightness = kwargs.get(
-                    ATTR_BRIGHTNESS,
-                    self._brightness if self._brightness else 255)
+                # If there's a brightness topic set, we don't want to scale the
+                # RGB values given using the brightness.
+                if self._brightness is not None:
+                    brightness = 255
+                else:
+                    brightness = kwargs.get(
+                        ATTR_BRIGHTNESS,
+                        self._brightness if self._brightness else 255)
                 rgb = color_util.color_hsv_to_RGB(
                     hs_color[0], hs_color[1], brightness / 255 * 100)
                 message['color']['r'] = rgb[0]

@@ -14,7 +14,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['shodan==1.7.7']
+REQUIREMENTS = ['shodan==1.10.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Shodan sensor."""
     import shodan
 
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.warning("Unable to connect to Shodan.io: %s", error)
         return False
 
-    add_devices([ShodanSensor(data, name)], True)
+    add_entities([ShodanSensor(data, name)], True)
 
 
 class ShodanSensor(Entity):
@@ -96,7 +96,7 @@ class ShodanSensor(Entity):
         self._state = self.data.details['total']
 
 
-class ShodanData(object):
+class ShodanData:
     """Get the latest data and update the states."""
 
     def __init__(self, api, query):

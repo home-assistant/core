@@ -17,7 +17,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED, EVENT_TIME_CHANGED, MATCH_ALL)
 from homeassistant.core import EventOrigin, State
 import homeassistant.helpers.config_validation as cv
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 
 DOMAIN = 'mqtt_eventstream'
 DEPENDENCIES = ['mqtt']
@@ -116,5 +116,4 @@ def async_setup(hass, config):
     if sub_topic:
         yield from mqtt.async_subscribe(sub_topic, _event_receiver)
 
-    hass.states.async_set('{domain}.initialized'.format(domain=DOMAIN), True)
     return True

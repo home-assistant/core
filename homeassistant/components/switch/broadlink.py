@@ -69,7 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
     import broadlink
     devices = config.get(CONF_SWITCHES)
@@ -179,7 +179,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except socket.timeout:
         _LOGGER.error("Failed to connect to device")
 
-    add_devices(switches)
+    add_entities(switches)
 
 
 class BroadlinkRMSwitch(SwitchDevice):
@@ -348,7 +348,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         self._state = self._parent_device.get_outlet_status(self._slot)
 
 
-class BroadlinkMP1Switch(object):
+class BroadlinkMP1Switch:
     """Representation of a Broadlink switch - To fetch states of all slots."""
 
     def __init__(self, device):

@@ -2,12 +2,12 @@
 Websocket based API for Home Assistant.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/developers/websocket_api/
+https://developers.home-assistant.io/docs/external_api_websocket.html
 """
 import asyncio
 from concurrent import futures
 from contextlib import suppress
-from functools import partial
+from functools import partial, wraps
 import json
 import logging
 
@@ -18,15 +18,16 @@ from voluptuous.humanize import humanize_error
 from homeassistant.const import (
     MATCH_ALL, EVENT_TIME_CHANGED, EVENT_HOMEASSISTANT_STOP,
     __version__)
-from homeassistant.core import callback
+from homeassistant.core import Context, callback, HomeAssistant
 from homeassistant.loader import bind_hass
-from homeassistant.remote import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.auth import validate_password
 from homeassistant.components.http.const import KEY_AUTHENTICATED
-from homeassistant.components.http.ban import process_wrong_login
+from homeassistant.components.http.ban import process_wrong_login, \
+    process_success_login
 
 DOMAIN = 'websocket_api'
 
@@ -38,6 +39,7 @@ MAX_PENDING_MSG = 512
 ERR_ID_REUSE = 1
 ERR_INVALID_FORMAT = 2
 ERR_NOT_FOUND = 3
+ERR_UNKNOWN_COMMAND = 4
 
 TYPE_AUTH = 'auth'
 TYPE_AUTH_INVALID = 'auth_invalid'
@@ -195,6 +197,23 @@ def async_register_command(hass, command, handler, schema):
     handlers[command] = (handler, schema)
 
 
+def require_owner(func):
+    """Websocket decorator to require user to be an owner."""
+    @wraps(func)
+    def with_owner(hass, connection, msg):
+        """Check owner and call function."""
+        user = connection.request.get('hass_user')
+
+        if user is None or not user.is_owner:
+            connection.to_write.put_nowait(error_message(
+                msg['id'], 'unauthorized', 'This command is for owners only.'))
+            return
+
+        func(hass, connection, msg)
+
+    return with_owner
+
+
 async def async_setup(hass, config):
     """Initialize the websocket API."""
     hass.http.register_view(WebsocketAPIView)
@@ -227,7 +246,6 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request):
         """Handle an incoming websocket connection."""
-        # pylint: disable=no-self-use
         return await ActiveConnection(request.app['hass'], request).handle()
 
 
@@ -243,6 +261,18 @@ class ActiveConnection:
         self.to_write = asyncio.Queue(maxsize=MAX_PENDING_MSG, loop=hass.loop)
         self._handle_task = None
         self._writer_task = None
+
+    @property
+    def user(self):
+        """Return the user associated with the connection."""
+        return self.request.get('hass_user')
+
+    def context(self, msg):
+        """Return a context."""
+        user = self.user
+        if user is None:
+            return Context()
+        return Context(user_id=user.id)
 
     def debug(self, message1, message2=''):
         """Print a debug message."""
@@ -269,7 +299,7 @@ class ActiveConnection:
 
     @callback
     def send_message_outside(self, message):
-        """Send a message to the client outside of the main task.
+        """Send a message to the client.
 
         Closes connection if the client is not reading the messages.
 
@@ -295,7 +325,6 @@ class ActiveConnection:
         await wsock.prepare(request)
         self.debug("Connected")
 
-        # Get a reference to current task so we can cancel our connection
         self._handle_task = asyncio.Task.current_task(loop=self.hass.loop)
 
         @callback
@@ -314,26 +343,41 @@ class ActiveConnection:
             if request[KEY_AUTHENTICATED]:
                 authenticated = True
 
-            else:
+            # always request auth when auth is active
+            #   even request passed pre-authentication (trusted networks)
+            # or when using legacy api_password
+            if self.hass.auth.active or not authenticated:
+                self.debug("Request auth")
                 await self.wsock.send_json(auth_required_message())
                 msg = await wsock.receive_json()
                 msg = AUTH_MESSAGE_SCHEMA(msg)
 
-                if 'api_password' in msg:
+                if self.hass.auth.active and 'access_token' in msg:
+                    self.debug("Received access_token")
+                    refresh_token = \
+                        await self.hass.auth.async_validate_access_token(
+                            msg['access_token'])
+                    authenticated = refresh_token is not None
+                    if authenticated:
+                        request['hass_user'] = refresh_token.user
+                        request['refresh_token_id'] = refresh_token.id
+
+                elif ((not self.hass.auth.active or
+                       self.hass.auth.support_legacy) and
+                      'api_password' in msg):
+                    self.debug("Received api_password")
                     authenticated = validate_password(
                         request, msg['api_password'])
 
-                elif 'access_token' in msg:
-                    authenticated = \
-                        msg['access_token'] in self.hass.auth.access_tokens
-
             if not authenticated:
-                self.debug("Invalid password")
+                self.debug("Authorization failed")
                 await self.wsock.send_json(
-                    auth_invalid_message('Invalid password'))
+                    auth_invalid_message('Invalid access token or password'))
                 await process_wrong_login(request)
                 return wsock
 
+            self.debug("Auth OK")
+            await process_success_login(request)
             await self.wsock.send_json(auth_ok_message())
 
             # ---------- AUTH PHASE OVER ----------
@@ -353,8 +397,11 @@ class ActiveConnection:
                         'Identifier values have to increase.'))
 
                 elif msg['type'] not in handlers:
-                    # Unknown command
-                    break
+                    self.log_error(
+                        'Received invalid command: {}'.format(msg['type']))
+                    self.to_write.put_nowait(error_message(
+                        cur_id, ERR_UNKNOWN_COMMAND,
+                        'Unknown command.'))
 
                 else:
                     handler, schema = handlers[msg['type']]
@@ -388,7 +435,7 @@ class ActiveConnection:
             if wsock.closed:
                 self.debug("Connection closed by client")
             else:
-                _LOGGER.exception("Unexpected TypeError: %s", msg)
+                _LOGGER.exception("Unexpected TypeError: %s", err)
 
         except ValueError as err:
             msg = "Received invalid JSON"
@@ -399,7 +446,7 @@ class ActiveConnection:
             self._writer_task.cancel()
 
         except CANCELLATION_ERRORS:
-            self.debug("Connection cancelled by server")
+            self.debug("Connection cancelled")
 
         except asyncio.QueueFull:
             self.log_error("Client exceeded max pending messages [1]:",
@@ -431,6 +478,26 @@ class ActiveConnection:
             self.debug("Closed connection")
 
         return wsock
+
+
+def async_response(func):
+    """Decorate an async function to handle WebSocket API messages."""
+    async def handle_msg_response(hass, connection, msg):
+        """Create a response and handle exception."""
+        try:
+            await func(hass, connection, msg)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            connection.send_message_outside(error_message(
+                msg['id'], 'unknown', 'Unexpected error occurred'))
+
+    @callback
+    @wraps(func)
+    def schedule_handler(hass, connection, msg):
+        """Schedule the handler."""
+        hass.async_create_task(handle_msg_response(hass, connection, msg))
+
+    return schedule_handler
 
 
 @callback
@@ -468,19 +535,20 @@ def handle_unsubscribe_events(hass, connection, msg):
             msg['id'], ERR_NOT_FOUND, 'Subscription not found.'))
 
 
-@callback
-def handle_call_service(hass, connection, msg):
+@async_response
+async def handle_call_service(hass, connection, msg):
     """Handle call service command.
 
     Async friendly.
     """
-    async def call_service_helper(msg):
-        """Call a service and fire complete message."""
-        await hass.services.async_call(
-            msg['domain'], msg['service'], msg.get('service_data'), True)
-        connection.send_message_outside(result_message(msg['id']))
-
-    hass.async_add_job(call_service_helper(msg))
+    blocking = True
+    if (msg['domain'] == 'homeassistant' and
+            msg['service'] in ['restart', 'stop']):
+        blocking = False
+    await hass.services.async_call(
+        msg['domain'], msg['service'], msg.get('service_data'), blocking,
+        connection.context(msg))
+    connection.send_message_outside(result_message(msg['id']))
 
 
 @callback
@@ -493,19 +561,15 @@ def handle_get_states(hass, connection, msg):
         msg['id'], hass.states.async_all()))
 
 
-@callback
-def handle_get_services(hass, connection, msg):
+@async_response
+async def handle_get_services(hass, connection, msg):
     """Handle get services command.
 
     Async friendly.
     """
-    async def get_services_helper(msg):
-        """Get available services and fire complete message."""
-        descriptions = await async_get_all_descriptions(hass)
-        connection.send_message_outside(
-            result_message(msg['id'], descriptions))
-
-    hass.async_add_job(get_services_helper(msg))
+    descriptions = await async_get_all_descriptions(hass)
+    connection.send_message_outside(
+        result_message(msg['id'], descriptions))
 
 
 @callback
@@ -525,3 +589,59 @@ def handle_ping(hass, connection, msg):
     Async friendly.
     """
     connection.to_write.put_nowait(pong_message(msg['id']))
+
+
+def ws_require_user(
+        only_owner=False, only_system_user=False, allow_system_user=True,
+        only_active_user=True, only_inactive_user=False):
+    """Decorate function validating login user exist in current WS connection.
+
+    Will write out error message if not authenticated.
+    """
+    def validator(func):
+        """Decorate func."""
+        @wraps(func)
+        def check_current_user(hass: HomeAssistant,
+                               connection: ActiveConnection,
+                               msg):
+            """Check current user."""
+            def output_error(message_id, message):
+                """Output error message."""
+                connection.send_message_outside(error_message(
+                    msg['id'], message_id, message))
+
+            if connection.user is None:
+                output_error('no_user', 'Not authenticated as a user')
+                return
+
+            if only_owner and not connection.user.is_owner:
+                output_error('only_owner', 'Only allowed as owner')
+                return
+
+            if (only_system_user and
+                    not connection.user.system_generated):
+                output_error('only_system_user',
+                             'Only allowed as system user')
+                return
+
+            if (not allow_system_user
+                    and connection.user.system_generated):
+                output_error('not_system_user', 'Not allowed as system user')
+                return
+
+            if (only_active_user and
+                    not connection.user.is_active):
+                output_error('only_active_user',
+                             'Only allowed as active user')
+                return
+
+            if only_inactive_user and connection.user.is_active:
+                output_error('only_inactive_user',
+                             'Not allowed as active user')
+                return
+
+            return func(hass, connection, msg)
+
+        return check_current_user
+
+    return validator

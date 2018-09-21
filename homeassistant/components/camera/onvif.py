@@ -25,9 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUIREMENTS = ['onvif-py3==0.1.3',
                 'suds-py3==1.3.3.0',
-                'http://github.com/tgaugry/suds-passworddigest-py3'
-                '/archive/86fc50e39b4d2b8997481967d6a7fe1c57118999.zip'
-                '#suds-passworddigest-py3==0.1.2a']
+                'suds-passworddigest-homeassistant==0.1.2a0.dev0']
 DEPENDENCIES = ['ffmpeg']
 DEFAULT_NAME = 'ONVIF Camera'
 DEFAULT_PORT = 5000
@@ -73,7 +71,7 @@ SERVICE_PTZ_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a ONVIF camera."""
     if not hass.data[DATA_FFMPEG].async_run_test(config.get(CONF_HOST)):
         return
@@ -96,7 +94,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     hass.services.async_register(DOMAIN, SERVICE_PTZ, handle_ptz,
                                  schema=SERVICE_PTZ_SCHEMA)
-    add_devices([ONVIFHassCamera(hass, config)])
+    add_entities([ONVIFHassCamera(hass, config)])
 
 
 class ONVIFHassCamera(Camera):
@@ -185,7 +183,7 @@ class ONVIFHassCamera(Camera):
             _LOGGER.debug("Camera '%s' doesn't support PTZ.", self._name)
 
     async def async_added_to_hass(self):
-        """Callback when entity is added to hass."""
+        """Handle entity addition to hass."""
         if ONVIF_DATA not in self.hass.data:
             self.hass.data[ONVIF_DATA] = {}
             self.hass.data[ONVIF_DATA][ENTITIES] = []

@@ -31,7 +31,7 @@ SENSOR_ICONS = {
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson Sensors."""
     _LOGGER.debug("Creating new Dyson fans")
     devices = []
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devices.append(DysonHumiditySensor(device))
         devices.append(DysonTemperatureSensor(device, unit))
         devices.append(DysonAirQualitySensor(device))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class DysonSensor(Entity):

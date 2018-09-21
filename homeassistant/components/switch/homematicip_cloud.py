@@ -1,16 +1,15 @@
 """
-Support for HomematicIP switch.
+Support for HomematicIP Cloud switch.
 
-For more details about this component, please refer to the documentation at
+For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.homematicip_cloud/
 """
-
 import logging
 
-from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.homematicip_cloud import (
-    HomematicipGenericDevice, DOMAIN as HOMEMATICIP_CLOUD_DOMAIN,
-    ATTR_HOME_ID)
+    HMIPC_HAPID, HomematicipGenericDevice)
+from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
+from homeassistant.components.switch import SwitchDevice
 
 DEPENDENCIES = ['homematicip_cloud']
 
@@ -21,16 +20,18 @@ ATTR_ENERGIE_COUNTER = 'energie_counter'
 ATTR_PROFILE_MODE = 'profile_mode'
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
-    """Set up the HomematicIP switch devices."""
-    from homematicip.device import (
-        PlugableSwitch, PlugableSwitchMeasuring,
-        BrandSwitchMeasuring)
+async def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
+    """Set up the HomematicIP Cloud switch devices."""
+    pass
 
-    if discovery_info is None:
-        return
-    home = hass.data[HOMEMATICIP_CLOUD_DOMAIN][discovery_info[ATTR_HOME_ID]]
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the HomematicIP switch from a config entry."""
+    from homematicip.device import (
+        PlugableSwitch, PlugableSwitchMeasuring, BrandSwitchMeasuring)
+
+    home = hass.data[HMIPC_DOMAIN][config_entry.data[HMIPC_HAPID]].home
     devices = []
     for device in home.devices:
         if isinstance(device, BrandSwitchMeasuring):
@@ -44,11 +45,11 @@ async def async_setup_platform(hass, config, async_add_devices,
             devices.append(HomematicipSwitch(home, device))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
-    """MomematicIP switch device."""
+    """representation of a HomematicIP Cloud switch device."""
 
     def __init__(self, home, device):
         """Initialize the switch device."""
@@ -69,7 +70,7 @@ class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):
 
 
 class HomematicipSwitchMeasuring(HomematicipSwitch):
-    """MomematicIP measuring switch device."""
+    """Representation of a HomematicIP measuring switch device."""
 
     @property
     def current_power_w(self):

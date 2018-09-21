@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['websockets==3.2']
+REQUIREMENTS = ['websockets==6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,14 +56,14 @@ def async_setup(hass, config):
     # add sensor devices for each zone (typically motion/fire/door sensors)
     zones = yield from api.get_zones()
     if zones:
-        hass.async_add_job(discovery.async_load_platform(
+        hass.async_create_task(discovery.async_load_platform(
             hass, 'binary_sensor', DOMAIN,
             {ATTR_DISCOVER_DEVICES: zones}, config))
 
     # create a separate alarm panel for each area
     areas = yield from api.get_areas()
     if areas:
-        hass.async_add_job(discovery.async_load_platform(
+        hass.async_create_task(discovery.async_load_platform(
             hass, 'alarm_control_panel', DOMAIN,
             {ATTR_DISCOVER_AREAS: areas}, config))
 
@@ -151,7 +151,7 @@ def _ws_process_message(message, async_callback, *args):
             "Unsuccessful websocket message delivered, ignoring: %s", message)
     try:
         yield from async_callback(message['data']['sia'], *args)
-    except:  # noqa: E722  # pylint: disable=bare-except
+    except:  # noqa: E722 pylint: disable=bare-except
         _LOGGER.exception("Exception in callback, ignoring")
 
 

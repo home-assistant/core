@@ -16,9 +16,7 @@ from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
 
-REQUIREMENTS = [
-    'https://github.com/jabesq/netatmo-api-python/archive/'
-    'v0.9.2.1.zip#lnetatmo==0.9.2.1']
+REQUIREMENTS = ['pyatmo==1.1.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,11 +43,11 @@ CONFIG_SCHEMA = vol.Schema({
 
 def setup(hass, config):
     """Set up the Netatmo devices."""
-    import lnetatmo
+    import pyatmo
 
     global NETATMO_AUTH
     try:
-        NETATMO_AUTH = lnetatmo.ClientAuth(
+        NETATMO_AUTH = pyatmo.ClientAuth(
             config[DOMAIN][CONF_API_KEY], config[DOMAIN][CONF_SECRET_KEY],
             config[DOMAIN][CONF_USERNAME], config[DOMAIN][CONF_PASSWORD],
             'read_station read_camera access_camera '
@@ -66,7 +64,7 @@ def setup(hass, config):
     return True
 
 
-class CameraData(object):
+class CameraData:
     """Get the latest data from Netatmo."""
 
     def __init__(self, auth, home=None):
@@ -103,16 +101,16 @@ class CameraData(object):
         return self.module_names
 
     def get_camera_type(self, camera=None, home=None, cid=None):
-        """Return all module available on the API as a list."""
-        for camera_name in self.camera_names:
-            self.camera_type = self.camera_data.cameraType(camera_name)
-            return self.camera_type
+        """Return camera type for a camera, cid has preference over camera."""
+        self.camera_type = self.camera_data.cameraType(camera=camera,
+                                                       home=home, cid=cid)
+        return self.camera_type
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Call the Netatmo API to update the data."""
-        import lnetatmo
-        self.camera_data = lnetatmo.CameraData(self.auth, size=100)
+        import pyatmo
+        self.camera_data = pyatmo.CameraData(self.auth, size=100)
 
     @Throttle(MIN_TIME_BETWEEN_EVENT_UPDATES)
     def update_event(self):

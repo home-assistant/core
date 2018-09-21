@@ -17,7 +17,7 @@ from homeassistant.helpers.event import track_time_change
 from homeassistant.helpers.restore_state import async_get_last_state
 import homeassistant.util.dt as dt_util
 
-REQUIREMENTS = ['speedtest-cli==2.0.0']
+REQUIREMENTS = ['speedtest-cli==2.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +61,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Speedtest sensor."""
     data = SpeedtestData(hass, config)
 
@@ -69,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for sensor in config[CONF_MONITORED_CONDITIONS]:
         dev.append(SpeedtestSensor(data, sensor))
 
-    add_devices(dev)
+    add_entities(dev)
 
     def update(call=None):
         """Update service for manual updates."""
@@ -148,7 +148,7 @@ class SpeedtestSensor(Entity):
         self._state = state.state
 
 
-class SpeedtestData(object):
+class SpeedtestData:
     """Get the latest data from speedtest.net."""
 
     def __init__(self, hass, config):

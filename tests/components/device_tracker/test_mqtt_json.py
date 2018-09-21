@@ -29,7 +29,7 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
     """Test JSON MQTT device tracker platform."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
 
@@ -41,8 +41,7 @@ class TestComponentsDeviceTrackerJSONMQTT(unittest.TestCase):
         except FileNotFoundError:
             pass
 
-    def test_ensure_device_tracker_platform_validation(self): \
-            # pylint: disable=invalid-name
+    def test_ensure_device_tracker_platform_validation(self):
         """Test if platform validation was done."""
         @asyncio.coroutine
         def mock_setup_scanner(hass, config, see, discovery_info=None):

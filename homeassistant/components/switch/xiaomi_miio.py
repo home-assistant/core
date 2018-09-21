@@ -39,7 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'chuangmi.plug.v3']),
 })
 
-REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 ATTR_POWER = 'power'
 ATTR_TEMPERATURE = 'temperature'
@@ -97,8 +97,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-# pylint: disable=unused-argument
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the switch from config."""
     from miio import Device, DeviceException
@@ -142,7 +141,7 @@ async def async_setup_platform(hass, config, async_add_devices,
 
     elif model in ['qmi.powerstrip.v1', 'zimi.powerstrip.v2']:
         from miio import PowerStrip
-        plug = PowerStrip(host, token)
+        plug = PowerStrip(host, token, model=model)
         device = XiaomiPowerStripSwitch(name, plug, model, unique_id)
         devices.append(device)
         hass.data[DATA_KEY][host] = device
@@ -159,7 +158,7 @@ async def async_setup_platform(hass, config, async_add_devices,
             'and provide the following data: %s', model)
         return False
 
-    async_add_devices(devices, update_before_add=True)
+    async_add_entities(devices, update_before_add=True)
 
     async def async_service_handler(service):
         """Map services to methods on XiaomiPlugGenericSwitch."""
@@ -422,8 +421,11 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             self._device_features = FEATURE_FLAGS_PLUG_V3
             self._state_attrs.update({
                 ATTR_WIFI_LED: None,
-                ATTR_LOAD_POWER: None,
             })
+            if self._channel_usb is False:
+                self._state_attrs.update({
+                    ATTR_LOAD_POWER: None,
+                })
 
     async def async_turn_on(self, **kwargs):
         """Turn a channel on."""
@@ -477,7 +479,7 @@ class ChuangMiPlugSwitch(XiaomiPlugGenericSwitch):
             if state.wifi_led:
                 self._state_attrs[ATTR_WIFI_LED] = state.wifi_led
 
-            if state.load_power:
+            if self._channel_usb is False and state.load_power:
                 self._state_attrs[ATTR_LOAD_POWER] = state.load_power
 
         except DeviceException as ex:

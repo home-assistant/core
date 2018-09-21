@@ -58,7 +58,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the sensor platform."""
     websession = async_get_clientsession(hass)
     apikey = config.get(CONF_API_KEY)
@@ -74,7 +75,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(StartcaSensor(ts_data, variable, name))
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class StartcaSensor(Entity):
@@ -118,7 +119,7 @@ class StartcaSensor(Entity):
             self._state = round(self.startcadata.data[self.type], 2)
 
 
-class StartcaData(object):
+class StartcaData:
     """Get data from Start.ca API."""
 
     def __init__(self, loop, websession, api_key, bandwidth_cap):

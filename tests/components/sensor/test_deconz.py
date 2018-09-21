@@ -41,7 +41,7 @@ SENSOR = {
 }
 
 
-async def setup_bridge(hass, data):
+async def setup_bridge(hass, data, allow_clip_sensor=True):
     """Load the deCONZ sensor platform."""
     from pydeconz import DeconzSession
     loop = Mock()
@@ -49,6 +49,7 @@ async def setup_bridge(hass, data):
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
     bridge = DeconzSession(loop, session, **entry.data)
+    bridge.config = Mock()
     with patch('pydeconz.DeconzSession.async_get_state',
                return_value=mock_coro(data)):
         await bridge.async_load_parameters()
@@ -57,7 +58,9 @@ async def setup_bridge(hass, data):
     hass.data[deconz.DATA_DECONZ_EVENT] = []
     hass.data[deconz.DATA_DECONZ_ID] = {}
     config_entry = config_entries.ConfigEntry(
-        1, deconz.DOMAIN, 'Mock Title', {'host': 'mock-host'}, 'test')
+        1, deconz.DOMAIN, 'Mock Title',
+        {'host': 'mock-host', 'allow_clip_sensor': allow_clip_sensor}, 'test',
+        config_entries.CONN_CLASS_LOCAL_PUSH)
     await hass.config_entries.async_forward_entry_setup(config_entry, 'sensor')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
@@ -97,3 +100,16 @@ async def test_add_new_sensor(hass):
     async_dispatcher_send(hass, 'deconz_new_sensor', [sensor])
     await hass.async_block_till_done()
     assert "sensor.name" in hass.data[deconz.DATA_DECONZ_ID]
+
+
+async def test_do_not_allow_clipsensor(hass):
+    """Test that clip sensors can be ignored."""
+    data = {}
+    await setup_bridge(hass, data, allow_clip_sensor=False)
+    sensor = Mock()
+    sensor.name = 'name'
+    sensor.type = 'CLIPTemperature'
+    sensor.register_async_callback = Mock()
+    async_dispatcher_send(hass, 'deconz_new_sensor', [sensor])
+    await hass.async_block_till_done()
+    assert len(hass.data[deconz.DATA_DECONZ_ID]) == 0

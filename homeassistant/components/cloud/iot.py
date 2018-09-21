@@ -185,7 +185,7 @@ class CloudIoT:
                 yield from client.send_json(response)
 
         except client_exceptions.WSServerHandshakeError as err:
-            if err.code == 401:
+            if err.status == 401:
                 disconnect_warn = 'Invalid auth.'
                 self.close_requested = True
                 # Should we notify user?
@@ -227,6 +227,9 @@ def async_handle_message(hass, cloud, handler_name, payload):
 @asyncio.coroutine
 def async_handle_alexa(hass, cloud, payload):
     """Handle an incoming IoT message for Alexa."""
+    if not cloud.alexa_enabled:
+        return alexa.turned_off_response(payload)
+
     result = yield from alexa.async_handle_message(
         hass, cloud.alexa_config, payload)
     return result
@@ -236,6 +239,9 @@ def async_handle_alexa(hass, cloud, payload):
 @asyncio.coroutine
 def async_handle_google_actions(hass, cloud, payload):
     """Handle an incoming IoT message for Google Actions."""
+    if not cloud.google_enabled:
+        return ga.turned_off_response(payload)
+
     result = yield from ga.async_handle_message(
         hass, cloud.gactions_config, payload)
     return result
@@ -253,5 +259,3 @@ def async_handle_cloud(hass, cloud, payload):
                       payload['reason'])
     else:
         _LOGGER.warning("Received unknown cloud action: %s", action)
-
-    return None

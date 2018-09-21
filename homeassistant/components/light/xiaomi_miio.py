@@ -42,7 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
          'philips.light.candle2']),
 })
 
-REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 # The light does not accept cct values < 1
 CCT_MIN = 1
@@ -100,8 +100,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-# pylint: disable=unused-argument
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the light from config."""
     from miio import Device, DeviceException
@@ -165,7 +164,7 @@ async def async_setup_platform(hass, config, async_add_devices,
             'and provide the following data: %s', model)
         return False
 
-    async_add_devices(devices, update_before_add=True)
+    async_add_entities(devices, update_before_add=True)
 
     async def async_service_handler(service):
         """Map services to methods on Xiaomi Philips Lights."""

@@ -12,11 +12,11 @@ from tests.common import (
 FUNCTION_PATH = 'homeassistant.components.binary_sensor.workday.get_date'
 
 
-class TestWorkdaySetup(object):
+class TestWorkdaySetup:
     """Test class for workday sensor."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         # Set valid default config for test
@@ -97,7 +97,7 @@ class TestWorkdaySetup(object):
         self.hass.stop()
 
     def test_setup_component_province(self):
-        """Setup workday component."""
+        """Set up workday component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor',
                             self.config_province)
@@ -145,7 +145,7 @@ class TestWorkdaySetup(object):
         assert entity.state == 'off'
 
     def test_setup_component_noprovince(self):
-        """Setup workday component."""
+        """Set up workday component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor',
                             self.config_noprovince)
@@ -191,7 +191,7 @@ class TestWorkdaySetup(object):
         assert entity.state == 'on'
 
     def test_setup_component_invalidprovince(self):
-        """Setup workday component."""
+        """Set up workday component."""
         with assert_setup_component(1, 'binary_sensor'):
             setup_component(self.hass, 'binary_sensor',
                             self.config_invalidprovince)

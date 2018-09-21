@@ -37,7 +37,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the HDDTemp sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for disk in disks:
         dev.append(HddTempSensor(name, disk, hddtemp))
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class HddTempSensor(Entity):
@@ -108,7 +108,7 @@ class HddTempSensor(Entity):
             self._state = None
 
 
-class HddTempData(object):
+class HddTempData:
     """Get the latest data from HDDTemp and update the states."""
 
     def __init__(self, host, port):

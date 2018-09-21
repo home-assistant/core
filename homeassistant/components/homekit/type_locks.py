@@ -4,13 +4,12 @@ import logging
 from pyhap.const import CATEGORY_DOOR_LOCK
 
 from homeassistant.components.lock import (
-    ATTR_ENTITY_ID, STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN)
+    ATTR_ENTITY_ID, DOMAIN, STATE_LOCKED, STATE_UNLOCKED, STATE_UNKNOWN)
 from homeassistant.const import ATTR_CODE
 
 from . import TYPES
 from .accessories import HomeAccessory
-from .const import (
-    SERV_LOCK, CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE)
+from .const import CHAR_LOCK_CURRENT_STATE, CHAR_LOCK_TARGET_STATE, SERV_LOCK
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +54,7 @@ class Lock(HomeAccessory):
         params = {ATTR_ENTITY_ID: self.entity_id}
         if self._code:
             params[ATTR_CODE] = self._code
-        self.hass.services.call('lock', service, params)
+        self.hass.services.call(DOMAIN, service, params)
 
     def update_state(self, new_state):
         """Update lock after state changed."""

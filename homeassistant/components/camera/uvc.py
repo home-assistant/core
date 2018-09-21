@@ -13,6 +13,7 @@ import voluptuous as vol
 from homeassistant.const import CONF_PORT
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import PlatformNotReady
 
 REQUIREMENTS = ['uvcclient==0.10.1']
 
@@ -33,7 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Discover cameras on a Unifi NVR."""
     addr = config[CONF_NVR]
     key = config[CONF_KEY]
@@ -41,31 +42,32 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     port = config[CONF_PORT]
 
     from uvcclient import nvr
-    nvrconn = nvr.UVCRemote(addr, port, key)
     try:
+        # Exceptions may be raised in all method calls to the nvr library.
+        nvrconn = nvr.UVCRemote(addr, port, key)
         cameras = nvrconn.index()
+
+        identifier = 'id' if nvrconn.server_version >= (3, 2, 0) else 'uuid'
+        # Filter out airCam models, which are not supported in the latest
+        # version of UnifiVideo and which are EOL by Ubiquiti
+        cameras = [
+            camera for camera in cameras
+            if 'airCam' not in nvrconn.get_camera(camera[identifier])['model']]
     except nvr.NotAuthorized:
         _LOGGER.error("Authorization failure while connecting to NVR")
         return False
-    except nvr.NvrError:
-        _LOGGER.error("NVR refuses to talk to me")
-        return False
+    except nvr.NvrError as ex:
+        _LOGGER.error("NVR refuses to talk to me: %s", str(ex))
+        raise PlatformNotReady
     except requests.exceptions.ConnectionError as ex:
         _LOGGER.error("Unable to connect to NVR: %s", str(ex))
-        return False
+        raise PlatformNotReady
 
-    identifier = 'id' if nvrconn.server_version >= (3, 2, 0) else 'uuid'
-    # Filter out airCam models, which are not supported in the latest
-    # version of UnifiVideo and which are EOL by Ubiquiti
-    cameras = [
-        camera for camera in cameras
-        if 'airCam' not in nvrconn.get_camera(camera[identifier])['model']]
-
-    add_devices([UnifiVideoCamera(nvrconn,
-                                  camera[identifier],
-                                  camera['name'],
-                                  password)
-                 for camera in cameras])
+    add_entities([UnifiVideoCamera(nvrconn,
+                                   camera[identifier],
+                                   camera['name'],
+                                   password)
+                  for camera in cameras])
     return True
 
 
@@ -169,10 +171,9 @@ class UnifiVideoCamera(Camera):
                 if retry:
                     self._login()
                     return _get_image(retry=False)
-                else:
-                    _LOGGER.error(
-                        "Unable to log into camera, unable to get snapshot")
-                    raise
+                _LOGGER.error(
+                    "Unable to log into camera, unable to get snapshot")
+                raise
 
         return _get_image()
 

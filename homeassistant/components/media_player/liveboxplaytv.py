@@ -5,20 +5,20 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.liveboxplaytv/
 """
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_ON, SUPPORT_TURN_OFF, SUPPORT_PLAY,
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_VOLUME_STEP, SUPPORT_VOLUME_MUTE, SUPPORT_SELECT_SOURCE,
-    MEDIA_TYPE_CHANNEL, MediaPlayerDevice, PLATFORM_SCHEMA)
+    MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_PORT, STATE_ON, STATE_OFF, STATE_PLAYING,
-    STATE_PAUSED, CONF_NAME)
+    CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF, STATE_ON, STATE_PAUSED,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -40,12 +40,13 @@ MIN_TIME_BETWEEN_FORCED_SCANS = timedelta(seconds=1)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
 })
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Orange Livebox Play TV platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -59,7 +60,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     except IOError:
         _LOGGER.error("Failed to connect to Livebox Play TV at %s:%s. "
                       "Please check your configuration", host, port)
-    async_add_devices(livebox_devices, True)
+    async_add_entities(livebox_devices, True)
 
 
 class LiveboxPlayTvDevice(MediaPlayerDevice):
@@ -88,6 +89,8 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         import pyteleloisirs
         try:
             self._state = self.refresh_state()
+            # Update channel list
+            self.refresh_channel_list()
             # Update current channel
             channel = self._client.channel
             if channel is not None:
@@ -200,7 +203,7 @@ class LiveboxPlayTvDevice(MediaPlayerDevice):
         state = self._client.media_state
         if state == 'PLAY':
             return STATE_PLAYING
-        elif state == 'PAUSE':
+        if state == 'PAUSE':
             return STATE_PAUSED
 
         return STATE_ON if self._client.is_on else STATE_OFF
