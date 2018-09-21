@@ -244,8 +244,8 @@ def date(value) -> date_sys:
     return date_val
 
 
-def time_period_str(value: str) -> timedelta:
-    """Validate and transform time offset."""
+def time_period_str_colon(value: str) -> timedelta:
+    """Validate and transform time offset with format HH:MM[:SS]."""
     if isinstance(value, int):
         raise vol.Invalid('Make sure you wrap time values in quotes')
     elif not isinstance(value, str):
@@ -279,15 +279,34 @@ def time_period_str(value: str) -> timedelta:
     return offset
 
 
-def time_period_seconds(value: Union[int, str]) -> timedelta:
-    """Validate and transform seconds to a time offset."""
-    try:
-        return timedelta(seconds=int(value))
-    except (ValueError, TypeError):
-        raise vol.Invalid('Expected seconds, got {}'.format(value))
+def time_period_str_unit(value: Any) -> timedelta:
+    """Validate and transform time period with time unit and integer value."""
+    if isinstance(value, int):
+        value = str(value)
+    elif not isinstance(value, str):
+        raise vol.Invalid("Expected string for time period with unit.")
+
+    unit_to_kwarg = {
+        'ms': 'milliseconds',
+        's': 'seconds',
+        'sec': 'seconds',
+        '': 'seconds',
+        'min': 'minutes',
+        'h': 'hours',
+        'd': 'days',
+    }
+
+    match = re.match(r"^([-+]?\d+)\s*(\w*)$", value)
+
+    if match is None or match.group(2) not in unit_to_kwarg:
+        raise vol.Invalid("Expected time period with unit, "
+                          "got {}".format(value))
+
+    kwarg = unit_to_kwarg[match.group(2)]
+    return timedelta(**{kwarg: int(match.group(1))})
 
 
-time_period = vol.Any(time_period_str, time_period_seconds, timedelta,
+time_period = vol.Any(time_period_str_colon, time_period_str_unit, timedelta,
                       time_period_dict)
 
 

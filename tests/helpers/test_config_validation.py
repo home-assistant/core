@@ -289,6 +289,36 @@ def test_time_period():
     assert -1 * timedelta(hours=1, minutes=15) == schema('-1:15')
 
 
+def test_time_period_with_unit():
+    """Test time_period_str_unit validation."""
+    # Test with time_period to see if it plays nicely with other formats
+    schema = vol.Schema(cv.time_period)
+
+    assert schema('70') == timedelta(seconds=70)
+    assert schema('0') == timedelta(seconds=0)
+    assert schema(70) == timedelta(seconds=70)
+    assert schema(0) == timedelta(seconds=0)
+    assert schema('70s') == timedelta(seconds=70)
+    assert schema('70 s') == timedelta(seconds=70)
+    assert schema('70\ts') == timedelta(seconds=70)
+    assert schema('70  s') == timedelta(seconds=70)
+    assert schema('10 sec') == timedelta(seconds=10)
+    assert schema('50 min') == timedelta(minutes=50)
+    assert schema('15ms') == timedelta(milliseconds=15)
+    assert schema('-15') == timedelta(seconds=-15)
+    assert schema('-3h') == timedelta(hours=-3)
+    assert schema('+3h') == timedelta(hours=3)
+    assert schema('14d') == timedelta(days=14)
+
+    for value in ['3.5', '-4.5h', '3m', '70u', '4,6h', '', 3.5]:
+        with pytest.raises(vol.Invalid):
+            schema(value)
+
+    # Check time_period_str_unit doesn't match time_period_dict
+    with pytest.raises(vol.Invalid):
+        cv.time_period_str_unit({'minutes': 30})
+
+
 def test_service():
     """Test service validation."""
     schema = vol.Schema(cv.service)
