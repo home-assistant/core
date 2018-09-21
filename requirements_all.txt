@@ -1058,7 +1058,7 @@ pysma==0.2
 pysnmp==4.4.5
 
 # homeassistant.components.sonos
-pysonos==0.0.1
+pysonos==0.0.2
 
 # homeassistant.components.notify.stride
 pystride==0.1.7

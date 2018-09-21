@@ -165,7 +165,7 @@ pyotp==2.2.6
 pyqwikswitch==0.8
 
 # homeassistant.components.sonos
-pysonos==0.0.1
+pysonos==0.0.2
 
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky
