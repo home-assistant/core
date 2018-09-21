@@ -104,8 +104,8 @@ TCS_MODES = [
 ]
 
 # bit masks for dispatcher packets
-EVO_MASTER = 0x01
-EVO_SLAVE = 0x02
+EVO_PARENT = 0x01
+EVO_CHILD = 0x02
 
 # these are used to help prevent E501 (line too long) violations
 GWS = 'gateways'
@@ -222,7 +222,7 @@ def setup(hass, config):
         pkt = {
             'sender': 'setup()',
             'signal': 'update',
-            'to': EVO_MASTER
+            'to': EVO_PARENT
         }
         hass.helpers.dispatcher.dispatcher_send(
             DISPATCHER_EVOHOME,
@@ -412,7 +412,7 @@ class EvoController(EvoEntity):
     def __init__(self, hass, client, obj_ref):
         """Initialize the evohome Controller."""
         self._obj = obj_ref
-        self._type = EVO_MASTER
+        self._type = EVO_PARENT
 
         super().__init__(hass, client, obj_ref)
 
