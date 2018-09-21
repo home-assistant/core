@@ -17,7 +17,7 @@ from homeassistant.const import (CONF_HOST, CONF_PORT,
                                  EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ["aqualogic==0.9", "zope.event==4.3.0"]
+REQUIREMENTS = ["aqualogic==0.11", "zope.event==4.3.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
