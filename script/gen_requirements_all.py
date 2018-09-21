@@ -96,6 +96,7 @@ TEST_REQUIREMENTS = (
     'somecomfort',
     'sqlalchemy',
     'statsd',
+    'turntouch',
     'uvcclient',
     'warrant',
     'yahoo-finance',
