@@ -556,6 +556,9 @@ lmnotify==0.0.4
 # homeassistant.components.device_tracker.google_maps
 locationsharinglib==2.0.11
 
+# homeassistant.components.logi_circle
+logi_circle==0.1.7
+
 # homeassistant.components.sensor.luftdaten
 luftdaten==0.2.0
 
