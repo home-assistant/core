@@ -126,9 +126,8 @@ class EvoController(ClimateDevice):
         self._config = domain_data['config'][GWS][0][TCS][0]
         self._params = domain_data['params']
 
-        # Set the entity's name & icon (treated as static vales)
+        # Set the entity's name (treated as static vales)
         self._name = domain_data['config']['locationInfo']['name']
-        self._icon = "mdi:thermostat"
 
         # Set the entity's supported features
         self._supported_features = SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
@@ -235,11 +234,6 @@ class EvoController(ClimateDevice):
     def name(self):
         """Return the name to use in the frontend UI."""
         return self._name
-
-    @property
-    def icon(self):
-        """Return the icon to use in the frontend UI."""
-        return self._icon
 
     @property
     def available(self):
