@@ -45,15 +45,13 @@ REQUIREMENTS = ['python-gitlab==1.6.0']
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Sensor platform setup."""
-    _priv_token = config.get(CONF_TOKEN)
-    _gitlab_id = config.get(CONF_GITLAB_ID)
     _name = config.get(CONF_NAME)
     _interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
     _url = config.get(CONF_URL)
 
     _gitlab_data = GitLabData(
-        priv_token=_priv_token,
-        gitlab_id=_gitlab_id,
+        priv_token=config[CONF_TOKEN],
+        gitlab_id=config[CONF_GITLAB_ID],
         interval=_interval,
         url=_url
     )
