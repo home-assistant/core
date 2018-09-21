@@ -11,10 +11,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (CONF_MONITORED_CONDITIONS,
-        TEMP_CELSIUS, TEMP_FAHRENHEIT)
+                                 TEMP_CELSIUS, TEMP_FAHRENHEIT)
 from homeassistant.core import callback
 from homeassistant.helpers.entity import Entity
-import homeassistant.components.aqualogic as aqualogic
+import homeassistant.components.aqualogic as aq
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,12 +46,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
+
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the sensor platform."""
     sensors = []
 
-    component = hass.data[aqualogic.DOMAIN]
+    component = hass.data[aq.DOMAIN]
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
         sensors.append(AquaLogicSensor(component, sensor_type))
 
@@ -74,18 +75,18 @@ class AquaLogicSensor(Entity):
 
     @property
     def name(self):
+        """Return the name of the sensor."""
         return "AquaLogic {}".format(SENSOR_TYPES[self._type][0])
 
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement the value is expressed in."""
         panel = self._component.panel
-        if panel == None:
+        if panel is None:
             return None
         if panel.is_metric:
             return SENSOR_TYPES[self._type][1][0]
-        else:
-            return SENSOR_TYPES[self._type][1][1]
+        return SENSOR_TYPES[self._type][1][1]
 
     @property
     def should_poll(self):
@@ -101,11 +102,12 @@ class AquaLogicSensor(Entity):
     def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            aqualogic.UPDATE_TOPIC, self.async_update_callback)
+            aq.UPDATE_TOPIC, self.async_update_callback)
 
     @callback
     def async_update_callback(self):
-        panel = self._component.panel;
+        """Update callback."""
+        panel = self._component.panel
         if panel is not None:
             self._state = getattr(panel, self._type)
             self.async_schedule_update_ha_state()

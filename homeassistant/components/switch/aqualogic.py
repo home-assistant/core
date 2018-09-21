@@ -11,10 +11,9 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.core import callback
-import homeassistant.components.aqualogic as aqualogic
+import homeassistant.components.aqualogic as aq
 from homeassistant.components.switch import SwitchDevice, PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION)
+from homeassistant.const import (CONF_MONITORED_CONDITIONS)
 
 DEPENDENCIES = ['aqualogic']
 
@@ -44,7 +43,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the switch platform."""
     switches = []
 
-    component = hass.data[aqualogic.DOMAIN]
+    component = hass.data[aq.DOMAIN]
     for switch_type in config.get(CONF_MONITORED_CONDITIONS):
         switches.append(AquaLogicSwitch(component, switch_type))
 
@@ -56,11 +55,10 @@ class AquaLogicSwitch(SwitchDevice):
 
     def __init__(self, component, switch_type):
         """Initialize switch."""
-        from aqualogic.core import AquaLogic, States
-        import aqualogic.core
+        from aqualogic.core import States
         self._component = component
         self._type = switch_type
-        self._stateName = {
+        self._state_name = {
             'lights': States.LIGHTS,
             'filter': States.FILTER,
             'filter_low_speed': States.FILTER_LOW_SPEED,
@@ -75,6 +73,7 @@ class AquaLogicSwitch(SwitchDevice):
 
     @property
     def name(self):
+        """Return the name of the switch."""
         return "AquaLogic {}".format(SWITCH_TYPES[self._type])
 
     @property
@@ -88,33 +87,34 @@ class AquaLogicSwitch(SwitchDevice):
         panel = self._component.panel
         if panel is None:
             return False
-        state = panel.get_state(self._stateName)
+        state = panel.get_state(self._state_name)
         return state
 
-    def turn_on(self):
+    def turn_on(self, **kwargs):
         """Turn the device on."""
         if self.is_on:
             return
         panel = self._component.panel
         if panel is None:
             return
-        panel.set_state(self._stateName, True)
+        panel.set_state(self._state_name, True)
 
-    def turn_off(self):
+    def turn_off(self, **kwargs):
         """Turn the device off."""
         if not self.is_on:
             return
         panel = self._component.panel
         if panel is None:
             return
-        panel.set_state(self._stateName, False)
+        panel.set_state(self._state_name, False)
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
-            aqualogic.UPDATE_TOPIC, self.async_update_callback)
+            aq.UPDATE_TOPIC, self.async_update_callback)
 
     @callback
     def async_update_callback(self):
+        """Update callback."""
         self.async_schedule_update_ha_state()

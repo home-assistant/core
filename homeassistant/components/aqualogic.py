@@ -12,9 +12,9 @@ import socket
 
 import voluptuous as vol
 
-from homeassistant.const import (
-    CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
-)
+from homeassistant.const import (CONF_HOST, CONF_PORT,
+                                 EVENT_HOMEASSISTANT_START,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 
 REQUIREMENTS = ["aqualogic==0.9", "zope.event==4.3.0"]
@@ -35,18 +35,19 @@ CONFIG_SCHEMA = vol.Schema({
 
 
 def setup(hass, base_config):
-    """Setup AquaLogic platform."""
+    """Set up AquaLogic platform."""
     config = base_config.get(DOMAIN)
-
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
-
     hass.data[DOMAIN] = AquaLogicProcessor(hass, host, port)
-
     return True
 
+
 class AquaLogicProcessor(threading.Thread):
+    """AquaLogic event processor thread."""
+
     def __init__(self, hass, host, port):
+        """Initialize the data object."""
         super(AquaLogicProcessor, self).__init__(daemon=True)
         self._hass = hass
         self._host = host
@@ -72,19 +73,21 @@ class AquaLogicProcessor(threading.Thread):
         self._shutdown = True
 
     def data_changed(self, panel):
+        """Aqualogic data changed callback."""
         self._hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
 
     def run(self):
+        """Event thread."""
         from aqualogic.core import AquaLogic
         import zope.event
 
         zope.event.subscribers.append(self.data_changed)
         while True:
             try:
-                s = socket.create_connection((self._host, self._port), 10)
+                sock = socket.create_connection((self._host, self._port), 10)
 
-                reader = s.makefile(mode='rb')
-                writer = s.makefile(mode='wb')
+                reader = sock.makefile(mode='rb')
+                writer = sock.makefile(mode='wb')
 
                 self._panel = AquaLogic(reader, writer)
                 self._panel.process()
@@ -97,10 +100,11 @@ class AquaLogicProcessor(threading.Thread):
             except socket.timeout:
                 _LOGGER.error("Connection to %s:%d timed out",
                               self._host, self._port)
-            except Exception:
+            except IOError:
                 _LOGGER.exception("Error")
                 time.sleep(RECONNECT_INTERVAL.seconds)
 
     @property
     def panel(self):
+        """Retrieve the AquaLogic object."""
         return self._panel
