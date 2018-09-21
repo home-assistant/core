@@ -457,6 +457,22 @@ async def test_color_temperature_light(hass):
     }
 
 
+async def test_color_temperature_light_bad_temp(hass):
+    """Test ColorTemperature trait support for light domain."""
+    assert not trait.ColorTemperatureTrait.supported(light.DOMAIN, 0)
+    assert trait.ColorTemperatureTrait.supported(light.DOMAIN,
+                                                 light.SUPPORT_COLOR_TEMP)
+
+    trt = trait.ColorTemperatureTrait(hass, State('light.bla', STATE_ON, {
+        light.ATTR_MIN_MIREDS: 200,
+        light.ATTR_COLOR_TEMP: 0,
+        light.ATTR_MAX_MIREDS: 500,
+    }))
+
+    assert trt.query_attributes() == {
+    }
+
+
 async def test_scene_scene(hass):
     """Test Scene trait support for scene domain."""
     assert trait.SceneTrait.supported(scene.DOMAIN, 0)

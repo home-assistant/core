@@ -66,9 +66,6 @@ PyXiaomiGateway==0.10.0
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.0
 
-# homeassistant.components.sonos
-SoCo==0.16
-
 # homeassistant.components.sensor.travisci
 TravisPy==0.3.5
 
@@ -455,7 +452,7 @@ hole==0.3.0
 holidays==0.9.7
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180919.0
+home-assistant-frontend==20180920.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -508,7 +505,7 @@ jsonrpc-async==0.6
 jsonrpc-websocket==0.6
 
 # homeassistant.scripts.keyring
-keyring==15.0.0
+keyring==15.1.0
 
 # homeassistant.scripts.keyring
 keyrings.alt==3.1
@@ -559,6 +556,9 @@ lmnotify==0.0.4
 
 # homeassistant.components.device_tracker.google_maps
 locationsharinglib==2.0.11
+
+# homeassistant.components.logi_circle
+logi_circle==0.1.7
 
 # homeassistant.components.sensor.luftdaten
 luftdaten==0.2.0
@@ -620,7 +620,7 @@ ndms2_client==0.0.4
 netdata==0.1.2
 
 # homeassistant.components.discovery
-netdisco==2.0.0
+netdisco==2.1.0
 
 # homeassistant.components.sensor.neurio_energy
 neurio==0.3.1
@@ -1061,6 +1061,9 @@ pysma==0.2
 # homeassistant.components.switch.snmp
 pysnmp==4.4.5
 
+# homeassistant.components.sonos
+pysonos==0.0.2
+
 # homeassistant.components.notify.stride
 pystride==0.1.7
 
@@ -1310,7 +1313,7 @@ sense_energy==0.4.2
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.sensor.shodan
-shodan==1.10.1
+shodan==1.10.2
 
 # homeassistant.components.notify.simplepush
 simplepush==1.1.4
