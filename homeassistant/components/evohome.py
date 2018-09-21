@@ -249,8 +249,8 @@ class EvoEntity(ClimateDevice):
     def __init__(self, hass, client, obj_ref):
         """Initialize the evohome entity.
 
-        Most read-only properties are set here.  SOe are pseudo read-only,
-        for example name (which can change).
+        Most read-only properties are set here.  So are pseudo read-only,
+        for example name (which _could_ change between update()s).
         """
         # Set the usual object references
         self.hass = hass
