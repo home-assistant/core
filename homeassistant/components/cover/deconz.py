@@ -69,12 +69,14 @@ class DeconzCover(CoverDevice):
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
+        if self.is_closed:
+            return 0
         return int(self._cover.brightness / 255 * 100)
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self.current_cover_position == 0
+        return not self._cover.state
 
     @property
     def name(self):
@@ -108,16 +110,22 @@ class DeconzCover(CoverDevice):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        data = {'bri': int(kwargs.get(ATTR_POSITION) / 100 * 255)}
+        position = kwargs[ATTR_POSITION]
+        data = {'on': False}
+        if position > 0:
+            data['on'] = True
+            data['bri'] = int(position / 100 * 255)
         await self._cover.async_set_state(data)
 
     async def async_open_cover(self, **kwargs):
         """Open cover."""
-        await self.async_set_cover_position(100)
+        data = {ATTR_POSITION: 100}
+        await self.async_set_cover_position(**data)
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
-        await self.async_set_cover_position(0)
+        data = {ATTR_POSITION: 0}
+        await self.async_set_cover_position(**data)
 
     @property
     def device_info(self):
