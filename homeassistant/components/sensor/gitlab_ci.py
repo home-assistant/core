@@ -25,7 +25,7 @@ ATTR_BUILD_FINISHED = 'build_finished'
 ATTR_BUILD_DURATION = 'build_duration'
 ATTR_BUILD_COMMIT_ID = 'commit id'
 ATTR_BUILD_COMMIT_DATE = 'commit date'
-ATTR_BUILD_BRANCH = 'master'
+ATTR_BUILD_BRANCH = 'build branch'
 
 SCAN_INTERVAL = timedelta(seconds=300)
 
@@ -139,11 +139,8 @@ class GitLabData():
         """Fetch data from GitLab API for most recent CI job."""
         import gitlab
         self._gitlab_id = gitlab_id
-        self._priv_token = priv_token
-        self._interval = interval
-        self._url = url
         self._gitlab = gitlab.Gitlab(
-            self._url, private_token=self._priv_token, per_page=1)
+            url, private_token=priv_token, per_page=1)
         self._gitlab.auth()
         self._gitlab_exceptions = gitlab.exceptions
         self.update = Throttle(interval)(self._update)
