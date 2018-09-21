@@ -71,7 +71,7 @@ async def test_no_switches(hass):
 
 
 async def test_switch(hass):
-    """Test that all supported switch entities and switch group are created."""
+    """Test that all supported switch entities are created."""
     await setup_bridge(hass, {"lights": SUPPORTED_SWITCHES})
     assert "switch.switch_1_name" in hass.data[deconz.DATA_DECONZ_ID]
     assert "switch.switch_2_name" in hass.data[deconz.DATA_DECONZ_ID]

@@ -6,7 +6,8 @@ https://home-assistant.io/components/light.deconz/
 """
 from homeassistant.components.deconz.const import (
     CONF_ALLOW_DECONZ_GROUPS, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN, SWITCH_TYPES)
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN,
+    COVER_TYPES, SWITCH_TYPES)
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
     ATTR_TRANSITION, EFFECT_COLORLOOP, FLASH_LONG, FLASH_SHORT,
@@ -33,7 +34,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         """Add light from deCONZ."""
         entities = []
         for light in lights:
-            if light.type not in SWITCH_TYPES:
+            if light.type not in COVER_TYPES + SWITCH_TYPES:
                 entities.append(DeconzLight(light))
         async_add_entities(entities, True)
 
