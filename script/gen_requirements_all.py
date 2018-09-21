@@ -19,7 +19,6 @@ COMMENT_REQUIREMENTS = (
     'bluepy',
     'opencv-python',
     'python-lirc',
-    'gattlib',
     'pyuserinput',
     'evdev',
     'pycups',
@@ -56,6 +55,7 @@ TEST_REQUIREMENTS = (
     'ha-ffmpeg',
     'haversine',
     'hbmqtt',
+    'hdate',
     'holidays',
     'home-assistant-frontend',
     'homematicip',
@@ -79,6 +79,7 @@ TEST_REQUIREMENTS = (
     'pynx584',
     'pyopenuv',
     'pyotp',
+    'pysonos',
     'pyqwikswitch',
     'PyRMVtransport',
     'python-forecastio',
@@ -92,7 +93,6 @@ TEST_REQUIREMENTS = (
     'ring_doorbell',
     'rxv',
     'sleepyq',
-    'SoCo',
     'somecomfort',
     'sqlalchemy',
     'statsd',
@@ -116,8 +116,8 @@ IGNORE_REQ = (
     'colorama<=1',  # Windows only requirement in check_config
 )
 
-URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
-           '#1-requirements')
+URL_PIN = ('https://developers.home-assistant.io/docs/'
+           'creating_platform_code_review.html#1-requirements')
 
 
 CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),

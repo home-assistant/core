@@ -42,6 +42,7 @@ omit =
 
     homeassistant/components/asterisk_mbox.py
     homeassistant/components/*/asterisk_mbox.py
+    homeassistant/components/*/asterisk_cdr.py
 
     homeassistant/components/august.py
     homeassistant/components/*/august.py
@@ -91,6 +92,9 @@ omit =
 
     homeassistant/components/ecobee.py
     homeassistant/components/*/ecobee.py
+
+    homeassistant/components/edp_redy.py
+    homeassistant/components/*/edp_redy.py
 
     homeassistant/components/egardia.py
     homeassistant/components/*/egardia.py
@@ -186,6 +190,9 @@ omit =
 
     homeassistant/components/linode.py
     homeassistant/components/*/linode.py
+
+    homeassistant/components/logi_circle.py
+    homeassistant/components/*/logi_circle.py
 
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
@@ -745,6 +752,7 @@ omit =
     homeassistant/components/sensor/sonarr.py
     homeassistant/components/sensor/speedtest.py
     homeassistant/components/sensor/spotcrime.py
+    homeassistant/components/sensor/starlingbank.py
     homeassistant/components/sensor/steam_online.py
     homeassistant/components/sensor/supervisord.py
     homeassistant/components/sensor/swiss_hydrological_data.py
@@ -818,6 +826,7 @@ omit =
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/darksky.py
+    homeassistant/components/weather/met.py
     homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/weather/zamg.py

@@ -114,11 +114,16 @@ class ScrapeSensor(Entity):
 
         raw_data = BeautifulSoup(self.rest.data, 'html.parser')
         _LOGGER.debug(raw_data)
-        if self._attr is not None:
-            value = raw_data.select(self._select)[0][self._attr]
-        else:
-            value = raw_data.select(self._select)[0].text
-        _LOGGER.debug(value)
+
+        try:
+            if self._attr is not None:
+                value = raw_data.select(self._select)[0][self._attr]
+            else:
+                value = raw_data.select(self._select)[0].text
+            _LOGGER.debug(value)
+        except IndexError:
+            _LOGGER.error("Unable to extract data from HTML")
+            return
 
         if self._value_template is not None:
             self._state = self._value_template.render_with_possible_json_value(

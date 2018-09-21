@@ -47,6 +47,7 @@ async def setup_bridge(hass, data):
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
     bridge = DeconzSession(loop, session, **entry.data)
+    bridge.config = Mock()
     with patch('pydeconz.DeconzSession.async_get_state',
                return_value=mock_coro(data)):
         await bridge.async_load_parameters()
@@ -54,7 +55,8 @@ async def setup_bridge(hass, data):
     hass.data[deconz.DATA_DECONZ_UNSUB] = []
     hass.data[deconz.DATA_DECONZ_ID] = {}
     config_entry = config_entries.ConfigEntry(
-        1, deconz.DOMAIN, 'Mock Title', {'host': 'mock-host'}, 'test')
+        1, deconz.DOMAIN, 'Mock Title', {'host': 'mock-host'}, 'test',
+        config_entries.CONN_CLASS_LOCAL_PUSH)
     await hass.config_entries.async_forward_entry_setup(config_entry, 'switch')
     # To flush out the service call to update the group
     await hass.async_block_till_done()
