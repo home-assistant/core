@@ -31,21 +31,6 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow):
                 reason='single_instance_allowed'
             )
 
-        if self.context and self.context.get('source') != \
-                config_entries.SOURCE_DISCOVERY:
-            # Get current discovered entries.
-            in_progress = self._async_in_progress()
-
-            has_devices = in_progress
-            if not has_devices:
-                has_devices = await self.hass.async_add_job(
-                    self._discovery_function, self.hass)
-
-            if not has_devices:
-                return self.async_abort(
-                    reason='no_devices_found'
-                )
-
         return await self.async_step_confirm()
 
     async def async_step_confirm(self, user_input=None):
