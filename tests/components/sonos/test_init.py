@@ -15,6 +15,12 @@ async def test_creating_entry_sets_up_media_player(hass):
             patch('pysonos.discover', return_value=True):
         result = await hass.config_entries.flow.async_init(
             sonos.DOMAIN, context={'source': config_entries.SOURCE_USER})
+
+        # Confirmation form
+        assert result['type'] == data_entry_flow.RESULT_TYPE_FORM
+
+        result = await hass.config_entries.flow.async_configure(
+            result['flow_id'], {})
         assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
         await hass.async_block_till_done()
