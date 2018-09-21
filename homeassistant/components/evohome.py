@@ -18,7 +18,7 @@ https://home-assistant.io/components/evohome/
 
 # Glossary
 # TCS - temperature control system (a.k.a. Controller, Master), which can
-# have up to 13 Slaves:
+# have up to 13 Children:
 #   0-12 Heating zones (a.k.a. Zone), and
 #   0-1 DHW controller, (a.k.a. Boiler)
 
@@ -237,7 +237,7 @@ def setup(hass, config):
 
 
 class EvoEntity(ClimateDevice):
-    """Base for Honeywell evohome slave devices (Heating/DHW zones)."""
+    """Base for Honeywell evohome child devices (Heating/DHW zones)."""
 
     def __init__(self, hass, client, obj_ref):
         """Initialize the evohome entity.
@@ -355,7 +355,7 @@ class EvoEntity(ClimateDevice):
         """Return True is the device is available.
 
         All evohome entities are initially unavailable. Once HA has started,
-        state data is then retrieved by the Controller, and then the slaves
+        state data is then retrieved by the Controller, and then the children
         will get a state (e.g. operating_mode, current_temperature).
 
         However, evohome entities can become unavailable for other reasons.
@@ -406,7 +406,7 @@ class EvoController(EvoEntity):
     """Base for a Honeywell evohome hub/Controller device.
 
     The Controller (aka TCS, temperature control system) is the master of all
-    the slave (CH/DHW) devices.
+    the child (CH/DHW) devices.
     """
 
     def __init__(self, hass, client, obj_ref):
@@ -519,9 +519,9 @@ class EvoController(EvoEntity):
     def update(self):
         """Get the latest state data of the installation.
 
-        This includes state data for the Controller and its slave devices, such
+        This includes state data for the Controller and its child devices, such
         as the operating_mode of the Controller and the current_temperature
-        of slaves.
+        of its children.
 
         This is not asyncio-friendly due to the underlying client api.
         """
