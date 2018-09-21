@@ -15,9 +15,7 @@ import voluptuous as vol
 from homeassistant.const import (
     CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 )
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
 
 REQUIREMENTS = ["aqualogic==0.9", "zope.event==4.3.0"]
 
@@ -71,7 +69,7 @@ class AquaLogicProcessor(threading.Thread):
     def shutdown(self, event):
         """Signal shutdown of processing event."""
         _LOGGER.debug("Event processing signaled exit")
-        self._shutdown = true
+        self._shutdown = True
 
     def data_changed(self, panel):
         self._hass.helpers.dispatcher.dispatcher_send(UPDATE_TOPIC)
@@ -83,7 +81,6 @@ class AquaLogicProcessor(threading.Thread):
         zope.event.subscribers.append(self.data_changed)
         while True:
             try:
-                #s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s = socket.create_connection((self._host, self._port), 10)
 
                 reader = s.makefile(mode='rb')
@@ -94,10 +91,12 @@ class AquaLogicProcessor(threading.Thread):
 
                 if self._shutdown:
                     return
-                
-                _LOGGER.error("Connection to %s:%d lost", self._host, self._port)
+
+                _LOGGER.error("Connection to %s:%d lost", 
+                        self._host, self._port)
             except socket.timeout:
-                _LOGGER.error("Connection to %s:%d timed out", self._host, self._port)
+                _LOGGER.error("Connection to %s:%d timed out", 
+                        self._host, self._port)
             except Exception:
                 _LOGGER.exception("Error")
                 time.sleep(RECONNECT_INTERVAL.seconds)
