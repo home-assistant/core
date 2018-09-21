@@ -134,6 +134,7 @@ class DeconzCover(CoverDevice):
                 self._cover.uniqueid.count(':') != 7):
             return None
         serial = self._cover.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -141,4 +142,5 @@ class DeconzCover(CoverDevice):
             'model': self._cover.modelid,
             'name': self._cover.name,
             'sw_version': self._cover.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
