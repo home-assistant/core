@@ -12,7 +12,8 @@ from homeassistant import config_entries
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json
 
-from .const import CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY
+from .const import (
+    CONF_IMPORT_GROUPS, CONF_IDENTITY, CONF_HOST, CONF_KEY, CONF_GATEWAY_ID)
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
@@ -84,13 +85,27 @@ async def async_setup_entry(hass, entry):
     gateway = Gateway()
 
     try:
-        await api(gateway.get_gateway_info())
+        gateway_info = await api(gateway.get_gateway_info())
     except RequestError:
         _LOGGER.error("Tradfri setup failed.")
         return False
 
     hass.data.setdefault(KEY_API, {})[entry.entry_id] = api
     hass.data.setdefault(KEY_GATEWAY, {})[entry.entry_id] = gateway
+
+    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections=set(),
+        identifiers={
+            (DOMAIN, entry.data[CONF_GATEWAY_ID])
+        },
+        manufacturer='IKEA',
+        name='Gateway',
+        # They just have 1 gateway model. Type is not exposed yet.
+        model='E1526',
+        sw_version=gateway_info.firmware_version,
+    )
 
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'light'
