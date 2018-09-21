@@ -98,8 +98,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     return True
 
 
-class EvoEntity(ClimateDevice):
-    """Base for Honeywell evohome child devices (Heating/DHW zones)."""
+class EvoController(ClimateDevice):
+    """Base for a Honeywell evohome hub/Controller device.
+
+    The Controller (aka TCS, temperature control system) is the parent of all
+    the child (CH/DHW) devices.
+    """
 
     def __init__(self, hass, client, obj_ref):
         """Initialize the evohome entity.
@@ -111,6 +115,9 @@ class EvoEntity(ClimateDevice):
         self.hass = hass
         self.client = client
         domain_data = hass.data[DATA_EVOHOME]
+
+        self._obj = obj_ref
+        self._type = EVO_PARENT
 
         # Set the entity's own object reference & identifier
         self._id = obj_ref.systemId
@@ -146,6 +153,29 @@ class EvoEntity(ClimateDevice):
             DISPATCHER_EVOHOME,
             self._connect
         )  # for: def async_dispatcher_connect(signal, target)
+
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            tmp_dict = dict(self._config)
+            if 'zones' in tmp_dict:
+                tmp_dict['zones'] = '...'
+            if 'dhw' in tmp_dict:
+                tmp_dict['dhw'] = '...'
+
+            _LOGGER.debug(
+                "__init__(%s), self._config = %s",
+                self._id + " [" + self._name + "]",
+                tmp_dict
+            )
+            _LOGGER.debug(
+                "__init__(%s), self._timers = %s",
+                self._id + " [" + self._name + "]",
+                self._timers
+            )
+            _LOGGER.debug(
+                "__init__(%s), self._params = %s",
+                self._id + " [" + self._name + "]",
+                self._params
+            )
 
     def _handle_requests_exceptions(self, err_hint, err):
         # evohomeclient v1 api (<=0.2.7) does not handle requests exceptions,
@@ -199,7 +229,7 @@ class EvoEntity(ClimateDevice):
     @callback
     def _connect(self, packet):
         """Process a dispatcher connect."""
-        if packet['to'] & self._type and packet['signal'] == 'update':          # noqa: E501; pylint: disable=no-member
+        if packet['to'] & self._type and packet['signal'] == 'update':          # noqa: E501; pxylint: disable=no-member
             self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
@@ -262,44 +292,6 @@ class EvoEntity(ClimateDevice):
     def max_temp(self):
         """Return the maximum target temp (setpoint) of a evohome entity."""
         return MAX_TEMP
-
-
-class EvoController(EvoEntity):
-    """Base for a Honeywell evohome hub/Controller device.
-
-    The Controller (aka TCS, temperature control system) is the parent of all
-    the child (CH/DHW) devices.
-    """
-
-    def __init__(self, hass, client, obj_ref):
-        """Initialize the evohome Controller."""
-        self._obj = obj_ref
-        self._type = EVO_PARENT
-
-        super().__init__(hass, client, obj_ref)
-
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            tmp_dict = dict(self._config)
-            if 'zones' in tmp_dict:
-                tmp_dict['zones'] = '...'
-            if 'dhw' in tmp_dict:
-                tmp_dict['dhw'] = '...'
-
-            _LOGGER.debug(
-                "__init__(%s), self._config = %s",
-                self._id + " [" + self._name + "]",
-                tmp_dict
-            )
-            _LOGGER.debug(
-                "__init__(%s), self._timers = %s",
-                self._id + " [" + self._name + "]",
-                self._timers
-            )
-            _LOGGER.debug(
-                "__init__(%s), self._params = %s",
-                self._id + " [" + self._name + "]",
-                self._params
-            )
 
     @property
     def state(self):
