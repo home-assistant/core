@@ -17,18 +17,18 @@ from homeassistant.util.color import \
 DEPENDENCIES = ['wink']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink lights."""
     import pywink
 
     for light in pywink.get_light_bulbs():
         _id = light.object_id() + light.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkLight(light, hass)])
+            add_entities([WinkLight(light, hass)])
     for light in pywink.get_light_groups():
         _id = light.object_id() + light.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkLight(light, hass)])
+            add_entities([WinkLight(light, hass)])
 
 
 class WinkLight(WinkDevice, Light):

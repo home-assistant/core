@@ -8,16 +8,18 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.dyson import DYSON_DEVICES
 from homeassistant.components.fan import (
     DOMAIN, SUPPORT_OSCILLATE, SUPPORT_SET_SPEED, FanEntity)
 from homeassistant.const import CONF_ENTITY_ID
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 CONF_NIGHT_MODE = 'night_mode'
+
+ATTR_IS_NIGHT_MODE = 'is_night_mode'
+ATTR_IS_AUTO_MODE = 'is_auto_mode'
 
 DEPENDENCIES = ['dyson']
 DYSON_FAN_DEVICES = 'dyson_fan_devices'
@@ -30,7 +32,7 @@ DYSON_SET_NIGHT_MODE_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson fan components."""
     from libpurecoollink.dyson_pure_cool_link import DysonPureCoolLink
 
@@ -44,7 +46,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dyson_entity = DysonPureCoolLinkDevice(hass, device)
         hass.data[DYSON_FAN_DEVICES].append(dyson_entity)
 
-    add_devices(hass.data[DYSON_FAN_DEVICES])
+    add_entities(hass.data[DYSON_FAN_DEVICES])
 
     def service_handle(service):
         """Handle the Dyson services."""
@@ -100,7 +102,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         """Return the display name of this fan."""
         return self._device.name
 
-    def set_speed(self: ToggleEntity, speed: str) -> None:
+    def set_speed(self, speed: str) -> None:
         """Set the speed of the fan. Never called ??."""
         from libpurecoollink.const import FanSpeed, FanMode
 
@@ -113,7 +115,7 @@ class DysonPureCoolLinkDevice(FanEntity):
             self._device.set_configuration(
                 fan_mode=FanMode.FAN, fan_speed=fan_speed)
 
-    def turn_on(self: ToggleEntity, speed: str = None, **kwargs) -> None:
+    def turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn on the fan."""
         from libpurecoollink.const import FanSpeed, FanMode
 
@@ -129,14 +131,14 @@ class DysonPureCoolLinkDevice(FanEntity):
             # Speed not set, just turn on
             self._device.set_configuration(fan_mode=FanMode.FAN)
 
-    def turn_off(self: ToggleEntity, **kwargs) -> None:
+    def turn_off(self, **kwargs) -> None:
         """Turn off the fan."""
         from libpurecoollink.const import FanMode
 
         _LOGGER.debug("Turn off fan %s", self.name)
         self._device.set_configuration(fan_mode=FanMode.OFF)
 
-    def oscillate(self: ToggleEntity, oscillating: bool) -> None:
+    def oscillate(self, oscillating: bool) -> None:
         """Turn on/off oscillating."""
         from libpurecoollink.const import Oscillation
 
@@ -159,7 +161,7 @@ class DysonPureCoolLinkDevice(FanEntity):
     def is_on(self):
         """Return true if the entity is on."""
         if self._device.state:
-            return self._device.state.fan_state == "FAN"
+            return self._device.state.fan_mode == "FAN"
         return False
 
     @property
@@ -183,7 +185,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         """Return Night mode."""
         return self._device.state.night_mode == "ON"
 
-    def night_mode(self: ToggleEntity, night_mode: bool) -> None:
+    def night_mode(self, night_mode: bool) -> None:
         """Turn fan in night mode."""
         from libpurecoollink.const import NightMode
 
@@ -198,7 +200,7 @@ class DysonPureCoolLinkDevice(FanEntity):
         """Return auto mode."""
         return self._device.state.fan_mode == "AUTO"
 
-    def auto_mode(self: ToggleEntity, auto_mode: bool) -> None:
+    def auto_mode(self, auto_mode: bool) -> None:
         """Turn fan in auto mode."""
         from libpurecoollink.const import FanMode
 
@@ -209,7 +211,7 @@ class DysonPureCoolLinkDevice(FanEntity):
             self._device.set_configuration(fan_mode=FanMode.FAN)
 
     @property
-    def speed_list(self: ToggleEntity) -> list:
+    def speed_list(self) -> list:
         """Get the list of available speeds."""
         from libpurecoollink.const import FanSpeed
 
@@ -230,6 +232,14 @@ class DysonPureCoolLinkDevice(FanEntity):
         return supported_speeds
 
     @property
-    def supported_features(self: ToggleEntity) -> int:
+    def supported_features(self) -> int:
         """Flag supported features."""
         return SUPPORT_OSCILLATE | SUPPORT_SET_SPEED
+
+    @property
+    def device_state_attributes(self) -> dict:
+        """Return optional state attributes."""
+        return {
+            ATTR_IS_NIGHT_MODE: self.is_night_mode,
+            ATTR_IS_AUTO_MODE: self.is_auto_mode
+            }

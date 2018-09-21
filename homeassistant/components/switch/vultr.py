@@ -28,7 +28,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Vultr subscription switch."""
     vultr = hass.data[DATA_VULTR]
 
@@ -39,7 +39,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("Subscription %s not found", subscription)
         return False
 
-    add_devices([VultrSwitch(vultr, subscription, name)], True)
+    add_entities([VultrSwitch(vultr, subscription, name)], True)
 
 
 class VultrSwitch(SwitchDevice):

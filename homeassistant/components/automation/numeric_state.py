@@ -66,7 +66,7 @@ def async_trigger(hass, config, action):
         @callback
         def call_action():
             """Call action with right context."""
-            hass.async_run_job(action, {
+            hass.async_run_job(action({
                 'trigger': {
                     'platform': 'numeric_state',
                     'entity_id': entity,
@@ -75,7 +75,7 @@ def async_trigger(hass, config, action):
                     'from_state': from_s,
                     'to_state': to_s,
                 }
-            })
+            }, context=to_s.context))
 
         matching = check_numeric_state(entity, from_s, to_s)
 

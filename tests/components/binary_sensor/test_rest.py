@@ -28,7 +28,7 @@ class TestRestBinarySensorSetup(unittest.TestCase):
             self.DEVICES.append(device)
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         # Reset for this test.
         self.DEVICES = []
@@ -136,7 +136,7 @@ class TestRestBinarySensor(unittest.TestCase):
     """Tests for REST binary sensor platform."""
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.rest = Mock('RestData')
         self.rest.update = Mock('RestData.update',

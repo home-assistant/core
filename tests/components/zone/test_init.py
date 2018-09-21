@@ -17,7 +17,6 @@ async def test_setup_entry_successful(hass):
         zone.CONF_NAME: 'Test Zone',
         zone.CONF_LATITUDE: 1.1,
         zone.CONF_LONGITUDE: -2.2,
-        zone.CONF_RADIUS: 250,
         zone.CONF_RADIUS: True
     }
     hass.data[zone.DOMAIN] = {}
@@ -43,7 +42,7 @@ class TestComponentZone(unittest.TestCase):
     """Test the zone component."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name

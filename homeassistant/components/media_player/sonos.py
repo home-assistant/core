@@ -1,5 +1,5 @@
 """
-Support to interface with Sonos players (via SoCo).
+Support to interface with Sonos players.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.sonos/
@@ -9,8 +9,8 @@ import datetime
 import functools as ft
 import logging
 import socket
-import urllib
 import threading
+import urllib
 
 import voluptuous as vol
 
@@ -20,20 +20,22 @@ from homeassistant.components.media_player import (
     SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_SELECT_SOURCE, SUPPORT_SHUFFLE_SET, SUPPORT_STOP,
     SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
+from homeassistant.components.sonos import DOMAIN as SONOS_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TIME, CONF_HOSTS, STATE_IDLE, STATE_OFF, STATE_PAUSED,
     STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['SoCo==0.14']
+DEPENDENCIES = ('sonos',)
 
 _LOGGER = logging.getLogger(__name__)
 
-# Quiet down soco logging to just actual problems.
-logging.getLogger('soco').setLevel(logging.WARNING)
-logging.getLogger('soco.data_structures_entry').setLevel(logging.ERROR)
-_SOCO_SERVICES_LOGGER = logging.getLogger('soco.services')
+# Quiet down pysonos logging to just actual problems.
+logging.getLogger('pysonos').setLevel(logging.WARNING)
+logging.getLogger('pysonos.events').setLevel(logging.ERROR)
+logging.getLogger('pysonos.data_structures_entry').setLevel(logging.ERROR)
+_SOCO_SERVICES_LOGGER = logging.getLogger('pysonos.services')
 
 SUPPORT_SONOS = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE |\
@@ -49,11 +51,12 @@ SERVICE_CLEAR_TIMER = 'sonos_clear_sleep_timer'
 SERVICE_UPDATE_ALARM = 'sonos_update_alarm'
 SERVICE_SET_OPTION = 'sonos_set_option'
 
-DATA_SONOS = 'sonos'
+DATA_SONOS = 'sonos_devices'
 
 SOURCE_LINEIN = 'Line-in'
 SOURCE_TV = 'TV'
 
+CONF_ADVERTISE_ADDR = 'advertise_addr'
 CONF_INTERFACE_ADDR = 'interface_addr'
 
 # Service call validation schemas
@@ -72,6 +75,7 @@ ATTR_SONOS_GROUP = 'sonos_group'
 UPNP_ERRORS_TO_IGNORE = ['701', '711']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_ADVERTISE_ADDR): cv.string,
     vol.Optional(CONF_INTERFACE_ADDR): cv.string,
     vol.Optional(CONF_HOSTS): vol.All(cv.ensure_list, [cv.string]),
 })
@@ -117,31 +121,40 @@ class SonosData:
         self.topology_lock = threading.Lock()
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the Sonos platform.
+
+    Deprecated.
+    """
+    _LOGGER.warning('Loading Sonos via platform config is deprecated.')
+    _setup_platform(hass, config, add_entities, discovery_info)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up Sonos from a config entry."""
+    def add_entities(devices, update_before_add=False):
+        """Sync version of async add devices."""
+        hass.add_job(async_add_entities, devices, update_before_add)
+
+    hass.add_job(_setup_platform, hass,
+                 hass.data[SONOS_DOMAIN].get('media_player', {}),
+                 add_entities, None)
+
+
+def _setup_platform(hass, config, add_entities, discovery_info):
     """Set up the Sonos platform."""
-    import soco
-    import soco.events
-    import soco.exceptions
-
-    orig_parse_event_xml = soco.events.parse_event_xml
-
-    def safe_parse_event_xml(xml):
-        """Avoid SoCo 0.14 event thread dying from invalid xml."""
-        try:
-            return orig_parse_event_xml(xml)
-        # pylint: disable=broad-except
-        except Exception as ex:
-            _LOGGER.debug("Dodged exception: %s %s", type(ex), str(ex))
-            return {}
-
-    soco.events.parse_event_xml = safe_parse_event_xml
+    import pysonos
 
     if DATA_SONOS not in hass.data:
         hass.data[DATA_SONOS] = SonosData()
 
+    advertise_addr = config.get(CONF_ADVERTISE_ADDR)
+    if advertise_addr:
+        pysonos.config.EVENT_ADVERTISE_IP = advertise_addr
+
     players = []
     if discovery_info:
-        player = soco.SoCo(discovery_info.get('host'))
+        player = pysonos.SoCo(discovery_info.get('host'))
 
         # If device already exists by config
         if player.uid in hass.data[DATA_SONOS].uids:
@@ -161,11 +174,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             hosts = hosts.split(',') if isinstance(hosts, str) else hosts
             for host in hosts:
                 try:
-                    players.append(soco.SoCo(socket.gethostbyname(host)))
+                    players.append(pysonos.SoCo(socket.gethostbyname(host)))
                 except OSError:
                     _LOGGER.warning("Failed to initialize '%s'", host)
         else:
-            players = soco.discover(
+            players = pysonos.discover(
                 interface_addr=config.get(CONF_INTERFACE_ADDR))
 
         if not players:
@@ -173,7 +186,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             return
 
     hass.data[DATA_SONOS].uids.update(p.uid for p in players)
-    add_devices(SonosDevice(p) for p in players)
+    add_entities(SonosDevice(p) for p in players)
     _LOGGER.debug("Added %s Sonos speakers", len(players))
 
     def service_handle(service):
@@ -274,7 +287,7 @@ def soco_error(errorcodes=None):
         @ft.wraps(funct)
         def wrapper(*args, **kwargs):
             """Wrap for all soco UPnP exception."""
-            from soco.exceptions import SoCoUPnPException, SoCoException
+            from pysonos.exceptions import SoCoUPnPException, SoCoException
 
             # Temporarily disable SoCo logging because it will log the
             # UPnP exception otherwise
@@ -376,6 +389,18 @@ class SonosDevice(MediaPlayerDevice):
         return self._name
 
     @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (SONOS_DOMAIN, self._unique_id)
+            },
+            'name': self._name,
+            'model': self._model.replace("Sonos ", ""),
+            'manufacturer': 'Sonos',
+        }
+
+    @property
     @soco_coordinator
     def state(self):
         """Return the state of the device."""
@@ -426,11 +451,15 @@ class SonosDevice(MediaPlayerDevice):
 
         self.update_volume()
 
-        self._favorites = []
-        # SoCo 0.14 raises a generic Exception on invalid xml in favorites.
+        self._set_favorites()
+
+    def _set_favorites(self):
+        """Set available favorites."""
+        # SoCo 0.16 raises a generic Exception on invalid xml in favorites.
         # Filter those out now so our list is safe to use.
         # pylint: disable=broad-except
         try:
+            self._favorites = []
             for fav in self.soco.music_library.get_sonos_favorites():
                 try:
                     if fav.reference.get_uri():
@@ -471,6 +500,9 @@ class SonosDevice(MediaPlayerDevice):
 
         queue = _ProcessSonosEventQueue(self.update_groups)
         player.zoneGroupTopology.subscribe(auto_renew=True, event_queue=queue)
+
+        queue = _ProcessSonosEventQueue(self.update_content)
+        player.contentDirectory.subscribe(auto_renew=True, event_queue=queue)
 
     def update(self):
         """Retrieve latest state."""
@@ -580,9 +612,9 @@ class SonosDevice(MediaPlayerDevice):
         current_uri_metadata = media_info["CurrentURIMetaData"]
         if current_uri_metadata not in ('', 'NOT_IMPLEMENTED', None):
             # currently soco does not have an API for this
-            import soco
-            current_uri_metadata = soco.xml.XML.fromstring(
-                soco.utils.really_utf8(current_uri_metadata))
+            import pysonos
+            current_uri_metadata = pysonos.xml.XML.fromstring(
+                pysonos.utils.really_utf8(current_uri_metadata))
 
             md_title = current_uri_metadata.findtext(
                 './/{http://purl.org/dc/elements/1.1/}title')
@@ -714,6 +746,11 @@ class SonosDevice(MediaPlayerDevice):
                         slave._sonos_group = sonos_group
                         slave.schedule_update_ha_state()
 
+    def update_content(self, event=None):
+        """Update information about available content."""
+        self._set_favorites()
+        self.schedule_update_ha_state()
+
     @property
     def volume_level(self):
         """Volume level of the media player (0..1)."""
@@ -830,9 +867,7 @@ class SonosDevice(MediaPlayerDevice):
                 src = fav.pop()
                 uri = src.reference.get_uri()
                 if _is_radio_uri(uri):
-                    # SoCo 0.14 fails to XML escape the title parameter
-                    from xml.sax.saxutils import escape
-                    self.soco.play_uri(uri, title=escape(source))
+                    self.soco.play_uri(uri, title=source)
                 else:
                     self.soco.clear_queue()
                     self.soco.add_to_queue(src.reference)
@@ -844,10 +879,13 @@ class SonosDevice(MediaPlayerDevice):
         """List of available input sources."""
         sources = [fav.title for fav in self._favorites]
 
-        if 'PLAY:5' in self._model or 'CONNECT' in self._model:
+        model = self._model.upper()
+        if 'PLAY:5' in model or 'CONNECT' in model:
             sources += [SOURCE_LINEIN]
-        elif 'PLAYBAR' in self._model:
+        elif 'PLAYBAR' in model:
             sources += [SOURCE_LINEIN, SOURCE_TV]
+        elif 'BEAM' in model:
+            sources += [SOURCE_TV]
 
         return sources
 
@@ -912,7 +950,7 @@ class SonosDevice(MediaPlayerDevice):
         If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
         if kwargs.get(ATTR_MEDIA_ENQUEUE):
-            from soco.exceptions import SoCoUPnPException
+            from pysonos.exceptions import SoCoUPnPException
             try:
                 self.soco.add_uri_to_queue(media_id)
             except SoCoUPnPException:
@@ -943,7 +981,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error()
     def snapshot(self, with_group=True):
         """Snapshot the player."""
-        from soco.snapshot import Snapshot
+        from pysonos.snapshot import Snapshot
 
         self._soco_snapshot = Snapshot(self.soco)
         self._soco_snapshot.snapshot()
@@ -958,7 +996,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_error()
     def restore(self, with_group=True):
         """Restore snapshot for the player."""
-        from soco.exceptions import SoCoException
+        from pysonos.exceptions import SoCoException
         try:
             # need catch exception if a coordinator is going to slave.
             # this state will recover with group part.
@@ -1022,7 +1060,7 @@ class SonosDevice(MediaPlayerDevice):
     @soco_coordinator
     def set_alarm(self, **data):
         """Set the alarm clock on the player."""
-        from soco import alarms
+        from pysonos import alarms
         alarm = None
         for one_alarm in alarms.get_alarms(self.soco):
             # pylint: disable=protected-access

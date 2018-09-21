@@ -10,7 +10,7 @@ import math
 
 import voluptuous as vol
 
-import homeassistant.components.history as history
+from homeassistant.components import history
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -67,7 +67,7 @@ PLATFORM_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({
 
 
 # noinspection PyUnusedLocal
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the History Stats sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     entity_state = config.get(CONF_STATE)
@@ -81,8 +81,8 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if template is not None:
             template.hass = hass
 
-    add_devices([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
-                                    duration, sensor_type, name)])
+    add_entities([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
+                                     duration, sensor_type, name)])
 
     return True
 
@@ -294,7 +294,7 @@ class HistoryStatsHelper:
         minutes, seconds = divmod(seconds, 60)
         if days > 0:
             return '%dd %dh %dm' % (days, hours, minutes)
-        elif hours > 0:
+        if hours > 0:
             return '%dh %dm' % (hours, minutes)
         return '%dm' % minutes
 

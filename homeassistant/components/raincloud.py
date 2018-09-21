@@ -19,7 +19,7 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['raincloudy==0.0.4']
+REQUIREMENTS = ['raincloudy==0.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -124,7 +124,7 @@ def setup(hass, config):
     return True
 
 
-class RainCloudHub(object):
+class RainCloudHub:
     """Representation of a base RainCloud device."""
 
     def __init__(self, data):

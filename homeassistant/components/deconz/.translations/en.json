@@ -21,10 +21,11 @@
                 "title": "Link with deCONZ"
             },
             "options": {
-                "title": "Extra configuration options for deCONZ",
                 "data": {
-                    "allow_clip_sensor": "Allow importing virtual sensors"
-                }
+                    "allow_clip_sensor": "Allow importing virtual sensors",
+                    "allow_deconz_groups": "Allow importing deCONZ groups"
+                },
+                "title": "Extra configuration options for deCONZ"
             }
         },
         "title": "deCONZ Zigbee gateway"

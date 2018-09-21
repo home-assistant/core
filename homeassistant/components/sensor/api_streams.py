@@ -38,9 +38,9 @@ class StreamHandler(logging.Handler):
         else:
             if not record.msg.startswith('WS'):
                 return
-            elif len(record.args) < 2:
+            if len(record.args) < 2:
                 return
-            elif record.args[1] == 'Connected':
+            if record.args[1] == 'Connected':
                 self.entity.count += 1
             elif record.args[1] == 'Closed connection':
                 self.entity.count -= 1
@@ -49,7 +49,8 @@ class StreamHandler(logging.Handler):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the API stream platform."""
     entity = APICount()
     handler = StreamHandler(entity)
@@ -65,7 +66,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, remove_logger)
 
-    async_add_devices([entity])
+    async_add_entities([entity])
 
 
 class APICount(Entity):

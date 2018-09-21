@@ -2,7 +2,6 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.core import State
 from homeassistant.components.homekit.const import (
     CONF_FEATURE, CONF_FEATURE_LIST, HOMEKIT_NOTIFY_ID, FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE, TYPE_OUTLET)
@@ -17,6 +16,7 @@ from homeassistant.components.persistent_notification import (
 from homeassistant.const import (
     ATTR_CODE, ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE, STATE_UNKNOWN,
     TEMP_CELSIUS, TEMP_FAHRENHEIT)
+from homeassistant.core import State
 
 from tests.common import async_mock_service
 

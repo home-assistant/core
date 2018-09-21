@@ -27,7 +27,7 @@ def setup_scanner(hass, config, see, discovery_info=None):
     return True
 
 
-class BMWDeviceTracker(object):
+class BMWDeviceTracker:
     """BMW Connected Drive device tracker."""
 
     def __init__(self, see, vehicle):

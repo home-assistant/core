@@ -1,14 +1,14 @@
 """Helper methods to handle the time in Home Assistant."""
 import datetime as dt
 import re
-
-# pylint: disable=unused-import
-from typing import Any, Dict, Union, Optional, Tuple  # NOQA
+from typing import Any, Dict, Union, Optional, Tuple  # noqa pylint: disable=unused-import
 
 import pytz
+import pytz.exceptions as pytzexceptions
 
 DATE_STR_FORMAT = "%Y-%m-%d"
-UTC = DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
+UTC = pytz.utc
+DEFAULT_TIME_ZONE = pytz.utc  # type: dt.tzinfo
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
@@ -27,7 +27,7 @@ def set_default_time_zone(time_zone: dt.tzinfo) -> None:
 
     Async friendly.
     """
-    global DEFAULT_TIME_ZONE  # pylint: disable=global-statement
+    global DEFAULT_TIME_ZONE
 
     # NOTE: Remove in the future in favour of typing
     assert isinstance(time_zone, dt.tzinfo)
@@ -42,7 +42,7 @@ def get_time_zone(time_zone_str: str) -> Optional[dt.tzinfo]:
     """
     try:
         return pytz.timezone(time_zone_str)
-    except pytz.exceptions.UnknownTimeZoneError:
+    except pytzexceptions.UnknownTimeZoneError:
         return None
 
 
@@ -51,7 +51,7 @@ def utcnow() -> dt.datetime:
     return dt.datetime.now(UTC)
 
 
-def now(time_zone: dt.tzinfo = None) -> dt.datetime:
+def now(time_zone: Optional[dt.tzinfo] = None) -> dt.datetime:
     """Get now in specified time zone."""
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
@@ -63,20 +63,20 @@ def as_utc(dattim: dt.datetime) -> dt.datetime:
     """
     if dattim.tzinfo == UTC:
         return dattim
-    elif dattim.tzinfo is None:
-        dattim = DEFAULT_TIME_ZONE.localize(dattim)
+    if dattim.tzinfo is None:
+        dattim = DEFAULT_TIME_ZONE.localize(dattim)  # type: ignore
 
     return dattim.astimezone(UTC)
 
 
-def as_timestamp(dt_value):
+def as_timestamp(dt_value: dt.datetime) -> float:
     """Convert a date/time into a unix time (seconds since 1970)."""
     if hasattr(dt_value, "timestamp"):
-        parsed_dt = dt_value
+        parsed_dt = dt_value  # type: Optional[dt.datetime]
     else:
         parsed_dt = parse_datetime(str(dt_value))
-        if not parsed_dt:
-            raise ValueError("not a valid date/time.")
+    if parsed_dt is None:
+        raise ValueError("not a valid date/time.")
     return parsed_dt.timestamp()
 
 
@@ -84,7 +84,7 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
     """Convert a UTC datetime object to local time zone."""
     if dattim.tzinfo == DEFAULT_TIME_ZONE:
         return dattim
-    elif dattim.tzinfo is None:
+    if dattim.tzinfo is None:
         dattim = UTC.localize(dattim)
 
     return dattim.astimezone(DEFAULT_TIME_ZONE)
@@ -92,23 +92,24 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
 
 def utc_from_timestamp(timestamp: float) -> dt.datetime:
     """Return a UTC time from a timestamp."""
-    return dt.datetime.utcfromtimestamp(timestamp).replace(tzinfo=UTC)
+    return UTC.localize(dt.datetime.utcfromtimestamp(timestamp))
 
 
-def start_of_local_day(dt_or_d:
-                       Union[dt.date, dt.datetime]=None) -> dt.datetime:
+def start_of_local_day(
+        dt_or_d: Union[dt.date, dt.datetime, None] = None) -> dt.datetime:
     """Return local datetime object of start of day from date or datetime."""
     if dt_or_d is None:
         date = now().date()  # type: dt.date
     elif isinstance(dt_or_d, dt.datetime):
         date = dt_or_d.date()
-    return DEFAULT_TIME_ZONE.localize(dt.datetime.combine(date, dt.time()))
+    return DEFAULT_TIME_ZONE.localize(dt.datetime.combine(  # type: ignore
+        date, dt.time()))
 
 
 # Copyright (c) Django Software Foundation and individual contributors.
 # All rights reserved.
 # https://github.com/django/django/blob/master/LICENSE
-def parse_datetime(dt_str: str) -> dt.datetime:
+def parse_datetime(dt_str: str) -> Optional[dt.datetime]:
     """Parse a string and return a datetime.datetime.
 
     This function supports time zone offsets. When the input contains one,
@@ -134,14 +135,12 @@ def parse_datetime(dt_str: str) -> dt.datetime:
         if tzinfo_str[0] == '-':
             offset = -offset
         tzinfo = dt.timezone(offset)
-    else:
-        tzinfo = None
     kws = {k: int(v) for k, v in kws.items() if v is not None}
     kws['tzinfo'] = tzinfo
     return dt.datetime(**kws)
 
 
-def parse_date(dt_str: str) -> dt.date:
+def parse_date(dt_str: str) -> Optional[dt.date]:
     """Convert a date string to a date object."""
     try:
         return dt.datetime.strptime(dt_str, DATE_STR_FORMAT).date()
@@ -149,7 +148,7 @@ def parse_date(dt_str: str) -> dt.date:
         return None
 
 
-def parse_time(time_str):
+def parse_time(time_str: str) -> Optional[dt.time]:
     """Parse a time string (00:20:00) into Time object.
 
     Return None if invalid.
@@ -180,11 +179,9 @@ def get_age(date: dt.datetime) -> str:
     def formatn(number: int, unit: str) -> str:
         """Add "unit" if it's plural."""
         if number == 1:
-            return "1 %s" % unit
-        elif number > 1:
-            return "%d %ss" % (number, unit)
+            return '1 {}'.format(unit)
+        return '{:d} {}s'.format(number, unit)
 
-    # pylint: disable=invalid-sequence-index
     def q_n_r(first: int, second: int) -> Tuple[int, int]:
         """Return quotient and remaining."""
         return first // second, first % second
@@ -211,4 +208,4 @@ def get_age(date: dt.datetime) -> str:
     if minute > 0:
         return formatn(minute, 'minute')
 
-    return formatn(second, 'second') if second > 0 else "0 seconds"
+    return formatn(second, 'second')

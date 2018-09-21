@@ -31,7 +31,7 @@ SENSOR_TYPES_ELEC = {
 SENSOR_TYPES_ELEC.update(SENSOR_TYPES)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BMW sensors."""
     accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     device = BMWConnectedDriveSensor(account, vehicle, key,
                                                      value[0], value[1])
                     devices.append(device)
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class BMWConnectedDriveSensor(BinarySensorDevice):
@@ -71,7 +71,10 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
 
     @property
     def should_poll(self) -> bool:
-        """Data update is triggered from BMWConnectedDriveEntity."""
+        """Return False.
+
+        Data update is triggered from BMWConnectedDriveEntity.
+        """
         return False
 
     @property
@@ -124,11 +127,11 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
                 result['check_control_messages'] = check_control_messages
         elif self._attribute == 'charging_status':
             result['charging_status'] = vehicle_state.charging_status.value
-            # pylint: disable=W0212
+            # pylint: disable=protected-access
             result['last_charging_end_result'] = \
                 vehicle_state._attributes['lastChargingEndResult']
         if self._attribute == 'connection_status':
-            # pylint: disable=W0212
+            # pylint: disable=protected-access
             result['connection_status'] = \
                 vehicle_state._attributes['connectionStatus']
 
@@ -166,7 +169,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         # device class plug: On means device is plugged in,
         #                    Off means device is unplugged
         if self._attribute == 'connection_status':
-            # pylint: disable=W0212
+            # pylint: disable=protected-access
             self._state = (vehicle_state._attributes['connectionStatus'] ==
                            'CONNECTED')
 

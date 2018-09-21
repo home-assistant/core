@@ -7,7 +7,7 @@ https://home-assistant.io/components/device_tracker.gpslogger/
 import logging
 from hmac import compare_digest
 
-from aiohttp.web import Request, HTTPUnauthorized  # NOQA
+from aiohttp.web import Request, HTTPUnauthorized
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv

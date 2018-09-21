@@ -29,7 +29,7 @@ SUPPORT_DYSON = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PAUSE | \
                 SUPPORT_BATTERY | SUPPORT_STOP
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Dyson 360 Eye robot vacuum platform."""
     from libpurecoollink.dyson_360_eye import Dyson360Eye
 
@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         dyson_entity = Dyson360EyeDevice(device)
         hass.data[DYSON_360_EYE_DEVICES].append(dyson_entity)
 
-    add_devices(hass.data[DYSON_360_EYE_DEVICES])
+    add_entities(hass.data[DYSON_360_EYE_DEVICES])
     return True
 
 

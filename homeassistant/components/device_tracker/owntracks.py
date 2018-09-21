@@ -12,7 +12,7 @@ from collections import defaultdict
 
 import voluptuous as vol
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import zone as zone_comp
 from homeassistant.components.device_tracker import (

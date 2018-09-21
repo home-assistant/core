@@ -18,7 +18,7 @@ from homeassistant.const import (
     CONF_HOST, TEMP_FAHRENHEIT, ATTR_TEMPERATURE, PRECISION_HALVES)
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['radiotherm==1.3']
+REQUIREMENTS = ['radiotherm==1.4.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +83,7 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                  SUPPORT_FAN_MODE | SUPPORT_AWAY_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Radio Thermostat."""
     import radiotherm
 
@@ -112,7 +112,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.exception("Unable to connect to Radio Thermostat: %s",
                               host)
 
-    add_devices(tstats, True)
+    add_entities(tstats, True)
 
 
 class RadioThermostat(ClimateDevice):
@@ -137,8 +137,8 @@ class RadioThermostat(ClimateDevice):
 
         # Fan circulate mode is only supported by the CT80 models.
         import radiotherm
-        self._is_model_ct80 = isinstance(self.device,
-                                         radiotherm.thermostat.CT80)
+        self._is_model_ct80 = isinstance(
+            self.device, radiotherm.thermostat.CT80)
 
     @property
     def supported_features(self):
@@ -174,8 +174,8 @@ class RadioThermostat(ClimateDevice):
     def device_state_attributes(self):
         """Return the device specific state attributes."""
         return {
-            ATTR_FAN: self._fmode,
-            ATTR_MODE: self._tmode,
+            ATTR_FAN: self._fstate,
+            ATTR_MODE: self._tstate,
         }
 
     @property
@@ -308,7 +308,7 @@ class RadioThermostat(ClimateDevice):
 
     def set_operation_mode(self, operation_mode):
         """Set operation mode (auto, cool, heat, off)."""
-        if operation_mode == STATE_OFF or operation_mode == STATE_AUTO:
+        if operation_mode in (STATE_OFF, STATE_AUTO):
             self.device.tmode = TEMP_MODE_TO_CODE[operation_mode]
 
         # Setting t_cool or t_heat automatically changes tmode.

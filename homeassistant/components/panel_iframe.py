@@ -4,8 +4,6 @@ Register an iFrame front end panel.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/panel_iframe/
 """
-import asyncio
-
 import voluptuous as vol
 
 from homeassistant.const import (CONF_ICON, CONF_URL)
@@ -34,11 +32,10 @@ CONFIG_SCHEMA = vol.Schema({
         }})}, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the iFrame frontend panels."""
     for url_path, info in config[DOMAIN].items():
-        yield from hass.components.frontend.async_register_built_in_panel(
+        await hass.components.frontend.async_register_built_in_panel(
             'iframe', info.get(CONF_TITLE), info.get(CONF_ICON),
             url_path, {'url': info[CONF_URL]})
 

@@ -26,7 +26,7 @@ class TestComponentLogbook(unittest.TestCase):
     EMPTY_CONFIG = logbook.CONFIG_SCHEMA({logbook.DOMAIN: {}})
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         init_recorder_component(self.hass)  # Force an in memory DB
         assert setup_component(self.hass, logbook.DOMAIN, self.EMPTY_CONFIG)
@@ -542,8 +542,7 @@ class TestComponentLogbook(unittest.TestCase):
 
     def create_state_changed_event(self, event_time_fired, entity_id, state,
                                    attributes=None, last_changed=None,
-                                   last_updated=None): \
-            # pylint: disable=no-self-use
+                                   last_updated=None):
         """Create state changed event."""
         # Logbook only cares about state change events that
         # contain an old state but will not actually act on it.

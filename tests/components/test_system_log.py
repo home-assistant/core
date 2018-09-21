@@ -28,7 +28,7 @@ async def get_error_log(hass, aiohttp_client, expected_count):
 def _generate_and_log_exception(exception, log):
     try:
         raise Exception(exception)
-    except:  # noqa: E722  # pylint: disable=bare-except
+    except:  # noqa: E722 pylint: disable=bare-except
         _LOGGER.exception(log)
 
 

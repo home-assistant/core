@@ -19,7 +19,7 @@ def cls():
     patcher = patch_debounce()
     patcher.start()
     _import = __import__('homeassistant.components.homekit.type_covers',
-                         fromlist=['GarageDoorOpener', 'WindowCovering,',
+                         fromlist=['GarageDoorOpener', 'WindowCovering',
                                    'WindowCoveringBasic'])
     patcher_tuple = namedtuple('Cls', ['window', 'window_basic', 'garage'])
     yield patcher_tuple(window=_import.WindowCovering,

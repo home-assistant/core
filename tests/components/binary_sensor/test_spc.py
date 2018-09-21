@@ -14,7 +14,7 @@ def hass(loop):
     hass = loop.run_until_complete(async_test_home_assistant(loop))
     hass.data['spc_registry'] = SpcRegistry()
     yield hass
-    loop.run_until_complete(hass.async_stop())
+    loop.run_until_complete(hass.async_stop(force=True))
 
 
 @asyncio.coroutine
@@ -54,7 +54,7 @@ def test_setup_platform(hass):
 
     yield from spc.async_setup_platform(hass=hass,
                                         config={},
-                                        async_add_devices=add_entities,
+                                        async_add_entities=add_entities,
                                         discovery_info=zones)
 
     assert len(added_entities) == 3

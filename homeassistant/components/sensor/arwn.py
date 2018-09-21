@@ -8,7 +8,7 @@ import asyncio
 import json
 import logging
 
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.core import callback
 from homeassistant.const import TEMP_FAHRENHEIT, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
@@ -59,7 +59,8 @@ def _slug(name):
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the ARWN platform."""
     @callback
     def async_sensor_event_received(topic, payload, qos):
@@ -97,7 +98,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                 store[sensor.name] = sensor
                 _LOGGER.debug("Registering new sensor %(name)s => %(event)s",
                               dict(name=sensor.name, event=event))
-                async_add_devices((sensor,), True)
+                async_add_entities((sensor,), True)
             else:
                 store[sensor.name].set_event(event)
 

@@ -31,7 +31,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
         'unifi_direct.UnifiDeviceScanner'
 
     def setup_method(self, _):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_component(self.hass, 'zone')
 
@@ -45,8 +45,7 @@ class TestComponentsDeviceTrackerUnifiDirect(unittest.TestCase):
 
     @mock.patch(scanner_path,
                 return_value=mock.MagicMock())
-    def test_get_scanner(self, unifi_mock):  \
-            # pylint: disable=invalid-name
+    def test_get_scanner(self, unifi_mock):
         """Test creating an Unifi direct scanner with a password."""
         conf_dict = {
             DOMAIN: {

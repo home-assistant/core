@@ -14,7 +14,7 @@ class TestRestSwitchSetup:
     """Tests for setting up the REST switch platform."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self):
@@ -95,7 +95,7 @@ class TestRestSwitch:
     """Tests for REST switch platform."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.name = 'foo'
         self.method = 'post'

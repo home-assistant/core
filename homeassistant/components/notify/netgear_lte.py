@@ -25,16 +25,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 async def async_get_service(hass, config, discovery_info=None):
     """Get the notification service."""
-    lte_data = hass.data[DATA_KEY].get(config)
+    modem_data = hass.data[DATA_KEY].get_modem_data(config)
     phone = config.get(ATTR_TARGET)
-    return NetgearNotifyService(lte_data, phone)
+    return NetgearNotifyService(modem_data, phone)
 
 
 @attr.s
 class NetgearNotifyService(BaseNotificationService):
     """Implementation of a notification service."""
 
-    lte_data = attr.ib()
+    modem_data = attr.ib()
     phone = attr.ib()
 
     async def async_send_message(self, message="", **kwargs):
@@ -42,4 +42,4 @@ class NetgearNotifyService(BaseNotificationService):
         targets = kwargs.get(ATTR_TARGET, self.phone)
         if targets and message:
             for target in targets:
-                await self.lte_data.eternalegypt.sms(target, message)
+                await self.modem_data.modem.sms(target, message)

@@ -71,7 +71,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Fido sensor."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -89,7 +90,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         for variable in config[CONF_MONITORED_VARIABLES]:
             sensors.append(FidoSensor(fido_data, variable, name, number))
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class FidoSensor(Entity):
@@ -147,7 +148,7 @@ class FidoSensor(Entity):
                 self._state = round(self._state, 2)
 
 
-class FidoData(object):
+class FidoData:
     """Get data from Fido."""
 
     def __init__(self, username, password, httpsession):

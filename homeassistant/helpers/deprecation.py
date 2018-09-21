@@ -33,8 +33,7 @@ def deprecated_substitute(substitute_name):
 
                 # Return the old property
                 return getattr(self, substitute_name)
-            else:
-                return func(self)
+            return func(self)
         return func_wrapper
     return decorator
 

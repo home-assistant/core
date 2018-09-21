@@ -3,7 +3,7 @@
 import asyncio
 import unittest
 
-from homeassistant.core import CoreState, State
+from homeassistant.core import CoreState, State, Context
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components.input_text import (DOMAIN, set_value)
 
@@ -15,7 +15,7 @@ class TestInputText(unittest.TestCase):
 
     # pylint: disable=invalid-name
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     # pylint: disable=invalid-name
@@ -180,3 +180,27 @@ def test_no_initial_state_and_no_restore_state(hass):
     state = hass.states.get('input_text.b1')
     assert state
     assert str(state.state) == 'unknown'
+
+
+async def test_input_text_context(hass):
+    """Test that input_text context works."""
+    assert await async_setup_component(hass, 'input_text', {
+        'input_text': {
+            't1': {
+                'initial': 'bla',
+            }
+        }
+    })
+
+    state = hass.states.get('input_text.t1')
+    assert state is not None
+
+    await hass.services.async_call('input_text', 'set_value', {
+        'entity_id': state.entity_id,
+        'value': 'new_value',
+    }, True, Context(user_id='abcd'))
+
+    state2 = hass.states.get('input_text.t1')
+    assert state2 is not None
+    assert state.state != state2.state
+    assert state2.context.user_id == 'abcd'

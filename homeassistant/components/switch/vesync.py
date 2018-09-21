@@ -21,7 +21,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the VeSync switch platform."""
     from pyvesync.vesync import VeSync
 
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     else:
         _LOGGER.info("No VeSync devices found")
 
-    add_devices(switches)
+    add_entities(switches)
 
 
 class VeSyncSwitchHA(SwitchDevice):

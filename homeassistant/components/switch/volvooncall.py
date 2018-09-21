@@ -14,11 +14,11 @@ from homeassistant.helpers.entity import ToggleEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Tellstick switches."""
     if discovery_info is None:
         return
-    add_devices([VolvoSwitch(hass, *discovery_info)])
+    add_entities([VolvoSwitch(hass, *discovery_info)])
 
 
 class VolvoSwitch(VolvoEntity, ToggleEntity):

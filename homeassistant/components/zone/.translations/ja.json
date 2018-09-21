@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "init": {
+                "data": {
+                    "latitude": "\u7def\u5ea6",
+                    "longitude": "\u7d4c\u5ea6",
+                    "name": "\u540d\u524d"
+                }
+            }
+        }
+    }
+}

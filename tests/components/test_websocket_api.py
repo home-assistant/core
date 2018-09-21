@@ -10,7 +10,7 @@ from homeassistant.core import callback
 from homeassistant.components import websocket_api as wapi
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_coro
+from tests.common import mock_coro, async_mock_service
 
 API_PASSWORD = 'test1234'
 
@@ -77,7 +77,7 @@ def test_auth_via_msg_incorrect_pass(no_auth_websocket_client):
 
     assert mock_process_wrong_login.called
     assert msg['type'] == wapi.TYPE_AUTH_INVALID
-    assert msg['message'] == 'Invalid password'
+    assert msg['message'] == 'Invalid access token or password'
 
 
 @asyncio.coroutine
@@ -316,37 +316,196 @@ def test_unknown_command(websocket_client):
     assert msg['error']['code'] == wapi.ERR_UNKNOWN_COMMAND
 
 
-async def test_auth_with_token(hass, aiohttp_client, hass_access_token):
+async def test_auth_active_with_token(hass, aiohttp_client, hass_access_token):
     """Test authenticating with a token."""
     assert await async_setup_component(hass, 'websocket_api', {
-            'http': {
-                'api_password': API_PASSWORD
-            }
-        })
+        'http': {
+            'api_password': API_PASSWORD
+        }
+    })
 
     client = await aiohttp_client(hass.http.app)
 
     async with client.ws_connect(wapi.URL) as ws:
-        auth_msg = await ws.receive_json()
-        assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+        with patch('homeassistant.auth.AuthManager.active') as auth_active:
+            auth_active.return_value = True
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
 
-        await ws.send_json({
-            'type': wapi.TYPE_AUTH,
-            'access_token': hass_access_token.token
-        })
+            await ws.send_json({
+                'type': wapi.TYPE_AUTH,
+                'access_token': hass_access_token
+            })
 
-        auth_msg = await ws.receive_json()
-        assert auth_msg['type'] == wapi.TYPE_AUTH_OK
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_OK
+
+
+async def test_auth_active_user_inactive(hass, aiohttp_client,
+                                         hass_access_token):
+    """Test authenticating with a token."""
+    refresh_token = await hass.auth.async_validate_access_token(
+        hass_access_token)
+    refresh_token.user.is_active = False
+    assert await async_setup_component(hass, 'websocket_api', {
+        'http': {
+            'api_password': API_PASSWORD
+        }
+    })
+
+    client = await aiohttp_client(hass.http.app)
+
+    async with client.ws_connect(wapi.URL) as ws:
+        with patch('homeassistant.auth.AuthManager.active') as auth_active:
+            auth_active.return_value = True
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+
+            await ws.send_json({
+                'type': wapi.TYPE_AUTH,
+                'access_token': hass_access_token
+            })
+
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_INVALID
+
+
+async def test_auth_active_with_password_not_allow(hass, aiohttp_client):
+    """Test authenticating with a token."""
+    assert await async_setup_component(hass, 'websocket_api', {
+        'http': {
+            'api_password': API_PASSWORD
+        }
+    })
+
+    client = await aiohttp_client(hass.http.app)
+
+    async with client.ws_connect(wapi.URL) as ws:
+        with patch('homeassistant.auth.AuthManager.active',
+                   return_value=True):
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+
+            await ws.send_json({
+                'type': wapi.TYPE_AUTH,
+                'api_password': API_PASSWORD
+            })
+
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_INVALID
+
+
+async def test_auth_legacy_support_with_password(hass, aiohttp_client):
+    """Test authenticating with a token."""
+    assert await async_setup_component(hass, 'websocket_api', {
+        'http': {
+            'api_password': API_PASSWORD
+        }
+    })
+
+    client = await aiohttp_client(hass.http.app)
+
+    async with client.ws_connect(wapi.URL) as ws:
+        with patch('homeassistant.auth.AuthManager.active',
+                   return_value=True),\
+             patch('homeassistant.auth.AuthManager.support_legacy',
+                   return_value=True):
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+
+            await ws.send_json({
+                'type': wapi.TYPE_AUTH,
+                'api_password': API_PASSWORD
+            })
+
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_OK
 
 
 async def test_auth_with_invalid_token(hass, aiohttp_client):
     """Test authenticating with a token."""
     assert await async_setup_component(hass, 'websocket_api', {
-            'http': {
-                'api_password': API_PASSWORD
+        'http': {
+            'api_password': API_PASSWORD
+        }
+    })
+
+    client = await aiohttp_client(hass.http.app)
+
+    async with client.ws_connect(wapi.URL) as ws:
+        with patch('homeassistant.auth.AuthManager.active') as auth_active:
+            auth_active.return_value = True
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+
+            await ws.send_json({
+                'type': wapi.TYPE_AUTH,
+                'access_token': 'incorrect'
+            })
+
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_INVALID
+
+
+async def test_call_service_context_with_user(hass, aiohttp_client,
+                                              hass_access_token):
+    """Test that the user is set in the service call context."""
+    assert await async_setup_component(hass, 'websocket_api', {
+        'http': {
+            'api_password': API_PASSWORD
+        }
+    })
+
+    calls = async_mock_service(hass, 'domain_test', 'test_service')
+    client = await aiohttp_client(hass.http.app)
+
+    async with client.ws_connect(wapi.URL) as ws:
+        with patch('homeassistant.auth.AuthManager.active') as auth_active:
+            auth_active.return_value = True
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+
+            await ws.send_json({
+                'type': wapi.TYPE_AUTH,
+                'access_token': hass_access_token
+            })
+
+            auth_msg = await ws.receive_json()
+            assert auth_msg['type'] == wapi.TYPE_AUTH_OK
+
+        await ws.send_json({
+            'id': 5,
+            'type': wapi.TYPE_CALL_SERVICE,
+            'domain': 'domain_test',
+            'service': 'test_service',
+            'service_data': {
+                'hello': 'world'
             }
         })
 
+        msg = await ws.receive_json()
+        assert msg['success']
+
+        refresh_token = await hass.auth.async_validate_access_token(
+            hass_access_token)
+
+        assert len(calls) == 1
+        call = calls[0]
+        assert call.domain == 'domain_test'
+        assert call.service == 'test_service'
+        assert call.data == {'hello': 'world'}
+        assert call.context.user_id == refresh_token.user.id
+
+
+async def test_call_service_context_no_user(hass, aiohttp_client):
+    """Test that connection without user sets context."""
+    assert await async_setup_component(hass, 'websocket_api', {
+        'http': {
+            'api_password': API_PASSWORD
+        }
+    })
+
+    calls = async_mock_service(hass, 'domain_test', 'test_service')
     client = await aiohttp_client(hass.http.app)
 
     async with client.ws_connect(wapi.URL) as ws:
@@ -355,8 +514,28 @@ async def test_auth_with_invalid_token(hass, aiohttp_client):
 
         await ws.send_json({
             'type': wapi.TYPE_AUTH,
-            'access_token': 'incorrect'
+            'api_password': API_PASSWORD
         })
 
         auth_msg = await ws.receive_json()
-        assert auth_msg['type'] == wapi.TYPE_AUTH_INVALID
+        assert auth_msg['type'] == wapi.TYPE_AUTH_OK
+
+        await ws.send_json({
+            'id': 5,
+            'type': wapi.TYPE_CALL_SERVICE,
+            'domain': 'domain_test',
+            'service': 'test_service',
+            'service_data': {
+                'hello': 'world'
+            }
+        })
+
+        msg = await ws.receive_json()
+        assert msg['success']
+
+        assert len(calls) == 1
+        call = calls[0]
+        assert call.domain == 'domain_test'
+        assert call.service == 'test_service'
+        assert call.data == {'hello': 'world'}
+        assert call.context.user_id is None

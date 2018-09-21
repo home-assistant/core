@@ -38,8 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint sensors."""
     octoprint_api = hass.data[DOMAIN]["api"]
     name = config.get(CONF_NAME)
@@ -75,7 +74,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
                 SENSOR_TYPES[octo_type][1])
             devices.append(new_sensor)
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class OctoPrintSensor(Entity):
@@ -108,13 +107,12 @@ class OctoPrintSensor(Entity):
     def state(self):
         """Return the state of the sensor."""
         sensor_unit = self.unit_of_measurement
-        if sensor_unit == TEMP_CELSIUS or sensor_unit == "%":
+        if sensor_unit in (TEMP_CELSIUS, "%"):
             # API sometimes returns null and not 0
             if self._state is None:
                 self._state = 0
             return round(self._state, 2)
-        else:
-            return self._state
+        return self._state
 
     @property
     def unit_of_measurement(self):

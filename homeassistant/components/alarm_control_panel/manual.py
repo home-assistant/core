@@ -103,9 +103,9 @@ PLATFORM_SCHEMA = vol.Schema(vol.All({
 }, _state_validator))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the manual alarm platform."""
-    add_devices([ManualAlarm(
+    add_entities([ManualAlarm(
         hass,
         config[CONF_NAME],
         config.get(CONF_CODE),
@@ -205,7 +205,7 @@ class ManualAlarm(alarm.AlarmControlPanel):
         """Return one or more digits/characters."""
         if self._code is None:
             return None
-        elif isinstance(self._code, str) and re.search('^\\d+$', self._code):
+        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
             return 'Number'
         return 'Any'
 
