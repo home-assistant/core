@@ -27,18 +27,20 @@ ATTR_BUILD_COMMIT_ID = 'commit id'
 ATTR_BUILD_COMMIT_DATE = 'commit date'
 ATTR_BUILD_BRANCH = 'master'
 
+SCAN_INTERVAL = timedelta(seconds=300)
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOKEN): cv.string,
     vol.Required(CONF_GITLAB_ID): cv.string,
     vol.Optional(CONF_URL, default='https://gitlab.com'): cv.string,
     vol.Optional(CONF_SCAN_INTERVAL,
-                 default=timedelta(seconds=300)): cv.time_period,
+                 default=SCAN_INTERVAL): cv.time_period,
 })
 
 REQUIREMENTS = ['python-gitlab==1.6.0']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Sensor platform setup."""
     _priv_token = config.get(CONF_TOKEN)
     _gitlab_id = config.get(CONF_GITLAB_ID)
@@ -52,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         url=_url
     )
 
-    add_devices([GitLabSensor(_gitlab_id, _priv_token, _gitlab_data)], True)
+    add_entities([GitLabSensor(_gitlab_id, _priv_token, _gitlab_data)], True)
 
 
 class GitLabSensor(Entity):
