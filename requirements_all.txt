@@ -141,7 +141,6 @@ apns2==0.3.0
 
 # homeassistant.components.aqualogic
 aqualogic==0.9
-zope.event==4.3.0
 
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
@@ -1560,3 +1559,6 @@ zigpy==0.2.0
 
 # homeassistant.components.zoneminder
 zm-py==0.0.1
+
+# homeassistant.components.aqualogic
+zope.event==4.3.0

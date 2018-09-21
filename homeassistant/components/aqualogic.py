@@ -9,7 +9,6 @@ import logging
 import time
 import threading
 import socket
-import zope.event
 
 import voluptuous as vol
 
@@ -20,8 +19,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ["aqualogic==0.9"]
-REQUIREMENTS = ["zope.event==4.3.0"]
+REQUIREMENTS = ["aqualogic==0.9", "zope.event==4.3.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -80,6 +78,8 @@ class AquaLogicProcessor(threading.Thread):
 
     def run(self):
         from aqualogic.core import AquaLogic
+        import zope.event
+
         zope.event.subscribers.append(self.data_changed)
         while True:
             try:
