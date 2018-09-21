@@ -17,7 +17,7 @@ https://home-assistant.io/components/evohome/
 """
 
 # Glossary
-# TCS - temperature control system (a.k.a. Controller, Master), which can
+# TCS - temperature control system (a.k.a. Controller, Parent), which can
 # have up to 13 Children:
 #   0-12 Heating zones (a.k.a. Zone), and
 #   0-1 DHW controller, (a.k.a. Boiler)
@@ -405,7 +405,7 @@ class EvoEntity(ClimateDevice):
 class EvoController(EvoEntity):
     """Base for a Honeywell evohome hub/Controller device.
 
-    The Controller (aka TCS, temperature control system) is the master of all
+    The Controller (aka TCS, temperature control system) is the parent of all
     the child (CH/DHW) devices.
     """
 
