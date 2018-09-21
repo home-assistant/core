@@ -228,7 +228,7 @@ class EvoController(ClimateDevice):
     @callback
     def _connect(self, packet):
         """Process a dispatcher connect."""
-        if packet['to'] & self._type and packet['signal'] == 'update':          # noqa: E501; pxylint: disable=no-member
+        if packet['to'] & self._type and packet['signal'] == 'update':
             self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
