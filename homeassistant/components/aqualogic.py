@@ -101,7 +101,7 @@ class AquaLogicProcessor(threading.Thread):
             except Exception:
                 _LOGGER.exception("Error")
                 time.sleep(RECONNECT_INTERVAL.seconds)
-   
+
     @property
     def panel(self):
         return self._panel
