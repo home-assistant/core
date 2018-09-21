@@ -322,7 +322,7 @@ def mock_component(hass, component):
 def mock_registry(hass, mock_entries=None):
     """Mock the Entity Registry."""
     registry = entity_registry.EntityRegistry(hass)
-    registry.entities = mock_entries or {}
+    registry.entities = mock_entries or OrderedDict()
 
     async def _get_reg():
         return registry
