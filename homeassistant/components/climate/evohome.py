@@ -176,16 +176,6 @@ class EvoController(ClimateDevice):
             )
 
     def _handle_requests_exceptions(self, err_hint, err):
-        # evohomeclient v1 api (<=0.2.7) does not handle requests exceptions,
-        # but we can catch them and extract the r.response, incl.:
-        # {
-        #   'code':    'TooManyRequests',
-        #   'message': 'Request count limitation exceeded, ...'
-        # }
-        if err_hint == "TooManyRequests":  # not actually from requests library
-            api_rate_limit_exceeded = True
-            api_ver = "v1"
-
         # evohomeclient v2 api (>=0.2.7) exposes requests exceptions, incl.:
         # - HTTP_BAD_REQUEST, is usually Bad user credentials
         # - HTTP_TOO_MANY_REQUESTS, is api usuage limit exceeded

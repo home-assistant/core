@@ -113,6 +113,8 @@ def setup(hass, config):
         # ...then restore it to what it was before instantiating the client
         logging.getLogger().setLevel(log_level)
 
+#   except HTTPError as err:
+#       if err.response.status_code == HTTP_BAD_REQUEST:
     except RequestException as err:
         if str(HTTP_BAD_REQUEST) in str(err):
             # this happens when bad user credentials are supplied
