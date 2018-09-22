@@ -234,6 +234,12 @@ sensor.yw_day1_humidity:
   icon: mdi:water-percent
 sensor.yw_day1_visibility:
   friendly_name: Widoczność jutro
+sensor.current_ozone_level:
+  friendly_name: Aktualny poziom ozonu
+sensor.current_uv_level:
+  friendly_name: Aktualny poziom promieniowania UV
+sensor.skin_type_3_safe_exposure_time:
+  friendly_name: Bezpieszny czas ekspozycji dla skóry
 group.dom_system_version:
   context_key_words: wersja,aktualizacja,wersja systemu
   context_answer: OK, wybrano informację o wersji. Możesz nawigować pilotem by sprawdzić

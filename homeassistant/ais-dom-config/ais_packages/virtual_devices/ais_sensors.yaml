@@ -21,3 +21,6 @@ group:
 #      - sensor.temperatura_si7021
 #      - sensor.wilgotnosc_si7021
       - binary_sensor.ping_binary_sensor
+      - sensor.current_ozone_level
+      - sensor.current_uv_level
+      - sensor.skin_type_3_safe_exposure_time
