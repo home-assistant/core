@@ -1,16 +1,22 @@
+"""
+Support for Tilgin routers.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/device_tracker.tilgen/
+"""
+
 import re
 import hmac
 import logging
 import hashlib
 import requests
 
+import voluptuous as vol
+
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
     CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
-
-import voluptuous as vol
 
 REQUIREMENTS = ['beautifulsoup4==4.6.3']
 
@@ -27,7 +33,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def get_scanner(hass, config):
     """Validate the configuration and return a Tilgin Device Scanner."""
-
     models = [TilginHG238xDeviceScanner]
     for model_family in models:
         scanner = model_family(config[DOMAIN])
@@ -39,7 +44,6 @@ def get_scanner(hass, config):
 
 class TilginHG238xDeviceScanner(DeviceScanner):
     """Queries the router for connected devices."""
-
     def __init__(self, config):
         """Initialize the scanner."""
         self.url = 'http://{}'.format(config[CONF_HOST])
@@ -63,25 +67,25 @@ class TilginHG238xDeviceScanner(DeviceScanner):
         return self.last_results.get(device)
 
     def _check_auth(self):
+        """Check the credentials work."""
         self._authenticate()
-        r = self.session.get(self.url)
-        if 'You are logged in as' in r.text:
+        res = self.session.get(self.url)
+        if 'You are logged in as' in res.text:
             _LOGGER.debug("auth success")
             return True
-        else:
-            _LOGGER.debug("auth failure")
-            return False
+        _LOGGER.debug("auth failure")
+        return False
 
     def _authenticate(self):
-        """Extract the HMAC key and auth to the device"""
+        """Extract the HMAC key and auth to the device."""
         from bs4 import BeautifulSoup
 
         _LOGGER.debug("Starting auth")
-        r = self.session.get(self.url + '/status/lan_clients/')
-        if 'You are logged in as' in r.text:
+        res = self.session.get(self.url + '/status/lan_clients/')
+        if 'You are logged in as' in res.text:
             _LOGGER.debug("already authenticated")
             return
-        soup = BeautifulSoup(r.content, 'html.parser')
+        soup = BeautifulSoup(res.content, 'html.parser')
         hmac_key = re.search(r'__pass\.value,\s+"(\w+?)"', soup.text).group(1)
         hmac_message = (self.username + self.password).encode("utf8")
 
@@ -103,20 +107,21 @@ class TilginHG238xDeviceScanner(DeviceScanner):
 
     def _update_info(self):
         """Ensure the information from the TP-Link router is up to date.
+
         Return boolean if scanning successful.
         """
         from bs4 import BeautifulSoup
 
         _LOGGER.info("Loading LAN clients...")
 
-        r = self.session.get(self.url + '/status/lan_clients/')
-        if r.status_code == 403:
+        res = self.session.get(self.url + '/status/lan_clients/')
+        if res.status_code == 403:
             self._authenticate()
-            r = self.session.get(self.url + '/status/lan_clients/')
-            if r.status_code == 403:
+            res = self.session.get(self.url + '/status/lan_clients/')
+            if res.status_code == 403:
                 return False
 
-        soup = BeautifulSoup(r.content, 'html.parser')
+        soup = BeautifulSoup(res.content, 'html.parser')
         clients_html = soup.find('table', {"class": "control"})
         devices = clients_html.findAll('tr')[1:]
 
