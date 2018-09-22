@@ -401,6 +401,7 @@ gearbest_parser==1.0.7
 geizhals==0.0.7
 
 # homeassistant.components.geo_location.geo_json_events
+# homeassistant.components.geo_location.nsw_rural_fire_service_feed
 geojson_client==0.1
 
 # homeassistant.components.sensor.geo_rss_events
