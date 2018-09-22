@@ -4,7 +4,7 @@ Support for a temperature control system (TCS, controller) with 0+ heating
 zones (e.g. TRVs, relays) and, optionally, a DHW controller.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/evohome/
+https://home-assistant.io/components/climate.evohome/
 """
 
 from datetime import datetime, timedelta
@@ -16,7 +16,6 @@ from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE,
     SUPPORT_AWAY_MODE,
 )
-
 from homeassistant.components.evohome import (
     CONF_LOCATION_IDX,
     DATA_EVOHOME,
@@ -25,14 +24,12 @@ from homeassistant.components.evohome import (
     MIN_TEMP,
     SCAN_INTERVAL_MAX
 )
-
 from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     PRECISION_TENTHS,
     TEMP_CELSIUS,
     HTTP_TOO_MANY_REQUESTS,
 )
-
 from homeassistant.core import callback
 
 _LOGGER = logging.getLogger(__name__)
@@ -51,7 +48,7 @@ EVO_DAYOFF = 'DayOff'
 EVO_CUSTOM = 'Custom'
 EVO_HEATOFF = 'HeatingOff'
 
-TCS_MODES = [
+TCS_OP_LIST = [
     EVO_RESET,
     EVO_AUTO,
     EVO_AUTOECO,
@@ -60,10 +57,6 @@ TCS_MODES = [
     EVO_CUSTOM,
     EVO_HEATOFF
 ]
-
-# bit masks for dispatcher packets
-EVO_PARENT = 0x01
-EVO_CHILD = 0x02
 
 # these are used to help prevent E501 (line too long) violations
 GWS = 'gateways'
@@ -95,8 +88,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     master = EvoController(hass, client, tcs_obj_ref)
     add_entities([master], update_before_add=False)
 
-    return True
-
 
 class EvoController(ClimateDevice):
     """Base for a Honeywell evohome hub/Controller device.
@@ -111,46 +102,28 @@ class EvoController(ClimateDevice):
         Most read-only properties are set here.  So are pseudo read-only,
         for example name (which _could_ change between update()s).
         """
-        # Set the usual object references
         self.hass = hass
         self.client = client
         domain_data = hass.data[DATA_EVOHOME]
 
         self._obj = obj_ref
-        self._type = EVO_PARENT
-
-        # Set the entity's own object reference & identifier
         self._id = obj_ref.systemId
+        self._name = domain_data['config']['locationInfo']['name']
 
-        # Set the entity's configuration shortcut (considered static)
         self._config = domain_data['config'][GWS][0][TCS][0]
         self._params = domain_data['params']
 
-        # Set the entity's name (treated as static vales)
-        self._name = domain_data['config']['locationInfo']['name']
-
-        # Set the entity's supported features
-        self._supported_features = SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
-
-        # Set the entity's operation list - hard-coded for a particular order,
-        # instead of using self._config['allowedSystemModes']
-        self._op_list = TCS_MODES
-
-        # Create timers, etc. - they're maintained in update(), or schedule()
         self._status = {}
         self._timers = domain_data['timers']
-
         self._timers['statusUpdated'] = datetime.min
         domain_data['schedules'] = {}
 
-        # Set the entity's (initial) behaviour
-        self._available = False  # will be True after first update()
+        self._available = False  # should become True after first update()
 
-        # Create a listener for (internal) update packets...
         hass.helpers.dispatcher.dispatcher_connect(
             DISPATCHER_EVOHOME,
             self._connect
-        )  # for: def async_dispatcher_connect(signal, target)
+        )
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             tmp_dict = dict(self._config)
@@ -214,10 +187,9 @@ class EvoController(ClimateDevice):
             raise err
 
     @callback
-    def _connect(self, packet):
+    def _connect(self):
         """Process a dispatcher connect."""
-        if packet['to'] & self._type and packet['signal'] == 'update':
-            self.async_schedule_update_ha_state(force_refresh=True)
+        self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
     def name(self):
@@ -226,7 +198,7 @@ class EvoController(ClimateDevice):
 
     @property
     def available(self):
-        """Return True is the device is available.
+        """Return True if the device is available.
 
         All evohome entities are initially unavailable. Once HA has started,
         state data is then retrieved by the Controller, and then the children
@@ -239,20 +211,26 @@ class EvoController(ClimateDevice):
     @property
     def supported_features(self):
         """Get the list of supported features of the Controller."""
-        return self._supported_features
+        return SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
 
     @property
     def operation_list(self):
         """Return the list of available operations.
 
         Note that, for evohome, the operating mode is determined by - but not
-        equivalent to - the last operation (from the operation list).
+        always equivalent to - the last operation (from the operation list).
         """
-        return self._op_list
+        # The operation list is hard-coded for a particular order, instead of
+        # using self._config['allowedSystemModes']
+        return TCS_OP_LIST
 
     @property
     def current_operation(self):
-        """Return the operation mode of the evohome entity."""
+        """Return the operation mode of the evohome entity.
+
+        The Controller's state is usually its current operation_mode. NB: After
+        calling 'AutoWithReset', the controller will enter 'Auto' mode.
+        """
         return self._status['systemModeStatus']['mode']
 
     @property
@@ -261,8 +239,8 @@ class EvoController(ClimateDevice):
         temps = [zone['setpointStatus']['targetHeatTemperature']
                  for zone in self._status['zones']]
 
-        avg_temp = sum(temps) / len(temps) if temps else None
-        return round(avg_temp, 1)
+        avg_temp = round(sum(temps) / len(temps), 1) if temps else None
+        return avg_temp
 
     @property
     def current_temperature(self):
@@ -271,8 +249,8 @@ class EvoController(ClimateDevice):
                     if x['temperatureStatus']['isAvailable'] is True]
         temps = [zone['temperatureStatus']['temperature'] for zone in tmp_list]
 
-        avg_temp = sum(temps) / len(temps) if temps else None
-        return round(avg_temp, 1)
+        avg_temp = round(sum(temps) / len(temps), 1) if temps else None
+        return avg_temp
 
     @property
     def temperature_unit(self):
@@ -295,17 +273,13 @@ class EvoController(ClimateDevice):
         return MAX_TEMP
 
     @property
-    def state(self):
-        """Return the controller's current state.
+    def is_on(self):
+        """Return true as evohome controllers are always on.
 
-        The Controller's state is usually its current operation_mode. NB: After
-        calling AutoWithReset, the controller will enter Auto mode.
+        Operating modes can include 'HeatingOff', but (for example) DHW would
+        remain on.
         """
-        if self._status['systemModeStatus']['mode'] == EVO_RESET:
-            state = EVO_AUTO
-        else:
-            state = self.current_operation
-        return state
+        return True
 
     @property
     def is_away_mode_on(self):
@@ -315,13 +289,13 @@ class EvoController(ClimateDevice):
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode for the TCS.
 
-        'AutoWithReset may not be a mode in itself: instead, it _should_(?)
+        'AutoWithReset' may not be a mode in itself: instead, it _should_(?)
         lead to 'Auto' mode after resetting all the zones to 'FollowSchedule'.
 
         'HeatingOff' doesn't turn off heating, instead: it simply sets
         setpoints to a minimum value (i.e. FrostProtect mode).
         """
-        if operation_mode in TCS_MODES:
+        if operation_mode in TCS_OP_LIST:
             _LOGGER.debug(
                 "set_operation_mode(): API call [1 request(s)]: "
                 "tcs._set_status(%s)...",
@@ -334,7 +308,10 @@ class EvoController(ClimateDevice):
                 self._handle_requests_exceptions("HTTPError", err)
 
         else:
-            raise NotImplementedError()
+            _LOGGER.error(
+                "set_operation_mode(): %s is not a valid operation_mode",
+                operation_mode
+            )
 
     def turn_away_mode_on(self):
         """Turn away mode on."""
