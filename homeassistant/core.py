@@ -129,10 +129,7 @@ class HomeAssistant:
             self,
             loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
         """Initialize new Home Assistant object."""
-        if sys.platform == 'win32':
-            self.loop = loop or asyncio.ProactorEventLoop()
-        else:
-            self.loop = loop or asyncio.get_event_loop()
+        self.loop = loop or asyncio.get_event_loop()
 
         executor_opts = {'max_workers': None}  # type: Dict[str, Any]
         if sys.version_info[:2] >= (3, 6):

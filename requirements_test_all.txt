@@ -24,9 +24,6 @@ HAP-python==2.2.2
 # homeassistant.components.sensor.rmvtransport
 PyRMVtransport==0.1
 
-# homeassistant.components.sonos
-SoCo==0.16
-
 # homeassistant.components.device_tracker.automatic
 aioautomatic==0.6.5
 
@@ -66,7 +63,10 @@ feedparser==5.2.1
 foobot_async==0.3.1
 
 # homeassistant.components.tts.google
-gTTS-token==1.1.1
+gTTS-token==1.1.2
+
+# homeassistant.components.geo_location.geo_json_events
+geojson_client==0.1
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.9
@@ -167,6 +167,9 @@ pyotp==2.2.6
 # homeassistant.components.qwikswitch
 pyqwikswitch==0.8
 
+# homeassistant.components.sonos
+pysonos==0.0.2
+
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
 
@@ -193,7 +196,7 @@ pyupnp-async==0.1.1.1
 pywebpush==1.6.0
 
 # homeassistant.components.python_script
-restrictedpython==4.0b4
+restrictedpython==4.0b5
 
 # homeassistant.components.rflink
 rflink==0.0.37
