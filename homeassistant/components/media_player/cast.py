@@ -61,8 +61,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
 })
 
-CONNECTION_RETRY = 3
-CONNECTION_RETRY_WAIT = 2
+CONNECTION_RETRY = 6
+CONNECTION_RETRY_WAIT = 5
 CONNECTION_TIMEOUT = 10
 
 
@@ -124,7 +124,6 @@ def _fill_out_missing_chromecast_info(info: ChromecastInfo) -> ChromecastInfo:
 def _discover_chromecast(hass: HomeAssistantType, info: ChromecastInfo):
     if info in hass.data[KNOWN_CHROMECAST_INFO_KEY]:
         _LOGGER.debug("Discovered previous chromecast %s", info)
-        return
 
     # Either discovered completely new chromecast or a "moved" one.
     info = _fill_out_missing_chromecast_info(info)
