@@ -2,6 +2,7 @@
 import asyncio
 import logging
 import uuid
+import json
 import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.helpers import intent
@@ -81,6 +82,23 @@ def async_setup(hass, config):
         source = bookmark.split(';', 1)[0].strip()
         item = next((itm for itm in d.bookmarks if (itm['name'] == name and itm['source'] == source)), None)
         if item is not None:
+            if source == ais_global.G_AN_LOCAL:
+                hass.async_add_job(
+                    hass.services.async_call(
+                        'input_select',
+                        'set_options', {
+                            "entity_id": "input_select.folder_name",
+                            "options": item['options']
+                        })
+                )
+                hass.async_add_job(
+                    hass.services.async_call(
+                        'input_select',
+                        'select_option', {
+                            "entity_id": "input_select.folder_name",
+                            "option": item['option']
+                        })
+                )
             hass.async_add_job(
                 hass.services.async_call(
                     'media_player',
@@ -90,7 +108,30 @@ def async_setup(hass, config):
                         "media_content_id": item['media_content_id']
                     })
             )
+            _audio_info = json.dumps(
+                {"IMAGE_URL": item["media_stream_image"], "NAME": item['name'], "MEDIA_SOURCE": item['source']}
+            )
+            # set stream image and title
+            hass.async_add_job(
+                hass.services.async_call(
+                    'media_player',
+                    'play_media', {
+                        "entity_id": "media_player.wbudowany_glosnik",
+                        "media_content_type": "ais_info",
+                        "media_content_id": _audio_info
+                    })
+            )
 
+            hass.async_add_job(
+                hass.services.async_call(
+                    'media_player',
+                    'media_seek', {
+                        "entity_id": "media_player.wbudowany_glosnik",
+                        "seek_position": item['media_position']
+                    })
+            )
+            # maybe we should remove bookmark if it was selected???
+            # d.async_remove_bookmark(item['id'])
     @asyncio.coroutine
     def play_favorite_service(call):
         """Play selected favorite"""
@@ -107,6 +148,19 @@ def async_setup(hass, config):
                         "entity_id": "media_player.wbudowany_glosnik",
                         "media_content_type": "audio/mp4",
                         "media_content_id": item['media_content_id']
+                    })
+            )
+            _audio_info = json.dumps(
+                {"IMAGE_URL": item["media_stream_image"], "NAME": item['name'], "MEDIA_SOURCE": item['source']}
+            )
+            # set stream image and title
+            hass.async_add_job(
+                hass.services.async_call(
+                    'media_player',
+                    'play_media', {
+                        "entity_id": "media_player.wbudowany_glosnik",
+                        "media_content_type": "ais_info",
+                        "media_content_id": _audio_info
                     })
             )
 
@@ -159,8 +213,16 @@ class BookmarksData:
         """Add a item."""
         name = attributes.get("media_title").strip()
         source = attributes.get("source").strip()
+        options = None
+        option = None
+        if source == ais_global.G_AN_LOCAL:
+            state = self.hass.states.get("input_select.folder_name")
+            options = state.attributes.get('options')
+            option = state.state
+
         media_position = attributes.get("media_position", None)
         media_content_id = attributes.get("media_content_id")
+        media_stream_image = attributes.get("media_stream_image")
 
         if name is None or source is None or media_content_id is None:
             _LOGGER.warning("can't add the bookmark, no full info provided: " + str(attributes))
@@ -181,7 +243,10 @@ class BookmarksData:
                     'id': uuid.uuid4().hex,
                     'source': source,
                     'media_position': media_position,
-                    'media_content_id': media_content_id
+                    'media_content_id': media_content_id,
+                    'media_stream_image': media_stream_image,
+                    'options': options,
+                    'option': option
                 }
                 self.bookmarks.append(item)
                 self.hass.async_add_job(self.save)
@@ -203,7 +268,9 @@ class BookmarksData:
                 'name': name,
                 'id': uuid.uuid4().hex,
                 'source': source,
-                'media_content_id': media_content_id
+                'media_content_id': media_content_id,
+                'media_stream_image': media_stream_image,
+                'options': options
             }
             self.favorites.append(item)
             self.hass.async_add_job(self.save)
@@ -222,10 +289,11 @@ class BookmarksData:
         return item
 
     @callback
-    def async_clear_completed(self):
-        """Clear completed bookmarks."""
-        self.bookmarks = [itm for itm in self.bookmarks if not itm['complete']]
+    def async_remove_bookmark(self, item_id):
+        """Reemove completed bookmarks."""
+        self.bookmarks = [itm for itm in self.bookmarks if not itm['id'] == item_id]
         self.hass.async_add_job(self.save)
+
 
     @asyncio.coroutine
     def async_load(self):

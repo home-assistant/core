@@ -143,7 +143,7 @@ class ExoPlayerDevice(MediaPlayerDevice):
         """Seek the media to a specific location."""
         if position == 0:
             position = -5000
-        else:
+        elif position == 1:
             position = 5000
         self.hass.services.call(
             'ais_ai_service',
@@ -248,9 +248,17 @@ class ExoPlayerDevice(MediaPlayerDevice):
         return self._media_content_id
 
     @property
+    def media_stream_image(self):
+        """The media content id"""
+        return self._stream_image
+
+    @property
     def media_position(self):
         """Position of current playing media in seconds."""
-        return self._media_position
+        position = self._media_position
+        if self._status == 3 and self._media_status_received_time is not None:
+            position += (dt_util.utcnow() - self._media_status_received_time).total_seconds()
+        return int(position)
 
     @property
     def device_state_attributes(self):
@@ -302,7 +310,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
                                     {"attr": {"media_title": self.media_title,
                                               "source": self._media_source,
                                               "media_position": self._media_position,
-                                              "media_content_id": self._media_content_id}})
+                                              "media_content_id": self._media_content_id,
+                                              "media_stream_image": self._stream_image}})
 
         self._playing = False
 
@@ -402,6 +411,8 @@ class ExoPlayerDevice(MediaPlayerDevice):
             self._currentplaylist = j_info["MEDIA_SOURCE"]
         else:
             self._media_content_id = media_content_id
+            self._media_position = 0
+            self._media_status_received_time = dt_util.utcnow()
             self.hass.services.call(
                 'ais_ai_service',
                 'publish_command_to_frame', {

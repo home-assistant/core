@@ -357,18 +357,18 @@ class AisCacheData:
 
     def audio_type(self, nature):
         # get types from cache file
-        # types = [ais_global.G_EMPTY_OPTION]
         path = self.get_path(nature)
+        data = None
         if not os.path.isfile(path):
             return None
         else:
             with open(path) as file:
                 data = json.loads(file.read())
                 # items = data["data"]
-                # values = set()
                 # for item in items:
-                #     values.add(item['type'])
-                #     types = list(sorted(values))
+                #     # values.add(item['type'])
+                #     # types = list(sorted(values))
+                #     _LOGGER.error("item " + str(item))
         return data
 
     def store_audio_type(self, nature, json_data):
@@ -467,9 +467,7 @@ class AisColudData:
         yield from self.hass.async_add_job(load)
 
     def get_radio_types(self, call):
-        ws_resp = self.cache.audio_type(ais_global.G_AN_RADIO)
-        if ws_resp is None:
-            ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)
+        ws_resp = self.cloud.audio_type(ais_global.G_AN_RADIO)
         json_ws_resp = ws_resp.json()
         types = [ais_global.G_EMPTY_OPTION]
         for item in json_ws_resp["data"]:

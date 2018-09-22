@@ -99,7 +99,7 @@ class YouTubeData:
         params = dict(order='relevance',
                       part='snippet',
                       key=G_YT_KEY,
-                      maxResults=10)
+                      maxResults=50)
         params.update({'q': query})
         data = requests.get(URL_BASE, params=params).json()
         found = []
