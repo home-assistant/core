@@ -154,11 +154,6 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
 
         payload = dict(payload)
 
-        if TOPIC_PREFIX in payload:
-            prefix = payload[TOPIC_PREFIX]
-            for key in payload.keys():
-                payload[key] = payload[key].replace(TOPIC_PREFIX, prefix)
-
         for key in list(payload.keys()):
             abbreviated_key = key
             # Pattern to match one ore or word characters, excluding _, and:
@@ -175,6 +170,13 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
 
             key = re.sub(pattern, expand, key)
             payload[key] = payload.pop(abbreviated_key)
+
+        if TOPIC_PREFIX in payload:
+            prefix = payload[TOPIC_PREFIX]
+            for key, value in payload.items():
+                if value.startswith(TOPIC_PREFIX) and key.endswith('_topic'):
+                    payload[key] = "{}{}".format(prefix,
+                                                 value[len(TOPIC_PREFIX):])
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = '_'.join((node_id, object_id)) if node_id else object_id
