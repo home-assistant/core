@@ -9,7 +9,7 @@ matrix:
     - python: "3.5.3"
       env: TOXENV=lint
     - python: "3.5.3"
-      env: TOXENV=pylint
+      env: TOXENV=pylint PYLINT_ARGS=--jobs=0
     - python: "3.5.3"
       env: TOXENV=typing
     - python: "3.5.3"
