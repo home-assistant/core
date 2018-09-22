@@ -858,7 +858,7 @@ class MqttDiscoveryUpdate(Entity):
             if not payload:
                 # Empty payload: Remove component
                 _LOGGER.info("Removing component: %s", self.entity_id)
-                self.hass.async_add_job(self.async_remove())
+                self.hass.async_create_task(self.async_remove())
                 del self.hass.data[ALREADY_DISCOVERED][self._discovery_hash]
                 self._remove_signal()
 
