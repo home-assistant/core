@@ -7,7 +7,7 @@ import requests
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, HTTP_HEADER_X_REQUESTED_WITH)
+    CONF_HOST, CONF_PASSWORD, CONF_USERNAME)
 import homeassistant.helpers.config_validation as cv
 
 import voluptuous as vol
@@ -24,16 +24,18 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_USERNAME): cv.string
 })
 
+
 def get_scanner(hass, config):
     """Validate the configuration and return a Tilgin Device Scanner."""
 
-    models = [ TilginHG238xDeviceScanner ]
+    models = [TilginHG238xDeviceScanner]
     for model_family in models:
         scanner = model_family(config[DOMAIN])
         if scanner.success_init:
             return scanner
 
     return None
+
 
 class TilginHG238xDeviceScanner(DeviceScanner):
     """Queries the router for connected devices."""
@@ -48,11 +50,8 @@ class TilginHG238xDeviceScanner(DeviceScanner):
         self.last_results = {}
         self.success_init = False
 
-        try:
-            _LOGGER.debug("Initialising Tilgin HG238x Device")
-            self.success_init = self._check_auth()
-        except:
-            _LOGGER.debug("ConnectionError in TilginDeviceScanner")
+        _LOGGER.debug("Initialising Tilgin HG238x Device")
+        self.success_init = self._check_auth()
 
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
@@ -78,18 +77,27 @@ class TilginHG238xDeviceScanner(DeviceScanner):
         """Extract the HMAC key and auth to the device"""
 
         _LOGGER.debug("Starting auth")
-        r = self.session.get(self.url)
+        r = self.session.get(self.url + '/status/lan_clients/')
         if 'You are logged in as' in r.text:
             _LOGGER.debug("already authenticated")
             return
         soup = BeautifulSoup(r.content, 'html.parser')
         hmac_key = re.search('__pass\.value,\s+"(\w+?)"', soup.text).group(1)
+        hmac_message = (self.username + self.password).encode("utf8")
+
         _LOGGER.debug("hmac_key: {}".format(hmac_key))
 
         # Calculate the login HMAC
-        hashed_login = hmac.new(bytes(hmac_key, 'ascii'), (self.username + self.password).encode("utf8"), hashlib.sha1)
+        hashed_login = hmac.new(bytes(hmac_key, 'ascii'),
+                                hmac_message,
+                                hashlib.sha1
+                                )
 
-        login_data = { '__hash': hashed_login.hexdigest(), '__user': self.username, '__auth': 'login', '__formtok':''}
+        login_data = {'__hash': hashed_login.hexdigest(),
+                      '__user': self.username,
+                      '__auth': 'login',
+                      '__formtok':''
+                      }
 
         self.session.post(self.url, data=login_data, allow_redirects=False)
 
@@ -112,9 +120,16 @@ class TilginHG238xDeviceScanner(DeviceScanner):
         clients_html = soup.find('table', {"class": "control"})
         devices = clients_html.findAll('tr')[1:]
 
-        self.last_results = {
-            device.findAll('td')[2].text.strip(u'\u200e'): device.findAll('td')[1].text
-            for device in devices if 'Active' in device.findAll('td')[0].text
-        }
+        self.last_results = {}
+
+        for device in devices:
+            device = device.findAll('td')
+            if 'Active' not in device[0].text:
+                continue
+            device_mac = device[2].text.strip(u'\u200e')
+            device_name = device[1].text
+            _LOGGER.debug('{}: {}'.format(device_name, device_mac))
+            self.last_results[device_mac] = device_name
+
         _LOGGER.debug("Found {} devices".format(len(self.last_results)))
         return True
