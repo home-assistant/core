@@ -50,6 +50,7 @@ class TilginHG238xDeviceScanner(DeviceScanner):
         self.success_init = False
 
         try:
+            _LOGGER.debug("Initialising Tilgin HG238x Device")
             self.success_init = self._check_auth()
         except:
             _LOGGER.debug("ConnectionError in TilginDeviceScanner")
@@ -67,14 +68,20 @@ class TilginHG238xDeviceScanner(DeviceScanner):
         self._authenticate()
         r = self.session.get(self.url)
         if 'You are logged in as' in r.text:
+            _LOGGER.debug("auth success")
             return True
         else:
+            _LOGGER.debug("auth failure")
             return False
 
     def _authenticate(self):
         """Extract the HMAC key and auth to the device"""
 
+        _LOGGER.debug("Starting auth")
         r = self.session.get(self.url)
+        if 'You are logged in as' in r.text:
+            _LOGGER.debug("already authenticated")
+            return
         soup = BeautifulSoup(r.content, 'html.parser')
         hmac_key = re.search('__pass\.value,\s+"(\w+?)"', soup.text).group(1)
         _LOGGER.debug("hmac_key: {}".format(hmac_key))
@@ -108,4 +115,5 @@ class TilginHG238xDeviceScanner(DeviceScanner):
             device.findAll('td')[2].text.strip(u'\u200e'): device.findAll('td')[1].text
             for device in devices if 'Active' in device.findAll('td')[0].text
         }
+        _LOGGER.debug("Found {} devices".format(len(self.last_results)))
         return True
