@@ -1,5 +1,6 @@
 """
 Support for Tilgin routers.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.tilgen/
 """
@@ -44,6 +45,7 @@ def get_scanner(hass, config):
 
 class TilginHG238xDeviceScanner(DeviceScanner):
     """Queries the router for connected devices."""
+
     def __init__(self, config):
         """Initialize the scanner."""
         self.url = 'http://{}'.format(config[CONF_HOST])
@@ -89,7 +91,7 @@ class TilginHG238xDeviceScanner(DeviceScanner):
         hmac_key = re.search(r'__pass\.value,\s+"(\w+?)"', soup.text).group(1)
         hmac_message = (self.username + self.password).encode("utf8")
 
-        _LOGGER.debug("hmac_key: {}".format(hmac_key))
+        _LOGGER.debug("hmac_key: %s", hmac_key)
 
         # Calculate the login HMAC
         hashed_login = hmac.new(bytes(hmac_key, 'ascii'),
@@ -133,8 +135,8 @@ class TilginHG238xDeviceScanner(DeviceScanner):
                 continue
             device_mac = device[2].text.strip(u'\u200e')
             device_name = device[1].text
-            _LOGGER.debug('{}: {}'.format(device_name, device_mac))
+            _LOGGER.debug('%s: %s', device_name, device_mac)
             self.last_results[device_mac] = device_name
 
-        _LOGGER.debug("Found {} devices".format(len(self.last_results)))
+        _LOGGER.debug("Found %d devices", len(self.last_results))
         return True
