@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 
 import voluptuous as vol
 
-REQUIREMENTS = ['beautifulsoup4']
+REQUIREMENTS = ['beautifulsoup4==4.6.3']
 
 _LOGGER = logging.getLogger(__name__)
 
