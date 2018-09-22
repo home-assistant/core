@@ -3,7 +3,6 @@ import hmac
 import logging
 import hashlib
 import requests
-from bs4 import BeautifulSoup
 
 from homeassistant.components.device_tracker import (
     DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
@@ -75,6 +74,7 @@ class TilginHG238xDeviceScanner(DeviceScanner):
             return False
 
     def _authenticate(self):
+        from bs4 import BeautifulSoup
         """Extract the HMAC key and auth to the device"""
 
         _LOGGER.debug("Starting auth")
@@ -94,6 +94,7 @@ class TilginHG238xDeviceScanner(DeviceScanner):
         self.session.post(self.url, data=login_data, allow_redirects=False)
 
     def _update_info(self):
+        from bs4 import BeautifulSoup
         """Ensure the information from the TP-Link router is up to date.
         Return boolean if scanning successful.
         """
