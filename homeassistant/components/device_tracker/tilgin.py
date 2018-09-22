@@ -96,7 +96,7 @@ class TilginHG238xDeviceScanner(DeviceScanner):
         login_data = {'__hash': hashed_login.hexdigest(),
                       '__user': self.username,
                       '__auth': 'login',
-                      '__formtok':''
+                      '__formtok': ''
                       }
 
         self.session.post(self.url, data=login_data, allow_redirects=False)
