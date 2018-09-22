@@ -188,6 +188,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
     def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
+        if self._clean_state == STATE_CLEANING:
+            self.robot.pause_cleaning()
         self._clean_state = STATE_RETURNING
         self.robot.send_to_base()
 
