@@ -4,16 +4,13 @@ Support for Xiaomi Mi Flora BLE plant sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.miflora/
 """
-import asyncio
 from datetime import timedelta
 import logging
 import voluptuous as vol
-import async_timeout
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_MONITORED_CONDITIONS, CONF_NAME, CONF_MAC,
     CONF_SCAN_INTERVAL, EVENT_HOMEASSISTANT_START)
