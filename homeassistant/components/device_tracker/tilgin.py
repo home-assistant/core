@@ -73,8 +73,8 @@ class TilginHG238xDeviceScanner(DeviceScanner):
             return False
 
     def _authenticate(self):
-        from bs4 import BeautifulSoup
         """Extract the HMAC key and auth to the device"""
+        from bs4 import BeautifulSoup
 
         _LOGGER.debug("Starting auth")
         r = self.session.get(self.url + '/status/lan_clients/')
@@ -82,7 +82,7 @@ class TilginHG238xDeviceScanner(DeviceScanner):
             _LOGGER.debug("already authenticated")
             return
         soup = BeautifulSoup(r.content, 'html.parser')
-        hmac_key = re.search('__pass\.value,\s+"(\w+?)"', soup.text).group(1)
+        hmac_key = re.search(r'__pass\.value,\s+"(\w+?)"', soup.text).group(1)
         hmac_message = (self.username + self.password).encode("utf8")
 
         _LOGGER.debug("hmac_key: {}".format(hmac_key))
@@ -102,10 +102,10 @@ class TilginHG238xDeviceScanner(DeviceScanner):
         self.session.post(self.url, data=login_data, allow_redirects=False)
 
     def _update_info(self):
-        from bs4 import BeautifulSoup
         """Ensure the information from the TP-Link router is up to date.
         Return boolean if scanning successful.
         """
+        from bs4 import BeautifulSoup
 
         _LOGGER.info("Loading LAN clients...")
 
