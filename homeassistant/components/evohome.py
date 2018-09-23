@@ -79,14 +79,6 @@ def setup(hass, config):
     domain_data['params'] = dict(config[DOMAIN])
     domain_data['params'][CONF_SCAN_INTERVAL] = SCAN_INTERVAL_DEFAULT
 
-    if _LOGGER.isEnabledFor(logging.DEBUG):
-        # Redact username and password, so they are not logged.
-        tmp = dict(domain_data['params'])
-        tmp[CONF_USERNAME] = 'REDACTED'
-        tmp[CONF_PASSWORD] = 'REDACTED'
-
-        _LOGGER.debug("setup(): Configuration parameters: %s", tmp)
-
     from evohomeclient2 import EvohomeClient
 
     _LOGGER.debug("setup(): API call [4 request(s)]: client.__init__()...")

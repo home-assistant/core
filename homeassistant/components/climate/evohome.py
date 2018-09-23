@@ -406,8 +406,7 @@ class EvoController(ClimateDevice):
         if not self._available and was_available:
             # only warn if available from True to False
             _LOGGER.warning(
-                "The entity, %s, is now unavailable "
-                "(i.e. self.available() = False), debug code is: %s",
+                "The entity, %s, has become unavailable, debug code is: %s",
                 self._id + " [" + self._name + "]",
                 debug_code
             )
@@ -416,9 +415,6 @@ class EvoController(ClimateDevice):
                 self._timers['statusUpdated'] != datetime.min:
             # this isn't the first re-available (e.g. _after_ STARTUP)
             _LOGGER.debug(
-                "The entity, %s, is now available "
-                "(i.e. self.available() = True)",
+                "The entity, %s, has become available",
                 self._id + " [" + self._name + "]"
             )
-
-        return True
