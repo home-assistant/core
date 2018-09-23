@@ -114,9 +114,9 @@ class KNXLight(Light):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         if self.device.supports_color:
-            return max(self.device.current_color) \
-                if self.device.current_color is not None else \
-                DEFAULT_BRIGHTNESS
+            if self.device.current_color is None:
+                return DEFAULT_BRIGHTNESS
+            return max(self.device.current_color)
         if self.device.supports_brightness:
             return self.device.current_brightness
         return None
@@ -126,8 +126,9 @@ class KNXLight(Light):
         """Return the HS color value."""
         if self.device.supports_color:
             rgb = self.device.current_color
-            return color_util.color_RGB_to_hs(*rgb) \
-                if rgb is not None else DEFAULT_COLOR
+            if rgb is None:
+                return DEFAULT_COLOR
+            return color_util.color_RGB_to_hs(*rgb)
         return None
 
     @property
