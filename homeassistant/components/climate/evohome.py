@@ -76,7 +76,6 @@ EVO_DEBUG_NO_RECENT_UPDATES = '0x01'
 EVO_DEBUG_NO_STATUS = '0x02'
 
 
-
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create a Honeywell (EMEA/EU) evohome CH/DHW system.
 
