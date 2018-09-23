@@ -14,13 +14,15 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components.climate import (
     ClimateDevice,
+    STATE_AUTO,
+    STATE_ECO,
+    STATE_OFF,
     SUPPORT_OPERATION_MODE,
     SUPPORT_AWAY_MODE,
 )
 from homeassistant.components.evohome import (
     CONF_LOCATION_IDX,
     DATA_EVOHOME,
-    DISPATCHER_EVOHOME,
     MAX_TEMP,
     MIN_TEMP,
     SCAN_INTERVAL_MAX
@@ -31,8 +33,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     HTTP_TOO_MANY_REQUESTS,
 )
-from homeassistant.core import callback
-
 _LOGGER = logging.getLogger(__name__)
 
 # Usually, only the controller does client api I/O during update()s to pull
@@ -60,9 +60,9 @@ TCS_OP_LIST = [
 ]
 
 HA_STATE_TO_EVO = {
-    STATE_AUTO: 'Auto',
-    STATE_ECO: 'AutoWithEco',
-    STATE_OFF: 'HeatingOff'
+    STATE_AUTO: EVO_AUTO,
+    STATE_ECO: EVO_AUTOECO,
+    STATE_OFF: EVO_HEATOFF
 }
 
 EVO_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_EVO.items()}

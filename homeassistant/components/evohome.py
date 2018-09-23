@@ -30,7 +30,6 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
-    EVENT_HOMEASSISTANT_START,
     HTTP_BAD_REQUEST
 )
 
@@ -46,7 +45,6 @@ _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'evohome'
 DATA_EVOHOME = 'data_' + DOMAIN
-DISPATCHER_EVOHOME = 'dispatcher_' + DOMAIN
 
 CONF_LOCATION_IDX = 'location_idx'
 MAX_TEMP = 35
@@ -161,12 +159,6 @@ def setup(hass, config):
         domain_data['config'][GWS][0][TCS][0]['systemId'],
         domain_data['config'][GWS][0][TCS][0]['modelType']
     )
-
-    def _first_update(event):
-        # Inform the hub when HA has started, so it starts pulling updates.
-        hass.helpers.dispatcher.dispatcher_send(DISPATCHER_EVOHOME)
-
-    hass.bus.listen(EVENT_HOMEASSISTANT_START, _first_update)
 
     load_platform(hass, 'climate', DOMAIN)
 
