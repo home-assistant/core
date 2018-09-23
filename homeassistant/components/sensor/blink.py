@@ -17,7 +17,7 @@ DEPENDENCIES = ['blink']
 SENSOR_TYPES = {
     'temperature': ['Temperature', TEMP_FAHRENHEIT],
     'battery': ['Battery', ''],
-    'notifications': ['Notifications', '']
+    'motion_detected': ['Motion Detected', list()]
 }
 
 
@@ -32,7 +32,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     for name in data.cameras:
         devs.append(BlinkSensor(name, 'temperature', index, data))
         devs.append(BlinkSensor(name, 'battery', index, data))
-        devs.append(BlinkSensor(name, 'notifications', index, data))
+        devs.append(BlinkSensor(name, 'motion_detected', index, data))
         index += 1
 
     add_entities(devs, True)
@@ -69,12 +69,8 @@ class BlinkSensor(Entity):
     def update(self):
         """Retrieve sensor data from the camera."""
         camera = self.data.cameras[self._camera_name]
-        if self._type == 'temperature':
-            self._state = camera.temperature
-        elif self._type == 'battery':
-            self._state = camera.battery_string
-        elif self._type == 'notifications':
-            self._state = camera.notifications
-        else:
+        try:
+            self._states = camera.attributes[self._type]
+        except KeyError:
             self._state = None
-            _LOGGER.warning("Could not retrieve state from %s", self.name)
+            _LOGGER.error("%s not a valid camera attribute.  Did the blinkpy API change?", self._type)
