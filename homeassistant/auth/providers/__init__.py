@@ -15,7 +15,7 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.decorator import Registry
 
 from ..auth_store import AuthStore
-from ..const import SESSION_EXPIRATION
+from ..const import MFA_SESSION_EXPIRATION
 from ..models import Credentials, User, UserMeta  # noqa: F401
 
 _LOGGER = logging.getLogger(__name__)
@@ -229,7 +229,7 @@ class LoginFlow(data_entry_flow.FlowHandler):
             await auth_module.async_initialize_login_mfa_step(self.user.id)
 
         if user_input is not None:
-            expires = self.created_at + SESSION_EXPIRATION
+            expires = self.created_at + MFA_SESSION_EXPIRATION
             if dt_util.utcnow() > expires:
                 return self.async_abort(
                     reason='login_expired'

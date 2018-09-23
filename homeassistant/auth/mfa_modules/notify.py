@@ -31,8 +31,6 @@ STORAGE_VERSION = 1
 STORAGE_KEY = 'auth_module.notify'
 STORAGE_USERS = 'users'
 STORAGE_USER_ID = 'user_id'
-STORAGE_OTA_SECRET = 'ota_secret'
-STORAGE_COUNTER = 'counter'
 
 INPUT_FIELD_CODE = 'code'
 
@@ -54,13 +52,13 @@ def _generate_random() -> int:
 def _generate_otp(secret: str, count: int) -> str:
     """Generate one time password."""
     import pyotp
-    return str(pyotp.HOTP(secret, digits=8).at(count))
+    return str(pyotp.HOTP(secret).at(count))
 
 
 def _verify_otp(secret: str, otp: str, count: int) -> bool:
     """Verify one time password."""
     import pyotp
-    return bool(pyotp.HOTP(secret, digits=8).verify(otp, count))
+    return bool(pyotp.HOTP(secret).verify(otp, count))
 
 
 @attr.s(slots=True)
@@ -81,7 +79,6 @@ class NotifyAuthModule(MultiFactorAuthModule):
     """Auth module send hmac-based one time password by notify service."""
 
     DEFAULT_TITLE = 'Notify One-Time Password'
-    DUMMY_SECRET = '7Z5EFWI4RFLVV67G'
 
     def __init__(self, hass: HomeAssistant, config: Dict[str, Any]) -> None:
         """Initialize the user data store."""
@@ -128,16 +125,14 @@ class NotifyAuthModule(MultiFactorAuthModule):
     @callback
     def aync_get_available_notify_services(self) -> List[str]:
         """Return list of notify services."""
-        unordered_services = list(self.hass.services.async_services().get(
-            'notify', {}))
+        unordered_services = set()
 
-        for exclude_service in self._exclude:
-            if exclude_service in unordered_services:
-                unordered_services.remove(exclude_service)
+        for service in self.hass.services.async_services().get('notify', {}):
+            if service not in self._exclude:
+                unordered_services.add(service)
 
         if self._include:
-            unordered_services = [s for s in self._include
-                                  if s in unordered_services]
+            unordered_services &= set(self._include)
 
         return sorted(unordered_services)
 
