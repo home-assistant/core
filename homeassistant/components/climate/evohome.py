@@ -59,6 +59,14 @@ TCS_OP_LIST = [
     EVO_HEATOFF
 ]
 
+HA_STATE_TO_EVO = {
+    STATE_AUTO: 'Auto',
+    STATE_ECO: 'AutoWithEco',
+    STATE_OFF: 'HeatingOff'
+}
+
+EVO_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_EVO.items()}
+
 # these are used to help prevent E501 (line too long) violations
 GWS = 'gateways'
 TCS = 'temperatureControlSystems'
@@ -158,13 +166,11 @@ class EvoController(ClimateDevice):
             api_rate_limit_exceeded = True
             api_ver = "v2"
 
-        # we can't handle any other exceptions here
         else:
             api_rate_limit_exceeded = False
 
-        # do we need to back off?
         if api_rate_limit_exceeded is True:
-            # so increase the scan_interval
+            # execute a back off: pause, and reduce rate
             old_scan_interval = self._params[CONF_SCAN_INTERVAL]
             new_scan_interval = min(old_scan_interval * 2, SCAN_INTERVAL_MAX)
             self._params[CONF_SCAN_INTERVAL] = new_scan_interval
@@ -180,7 +186,6 @@ class EvoController(ClimateDevice):
                 new_scan_interval * 3
             )
 
-            # and also wait for a short while - 3 scan_intervals
             self._timers['statusUpdated'] = datetime.now() + \
                 timedelta(seconds=new_scan_interval * 3)
 
@@ -216,8 +221,8 @@ class EvoController(ClimateDevice):
         Note that, for evohome, the operating mode is determined by - but not
         always equivalent to - the last operation (from the operation list).
         """
-        # The operation list is hard-coded for a particular order, instead of
-        # using self._config['allowedSystemModes']
+        # Instead of using self._config['allowedSystemModes'] use a static
+        # list, to ensure a particular order
         return TCS_OP_LIST
 
     @property
@@ -321,7 +326,6 @@ class EvoController(ClimateDevice):
         client = domain_data['client']
         loc_idx = domain_data['params'][CONF_LOCATION_IDX]
 
-        # Obtain latest state data (e.g. temperatures)...
         _LOGGER.debug(
             "_update_state_data(): API call [1 request(s)]: "
             "client.locations[loc_idx].status()..."
@@ -336,7 +340,6 @@ class EvoController(ClimateDevice):
             self._handle_requests_exceptions("HTTPError", err)
 
         else:
-            # only update the timers if the api call was successful
             domain_data['timers']['statusUpdated'] = datetime.now()
 
         _LOGGER.debug(
@@ -355,16 +358,13 @@ class EvoController(ClimateDevice):
         """
         domain_data = self.hass.data[DATA_EVOHOME]
 
-        # Wait a minimum (scan_interval/60) mins (rounded up) between updates
         timeout = datetime.now() + timedelta(seconds=55)
         expired = timeout > self._timers['statusUpdated'] + \
             timedelta(seconds=domain_data['params'][CONF_SCAN_INTERVAL])
 
-        if not expired:  # timer not expired, so exit
+        if not expired:
             return True
 
-        # If we reached here, then it is time to update state data.  NB: unlike
-        # all other config/state data, zones maintain their own schedules.
         self._update_state_data(domain_data)
         self._status = domain_data['status']
 
@@ -392,7 +392,6 @@ class EvoController(ClimateDevice):
         was_available = self._available
 
         if no_recent_updates:
-            # unavailable because no successful update()s (but why?)
             self._available = False
             debug_code = '0x01'
 
@@ -401,11 +400,11 @@ class EvoController(ClimateDevice):
             self._available = False
             debug_code = '0x02'
 
-        else:  # is available
+        else:
             self._available = True
 
         if not self._available and was_available:
-            # only warn if available from False to True
+            # only warn if available from True to False
             _LOGGER.warning(
                 "The entity, %s, is now unavailable "
                 "(i.e. self.available() = False), debug code is: %s",
