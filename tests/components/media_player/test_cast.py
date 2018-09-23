@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 from typing import Optional
-from unittest.mock import patch, MagicMock, Mock
+from unittest.mock import patch, MagicMock, Mock, PropertyMock
 from uuid import UUID
 
 import attr
@@ -245,8 +245,11 @@ async def test_normal_chromecast_not_starting_discovery(hass):
 async def test_normal_raises_platform_not_ready(hass):
     """Test cast platform raises PlatformNotReady if HTTP dial fails."""
     with patch('pychromecast.dial.get_device_status', return_value=None):
-        with pytest.raises(PlatformNotReady):
-            await async_setup_cast(hass, {'host': 'host1'})
+        with patch('homeassistant.core.HomeAssistant.is_running',
+                   new_callable=PropertyMock,
+                   return_value=False):
+            with pytest.raises(PlatformNotReady):
+                await async_setup_cast(hass, {'host': 'host1'})
 
 
 async def test_replay_past_chromecasts(hass):
@@ -370,7 +373,7 @@ async def test_entry_setup_no_config(hass: HomeAssistantType):
 
     with patch(
         'homeassistant.components.media_player.cast._async_setup_platform',
-            return_value=mock_coro()) as mock_setup:
+            return_value=mock_coro(True)) as mock_setup:
         await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
     assert len(mock_setup.mock_calls) == 1
@@ -389,7 +392,7 @@ async def test_entry_setup_single_config(hass: HomeAssistantType):
 
     with patch(
         'homeassistant.components.media_player.cast._async_setup_platform',
-            return_value=mock_coro()) as mock_setup:
+            return_value=mock_coro(True)) as mock_setup:
         await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
     assert len(mock_setup.mock_calls) == 1
@@ -409,7 +412,7 @@ async def test_entry_setup_list_config(hass: HomeAssistantType):
 
     with patch(
         'homeassistant.components.media_player.cast._async_setup_platform',
-            return_value=mock_coro()) as mock_setup:
+            return_value=mock_coro(True)) as mock_setup:
         await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
     assert len(mock_setup.mock_calls) == 2

@@ -120,6 +120,7 @@ def _fill_out_missing_chromecast_info(info: ChromecastInfo) -> ChromecastInfo:
 def _discover_chromecast(hass: HomeAssistantType, info: ChromecastInfo):
     if info in hass.data[KNOWN_CHROMECAST_INFO_KEY]:
         _LOGGER.debug("Discovered previous chromecast %s", info)
+        return
 
     # Either discovered completely new chromecast or a "moved" one.
     info = _fill_out_missing_chromecast_info(info)
@@ -201,8 +202,9 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     _LOGGER.warning(
         'Setting configuration for Cast via platform is deprecated. '
         'Configure via Cast component instead.')
-    await _async_setup_platform(
-        hass, config, async_add_entities, discovery_info)
+    if not await _async_setup_platform(
+            hass, config, async_add_entities, discovery_info):
+        raise PlatformNotReady
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
