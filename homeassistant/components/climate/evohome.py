@@ -71,6 +71,11 @@ EVO_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_EVO.items()}
 GWS = 'gateways'
 TCS = 'temperatureControlSystems'
 
+# debug codes - these happen occasionally, but the cause is unknown
+EVO_DEBUG_NO_RECENT_UPDATES = '0x01'
+EVO_DEBUG_NO_STATUS = '0x02'
+
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Create a Honeywell (EMEA/EU) evohome CH/DHW system.
@@ -140,16 +145,6 @@ class EvoController(ClimateDevice):
                 "__init__(%s), self._config = %s",
                 self._id + " [" + self._name + "]",
                 tmp_dict
-            )
-            _LOGGER.debug(
-                "__init__(%s), self._timers = %s",
-                self._id + " [" + self._name + "]",
-                self._timers
-            )
-            _LOGGER.debug(
-                "__init__(%s), self._params = %s",
-                self._id + " [" + self._name + "]",
-                self._params
             )
 
     @asyncio.coroutine
@@ -332,7 +327,7 @@ class EvoController(ClimateDevice):
         )
 
         try:
-            domain_data['status'].update(  # or: domain_data['status'] =
+            domain_data['status'].update(
                 client.locations[loc_idx].status()[GWS][0][TCS][0])
 
         except HTTPError as err:
@@ -363,7 +358,7 @@ class EvoController(ClimateDevice):
             timedelta(seconds=domain_data['params'][CONF_SCAN_INTERVAL])
 
         if not expired:
-            return True
+            return
 
         self._update_state_data(domain_data)
         self._status = domain_data['status']
@@ -380,11 +375,6 @@ class EvoController(ClimateDevice):
                 self._id + " [" + self._name + "]",
                 tmp_dict
             )
-            _LOGGER.debug(
-                "update(%s), self._timers = %s",
-                self._id + " [" + self._name + "]",
-                self._timers
-            )
 
         no_recent_updates = self._timers['statusUpdated'] < datetime.now() - \
             timedelta(seconds=self._params[CONF_SCAN_INTERVAL] * 3.1)
@@ -393,18 +383,18 @@ class EvoController(ClimateDevice):
 
         if no_recent_updates:
             self._available = False
-            debug_code = '0x01'
+            debug_code = EVO_DEBUG_NO_RECENT_UPDATES
 
         elif not self._status:  # self._status == {}
             # unavailable because no status (but how? other than at startup?)
             self._available = False
-            debug_code = '0x02'
+            debug_code = EVO_DEBUG_NO_STATUS
 
         else:
             self._available = True
 
         if not self._available and was_available:
-            # only warn if available from True to False
+            # only warn if available went from True to False
             _LOGGER.warning(
                 "The entity, %s, has become unavailable, debug code is: %s",
                 self._id + " [" + self._name + "]",

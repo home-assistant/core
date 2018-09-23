@@ -3,15 +3,6 @@
 Support for a temperature control system (TCS, controller) with 0+ heating
 zones (e.g. TRVs, relays) and, optionally, a DHW controller.
 
-A minimal configuration.yaml is as as below:
-
-evohome:
-  username: !secret evohome_username
-  password: !secret evohome_password
-
-# This config parameter is presented with its default value:
-# location_idx: 0        # if you have more than 1 location, use this index
-
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.evohome/
 """
@@ -71,9 +62,7 @@ def setup(hass, config):
     One controller with 0+ heating zones (e.g. TRVs, relays) and, optionally, a
     DHW controller.  Does not work for US-based systems.
     """
-    hass.data[DATA_EVOHOME] = {}
-
-    domain_data = hass.data[DATA_EVOHOME]
+    domain_data = hass.data[DATA_EVOHOME] = {}
     domain_data['timers'] = {}
 
     domain_data['params'] = dict(config[DOMAIN])
