@@ -52,6 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         teleinfo_data = TeleinfoData(teleinfo)
 
     except exceptions.KylinSerialError as err:
+        _LOGGER.critical("Serial error with Teleinfo: %s", err)
         return
 
     if not teleinfo_data.update():
@@ -103,7 +104,7 @@ class TeleinfoSensor(Entity):
                     self._state = self._attributes['ADCO']
 
 
-class TeleinfoData(object):
+class TeleinfoData():
     """Get the latest data from Teleinfo."""
 
     def __init__(self, teleinfo):
@@ -137,4 +138,3 @@ class TeleinfoData(object):
         if self._teleinfo is not None:
             self._teleinfo.close()
             self._teleinfo = None
-
