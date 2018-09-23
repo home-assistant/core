@@ -1546,7 +1546,7 @@ youtube_dl==2018.09.18
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.21.2
+zeroconf==0.21.3
 
 # homeassistant.components.climate.zhong_hong
 zhong_hong_hvac==1.0.9
