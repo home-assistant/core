@@ -189,10 +189,6 @@ class EcovacsVacuum(VacuumDevice):
 
         for key, val in self.device.components.items():
             attr_name = ATTR_COMPONENT_PREFIX + key
-            data[attr_name] = int(val * 100 / 0.2777778)
-            # The above calculation includes a fix for a bug in sucks 0.9.1
-            # When sucks 0.9.2+ is released, it should be changed to the
-            # following:
-            # data[attr_name] = int(val * 100)
+            data[attr_name] = int(val * 100)
 
         return data

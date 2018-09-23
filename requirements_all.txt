@@ -1385,7 +1385,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.ecovacs
-sucks==0.9.1
+sucks==0.9.3
 
 # homeassistant.components.camera.onvif
 suds-passworddigest-homeassistant==0.1.2a0.dev0
