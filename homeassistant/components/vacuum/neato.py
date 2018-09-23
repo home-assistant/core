@@ -75,6 +75,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
                 requests.exceptions.HTTPError) as ex:
             _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
+            self._clean_state = STATE_ERROR
+            self._status_state = 'Robot Offline'
             return
         _LOGGER.debug('self._state=%s', self._state)
         if self._state['state'] == 1:
