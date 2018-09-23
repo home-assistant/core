@@ -24,7 +24,7 @@ CLASS_MAPPING = {
 }
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Zigbee Home Automation binary sensors."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
@@ -34,14 +34,14 @@ async def async_setup_platform(hass, config, async_add_devices,
     from zigpy.zcl.clusters.general import OnOff
     from zigpy.zcl.clusters.security import IasZone
     if IasZone.cluster_id in discovery_info['in_clusters']:
-        await _async_setup_iaszone(hass, config, async_add_devices,
+        await _async_setup_iaszone(hass, config, async_add_entities,
                                    discovery_info)
     elif OnOff.cluster_id in discovery_info['out_clusters']:
-        await _async_setup_remote(hass, config, async_add_devices,
+        await _async_setup_remote(hass, config, async_add_entities,
                                   discovery_info)
 
 
-async def _async_setup_iaszone(hass, config, async_add_devices,
+async def _async_setup_iaszone(hass, config, async_add_entities,
                                discovery_info):
     device_class = None
     from zigpy.zcl.clusters.security import IasZone
@@ -59,33 +59,31 @@ async def _async_setup_iaszone(hass, config, async_add_devices,
         pass
 
     sensor = BinarySensor(device_class, **discovery_info)
-    async_add_devices([sensor], update_before_add=True)
+    async_add_entities([sensor], update_before_add=True)
 
 
-async def _async_setup_remote(hass, config, async_add_devices, discovery_info):
+async def _async_setup_remote(hass, config, async_add_entities,
+                              discovery_info):
 
-    async def safe(coro):
-        """Run coro, catching ZigBee delivery errors, and ignoring them."""
-        import zigpy.exceptions
-        try:
-            await coro
-        except zigpy.exceptions.DeliveryError as exc:
-            _LOGGER.warning("Ignoring error during setup: %s", exc)
+    remote = Remote(**discovery_info)
 
     if discovery_info['new_join']:
         from zigpy.zcl.clusters.general import OnOff, LevelControl
         out_clusters = discovery_info['out_clusters']
         if OnOff.cluster_id in out_clusters:
             cluster = out_clusters[OnOff.cluster_id]
-            await safe(cluster.bind())
-            await safe(cluster.configure_reporting(0, 0, 600, 1))
+            await zha.configure_reporting(
+                remote.entity_id, cluster, 0, min_report=0, max_report=600,
+                reportable_change=1
+            )
         if LevelControl.cluster_id in out_clusters:
             cluster = out_clusters[LevelControl.cluster_id]
-            await safe(cluster.bind())
-            await safe(cluster.configure_reporting(0, 1, 600, 1))
+            await zha.configure_reporting(
+                remote.entity_id, cluster, 0, min_report=1, max_report=600,
+                reportable_change=1
+            )
 
-    sensor = Switch(**discovery_info)
-    async_add_devices([sensor], update_before_add=True)
+    async_add_entities([remote], update_before_add=True)
 
 
 class BinarySensor(zha.Entity, BinarySensorDevice):
@@ -130,17 +128,18 @@ class BinarySensor(zha.Entity, BinarySensorDevice):
 
     async def async_update(self):
         """Retrieve latest state."""
-        from bellows.types.basic import uint16_t
+        from zigpy.types.basic import uint16_t
 
         result = await zha.safe_read(self._endpoint.ias_zone,
                                      ['zone_status'],
-                                     allow_cache=False)
+                                     allow_cache=False,
+                                     only_cache=(not self._initialized))
         state = result.get('zone_status', self._state)
         if isinstance(state, (int, uint16_t)):
             self._state = result.get('zone_status', self._state) & 3
 
 
-class Switch(zha.Entity, BinarySensorDevice):
+class Remote(zha.Entity, BinarySensorDevice):
     """ZHA switch/remote controller/button."""
 
     _domain = DOMAIN

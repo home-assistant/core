@@ -10,13 +10,13 @@ import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
-    SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_SET, SUPPORT_PLAY, MediaPlayerDevice)
+    PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
+    CONF_DEVICE, CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT, CONF_SSL,
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY,
-    STATE_UNKNOWN, CONF_HOST, CONF_PORT, CONF_SSL, CONF_NAME, CONF_DEVICE,
-    CONF_DEVICES)
+    STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the FireTV platform."""
     name = config.get(CONF_NAME)
     ssl = config.get(CONF_SSL)
@@ -58,7 +58,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         response = requests.get(
             DEVICE_LIST_URL.format(proto, host, port)).json()
         if device_id in response[CONF_DEVICES].keys():
-            add_devices([FireTVDevice(proto, host, port, device_id, name)])
+            add_entities([FireTVDevice(proto, host, port, device_id, name)])
             _LOGGER.info("Device %s accessible and ready for control",
                          device_id)
         else:

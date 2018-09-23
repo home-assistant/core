@@ -106,6 +106,8 @@ def test_type_covers(type_name, entity_id, state, attrs):
     ('AirQualitySensor', 'sensor.air_quality_pm25', '40', {}),
     ('AirQualitySensor', 'sensor.air_quality', '40',
      {ATTR_DEVICE_CLASS: 'pm25'}),
+    ('CarbonMonoxideSensor', 'sensor.airmeter', '2',
+     {ATTR_DEVICE_CLASS: 'co'}),
     ('CarbonDioxideSensor', 'sensor.airmeter_co2', '500', {}),
     ('CarbonDioxideSensor', 'sensor.airmeter', '500',
      {ATTR_DEVICE_CLASS: 'co2'}),

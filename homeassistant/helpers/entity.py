@@ -1,9 +1,9 @@
 """An abstract class for entities."""
 import asyncio
+from datetime import timedelta
 import logging
 import functools as ft
 from timeit import default_timer as timer
-
 from typing import Optional, List, Iterable
 
 from homeassistant.const import (
@@ -16,6 +16,7 @@ from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -85,6 +86,10 @@ class Entity:
     # Hold list for functions to call on remove.
     _on_remove = None
 
+    # Context
+    _context = None
+    _context_set = None
+
     @property
     def should_poll(self) -> bool:
         """Return True if entity has to be polled for state.
@@ -119,6 +124,14 @@ class Entity:
     @property
     def device_state_attributes(self):
         """Return device specific state attributes.
+
+        Implemented by platform classes.
+        """
+        return None
+
+    @property
+    def device_info(self):
+        """Return device specific attributes.
 
         Implemented by platform classes.
         """
@@ -173,13 +186,24 @@ class Entity:
         """Flag supported features."""
         return None
 
+    @property
+    def context_recent_time(self):
+        """Time that a context is considered recent."""
+        return timedelta(seconds=5)
+
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
 
+    @callback
+    def async_set_context(self, context):
+        """Set the context the entity currently operates under."""
+        self._context = context
+        self._context_set = dt_util.utcnow()
+
     @asyncio.coroutine
-    def async_update_ha_state(self, force_refresh=False, context=None):
+    def async_update_ha_state(self, force_refresh=False):
         """Update Home Assistant with current state of entity.
 
         If force_refresh == True will update entity before setting state.
@@ -278,8 +302,14 @@ class Entity:
             # Could not convert state to float
             pass
 
+        if (self._context is not None and
+                dt_util.utcnow() - self._context_set >
+                self.context_recent_time):
+            self._context = None
+            self._context_set = None
+
         self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update, context)
+            self.entity_id, state, attr, self.force_update, self._context)
 
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
@@ -347,7 +377,7 @@ class Entity:
 
     @callback
     def async_registry_updated(self, old, new):
-        """Called when the entity registry has been updated."""
+        """Handle entity registry update."""
         self.registry_name = new.name
 
         if new.entity_id == self.entity_id:

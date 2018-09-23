@@ -77,7 +77,7 @@ class _GoogleEntity:
         domain = state.domain
         features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
 
-        return [Trait(state) for Trait in trait.TRAITS
+        return [Trait(self.hass, state) for Trait in trait.TRAITS
                 if Trait.supported(domain, features)]
 
     @callback
@@ -159,7 +159,7 @@ class _GoogleEntity:
         executed = False
         for trt in self.traits():
             if trt.can_execute(command, params):
-                await trt.execute(self.hass, command, params)
+                await trt.execute(command, params)
                 executed = True
                 break
 
@@ -324,3 +324,11 @@ async def handle_devices_execute(hass, config, payload):
         })
 
     return {'commands': final_results}
+
+
+def turned_off_response(message):
+    """Return a device turned off response."""
+    return {
+        'requestId': message.get('requestId'),
+        'payload': {'errorCode': 'deviceTurnedOff'}
+    }

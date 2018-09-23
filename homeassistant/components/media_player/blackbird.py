@@ -13,15 +13,15 @@ from homeassistant.components.media_player import (
     DOMAIN, MEDIA_PLAYER_SCHEMA, PLATFORM_SCHEMA, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_NAME, CONF_HOST, CONF_PORT, STATE_OFF, STATE_ON)
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_OFF,
+    STATE_ON)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['pyblackbird==0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_BLACKBIRD = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-                    SUPPORT_SELECT_SOURCE
+SUPPORT_BLACKBIRD = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
 
 ZONE_SCHEMA = vol.Schema({
     vol.Required(CONF_NAME): cv.string,
@@ -33,7 +33,6 @@ SOURCE_SCHEMA = vol.Schema({
 
 CONF_ZONES = 'zones'
 CONF_SOURCES = 'sources'
-CONF_TYPE = 'type'
 
 DATA_BLACKBIRD = 'blackbird'
 
@@ -61,7 +60,7 @@ PLATFORM_SCHEMA = vol.All(
     }))
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Monoprice Blackbird 4k 8x8 HDBaseT Matrix platform."""
     if DATA_BLACKBIRD not in hass.data:
         hass.data[DATA_BLACKBIRD] = {}
@@ -100,7 +99,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         hass.data[DATA_BLACKBIRD][unique_id] = device
         devices.append(device)
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
     def service_handle(service):
         """Handle for services."""

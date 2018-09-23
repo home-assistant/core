@@ -143,7 +143,7 @@ class FeedManager:
         else:
             self._has_published_parsed = False
             _LOGGER.debug("No published_parsed info available for entry %s",
-                          entry.title)
+                          entry)
         entry.update({'feed_url': self._url})
         self._hass.bus.fire(self._event_type, entry)
 
@@ -164,7 +164,7 @@ class FeedManager:
                 self._update_and_fire_entry(entry)
                 new_entries = True
             else:
-                _LOGGER.debug("Entry %s already processed", entry.title)
+                _LOGGER.debug("Entry %s already processed", entry)
         if not new_entries:
             self._log_no_entries()
         self._firstrun = False

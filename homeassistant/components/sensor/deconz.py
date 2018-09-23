@@ -6,10 +6,11 @@ https://home-assistant.io/components/sensor.deconz/
 """
 from homeassistant.components.deconz.const import (
     ATTR_DARK, ATTR_ON, CONF_ALLOW_CLIP_SENSOR, DOMAIN as DATA_DECONZ,
-    DATA_DECONZ_ID, DATA_DECONZ_UNSUB)
+    DATA_DECONZ_ID, DATA_DECONZ_UNSUB, DECONZ_DOMAIN)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, DEVICE_CLASS_BATTERY)
 from homeassistant.core import callback
+from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
@@ -21,13 +22,13 @@ ATTR_DAYLIGHT = 'daylight'
 ATTR_EVENT_ID = 'event_id'
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Old way of setting up deCONZ sensors."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the deCONZ sensors."""
     @callback
     def async_add_sensor(sensors):
@@ -43,7 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
                         entities.append(DeconzBattery(sensor))
                 else:
                     entities.append(DeconzSensor(sensor))
-        async_add_devices(entities, True)
+        async_add_entities(entities, True)
 
     hass.data[DATA_DECONZ_UNSUB].append(
         async_dispatcher_connect(hass, 'deconz_new_sensor', async_add_sensor))
@@ -62,6 +63,11 @@ class DeconzSensor(Entity):
         """Subscribe to sensors events."""
         self._sensor.register_async_callback(self.async_update_callback)
         self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect sensor object when removed."""
+        self._sensor.remove_callback(self.async_update_callback)
+        self._sensor = None
 
     @callback
     def async_update_callback(self, reason):
@@ -134,20 +140,43 @@ class DeconzSensor(Entity):
             attr[ATTR_DAYLIGHT] = self._sensor.daylight
         return attr
 
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if (self._sensor.uniqueid is None or
+                self._sensor.uniqueid.count(':') != 7):
+            return None
+        serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
+        return {
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'name': self._sensor.name,
+            'sw_version': self._sensor.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
+        }
+
 
 class DeconzBattery(Entity):
     """Battery class for when a device is only represented as an event."""
 
-    def __init__(self, device):
+    def __init__(self, sensor):
         """Register dispatcher callback for update of battery state."""
-        self._device = device
-        self._name = '{} {}'.format(self._device.name, 'Battery Level')
+        self._sensor = sensor
+        self._name = '{} {}'.format(self._sensor.name, 'Battery Level')
         self._unit_of_measurement = "%"
 
     async def async_added_to_hass(self):
         """Subscribe to sensors events."""
-        self._device.register_async_callback(self.async_update_callback)
-        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._device.deconz_id
+        self._sensor.register_async_callback(self.async_update_callback)
+        self.hass.data[DATA_DECONZ_ID][self.entity_id] = self._sensor.deconz_id
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Disconnect sensor object when removed."""
+        self._sensor.remove_callback(self.async_update_callback)
+        self._sensor = None
 
     @callback
     def async_update_callback(self, reason):
@@ -158,7 +187,7 @@ class DeconzBattery(Entity):
     @property
     def state(self):
         """Return the state of the battery."""
-        return self._device.battery
+        return self._sensor.battery
 
     @property
     def name(self):
@@ -168,7 +197,7 @@ class DeconzBattery(Entity):
     @property
     def unique_id(self):
         """Return a unique identifier for the device."""
-        return self._device.uniqueid
+        return self._sensor.uniqueid
 
     @property
     def device_class(self):
@@ -189,6 +218,24 @@ class DeconzBattery(Entity):
     def device_state_attributes(self):
         """Return the state attributes of the battery."""
         attr = {
-            ATTR_EVENT_ID: slugify(self._device.name),
+            ATTR_EVENT_ID: slugify(self._sensor.name),
         }
         return attr
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if (self._sensor.uniqueid is None or
+                self._sensor.uniqueid.count(':') != 7):
+            return None
+        serial = self._sensor.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
+        return {
+            'connections': {(CONNECTION_ZIGBEE, serial)},
+            'identifiers': {(DECONZ_DOMAIN, serial)},
+            'manufacturer': self._sensor.manufacturer,
+            'model': self._sensor.modelid,
+            'name': self._sensor.name,
+            'sw_version': self._sensor.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
+        }

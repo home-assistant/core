@@ -21,13 +21,13 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE |
                  SUPPORT_AUX_HEAT)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Hive climate devices."""
     if discovery_info is None:
         return
     session = hass.data.get(DATA_HIVE)
 
-    add_devices([HiveClimateEntity(session, discovery_info)])
+    add_entities([HiveClimateEntity(session, discovery_info)])
 
 
 class HiveClimateEntity(ClimateDevice):

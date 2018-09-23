@@ -39,6 +39,7 @@ class RegistryEntry:
     unique_id = attr.ib(type=str)
     platform = attr.ib(type=str)
     name = attr.ib(type=str, default=None)
+    device_id = attr.ib(type=str, default=None)
     config_entry_id = attr.ib(type=str, default=None)
     disabled_by = attr.ib(
         type=str, default=None,
@@ -107,17 +108,14 @@ class EntityRegistry:
 
     @callback
     def async_get_or_create(self, domain, platform, unique_id, *,
-                            suggested_object_id=None, config_entry_id=None):
+                            suggested_object_id=None, config_entry_id=None,
+                            device_id=None):
         """Get entity. Create if it doesn't exist."""
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
         if entity_id:
-            entry = self.entities[entity_id]
-            if entry.config_entry_id == config_entry_id:
-                return entry
-
-            self._async_update_entity(
-                entity_id, config_entry_id=config_entry_id)
-            return self.entities[entity_id]
+            return self._async_update_entity(
+                entity_id, config_entry_id=config_entry_id,
+                device_id=device_id)
 
         entity_id = self.async_generate_entity_id(
             domain, suggested_object_id or '{}_{}'.format(platform, unique_id))
@@ -125,6 +123,7 @@ class EntityRegistry:
         entity = RegistryEntry(
             entity_id=entity_id,
             config_entry_id=config_entry_id,
+            device_id=device_id,
             unique_id=unique_id,
             platform=platform,
         )
@@ -146,7 +145,8 @@ class EntityRegistry:
 
     @callback
     def _async_update_entity(self, entity_id, *, name=_UNDEF,
-                             config_entry_id=_UNDEF, new_entity_id=_UNDEF):
+                             config_entry_id=_UNDEF, new_entity_id=_UNDEF,
+                             device_id=_UNDEF):
         """Private facing update properties method."""
         old = self.entities[entity_id]
 
@@ -158,6 +158,9 @@ class EntityRegistry:
         if (config_entry_id is not _UNDEF and
                 config_entry_id != old.config_entry_id):
             changes['config_entry_id'] = config_entry_id
+
+        if (device_id is not _UNDEF and device_id != old.device_id):
+            changes['device_id'] = device_id
 
         if new_entity_id is not _UNDEF and new_entity_id != old.entity_id:
             if self.async_is_registered(new_entity_id):
@@ -210,6 +213,7 @@ class EntityRegistry:
                 entities[entity['entity_id']] = RegistryEntry(
                     entity_id=entity['entity_id'],
                     config_entry_id=entity.get('config_entry_id'),
+                    device_id=entity.get('device_id'),
                     unique_id=entity['unique_id'],
                     platform=entity['platform'],
                     name=entity.get('name'),
@@ -225,20 +229,29 @@ class EntityRegistry:
 
     @callback
     def _data_to_save(self):
-        """Data of entity registry to store in a file."""
+        """Return data of entity registry to store in a file."""
         data = {}
 
         data['entities'] = [
             {
                 'entity_id': entry.entity_id,
                 'config_entry_id': entry.config_entry_id,
+                'device_id': entry.device_id,
                 'unique_id': entry.unique_id,
                 'platform': entry.platform,
                 'name': entry.name,
+                'disabled_by': entry.disabled_by,
             } for entry in self.entities.values()
         ]
 
         return data
+
+    @callback
+    def async_clear_config_entry(self, config_entry):
+        """Clear config entry from registry entries."""
+        for entity_id, entry in self.entities.items():
+            if config_entry == entry.config_entry_id:
+                self._async_update_entity(entity_id, config_entry_id=None)
 
 
 @bind_hass

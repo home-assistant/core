@@ -14,7 +14,6 @@ COMPONENTS = [
     'switch',
 ]
 
-CONF_NAME = 'name'
 CONF_ACCESSPOINT = 'accesspoint'
 CONF_AUTHTOKEN = 'authtoken'
 

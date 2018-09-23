@@ -36,7 +36,7 @@ def call_from_config(hass, config, blocking=False, variables=None,
 
 @bind_hass
 async def async_call_from_config(hass, config, blocking=False, variables=None,
-                                 validate_config=True):
+                                 validate_config=True, context=None):
     """Call a service based on a config hash."""
     if validate_config:
         try:
@@ -77,7 +77,7 @@ async def async_call_from_config(hass, config, blocking=False, variables=None,
         service_data[ATTR_ENTITY_ID] = config[CONF_SERVICE_ENTITY_ID]
 
     await hass.services.async_call(
-        domain, service_name, service_data, blocking)
+        domain, service_name, service_data, blocking=blocking, context=context)
 
 
 @bind_hass
@@ -218,13 +218,15 @@ async def _handle_service_platform_call(func, data, entities, context):
         if not entity.available:
             continue
 
+        entity.async_set_context(context)
+
         if isinstance(func, str):
             await getattr(entity, func)(**data)
         else:
             await func(entity, data)
 
         if entity.should_poll:
-            tasks.append(entity.async_update_ha_state(True, context))
+            tasks.append(entity.async_update_ha_state(True))
 
     if tasks:
         await asyncio.wait(tasks)

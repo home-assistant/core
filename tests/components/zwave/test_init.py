@@ -128,24 +128,24 @@ def test_setup_platform(hass, mock_openzwave):
     mock_device = MagicMock()
     hass.data[DATA_NETWORK] = MagicMock()
     hass.data[zwave.DATA_DEVICES] = {456: mock_device}
-    async_add_devices = MagicMock()
+    async_add_entities = MagicMock()
 
     result = yield from zwave.async_setup_platform(
-        hass, None, async_add_devices, None)
+        hass, None, async_add_entities, None)
     assert not result
-    assert not async_add_devices.called
+    assert not async_add_entities.called
 
     result = yield from zwave.async_setup_platform(
-        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 123})
+        hass, None, async_add_entities, {const.DISCOVERY_DEVICE: 123})
     assert not result
-    assert not async_add_devices.called
+    assert not async_add_entities.called
 
     result = yield from zwave.async_setup_platform(
-        hass, None, async_add_devices, {const.DISCOVERY_DEVICE: 456})
+        hass, None, async_add_entities, {const.DISCOVERY_DEVICE: 456})
     assert result
-    assert async_add_devices.called
-    assert len(async_add_devices.mock_calls) == 1
-    assert async_add_devices.mock_calls[0][1][0] == [mock_device]
+    assert async_add_entities.called
+    assert len(async_add_entities.mock_calls) == 1
+    assert async_add_entities.mock_calls[0][1][0] == [mock_device]
 
 
 @asyncio.coroutine
@@ -1180,7 +1180,7 @@ class TestZWaveServices(unittest.TestCase):
 
         self.zwave_network.nodes = {14: node}
 
-        with self.assertLogs(level='INFO') as mock_logger:
+        with self.assertLogs(level='DEBUG') as mock_logger:
             self.hass.services.call('zwave', 'print_node', {
                 const.ATTR_NODE_ID: 14
             })

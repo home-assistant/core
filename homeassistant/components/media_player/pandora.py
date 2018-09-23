@@ -4,23 +4,22 @@ Component for controlling Pandora stations through the pianobar client.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/media_player.pandora/
 """
-import logging
-import re
-import os
-import signal
 from datetime import timedelta
+import logging
+import os
+import re
 import shutil
+import signal
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, MEDIA_TYPE_MUSIC,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PLAY, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
-    MediaPlayerDevice)
-from homeassistant.const import (STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-                                 STATE_IDLE)
 from homeassistant import util
+from homeassistant.components.media_player import (
+    MEDIA_TYPE_MUSIC, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING)
 
 REQUIREMENTS = ['pexpect==4.6.0']
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +42,7 @@ CURRENT_SONG_PATTERN = re.compile(r'"(.*?)"\s+by\s+"(.*?)"\son\s+"(.*?)"',
 STATION_PATTERN = re.compile(r'Station\s"(.+?)"', re.MULTILINE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pandora media player platform."""
     if not _pianobar_exists():
         return False
@@ -55,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pandora.turn_off()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_pianobar)
-    add_devices([pandora])
+    add_entities([pandora])
 
 
 class PandoraMediaPlayer(MediaPlayerDevice):

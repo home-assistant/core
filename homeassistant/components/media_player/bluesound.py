@@ -24,8 +24,8 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_HOSTS, CONF_NAME, CONF_PORT,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE,
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
+    STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -88,7 +88,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-def _add_player(hass, async_add_devices, host, port=None, name=None):
+def _add_player(hass, async_add_entities, host, port=None, name=None):
     """Add Bluesound players."""
     if host in [x.host for x in hass.data[DATA_BLUESOUND]]:
         return
@@ -111,7 +111,7 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
     @callback
     def _add_player_cb():
         """Add player after first sync fetch."""
-        async_add_devices([player])
+        async_add_entities([player])
         _LOGGER.info("Added device with name: %s", player.name)
 
         if hass.is_running:
@@ -132,13 +132,13 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Bluesound platforms."""
     if DATA_BLUESOUND not in hass.data:
         hass.data[DATA_BLUESOUND] = []
 
     if discovery_info:
-        _add_player(hass, async_add_devices, discovery_info.get(CONF_HOST),
+        _add_player(hass, async_add_entities, discovery_info.get(CONF_HOST),
                     discovery_info.get(CONF_PORT, None))
         return
 
@@ -146,7 +146,7 @@ async def async_setup_platform(
     if hosts:
         for host in hosts:
             _add_player(
-                hass, async_add_devices, host.get(CONF_HOST),
+                hass, async_add_entities, host.get(CONF_HOST),
                 host.get(CONF_PORT), host.get(CONF_NAME))
 
     async def async_service_handler(service):

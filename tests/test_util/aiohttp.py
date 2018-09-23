@@ -12,6 +12,8 @@ from yarl import URL
 
 from aiohttp.client_exceptions import ClientResponseError
 
+from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE
+
 retype = type(re.compile(''))
 
 
@@ -216,7 +218,18 @@ def mock_aiohttp_client():
     """Context manager to mock aiohttp client."""
     mocker = AiohttpClientMocker()
 
+    def create_session(hass, *args):
+        session = mocker.create_session(hass.loop)
+
+        async def close_session(event):
+            """Close session."""
+            await session.close()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, close_session)
+
+        return session
+
     with mock.patch(
         'homeassistant.helpers.aiohttp_client.async_create_clientsession',
-            side_effect=lambda hass, *args: mocker.create_session(hass.loop)):
+            side_effect=create_session):
         yield mocker

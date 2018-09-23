@@ -50,7 +50,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the CUPS sensor."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -71,7 +71,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             _LOGGER.error("Printer is not present: %s", printer)
             continue
 
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class CupsSensor(Entity):

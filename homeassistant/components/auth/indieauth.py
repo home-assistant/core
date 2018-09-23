@@ -4,6 +4,7 @@ from html.parser import HTMLParser
 from ipaddress import ip_address, ip_network
 from urllib.parse import urlparse, urljoin
 
+import aiohttp
 from aiohttp.client_exceptions import ClientError
 
 # IP addresses of loopback interfaces
@@ -76,18 +77,17 @@ async def fetch_redirect_uris(hass, url):
 
     We do not implement extracting redirect uris from headers.
     """
-    session = hass.helpers.aiohttp_client.async_get_clientsession()
     parser = LinkTagParser('redirect_uri')
     chunks = 0
     try:
-        resp = await session.get(url, timeout=5)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url, timeout=5) as resp:
+                async for data in resp.content.iter_chunked(1024):
+                    parser.feed(data.decode())
+                    chunks += 1
 
-        async for data in resp.content.iter_chunked(1024):
-            parser.feed(data.decode())
-            chunks += 1
-
-            if chunks == 10:
-                break
+                    if chunks == 10:
+                        break
 
     except (asyncio.TimeoutError, ClientError):
         pass
