@@ -2,7 +2,7 @@
 # pylint: disable=protected-access
 import asyncio
 from typing import Optional
-from unittest.mock import patch, MagicMock, Mock, PropertyMock
+from unittest.mock import patch, MagicMock, Mock
 from uuid import UUID
 
 import attr
