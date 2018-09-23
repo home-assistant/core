@@ -227,10 +227,6 @@ class HomeKit():
             return
         self.status = STATUS_WAIT
 
-        if len(self.bridge.accessories) > MAX_DEVICES:
-            _LOGGER.warning("More than %s devices added to homekit.",
-                            MAX_DEVICES)
-
         # pylint: disable=unused-variable
         from . import (  # noqa F401
             type_covers, type_fans, type_lights, type_locks,
@@ -243,6 +239,10 @@ class HomeKit():
 
         if not self.driver.state.paired:
             show_setup_message(self.hass, self.driver.state.pincode)
+
+        if len(self.bridge.accessories) > MAX_DEVICES:
+            _LOGGER.warning("More than %s devices added to homekit.",
+                            MAX_DEVICES)
 
         _LOGGER.debug('Driver start')
         self.hass.add_job(self.driver.start)
