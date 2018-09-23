@@ -71,11 +71,13 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     Here, we add the controller, and the zones (if there are any).
     """
-    client = hass.data[DATA_EVOHOME]['client']
-    loc_idx = hass.data[DATA_EVOHOME]['params'][CONF_LOCATION_IDX]
+    domain_data = hass.data[DATA_EVOHOME]
 
-# Collect the (master) controller - evohomeclient has no defined way of
-# accessing non-default location other than using the protected member
+    client = domain_data['client']
+    loc_idx = domain_data['params'][CONF_LOCATION_IDX]
+
+    # evohomeclient has no defined way of accessing non-default location other
+    # than using a protected member, such as below
     tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
 
     _LOGGER.debug(
@@ -85,8 +87,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         tcs_obj_ref.location.name,
         tcs_obj_ref.modelType
     )
-    master = EvoController(hass, client, tcs_obj_ref)
-    add_entities([master], update_before_add=False)
+    parent = EvoController(hass, domain_data, client, tcs_obj_ref)
+    add_entities([parent], update_before_add=False)
 
 
 class EvoController(ClimateDevice):
@@ -96,17 +98,17 @@ class EvoController(ClimateDevice):
     the child (CH/DHW) devices.
     """
 
-    def __init__(self, hass, client, obj_ref):
+    def __init__(self, hass, domain_data, client, obj_ref):
         """Initialize the evohome entity.
 
         Most read-only properties are set here.  So are pseudo read-only,
         for example name (which _could_ change between update()s).
         """
-        self.hass = hass
+#       self.hass = hass
         self.client = client
-        domain_data = hass.data[DATA_EVOHOME]
-
+#       domain_data = hass.data[DATA_EVOHOME]
         self._obj = obj_ref
+
         self._id = obj_ref.systemId
         self._name = domain_data['config']['locationInfo']['name']
 
@@ -147,6 +149,8 @@ class EvoController(ClimateDevice):
                 self._id + " [" + self._name + "]",
                 self._params
             )
+
+#   def async_added_to_hass()
 
     def _handle_requests_exceptions(self, err_hint, err):
         # evohomeclient v2 api (>=0.2.7) exposes requests exceptions, incl.:
