@@ -39,6 +39,8 @@ STATUS_RUNNING = 1
 STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
+MAX_DEVICES = 100
+
 SWITCH_TYPES = {TYPE_OUTLET: 'Outlet',
                 TYPE_SWITCH: 'Switch'}
 
@@ -193,6 +195,7 @@ class HomeKit():
         self._filter = entity_filter
         self._config = entity_config
         self.status = STATUS_READY
+        self.devices_added = 0
 
         self.bridge = None
         self.driver = None
@@ -214,6 +217,10 @@ class HomeKit():
         """Try adding accessory to bridge if configured beforehand."""
         if not state or not self._filter(state.entity_id):
             return
+        self.devices_added += 1
+        if self.devices_added == MAX_DEVICES + 1:
+            _LOGGER.warning("More than %s devices added to homekit.",
+                            MAX_DEVICES)
         aid = generate_aid(state.entity_id)
         conf = self._config.pop(state.entity_id, {})
         acc = get_accessory(self.hass, self.driver, state, aid, conf)
