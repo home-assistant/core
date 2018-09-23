@@ -429,7 +429,7 @@ async def test_entry_setup_platform_not_ready(hass: HomeAssistantType):
 
     with patch(
         'homeassistant.components.media_player.cast._async_setup_platform',
-            return_value=mock_coro(exception=PlatformNotReady)) as mock_setup:
+            return_value=mock_coro(exception=Exception)) as mock_setup:
         with pytest.raises(PlatformNotReady):
             await cast.async_setup_entry(hass, MockConfigEntry(), None)
 
