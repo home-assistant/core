@@ -4,31 +4,30 @@ Support for French FAI Bouygues Bbox routers.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.bbox/
 """
-
 from collections import namedtuple
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.device_tracker import (
-    PLATFORM_SCHEMA, DOMAIN, DeviceScanner)
+    DOMAIN, PLATFORM_SCHEMA, DeviceScanner)
 from homeassistant.const import CONF_HOST
-
-import homeassistant.util.dt as dt_util
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util import Throttle
+import homeassistant.util.dt as dt_util
 
 REQUIREMENTS = ['pybbox==0.0.5-alpha']
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORM_SCHEMA = vol.All(
-    PLATFORM_SCHEMA.extend({
-        vol.Optional(CONF_HOST, default='192.168.1.254'): cv.string
-    }))
+DEFAULT_HOST = '192.168.1.254'
 
 MIN_TIME_BETWEEN_SCANS = timedelta(seconds=60)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
+})
 
 
 def get_scanner(hass, config):
