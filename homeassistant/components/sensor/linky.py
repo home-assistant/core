@@ -35,8 +35,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     password = config[CONF_PASSWORD]
     timeout = config[CONF_TIMEOUT]
 
-    from pylinky.client import LinkyClient
+    from pylinky.client import LinkyClient, PyLinkyError
     client = LinkyClient(username, password, None, timeout)
+
+    try:
+        client.fetch_data()
+    except PyLinkyError as exp:
+        _LOGGER.error(exp)
+        return
 
     devices = [LinkySensor('Linky', client)]
     add_entities(devices, True)
@@ -74,8 +80,7 @@ class LinkySensor(Entity):
             self._client.fetch_data()
         except PyLinkyError as exp:
             _LOGGER.error(exp)
-        except BaseException as exp:
-            _LOGGER.error(exp)
+            return
 
         _LOGGER.debug(json.dumps(self._client.get_data(), indent=2))
 
