@@ -15,7 +15,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, \
     EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['sucks==0.9.1']
+REQUIREMENTS = ['sucks==0.9.3']
 
 _LOGGER = logging.getLogger(__name__)
 
