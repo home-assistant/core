@@ -88,7 +88,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         tcs_obj_ref.location.name,
         tcs_obj_ref.modelType
     )
-    parent = EvoController(hass, domain_data, client, tcs_obj_ref)
+    parent = EvoController(domain_data, client, tcs_obj_ref)
     add_entities([parent], update_before_add=False)
 
 
@@ -99,15 +99,13 @@ class EvoController(ClimateDevice):
     the child (CH/DHW) devices.
     """
 
-    def __init__(self, hass, domain_data, client, obj_ref):
+    def __init__(self, domain_data, client, obj_ref):
         """Initialize the evohome entity.
 
         Most read-only properties are set here.  So are pseudo read-only,
         for example name (which _could_ change between update()s).
         """
-#       self.hass = hass
         self.client = client
-#       domain_data = hass.data[DATA_EVOHOME]
         self._obj = obj_ref
 
         self._id = obj_ref.systemId
