@@ -266,11 +266,6 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         if info.friendly_name is None:
             _LOGGER.debug("Cannot retrieve detail information for chromecast"
                           " %s, the device may not online", info)
-            #if not hass.is_running:
-                # We don't want to block system setup
-                # If hass.is_running is True, means we are in the retry setup,
-                # create an unavailable device and open a socket to keep listen
-                # configured host
             remove_handler()
             return False
 
