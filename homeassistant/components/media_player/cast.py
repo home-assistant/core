@@ -202,9 +202,8 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     _LOGGER.warning(
         'Setting configuration for Cast via platform is deprecated. '
         'Configure via Cast component instead.')
-    if not await _async_setup_platform(
-            hass, config, async_add_entities, discovery_info):
-        raise PlatformNotReady
+    await _async_setup_platform(
+        hass, config, async_add_entities, discovery_info)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -213,15 +212,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if not isinstance(config, list):
         config = [config]
 
-    done, pending = await asyncio.wait([
+    # no pending task
+    done, _ = await asyncio.wait([
         _async_setup_platform(hass, cfg, async_add_entities, None)
         for cfg in config])
-    if pending or any([not task.result() for task in done]):
+    if any([task.exception() for task in done]):
         raise PlatformNotReady
 
 
 async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                                async_add_entities, discovery_info) -> bool:
+                                async_add_entities, discovery_info):
     """Set up the cast platform."""
     import pychromecast
 
@@ -265,13 +265,11 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                         info)
         if info.friendly_name is None:
             _LOGGER.debug("Cannot retrieve detail information for chromecast"
-                          " %s, the device may not online", info)
+                          " %s, the device may not be online", info)
             remove_handler()
-            return False
+            raise PlatformNotReady
 
         hass.async_add_job(_discover_chromecast, hass, info)
-
-    return True
 
 
 class CastStatusListener:
