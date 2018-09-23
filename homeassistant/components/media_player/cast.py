@@ -61,10 +61,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
         vol.All(cv.ensure_list, [cv.string]),
 })
 
-CONNECTION_RETRY = 3
-CONNECTION_RETRY_WAIT = 2
-CONNECTION_TIMEOUT = 10
-
 
 @attr.s(slots=True, frozen=True)
 class ChromecastInfo:
@@ -216,9 +212,12 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     if not isinstance(config, list):
         config = [config]
 
-    await asyncio.wait([
+    # no pending task
+    done, _ = await asyncio.wait([
         _async_setup_platform(hass, cfg, async_add_entities, None)
         for cfg in config])
+    if any([task.exception() for task in done]):
+        raise PlatformNotReady
 
 
 async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
@@ -250,8 +249,8 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         if cast_device is not None:
             async_add_entities([cast_device])
 
-    async_dispatcher_connect(hass, SIGNAL_CAST_DISCOVERED,
-                             async_cast_discovered)
+    remove_handler = async_dispatcher_connect(
+        hass, SIGNAL_CAST_DISCOVERED, async_cast_discovered)
     # Re-play the callback for all past chromecasts, store the objects in
     # a list to avoid concurrent modification resulting in exception.
     for chromecast in list(hass.data[KNOWN_CHROMECAST_INFO_KEY]):
@@ -265,8 +264,11 @@ async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         info = await hass.async_add_job(_fill_out_missing_chromecast_info,
                                         info)
         if info.friendly_name is None:
-            # HTTP dial failed, so we won't be able to connect.
+            _LOGGER.debug("Cannot retrieve detail information for chromecast"
+                          " %s, the device may not be online", info)
+            remove_handler()
             raise PlatformNotReady
+
         hass.async_add_job(_discover_chromecast, hass, info)
 
 
@@ -379,7 +381,7 @@ class CastDevice(MediaPlayerDevice):
             pychromecast._get_chromecast_from_host, (
                 cast_info.host, cast_info.port, cast_info.uuid,
                 cast_info.model_name, cast_info.friendly_name
-            ), CONNECTION_RETRY, CONNECTION_RETRY_WAIT, CONNECTION_TIMEOUT)
+            ))
         self._chromecast = chromecast
         self._status_listener = CastStatusListener(self, chromecast)
         # Initialise connection status as connected because we can only
