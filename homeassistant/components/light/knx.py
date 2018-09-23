@@ -81,7 +81,6 @@ class KNXLight(Light):
         """Initialize of KNX light."""
         self.device = device
         self.hass = hass
-        self.async_register_callbacks()
 
     @callback
     def async_register_callbacks(self):
@@ -90,6 +89,10 @@ class KNXLight(Light):
             """Call after device was updated."""
             await self.async_update_ha_state()
         self.device.register_device_updated_cb(after_update_callback)
+
+    async def async_added_to_hass(self):
+        """Store register state change callback."""
+        self.async_register_callbacks()
 
     @property
     def name(self):
