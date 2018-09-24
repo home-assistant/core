@@ -206,7 +206,10 @@ class EvoController(ClimateDevice):
         to the restrictions placed upon ClimateDevice properties, etc by HA.
         """
         data = {}
-        data['systemModeStatus'] = self._status['systemModeStatus']
+        data['systemMode'] = self._status['systemModeStatus']['mode']
+        data['isPermanent'] = self._status['systemModeStatus']['isPermanent']
+        if 'timeUntil' in self._status['systemModeStatus']:
+            data['timeUntil'] = self._status['systemModeStatus']['timeUntil']
         data['activeFaults'] = self._status['activeFaults']
         return data
 
