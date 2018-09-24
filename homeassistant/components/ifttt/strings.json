@@ -8,7 +8,8 @@
       }
     },
     "abort": {
-      "one_instance_allowed": "Only a single instance is necessary."
+      "one_instance_allowed": "Only a single instance is necessary.",
+      "not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive IFTTT messages."
     }
   }
 }

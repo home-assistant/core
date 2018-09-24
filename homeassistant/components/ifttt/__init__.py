@@ -4,13 +4,16 @@ Support to trigger Maker IFTTT recipes.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/ifttt/
 """
+from ipaddress import ip_address
 import logging
+from urllib.parse import urlparse
 
 import requests
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant import config_entries
+from homeassistant.util.network import is_local
 
 REQUIREMENTS = ['pyfttt==0.3']
 DEPENDENCIES = ['webhook']
@@ -101,6 +104,14 @@ class ConfigFlow(config_entries.ConfigFlow):
         """Handle a user initiated set up flow."""
         if self._async_current_entries():
             return self.async_abort(reason='one_instance_allowed')
+
+        try:
+            url_parts = urlparse(self.hass.config.api.base_url)
+
+            if is_local(ip_address(url_parts.hostname)):
+                return self.async_abort(reason='not_internet_accessible')
+        except ValueError:
+            return self.async_abort(reason='not_internet_accessible')
 
         if self.webhook_id is None:
             self.webhook_id = \
