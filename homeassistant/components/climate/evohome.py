@@ -35,11 +35,6 @@ from homeassistant.const import (
 )
 _LOGGER = logging.getLogger(__name__)
 
-# Usually, only the controller does client api I/O during update()s to pull
-# current state - the exception is when zones pull their own schedules during
-# their own update()s. It is safe for them to do so concurrently.
-PARALLEL_UPDATES = 0
-
 # these are for the controller's opmode/state and the zone's state
 EVO_RESET = 'AutoWithReset'
 EVO_AUTO = 'Auto'
@@ -50,22 +45,26 @@ EVO_CUSTOM = 'Custom'
 EVO_HEATOFF = 'HeatingOff'
 
 TCS_OP_LIST = [
-    EVO_RESET,
-    EVO_AUTO,
-    EVO_AUTOECO,
-    EVO_AWAY,
-    EVO_DAYOFF,
-    EVO_CUSTOM,
-    EVO_HEATOFF
+    STATE_AUTO,
+    STATE_ECO,
+    STATE_OFF
 ]
+
+EVO_STATE_TO_HA = {
+    EVO_RESET: STATE_AUTO,
+    EVO_AUTO: STATE_AUTO,
+    EVO_AUTOECO: STATE_ECO,
+    EVO_AWAY: STATE_AUTO,
+    EVO_DAYOFF: STATE_AUTO,
+    EVO_CUSTOM: STATE_AUTO,
+    EVO_HEATOFF: STATE_OFF
+}
 
 HA_STATE_TO_EVO = {
     STATE_AUTO: EVO_AUTO,
     STATE_ECO: EVO_AUTOECO,
     STATE_OFF: EVO_HEATOFF
 }
-
-EVO_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_EVO.items()}
 
 # these are used to help prevent E501 (line too long) violations
 GWS = 'gateways'
@@ -226,7 +225,7 @@ class EvoController(ClimateDevice):
         The Controller's state is usually its current operation_mode. NB: After
         calling 'AutoWithReset', the controller will enter 'Auto' mode.
         """
-        return self._status['systemModeStatus']['mode']
+        return EVO_STATE_TO_HA.get(self._status['systemModeStatus']['mode'])
 
     @property
     def target_temperature(self):
@@ -281,40 +280,33 @@ class EvoController(ClimateDevice):
         """Return true if away mode is on."""
         return self._status['systemModeStatus']['mode'] == EVO_AWAY
 
-    def set_operation_mode(self, operation_mode):
-        """Set new target operation mode for the TCS.
-
-        'AutoWithReset' may not be a mode in itself: instead, it _should_(?)
-        lead to 'Auto' mode after resetting all the zones to 'FollowSchedule'.
-
-        'HeatingOff' doesn't turn off heating, instead: it simply sets
-        setpoints to a minimum value (i.e. FrostProtect mode).
-        """
-        if operation_mode in TCS_OP_LIST:
-            _LOGGER.debug(
-                "set_operation_mode(): API call [1 request(s)]: "
-                "tcs._set_status(%s)...",
-                operation_mode
-            )
-
-            try:
-                self._obj._set_status(operation_mode)                           # noqa: E501; pylint: disable=protected-access
-            except HTTPError as err:
-                self._handle_requests_exceptions("HTTPError", err)
-
-        else:
-            _LOGGER.error(
-                "set_operation_mode(): %s is not a valid operation_mode",
-                operation_mode
-            )
-
     def turn_away_mode_on(self):
         """Turn away mode on."""
-        self.set_operation_mode(EVO_AWAY)
+        self._set_operation_mode(EVO_AWAY)
 
     def turn_away_mode_off(self):
         """Turn away mode off."""
-        self.set_operation_mode(EVO_AUTO)
+        self._set_operation_mode(EVO_AUTO)
+
+    def _set_operation_mode(self, operation_mode):
+        # Set new target operation mode for the TCS.
+        _LOGGER.debug(
+            "_set_operation_mode(): API call [1 request(s)]: "
+            "tcs._set_status(%s)...",
+            operation_mode
+        )
+        try:
+            self._obj._set_status(operation_mode)                                      # noqa: E501; pylint: disable=protected-access
+        except HTTPError as err:
+            self._handle_requests_exceptions("HTTPError", err)
+
+    def set_operation_mode(self, operation_mode):
+        """Set new target operation mode for the TCS.
+
+        Currently limited to 'Auto', 'AutoWithEco' & 'HeatingOff'. If 'Away'
+        mode is needed, it can be enabled via turn_away_mode_on method.
+        """
+        self._set_operation_mode(HA_STATE_TO_EVO.get(operation_mode))
 
     def _update_state_data(self, domain_data):
         client = domain_data['client']
