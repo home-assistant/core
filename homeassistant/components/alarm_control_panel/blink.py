@@ -14,11 +14,12 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.components.blink import (
     DOMAIN, DEFAULT_ATTRIBUTION)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY)
+    ATTR_ATTRIBUTION, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ['blinkpy']
+DEPENDENCIES = ['blink']
 
 ICON = 'mdi:security'
 
@@ -85,7 +86,14 @@ class BlinkSyncModule(AlarmControlPanel):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         self.sync.arm = False
+        self.sync.refresh()
 
     def alarm_arm_away(self, code=None):
         """Send arm command."""
         self.sync.arm = True
+        self.sync.refresh()
+
+    def alarm_arm_home(self, code=None):
+        """Send arm command."""
+        self.sync.arm = True
+        self.sync.refresh()
