@@ -63,7 +63,7 @@ def setup(hass, config):
         name = call.data.get(CONF_NAME, '')
         if name in cameras:
             cameras[name].snap_picture()
-        hass.data[DOMAIN].refresh()
+        hass.data[DOMAIN].blink.refresh()
 
     hass.services.register(
         DOMAIN, SERVICE_TRIGGER, trigger_camera, schema=SERVICE_TRIGGER_SCHEMA
