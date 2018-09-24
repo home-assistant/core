@@ -152,6 +152,14 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
             _LOGGER.warning("Component %s is not supported", component)
             return
 
+        if payload:
+            try:
+                payload = json.loads(payload)
+            except ValueError:
+                _LOGGER.warning("Unable to parse JSON %s: '%s'",
+                                object_id, payload)
+                return
+
         payload = dict(payload)
 
         for key in list(payload.keys()):
@@ -194,14 +202,6 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
                 hass, MQTT_DISCOVERY_UPDATED.format(discovery_hash), payload)
         elif payload:
             # Add component
-            try:
-                payload = json.loads(payload)
-            except ValueError:
-                _LOGGER.warning("Unable to parse JSON %s: '%s'",
-                                object_id, payload)
-                return
-
-            payload = dict(payload)
             platform = payload.get(CONF_PLATFORM, 'mqtt')
             if platform not in ALLOWED_PLATFORMS.get(component, []):
                 _LOGGER.warning("Platform %s (component %s) is not allowed",
