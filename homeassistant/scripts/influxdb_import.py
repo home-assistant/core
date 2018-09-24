@@ -3,7 +3,6 @@ import argparse
 import json
 import os
 import sys
-
 from typing import List
 
 import homeassistant.config as config_util
