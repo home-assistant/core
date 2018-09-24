@@ -81,7 +81,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     An evohome system consists of: a controller, with 0-12 heating zones (e.g.
     TRVs, relays) and, optionally, a DHW controller (a HW boiler).
 
-    Here, we add the controller, and the zones (if there are any).
+    Here, we add the controller only.
     """
     domain_data = hass.data[DATA_EVOHOME]
 
@@ -332,6 +332,14 @@ class EvoController(ClimateDevice):
         if not expired:
             return
 
+        was_available = self._available or \
+            self._timers['statusUpdated'] == datetime.min
+
+        _LOGGER.warn(
+            "was_available=%s, self._available=%s, bool(self._timers['statusUpdated'] != datetime.min)=%s",
+            was_available, self._available, bool(self._timers['statusUpdated'] != datetime.min)
+        )
+
         self._update_state_data(domain_data)
         self._status = domain_data['status']
 
@@ -351,13 +359,11 @@ class EvoController(ClimateDevice):
         no_recent_updates = self._timers['statusUpdated'] < datetime.now() - \
             timedelta(seconds=self._params[CONF_SCAN_INTERVAL] * 3.1)
 
-        was_available = self._available
-
         if no_recent_updates:
             self._available = False
             debug_code = EVO_DEBUG_NO_RECENT_UPDATES
 
-        elif not self._status:  # self._status == {}
+        elif not self._status:
             # unavailable because no status (but how? other than at startup?)
             self._available = False
             debug_code = EVO_DEBUG_NO_STATUS
@@ -373,8 +379,7 @@ class EvoController(ClimateDevice):
                 debug_code
             )
 
-        elif self._available and not was_available and \
-                self._timers['statusUpdated'] != datetime.min:
+        elif self._available and not was_available:
             # this isn't the first re-available (e.g. _after_ STARTUP)
             _LOGGER.debug(
                 "The entity, %s, has become available",
