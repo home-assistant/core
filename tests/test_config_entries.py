@@ -103,7 +103,7 @@ def test_add_entry_calls_setup_entry(hass, manager):
         hass, 'comp',
         MockModule('comp', async_setup_entry=mock_setup_entry))
 
-    class TestFlow(data_entry_flow.FlowHandler):
+    class TestFlow(config_entries.ConfigFlow):
 
         VERSION = 1
 
@@ -159,8 +159,9 @@ async def test_saving_and_loading(hass):
         hass, 'test',
         MockModule('test', async_setup_entry=lambda *args: mock_coro(True)))
 
-    class TestFlow(data_entry_flow.FlowHandler):
+    class TestFlow(config_entries.ConfigFlow):
         VERSION = 5
+        CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
         @asyncio.coroutine
         def async_step_user(self, user_input=None):
@@ -175,8 +176,9 @@ async def test_saving_and_loading(hass):
         await hass.config_entries.flow.async_init(
             'test', context={'source': config_entries.SOURCE_USER})
 
-    class Test2Flow(data_entry_flow.FlowHandler):
+    class Test2Flow(config_entries.ConfigFlow):
         VERSION = 3
+        CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
         @asyncio.coroutine
         def async_step_user(self, user_input=None):
@@ -209,6 +211,7 @@ async def test_saving_and_loading(hass):
         assert orig.title == loaded.title
         assert orig.data == loaded.data
         assert orig.source == loaded.source
+        assert orig.connection_class == loaded.connection_class
 
 
 async def test_forward_entry_sets_up_component(hass):
@@ -252,7 +255,7 @@ async def test_discovery_notification(hass):
     loader.set_component(hass, 'test', MockModule('test'))
     await async_setup_component(hass, 'persistent_notification', {})
 
-    class TestFlow(data_entry_flow.FlowHandler):
+    class TestFlow(config_entries.ConfigFlow):
         VERSION = 5
 
         async def async_step_discovery(self, user_input=None):
@@ -289,7 +292,7 @@ async def test_discovery_notification_not_created(hass):
     loader.set_component(hass, 'test', MockModule('test'))
     await async_setup_component(hass, 'persistent_notification', {})
 
-    class TestFlow(data_entry_flow.FlowHandler):
+    class TestFlow(config_entries.ConfigFlow):
         VERSION = 5
 
         async def async_step_discovery(self, user_input=None):

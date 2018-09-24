@@ -8,7 +8,7 @@ from .const import (
     EVENT_HANGOUTS_CONNECTED, EVENT_HANGOUTS_CONVERSATIONS_CHANGED,
     EVENT_HANGOUTS_DISCONNECTED, EVENT_HANGOUTS_MESSAGE_RECEIVED,
     CONF_MATCHERS, CONF_CONVERSATION_ID,
-    CONF_CONVERSATION_NAME)
+    CONF_CONVERSATION_NAME, EVENT_HANGOUTS_CONVERSATIONS_RESOLVED, INTENT_HELP)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,7 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 class HangoutsBot:
     """The Hangouts Bot."""
 
-    def __init__(self, hass, refresh_token, intents, error_suppressed_convs):
+    def __init__(self, hass, refresh_token, intents,
+                 default_convs, error_suppressed_convs):
         """Set up the client."""
         self.hass = hass
         self._connected = False
@@ -29,6 +30,8 @@ class HangoutsBot:
         self._client = None
         self._user_list = None
         self._conversation_list = None
+        self._default_convs = default_convs
+        self._default_conv_ids = None
         self._error_suppressed_convs = error_suppressed_convs
         self._error_suppressed_conv_ids = None
 
@@ -51,7 +54,7 @@ class HangoutsBot:
                 return conv
         return None
 
-    def async_update_conversation_commands(self, _):
+    def async_update_conversation_commands(self):
         """Refresh the commands for every conversation."""
         self._conversation_intents = {}
 
@@ -63,6 +66,8 @@ class HangoutsBot:
                     if conv_id is not None:
                         conversations.append(conv_id)
                 data['_' + CONF_CONVERSATIONS] = conversations
+            elif self._default_conv_ids:
+                data['_' + CONF_CONVERSATIONS] = self._default_conv_ids
             else:
                 data['_' + CONF_CONVERSATIONS] = \
                     [conv.id_ for conv in self._conversation_list.get_all()]
@@ -81,13 +86,22 @@ class HangoutsBot:
         self._conversation_list.on_event.add_observer(
             self._async_handle_conversation_event)
 
-    def async_handle_update_error_suppressed_conversations(self, _):
-        """Resolve the list of error suppressed conversations."""
+    def async_resolve_conversations(self, _):
+        """Resolve the list of default and error suppressed conversations."""
+        self._default_conv_ids = []
         self._error_suppressed_conv_ids = []
+
+        for conversation in self._default_convs:
+            conv_id = self._resolve_conversation_id(conversation)
+            if conv_id is not None:
+                self._default_conv_ids.append(conv_id)
+
         for conversation in self._error_suppressed_convs:
             conv_id = self._resolve_conversation_id(conversation)
             if conv_id is not None:
                 self._error_suppressed_conv_ids.append(conv_id)
+        dispatcher.async_dispatcher_send(self.hass,
+                                         EVENT_HANGOUTS_CONVERSATIONS_RESOLVED)
 
     async def _async_handle_conversation_event(self, event):
         from hangups import ChatMessageEvent
@@ -112,7 +126,8 @@ class HangoutsBot:
         if intents is not None:
             is_error = False
             try:
-                intent_result = await self._async_process(intents, message)
+                intent_result = await self._async_process(intents, message,
+                                                          conv_id)
             except (intent.UnknownIntent, intent.IntentHandleError) as err:
                 is_error = True
                 intent_result = intent.IntentResponse()
@@ -133,7 +148,7 @@ class HangoutsBot:
                     [{'text': message, 'parse_str': True}],
                     [{CONF_CONVERSATION_ID: conv_id}])
 
-    async def _async_process(self, intents, text):
+    async def _async_process(self, intents, text, conv_id):
         """Detect a matching intent."""
         for intent_type, data in intents.items():
             for matcher in data.get(CONF_MATCHERS, []):
@@ -141,12 +156,15 @@ class HangoutsBot:
 
                 if not match:
                     continue
+                if intent_type == INTENT_HELP:
+                    return await self.hass.helpers.intent.async_handle(
+                        DOMAIN, intent_type,
+                        {'conv_id': {'value': conv_id}}, text)
 
-                response = await self.hass.helpers.intent.async_handle(
+                return await self.hass.helpers.intent.async_handle(
                     DOMAIN, intent_type,
-                    {key: {'value': value} for key, value
-                     in match.groupdict().items()}, text)
-                return response
+                    {key: {'value': value}
+                     for key, value in match.groupdict().items()}, text)
 
     async def async_connect(self):
         """Login to the Google Hangouts."""
@@ -204,15 +222,16 @@ class HangoutsBot:
         from hangups import ChatMessageSegment, hangouts_pb2
         messages = []
         for segment in message:
+            if messages:
+                messages.append(ChatMessageSegment('',
+                                                   segment_type=hangouts_pb2.
+                                                   SEGMENT_TYPE_LINE_BREAK))
             if 'parse_str' in segment and segment['parse_str']:
                 messages.extend(ChatMessageSegment.from_str(segment['text']))
             else:
                 if 'parse_str' in segment:
                     del segment['parse_str']
                 messages.append(ChatMessageSegment(**segment))
-            messages.append(ChatMessageSegment('',
-                                               segment_type=hangouts_pb2.
-                                               SEGMENT_TYPE_LINE_BREAK))
 
         if not messages:
             return False
@@ -247,3 +266,7 @@ class HangoutsBot:
     async def async_handle_update_users_and_conversations(self, _=None):
         """Handle the update_users_and_conversations service."""
         await self._async_list_conversations()
+
+    def get_intents(self, conv_id):
+        """Return the intents for a specific conversation."""
+        return self._conversation_intents.get(conv_id)
