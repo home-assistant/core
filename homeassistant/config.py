@@ -475,7 +475,7 @@ async def async_process_ha_core_config(
                 auth_conf.append({'type': 'trusted_networks'})
 
         mfa_conf = config.get(CONF_AUTH_MFA_MODULES, [
-            {'type': 'totp', 'id': 'totp', 'name': 'Authenticator app'}
+            {'type': 'totp', 'id': 'totp', 'name': 'Authenticator app'},
         ])
 
         setattr(hass, 'auth', await auth.auth_manager_from_config(
