@@ -11,7 +11,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD)
+    CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['blinkpy==0.8.1']
@@ -30,6 +30,11 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PASSWORD): cv.string
     })
 }, extra=vol.ALLOW_EXTRA)
+
+SERVICE_TRIGGER = 'trigger_camera'
+SERVICE_TRIGGER_SCHEMA = vol.Schema({
+    vol.Required(CONF_NAME): cv.string
+})
 
 
 class BlinkSystem:
@@ -52,4 +57,15 @@ def setup(hass, config):
     """Set up Blink System."""
     hass.data[DOMAIN] = BlinkSystem(config)
 
+    def trigger_camera(call):
+        """Trigger a camera."""
+        cameras = hass.data[DOMAIN].blink.cameras
+        name = call.data.get(CONF_NAME, '')
+        if name in cameras:
+            cameras[name].snap_picture()
+        hass.data[DOMAIN].refresh()
+
+    hass.services.register(
+        DOMAIN, SERVICE_TRIGGER, trigger_camera, schema=SERVICE_TRIGGER_SCHEMA
+    )
     return True
