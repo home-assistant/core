@@ -36,7 +36,7 @@ VALID_CONFIG = {
     }
 
 
-class KeyErrorException(Exception):
+class ApiError(Exception):
     def __init__(self):
         self.response.content = MOCK_KEY_ERROR
 
@@ -46,6 +46,13 @@ def mock_app():
     """Return a mock ClarifaiApp object."""
     with patch('clarifai.rest.ClarifaiApp') as _mock_app:
         yield _mock_app
+
+@pytest.fixture
+def mock_app_with_error():
+    """Return a mock ClarifaiApp object."""
+    with patch('clarifai.rest.ClarifaiApp',
+               side_efect=ApiError) as _mock_mock_app_with_error:
+        yield _mock_mock_app_with_error
 
 
 @pytest.fixture
@@ -81,11 +88,10 @@ def test_valid_api_key(mock_app):
     mock_app.assert_called_with(api_key=MOCK_API_KEY)
 
 
-def test_invalid_api_key(caplog, mock_app):
+def test_invalid_api_key(caplog, mock_app_with_error):
     """Test that an invalid api key is caught."""
-    with pytest.raises(KeyErrorException):
-        cg.validate_api_key(MOCK_API_KEY)
-        assert "Clarifai error: API Key not found" in caplog.text
+    cg.validate_api_key(MOCK_API_KEY)
+    assert "Clarifai error: API Key not found" in caplog.text
 
 
 async def test_setup_platform(hass, mock_app, mock_image):
