@@ -61,6 +61,9 @@ def trigger(hass, event, value1=None, value2=None, value3=None):
 
 def async_setup(hass, config):
     """Set up the IFTTT service component."""
+    if DOMAIN not in config:
+        return
+
     key = config[DOMAIN][CONF_KEY]
 
     def trigger_service(call):
