@@ -64,7 +64,10 @@ feedparser==5.2.1
 foobot_async==0.3.1
 
 # homeassistant.components.tts.google
-gTTS-token==1.1.1
+gTTS-token==1.1.2
+
+# homeassistant.components.geo_location.geo_json_events
+geojson_client==0.1
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==1.9
@@ -85,7 +88,7 @@ hdate==0.6.3
 holidays==0.9.7
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180920.0
+home-assistant-frontend==20180924.0
 
 # homeassistant.components.homematicip_cloud
 homematicip==0.9.8
@@ -158,6 +161,7 @@ pynx584==0.4
 # homeassistant.components.openuv
 pyopenuv==1.0.4
 
+# homeassistant.auth.mfa_modules.notify
 # homeassistant.auth.mfa_modules.totp
 # homeassistant.components.sensor.otp
 pyotp==2.2.6
@@ -167,6 +171,9 @@ pyqwikswitch==0.8
 
 # homeassistant.components.sonos
 pysonos==0.0.2
+
+# homeassistant.components.spc
+pyspcwebgw==0.4.0
 
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky
@@ -191,7 +198,7 @@ pyupnp-async==0.1.1.1
 pywebpush==1.6.0
 
 # homeassistant.components.python_script
-restrictedpython==4.0b4
+restrictedpython==4.0b5
 
 # homeassistant.components.rflink
 rflink==0.0.37

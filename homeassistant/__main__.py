@@ -19,15 +19,19 @@ from homeassistant.const import (
 )
 
 
-def attempt_use_uvloop() -> None:
+def set_loop() -> None:
     """Attempt to use uvloop."""
     import asyncio
-    try:
-        import uvloop
-    except ImportError:
-        pass
+
+    if sys.platform == 'win32':
+        asyncio.set_event_loop(asyncio.ProactorEventLoop())
     else:
-        asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
+        try:
+            import uvloop
+        except ImportError:
+            pass
+        else:
+            asyncio.set_event_loop_policy(uvloop.EventLoopPolicy())
 
 
 def validate_python() -> None:
@@ -244,17 +248,6 @@ async def setup_and_run_hass(config_dir: str,
     """Set up HASS and run."""
     from homeassistant import bootstrap, core
 
-    # Run a simple daemon runner process on Windows to handle restarts
-    if os.name == 'nt' and '--runner' not in sys.argv:
-        nt_args = cmdline() + ['--runner']
-        while True:
-            try:
-                subprocess.check_call(nt_args)
-                sys.exit(0)
-            except subprocess.CalledProcessError as exc:
-                if exc.returncode != RESTART_EXIT_CODE:
-                    sys.exit(exc.returncode)
-
     hass = core.HomeAssistant()
 
     if args.demo_mode:
@@ -345,7 +338,20 @@ def main() -> int:
             monkey_patch.disable_c_asyncio()
         monkey_patch.patch_weakref_tasks()
 
-    attempt_use_uvloop()
+    set_loop()
+
+    # Run a simple daemon runner process on Windows to handle restarts
+    if os.name == 'nt' and '--runner' not in sys.argv:
+        nt_args = cmdline() + ['--runner']
+        while True:
+            try:
+                subprocess.check_call(nt_args)
+                sys.exit(0)
+            except KeyboardInterrupt:
+                sys.exit(0)
+            except subprocess.CalledProcessError as exc:
+                if exc.returncode != RESTART_EXIT_CODE:
+                    sys.exit(exc.returncode)
 
     args = get_arguments()
 
