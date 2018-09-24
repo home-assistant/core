@@ -29,6 +29,7 @@ CONFIG_SCHEMA = vol.Schema({
 
 PLUM_DATA = 'plum'
 
+
 def setup(hass, config):
     """Setup the Plum Lightpad component."""
     from plumlightpad import Plum
