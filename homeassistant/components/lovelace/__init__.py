@@ -41,7 +41,7 @@ async def websocket_lovelace_config(hass, connection, msg):
         )
     except FileNotFoundError:
         error = ('file_not_found',
-                    'Could not find ui-lovelace.yaml in your config dir.')
+                 'Could not find ui-lovelace.yaml in your config dir.')
     except HomeAssistantError as err:
         error = 'load_error', str(err)
 
