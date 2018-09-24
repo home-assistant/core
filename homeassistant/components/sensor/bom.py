@@ -220,23 +220,32 @@ class BOMCurrentData:
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        # Get the latest data from BOM, check if it is > 35 minutes since the last reading came in.
-        # The readings are timestamped on the hour/half hour and the data generally refreshes 35 minutes after that.
-        # You don't want to just throttle for 35 mins as that doesn't take into account how far you currently are from the last reading time.
+        """Get the latest data from BOM.
+
+        Check if it is > 35 minutes since the last reading came in.
+        The readings are timestamped on the hour/half hour and the
+        data generally refreshes 35 minutes after that.
+        You don't want to just throttle for 35 mins as that doesn't take
+        into account how far you currently are from the last reading time.
+        """
         if self._lastupdate != 0 and \
             ((datetime.datetime.now() - self._lastupdate) <
              datetime.timedelta(minutes=35)):
             _LOGGER.debug(
                 "BOM was updated %s minutes ago, skipping update as"
-                " < 35 minutes, Now: %s, LastUpdate: %s", (datetime.datetime.now() - self._lastupdate), datetime.datetime.now(), self._lastupdate)
+                " < 35 minutes, Now: %s, LastUpdate: %s",
+                (datetime.datetime.now() - self._lastupdate),
+                datetime.datetime.now(), self._lastupdate)
             return self._lastupdate
 
         try:
             result = requests.get(self._build_url(), timeout=10).json()
             self._data = result['observations']['data']
-            
-            # set lastupdate using self._data[0] as the first element in the array is the latest date in the json
-            self._lastupdate = datetime.datetime.strptime(str(self._data[0]['local_date_time_full']), '%Y%m%d%H%M%S') 
+
+            # set lastupdate using self._data[0] as the first element in the
+            # array is the latest date in the json
+            self._lastupdate = datetime.datetime.strptime(
+                str(self._data[0]['local_date_time_full']), '%Y%m%d%H%M%S')
             return self._lastupdate
 
         except ValueError as err:
