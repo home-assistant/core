@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "\ud558\ub098\uc758 Home Assistant iOS \uad6c\uc131\ub9cc \ud544\uc694\ud569\ub2c8\ub2e4."
+            "single_instance_allowed": "\ud558\ub098\uc758 Home Assistant iOS \ub9cc \uad6c\uc131 \ud560 \uc218 \uc788\uc2b5\ub2c8\ub2e4."
         },
         "step": {
             "confirm": {
-                "description": "Home Assistant iOS \ucef4\ud3ec\ub10c\ud2b8\uc758 \uc124\uc815\uc744 \ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
+                "description": "Home Assistant iOS \ucef4\ud3ec\ub10c\ud2b8\ub97c \uc124\uc815 \ud558\uc2dc\uaca0\uc2b5\ub2c8\uae4c?",
                 "title": "Home Assistant iOS"
             }
         },
