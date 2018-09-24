@@ -47,6 +47,7 @@ def mock_app():
     with patch('clarifai.rest.ClarifaiApp') as _mock_app:
         yield _mock_app
 
+
 @pytest.fixture
 def mock_app_with_error():
     """Return a mock ClarifaiApp object."""
