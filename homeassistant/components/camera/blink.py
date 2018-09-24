@@ -16,7 +16,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['blink']
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=45)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 ATTR_VIDEO_CLIP = 'video'
 ATTR_IMAGE = 'image'

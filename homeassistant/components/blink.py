@@ -22,8 +22,7 @@ DOMAIN = 'blink'
 DEFAULT_BRAND = 'blink'
 DEFAULT_ATTRIBUTION = "Data provided by immedia-semi.com"
 
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=45)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

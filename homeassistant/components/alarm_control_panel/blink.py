@@ -67,7 +67,7 @@ class BlinkSyncModule(AlarmControlPanel):
     def update(self):
         """Update the state of the device."""
         _LOGGER.debug("Updating Blink Alarm Control Panel %s", self._name)
-        self.sync.refresh()
+        self.data.refresh()
         mode = self.sync.arm
         if mode:
             self._state = STATE_ALARM_ARMED_AWAY
