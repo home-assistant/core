@@ -24,7 +24,6 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST
 )
 
-from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
 
