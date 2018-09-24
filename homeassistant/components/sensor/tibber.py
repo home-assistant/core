@@ -44,7 +44,7 @@ async def async_setup_platform(hass, config, async_add_entities,
                                       websession=async_get_clientsession(hass))
 
     async def _close(*_):
-        await tibber_connection.rt_disconnect(blocking=True)
+        await tibber_connection.rt_disconnect()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
     try:
