@@ -6,11 +6,10 @@ https://home-assistant.io/components/camera.blink/
 """
 from datetime import timedelta
 import logging
-
 import requests
 
 from homeassistant.components.blink import DOMAIN
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.camera import Camera
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -20,6 +19,8 @@ DEPENDENCIES = ['blink']
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=45)
 
 ATTR_BRAND = 'blink'
+ATTR_VIDEO_CLIP = 'video'
+ATTR_IMAGE = 'image'
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -42,11 +43,11 @@ class BlinkCamera(Camera):
         self.hass = hass
         self._name = name
         self._camera = self.data.blink.cameras[name]
-        self.attr = self._camera.attributes
+        self.attr = dict()
         self.response = None
         self.current_image = None
         self.last_image = None
-        _LOGGER.debug("Initialized blink camera %s", self._name)
+        _LOGGER.debug("Initialized blink camera %", self._name)
 
     @property
     def name(self):
@@ -56,8 +57,8 @@ class BlinkCamera(Camera):
     @property
     def state_attributes(self):
         """Return the camera attributes."""
-        self.attr['current_image'] = self.current_image
-        self.attr['last_image'] = self.last_image
+        self.attr = self._camera.attributes
+        self.attr['brand'] = self.brand
         return self.attr
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
@@ -69,6 +70,7 @@ class BlinkCamera(Camera):
 
     def check_for_new_image(self):
         """Check if new thumbnail since last update."""
+        self.data.refresh()
         self.current_image = self._camera.image_refresh()
         if self.current_image is not self.last_image:
             self.attr = self._camera.attributes
@@ -88,9 +90,10 @@ class BlinkCamera(Camera):
         """Return the state of the camera."""
         return self._camera.armed
 
+    @property
     def brand(self):
         """Return the camera brand."""
-        return ATTR_CAMERA_BRAND
+        return ATTR_BRAND
 
     def camera_image(self):
         """Return a still image response from the camera."""

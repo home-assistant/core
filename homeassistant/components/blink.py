@@ -15,13 +15,13 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['blinkpy==0.8.0']
+REQUIREMENTS = ['blinkpy==0.8.1']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blink'
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=15)
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=45)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({

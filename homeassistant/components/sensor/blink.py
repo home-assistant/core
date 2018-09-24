@@ -15,25 +15,26 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['blink']
 
 SENSOR_TYPES = {
-    'temperature': ['Temperature', TEMP_FAHRENHEIT],
-    'battery': ['Battery', ''],
-    'motion_detected': ['Motion Detected', list()]
+    'temperature':
+        ['Temperature', TEMP_FAHRENHEIT, 'mdi:thermometer'],
+    'battery':
+        ['Battery', '%', 'mdi:battery-80'],
+    'motion_detected':
+        ['Motion Detected', '', 'mdi:run-fast'],
+    'wifi_strength':
+        ['Wifi Signal', 'dBm', 'mdi:wifi-strength-2'],
+    'status':
+        ['Status', '', 'mdi:bell'],
 }
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Blink sensor."""
-    if discovery_info is None:
-        return
-
-    data = hass.data[DOMAIN].blink
+    data = hass.data[DOMAIN]
     devs = list()
-    index = 0
-    for name in data.cameras:
-        devs.append(BlinkSensor(name, 'temperature', index, data))
-        devs.append(BlinkSensor(name, 'battery', index, data))
-        devs.append(BlinkSensor(name, 'motion_detected', index, data))
-        index += 1
+    for index, name in enumerate(data.blink.cameras):
+        for sensor_type in SENSOR_TYPES:
+            devs.append(BlinkSensor(name, sensor_type, index, data))
 
     add_entities(devs, True)
 
@@ -43,18 +44,26 @@ class BlinkSensor(Entity):
 
     def __init__(self, name, sensor_type, index, data):
         """Initialize sensors from Blink camera."""
-        self._name = 'blink_' + name + '_' + SENSOR_TYPES[sensor_type][0]
+        self._name = "{} {} {}".format(
+            DOMAIN, name, SENSOR_TYPES[sensor_type][0])
         self._camera_name = name
         self._type = sensor_type
         self.data = data
         self.index = index
+        self._camera = self.data.blink.cameras[name]
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+        self._icon = SENSOR_TYPES[sensor_type][2]
 
     @property
     def name(self):
         """Return the name of the camera."""
         return self._name
+
+    @property
+    def icon(self):
+        """Return the icon of the sensor."""
+        return self._icon
 
     @property
     def state(self):
@@ -68,9 +77,8 @@ class BlinkSensor(Entity):
 
     def update(self):
         """Retrieve sensor data from the camera."""
-        camera = self.data.cameras[self._camera_name]
         try:
-            self._states = camera.attributes[self._type]
+            self._state = self._camera.attributes[self._type]
         except KeyError:
             self._state = None
             _LOGGER.error("%s not a valid camera attribute.  Did the blinkpy API change?", self._type)
