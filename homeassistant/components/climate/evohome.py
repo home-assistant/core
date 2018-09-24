@@ -201,7 +201,7 @@ class EvoController(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the device state attributes of the controller.
-        
+
         This is operating mode state data that is not available otherwise, due
         to the restrictions placed upon ClimateDevice properties, etc by HA.
         """
@@ -346,11 +346,6 @@ class EvoController(ClimateDevice):
 
         was_available = self._available or \
             self._timers['statusUpdated'] == datetime.min
-
-        _LOGGER.warn(
-            "was_available=%s, self._available=%s, bool(self._timers['statusUpdated'] != datetime.min)=%s",
-            was_available, self._available, bool(self._timers['statusUpdated'] != datetime.min)
-        )
 
         self._update_state_data(domain_data)
         self._status = domain_data['status']
