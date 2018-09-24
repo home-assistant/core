@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
     DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
