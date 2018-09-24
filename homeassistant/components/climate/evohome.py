@@ -189,6 +189,18 @@ class EvoController(ClimateDevice):
         return SUPPORT_OPERATION_MODE | SUPPORT_AWAY_MODE
 
     @property
+    def device_state_attributes(self):
+        """Return the device state attributes of the controller.
+        
+        This is operating mode state data that is not available otherwise, due
+        to the restriction placed upon ClimateDevice base properties, etc.
+        """
+        data = {}
+        data['systemModeStatus'] = self._status['systemModeStatus']
+        data['activeFaults'] = self._status['activeFaults']
+        return data
+
+    @property
     def operation_list(self):
         """Return the list of available operations.
 
