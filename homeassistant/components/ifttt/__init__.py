@@ -92,6 +92,13 @@ def async_setup_entry(hass, entry):
     """Configure based on config entry."""
     hass.components.webhook.async_register(
         entry.data['webhook_id'], handle_webhook)
+    return True
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    hass.components.webhook.async_unregister(entry.data['webhook_id'])
+    return True
 
 
 @config_entries.HANDLERS.register(DOMAIN)
@@ -117,24 +124,24 @@ class ConfigFlow(config_entries.ConfigFlow):
             self.webhook_id = \
                 self.hass.components.webhook.async_generate_webhook_id()
 
-        if not user_input:
-            webhook_url = \
-                self.hass.components.webhook.\
-                async_generate_webhook_url(self.webhook_id)
-
+        if user_input is None:
             return self.async_show_form(
                 step_id='user',
-                description_placeholders={
-                    'applet_url': 'https://ifttt.com/maker_webhooks',
-                    'webhook_url': webhook_url,
-                    'docs_url':
-                    'https://www.home-assistant.io/components/ifttt/'
-                },
             )
+
+        webhook_url = \
+            self.hass.components.webhook.async_generate_webhook_url(
+                self.webhook_id)
 
         return self.async_create_entry(
             title='IFTTT Webhook',
             data={
                 CONF_WEBHOOK_ID: self.webhook_id
             },
+            description_placeholders={
+                'applet_url': 'https://ifttt.com/maker_webhooks',
+                'webhook_url': webhook_url,
+                'docs_url':
+                'https://www.home-assistant.io/components/ifttt/'
+            }
         )

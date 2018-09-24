@@ -30,6 +30,14 @@ def async_register(hass, webhook_id, handler):
 
 
 @callback
+@bind_hass
+def async_unregister(hass, webhook_id):
+    """Remove a webhook."""
+    handlers = hass.data.setdefault(webhook_id, {})
+    handlers.pop(webhook_id, None)
+
+
+@callback
 def async_generate_webhook_id():
     """Generate a webhook_id."""
     return generate_secret(entropy=32)
@@ -58,7 +66,7 @@ class WebhookView(HomeAssistantView):
     async def post(self, request, webhook_id):
         """Handle webhook call."""
         hass = request.app['hass']
-        handlers = hass.data.setdefault(webhook_id, {})
+        handlers = hass.data.setdefault(DOMAIN, {})
         handler = handlers.get(webhook_id)
 
         # Always respond successfully to not give away if a hook exists or not.

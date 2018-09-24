@@ -1,5 +1,6 @@
 """Helpers to resolve client ID/secret."""
 import asyncio
+from ipaddress import ip_address
 from html.parser import HTMLParser
 from urllib.parse import urlparse, urljoin
 
