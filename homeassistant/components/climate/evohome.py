@@ -132,24 +132,16 @@ class EvoController(ClimateDevice):
         # - HTTP_BAD_REQUEST, is usually Bad user credentials
         # - HTTP_TOO_MANY_REQUESTS, is api usuage limit exceeded
         # - HTTP_SERVICE_UNAVAILABLE, is often Vendor's fault
+
         if err.response.status_code == HTTP_TOO_MANY_REQUESTS:
-            api_rate_limit_exceeded = True
-            api_ver = "v2"
-
-        else:
-            api_rate_limit_exceeded = False
-
-        if api_rate_limit_exceeded is True:
             # execute a back off: pause, and reduce rate
             old_scan_interval = self._params[CONF_SCAN_INTERVAL]
             new_scan_interval = min(old_scan_interval * 2, SCAN_INTERVAL_MAX)
             self._params[CONF_SCAN_INTERVAL] = new_scan_interval
 
             _LOGGER.warning(
-                "API rate limit has been exceeded (for %s api), "
-                "increasing '%s' from %s to %s seconds, and "
-                "suspending polling for (at least) %s seconds.",
-                api_ver,
+                "API rate limit has been exceeded: increasing '%s' from %s to "
+                "%s seconds, and suspending polling for %s seconds.",
                 CONF_SCAN_INTERVAL,
                 old_scan_interval,
                 new_scan_interval,
