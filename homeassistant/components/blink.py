@@ -11,8 +11,7 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, ATTR_FRIENDLY_NAME, ATTR_ARMED)
-from homeassistant.helpers import discovery
+    CONF_USERNAME, CONF_PASSWORD)
 from homeassistant.util import Throttle
 
 REQUIREMENTS = ['blinkpy==0.8.1']
@@ -39,9 +38,9 @@ class BlinkSystem:
 
     def __init__(self, config_info):
         """Initialize the system."""
-        import blinkpy.blinkpy as blinkpy
-        self.blink = blinkpy.Blink(username=config_info[DOMAIN][CONF_USERNAME],
-                                   password=config_info[DOMAIN][CONF_PASSWORD])
+        import blinkpy.blinkpy as blink
+        self.blink = blink.Blink(username=config_info[DOMAIN][CONF_USERNAME],
+                                 password=config_info[DOMAIN][CONF_PASSWORD])
         self.blink.start()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)

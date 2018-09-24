@@ -46,7 +46,7 @@ class BlinkCamera(Camera):
         self.response = None
         self.current_image = None
         self.last_image = None
-        _LOGGER.debug("Initialized blink camera %", self._name)
+        _LOGGER.debug("Initialized blink camera %s", self._name)
 
     @property
     def name(self):
@@ -65,7 +65,8 @@ class BlinkCamera(Camera):
         """Request a new image from Blink servers."""
         _LOGGER.debug("Requesting new image from blink servers")
         header = self._camera.header
-        self.response = requests.get(self.current_image, headers=header, stream=True)
+        self.response = requests.get(
+            self.current_image, headers=header, stream=True)
 
     def check_for_new_image(self):
         """Check if new thumbnail since last update."""

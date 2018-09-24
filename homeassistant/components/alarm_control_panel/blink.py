@@ -6,16 +6,11 @@ https://home-assistant.io/components/alarm_control_panel.blink/
 """
 import logging
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
-from homeassistant.components.alarm_control_panel import (
-    AlarmControlPanel, PLATFORM_SCHEMA)
+from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.components.blink import (
     DOMAIN, DEFAULT_ATTRIBUTION)
 from homeassistant.const import (
-    ATTR_ATTRIBUTION, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME)
+    ATTR_ATTRIBUTION, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,19 +64,15 @@ class BlinkSyncModule(AlarmControlPanel):
             'device_id': 'not implemented yet'
         }
 
-    def _get_state_from_mode(self, mode):
-        """Convert Blink mode to Home Assistant state."""
-        if mode:
-            return STATE_ALARM_ARMED_AWAY
-        else:
-            return STATE_ALARM_DISARMED
-
     def update(self):
         """Update the state of the device."""
         _LOGGER.debug("Updating Blink Alarm Control Panel %s", self._name)
         self.sync.refresh()
         mode = self.sync.arm
-        self._state = self._get_state_from_mode(mode)
+        if mode:
+            self._state = STATE_ALARM_ARMED_AWAY
+        else:
+            self._state = STATE_ALARM_DISARMED
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""

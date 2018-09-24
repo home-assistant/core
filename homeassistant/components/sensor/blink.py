@@ -92,7 +92,9 @@ class BlinkSensor(Entity):
             self._state = self._camera.attributes[self._type]
         except KeyError:
             self._state = None
-            _LOGGER.error("%s not a valid camera attribute.  Did the blinkpy API change?", self._type)
+            _LOGGER.error(
+                "%s not a valid camera attribute. Did the API change?",
+                self._type)
 
     @property
     def device_state_attribution(self):
