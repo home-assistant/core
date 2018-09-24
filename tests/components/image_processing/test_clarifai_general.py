@@ -40,6 +40,11 @@ class ApiError(Exception):
     """API key error."""
 
 
+def _raise():
+    """Raise the error."""
+    raise ApiError
+
+
 @pytest.fixture
 def mock_app():
     """Return a mock ClarifaiApp object."""
@@ -51,7 +56,7 @@ def mock_app():
 def mock_app_with_error():
     """Return a mock ClarifaiApp object."""
     with patch('clarifai.rest.ClarifaiApp',
-               side_efect=ApiError) as _mock_mock_app_with_error:
+               side_efect=_raise()) as _mock_mock_app_with_error:
         yield _mock_mock_app_with_error
 
 
