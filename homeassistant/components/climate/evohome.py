@@ -44,7 +44,17 @@ EVO_DAYOFF = 'DayOff'
 EVO_CUSTOM = 'Custom'
 EVO_HEATOFF = 'HeatingOff'
 
-TCS_OP_LIST = [
+EVO_OP_LIST = [
+    EVO_RESET,
+    EVO_AUTO,
+    EVO_AUTOECO,
+    EVO_AWAY,
+    EVO_DAYOFF,
+    EVO_CUSTOM,
+    EVO_HEATOFF
+]
+
+HA_OP_LIST = [
     STATE_AUTO,
     STATE_ECO,
     STATE_OFF
@@ -193,7 +203,7 @@ class EvoController(ClimateDevice):
         """Return the device state attributes of the controller.
         
         This is operating mode state data that is not available otherwise, due
-        to the restriction placed upon ClimateDevice base properties, etc.
+        to the restrictions placed upon ClimateDevice properties, etc by HA.
         """
         data = {}
         data['systemModeStatus'] = self._status['systemModeStatus']
@@ -202,22 +212,12 @@ class EvoController(ClimateDevice):
 
     @property
     def operation_list(self):
-        """Return the list of available operations.
-
-        Note that, for evohome, the operating mode is determined by - but not
-        always equivalent to - the last operation (from the operation list).
-        """
-        # Instead of using self._config['allowedSystemModes'] use a static
-        # list, to ensure a particular order
-        return TCS_OP_LIST
+        """Return the list of available operations."""
+        return HA_OP_LIST
 
     @property
     def current_operation(self):
-        """Return the operation mode of the evohome entity.
-
-        The Controller's state is usually its current operation_mode. NB: After
-        calling 'AutoWithReset', the controller will enter 'Auto' mode.
-        """
+        """Return the operation mode of the evohome entity."""
         return EVO_STATE_TO_HA.get(self._status['systemModeStatus']['mode'])
 
     @property
