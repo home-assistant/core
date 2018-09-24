@@ -950,6 +950,9 @@ pylgnetcast-homeassistant==0.2.0.dev0
 # homeassistant.components.notify.webostv
 pylgtv==0.1.7
 
+# homeassistant.components.sensor.linky
+pylinky==0.1.6
+
 # homeassistant.components.litejet
 pylitejet==0.1
 
