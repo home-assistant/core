@@ -170,6 +170,9 @@ pyqwikswitch==0.8
 # homeassistant.components.sonos
 pysonos==0.0.2
 
+# homeassistant.components.spc
+pyspcwebgw==0.4.0
+
 # homeassistant.components.sensor.darksky
 # homeassistant.components.weather.darksky
 python-forecastio==1.4.0

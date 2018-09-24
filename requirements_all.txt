@@ -1069,6 +1069,9 @@ pysnmp==4.4.5
 # homeassistant.components.sonos
 pysonos==0.0.2
 
+# homeassistant.components.spc
+pyspcwebgw==0.4.0
+
 # homeassistant.components.notify.stride
 pystride==0.1.7
 
@@ -1502,7 +1505,6 @@ waterfurnace==0.7.0
 # homeassistant.components.media_player.gpmdp
 websocket-client==0.37.0
 
-# homeassistant.components.spc
 # homeassistant.components.media_player.webostv
 websockets==6.0
 
