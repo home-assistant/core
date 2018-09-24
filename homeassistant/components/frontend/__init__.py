@@ -21,10 +21,8 @@ from homeassistant.components import websocket_api
 from homeassistant.config import find_config_file, load_yaml_config_file
 from homeassistant.const import CONF_NAME, EVENT_THEMES_UPDATED
 from homeassistant.core import callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
-from homeassistant.util.yaml import load_yaml
 
 REQUIREMENTS = ['home-assistant-frontend==20180924.0']
 
