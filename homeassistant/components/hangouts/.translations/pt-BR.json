@@ -5,16 +5,21 @@
             "unknown": "Ocorreu um erro desconhecido."
         },
         "error": {
-            "invalid_2fa": "Autentica\u00e7\u00e3o de 2 fatores inv\u00e1lida, por favor, tente novamente."
+            "invalid_2fa": "Autentica\u00e7\u00e3o de 2 fatores inv\u00e1lida, por favor, tente novamente.",
+            "invalid_2fa_method": "M\u00e9todo 2FA inv\u00e1lido (verificar no telefone).",
+            "invalid_login": "Login inv\u00e1lido, por favor, tente novamente."
         },
         "step": {
             "2fa": {
-                "title": ""
+                "description": "Vazio",
+                "title": "Autentica\u00e7\u00e3o de 2 Fatores"
             },
             "user": {
                 "data": {
+                    "email": "Endere\u00e7o de e-mail",
                     "password": "Senha"
                 },
+                "description": "Vazio",
                 "title": "Login do Hangouts do Google"
             }
         },
