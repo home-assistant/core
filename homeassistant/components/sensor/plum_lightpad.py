@@ -7,6 +7,7 @@ https://home-assistant.io/components/light.plum_lightpad
 import voluptuous as vol
 
 from homeassistant.components.light import PLATFORM_SCHEMA
+from homeassistant.components.plum_lightpad import PLUM_DATA
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
@@ -24,7 +25,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass, config, add_devices,
                                discovery_info=None):
     """Setup the Power Sensor support within Plum Lightpads."""
-    plum = hass.data['plum']
+    plum = hass.data[PLUM_DATA]
 
     @callback
     async def new_load(logical_load):

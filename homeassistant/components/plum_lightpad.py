@@ -27,6 +27,7 @@ CONFIG_SCHEMA = vol.Schema({
     }),
 }, extra=vol.ALLOW_EXTRA)
 
+PLUM_DATA = 'plum'
 
 def setup(hass, config):
     """Setup the Plum Lightpad component."""
@@ -35,7 +36,7 @@ def setup(hass, config):
     conf = config[DOMAIN]
     plum = Plum(conf.get(CONF_USERNAME), conf.get(CONF_PASSWORD))
 
-    hass.data['plum'] = plum
+    hass.data[PLUM_DATA] = plum
 
     @callback
     def cleanup(event):
