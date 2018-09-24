@@ -12,7 +12,7 @@ from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.helpers.entity import Entity
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['python-twitch-client==0.5.1']
+REQUIREMENTS = ['python-twitch-client==0.6.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         client.ingests.get_server_list()
     except HTTPError:
         _LOGGER.error("Client ID is not valid")
-        return False
+        return
 
     users = client.users.translate_usernames_to_ids(channels)
 

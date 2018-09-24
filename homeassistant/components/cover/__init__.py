@@ -35,8 +35,9 @@ ENTITY_ID_ALL_COVERS = group.ENTITY_ID_FORMAT.format('all_covers')
 ENTITY_ID_FORMAT = DOMAIN + '.{}'
 
 DEVICE_CLASSES = [
-    'window',        # Window control
+    'damper',
     'garage',        # Garage door control
+    'window',        # Window control
 ]
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
@@ -140,7 +141,7 @@ def stop_cover_tilt(hass, entity_id=None):
 
 async def async_setup(hass, config):
     """Track states and offer events for covers."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_COVERS)
 
     await component.async_setup(config)
@@ -193,6 +194,16 @@ async def async_setup(hass, config):
         "Closed {}"))
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class CoverDevice(Entity):

@@ -15,7 +15,7 @@ from homeassistant.helpers import discovery
 from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, \
     EVENT_HOMEASSISTANT_STOP
 
-REQUIREMENTS = ['sucks==0.9.1']
+REQUIREMENTS = ['sucks==0.9.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,8 +59,9 @@ def setup(hass, config):
     _LOGGER.debug("Ecobot devices: %s", devices)
 
     for device in devices:
-        _LOGGER.info("Discovered Ecovacs device on account: %s",
-                     device['nick'])
+        _LOGGER.info(
+            "Discovered Ecovacs device on account: %s with nickname %s",
+            device['did'], device['nick'])
         vacbot = VacBot(ecovacs_api.uid,
                         ecovacs_api.REALM,
                         ecovacs_api.resource,
@@ -74,7 +75,7 @@ def setup(hass, config):
         """Shut down open connections to Ecovacs XMPP server."""
         for device in hass.data[ECOVACS_DEVICES]:
             _LOGGER.info("Shutting down connection to Ecovacs device %s",
-                         device.vacuum['nick'])
+                         device.vacuum['did'])
             device.disconnect()
 
     # Listen for HA stop to disconnect.

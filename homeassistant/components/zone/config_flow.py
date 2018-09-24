@@ -3,7 +3,7 @@
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import (
     CONF_NAME, CONF_LATITUDE, CONF_LONGITUDE, CONF_ICON, CONF_RADIUS)
 from homeassistant.core import callback
@@ -20,7 +20,7 @@ def configured_zones(hass):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class ZoneFlowHandler(data_entry_flow.FlowHandler):
+class ZoneFlowHandler(config_entries.ConfigFlow):
     """Zone config flow."""
 
     VERSION = 1
