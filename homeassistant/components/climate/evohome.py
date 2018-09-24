@@ -44,22 +44,6 @@ EVO_DAYOFF = 'DayOff'
 EVO_CUSTOM = 'Custom'
 EVO_HEATOFF = 'HeatingOff'
 
-EVO_OP_LIST = [
-    EVO_RESET,
-    EVO_AUTO,
-    EVO_AUTOECO,
-    EVO_AWAY,
-    EVO_DAYOFF,
-    EVO_CUSTOM,
-    EVO_HEATOFF
-]
-
-HA_OP_LIST = [
-    STATE_AUTO,
-    STATE_ECO,
-    STATE_OFF
-]
-
 EVO_STATE_TO_HA = {
     EVO_RESET: STATE_AUTO,
     EVO_AUTO: STATE_AUTO,
@@ -75,6 +59,8 @@ HA_STATE_TO_EVO = {
     STATE_ECO: EVO_AUTOECO,
     STATE_OFF: EVO_HEATOFF
 }
+
+HA_OP_LIST = list(HA_STATE_TO_EVO.keys())
 
 # these are used to help prevent E501 (line too long) violations
 GWS = 'gateways'
