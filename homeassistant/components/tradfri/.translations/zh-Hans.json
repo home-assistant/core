@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6865\u63a5\u5668\u5df2\u914d\u7f6e\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u65e0\u6cd5\u8fde\u63a5\u5230\u7f51\u5173\u3002",
+            "invalid_key": "\u65e0\u6cd5\u7528\u63d0\u4f9b\u7684\u5bc6\u94a5\u6ce8\u518c\u3002\u5982\u679c\u9519\u8bef\u6301\u7eed\u53d1\u751f\uff0c\u8bf7\u5c1d\u8bd5\u91cd\u65b0\u542f\u52a8\u7f51\u5173\u3002",
+            "timeout": "\u4ee3\u7801\u9a8c\u8bc1\u8d85\u65f6"
+        }
+    }
+}
