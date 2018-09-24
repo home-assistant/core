@@ -31,7 +31,7 @@ class ISYLightDevice(ISYDevice, Light):
     @property
     def is_on(self) -> bool:
         """Get whether the ISY994 light is on."""
-        return self.value > 0
+        return self.value != 0
 
     @property
     def brightness(self) -> float:
