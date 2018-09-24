@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Jalur akses sudah dikonfigurasi",
-            "conection_aborted": "Tidak dapat terhubung ke server HMIP",
             "connection_aborted": "Tidak dapat terhubung ke server HMIP",
             "unknown": "Kesalahan tidak dikenal terjadi."
         },
