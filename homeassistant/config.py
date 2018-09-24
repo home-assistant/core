@@ -171,7 +171,7 @@ def _no_duplicate_auth_mfa_module(configs: Sequence[Dict[str, Any]]) \
 
 PACKAGES_CONFIG_SCHEMA = vol.Schema({
     cv.slug: vol.Schema(  # Package names are slugs
-        {cv.slug: vol.Any(dict, list, None)})  # Only slugs for component names
+        {cv.string: vol.Any(dict, list, None)})  # Component configuration
 })
 
 CUSTOMIZE_DICT_SCHEMA = vol.Schema({
@@ -662,7 +662,10 @@ def merge_packages_config(hass: HomeAssistant, config: Dict, packages: Dict,
         for comp_name, comp_conf in pack_conf.items():
             if comp_name == CONF_CORE:
                 continue
-            component = get_component(hass, comp_name)
+            # If component name is given with a trailing description, remove it
+            # when looking for component
+            domain = comp_name.split(' ')[0]
+            component = get_component(hass, domain)
 
             if component is None:
                 _log_pkg_error(pack_name, comp_name, config, "does not exist")
