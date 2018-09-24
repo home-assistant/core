@@ -164,27 +164,19 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
 
         for key in list(payload.keys()):
             abbreviated_key = key
-            # Pattern to match one ore or word characters, excluding _, and:
-            # - at beginning of string or prefixed by _
-            # - at end of string or suffixed by _
-            pattern = r'(?:(?<=^)|(?<=_))[^\W_]+(?=_|$)'
-
-            def expand(matchobj):
-                """Expand a possibly abbreviated word."""
-                abbreviation = matchobj.group(0)
-                if abbreviation in ABBREVIATIONS:
-                    return ABBREVIATIONS[abbreviation]
-                return abbreviation
-
-            key = re.sub(pattern, expand, key)
+            tmp = key.split('_')
+            key = []
+            for word in tmp:
+                word = ABBREVIATIONS.get(word, word)
+                key.append(word)
+            key = "_".join(key)
             payload[key] = payload.pop(abbreviated_key)
 
         if TOPIC_PREFIX in payload:
             prefix = payload[TOPIC_PREFIX]
             for key, value in payload.items():
-                if value.startswith(TOPIC_PREFIX) and key.endswith('_topic'):
-                    payload[key] = "{}{}".format(prefix,
-                                                 value[len(TOPIC_PREFIX):])
+                if value[0] == TOPIC_PREFIX and key.endswith('_topic'):
+                    payload[key] = "{}{}".format(prefix, value[1:])
 
         # If present, the node_id will be included in the discovered object id
         discovery_id = '_'.join((node_id, object_id)) if node_id else object_id
