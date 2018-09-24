@@ -17,7 +17,7 @@ SCHEMA_GET_LOVELACE_UI = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend({
 
 async def async_setup(hass, config):
     """Set up the Lovelace commands."""
-    # Backwards compat. Added in 0.79. Remove after 0.85
+    # Backwards compat. Added in 0.80. Remove after 0.85
     hass.components.websocket_api.async_register_command(
         OLD_WS_TYPE_GET_LOVELACE_UI, websocket_lovelace_config,
         SCHEMA_GET_LOVELACE_UI)
