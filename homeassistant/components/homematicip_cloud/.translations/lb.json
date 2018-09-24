@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Acesspoint ass schon konfigur\u00e9iert",
-            "conection_aborted": "Konnt sech net mam HMIP Server verbannen",
             "connection_aborted": "Konnt sech net mam HMIP Server verbannen",
             "unknown": "Onbekannten Feeler opgetrueden"
         },
