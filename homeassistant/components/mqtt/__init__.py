@@ -92,6 +92,7 @@ ATTR_PAYLOAD = 'payload'
 ATTR_PAYLOAD_TEMPLATE = 'payload_template'
 ATTR_QOS = CONF_QOS
 ATTR_RETAIN = CONF_RETAIN
+ATTR_DISCOVERY_HASH = 'discovery_hash'
 
 MAX_RECONNECT_WAIT = 300  # seconds
 
@@ -833,3 +834,36 @@ class MqttAvailability(Entity):
     def available(self) -> bool:
         """Return if the device is available."""
         return self._available
+
+
+class MqttDiscoveryUpdate(Entity):
+    """Mixin used to handle updated discovery message."""
+
+    def __init__(self, discovery_hash) -> None:
+        """Initialize the discovery update mixin."""
+        self._discovery_hash = discovery_hash
+        self._remove_signal = None
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to discovery updates."""
+        from homeassistant.helpers.dispatcher import async_dispatcher_connect
+        from homeassistant.components.mqtt.discovery import (
+            ALREADY_DISCOVERED, MQTT_DISCOVERY_UPDATED)
+
+        @callback
+        def discovery_callback(payload):
+            """Handle discovery update."""
+            _LOGGER.info("Got update for entity with hash: %s '%s'",
+                         self._discovery_hash, payload)
+            if not payload:
+                # Empty payload: Remove component
+                _LOGGER.info("Removing component: %s", self.entity_id)
+                self.hass.async_create_task(self.async_remove())
+                del self.hass.data[ALREADY_DISCOVERED][self._discovery_hash]
+                self._remove_signal()
+
+        if self._discovery_hash:
+            self._remove_signal = async_dispatcher_connect(
+                self.hass,
+                MQTT_DISCOVERY_UPDATED.format(self._discovery_hash),
+                discovery_callback)
