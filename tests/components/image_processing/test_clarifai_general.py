@@ -125,4 +125,3 @@ async def test_setup_platform_with_name(hass, mock_app):
     assert hass.states.get(named_entity_id)
     state = hass.states.get(named_entity_id)
     assert state.attributes.get(CONF_FRIENDLY_NAME) == MOCK_NAME
-
