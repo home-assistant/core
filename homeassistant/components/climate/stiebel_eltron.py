@@ -10,7 +10,7 @@ climate:
     port: 502
 
 For more details about this platform, please refer to the documentation
-https://home-assistant.io/components/climate.stiebeleltron/
+https://home-assistant.io/components/climate.stiebel_eltron/
 """
 import logging
 import voluptuous as vol
@@ -26,8 +26,7 @@ from homeassistant.components import modbus
 import homeassistant.helpers.config_validation as cv
 
 
-# REQUIREMENTS = ['pyflexit==0.3']
-REQUIREMENTS = ['pymodbus==1.3.1']
+REQUIREMENTS = ['pymodbus==1.3.1', 'https://github.com/fucm/python-stiebel-eltron.git@82fff63386d6bfa2ee5ed127f835f3f8e5e5a6ae#egg=python-stiebel-eltron']
 # DEPENDENCIES = ['modbus']
 
 STATE_DAYMODE = 'Tagbetrieb'
@@ -88,9 +87,9 @@ class StiebelEltron(ClimateDevice):
         self._target_temperature = None
         self._current_temperature = None
         # self._current_fan_mode = None
-        self._operation_modes = [STATE_AUTO, STATE_MANUAL, STATE_IDLE,
-                                 STATE_DAYMODE, STATE_SETBACK, STATE_DHW,
-                                 STATE_EMERGENCY]
+        # Skip special states:
+        # STATE_MANUAL, STATE_DAYMODE, STATE_SETBACK, STATE_EMERGENCY
+        self._operation_modes = [STATE_AUTO, STATE_IDLE, STATE_DHW]
         self._current_operation = None
         # self._fan_list = ['Off', 'Low', 'Medium', 'High']
         # self._current_operation = None
@@ -101,8 +100,7 @@ class StiebelEltron(ClimateDevice):
         # self._heating = None
         # self._cooling = None
         # self._alarm = False
-        # self.unit = pyflexit.pyflexit(modbus.HUB, modbus_slave)
-        self.unit = pystiebeleltron.pystiebeleltron(self._client, self._slave)
+        self.unit = pystiebeleltron.StiebelEltronAPI(self._client, self._slave)
 
     @property
     def supported_features(self):
@@ -168,6 +166,21 @@ class StiebelEltron(ClimateDevice):
     def target_temperature(self):
         """Return the temperature we try to reach."""
         return self._target_temperature
+
+    @property
+    def target_temperature_step(self):
+        """Return the supported step of target temperature."""
+        return 0.1
+
+    @property
+    def min_temp(self):
+        """Return the minimum temperature."""
+        return 10.0
+
+    @property
+    def max_temp(self):
+        """Return the maximum temperature."""
+        return 30.0
 
     @property
     def operation_list(self):
