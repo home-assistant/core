@@ -34,7 +34,7 @@ def setup(hass, config):
     from plumlightpad import Plum
 
     conf = config[DOMAIN]
-    plum = Plum(conf.get(CONF_USERNAME), conf.get(CONF_PASSWORD))
+    plum = Plum(conf[CONF_USERNAME], conf[CONF_PASSWORD])
 
     hass.data[PLUM_DATA] = plum
 
