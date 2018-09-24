@@ -285,6 +285,12 @@ def say_curr_group(hass):
     _say_it(hass, get_curr_group()['friendly_name'], None)
 
 
+def set_bookmarks_curr_group(hass):
+    for idx, g in enumerate(GROUP_ENTITIES, start=0):
+        if g['entity_id'] == 'group.bookmarks':
+            set_curr_group(hass, g)
+
+
 def set_curr_group(hass, group):
     # set focus on current menu group view
     global CURR_GROUP_VIEW
@@ -955,7 +961,7 @@ async def async_setup(hass, config):
         elif 'dom_' + ais_global.G_MODEL_SONOFF_SLAMPHER in iot:
             info = "Oprawka"
         elif 'dom_' + ais_global.G_MODEL_SONOFF_TOUCH in iot:
-            info = "Przełącznik dotykowy "
+            info = "Przełącznik dotykowy"
         elif 'dom_' + ais_global.G_MODEL_SONOFF_POW in iot:
             info = "Przełącznik z pomiarem mocy"
         elif 'dom_' + ais_global.G_MODEL_SONOFF_DUAL in iot:
@@ -964,6 +970,12 @@ async def async_setup(hass, config):
             info = "Przełącznik"
         elif 'dom_' + ais_global.G_MODEL_SONOFF_IFAN in iot:
             info = "Wentylator sufitowy"
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_T11 in iot:
+            info = "Przełącznik dotykowy pojedynczy"
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_T12 in iot:
+            info = "Przełącznik dotykowy podwójny"
+        elif 'dom_' + ais_global.G_MODEL_SONOFF_T13 in iot:
+            info = "Przełącznik dotykowy potrójny"
         else:
             info = "Nowe urządzenie"
         hass.services.call(
@@ -1273,6 +1285,12 @@ def _process_command_from_frame(hass, service):
                 info = "Znaleziono nowy przełącznik"
             elif item["model"] == ais_global.G_MODEL_SONOFF_IFAN:
                 info = "Znaleziono nowy wentylator sufitowy"
+            elif item["model"] == ais_global.G_MODEL_SONOFF_T11:
+                info = "Znaleziono nowy przełącznik dotykowy pojedynczy"
+            elif item["model"] == ais_global.G_MODEL_SONOFF_T12:
+                info = "Znaleziono nowy przełącznik dotykowy podwójny"
+            elif item["model"] == ais_global.G_MODEL_SONOFF_T13:
+                info = "Znaleziono nowy przełącznik dotykowy potrójny"
             else:
                 info = "Znaleziono nowe urządzenie, to urządzenie może"
                 info += " nie być w pełni wspierane przez system 'Asystent domowy'"
@@ -1327,6 +1345,12 @@ def _process_command_from_frame(hass, service):
                 info += "przełącznik"
             elif 'dom_' + ais_global.G_MODEL_SONOFF_IFAN in cci["ssid"].lower():
                 info += "wentylator sufitowy"
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_T11 in cci["ssid"].lower():
+                info = "przełącznik dotykowy pojedynczy"
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_T12 in cci["ssid"].lower():
+                info = "przełącznik dotykowy podwójny"
+            elif 'dom_' + ais_global.G_MODEL_SONOFF_T13 in cci["ssid"].lower():
+                info = "przełącznik dotykowy potrójny"
             else:
                 info += cci["ssid"] + " "
         if "state" in cci:
@@ -1508,10 +1532,14 @@ def _process_code(hass, data, callback):
     # codes according to android.view.KeyEvent
     if code == 93:
         # PG- -> KEYCODE_PAGE_DOWN
-        pass
+        set_bookmarks_curr_group(hass)
+        set_curr_entity(hass, 'input_select.ais_bookmark_last_played')
+        say_curr_entity(hass)
     elif code == 92:
         # PG+ -> KEYCODE_PAGE_UP
-        pass
+        set_bookmarks_curr_group(hass)
+        set_curr_entity(hass, 'input_select.ais_bookmark_favorites')
+        say_curr_entity(hass)
     elif code == 4:
         # Back arrow, go up in menu/groups -> KEYCODE_BACK
         # or go up in local folder structure

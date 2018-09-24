@@ -39,6 +39,9 @@ G_MODEL_SONOFF_POW = "sonoff_pow"
 G_MODEL_SONOFF_DUAL = "sonoff_dual"
 G_MODEL_SONOFF_BASIC = "sonoff_basic"
 G_MODEL_SONOFF_IFAN = "sonoff_ifan"
+G_MODEL_SONOFF_T11 = "sonoff_t11"
+G_MODEL_SONOFF_T12 = "sonoff_t12"
+G_MODEL_SONOFF_T13 = "sonoff_t13"
 #
 
 def set_my_ssid(ssid):

@@ -18,8 +18,8 @@ process_code:
   description: Przetwarzanie kodu z pilota.
   fields:
     text:
-      description: Kod z pilota.
-      example: '23'
+      description: Wiadomość z kodem z pilota oraz akcją (0 - down, 1 - up, 2 - hold)
+      example: '{"text": "{\"KeyCode\": 92, \"Action\": \"0\"}"} '
 
 process_command_from_frame:
   description: Przetwarzanie wiadomości/komendy z aplikacji android.
