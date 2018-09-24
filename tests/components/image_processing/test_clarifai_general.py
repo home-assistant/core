@@ -1,6 +1,7 @@
 """The tests for the clarifai_general component."""
 from unittest.mock import patch
 
+from clarifai.rest import ApiError
 import pytest
 
 from homeassistant.core import callback
@@ -38,15 +39,6 @@ VALID_CONFIG = {
     }
 
 
-class ApiError(Exception):
-    """API key error."""
-
-
-def _raise():
-    """Raise the error."""
-    raise ApiError
-
-
 def test_encode_image():
     """Test that binary data is encoded correctly."""
     assert cg.encode_image(b'test') == b'dGVzdA=='
@@ -66,8 +58,8 @@ def test_valid_api_key(mocked_clarifai):
 
 
 @MockDependency('clarifai.rest')
-@patch('ClarifaiApp', side_effect=ApiError)
-def test_invalid_api_key(caplog):
+@patch('clarifai.rest.ClarifaiApp', side_effect=ApiError)
+def test_invalid_api_key(mocked_clarifai, caplog): #
     """Test that an invalid api key is caught."""
     with pytest.raises(ApiError):
         cg.validate_api_key(MOCK_API_KEY)

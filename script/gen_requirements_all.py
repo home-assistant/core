@@ -44,6 +44,7 @@ TEST_REQUIREMENTS = (
     'apns2',
     'caldav',
     'coinmarketcap',
+    'clarifai',
     'defusedxml',
     'dsmr_parser',
     'ephem',
