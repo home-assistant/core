@@ -7,7 +7,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/climate.evohome/
 """
 
-import asyncio
 from datetime import datetime, timedelta
 import logging
 from requests.exceptions import HTTPError
@@ -100,7 +99,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         tcs_obj_ref.modelType
     )
     parent = EvoController(domain_data, client, tcs_obj_ref)
-    add_entities([parent], update_before_add=False)
+    add_entities([parent], update_before_add=True)
 
 
 class EvoController(ClimateDevice):
@@ -144,11 +143,6 @@ class EvoController(ClimateDevice):
                 self._id + " [" + self._name + "]",
                 tmp_dict
             )
-
-    @asyncio.coroutine
-    def async_added_to_hass(self):
-        """Start pulling down state as entity about to be added."""
-        self.async_schedule_update_ha_state(force_refresh=True)
 
     def _handle_requests_exceptions(self, err_hint, err):
         # evohomeclient v2 api (>=0.2.7) exposes requests exceptions, incl.:
