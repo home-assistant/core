@@ -6,8 +6,14 @@ https://home-assistant.io/components/sensor.blink/
 """
 import logging
 
-from homeassistant.components.blink import DOMAIN
-from homeassistant.const import TEMP_FAHRENHEIT
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
+from homeassistant.components.blink import (
+    DOMAIN, DEFAULT_BRAND, DEFAULT_ATTRIBUTION)
+from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.const import (
+    CONF_MONITORED_CONDITIONS, ATTR_ATTRIBUTION, TEMP_FAHRENHEIT)
 from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
@@ -26,6 +32,11 @@ SENSOR_TYPES = {
     'status':
         ['Status', '', 'mdi:bell'],
 }
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_MONITORED_CONDITIONS, default=list(SENSOR_TYPES)):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+})
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -82,3 +93,11 @@ class BlinkSensor(Entity):
         except KeyError:
             self._state = None
             _LOGGER.error("%s not a valid camera attribute.  Did the blinkpy API change?", self._type)
+
+    @property
+    def device_state_attribution(self):
+        """Return the device state attributes."""
+        attr = {}
+        attr[ATTR_ATTRIBUTION] = DEFAULT_ATTRIBUTION
+        attr['brand'] = DEFAULT_BRAND
+        return attr

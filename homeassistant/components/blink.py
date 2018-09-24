@@ -20,6 +20,9 @@ REQUIREMENTS = ['blinkpy==0.8.1']
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blink'
+DEFAULT_BRAND = 'blink'
+DEFAULT_ATTRIBUTION = "Data provided by immedia-semi.com"
+
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=45)
 

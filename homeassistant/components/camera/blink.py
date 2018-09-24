@@ -8,7 +8,7 @@ from datetime import timedelta
 import logging
 import requests
 
-from homeassistant.components.blink import DOMAIN
+from homeassistant.components.blink import DOMAIN, DEFAULT_BRAND
 from homeassistant.components.camera import Camera
 from homeassistant.util import Throttle
 
@@ -18,7 +18,6 @@ DEPENDENCIES = ['blink']
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=45)
 
-ATTR_BRAND = 'blink'
 ATTR_VIDEO_CLIP = 'video'
 ATTR_IMAGE = 'image'
 
@@ -93,7 +92,7 @@ class BlinkCamera(Camera):
     @property
     def brand(self):
         """Return the camera brand."""
-        return ATTR_BRAND
+        return DEFAULT_BRAND
 
     def camera_image(self):
         """Return a still image response from the camera."""
