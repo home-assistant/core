@@ -9,6 +9,7 @@ https://home-assistant.io/components/climate.evohome/
 
 from datetime import datetime, timedelta
 import logging
+
 from requests.exceptions import HTTPError
 
 from homeassistant.components.climate import (
@@ -92,8 +93,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     tcs_obj_ref = client.locations[loc_idx]._gateways[0]._control_systems[0]    # noqa E501; pylint: disable=protected-access
 
     _LOGGER.debug(
-        "setup_platform(): Found Controller [idx=%s]: id: %s [%s], type: %s",
-        loc_idx,
+        "setup_platform(): Found Controller: id: %s [%s], type: %s",
         tcs_obj_ref.systemId,
         tcs_obj_ref.location.name,
         tcs_obj_ref.modelType
@@ -130,19 +130,6 @@ class EvoController(ClimateDevice):
         domain_data['schedules'] = {}
 
         self._available = False  # should become True after first update()
-
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            tmp_dict = dict(self._config)
-            if 'zones' in tmp_dict:
-                tmp_dict['zones'] = '...'
-            if 'dhw' in tmp_dict:
-                tmp_dict['dhw'] = '...'
-
-            _LOGGER.debug(
-                "__init__(%s), self._config = %s",
-                self._id + " [" + self._name + "]",
-                tmp_dict
-            )
 
     def _handle_requests_exceptions(self, err_hint, err):
         # evohomeclient v2 api (>=0.2.7) exposes requests exceptions, incl.:

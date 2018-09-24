@@ -95,10 +95,7 @@ def setup(hass, config):
             )
             return False  # unable to continue
 
-        raise PlatformNotReady(err)
-
-    except requests.RequestException as err:
-        raise PlatformNotReady(err)
+        raise  # we dont handle any other HTTPErrors
 
     else:  # Redact username, password as no longer needed.
         domain_data['params'][CONF_USERNAME] = 'REDACTED'
@@ -132,14 +129,16 @@ def setup(hass, config):
 
     domain_data['status'] = {}
 
-    _LOGGER.debug(
-        "setup(): The location (temperature control system) "
-        "used is: %s [%s] (%s [%s])",
-        domain_data['config']['locationInfo']['locationId'],
-        domain_data['config']['locationInfo']['name'],
-        domain_data['config'][GWS][0][TCS][0]['systemId'],
-        domain_data['config'][GWS][0][TCS][0]['modelType']
-    )
+    if _LOGGER.isEnabledFor(logging.DEBUG):
+        tmp_loc = dict(domain_data['config'])
+        tmp_loc['locationInfo']['postcode'] = 'REDACTED'
+        tmp_tcs = tmp_loc[GWS][0][TCS][0]
+        if 'zones' in tmp_tcs:
+            tmp_tcs['zones'] = '...'
+        if 'dhw' in tmp_tcs:
+            tmp_tcs['dhw'] = '...'
+
+        _LOGGER.debug("setup(), location = %s", tmp_loc)
 
     load_platform(hass, 'climate', DOMAIN)
 
