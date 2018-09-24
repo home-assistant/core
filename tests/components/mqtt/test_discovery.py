@@ -209,3 +209,25 @@ def test_discovery_removal(hass, mqtt_mock, caplog):
 
     state = hass.states.get('switch.beer')
     assert state is None
+
+
+@asyncio.coroutine
+def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
+    """Test removal of discovered binary_sensor."""
+    yield from async_start(hass, 'homeassistant', {})
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
+                            data)
+    yield from hass.async_block_till_done()
+    state = hass.states.get('binary_sensor.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
+                            '')
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
+    state = hass.states.get('binary_sensor.beer')
+    assert state is None

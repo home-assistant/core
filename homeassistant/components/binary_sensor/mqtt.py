@@ -18,8 +18,9 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, CONF_PAYLOAD_ON,
     CONF_PAYLOAD_OFF, CONF_DEVICE_CLASS)
 from homeassistant.components.mqtt import (
-    CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC, CONF_PAYLOAD_AVAILABLE,
-    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC, CONF_AVAILABILITY_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
+    MqttAvailability, MqttDiscoveryUpdate)
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +56,10 @@ def async_setup_platform(hass, config, async_add_entities,
     if value_template is not None:
         value_template.hass = hass
 
+    discovery_hash = None
+    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
+        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
+
     async_add_entities([MqttBinarySensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
@@ -68,19 +73,22 @@ def async_setup_platform(hass, config, async_add_entities,
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
         value_template,
         config.get(CONF_UNIQUE_ID),
+        discovery_hash,
     )])
 
 
-class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
+class MqttBinarySensor(MqttAvailability, MqttDiscoveryUpdate,
+                       BinarySensorDevice):
     """Representation a binary sensor that is updated by MQTT."""
 
     def __init__(self, name, state_topic, availability_topic, device_class,
                  qos, force_update, payload_on, payload_off, payload_available,
                  payload_not_available, value_template,
-                 unique_id: Optional[str]):
+                 unique_id: Optional[str], discovery_hash):
         """Initialize the MQTT binary sensor."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash)
         self._name = name
         self._state = None
         self._state_topic = state_topic
@@ -91,11 +99,13 @@ class MqttBinarySensor(MqttAvailability, BinarySensorDevice):
         self._force_update = force_update
         self._template = value_template
         self._unique_id = unique_id
+        self._discovery_hash = discovery_hash
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe mqtt events."""
-        yield from super().async_added_to_hass()
+        yield from MqttAvailability.async_added_to_hass(self)
+        yield from MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
         def state_message_received(topic, payload, qos):
