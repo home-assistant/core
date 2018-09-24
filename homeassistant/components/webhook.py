@@ -49,6 +49,7 @@ async def async_setup(hass, config):
 
 
 class WebhookView(HomeAssistantView):
+    """Handle incoming webhook requests."""
 
     url = "/api/webhook/{webhook_id}"
     name = "api:webhook"
