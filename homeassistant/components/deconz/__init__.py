@@ -26,6 +26,9 @@ from .const import (
 
 REQUIREMENTS = ['pydeconz==47']
 
+SUPPORTED_PLATFORMS = ['binary_sensor', 'cover',
+                       'light', 'scene', 'sensor', 'switch']
+
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_API_KEY): cv.string,
@@ -104,7 +107,7 @@ async def async_setup_entry(hass, config_entry):
     hass.data[DATA_DECONZ_EVENT] = []
     hass.data[DATA_DECONZ_UNSUB] = []
 
-    for component in ['binary_sensor', 'light', 'scene', 'sensor', 'switch']:
+    for component in SUPPORTED_PLATFORMS:
         hass.async_create_task(hass.config_entries.async_forward_entry_setup(
             config_entry, component))
 
@@ -127,7 +130,7 @@ async def async_setup_entry(hass, config_entry):
     device_registry = await \
         hass.helpers.device_registry.async_get_registry()
     device_registry.async_get_or_create(
-        config_entry=config_entry.entry_id,
+        config_entry_id=config_entry.entry_id,
         connections={(CONNECTION_NETWORK_MAC, deconz.config.mac)},
         identifiers={(DOMAIN, deconz.config.bridgeid)},
         manufacturer='Dresden Elektronik', model=deconz.config.modelid,
@@ -228,7 +231,7 @@ async def async_unload_entry(hass, config_entry):
     hass.services.async_remove(DOMAIN, SERVICE_DECONZ)
     deconz.close()
 
-    for component in ['binary_sensor', 'light', 'scene', 'sensor', 'switch']:
+    for component in SUPPORTED_PLATFORMS:
         await hass.config_entries.async_forward_entry_unload(
             config_entry, component)
 

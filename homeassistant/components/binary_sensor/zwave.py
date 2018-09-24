@@ -9,8 +9,8 @@ import datetime
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_point_in_time
 from homeassistant.components import zwave
-from homeassistant.components.zwave import workaround
-from homeassistant.components.zwave import async_setup_platform  # noqa pylint: disable=unused-import
+from homeassistant.components.zwave import (  # noqa pylint: disable=unused-import
+    async_setup_platform, workaround)
 from homeassistant.components.binary_sensor import (
     DOMAIN,
     BinarySensorDevice)

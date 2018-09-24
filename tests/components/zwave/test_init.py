@@ -1180,7 +1180,7 @@ class TestZWaveServices(unittest.TestCase):
 
         self.zwave_network.nodes = {14: node}
 
-        with self.assertLogs(level='INFO') as mock_logger:
+        with self.assertLogs(level='DEBUG') as mock_logger:
             self.hass.services.call('zwave', 'print_node', {
                 const.ATTR_NODE_ID: 14
             })
