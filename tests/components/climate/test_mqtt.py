@@ -12,8 +12,10 @@ from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
     SUPPORT_FAN_MODE, SUPPORT_SWING_MODE, SUPPORT_HOLD_MODE,
     SUPPORT_AWAY_MODE, SUPPORT_AUX_HEAT, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP)
+from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (get_test_home_assistant, mock_mqtt_component,
-                          fire_mqtt_message, mock_component)
+                          async_fire_mqtt_message, fire_mqtt_message,
+                          mock_component)
 
 ENTITY_CLIMATE = 'climate.test'
 
@@ -649,3 +651,23 @@ class TestMQTTClimate(unittest.TestCase):
 
         self.assertIsInstance(max_temp, float)
         self.assertEqual(60, max_temp)
+
+
+async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
+    """Test removal of discovered climate."""
+    await async_start(hass, 'homeassistant', {})
+    data = (
+        '{ "name": "Beer" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    state = hass.states.get('climate.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('climate.beer')
+    assert state is None
