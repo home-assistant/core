@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
     CONF_NAME, CONF_MODE, CONF_MONITORED_CONDITIONS, TEMP_CELSIUS,
-    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY, STATE_UNKNOWN)
+    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_HUMIDITY)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
@@ -125,7 +125,7 @@ class NetatmoPublicSensor(Entity):
 
         if self.netatmo_data.data is None:
             _LOGGER.warning("No data found for %s", self._name)
-            self._state = STATE_UNKNOWN
+            self._state = None
             return
 
         data = None
@@ -146,7 +146,7 @@ class NetatmoPublicSensor(Entity):
         if not data:
             _LOGGER.warning("No station provides %s data in the area %s",
                             self.type, self._area_name)
-            self._state = STATE_UNKNOWN
+            self._state = None
             return
 
         if self._mode == 'avg':
