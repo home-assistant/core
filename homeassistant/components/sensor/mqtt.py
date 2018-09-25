@@ -13,8 +13,9 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.components.mqtt import (
-    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_PAYLOAD_AVAILABLE,
-    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
+    MqttAvailability, MqttDiscoveryUpdate)
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
@@ -60,6 +61,10 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     if value_template is not None:
         value_template.hass = hass
 
+    discovery_hash = None
+    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
+        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
+
     async_add_entities([MqttSensor(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
@@ -75,20 +80,22 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        discovery_hash,
     )])
 
 
-class MqttSensor(MqttAvailability, Entity):
+class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
                  force_update, expire_after, icon, device_class: Optional[str],
                  value_template, json_attributes, unique_id: Optional[str],
-                 availability_topic, payload_available,
-                 payload_not_available):
+                 availability_topic, payload_available, payload_not_available,
+                 discovery_hash):
         """Initialize the sensor."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash)
         self._state = STATE_UNKNOWN
         self._name = name
         self._state_topic = state_topic
@@ -103,10 +110,12 @@ class MqttSensor(MqttAvailability, Entity):
         self._json_attributes = set(json_attributes)
         self._unique_id = unique_id
         self._attributes = None
+        self._discovery_hash = discovery_hash
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
+        await MqttAvailability.async_added_to_hass(self)
+        await MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
         def message_received(topic, payload, qos):
