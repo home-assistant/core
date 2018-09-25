@@ -1,2 +1,2 @@
 #!/bin/bash
-[[ -z $(git ls-files --others --exclude-standard) ]] || { echo '\n***** ERROR: Tests are leaving files behind. Please update the tests to avoid writing any files.\n'; exit 1; }
+[[ -z $(git ls-files --others --exclude-standard) ]] || { echo -e '\n***** ERROR: Tests are leaving files behind. Please update the tests to avoid writing any files.\n'; exit 1; }
