@@ -84,11 +84,6 @@ SET_CONFIG_PARAMETER_SCHEMA = vol.Schema({
     vol.Optional(const.ATTR_CONFIG_SIZE, default=2): vol.Coerce(int)
 })
 
-SET_INDICATOR_SCHEMA = vol.Schema({
-    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
-    vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int)
-})
-
 SET_NODE_VALUE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
@@ -508,19 +503,6 @@ async def async_setup(hass, config):
                      "with selection %s", param, node_id,
                      selection)
 
-    def set_indicator(service):
-        """Set the indicator value of a node."""
-        node_id = service.data.get(const.ATTR_NODE_ID)
-        node = network.nodes[node_id]
-        value = service.data.get(const.ATTR_CONFIG_VALUE)
-        if node.has_command_class(const.COMMAND_CLASS_INDICATOR):
-            for value_id in node.get_values(
-                    class_id=const.COMMAND_CLASS_INDICATOR):
-                node.values[value_id].data = value
-                _LOGGER.info("Node %s indicator set to %d", node_id, value)
-        else:
-            _LOGGER.info("Node %s does not support indicator", node_id)
-
     def refresh_node_value(service):
         """Refresh the specified value from a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
@@ -708,9 +690,6 @@ async def async_setup(hass, config):
         hass.services.register(DOMAIN, const.SERVICE_SET_CONFIG_PARAMETER,
                                set_config_parameter,
                                schema=SET_CONFIG_PARAMETER_SCHEMA)
-        hass.services.register(DOMAIN, const.SERVICE_SET_INDICATOR,
-                               set_indicator,
-                               schema=SET_INDICATOR_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_SET_NODE_VALUE,
                                set_node_value,
                                schema=SET_NODE_VALUE_SCHEMA)
