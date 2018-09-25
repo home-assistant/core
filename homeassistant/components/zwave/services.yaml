@@ -77,12 +77,6 @@ set_indicator:
     value:
       description: Value to set (integer).
 
-refresh_indicator:
-  description: Refresh the indicator value for a Z-Wave device if available.
-  fields:
-    node_id:
-      description: Node id of the device to refresh indicator value from (integer).
-
 refresh_node_value:
   description: Refresh the value for a given value_id on a Z-Wave device.
   fields:
