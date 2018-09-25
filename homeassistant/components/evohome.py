@@ -61,11 +61,11 @@ def setup(hass, config):
     One controller with 0+ heating zones (e.g. TRVs, relays) and, optionally, a
     DHW controller.  Does not work for US-based systems.
     """
-    domain_data = hass.data[DATA_EVOHOME] = {}
-    domain_data['timers'] = {}
+    evo_data = hass.data[DATA_EVOHOME] = {}
+    evo_data['timers'] = {}
 
-    domain_data['params'] = dict(config[DOMAIN])
-    domain_data['params'][CONF_SCAN_INTERVAL] = SCAN_INTERVAL_DEFAULT
+    evo_data['params'] = dict(config[DOMAIN])
+    evo_data['params'][CONF_SCAN_INTERVAL] = SCAN_INTERVAL_DEFAULT
 
     from evohomeclient2 import EvohomeClient
 
@@ -77,8 +77,8 @@ def setup(hass, config):
         log_level = logging.getLogger().getEffectiveLevel()
 
         client = EvohomeClient(
-            domain_data['params'][CONF_USERNAME],
-            domain_data['params'][CONF_PASSWORD],
+            evo_data['params'][CONF_USERNAME],
+            evo_data['params'][CONF_PASSWORD],
             debug=False
         )
         # ...then restore it to what it was before instantiating the client
@@ -90,17 +90,17 @@ def setup(hass, config):
                 "Failed to establish a connection with evohome web servers, "
                 "Check your username (%s), and password are correct."
                 "Unable to continue. Resolve any errors and restart HA.",
-                domain_data['params'][CONF_USERNAME]
+                evo_data['params'][CONF_USERNAME]
             )
             return False  # unable to continue
 
         raise  # we dont handle any other HTTPErrors
 
-    else:  # Redact username, password as no longer needed.
-        domain_data['params'][CONF_USERNAME] = 'REDACTED'
-        domain_data['params'][CONF_PASSWORD] = 'REDACTED'
+    finally:  # Redact username, password as no longer needed.
+        evo_data['params'][CONF_USERNAME] = 'REDACTED'
+        evo_data['params'][CONF_PASSWORD] = 'REDACTED'
 
-    domain_data['client'] = client
+    evo_data['client'] = client
 
     # Redact any installation data we'll never need.
     if client.installation_info[0]['locationInfo']['locationId'] != 'REDACTED':
@@ -111,10 +111,10 @@ def setup(hass, config):
             loc[GWS][0]['gatewayInfo'] = 'REDACTED'
 
     # Pull down the installation configuration.
-    loc_idx = domain_data['params'][CONF_LOCATION_IDX]
+    loc_idx = evo_data['params'][CONF_LOCATION_IDX]
 
     try:
-        domain_data['config'] = client.installation_info[loc_idx]
+        evo_data['config'] = client.installation_info[loc_idx]
 
     except IndexError:
         _LOGGER.warning(
@@ -126,10 +126,10 @@ def setup(hass, config):
 
         return False  # unable to continue
 
-    domain_data['status'] = {}
+    evo_data['status'] = {}
 
     if _LOGGER.isEnabledFor(logging.DEBUG):
-        tmp_loc = dict(domain_data['config'])
+        tmp_loc = dict(evo_data['config'])
         tmp_loc['locationInfo']['postcode'] = 'REDACTED'
         tmp_tcs = tmp_loc[GWS][0][TCS][0]
         if 'zones' in tmp_tcs:

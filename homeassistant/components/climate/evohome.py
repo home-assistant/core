@@ -79,10 +79,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     Here, we add the controller only.
     """
-    domain_data = hass.data[DATA_EVOHOME]
+    evo_data = hass.data[DATA_EVOHOME]
 
-    client = domain_data['client']
-    loc_idx = domain_data['params'][CONF_LOCATION_IDX]
+    client = evo_data['client']
+    loc_idx = evo_data['params'][CONF_LOCATION_IDX]
 
     # evohomeclient has no defined way of accessing non-default location other
     # than using a protected member, such as below
@@ -94,7 +94,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         tcs_obj_ref.location.name,
         tcs_obj_ref.modelType
     )
-    parent = EvoController(domain_data, client, tcs_obj_ref)
+    parent = EvoController(evo_data, client, tcs_obj_ref)
     add_entities([parent], update_before_add=True)
 
 
@@ -105,7 +105,7 @@ class EvoController(ClimateDevice):
     the child (CH/DHW) devices.
     """
 
-    def __init__(self, domain_data, client, obj_ref):
+    def __init__(self, evo_data, client, obj_ref):
         """Initialize the evohome entity.
 
         Most read-only properties are set here.  So are pseudo read-only,
@@ -115,15 +115,15 @@ class EvoController(ClimateDevice):
         self._obj = obj_ref
 
         self._id = obj_ref.systemId
-        self._name = domain_data['config']['locationInfo']['name']
+        self._name = evo_data['config']['locationInfo']['name']
 
-        self._config = domain_data['config'][GWS][0][TCS][0]
-        self._params = domain_data['params']
+        self._config = evo_data['config'][GWS][0][TCS][0]
+        self._params = evo_data['params']
 
         self._status = {}
-        self._timers = domain_data['timers']
+        self._timers = evo_data['timers']
         self._timers['statusUpdated'] = datetime.min
-        domain_data['schedules'] = {}
+        evo_data['schedules'] = {}
 
         self._available = False  # should become True after first update()
 
@@ -282,9 +282,9 @@ class EvoController(ClimateDevice):
         """
         self._set_operation_mode(HA_STATE_TO_EVO.get(operation_mode))
 
-    def _update_state_data(self, domain_data):
-        client = domain_data['client']
-        loc_idx = domain_data['params'][CONF_LOCATION_IDX]
+    def _update_state_data(self, evo_data):
+        client = evo_data['client']
+        loc_idx = evo_data['params'][CONF_LOCATION_IDX]
 
         _LOGGER.debug(
             "_update_state_data(): API call [1 request(s)]: "
@@ -292,7 +292,7 @@ class EvoController(ClimateDevice):
         )
 
         try:
-            domain_data['status'].update(
+            evo_data['status'].update(
                 client.locations[loc_idx].status()[GWS][0][TCS][0])
 
         except HTTPError as err:
@@ -300,11 +300,11 @@ class EvoController(ClimateDevice):
             self._handle_requests_exceptions("HTTPError", err)
 
         else:
-            domain_data['timers']['statusUpdated'] = datetime.now()
+            evo_data['timers']['statusUpdated'] = datetime.now()
 
         _LOGGER.debug(
-            "_update_state_data(): domain_data['status'] = %s",
-            domain_data['status']
+            "_update_state_data(): evo_data['status'] = %s",
+            evo_data['status']
         )
 
     def update(self):
@@ -316,11 +316,11 @@ class EvoController(ClimateDevice):
 
         This is not asyncio-friendly due to the underlying client api.
         """
-        domain_data = self.hass.data[DATA_EVOHOME]
+        evo_data = self.hass.data[DATA_EVOHOME]
 
         timeout = datetime.now() + timedelta(seconds=55)
         expired = timeout > self._timers['statusUpdated'] + \
-            timedelta(seconds=domain_data['params'][CONF_SCAN_INTERVAL])
+            timedelta(seconds=evo_data['params'][CONF_SCAN_INTERVAL])
 
         if not expired:
             return
@@ -328,8 +328,8 @@ class EvoController(ClimateDevice):
         was_available = self._available or \
             self._timers['statusUpdated'] == datetime.min
 
-        self._update_state_data(domain_data)
-        self._status = domain_data['status']
+        self._update_state_data(evo_data)
+        self._status = evo_data['status']
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             tmp_dict = dict(self._status)
