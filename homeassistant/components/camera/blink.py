@@ -99,4 +99,6 @@ class BlinkCamera(Camera):
         """Return a still image response from the camera."""
         if self.check_for_new_image():
             self.request_image()
+        if self.response is None:
+            return None
         return self.response.content
