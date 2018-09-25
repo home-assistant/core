@@ -1973,9 +1973,13 @@ class GetTimeIntent(intent.IntentHandler):
     @asyncio.coroutine
     def async_handle(self, intent_obj):
         """Handle the intent."""
-        hass = intent_obj.hass
-        time = hass.states.get('sensor.time').state
-        message = 'Jest godzina ' + time
+        # hass = intent_obj.hass
+        # time = hass.states.get('sensor.time').state
+        # message = 'Jest godzina ' + time
+        import babel.dates
+        now = datetime.datetime.now()
+        message = 'Jest ' + babel.dates.format_time(
+            now, format='short', locale='pl')
         return message, True
 
 
@@ -1987,7 +1991,24 @@ class AisGetWeather(intent.IntentHandler):
     def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        weather = hass.states.get('sensor.pogoda_info').state
+        # weather = hass.states.get('sensor.pogoda_info').state
+        weather = "Aktualna pogoda w Twojej lokalizacji: "
+        attr = hass.states.get('group.ais_pogoda').attributes
+        for a in attr['entity_id']:
+            w = hass.states.get(a)
+            if a == 'sensor.yweather_condition':
+                cc = w.attributes['condition_code']
+                weather += ais_global.G_Y_WEATHER_CODES.get(int(cc), " ").capitalize() + "; "
+            else:
+                weather += w.attributes['friendly_name'] + " " + w.state + " "
+                if w.attributes['unit_of_measurement'] == 'hPa':
+                    weather += "hektopascala; "
+                elif w.attributes['unit_of_measurement'] == 'km/h':
+                    weather += "kilometrów na godzinę; "
+                elif w.attributes['unit_of_measurement'] == 'km':
+                    weather += "kilometra; "
+                else:
+                    weather += w.attributes['unit_of_measurement'] + "; "
         return weather, True
 
 
@@ -1999,7 +2020,24 @@ class AisGetWeather48(intent.IntentHandler):
     def async_handle(self, intent_obj):
         """Handle the intent."""
         hass = intent_obj.hass
-        weather = hass.states.get('sensor.prognoza_info').state
+        # weather = hass.states.get('sensor.prognoza_info').state
+        weather = "Prognoza pogody na jutro w Twojej lokalizacji: "
+        attr = hass.states.get('group.ais_pogoda_48').attributes
+        for a in attr['entity_id']:
+            w = hass.states.get(a)
+            if a == 'sensor.yw_day1_condition':
+                cc = w.attributes['condition_code']
+                weather += ais_global.G_Y_WEATHER_CODES.get(int(cc), " ").capitalize() + "; "
+            else:
+                weather += w.attributes['friendly_name'] + " " + w.state + " "
+                if w.attributes['unit_of_measurement'] == 'hPa':
+                    weather += "hektopascala; "
+                elif w.attributes['unit_of_measurement'] == 'km/h':
+                    weather += "kilometrów na godzinę; "
+                elif w.attributes['unit_of_measurement'] == 'km':
+                    weather += "kilometra; "
+                else:
+                    weather += w.attributes['unit_of_measurement'] + "; "
         return weather, True
 
 
