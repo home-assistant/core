@@ -4,9 +4,13 @@ Support for Home Assistant iOS app sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/ecosystem/ios/
 """
+import logging
+
 from homeassistant.components import ios
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.icon import icon_for_battery_level
+
+_LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['ios']
 
@@ -45,6 +49,21 @@ class IOSSensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
+
+    
+    @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (ios.DOMAIN, self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_PERMANENT_ID]),
+            },
+            'name': self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME],
+            'manufacturer': 'Apple',
+            'model': self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_TYPE],
+            'sw_version': self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_SYSTEM_VERSION],
+        }
+    
 
     @property
     def name(self):
