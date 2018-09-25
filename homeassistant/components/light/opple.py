@@ -33,9 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Opple light platform."""
-    name = config['name']
-    host = config['host']
-    add_entities([OppleLight(name, host)])
+    name = config[CONF_NAME]
+    host = config[CONF_HOST]
+    entity = OppleLight(name, host)
+    add_entities([entity])
+
+    _LOGGER.debug("Init light %s %s", host, entity.unique_id)
 
 
 class OppleLight(Light):
@@ -50,8 +53,6 @@ class OppleLight(Light):
         self._is_on = None
         self._brightness = None
         self._color_temp = None
-
-        _LOGGER.debug("Init light %s %s", self._device.ip, self._device.mac)
 
     @property
     def available(self):
