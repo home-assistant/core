@@ -795,7 +795,7 @@ pyasn1-modules==0.1.5
 pyasn1==0.3.7
 
 # homeassistant.components.netatmo
-pyatmo==1.1.1
+pyatmo==1.2
 
 # homeassistant.components.apple_tv
 pyatv==0.3.10
@@ -1114,6 +1114,9 @@ python-forecastio==1.4.0
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a
+
+# homeassistant.components.sensor.gitlab_ci
+python-gitlab==1.6.0
 
 # homeassistant.components.sensor.hp_ilo
 python-hpilo==3.9
@@ -1568,4 +1571,4 @@ zigpy-xbee==0.1.1
 zigpy==0.2.0
 
 # homeassistant.components.zoneminder
-zm-py==0.0.2
+zm-py==0.0.3
