@@ -7,10 +7,11 @@ from homeassistant.const import (
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNAVAILABLE,
     STATE_UNKNOWN)
 from homeassistant.components import alarm_control_panel
+from homeassistant.components.mqtt.discovery import async_start
 
 from tests.common import (
-    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant,
-    assert_setup_component)
+    mock_mqtt_component, async_fire_mqtt_message, fire_mqtt_message,
+    get_test_home_assistant, assert_setup_component)
 
 CODE = 'HELLO_CODE'
 
@@ -239,3 +240,32 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNAVAILABLE, state.state)
 
         fire_mqtt_message(self.hass, 'availability-topic', 'good')
+
+
+async def test_discovery_removal_alarm(hass, mqtt_mock, caplog):
+    """Test removal of discovered alarm_control_panel."""
+    await async_start(hass, 'homeassistant', {})
+
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass,
+                            'homeassistant/alarm_control_panel/bla/config',
+                            data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass,
+                            'homeassistant/alarm_control_panel/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.beer')
+    assert state is None
