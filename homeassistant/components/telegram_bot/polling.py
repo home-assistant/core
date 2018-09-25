@@ -42,7 +42,6 @@ def async_setup_platform(hass, config):
     return True
 
 
-@callback
 def process_error(bot, update, error):
     """Telegram bot error handler."""
     from telegram.error import (
