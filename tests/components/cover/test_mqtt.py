@@ -6,9 +6,11 @@ from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN, \
     STATE_UNAVAILABLE, ATTR_ASSUMED_STATE
 import homeassistant.components.cover as cover
 from homeassistant.components.cover.mqtt import MqttCover
+from homeassistant.components.mqtt.discovery import async_start
 
 from tests.common import (
-    get_test_home_assistant, mock_mqtt_component, fire_mqtt_message)
+    get_test_home_assistant, mock_mqtt_component, async_fire_mqtt_message,
+    fire_mqtt_message)
 
 
 class TestCoverMQTT(unittest.TestCase):
@@ -579,7 +581,7 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test', 'state-topic', 'command-topic', None,
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 100, 0, 0, 100, False, False, None, None)
+            False, None, 100, 0, 0, 100, False, False, None, None, None)
 
         self.assertEqual(44, mqtt_cover.find_percentage_in_range(44))
 
@@ -589,7 +591,7 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test', 'state-topic', 'command-topic', None,
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 180, 80, 80, 180, False, False, None, None)
+            False, None, 180, 80, 80, 180, False, False, None, None, None)
 
         self.assertEqual(40, mqtt_cover.find_percentage_in_range(120))
 
@@ -599,7 +601,7 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test', 'state-topic', 'command-topic', None,
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 100, 0, 0, 100, False, True, None, None)
+            False, None, 100, 0, 0, 100, False, True, None, None, None)
 
         self.assertEqual(56, mqtt_cover.find_percentage_in_range(44))
 
@@ -609,7 +611,7 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test', 'state-topic', 'command-topic', None,
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 180, 80, 80, 180, False, True, None, None)
+            False, None, 180, 80, 80, 180, False, True, None, None, None)
 
         self.assertEqual(60, mqtt_cover.find_percentage_in_range(120))
 
@@ -619,7 +621,7 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test', 'state-topic', 'command-topic', None,
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 100, 0, 0, 100, False, False, None, None)
+            False, None, 100, 0, 0, 100, False, False, None, None, None)
 
         self.assertEqual(44, mqtt_cover.find_in_range_from_percent(44))
 
@@ -629,7 +631,7 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test', 'state-topic', 'command-topic', None,
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 180, 80, 80, 180, False, False, None, None)
+            False, None, 180, 80, 80, 180, False, False, None, None, None)
 
         self.assertEqual(120, mqtt_cover.find_in_range_from_percent(40))
 
@@ -639,7 +641,7 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test', 'state-topic', 'command-topic', None,
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 100, 0, 0, 100, False, True, None, None)
+            False, None, 100, 0, 0, 100, False, True, None, None, None)
 
         self.assertEqual(44, mqtt_cover.find_in_range_from_percent(56))
 
@@ -649,7 +651,7 @@ class TestCoverMQTT(unittest.TestCase):
             'cover.test', 'state-topic', 'command-topic', None,
             'tilt-command-topic', 'tilt-status-topic', 0, False,
             'OPEN', 'CLOSE', 'OPEN', 'CLOSE', 'STOP', None, None,
-            False, None, 180, 80, 80, 180, False, True, None, None)
+            False, None, 180, 80, 80, 180, False, True, None, None, None)
 
         self.assertEqual(120, mqtt_cover.find_in_range_from_percent(60))
 
@@ -722,3 +724,24 @@ class TestCoverMQTT(unittest.TestCase):
 
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+
+async def test_discovery_removal_cover(hass, mqtt_mock, caplog):
+    """Test removal of discovered cover."""
+    await async_start(hass, 'homeassistant', {})
+    data = (
+        '{ "name": "Beer",'
+        '  "command_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/cover/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/cover/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('cover.beer')
+    assert state is None
