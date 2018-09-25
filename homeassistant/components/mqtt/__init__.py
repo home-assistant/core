@@ -524,12 +524,8 @@ async def async_setup_entry(hass, entry):
         schema=MQTT_PUBLISH_SCHEMA)
 
     if conf.get(CONF_DISCOVERY):
-        async def async_setup_discovery(event):
-            await _async_setup_discovery(
-                hass, conf, hass.data[DATA_MQTT_HASS_CONFIG])
-
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_setup_discovery)
+        await _async_setup_discovery(
+            hass, conf, hass.data[DATA_MQTT_HASS_CONFIG])
 
     return True
 
