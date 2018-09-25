@@ -294,11 +294,8 @@ class EvoController(ClimateDevice):
         try:
             evo_data['status'].update(
                 client.locations[loc_idx].status()[GWS][0][TCS][0])
-
-        except HTTPError as err:
-            # check if we've exceeded the api rate limit
+        except HTTPError as err:  # check if we've exceeded the api rate limit
             self._handle_requests_exceptions(err)
-
         else:
             evo_data['timers']['statusUpdated'] = datetime.now()
 
