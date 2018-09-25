@@ -379,6 +379,12 @@ class ConfigEntries:
                                            CONN_CLASS_UNKNOWN))
             for entry in config['entries']]
 
+    @callback
+    def async_update_entry(self, entry, *, data):
+        """Update a config entry."""
+        entry.data = data
+        self._async_schedule_save()
+
     async def async_forward_entry_setup(self, entry, component):
         """Forward the setup of an entry to a different component.
 

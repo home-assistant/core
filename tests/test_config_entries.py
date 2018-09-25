@@ -315,3 +315,20 @@ async def test_loading_default_config(hass):
         await manager.async_load()
 
     assert len(manager.async_entries()) == 0
+
+
+async def test_updating_entry_data(manager):
+    """Test that we can update an entry data."""
+    entry = MockConfigEntry(
+        domain='test',
+        data={'first': True},
+    )
+    entry.add_to_manager(manager)
+
+    manager.async_update_entry(entry, data={
+        'second': True
+    })
+
+    assert entry.data == {
+        'second': True
+    }
