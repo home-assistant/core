@@ -128,6 +128,11 @@ class NestBinarySensor(NestSensorDevice, BinarySensorDevice):
         """Return the device class of the binary sensor."""
         return _VALID_BINARY_SENSOR_TYPES.get(self.variable)
 
+    @property
+    def unique_id(self):
+        """Return unique id based on serial and sensor."""
+        return "{}-{}".format(self.device.serial, self.variable)
+
     def update(self):
         """Retrieve latest state."""
         value = getattr(self.device, self.variable)
