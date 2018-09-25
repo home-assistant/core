@@ -102,17 +102,16 @@ class OppleLight(Light):
         """Instruct the light to turn on."""
         _LOGGER.debug("Turn on light %s %s", self._device.ip, kwargs)
         if not self.is_on:
-            self._is_on = self._device.power_on = True
+            self._device.power_on = True
 
         if ATTR_BRIGHTNESS in kwargs and \
                 self.brightness != kwargs[ATTR_BRIGHTNESS]:
-            self._brightness = kwargs[ATTR_BRIGHTNESS]
             self._device.brightness = kwargs[ATTR_BRIGHTNESS]
 
         if ATTR_COLOR_TEMP in kwargs and \
                 self.brightness != kwargs[ATTR_COLOR_TEMP]:
             color_temp = mired_to_kelvin(kwargs[ATTR_COLOR_TEMP])
-            self._color_temp = self._device.color_temperature = color_temp
+            self._device.color_temperature = color_temp
 
     def turn_off(self, **kwargs):
         """Instruct the light to turn off."""
