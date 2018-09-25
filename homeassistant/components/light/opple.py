@@ -23,17 +23,19 @@ REQUIREMENTS = ['pyoppleio==1.0.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+DEFAULT_NAME = "opple light"
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
-    vol.Optional(CONF_NAME, default="opple light"): cv.string
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Opple light platform."""
-    name = config.get('name')
-    host = config.get('host')
-    add_devices([OppleLight(name, host)])
+    name = config['name']
+    host = config['host']
+    add_entities([OppleLight(name, host)])
 
 
 class OppleLight(Light):
@@ -49,12 +51,17 @@ class OppleLight(Light):
         self._brightness = None
         self._color_temp = None
 
-        _LOGGER.debug("init light %s %s", self._device.ip, self._device.mac)
+        _LOGGER.debug("Init light %s %s", self._device.ip, self._device.mac)
 
     @property
     def available(self):
         """Return True if light is available."""
         return self._device.is_online
+
+    @property
+    def unique_id(self):
+        """Return unique ID for light."""
+        return self._device.mac
 
     @property
     def name(self):
@@ -114,14 +121,24 @@ class OppleLight(Light):
 
     def update(self):
         """Synchronize state with light."""
+        prev_available = self.available
         self._device.update()
+
+        if prev_available == self.available and \
+                self._is_on == self._device.power_on and \
+                self._brightness == self._device.brightness and \
+                self._color_temp == self._device.color_temperature:
+            return
+
+        if not self.available:
+            _LOGGER.debug("Light %s is offline", self._device.ip)
+            return
+
         self._is_on = self._device.power_on
         self._brightness = self._device.brightness
         self._color_temp = self._device.color_temperature
 
-        if not self.available:
-            _LOGGER.debug("Light %s is offline", self._device.ip)
-        elif not self.is_on:
+        if not self.is_on:
             _LOGGER.debug("Update light %s success: power off",
                           self._device.ip)
         else:
