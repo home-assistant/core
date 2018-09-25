@@ -62,6 +62,11 @@ class HomematicipGenericDevice(Entity):
         return not self._device.unreach
 
     @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return "{}_{}".format(self.__class__.__name__, self._device.id)
+
+    @property
     def icon(self):
         """Return the icon."""
         if hasattr(self._device, 'lowBat') and self._device.lowBat:
