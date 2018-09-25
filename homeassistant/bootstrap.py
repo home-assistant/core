@@ -18,7 +18,6 @@ from homeassistant.util.logging import AsyncHandler
 from homeassistant.util.package import async_get_user_site, is_virtual_env
 from homeassistant.util.yaml import clear_secret_cache
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.signal import async_register_signal_handling
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -159,7 +158,6 @@ async def async_from_config_dict(config: Dict[str, Any],
     stop = time()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop-start)
 
-    async_register_signal_handling(hass)
     return hass
 
 

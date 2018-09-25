@@ -42,6 +42,7 @@ omit =
 
     homeassistant/components/asterisk_mbox.py
     homeassistant/components/*/asterisk_mbox.py
+    homeassistant/components/*/asterisk_cdr.py
 
     homeassistant/components/august.py
     homeassistant/components/*/august.py
@@ -189,6 +190,9 @@ omit =
 
     homeassistant/components/linode.py
     homeassistant/components/*/linode.py
+
+    homeassistant/components/logi_circle.py
+    homeassistant/components/*/logi_circle.py
 
     homeassistant/components/lutron.py
     homeassistant/components/*/lutron.py
@@ -506,6 +510,7 @@ omit =
     homeassistant/components/light/lw12wifi.py
     homeassistant/components/light/mystrom.py
     homeassistant/components/light/nanoleaf_aurora.py
+    homeassistant/components/light/opple.py
     homeassistant/components/light/osramlightify.py
     homeassistant/components/light/piglow.py
     homeassistant/components/light/rpi_gpio_pwm.py
@@ -675,6 +680,7 @@ omit =
     homeassistant/components/sensor/fritzbox_netmonitor.py
     homeassistant/components/sensor/gearbest.py
     homeassistant/components/sensor/geizhals.py
+    homeassistant/components/sensor/gitlab_ci.py
     homeassistant/components/sensor/gitter.py
     homeassistant/components/sensor/glances.py
     homeassistant/components/sensor/google_travel_time.py
@@ -691,6 +697,7 @@ omit =
     homeassistant/components/sensor/kwb.py
     homeassistant/components/sensor/lacrosse.py
     homeassistant/components/sensor/lastfm.py
+    homeassistant/components/sensor/linky.py
     homeassistant/components/sensor/linux_battery.py
     homeassistant/components/sensor/loopenergy.py
     homeassistant/components/sensor/luftdaten.py
@@ -821,6 +828,7 @@ omit =
     homeassistant/components/weather/bom.py
     homeassistant/components/weather/buienradar.py
     homeassistant/components/weather/darksky.py
+    homeassistant/components/weather/met.py
     homeassistant/components/weather/metoffice.py
     homeassistant/components/weather/openweathermap.py
     homeassistant/components/weather/zamg.py

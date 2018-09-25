@@ -146,10 +146,11 @@ from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
 import homeassistant.components.light as light
+from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.core as ha
 from tests.common import (
     assert_setup_component, get_test_home_assistant, mock_mqtt_component,
-    fire_mqtt_message, mock_coro)
+    async_fire_mqtt_message, fire_mqtt_message, mock_coro)
 
 
 class TestLightMQTT(unittest.TestCase):
@@ -876,3 +877,30 @@ class TestLightMQTT(unittest.TestCase):
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+
+async def test_discovery_removal_light(hass, mqtt_mock, caplog):
+    """Test removal of discovered light."""
+    await async_start(hass, 'homeassistant', {})
+
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is None

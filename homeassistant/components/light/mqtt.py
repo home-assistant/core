@@ -19,9 +19,9 @@ from homeassistant.const import (
     CONF_OPTIMISTIC, CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON, STATE_ON,
     CONF_RGB, CONF_STATE, CONF_VALUE_TEMPLATE, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
-    CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE,
-    CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN, CONF_STATE_TOPIC,
-    MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
+    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate)
 from homeassistant.helpers.restore_state import async_get_last_state
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
@@ -111,6 +111,10 @@ async def async_setup_platform(hass, config, async_add_entities,
     config.setdefault(
         CONF_STATE_VALUE_TEMPLATE, config.get(CONF_VALUE_TEMPLATE))
 
+    discovery_hash = None
+    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
+        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
+
     async_add_entities([MqttLight(
         config.get(CONF_NAME),
         config.get(CONF_UNIQUE_ID),
@@ -156,19 +160,21 @@ async def async_setup_platform(hass, config, async_add_entities,
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        discovery_hash,
     )])
 
 
-class MqttLight(MqttAvailability, Light):
+class MqttLight(MqttAvailability, MqttDiscoveryUpdate, Light):
     """Representation of a MQTT light."""
 
     def __init__(self, name, unique_id, effect_list, topic, templates,
                  qos, retain, payload, optimistic, brightness_scale,
                  white_value_scale, on_command_type, availability_topic,
-                 payload_available, payload_not_available):
+                 payload_available, payload_not_available, discovery_hash):
         """Initialize MQTT light."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash)
         self._name = name
         self._unique_id = unique_id
         self._effect_list = effect_list
@@ -216,10 +222,12 @@ class MqttLight(MqttAvailability, Light):
             SUPPORT_WHITE_VALUE)
         self._supported_features |= (
             topic[CONF_XY_COMMAND_TOPIC] is not None and SUPPORT_COLOR)
+        self._discovery_hash = discovery_hash
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
+        await MqttAvailability.async_added_to_hass(self)
+        await MqttDiscoveryUpdate.async_added_to_hass(self)
 
         templates = {}
         for key, tpl in list(self._templates.items()):

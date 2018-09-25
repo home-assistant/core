@@ -9,7 +9,6 @@ import logging
 import datetime
 
 import voluptuous as vol
-# from voluptuous.humanize import humanize_error
 
 from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
@@ -274,8 +273,9 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         # try:
         #     data = IDENTIFY_SCHEMA(req_data)
         # except vol.Invalid as ex:
-        #     return self.json_message(humanize_error(request.json, ex),
-        #                              HTTP_BAD_REQUEST)
+        #     return self.json_message(
+        #         vol.humanize.humanize_error(request.json, ex),
+        #         HTTP_BAD_REQUEST)
 
         data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 

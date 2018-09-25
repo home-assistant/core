@@ -55,6 +55,7 @@ async def setup_bridge(hass, data, allow_deconz_groups=True):
     entry = Mock()
     entry.data = {'host': '1.2.3.4', 'port': 80, 'api_key': '1234567890ABCDEF'}
     bridge = DeconzSession(loop, session, **entry.data)
+    bridge.config = Mock()
     with patch('pydeconz.DeconzSession.async_get_state',
                return_value=mock_coro(data)):
         await bridge.async_load_parameters()
