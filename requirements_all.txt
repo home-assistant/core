@@ -1594,4 +1594,4 @@ zigpy-xbee==0.1.1
 zigpy==0.2.0
 
 # homeassistant.components.zoneminder
-zm-py==0.0.5
+zm-py==0.1.0

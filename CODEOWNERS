@@ -233,7 +233,7 @@ homeassistant/components/*/xiaomi_aqara.py @danielhiversen @syssi
 homeassistant/components/*/xiaomi_miio.py @rytilahti @syssi
 
 # Z
-homeassistant/components/zoneminder.py @rohankapoorcom
+homeassistant/components/zoneminder/ @rohankapoorcom
 homeassistant/components/*/zoneminder.py @rohankapoorcom
 
 # Other code
