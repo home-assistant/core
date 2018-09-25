@@ -54,7 +54,7 @@ CONFIG_SCHEMA = vol.Schema(
             vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA}
         }
     },
-    extra=vol.ALLOW_EXTRA)
+    extra=vol.PREVENT_EXTRA)
 
 
 @bind_hass
