@@ -36,7 +36,7 @@ from homeassistant.util.async_ import (
 
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa  # pylint: disable=unused-import
-from .const import CONF_BROKER
+from .const import CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY
 from .server import HBMQTT_CONFIG_SCHEMA
 
 REQUIREMENTS = ['paho-mqtt==1.4.0']
@@ -47,13 +47,13 @@ DOMAIN = 'mqtt'
 
 DATA_MQTT = 'mqtt'
 DATA_MQTT_CONFIG = 'mqtt_config'
+DATA_MQTT_HASS_CONFIG = 'mqtt_hass_config'
 
 SERVICE_PUBLISH = 'publish'
 
 CONF_EMBEDDED = 'embedded'
 
 CONF_CLIENT_ID = 'client_id'
-CONF_DISCOVERY = 'discovery'
 CONF_DISCOVERY_PREFIX = 'discovery_prefix'
 CONF_KEEPALIVE = 'keepalive'
 CONF_CERTIFICATE = 'certificate'
@@ -81,7 +81,6 @@ DEFAULT_KEEPALIVE = 60
 DEFAULT_QOS = 0
 DEFAULT_RETAIN = False
 DEFAULT_PROTOCOL = PROTOCOL_311
-DEFAULT_DISCOVERY = False
 DEFAULT_DISCOVERY_PREFIX = 'homeassistant'
 DEFAULT_TLS_PROTOCOL = 'auto'
 DEFAULT_PAYLOAD_AVAILABLE = 'online'
@@ -321,23 +320,21 @@ async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
     return broker_config
 
 
-async def _async_setup_discovery(hass: HomeAssistantType,
-                                 config: ConfigType) -> bool:
+async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
+                                 hass_config: ConfigType) -> bool:
     """Try to start the discovery of MQTT devices.
 
     This method is a coroutine.
     """
-    conf = config.get(DOMAIN, {})  # type: ConfigType
-
     discovery = await async_prepare_setup_platform(
-        hass, config, DOMAIN, 'discovery')
+        hass, hass_config, DOMAIN, 'discovery')
 
     if discovery is None:
         _LOGGER.error("Unable to load MQTT discovery")
         return False
 
     success = await discovery.async_start(
-        hass, conf[CONF_DISCOVERY_PREFIX], config)  # type: bool
+        hass, conf[CONF_DISCOVERY_PREFIX], hass_config)  # type: bool
 
     return success
 
@@ -345,6 +342,11 @@ async def _async_setup_discovery(hass: HomeAssistantType,
 async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     """Start the MQTT protocol service."""
     conf = config.get(DOMAIN)  # type: Optional[ConfigType]
+
+    # We need this because discovery can cause components to be set up and
+    # otherwise it will not load the users config.
+    # This needs a better solution.
+    hass.data[DATA_MQTT_HASS_CONFIG] = config
 
     if conf is None:
         # If we have a config entry, setup is done by that config entry.
@@ -389,13 +391,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
             DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
             data={}
         ))
-
-    if conf.get(CONF_DISCOVERY):
-        async def async_setup_discovery(event):
-            await _async_setup_discovery(hass, config)
-
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_setup_discovery)
 
     return True
 
@@ -527,6 +522,14 @@ async def async_setup_entry(hass, entry):
     hass.services.async_register(
         DOMAIN, SERVICE_PUBLISH, async_publish_service,
         schema=MQTT_PUBLISH_SCHEMA)
+
+    if conf.get(CONF_DISCOVERY):
+        async def async_setup_discovery(event):
+            await _async_setup_discovery(
+                hass, conf, hass.data[DATA_MQTT_HASS_CONFIG])
+
+        hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_START, async_setup_discovery)
 
     return True
 
