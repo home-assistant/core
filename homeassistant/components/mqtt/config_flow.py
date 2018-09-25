@@ -7,7 +7,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 
-from .const import CONF_BROKER
+from .const import CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY
 
 
 @config_entries.HANDLERS.register('mqtt')
@@ -44,6 +44,7 @@ class FlowHandler(config_entries.ConfigFlow):
         fields[vol.Required(CONF_PORT, default=1883)] = vol.Coerce(int)
         fields[vol.Optional(CONF_USERNAME)] = str
         fields[vol.Optional(CONF_PASSWORD)] = str
+        fields[vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY)] = bool
 
         return self.async_show_form(
             step_id='broker', data_schema=vol.Schema(fields), errors=errors)

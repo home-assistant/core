@@ -9,7 +9,8 @@
           "broker": "Broker",
           "port": "Port",
           "username": "Username",
-          "password": "Password"
+          "password": "Password",
+          "discovery": "Enable discovery"
         }
       }
     },
