@@ -5,8 +5,10 @@ from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_LOCKED, STATE_UNLOCKED, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
 import homeassistant.components.lock as lock
+from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (
-    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant)
+    mock_mqtt_component, async_fire_mqtt_message, fire_mqtt_message,
+    get_test_home_assistant)
 
 
 class TestLockMQTT(unittest.TestCase):
@@ -172,3 +174,24 @@ class TestLockMQTT(unittest.TestCase):
 
         state = self.hass.states.get('lock.test')
         self.assertEqual(STATE_UNAVAILABLE, state.state)
+
+
+async def test_discovery_removal_lock(hass, mqtt_mock, caplog):
+    """Test removal of discovered lock."""
+    await async_start(hass, 'homeassistant', {})
+    data = (
+        '{ "name": "Beer",'
+        '  "command_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    state = hass.states.get('lock.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/lock/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('lock.beer')
+    assert state is None
