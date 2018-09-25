@@ -794,7 +794,7 @@ pyasn1-modules==0.1.5
 pyasn1==0.3.7
 
 # homeassistant.components.netatmo
-pyatmo==1.1.1
+pyatmo==1.2
 
 # homeassistant.components.apple_tv
 pyatv==0.3.10
