@@ -95,7 +95,9 @@ class FlowHandler(config_entries.ConfigFlow):
 
         try:
             data = await get_gateway_info(
-                self.hass, user_input['host'], user_input['identity'],
+                self.hass, user_input['host'],
+                # Old config format had a fixed identity
+                user_input.get('identity', 'homeassistant'),
                 user_input['key'])
 
             data[CONF_IMPORT_GROUPS] = user_input[CONF_IMPORT_GROUPS]
