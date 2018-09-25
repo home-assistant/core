@@ -379,7 +379,8 @@ class ConfigEntries:
                                            CONN_CLASS_UNKNOWN))
             for entry in config['entries']]
 
-    async def async_update_entry(self, entry, data):
+    @callback
+    def async_update_entry(self, entry, *, data):
         """Update a config entry."""
         entry.data = data
         self._async_schedule_save()
