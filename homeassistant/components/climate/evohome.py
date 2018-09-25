@@ -60,7 +60,7 @@ HA_STATE_TO_EVO = {
     STATE_OFF: EVO_HEATOFF
 }
 
-HA_OP_LIST = list(HA_STATE_TO_EVO.keys())
+HA_OP_LIST = list(HA_STATE_TO_EVO)
 
 # these are used to help prevent E501 (line too long) violations
 GWS = 'gateways'
