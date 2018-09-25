@@ -49,7 +49,11 @@ def test_remove_entry(hass, manager):
         MockModule('comp', async_unload_entry=mock_unload_entry))
 
     MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
-    MockConfigEntry(domain='test', entry_id='test2').add_to_manager(manager)
+    MockConfigEntry(
+        domain='test',
+        entry_id='test2',
+        state=config_entries.ENTRY_STATE_LOADED
+    ).add_to_manager(manager)
     MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
 
     assert [item.entry_id for item in manager.async_entries()] == \
@@ -79,7 +83,11 @@ def test_remove_entry_raises(hass, manager):
         MockModule('comp', async_unload_entry=mock_unload_entry))
 
     MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
-    MockConfigEntry(domain='test', entry_id='test2').add_to_manager(manager)
+    MockConfigEntry(
+        domain='test',
+        entry_id='test2',
+        state=config_entries.ENTRY_STATE_LOADED
+    ).add_to_manager(manager)
     MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
 
     assert [item.entry_id for item in manager.async_entries()] == \
@@ -92,6 +100,33 @@ def test_remove_entry_raises(hass, manager):
     }
     assert [item.entry_id for item in manager.async_entries()] == \
         ['test1', 'test3']
+
+
+@asyncio.coroutine
+def test_remove_entry_if_not_loaded(hass, manager):
+    """Test that we can remove an entry."""
+    mock_unload_entry = MagicMock(return_value=mock_coro(True))
+
+    loader.set_component(
+        hass, 'test',
+        MockModule('comp', async_unload_entry=mock_unload_entry))
+
+    MockConfigEntry(domain='test', entry_id='test1').add_to_manager(manager)
+    MockConfigEntry(domain='test', entry_id='test2').add_to_manager(manager)
+    MockConfigEntry(domain='test', entry_id='test3').add_to_manager(manager)
+
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1', 'test2', 'test3']
+
+    result = yield from manager.async_remove('test2')
+
+    assert result == {
+        'require_restart': False
+    }
+    assert [item.entry_id for item in manager.async_entries()] == \
+        ['test1', 'test3']
+
+    assert len(mock_unload_entry.mock_calls) == 0
 
 
 @asyncio.coroutine

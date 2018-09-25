@@ -340,7 +340,10 @@ class ConfigEntries:
         entry = self._entries.pop(found)
         self._async_schedule_save()
 
-        unloaded = await entry.async_unload(self.hass)
+        if entry.state == ENTRY_STATE_LOADED:
+            unloaded = await entry.async_unload(self.hass)
+        else:
+            unloaded = True
 
         device_registry = await \
             self.hass.helpers.device_registry.async_get_registry()
