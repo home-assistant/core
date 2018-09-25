@@ -4,6 +4,7 @@ import unittest
 import homeassistant.core as ha
 from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.binary_sensor as binary_sensor
+from homeassistant.components.mqtt.discovery import async_start
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
@@ -226,3 +227,24 @@ async def test_unique_id(hass):
     async_fire_mqtt_message(hass, 'test-topic', 'payload')
     await hass.async_block_till_done()
     assert len(hass.states.async_all()) == 1
+
+
+async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
+    """Test removal of discovered binary_sensor."""
+    await async_start(hass, 'homeassistant', {})
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic" }'
+    )
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
+                            data)
+    await hass.async_block_till_done()
+    state = hass.states.get('binary_sensor.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+    async_fire_mqtt_message(hass, 'homeassistant/binary_sensor/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    state = hass.states.get('binary_sensor.beer')
+    assert state is None

@@ -7,6 +7,7 @@ from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE,\
     ATTR_ASSUMED_STATE
 import homeassistant.core as ha
 import homeassistant.components.switch as switch
+from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant, mock_coro,
     async_mock_mqtt_component, async_fire_mqtt_message)
@@ -306,3 +307,30 @@ async def test_unique_id(hass):
 
     assert len(hass.states.async_entity_ids()) == 2
     # all switches group is 1, unique id created is 1
+
+
+async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
+    """Test expansion of discovered switch."""
+    await async_start(hass, 'homeassistant', {})
+
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
+                            data)
+    await hass.async_block_till_done()
+
+    state = hass.states.get('switch.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
+                            '')
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    state = hass.states.get('switch.beer')
+    assert state is None
