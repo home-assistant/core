@@ -4,25 +4,24 @@ Component for controlling Pandora stations through the pianobar client.
 For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/media_player.pandora/
 """
-import logging
-import re
-import os
-import signal
 from datetime import timedelta
+import logging
+import os
+import re
 import shutil
+import signal
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, MEDIA_TYPE_MUSIC,
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY_PAUSE,
-    SERVICE_MEDIA_PLAY, SERVICE_VOLUME_UP, SERVICE_VOLUME_DOWN,
-    MediaPlayerDevice)
-from homeassistant.const import (STATE_OFF, STATE_PAUSED, STATE_PLAYING,
-                                 STATE_IDLE)
 from homeassistant import util
+from homeassistant.components.media_player import (
+    MEDIA_TYPE_MUSIC, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PLAY_PAUSE, SERVICE_VOLUME_DOWN, SERVICE_VOLUME_UP,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_SELECT_SOURCE,
+    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, MediaPlayerDevice)
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF, STATE_PAUSED,
+    STATE_PLAYING)
 
-REQUIREMENTS = ['pexpect==4.0.1']
+REQUIREMENTS = ['pexpect==4.6.0']
 _LOGGER = logging.getLogger(__name__)
 
 # SUPPORT_VOLUME_SET is close to available but we need volume up/down
@@ -43,8 +42,7 @@ CURRENT_SONG_PATTERN = re.compile(r'"(.*?)"\s+by\s+"(.*?)"\son\s+"(.*?)"',
 STATION_PATTERN = re.compile(r'Station\s"(.+?)"', re.MULTILINE)
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Pandora media player platform."""
     if not _pianobar_exists():
         return False
@@ -56,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         pandora.turn_off()
 
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, _stop_pianobar)
-    add_devices([pandora])
+    add_entities([pandora])
 
 
 class PandoraMediaPlayer(MediaPlayerDevice):
@@ -254,9 +252,11 @@ class PandoraMediaPlayer(MediaPlayerDevice):
             _LOGGER.warning("On unexpected station list page")
             self._pianobar.sendcontrol('m')  # press enter
             self._pianobar.sendcontrol('m')  # do it again b/c an 'i' got in
+            # pylint: disable=assignment-from-none
             response = self.update_playing_status()
         elif match_idx == 3:
             _LOGGER.debug("Received new playlist list")
+            # pylint: disable=assignment-from-none
             response = self.update_playing_status()
         else:
             response = self._pianobar.before.decode('utf-8')
@@ -295,8 +295,7 @@ class PandoraMediaPlayer(MediaPlayerDevice):
         time_remaining = int(cur_minutes) * 60 + int(cur_seconds)
         self._media_duration = int(total_minutes) * 60 + int(total_seconds)
 
-        if (time_remaining != self._time_remaining and
-                time_remaining != self._media_duration):
+        if time_remaining not in (self._time_remaining, self._media_duration):
             self._player_state = STATE_PLAYING
         elif self._player_state == STATE_PLAYING:
             self._player_state = STATE_PAUSED

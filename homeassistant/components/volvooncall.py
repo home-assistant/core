@@ -136,12 +136,11 @@ class VolvoData:
         if (vehicle.registration_number and
                 vehicle.registration_number.lower()) in self.names:
             return self.names[vehicle.registration_number.lower()]
-        elif (vehicle.vin and
-              vehicle.vin.lower() in self.names):
+        if vehicle.vin and vehicle.vin.lower() in self.names:
             return self.names[vehicle.vin.lower()]
-        elif vehicle.registration_number:
+        if vehicle.registration_number:
             return vehicle.registration_number
-        elif vehicle.vin:
+        if vehicle.vin:
             return vehicle.vin
         return ''
 

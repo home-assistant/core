@@ -2,21 +2,22 @@
 import unittest
 
 import homeassistant.core as ha
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.binary_sensor as binary_sensor
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 
-from tests.common import get_test_home_assistant, fire_mqtt_message
-from tests.common import mock_component, mock_mqtt_component
+from tests.common import (
+    get_test_home_assistant, fire_mqtt_message, async_fire_mqtt_message,
+    mock_component, mock_mqtt_component, async_mock_mqtt_component)
 
 
 class TestSensorMQTT(unittest.TestCase):
     """Test the MQTT sensor."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         mock_mqtt_component(self.hass)
 
@@ -204,3 +205,24 @@ class TestSensorMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
         self.hass.block_till_done()
         self.assertEqual(2, len(events))
+
+
+async def test_unique_id(hass):
+    """Test unique id option only creates one sensor per unique_id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, binary_sensor.DOMAIN, {
+        binary_sensor.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'state_topic': 'test-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'state_topic': 'test-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all()) == 1

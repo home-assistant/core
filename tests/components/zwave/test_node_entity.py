@@ -363,6 +363,7 @@ class TestZWaveNodeEntity(unittest.TestCase):
     def test_unique_id_missing_data(self):
         """Test unique_id."""
         self.node.manufacturer_name = None
+        self.node.name = None
         entity = node_entity.ZWaveNodeEntity(self.node, self.zwave_network)
 
         self.assertIsNone(entity.unique_id)

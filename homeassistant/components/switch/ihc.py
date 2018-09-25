@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.ihc/
 """
-from xml.etree.ElementTree import Element
-
 import voluptuous as vol
 
 from homeassistant.components.ihc import (
@@ -27,8 +25,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ihc switch platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the IHC switch platform."""
     ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
     info = hass.data[IHC_DATA][IHC_INFO]
     devices = []
@@ -46,14 +44,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensor = IHCSwitch(ihc_controller, name, ihc_id, info)
             devices.append(sensor)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class IHCSwitch(IHCDevice, SwitchDevice):
     """IHC Switch."""
 
     def __init__(self, ihc_controller, name: str, ihc_id: int,
-                 info: bool, product: Element = None) -> None:
+                 info: bool, product=None) -> None:
         """Initialize the IHC switch."""
         super().__init__(ihc_controller, name, ihc_id, product)
         self._state = False
@@ -72,6 +70,6 @@ class IHCSwitch(IHCDevice, SwitchDevice):
         self.ihc_controller.set_runtime_value_bool(self.ihc_id, False)
 
     def on_ihc_change(self, ihc_id, value):
-        """Callback when the ihc resource changes."""
+        """Handle IHC resource change."""
         self._state = value
         self.schedule_update_ha_state()

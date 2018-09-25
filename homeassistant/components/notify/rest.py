@@ -95,7 +95,7 @@ class RestNotificationService(BaseNotificationService):
                 """Recursive template creator helper function."""
                 if isinstance(value, list):
                     return [_data_template_creator(item) for item in value]
-                elif isinstance(value, dict):
+                if isinstance(value, dict):
                     return {key: _data_template_creator(item)
                             for key, item in value.items()}
                 value.hass = self._hass

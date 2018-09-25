@@ -15,14 +15,14 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['wink']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink platform."""
     import pywink
 
     for scene in pywink.get_scenes():
         _id = scene.object_id() + scene.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkScene(scene, hass)])
+            add_entities([WinkScene(scene, hass)])
 
 
 class WinkScene(WinkDevice, Scene):

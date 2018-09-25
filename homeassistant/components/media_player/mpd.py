@@ -32,9 +32,8 @@ DEFAULT_PORT = 6600
 
 PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=120)
 
-SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | \
-    SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | SUPPORT_SELECT_SOURCE | \
+SUPPORT_MPD = SUPPORT_PAUSE | SUPPORT_PREVIOUS_TRACK | \
+    SUPPORT_NEXT_TRACK | SUPPORT_PLAY_MEDIA | SUPPORT_PLAY | \
     SUPPORT_CLEAR_PLAYLIST | SUPPORT_SHUFFLE_SET | SUPPORT_SEEK | \
     SUPPORT_STOP | SUPPORT_TURN_OFF | SUPPORT_TURN_ON
 
@@ -46,8 +45,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MPD platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -55,7 +53,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     password = config.get(CONF_PASSWORD)
 
     device = MpdDevice(host, port, password, name)
-    add_devices([device], True)
+    add_entities([device], True)
 
 
 class MpdDevice(MediaPlayerDevice):
@@ -73,7 +71,7 @@ class MpdDevice(MediaPlayerDevice):
 
         self._status = None
         self._currentsong = None
-        self._playlists = []
+        self._playlists = None
         self._currentplaylist = None
         self._is_connected = False
         self._muted = False
@@ -142,11 +140,11 @@ class MpdDevice(MediaPlayerDevice):
         """Return the media state."""
         if self._status is None:
             return STATE_OFF
-        elif self._status['state'] == 'play':
+        if self._status['state'] == 'play':
             return STATE_PLAYING
-        elif self._status['state'] == 'pause':
+        if self._status['state'] == 'pause':
             return STATE_PAUSED
-        elif self._status['state'] == 'stop':
+        if self._status['state'] == 'stop':
             return STATE_OFF
 
         return STATE_OFF
@@ -183,9 +181,9 @@ class MpdDevice(MediaPlayerDevice):
             if file_name is None:
                 return "None"
             return os.path.basename(file_name)
-        elif name is None:
+        if name is None:
             return title
-        elif title is None:
+        if title is None:
             return name
 
         return '{}: {}'.format(name, title)
@@ -203,12 +201,24 @@ class MpdDevice(MediaPlayerDevice):
     @property
     def volume_level(self):
         """Return the volume level."""
-        return int(self._status['volume'])/100
+        if 'volume' in self._status:
+            return int(self._status['volume'])/100
+        return None
 
     @property
     def supported_features(self):
         """Flag media player features that are supported."""
-        return SUPPORT_MPD
+        if self._status is None:
+            return None
+
+        supported = SUPPORT_MPD
+        if 'volume' in self._status:
+            supported |= \
+                SUPPORT_VOLUME_SET | SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE
+        if self._playlists is not None:
+            supported |= SUPPORT_SELECT_SOURCE
+
+        return supported
 
     @property
     def source(self):
@@ -227,27 +237,36 @@ class MpdDevice(MediaPlayerDevice):
     @Throttle(PLAYLIST_UPDATE_INTERVAL)
     def _update_playlists(self, **kwargs):
         """Update available MPD playlists."""
-        self._playlists = []
-        for playlist_data in self._client.listplaylists():
-            self._playlists.append(playlist_data['playlist'])
+        import mpd
+
+        try:
+            self._playlists = []
+            for playlist_data in self._client.listplaylists():
+                self._playlists.append(playlist_data['playlist'])
+        except mpd.CommandError as error:
+            self._playlists = None
+            _LOGGER.warning("Playlists could not be updated: %s:", error)
 
     def set_volume_level(self, volume):
         """Set volume of media player."""
-        self._client.setvol(int(volume * 100))
+        if 'volume' in self._status:
+            self._client.setvol(int(volume * 100))
 
     def volume_up(self):
         """Service to send the MPD the command for volume up."""
-        current_volume = int(self._status['volume'])
+        if 'volume' in self._status:
+            current_volume = int(self._status['volume'])
 
-        if current_volume <= 100:
-            self._client.setvol(current_volume + 5)
+            if current_volume <= 100:
+                self._client.setvol(current_volume + 5)
 
     def volume_down(self):
         """Service to send the MPD the command for volume down."""
-        current_volume = int(self._status['volume'])
+        if 'volume' in self._status:
+            current_volume = int(self._status['volume'])
 
-        if current_volume >= 0:
-            self._client.setvol(current_volume - 5)
+            if current_volume >= 0:
+                self._client.setvol(current_volume - 5)
 
     def media_play(self):
         """Service to send the MPD the command for play/pause."""
@@ -271,12 +290,13 @@ class MpdDevice(MediaPlayerDevice):
 
     def mute_volume(self, mute):
         """Mute. Emulated with set_volume_level."""
-        if mute is True:
-            self._muted_volume = self.volume_level
-            self.set_volume_level(0)
-        elif mute is False:
-            self.set_volume_level(self._muted_volume)
-        self._muted = mute
+        if 'volume' in self._status:
+            if mute:
+                self._muted_volume = self.volume_level
+                self.set_volume_level(0)
+            else:
+                self.set_volume_level(self._muted_volume)
+            self._muted = mute
 
     def play_media(self, media_type, media_id, **kwargs):
         """Send the media player the command for playing a playlist."""

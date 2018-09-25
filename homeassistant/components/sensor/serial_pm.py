@@ -27,7 +27,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available PM sensors."""
     from pmsensor import serial_pm as pm
 
@@ -54,7 +54,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             name = 'PM{}'.format(pmname)
         dev.append(ParticulateMatterSensor(coll, name, pmname))
 
-    add_devices(dev)
+    add_entities(dev)
 
 
 class ParticulateMatterSensor(Entity):

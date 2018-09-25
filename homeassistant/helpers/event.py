@@ -133,7 +133,6 @@ def async_track_same_state(hass, period, action, async_check_same_func,
         """Clear all unsub listener."""
         nonlocal async_remove_state_for_cancel, async_remove_state_for_listener
 
-        # pylint: disable=not-callable
         if async_remove_state_for_listener is not None:
             async_remove_state_for_listener()
             async_remove_state_for_listener = None
@@ -375,7 +374,7 @@ def _process_state_match(parameter):
     if parameter is None or parameter == MATCH_ALL:
         return lambda _: True
 
-    elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
+    if isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return lambda state: state == parameter
 
     parameter = tuple(parameter)
@@ -387,11 +386,11 @@ def _process_time_match(parameter):
     if parameter is None or parameter == MATCH_ALL:
         return lambda _: True
 
-    elif isinstance(parameter, str) and parameter.startswith('/'):
+    if isinstance(parameter, str) and parameter.startswith('/'):
         parameter = float(parameter[1:])
         return lambda time: time % parameter == 0
 
-    elif isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
+    if isinstance(parameter, str) or not hasattr(parameter, '__iter__'):
         return lambda time: time == parameter
 
     parameter = tuple(parameter)

@@ -16,7 +16,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['sense_energy==0.3.1']
+REQUIREMENTS = ['sense_energy==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ CONSUMPTION_NAME = "Usage"
 ACTIVE_TYPE = 'active'
 
 
-class SensorConfig(object):
+class SensorConfig:
     """Data structure holding sensor config."""
 
     def __init__(self, name, sensor_type):
@@ -64,7 +64,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Sense sensor."""
     from sense_energy import Senseable
 
@@ -96,7 +96,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         devices.append(Sense(data, name, sensor_type,
                              is_production, update_call))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class Sense(Entity):
@@ -139,7 +139,12 @@ class Sense(Entity):
 
     def update(self):
         """Get the latest data, update state."""
-        self.update_sensor()
+        from sense_energy import SenseAPITimeoutException
+        try:
+            self.update_sensor()
+        except SenseAPITimeoutException:
+            _LOGGER.error("Timeout retrieving data")
+            return
 
         if self._sensor_type == ACTIVE_TYPE:
             if self._is_production:

@@ -4,13 +4,11 @@ Fans on Zigbee Home Automation networks.
 For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/fan.zha/
 """
-import asyncio
 import logging
 from homeassistant.components import zha
 from homeassistant.components.fan import (
     DOMAIN, FanEntity, SPEED_OFF, SPEED_LOW, SPEED_MEDIUM, SPEED_HIGH,
     SUPPORT_SET_SPEED)
-from homeassistant.const import STATE_UNKNOWN
 
 DEPENDENCIES = ['zha']
 
@@ -39,14 +37,14 @@ VALUE_TO_SPEED = {i: speed for i, speed in enumerate(SPEED_LIST)}
 SPEED_TO_VALUE = {speed: i for i, speed in enumerate(SPEED_LIST)}
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Zigbee Home Automation fans."""
     discovery_info = zha.get_discovery_info(hass, discovery_info)
     if discovery_info is None:
         return
 
-    async_add_devices([ZhaFan(**discovery_info)], update_before_add=True)
+    async_add_entities([ZhaFan(**discovery_info)], update_before_add=True)
 
 
 class ZhaFan(zha.Entity, FanEntity):
@@ -72,38 +70,42 @@ class ZhaFan(zha.Entity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if entity is on."""
-        if self._state == STATE_UNKNOWN:
+        if self._state is None:
             return False
         return self._state != SPEED_OFF
 
-    @asyncio.coroutine
-    def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
         """Turn the entity on."""
         if speed is None:
             speed = SPEED_MEDIUM
 
-        yield from self.async_set_speed(speed)
+        await self.async_set_speed(speed)
 
-    @asyncio.coroutine
-    def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs) -> None:
         """Turn the entity off."""
-        yield from self.async_set_speed(SPEED_OFF)
+        await self.async_set_speed(SPEED_OFF)
 
-    @asyncio.coroutine
-    def async_set_speed(self: FanEntity, speed: str) -> None:
+    async def async_set_speed(self, speed: str) -> None:
         """Set the speed of the fan."""
-        yield from self._endpoint.fan.write_attributes({
-            'fan_mode': SPEED_TO_VALUE[speed]})
+        from zigpy.exceptions import DeliveryError
+        try:
+            await self._endpoint.fan.write_attributes(
+                {'fan_mode': SPEED_TO_VALUE[speed]}
+            )
+        except DeliveryError as ex:
+            _LOGGER.error("%s: Could not set speed: %s", self.entity_id, ex)
+            return
 
         self._state = speed
         self.async_schedule_update_ha_state()
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Retrieve latest state."""
-        result = yield from zha.safe_read(self._endpoint.fan, ['fan_mode'])
+        result = await zha.safe_read(self._endpoint.fan, ['fan_mode'],
+                                     allow_cache=False,
+                                     only_cache=(not self._initialized))
         new_value = result.get('fan_mode', None)
-        self._state = VALUE_TO_SPEED.get(new_value, STATE_UNKNOWN)
+        self._state = VALUE_TO_SPEED.get(new_value, None)
 
     @property
     def should_poll(self) -> bool:

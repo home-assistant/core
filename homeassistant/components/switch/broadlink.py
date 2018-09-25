@@ -69,7 +69,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Broadlink switches."""
     import broadlink
     devices = config.get(CONF_SWITCHES)
@@ -142,9 +142,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if switch_type in RM_TYPES:
         broadlink_device = broadlink.rm((ip_addr, 80), mac_addr, None)
         hass.services.register(DOMAIN, SERVICE_LEARN + '_' +
-                               ip_addr.replace('.', '_'), _learn_command)
+                               slugify(ip_addr.replace('.', '_')),
+                               _learn_command)
         hass.services.register(DOMAIN, SERVICE_SEND + '_' +
-                               ip_addr.replace('.', '_'), _send_packet,
+                               slugify(ip_addr.replace('.', '_')),
+                               _send_packet,
                                vol.Schema({'packet': cv.ensure_list}))
         switches = []
         for object_id, device_config in devices.items():
@@ -179,7 +181,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except socket.timeout:
         _LOGGER.error("Failed to connect to device")
 
-    add_devices(switches)
+    add_entities(switches)
 
 
 class BroadlinkRMSwitch(SwitchDevice):
@@ -348,7 +350,7 @@ class BroadlinkMP1Slot(BroadlinkRMSwitch):
         self._state = self._parent_device.get_outlet_status(self._slot)
 
 
-class BroadlinkMP1Switch(object):
+class BroadlinkMP1Switch:
     """Representation of a Broadlink switch - To fetch states of all slots."""
 
     def __init__(self, device):

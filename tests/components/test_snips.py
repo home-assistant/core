@@ -5,6 +5,7 @@ import logging
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.mqtt import MQTT_PUBLISH_SCHEMA
 import homeassistant.components.snips as snips
+from homeassistant.helpers.intent import (ServiceIntentHandler, async_register)
 from tests.common import (async_fire_mqtt_message, async_mock_intent,
                           async_mock_service)
 
@@ -92,6 +93,8 @@ async def test_snips_intent(hass, mqtt_mock):
     assert result
     payload = """
     {
+        "siteId": "default",
+        "sessionId": "1234567890ABCDEF",
         "input": "turn the lights green",
         "intent": {
             "intentName": "Lights",
@@ -103,7 +106,8 @@ async def test_snips_intent(hass, mqtt_mock):
                 "value": {
                     "kind": "Custom",
                     "value": "green"
-                }
+                },
+                "rawValue": "green"
             }
         ]
     }
@@ -118,10 +122,57 @@ async def test_snips_intent(hass, mqtt_mock):
     intent = intents[0]
     assert intent.platform == 'snips'
     assert intent.intent_type == 'Lights'
+    assert intent
     assert intent.slots == {'light_color': {'value': 'green'},
+                            'light_color_raw': {'value': 'green'},
                             'probability': {'value': 1},
-                            'site_id': {'value': None}}
+                            'site_id': {'value': 'default'},
+                            'session_id': {'value': '1234567890ABCDEF'}}
     assert intent.text_input == 'turn the lights green'
+
+
+async def test_snips_service_intent(hass, mqtt_mock):
+    """Test ServiceIntentHandler via Snips."""
+    hass.states.async_set('light.kitchen', 'off')
+    calls = async_mock_service(hass, 'light', 'turn_on')
+    result = await async_setup_component(hass, "snips", {
+        "snips": {},
+    })
+    assert result
+    payload = """
+    {
+        "input": "turn the light on",
+        "intent": {
+            "intentName": "Lights",
+            "probability": 0.85
+        },
+        "siteId": "default",
+        "slots": [
+            {
+                "slotName": "name",
+                "value": {
+                    "kind": "Custom",
+                    "value": "kitchen"
+                },
+                "rawValue": "green"
+            }
+        ]
+    }
+    """
+
+    async_register(hass, ServiceIntentHandler(
+        "Lights", "light", 'turn_on', "Turned {} on"))
+
+    async_fire_mqtt_message(hass, 'hermes/intent/Lights',
+                            payload)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].domain == 'light'
+    assert calls[0].service == 'turn_on'
+    assert calls[0].data['entity_id'] == 'light.kitchen'
+    assert 'probability' not in calls[0].data
+    assert 'site_id' not in calls[0].data
 
 
 async def test_snips_intent_with_duration(hass, mqtt_mock):
@@ -173,7 +224,9 @@ async def test_snips_intent_with_duration(hass, mqtt_mock):
     assert intent.intent_type == 'SetTimer'
     assert intent.slots == {'probability': {'value': 1},
                             'site_id': {'value': None},
-                            'timer_duration': {'value': 300}}
+                            'session_id': {'value': None},
+                            'timer_duration': {'value': 300},
+                            'timer_duration_raw': {'value': 'five minutes'}}
 
 
 async def test_intent_speech_response(hass, mqtt_mock):

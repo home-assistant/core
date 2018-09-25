@@ -85,7 +85,7 @@ ABODE_PLATFORMS = [
 ]
 
 
-class AbodeSystem(object):
+class AbodeSystem:
     """Abode System class."""
 
     def __init__(self, username, password, cache,

@@ -60,7 +60,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the SyncThru component."""
     from pysyncthru import SyncThru, test_syncthru
 
@@ -101,7 +101,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if 'output_tray_{}'.format(key) in monitored:
             devices.append(SyncThruOutputTraySensor(printer, name, key))
 
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class SyncThruSensor(Entity):

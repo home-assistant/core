@@ -4,7 +4,6 @@ Support for Clementine Music Player as media player.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.clementine/
 """
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -12,23 +11,23 @@ import time
 
 import voluptuous as vol
 
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, PLATFORM_SCHEMA,
-    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_PLAY, MEDIA_TYPE_MUSIC,
-    SUPPORT_VOLUME_SET, MediaPlayerDevice)
+    MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOURCE,
+    SUPPORT_VOLUME_SET, SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_NAME, CONF_PORT, CONF_ACCESS_TOKEN,
-    STATE_OFF, STATE_PLAYING, STATE_PAUSED, STATE_UNKNOWN)
+    CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, CONF_PORT, STATE_OFF,
+    STATE_PAUSED, STATE_PLAYING)
+import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['python-clementine-remote==1.0.1']
-
-SCAN_INTERVAL = timedelta(seconds=5)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Clementine Remote'
 DEFAULT_PORT = 5500
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 SUPPORT_CLEMENTINE = SUPPORT_PAUSE | SUPPORT_VOLUME_STEP | \
                      SUPPORT_PREVIOUS_TRACK | SUPPORT_VOLUME_SET | \
@@ -43,8 +42,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Clementine platform."""
     from clementineremote import ClementineRemote
     host = config.get(CONF_HOST)
@@ -53,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     client = ClementineRemote(host, port, token, reconnect=True)
 
-    add_devices([ClementineDevice(client, config[CONF_NAME])])
+    add_entities([ClementineDevice(client, config[CONF_NAME])])
 
 
 class ClementineDevice(MediaPlayerDevice):
@@ -70,7 +68,7 @@ class ClementineDevice(MediaPlayerDevice):
         self._track_name = ''
         self._track_artist = ''
         self._track_album_name = ''
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     def update(self):
         """Retrieve the latest data from the Clementine Player."""

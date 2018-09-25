@@ -34,8 +34,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices_callback, discovery_info=None):
+def setup_platform(hass, config, add_entities_callback, discovery_info=None):
     """Set up Kankun Wifi switches."""
     switches = config.get('switches', {})
     devices = []
@@ -51,7 +50,7 @@ def setup_platform(hass, config, add_devices_callback, discovery_info=None):
                 properties.get(CONF_USERNAME, None),
                 properties.get(CONF_PASSWORD)))
 
-    add_devices_callback(devices)
+    add_entities_callback(devices)
 
 
 class KankunSwitch(SwitchDevice):

@@ -4,7 +4,6 @@ Support for Homekit switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.homekit_controller/
 """
-import json
 import logging
 
 from homeassistant.components.homekit_controller import (HomeKitEntity,
@@ -16,11 +15,11 @@ DEPENDENCIES = ['homekit_controller']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Homekit switch support."""
     if discovery_info is not None:
         accessory = hass.data[KNOWN_ACCESSORIES][discovery_info['serial']]
-        add_devices([HomeKitSwitch(accessory, discovery_info)], True)
+        add_entities([HomeKitSwitch(accessory, discovery_info)], True)
 
 
 class HomeKitSwitch(HomeKitEntity, SwitchDevice):
@@ -56,13 +55,11 @@ class HomeKitSwitch(HomeKitEntity, SwitchDevice):
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['on'],
                             'value': True}]
-        body = json.dumps({'characteristics': characteristics})
-        self._securecon.put('/characteristics', body)
+        self.put_characteristics(characteristics)
 
     def turn_off(self, **kwargs):
         """Turn the specified switch off."""
         characteristics = [{'aid': self._aid,
                             'iid': self._chars['on'],
                             'value': False}]
-        body = json.dumps({'characteristics': characteristics})
-        self._securecon.put('/characteristics', body)
+        self.put_characteristics(characteristics)

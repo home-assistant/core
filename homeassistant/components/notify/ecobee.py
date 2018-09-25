@@ -11,7 +11,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components import ecobee
 from homeassistant.components.notify import (
-    BaseNotificationService, PLATFORM_SCHEMA)  # NOQA
+    BaseNotificationService, PLATFORM_SCHEMA)
 
 _LOGGER = logging.getLogger(__name__)
 

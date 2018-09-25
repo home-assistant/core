@@ -1,5 +1,5 @@
 """Test Hue setup process."""
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from homeassistant.setup import async_setup_component
 from homeassistant.components import hue
@@ -8,7 +8,7 @@ from tests.common import mock_coro, MockConfigEntry
 
 
 async def test_setup_with_no_config(hass):
-    """Test that we do not discover anything or try to setup a bridge."""
+    """Test that we do not discover anything or try to set up a bridge."""
     with patch.object(hass, 'config_entries') as mock_config_entries, \
             patch.object(hue, 'configured_hosts', return_value=[]):
         assert await async_setup_component(hass, hue.DOMAIN, {}) is True
@@ -145,9 +145,21 @@ async def test_config_passed_to_config_entry(hass):
         'host': '0.0.0.0',
     })
     entry.add_to_hass(hass)
-
-    with patch.object(hue, 'HueBridge') as mock_bridge:
+    mock_registry = Mock()
+    with patch.object(hue, 'HueBridge') as mock_bridge, \
+        patch('homeassistant.helpers.device_registry.async_get_registry',
+              return_value=mock_coro(mock_registry)):
         mock_bridge.return_value.async_setup.return_value = mock_coro(True)
+        mock_bridge.return_value.api.config = Mock(
+            mac='mock-mac',
+            bridgeid='mock-bridgeid',
+            raw={
+                'modelid': 'mock-modelid',
+                'swversion': 'mock-swversion',
+            }
+        )
+        # Can't set name via kwargs
+        mock_bridge.return_value.api.config.name = 'mock-name'
         assert await async_setup_component(hass, hue.DOMAIN, {
             hue.DOMAIN: {
                 hue.CONF_BRIDGES: {
@@ -168,6 +180,21 @@ async def test_config_passed_to_config_entry(hass):
     assert p_allow_unreachable is True
     assert p_allow_groups is False
 
+    assert len(mock_registry.mock_calls) == 1
+    assert mock_registry.mock_calls[0][2] == {
+        'config_entry_id': entry.entry_id,
+        'connections': {
+            ('mac', 'mock-mac')
+        },
+        'identifiers': {
+            ('hue', 'mock-bridgeid')
+        },
+        'manufacturer': 'Signify',
+        'name': 'mock-name',
+        'model': 'mock-modelid',
+        'sw_version': 'mock-swversion',
+    }
+
 
 async def test_unload_entry(hass):
     """Test being able to unload an entry."""
@@ -176,8 +203,11 @@ async def test_unload_entry(hass):
     })
     entry.add_to_hass(hass)
 
-    with patch.object(hue, 'HueBridge') as mock_bridge:
+    with patch.object(hue, 'HueBridge') as mock_bridge, \
+        patch('homeassistant.helpers.device_registry.async_get_registry',
+              return_value=mock_coro(Mock())):
         mock_bridge.return_value.async_setup.return_value = mock_coro(True)
+        mock_bridge.return_value.api.config = Mock()
         assert await async_setup_component(hass, hue.DOMAIN, {}) is True
 
     assert len(mock_bridge.return_value.mock_calls) == 1

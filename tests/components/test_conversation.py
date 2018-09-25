@@ -89,7 +89,7 @@ async def test_register_before_setup(hass):
     assert intent.text_input == 'I would like the Grolsch beer'
 
 
-async def test_http_processing_intent(hass, test_client):
+async def test_http_processing_intent(hass, aiohttp_client):
     """Test processing intent via HTTP API."""
     class TestIntentHandler(intent.IntentHandler):
         """Test Intent Handler."""
@@ -119,7 +119,7 @@ async def test_http_processing_intent(hass, test_client):
     })
     assert result
 
-    client = await test_client(hass.http.app)
+    client = await aiohttp_client(hass.http.app)
     resp = await client.post('/api/conversation/process', json={
         'text': 'I would like the Grolsch beer'
     })
@@ -243,7 +243,7 @@ async def test_toggle_intent(hass, sentence):
     assert call.data == {'entity_id': 'light.kitchen'}
 
 
-async def test_http_api(hass, test_client):
+async def test_http_api(hass, aiohttp_client):
     """Test the HTTP conversation API."""
     result = await component.async_setup(hass, {})
     assert result
@@ -251,7 +251,7 @@ async def test_http_api(hass, test_client):
     result = await async_setup_component(hass, 'conversation', {})
     assert result
 
-    client = await test_client(hass.http.app)
+    client = await aiohttp_client(hass.http.app)
     hass.states.async_set('light.kitchen', 'off')
     calls = async_mock_service(hass, 'homeassistant', 'turn_on')
 
@@ -267,7 +267,7 @@ async def test_http_api(hass, test_client):
     assert call.data == {'entity_id': 'light.kitchen'}
 
 
-async def test_http_api_wrong_data(hass, test_client):
+async def test_http_api_wrong_data(hass, aiohttp_client):
     """Test the HTTP conversation API."""
     result = await component.async_setup(hass, {})
     assert result
@@ -275,7 +275,7 @@ async def test_http_api_wrong_data(hass, test_client):
     result = await async_setup_component(hass, 'conversation', {})
     assert result
 
-    client = await test_client(hass.http.app)
+    client = await aiohttp_client(hass.http.app)
 
     resp = await client.post('/api/conversation/process', json={
         'text': 123
@@ -290,11 +290,11 @@ async def test_http_api_wrong_data(hass, test_client):
 def test_create_matcher():
     """Test the create matcher method."""
     # Basic sentence
-    pattern = conversation._create_matcher('Hello world')
+    pattern = conversation.create_matcher('Hello world')
     assert pattern.match('Hello world') is not None
 
     # Match a part
-    pattern = conversation._create_matcher('Hello {name}')
+    pattern = conversation.create_matcher('Hello {name}')
     match = pattern.match('hello world')
     assert match is not None
     assert match.groupdict()['name'] == 'world'
@@ -302,7 +302,7 @@ def test_create_matcher():
     assert no_match is None
 
     # Optional and matching part
-    pattern = conversation._create_matcher('Turn on [the] {name}')
+    pattern = conversation.create_matcher('Turn on [the] {name}')
     match = pattern.match('turn on the kitchen lights')
     assert match is not None
     assert match.groupdict()['name'] == 'kitchen lights'
@@ -313,7 +313,7 @@ def test_create_matcher():
     assert match is None
 
     # Two different optional parts, 1 matching part
-    pattern = conversation._create_matcher('Turn on [the] [a] {name}')
+    pattern = conversation.create_matcher('Turn on [the] [a] {name}')
     match = pattern.match('turn on the kitchen lights')
     assert match is not None
     assert match.groupdict()['name'] == 'kitchen lights'
@@ -325,13 +325,13 @@ def test_create_matcher():
     assert match.groupdict()['name'] == 'kitchen light'
 
     # Strip plural
-    pattern = conversation._create_matcher('Turn {name}[s] on')
+    pattern = conversation.create_matcher('Turn {name}[s] on')
     match = pattern.match('turn kitchen lights on')
     assert match is not None
     assert match.groupdict()['name'] == 'kitchen light'
 
     # Optional 2 words
-    pattern = conversation._create_matcher('Turn [the great] {name} on')
+    pattern = conversation.create_matcher('Turn [the great] {name} on')
     match = pattern.match('turn the great kitchen lights on')
     assert match is not None
     assert match.groupdict()['name'] == 'kitchen lights'

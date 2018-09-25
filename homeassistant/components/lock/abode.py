@@ -15,7 +15,7 @@ DEPENDENCIES = ['abode']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up Abode lock devices."""
     import abodepy.helpers.constants as CONST
 
@@ -30,7 +30,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
 
     data.devices.extend(devices)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class AbodeLock(AbodeDevice, LockDevice):

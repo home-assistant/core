@@ -33,8 +33,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the available OctoPrint binary sensors."""
     octoprint_api = hass.data[DOMAIN]["api"]
     name = config.get(CONF_NAME)
@@ -48,7 +47,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             name, SENSOR_TYPES[octo_type][3], SENSOR_TYPES[octo_type][0],
             SENSOR_TYPES[octo_type][1], 'flags')
         devices.append(new_sensor)
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class OctoPrintBinarySensor(BinarySensorDevice):

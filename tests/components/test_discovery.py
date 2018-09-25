@@ -5,7 +5,7 @@ from unittest.mock import patch, MagicMock
 
 import pytest
 
-from homeassistant import data_entry_flow
+from homeassistant import config_entries
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import discovery
 from homeassistant.util.dt import utcnow
@@ -47,7 +47,7 @@ def netdisco_mock():
 
 
 async def mock_discovery(hass, discoveries, config=BASE_CONFIG):
-    """Helper to mock discoveries."""
+    """Mock discoveries."""
     result = await async_setup_component(hass, 'discovery', config)
     assert result
 
@@ -175,5 +175,5 @@ async def test_discover_config_flow(hass):
     assert len(m_init.mock_calls) == 1
     args, kwargs = m_init.mock_calls[0][1:]
     assert args == ('mock-component',)
-    assert kwargs['source'] == data_entry_flow.SOURCE_DISCOVERY
+    assert kwargs['context']['source'] == config_entries.SOURCE_DISCOVERY
     assert kwargs['data'] == discovery_info

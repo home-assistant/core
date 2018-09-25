@@ -40,7 +40,7 @@ SNAP_PICTURE_SCHEMA = vol.Schema({
 })
 
 
-class BlinkSystem(object):
+class BlinkSystem:
     """Blink System class."""
 
     def __init__(self, config_info):

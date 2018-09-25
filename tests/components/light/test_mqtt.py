@@ -140,14 +140,16 @@ light:
 """
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
 import homeassistant.components.light as light
+import homeassistant.core as ha
 from tests.common import (
     assert_setup_component, get_test_home_assistant, mock_mqtt_component,
-    fire_mqtt_message)
+    fire_mqtt_message, mock_coro)
 
 
 class TestLightMQTT(unittest.TestCase):
@@ -156,7 +158,7 @@ class TestLightMQTT(unittest.TestCase):
     # pylint: disable=invalid-name
 
     def setUp(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
@@ -175,8 +177,7 @@ class TestLightMQTT(unittest.TestCase):
             })
         self.assertIsNone(self.hass.states.get('light.test'))
 
-    def test_no_color_brightness_color_temp_white_xy_if_no_topics(self): \
-            # pylint: disable=invalid-name
+    def test_no_color_brightness_color_temp_white_xy_if_no_topics(self):
         """Test if there is no color and brightness if no topic."""
         with assert_setup_component(1, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -207,8 +208,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertIsNone(state.attributes.get('white_value'))
         self.assertIsNone(state.attributes.get('xy_color'))
 
-    def test_controlling_state_via_topic(self): \
-            # pylint: disable=invalid-name
+    def test_controlling_state_via_topic(self):
         """Test the controlling of the state via topic."""
         config = {light.DOMAIN: {
             'platform': 'mqtt',
@@ -408,14 +408,19 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(255,
                          light_state.attributes['white_value'])
 
-    def test_controlling_state_via_topic_with_templates(self): \
-            # pylint: disable=invalid-name
+    def test_controlling_state_via_topic_with_templates(self):
         """Test the setting og the state with a template."""
         config = {light.DOMAIN: {
             'platform': 'mqtt',
             'name': 'test',
             'state_topic': 'test_light_rgb/status',
             'command_topic': 'test_light_rgb/set',
+            'brightness_command_topic': 'test_light_rgb/brightness/set',
+            'rgb_command_topic': 'test_light_rgb/rgb/set',
+            'color_temp_command_topic': 'test_light_rgb/color_temp/set',
+            'effect_command_topic': 'test_light_rgb/effect/set',
+            'white_value_command_topic': 'test_light_rgb/white_value/set',
+            'xy_command_topic': 'test_light_rgb/xy/set',
             'brightness_state_topic': 'test_light_rgb/brightness/status',
             'color_temp_state_topic': 'test_light_rgb/color_temp/status',
             'effect_state_topic': 'test_light_rgb/effect/status',
@@ -464,8 +469,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(75, state.attributes.get('white_value'))
         self.assertEqual((0.14, 0.131), state.attributes.get('xy_color'))
 
-    def test_sending_mqtt_commands_and_optimistic(self): \
-            # pylint: disable=invalid-name
+    def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending of command in optimistic mode."""
         config = {light.DOMAIN: {
             'platform': 'mqtt',
@@ -477,16 +481,28 @@ class TestLightMQTT(unittest.TestCase):
             'effect_command_topic': 'test_light_rgb/effect/set',
             'white_value_command_topic': 'test_light_rgb/white_value/set',
             'xy_command_topic': 'test_light_rgb/xy/set',
+            'effect_list': ['colorloop', 'random'],
             'qos': 2,
             'payload_on': 'on',
             'payload_off': 'off'
         }}
-
-        with assert_setup_component(1, light.DOMAIN):
-            assert setup_component(self.hass, light.DOMAIN, config)
+        fake_state = ha.State('light.test', 'on', {'brightness': 95,
+                                                   'hs_color': [100, 100],
+                                                   'effect': 'random',
+                                                   'color_temp': 100,
+                                                   'white_value': 50})
+        with patch('homeassistant.components.light.mqtt.async_get_last_state',
+                   return_value=mock_coro(fake_state)):
+            with assert_setup_component(1, light.DOMAIN):
+                assert setup_component(self.hass, light.DOMAIN, config)
 
         state = self.hass.states.get('light.test')
-        self.assertEqual(STATE_OFF, state.state)
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(95, state.attributes.get('brightness'))
+        self.assertEqual((100, 100), state.attributes.get('hs_color'))
+        self.assertEqual('random', state.attributes.get('effect'))
+        self.assertEqual(100, state.attributes.get('color_temp'))
+        self.assertEqual(50, state.attributes.get('white_value'))
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
         light.turn_on(self.hass, 'light.test')
@@ -510,24 +526,24 @@ class TestLightMQTT(unittest.TestCase):
         self.mock_publish.reset_mock()
         light.turn_on(self.hass, 'light.test',
                       brightness=50, xy_color=[0.123, 0.123])
-        light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75],
+        light.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 0],
                       white_value=80)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_has_calls([
             mock.call('test_light_rgb/set', 'on', 2, False),
-            mock.call('test_light_rgb/rgb/set', '50,50,50', 2, False),
+            mock.call('test_light_rgb/rgb/set', '255,128,0', 2, False),
             mock.call('test_light_rgb/brightness/set', 50, 2, False),
             mock.call('test_light_rgb/white_value/set', 80, 2, False),
-            mock.call('test_light_rgb/xy/set', '0.323,0.329', 2, False),
+            mock.call('test_light_rgb/xy/set', '0.14,0.131', 2, False),
         ], any_order=True)
 
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
-        self.assertEqual((255, 255, 255), state.attributes['rgb_color'])
+        self.assertEqual((255, 128, 0), state.attributes['rgb_color'])
         self.assertEqual(50, state.attributes['brightness'])
         self.assertEqual(80, state.attributes['white_value'])
-        self.assertEqual((0.323, 0.329), state.attributes['xy_color'])
+        self.assertEqual((0.611, 0.375), state.attributes['xy_color'])
 
     def test_sending_mqtt_rgb_command_with_template(self):
         """Test the sending of RGB command with template."""
@@ -795,11 +811,11 @@ class TestLightMQTT(unittest.TestCase):
 
         # Turn on w/ just a color to insure brightness gets
         # added and sent.
-        light.turn_on(self.hass, 'light.test', rgb_color=[75, 75, 75])
+        light.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 0])
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_has_calls([
-            mock.call('test_light/rgb', '50,50,50', 0, False),
+            mock.call('test_light/rgb', '255,128,0', 0, False),
             mock.call('test_light/bright', 50, 0, False)
         ], any_order=True)
 

@@ -2,25 +2,26 @@
 import unittest
 from unittest.mock import patch
 
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE,\
     ATTR_ASSUMED_STATE
 import homeassistant.core as ha
 import homeassistant.components.switch as switch
 from tests.common import (
-    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant, mock_coro)
+    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant, mock_coro,
+    async_mock_mqtt_component, async_fire_mqtt_message)
 
 
 class TestSwitchMQTT(unittest.TestCase):
     """Test the MQTT switch."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """"Stop everything that was started."""
+        """Stop everything that was started."""
         self.hass.stop()
 
     def test_controlling_state_via_topic(self):
@@ -249,25 +250,59 @@ class TestSwitchMQTT(unittest.TestCase):
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_ON, state.state)
 
-    def test_unique_id(self):
-        """Test unique id option only creates one switch per unique_id."""
+    def test_custom_state_payload(self):
+        """Test the state payload."""
         assert setup_component(self.hass, switch.DOMAIN, {
-            switch.DOMAIN: [{
+            switch.DOMAIN: {
                 'platform': 'mqtt',
-                'name': 'Test 1',
-                'state_topic': 'test-topic',
+                'name': 'test',
+                'state_topic': 'state-topic',
                 'command_topic': 'command-topic',
-                'unique_id': 'TOTALLY_UNIQUE'
-            }, {
-                'platform': 'mqtt',
-                'name': 'Test 2',
-                'state_topic': 'test-topic',
-                'command_topic': 'command-topic',
-                'unique_id': 'TOTALLY_UNIQUE'
-            }]
+                'payload_on': 1,
+                'payload_off': 0,
+                'state_on': "HIGH",
+                'state_off': "LOW",
+            }
         })
 
-        fire_mqtt_message(self.hass, 'test-topic', 'payload')
+        state = self.hass.states.get('switch.test')
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertFalse(state.attributes.get(ATTR_ASSUMED_STATE))
+
+        fire_mqtt_message(self.hass, 'state-topic', 'HIGH')
         self.hass.block_till_done()
-        assert len(self.hass.states.async_entity_ids()) == 2
-        # all switches group is 1, unique id created is 1
+
+        state = self.hass.states.get('switch.test')
+        self.assertEqual(STATE_ON, state.state)
+
+        fire_mqtt_message(self.hass, 'state-topic', 'LOW')
+        self.hass.block_till_done()
+
+        state = self.hass.states.get('switch.test')
+        self.assertEqual(STATE_OFF, state.state)
+
+
+async def test_unique_id(hass):
+    """Test unique id option only creates one switch per unique_id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, switch.DOMAIN, {
+        switch.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'state_topic': 'test-topic',
+            'command_topic': 'command-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'state_topic': 'test-topic',
+            'command_topic': 'command-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 2
+    # all switches group is 1, unique id created is 1

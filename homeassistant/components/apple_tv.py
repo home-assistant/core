@@ -6,7 +6,6 @@ https://home-assistant.io/components/apple_tv/
 """
 import asyncio
 import logging
-
 from typing import Sequence, TypeVar, Union
 
 import voluptuous as vol
@@ -17,7 +16,7 @@ from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['pyatv==0.3.9']
+REQUIREMENTS = ['pyatv==0.3.10']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +44,7 @@ NOTIFICATION_AUTH_TITLE = 'Apple TV Authentication'
 NOTIFICATION_SCAN_ID = 'apple_tv_scan_notification'
 NOTIFICATION_SCAN_TITLE = 'Apple TV Scan'
 
-T = TypeVar('T')
+T = TypeVar('T')  # pylint: disable=invalid-name
 
 
 # This version of ensure_list interprets an empty dict as no value
@@ -218,10 +217,10 @@ def _setup_atv(hass, atv_config):
         ATTR_POWER: power
     }
 
-    hass.async_add_job(discovery.async_load_platform(
+    hass.async_create_task(discovery.async_load_platform(
         hass, 'media_player', DOMAIN, atv_config))
 
-    hass.async_add_job(discovery.async_load_platform(
+    hass.async_create_task(discovery.async_load_platform(
         hass, 'remote', DOMAIN, atv_config))
 
 

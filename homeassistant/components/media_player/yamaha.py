@@ -6,32 +6,45 @@ https://home-assistant.io/components/media_player.yamaha/
 """
 import logging
 
+import requests
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_SELECT_SOURCE, SUPPORT_PLAY_MEDIA, SUPPORT_PAUSE, SUPPORT_STOP,
-    SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK, SUPPORT_PLAY,
-    MEDIA_TYPE_MUSIC, MEDIA_PLAYER_SCHEMA, DOMAIN,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (CONF_NAME, CONF_HOST, STATE_OFF, STATE_ON,
-                                 STATE_PLAYING, STATE_IDLE, ATTR_ENTITY_ID)
+    DOMAIN, MEDIA_PLAYER_SCHEMA, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA,
+    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PREVIOUS_TRACK, SUPPORT_SELECT_SOUND_MODE, SUPPORT_SELECT_SOURCE,
+    SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE,
+    SUPPORT_VOLUME_SET, MediaPlayerDevice)
+from homeassistant.const import (
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, STATE_IDLE, STATE_OFF, STATE_ON,
+    STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['rxv==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
-    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+ATTR_ENABLED = 'enabled'
+ATTR_PORT = 'port'
 
-CONF_SOURCE_NAMES = 'source_names'
 CONF_SOURCE_IGNORE = 'source_ignore'
-CONF_ZONE_NAMES = 'zone_names'
+CONF_SOURCE_NAMES = 'source_names'
 CONF_ZONE_IGNORE = 'zone_ignore'
+CONF_ZONE_NAMES = 'zone_names'
 
-DEFAULT_NAME = 'Yamaha Receiver'
 DATA_YAMAHA = 'yamaha_known_receivers'
+DEFAULT_NAME = "Yamaha Receiver"
+
+ENABLE_OUTPUT_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_ENABLED): cv.boolean,
+    vol.Required(ATTR_PORT): cv.string,
+})
+
+SERVICE_ENABLE_OUTPUT = 'yamaha_enable_output'
+
+SUPPORT_YAMAHA = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
+    SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE | SUPPORT_PLAY \
+    | SUPPORT_SELECT_SOUND_MODE
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -44,18 +57,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_ZONE_NAMES, default={}): {cv.string: cv.string},
 })
 
-SERVICE_ENABLE_OUTPUT = 'yamaha_enable_output'
 
-ATTR_PORT = 'port'
-ATTR_ENABLED = 'enabled'
-
-ENABLE_OUTPUT_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_PORT): cv.string,
-    vol.Required(ATTR_ENABLED): cv.boolean
-})
-
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Yamaha platform."""
     import rxv
     # Keep track of configured receivers so that we don't end up
@@ -80,7 +83,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         receivers = rxv.RXV(
             ctrl_url, model_name=model, friendly_name=name,
             unit_desc_url=desc_url).zone_controllers()
-        _LOGGER.info("Receivers: %s", receivers)
+        _LOGGER.debug("Receivers: %s", receivers)
         # when we are dynamically discovered config is empty
         zone_ignore = []
     elif host is None:
@@ -96,15 +99,15 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if receiver.zone in zone_ignore:
             continue
 
-        device = YamahaDevice(name, receiver, source_ignore,
-                              source_names, zone_names)
+        device = YamahaDevice(
+            name, receiver, source_ignore, source_names, zone_names)
 
         # Only add device if it's not already added
         if device.zone_id not in hass.data[DATA_YAMAHA]:
             hass.data[DATA_YAMAHA][device.zone_id] = device
             devices.append(device)
         else:
-            _LOGGER.debug('Ignoring duplicate receiver %s', name)
+            _LOGGER.debug("Ignoring duplicate receiver: %s", name)
 
     def service_handler(service):
         """Handle for services."""
@@ -124,20 +127,22 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         DOMAIN, SERVICE_ENABLE_OUTPUT, service_handler,
         schema=ENABLE_OUTPUT_SCHEMA)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class YamahaDevice(MediaPlayerDevice):
     """Representation of a Yamaha device."""
 
-    def __init__(self, name, receiver, source_ignore,
-                 source_names, zone_names):
+    def __init__(
+            self, name, receiver, source_ignore, source_names, zone_names):
         """Initialize the Yamaha Receiver."""
         self.receiver = receiver
         self._muted = False
         self._volume = 0
         self._pwstate = STATE_OFF
         self._current_source = None
+        self._sound_mode = None
+        self._sound_mode_list = None
         self._source_list = None
         self._source_ignore = source_ignore or []
         self._source_names = source_names or {}
@@ -151,7 +156,12 @@ class YamahaDevice(MediaPlayerDevice):
 
     def update(self):
         """Get the latest details from the device."""
-        self._play_status = self.receiver.play_status()
+        try:
+            self._play_status = self.receiver.play_status()
+        except requests.exceptions.ConnectionError:
+            _LOGGER.info("Receiver is offline: %s", self._name)
+            return
+
         if self.receiver.on:
             if self._play_status is None:
                 self._pwstate = STATE_ON
@@ -174,6 +184,8 @@ class YamahaDevice(MediaPlayerDevice):
         self._playback_support = self.receiver.get_playback_support()
         self._is_playback_supported = self.receiver.is_playback_supported(
             self._current_source)
+        self._sound_mode = self.receiver.surround_program
+        self._sound_mode_list = self.receiver.surround_programs()
 
     def build_source_list(self):
         """Build the source list."""
@@ -216,13 +228,23 @@ class YamahaDevice(MediaPlayerDevice):
         return self._current_source
 
     @property
+    def sound_mode(self):
+        """Return the current sound mode."""
+        return self._sound_mode
+
+    @property
+    def sound_mode_list(self):
+        """Return the current sound mode."""
+        return self._sound_mode_list
+
+    @property
     def source_list(self):
         """List of available input sources."""
         return self._source_list
 
     @property
     def zone_id(self):
-        """Return an zone_id to ensure 1 media player per zone."""
+        """Return a zone_id to ensure 1 media player per zone."""
         return '{0}:{1}'.format(self.receiver.ctrl_url, self._zone)
 
     @property
@@ -231,11 +253,13 @@ class YamahaDevice(MediaPlayerDevice):
         supported_features = SUPPORT_YAMAHA
 
         supports = self._playback_support
-        mapping = {'play': (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
-                   'pause': SUPPORT_PAUSE,
-                   'stop': SUPPORT_STOP,
-                   'skip_f': SUPPORT_NEXT_TRACK,
-                   'skip_r': SUPPORT_PREVIOUS_TRACK}
+        mapping = {
+            'play': (SUPPORT_PLAY | SUPPORT_PLAY_MEDIA),
+            'pause': SUPPORT_PAUSE,
+            'stop': SUPPORT_STOP,
+            'skip_f': SUPPORT_NEXT_TRACK,
+            'skip_r': SUPPORT_PREVIOUS_TRACK,
+        }
         for attr, feature in mapping.items():
             if getattr(supports, attr, False):
                 supported_features |= feature
@@ -320,6 +344,10 @@ class YamahaDevice(MediaPlayerDevice):
     def enable_output(self, port, enabled):
         """Enable or disable an output port.."""
         self.receiver.enable_output(port, enabled)
+
+    def select_sound_mode(self, sound_mode):
+        """Set Sound Mode for Receiver.."""
+        self.receiver.surround_program = sound_mode
 
     @property
     def media_artist(self):

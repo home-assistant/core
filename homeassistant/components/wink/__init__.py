@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, CONF_EMAIL, CONF_PASSWORD,
+    ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, ATTR_NAME, CONF_EMAIL, CONF_PASSWORD,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON,
     __version__)
 from homeassistant.core import callback
@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.util.json import load_json, save_json
 
-REQUIREMENTS = ['python-wink==1.7.3', 'pubnubsub-handler==1.0.2']
+REQUIREMENTS = ['python-wink==1.10.1', 'pubnubsub-handler==1.0.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +45,6 @@ ATTR_ACCESS_TOKEN = 'access_token'
 ATTR_REFRESH_TOKEN = 'refresh_token'
 ATTR_CLIENT_ID = 'client_id'
 ATTR_CLIENT_SECRET = 'client_secret'
-ATTR_NAME = 'name'
 ATTR_PAIRING_MODE = 'pairing_mode'
 ATTR_KIDDE_RADIO_CODE = 'kidde_radio_code'
 ATTR_HUB_NAME = 'hub_name'
@@ -53,7 +52,8 @@ ATTR_HUB_NAME = 'hub_name'
 WINK_AUTH_CALLBACK_PATH = '/auth/wink/callback'
 WINK_AUTH_START = '/auth/wink'
 WINK_CONFIG_FILE = '.wink.conf'
-USER_AGENT = "Manufacturer/Home-Assistant%s python/3 Wink/3" % __version__
+USER_AGENT = "Manufacturer/Home-Assistant{} python/3 Wink/3".format(
+    __version__)
 
 DEFAULT_CONFIG = {
     'client_id': 'CLIENT_ID_HERE',
@@ -73,11 +73,25 @@ SERVICE_SET_AUTO_SHUTOFF = "siren_set_auto_shutoff"
 SERVICE_SIREN_STROBE_ENABLED = "set_siren_strobe_enabled"
 SERVICE_CHIME_STROBE_ENABLED = "set_chime_strobe_enabled"
 SERVICE_ENABLE_SIREN = "enable_siren"
+SERVICE_SET_DIAL_CONFIG = "set_nimbus_dial_configuration"
+SERVICE_SET_DIAL_STATE = "set_nimbus_dial_state"
 
 ATTR_VOLUME = "volume"
 ATTR_TONE = "tone"
 ATTR_ENABLED = "enabled"
 ATTR_AUTO_SHUTOFF = "auto_shutoff"
+ATTR_MIN_VALUE = "min_value"
+ATTR_MAX_VALUE = "max_value"
+ATTR_ROTATION = "rotation"
+ATTR_SCALE = "scale"
+ATTR_TICKS = "ticks"
+ATTR_MIN_POSITION = "min_position"
+ATTR_MAX_POSITION = "max_position"
+ATTR_VALUE = "value"
+ATTR_LABELS = "labels"
+
+SCALES = ["linear", "log"]
+ROTATIONS = ["cw", "ccw"]
 
 VOLUMES = ["low", "medium", "high"]
 TONES = ["doorbell", "fur_elise", "doorbell_extended", "alert",
@@ -145,6 +159,23 @@ ENABLED_SIREN_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENABLED): cv.boolean
 })
 
+DIAL_CONFIG_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Optional(ATTR_MIN_VALUE): vol.Coerce(int),
+    vol.Optional(ATTR_MAX_VALUE): vol.Coerce(int),
+    vol.Optional(ATTR_MIN_POSITION): cv.positive_int,
+    vol.Optional(ATTR_MAX_POSITION): cv.positive_int,
+    vol.Optional(ATTR_ROTATION): vol.In(ROTATIONS),
+    vol.Optional(ATTR_SCALE): vol.In(SCALES),
+    vol.Optional(ATTR_TICKS): cv.positive_int
+})
+
+DIAL_STATE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required(ATTR_VALUE): vol.Coerce(int),
+    vol.Optional(ATTR_LABELS): cv.ensure_list(cv.string)
+})
+
 WINK_COMPONENTS = [
     'binary_sensor', 'sensor', 'light', 'switch', 'lock', 'cover', 'climate',
     'fan', 'alarm_control_panel', 'scene'
@@ -173,10 +204,9 @@ def _request_app_setup(hass, config):
                        ATTR_CLIENT_SECRET: client_secret})
             setup(hass, config)
             return
-        else:
-            error_msg = "Your input was invalid. Please try again."
-            _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
-            configurator.notify_errors(_configurator, error_msg)
+        error_msg = "Your input was invalid. Please try again."
+        _configurator = hass.data[DOMAIN]['configuring'][DOMAIN]
+        configurator.notify_errors(_configurator, error_msg)
 
     start_url = "{}{}".format(hass.config.api.base_url,
                               WINK_AUTH_CALLBACK_PATH)
@@ -210,7 +240,6 @@ def _request_oauth_completion(hass, config):
             "Failed to register, please try again.")
         return
 
-    # pylint: disable=unused-argument
     def wink_configuration_callback(callback_data):
         """Call setup again."""
         setup(hass, config)
@@ -434,8 +463,23 @@ def setup(hass, config):
             DOMAIN, SERVICE_SET_PAIRING_MODE, set_pairing_mode,
             schema=SET_PAIRING_MODE_SCHEMA)
 
-    def service_handle(service):
-        """Handle services."""
+    def nimbus_service_handle(service):
+        """Handle nimbus services."""
+        entity_id = service.data.get('entity_id')[0]
+        _all_dials = []
+        for sensor in hass.data[DOMAIN]['entities']['sensor']:
+            if isinstance(sensor, WinkNimbusDialDevice):
+                _all_dials.append(sensor)
+        for _dial in _all_dials:
+            if _dial.entity_id == entity_id:
+                if service.service == SERVICE_SET_DIAL_CONFIG:
+                    _dial.set_configuration(**service.data)
+                if service.service == SERVICE_SET_DIAL_STATE:
+                    _dial.wink.set_state(service.data.get("value"),
+                                         service.data.get("labels"))
+
+    def siren_service_handle(service):
+        """Handle siren services."""
         entity_ids = service.data.get('entity_id')
         all_sirens = []
         for switch in hass.data[DOMAIN]['entities']['switch']:
@@ -453,7 +497,7 @@ def setup(hass, config):
             _man = siren.wink.device_manufacturer()
             if (service.service != SERVICE_SET_AUTO_SHUTOFF and
                     service.service != SERVICE_ENABLE_SIREN and
-                    (_man != 'dome' and _man != 'wink')):
+                    _man not in ('dome', 'wink')):
                 _LOGGER.error("Service only valid for Dome or Wink sirens")
                 return
 
@@ -488,7 +532,7 @@ def setup(hass, config):
     has_dome_or_wink_siren = False
     for siren in pywink.get_sirens():
         _man = siren.device_manufacturer()
-        if _man == "dome" or _man == "wink":
+        if _man in ("dome", "wink"):
             has_dome_or_wink_siren = True
         _id = siren.object_id() + siren.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
@@ -497,40 +541,67 @@ def setup(hass, config):
     if sirens:
 
         hass.services.register(DOMAIN, SERVICE_SET_AUTO_SHUTOFF,
-                               service_handle,
+                               siren_service_handle,
                                schema=SET_AUTO_SHUTOFF_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_ENABLE_SIREN,
-                               service_handle,
+                               siren_service_handle,
                                schema=ENABLED_SIREN_SCHEMA)
 
     if has_dome_or_wink_siren:
 
         hass.services.register(DOMAIN, SERVICE_SET_SIREN_TONE,
-                               service_handle,
+                               siren_service_handle,
                                schema=SET_SIREN_TONE_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_ENABLE_CHIME,
-                               service_handle,
+                               siren_service_handle,
                                schema=SET_CHIME_MODE_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_SET_SIREN_VOLUME,
-                               service_handle,
+                               siren_service_handle,
                                schema=SET_VOLUME_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_SET_CHIME_VOLUME,
-                               service_handle,
+                               siren_service_handle,
                                schema=SET_VOLUME_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_SIREN_STROBE_ENABLED,
-                               service_handle,
+                               siren_service_handle,
                                schema=SET_STROBE_ENABLED_SCHEMA)
 
         hass.services.register(DOMAIN, SERVICE_CHIME_STROBE_ENABLED,
-                               service_handle,
+                               siren_service_handle,
                                schema=SET_STROBE_ENABLED_SCHEMA)
 
     component.add_entities(sirens)
+
+    nimbi = []
+    dials = {}
+    all_nimbi = pywink.get_cloud_clocks()
+    all_dials = []
+    for nimbus in all_nimbi:
+        if nimbus.object_type() == "cloud_clock":
+            nimbi.append(nimbus)
+            dials[nimbus.object_id()] = []
+    for nimbus in all_nimbi:
+        if nimbus.object_type() == "dial":
+            dials[nimbus.parent_id()].append(nimbus)
+
+    for nimbus in nimbi:
+        for dial in dials[nimbus.object_id()]:
+            all_dials.append(WinkNimbusDialDevice(nimbus, dial, hass))
+
+    if nimbi:
+        hass.services.register(DOMAIN, SERVICE_SET_DIAL_CONFIG,
+                               nimbus_service_handle,
+                               schema=DIAL_CONFIG_SCHEMA)
+
+        hass.services.register(DOMAIN, SERVICE_SET_DIAL_STATE,
+                               nimbus_service_handle,
+                               schema=DIAL_STATE_SCHEMA)
+
+    component.add_entities(all_dials)
 
     return True
 
@@ -598,6 +669,7 @@ class WinkDevice(Entity):
                                                self.wink.name())
 
     def _pubnub_update(self, message):
+        _LOGGER.debug(message)
         try:
             if message is None:
                 _LOGGER.error("Error on pubnub update for %s "
@@ -742,3 +814,70 @@ class WinkSirenDevice(WinkDevice):
             attributes["chime_mode"] = chime_mode
 
         return attributes
+
+
+class WinkNimbusDialDevice(WinkDevice):
+    """Representation of the Quirky Nimbus device."""
+
+    def __init__(self, nimbus, dial, hass):
+        """Initialize the Nimbus dial."""
+        super().__init__(dial, hass)
+        self.parent = nimbus
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Call when entity is added to hass."""
+        self.hass.data[DOMAIN]['entities']['sensor'].append(self)
+
+    @property
+    def state(self):
+        """Return dials current value."""
+        return self.wink.state()
+
+    @property
+    def name(self):
+        """Return the name of the device."""
+        return self.parent.name() + " dial " + str(self.wink.index() + 1)
+
+    @property
+    def device_state_attributes(self):
+        """Return the device state attributes."""
+        attributes = super(WinkNimbusDialDevice, self).device_state_attributes
+        dial_attributes = self.dial_attributes()
+
+        return {**attributes, **dial_attributes}
+
+    def dial_attributes(self):
+        """Return the dial only attributes."""
+        return {
+            "labels": self.wink.labels(),
+            "position": self.wink.position(),
+            "rotation": self.wink.rotation(),
+            "max_value": self.wink.max_value(),
+            "min_value": self.wink.min_value(),
+            "num_ticks": self.wink.ticks(),
+            "scale_type": self.wink.scale(),
+            "max_position": self.wink.max_position(),
+            "min_position": self.wink.min_position()
+        }
+
+    def set_configuration(self, **kwargs):
+        """
+        Set the dial config.
+
+        Anything not sent will default to current setting.
+        """
+        attributes = {**self.dial_attributes(), **kwargs}
+
+        min_value = attributes["min_value"]
+        max_value = attributes["max_value"]
+        rotation = attributes["rotation"]
+        ticks = attributes["num_ticks"]
+        scale = attributes["scale_type"]
+        min_position = attributes["min_position"]
+        max_position = attributes["max_position"]
+
+        self.wink.set_configuration(min_value, max_value, rotation,
+                                    scale=scale, ticks=ticks,
+                                    min_position=min_position,
+                                    max_position=max_position)

@@ -10,15 +10,14 @@ import os
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_BATTERY
-from homeassistant.helpers.entity import Entity
+from homeassistant.const import ATTR_NAME, CONF_NAME, DEVICE_CLASS_BATTERY
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['batinfo==0.4.2']
 
 _LOGGER = logging.getLogger(__name__)
 
-ATTR_NAME = 'name'
 ATTR_PATH = 'path'
 ATTR_ALARM = 'alarm'
 ATTR_CAPACITY = 'capacity'
@@ -55,7 +54,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Linux Battery sensor."""
     name = config.get(CONF_NAME)
     battery_id = config.get(CONF_BATTERY)
@@ -70,7 +69,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         _LOGGER.error("No battery found")
         return False
 
-    add_devices([LinuxBatterySensor(name, battery_id, system)], True)
+    add_entities([LinuxBatterySensor(name, battery_id, system)], True)
 
 
 class LinuxBatterySensor(Entity):

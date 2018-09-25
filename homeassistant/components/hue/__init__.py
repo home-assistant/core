@@ -9,15 +9,17 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant import config_entries
 from homeassistant.const import CONF_FILENAME, CONF_HOST
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client, config_validation as cv, device_registry as dr)
 
 from .const import DOMAIN, API_NUPNP
 from .bridge import HueBridge
 # Loading the config flow file will register the flow
 from .config_flow import configured_hosts
 
-REQUIREMENTS = ['aiohue==1.3.0']
+REQUIREMENTS = ['aiohue==1.5.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +109,8 @@ async def async_setup(hass, config):
         # deadlock: creating a config entry will set up the component but the
         # setup would block till the entry is created!
         hass.async_add_job(hass.config_entries.flow.async_init(
-            DOMAIN, source='import', data={
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT},
+            data={
                 'host': bridge_conf[CONF_HOST],
                 'path': bridge_conf[CONF_FILENAME],
             }
@@ -130,7 +133,28 @@ async def async_setup_entry(hass, entry):
 
     bridge = HueBridge(hass, entry, allow_unreachable, allow_groups)
     hass.data[DOMAIN][host] = bridge
-    return await bridge.async_setup()
+
+    if not await bridge.async_setup():
+        return False
+
+    config = bridge.api.config
+    device_registry = await dr.async_get_registry(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={
+            (dr.CONNECTION_NETWORK_MAC, config.mac)
+        },
+        identifiers={
+            (DOMAIN, config.bridgeid)
+        },
+        manufacturer='Signify',
+        name=config.name,
+        # Not yet exposed as properties in aiohue
+        model=config.raw['modelid'],
+        sw_version=config.raw['swversion'],
+    )
+
+    return True
 
 
 async def async_unload_entry(hass, entry):

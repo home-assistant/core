@@ -20,7 +20,7 @@ class TestTemplateLight:
     # pylint: disable=invalid-name
 
     def setup_method(self, method):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.calls = []
 
@@ -36,7 +36,7 @@ class TestTemplateLight:
         self.hass.stop()
 
     def test_template_state_text(self):
-        """"Test the state text of a template."""
+        """Test the state text of a template."""
         with assert_setup_component(1, 'light'):
             assert setup.setup_component(self.hass, 'light', {
                 'light': {

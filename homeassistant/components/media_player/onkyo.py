@@ -12,10 +12,10 @@ from typing import List  # noqa: F401
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_SELECT_SOURCE,
     SUPPORT_TURN_OFF, SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP, SUPPORT_SELECT_SOURCE, SUPPORT_PLAY,
-    MediaPlayerDevice, PLATFORM_SCHEMA)
-from homeassistant.const import (STATE_OFF, STATE_ON, CONF_HOST, CONF_NAME)
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
+from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['onkyo-eiscp==1.2.4']
@@ -30,14 +30,19 @@ SUPPORTED_MAX_VOLUME = 80
 
 SUPPORT_ONKYO = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
     SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
-    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA
+
+SUPPORT_ONKYO_WO_VOLUME = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \
+    SUPPORT_SELECT_SOURCE | SUPPORT_PLAY | SUPPORT_PLAY_MEDIA
 
 KNOWN_HOSTS = []  # type: List[str]
 DEFAULT_SOURCES = {'tv': 'TV', 'bd': 'Bluray', 'game': 'Game', 'aux1': 'Aux1',
                    'video1': 'Video 1', 'video2': 'Video 2',
                    'video3': 'Video 3', 'video4': 'Video 4',
                    'video5': 'Video 5', 'video6': 'Video 6',
-                   'video7': 'Video 7'}
+                   'video7': 'Video 7', 'fm': 'Radio'}
+
+DEFAULT_PLAYABLE_SOURCES = ("fm", "am", "tuner")
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_HOST): cv.string,
@@ -77,7 +82,7 @@ def determine_zones(receiver):
     return out
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Onkyo platform."""
     import eiscp
     from eiscp import eISCP
@@ -119,7 +124,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             if receiver.host not in KNOWN_HOSTS:
                 hosts.append(OnkyoDevice(receiver, config.get(CONF_SOURCES)))
                 KNOWN_HOSTS.append(receiver.host)
-    add_devices(hosts, True)
+    add_entities(hosts, True)
 
 
 class OnkyoDevice(MediaPlayerDevice):
@@ -263,6 +268,13 @@ class OnkyoDevice(MediaPlayerDevice):
             source = self._reverse_mapping[source]
         self.command('input-selector {}'.format(source))
 
+    def play_media(self, media_type, media_id, **kwargs):
+        """Play radio station by preset number."""
+        source = self._reverse_mapping[self._current_source]
+        if (media_type.lower() == 'radio' and
+                source in DEFAULT_PLAYABLE_SOURCES):
+            self.command('preset {}'.format(media_id))
+
 
 class OnkyoDeviceZone(OnkyoDevice):
     """Representation of an Onkyo device's extra zone."""
@@ -270,7 +282,8 @@ class OnkyoDeviceZone(OnkyoDevice):
     def __init__(self, zone, receiver, sources, name=None):
         """Initialize the Zone with the zone identifier."""
         self._zone = zone
-        super().__init__(receiver, sources, name)
+        self._supports_volume = True
+        super(OnkyoDeviceZone, self).__init__(receiver, sources, name)
 
     def update(self):
         """Get the latest state from the device."""
@@ -289,8 +302,17 @@ class OnkyoDeviceZone(OnkyoDevice):
         current_source_raw = self.command(
             'zone{}.selector=query'.format(self._zone))
 
+        # If we received a source value, but not a volume value
+        # it's likely this zone permanently does not support volume.
+        if current_source_raw and not volume_raw:
+            self._supports_volume = False
+
         if not (volume_raw and mute_raw and current_source_raw):
             return
+
+        # It's possible for some players to have zones set to HDMI with
+        # no sound control. In this case, the string `N/A` is returned.
+        self._supports_volume = isinstance(volume_raw[1], (float, int))
 
         # eiscp can return string or tuple. Make everything tuples.
         if isinstance(current_source_raw[1], str):
@@ -307,7 +329,16 @@ class OnkyoDeviceZone(OnkyoDevice):
                 self._current_source = '_'.join(
                     [i for i in current_source_tuples[1]])
         self._muted = bool(mute_raw[1] == 'on')
-        self._volume = volume_raw[1] / 80.0
+
+        if self._supports_volume:
+            self._volume = volume_raw[1] / 80.0
+
+    @property
+    def supported_features(self):
+        """Return media player features that are supported."""
+        if self._supports_volume:
+            return SUPPORT_ONKYO
+        return SUPPORT_ONKYO_WO_VOLUME
 
     def turn_off(self):
         """Turn the media player off."""

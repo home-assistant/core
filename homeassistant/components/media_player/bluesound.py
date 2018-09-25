@@ -24,8 +24,8 @@ from homeassistant.components.media_player import (
     MediaPlayerDevice)
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_HOST, CONF_HOSTS, CONF_NAME, CONF_PORT,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE,
-    STATE_OFF, STATE_PAUSED, STATE_PLAYING)
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
+    STATE_PAUSED, STATE_PLAYING)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -88,7 +88,7 @@ SERVICE_TO_METHOD = {
 }
 
 
-def _add_player(hass, async_add_devices, host, port=None, name=None):
+def _add_player(hass, async_add_entities, host, port=None, name=None):
     """Add Bluesound players."""
     if host in [x.host for x in hass.data[DATA_BLUESOUND]]:
         return
@@ -111,7 +111,7 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
     @callback
     def _add_player_cb():
         """Add player after first sync fetch."""
-        async_add_devices([player])
+        async_add_entities([player])
         _LOGGER.info("Added device with name: %s", player.name)
 
         if hass.is_running:
@@ -132,13 +132,13 @@ def _add_player(hass, async_add_devices, host, port=None, name=None):
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Bluesound platforms."""
     if DATA_BLUESOUND not in hass.data:
         hass.data[DATA_BLUESOUND] = []
 
     if discovery_info:
-        _add_player(hass, async_add_devices, discovery_info.get(CONF_HOST),
+        _add_player(hass, async_add_entities, discovery_info.get(CONF_HOST),
                     discovery_info.get(CONF_PORT, None))
         return
 
@@ -146,7 +146,7 @@ async def async_setup_platform(
     if hosts:
         for host in hosts:
             _add_player(
-                hass, async_add_devices, host.get(CONF_HOST),
+                hass, async_add_entities, host.get(CONF_HOST),
                 host.get(CONF_PORT), host.get(CONF_NAME))
 
     async def async_service_handler(service):
@@ -216,12 +216,8 @@ class BluesoundPlayer(MediaPlayerDevice):
     async def force_update_sync_status(
             self, on_updated_cb=None, raise_timeout=False):
         """Update the internal status."""
-        resp = None
-        try:
-            resp = await self.send_bluesound_command(
-                'SyncStatus', raise_timeout, raise_timeout)
-        except Exception:
-            raise
+        resp = await self.send_bluesound_command(
+            'SyncStatus', raise_timeout, raise_timeout)
 
         if not resp:
             return None
@@ -333,10 +329,10 @@ class BluesoundPlayer(MediaPlayerDevice):
 
             if response.status == 200:
                 result = await response.text()
-                if len(result) < 1:
-                    data = None
-                else:
+                if result:
                     data = xmltodict.parse(result)
+                else:
+                    data = None
             elif response.status == 595:
                 _LOGGER.info("Status 595 returned, treating as timeout")
                 raise BluesoundPlayer._TimeoutException()
@@ -528,9 +524,9 @@ class BluesoundPlayer(MediaPlayerDevice):
             return STATE_GROUPED
 
         status = self._status.get('state', None)
-        if status == 'pause' or status == 'stop':
+        if status in ('pause', 'stop'):
             return STATE_PAUSED
-        elif status == 'stream' or status == 'play':
+        if status in ('stream', 'play'):
             return STATE_PLAYING
         return STATE_IDLE
 
@@ -640,7 +636,7 @@ class BluesoundPlayer(MediaPlayerDevice):
         volume = self.volume_level
         if not volume:
             return None
-        return volume < 0.001 and volume >= 0
+        return 0 <= volume < 0.001
 
     @property
     def name(self):
@@ -847,12 +843,12 @@ class BluesoundPlayer(MediaPlayerDevice):
 
         items = [x for x in self._preset_items if x['title'] == source]
 
-        if len(items) < 1:
+        if not items:
             items = [x for x in self._services_items if x['title'] == source]
-        if len(items) < 1:
+        if not items:
             items = [x for x in self._capture_items if x['title'] == source]
 
-        if len(items) < 1:
+        if not items:
             return
 
         selected_source = items[0]
@@ -974,6 +970,5 @@ class BluesoundPlayer(MediaPlayerDevice):
             if volume > 0:
                 self._lastvol = volume
             return await self.send_bluesound_command('Volume?level=0')
-        else:
-            return await self.send_bluesound_command(
-                'Volume?level=' + str(float(self._lastvol) * 100))
+        return await self.send_bluesound_command(
+            'Volume?level=' + str(float(self._lastvol) * 100))

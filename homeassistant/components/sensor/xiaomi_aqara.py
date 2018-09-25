@@ -18,7 +18,7 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
@@ -41,7 +41,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             elif device['model'] in ['gateway', 'gateway.v3', 'acpartner.v3']:
                 devices.append(XiaomiSensor(device, 'Illumination',
                                             'illumination', gateway))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class XiaomiSensor(XiaomiDevice):
@@ -91,9 +91,9 @@ class XiaomiSensor(XiaomiDevice):
             value = max(value - 300, 0)
         if self._data_key == 'temperature' and (value < -50 or value > 60):
             return False
-        elif self._data_key == 'humidity' and (value <= 0 or value > 100):
+        if self._data_key == 'humidity' and (value <= 0 or value > 100):
             return False
-        elif self._data_key == 'pressure' and value == 0:
+        if self._data_key == 'pressure' and value == 0:
             return False
         self._state = round(value, 1)
         return True

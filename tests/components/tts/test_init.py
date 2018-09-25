@@ -29,11 +29,11 @@ def mutagen_mock():
         yield
 
 
-class TestTTS(object):
+class TestTTS:
     """Test the Google speech component."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.demo_provider = DemoProvider('en')
         self.default_tts_cache = self.hass.config.path(tts.DEFAULT_CACHE_DIR)
@@ -44,13 +44,13 @@ class TestTTS(object):
 
     def teardown_method(self):
         """Stop everything that was started."""
+        self.hass.stop()
+
         if os.path.isdir(self.default_tts_cache):
             shutil.rmtree(self.default_tts_cache)
 
-        self.hass.stop()
-
     def test_setup_component_demo(self):
-        """Setup the demo platform with defaults."""
+        """Set up the demo platform with defaults."""
         config = {
             tts.DOMAIN: {
                 'platform': 'demo',
@@ -65,7 +65,7 @@ class TestTTS(object):
 
     @patch('os.mkdir', side_effect=OSError(2, "No access"))
     def test_setup_component_demo_no_access_cache_folder(self, mock_mkdir):
-        """Setup the demo platform with defaults."""
+        """Set up the demo platform with defaults."""
         config = {
             tts.DOMAIN: {
                 'platform': 'demo',
@@ -78,7 +78,7 @@ class TestTTS(object):
         assert not self.hass.services.has_service(tts.DOMAIN, 'clear_cache')
 
     def test_setup_component_and_test_service(self):
-        """Setup the demo platform and call service."""
+        """Set up the demo platform and call service."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -97,16 +97,15 @@ class TestTTS(object):
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
-            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
-            "_en_-_demo.mp3") \
-            != -1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID] == \
+            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" \
+            "_en_-_demo.mp3".format(self.hass.config.api.base_url)
         assert os.path.isfile(os.path.join(
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3"))
 
     def test_setup_component_and_test_service_with_config_language(self):
-        """Setup the demo platform and call service."""
+        """Set up the demo platform and call service."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -126,16 +125,15 @@ class TestTTS(object):
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
-            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
-            "_de_-_demo.mp3") \
-            != -1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID] == \
+            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" \
+            "_de_-_demo.mp3".format(self.hass.config.api.base_url)
         assert os.path.isfile(os.path.join(
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_de_-_demo.mp3"))
 
     def test_setup_component_and_test_service_with_wrong_conf_language(self):
-        """Setup the demo platform and call service with wrong config."""
+        """Set up the demo platform and call service with wrong config."""
         config = {
             tts.DOMAIN: {
                 'platform': 'demo',
@@ -147,7 +145,7 @@ class TestTTS(object):
             setup_component(self.hass, tts.DOMAIN, config)
 
     def test_setup_component_and_test_service_with_service_language(self):
-        """Setup the demo platform and call service."""
+        """Set up the demo platform and call service."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -167,16 +165,15 @@ class TestTTS(object):
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
-            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
-            "_de_-_demo.mp3") \
-            != -1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID] == \
+            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" \
+            "_de_-_demo.mp3".format(self.hass.config.api.base_url)
         assert os.path.isfile(os.path.join(
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_de_-_demo.mp3"))
 
     def test_setup_component_test_service_with_wrong_service_language(self):
-        """Setup the demo platform and call service."""
+        """Set up the demo platform and call service."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -200,7 +197,7 @@ class TestTTS(object):
             "265944c108cbb00b2a621be5930513e03a0bb2cd_lang_-_demo.mp3"))
 
     def test_setup_component_and_test_service_with_service_options(self):
-        """Setup the demo platform and call service with options."""
+        """Set up the demo platform and call service with options."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -225,10 +222,9 @@ class TestTTS(object):
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
-            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
-            "_de_{0}_demo.mp3".format(opt_hash)) \
-            != -1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID] == \
+            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" \
+            "_de_{}_demo.mp3".format(self.hass.config.api.base_url, opt_hash)
         assert os.path.isfile(os.path.join(
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_de_{0}_demo.mp3".format(
@@ -237,7 +233,7 @@ class TestTTS(object):
     @patch('homeassistant.components.tts.demo.DemoProvider.default_options',
            new_callable=PropertyMock(return_value={'voice': 'alex'}))
     def test_setup_component_and_test_with_service_options_def(self, def_mock):
-        """Setup the demo platform and call service with default options."""
+        """Set up the demo platform and call service with default options."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -259,17 +255,16 @@ class TestTTS(object):
 
         assert len(calls) == 1
         assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
-            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
-            "_de_{0}_demo.mp3".format(opt_hash)) \
-            != -1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID] == \
+            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" \
+            "_de_{}_demo.mp3".format(self.hass.config.api.base_url, opt_hash)
         assert os.path.isfile(os.path.join(
             self.default_tts_cache,
             "265944c108cbb00b2a621be5930513e03a0bb2cd_de_{0}_demo.mp3".format(
                 opt_hash)))
 
     def test_setup_component_and_test_service_with_service_options_wrong(self):
-        """Setup the demo platform and call service with wrong options."""
+        """Set up the demo platform and call service with wrong options."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -298,8 +293,34 @@ class TestTTS(object):
             "265944c108cbb00b2a621be5930513e03a0bb2cd_de_{0}_demo.mp3".format(
                 opt_hash)))
 
+    def test_setup_component_and_test_service_with_base_url_set(self):
+        """Set up the demo platform with ``base_url`` set and call service."""
+        calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+
+        config = {
+            tts.DOMAIN: {
+                'platform': 'demo',
+                'base_url': 'http://fnord',
+            }
+        }
+
+        with assert_setup_component(1, tts.DOMAIN):
+            setup_component(self.hass, tts.DOMAIN, config)
+
+        self.hass.services.call(tts.DOMAIN, 'demo_say', {
+            tts.ATTR_MESSAGE: "I person is on front of your door.",
+        })
+        self.hass.block_till_done()
+
+        assert len(calls) == 1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_TYPE] == MEDIA_TYPE_MUSIC
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID] == \
+            "http://fnord" \
+            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" \
+            "_en_-_demo.mp3"
+
     def test_setup_component_and_test_service_clear_cache(self):
-        """Setup the demo platform and call service clear cache."""
+        """Set up the demo platform and call service clear cache."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -329,7 +350,7 @@ class TestTTS(object):
             "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3"))
 
     def test_setup_component_and_test_service_with_receive_voice(self):
-        """Setup the demo platform and call service and receive voice."""
+        """Set up the demo platform and call service and receive voice."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -359,7 +380,7 @@ class TestTTS(object):
         assert req.content == demo_data
 
     def test_setup_component_and_test_service_with_receive_voice_german(self):
-        """Setup the demo platform and call service and receive voice."""
+        """Set up the demo platform and call service and receive voice."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -390,7 +411,7 @@ class TestTTS(object):
         assert req.content == demo_data
 
     def test_setup_component_and_web_view_wrong_file(self):
-        """Setup the demo platform and receive wrong file from web."""
+        """Set up the demo platform and receive wrong file from web."""
         config = {
             tts.DOMAIN: {
                 'platform': 'demo',
@@ -409,7 +430,7 @@ class TestTTS(object):
         assert req.status_code == 404
 
     def test_setup_component_and_web_view_wrong_filename(self):
-        """Setup the demo platform and receive wrong filename from web."""
+        """Set up the demo platform and receive wrong filename from web."""
         config = {
             tts.DOMAIN: {
                 'platform': 'demo',
@@ -428,7 +449,7 @@ class TestTTS(object):
         assert req.status_code == 404
 
     def test_setup_component_test_without_cache(self):
-        """Setup demo platform without cache."""
+        """Set up demo platform without cache."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -452,7 +473,7 @@ class TestTTS(object):
             "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3"))
 
     def test_setup_component_test_with_cache_call_service_without_cache(self):
-        """Setup demo platform with cache and call service without cache."""
+        """Set up demo platform with cache and call service without cache."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -477,7 +498,7 @@ class TestTTS(object):
             "265944c108cbb00b2a621be5930513e03a0bb2cd_en_-_demo.mp3"))
 
     def test_setup_component_test_with_cache_dir(self):
-        """Setup demo platform with cache and call service without cache."""
+        """Set up demo platform with cache and call service without cache."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         _, demo_data = self.demo_provider.get_tts_audio("bla", 'en')
@@ -507,15 +528,14 @@ class TestTTS(object):
         self.hass.block_till_done()
 
         assert len(calls) == 1
-        assert calls[0].data[ATTR_MEDIA_CONTENT_ID].find(
-            "/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd"
-            "_en_-_demo.mp3") \
-            != -1
+        assert calls[0].data[ATTR_MEDIA_CONTENT_ID] == \
+            "{}/api/tts_proxy/265944c108cbb00b2a621be5930513e03a0bb2cd" \
+            "_en_-_demo.mp3".format(self.hass.config.api.base_url)
 
     @patch('homeassistant.components.tts.demo.DemoProvider.get_tts_audio',
            return_value=(None, None))
     def test_setup_component_test_with_error_on_get_tts(self, tts_mock):
-        """Setup demo platform with wrong get_tts_audio."""
+        """Set up demo platform with wrong get_tts_audio."""
         calls = mock_service(self.hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
 
         config = {
@@ -535,7 +555,7 @@ class TestTTS(object):
         assert len(calls) == 0
 
     def test_setup_component_load_cache_retrieve_without_mem_cache(self):
-        """Setup component and load cache and get without mem cache."""
+        """Set up component and load cache and get without mem cache."""
         _, demo_data = self.demo_provider.get_tts_audio("bla", 'en')
         cache_file = os.path.join(
             self.default_tts_cache,
@@ -565,7 +585,7 @@ class TestTTS(object):
         assert req.content == demo_data
 
     def test_setup_component_and_web_get_url(self):
-        """Setup the demo platform and receive wrong file from web."""
+        """Set up the demo platform and receive wrong file from web."""
         config = {
             tts.DOMAIN: {
                 'platform': 'demo',
@@ -589,7 +609,7 @@ class TestTTS(object):
                                        .format(self.hass.config.api.base_url))
 
     def test_setup_component_and_web_get_url_bad_config(self):
-        """Setup the demo platform and receive wrong file from web."""
+        """Set up the demo platform and receive wrong file from web."""
         config = {
             tts.DOMAIN: {
                 'platform': 'demo',

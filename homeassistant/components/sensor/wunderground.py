@@ -40,7 +40,7 @@ MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 # Helper classes for declaring sensor configurations
 
-class WUSensorConfig(object):
+class WUSensorConfig:
     """WU Sensor Configuration.
 
     defines basic HA properties of the weather sensor and
@@ -632,7 +632,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None):
+                               async_add_entities, discovery_info=None):
     """Set up the WUnderground sensor."""
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
     longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
@@ -656,7 +656,7 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     if not rest.data:
         raise PlatformNotReady
 
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class WUndergroundSensor(Entity):
@@ -764,7 +764,7 @@ class WUndergroundSensor(Entity):
         return self._unique_id
 
 
-class WUndergroundData(object):
+class WUndergroundData:
     """Get data from WUnderground."""
 
     def __init__(self, hass, api_key, pws_id, lang, latitude, longitude):

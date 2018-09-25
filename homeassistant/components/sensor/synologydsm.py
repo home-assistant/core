@@ -12,18 +12,20 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, TEMP_CELSIUS,
-    CONF_MONITORED_CONDITIONS, EVENT_HOMEASSISTANT_START, CONF_DISKS)
+    CONF_HOST, CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SSL,
+    ATTR_ATTRIBUTION, TEMP_CELSIUS, CONF_MONITORED_CONDITIONS,
+    EVENT_HOMEASSISTANT_START, CONF_DISKS)
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['python-synology==0.1.0']
+REQUIREMENTS = ['python-synology==0.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+CONF_ATTRIBUTION = 'Data provided by Synology'
 CONF_VOLUMES = 'volumes'
 DEFAULT_NAME = 'Synology DSM'
-DEFAULT_PORT = 5000
+DEFAULT_PORT = 5001
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
@@ -74,6 +76,7 @@ _MONITORED_CONDITIONS = list(_UTILISATION_MON_COND.keys()) + \
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+    vol.Optional(CONF_SSL, default=True): cv.boolean,
     vol.Required(CONF_USERNAME): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
     vol.Optional(CONF_MONITORED_CONDITIONS):
@@ -83,7 +86,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Synology NAS Sensor."""
     def run_setup(event):
         """Wait until Home Assistant is fully initialized before creating.
@@ -95,10 +98,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         port = config.get(CONF_PORT)
         username = config.get(CONF_USERNAME)
         password = config.get(CONF_PASSWORD)
+        use_ssl = config.get(CONF_SSL)
         unit = hass.config.units.temperature_unit
         monitored_conditions = config.get(CONF_MONITORED_CONDITIONS)
 
-        api = SynoApi(host, port, username, password, unit)
+        api = SynoApi(host, port, username, password, unit, use_ssl)
 
         sensors = [SynoNasUtilSensor(
             api, variable, _UTILISATION_MON_COND[variable])
@@ -119,23 +123,24 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                         for variable in monitored_conditions
                         if variable in _STORAGE_DSK_MON_COND]
 
-        add_devices(sensors, True)
+        add_entities(sensors, True)
 
     # Wait until start event is sent to load this component.
     hass.bus.listen_once(EVENT_HOMEASSISTANT_START, run_setup)
 
 
-class SynoApi(object):
+class SynoApi:
     """Class to interface with Synology DSM API."""
 
-    def __init__(self, host, port, username, password, temp_unit):
+    def __init__(self, host, port, username, password, temp_unit, use_ssl):
         """Initialize the API wrapper class."""
         from SynologyDSM import SynologyDSM
         self.temp_unit = temp_unit
 
         try:
-            self._api = SynologyDSM(host, port, username, password)
-        except:  # noqa: E722  # pylint: disable=bare-except
+            self._api = SynologyDSM(host, port, username, password,
+                                    use_https=use_ssl)
+        except:  # noqa: E722 pylint: disable=bare-except
             _LOGGER.error("Error setting up Synology DSM")
 
         # Will be updated when update() gets called.
@@ -185,6 +190,13 @@ class SynoNasSensor(Entity):
         if self._api is not None:
             self._api.update()
 
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        return {
+            ATTR_ATTRIBUTION: CONF_ATTRIBUTION,
+        }
+
 
 class SynoNasUtilSensor(SynoNasSensor):
     """Representation a Synology Utilisation Sensor."""
@@ -202,7 +214,7 @@ class SynoNasUtilSensor(SynoNasSensor):
 
             if self.var_id in network_sensors:
                 return round(attr / 1024.0, 1)
-            elif self.var_id in memory_sensors:
+            if self.var_id in memory_sensors:
                 return round(attr / 1024.0 / 1024.0, 1)
         else:
             return getattr(self._api.utilisation, self.var_id)

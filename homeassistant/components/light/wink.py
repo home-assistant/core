@@ -16,21 +16,19 @@ from homeassistant.util.color import \
 
 DEPENDENCIES = ['wink']
 
-SUPPORT_WINK = SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_COLOR
 
-
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Wink lights."""
     import pywink
 
     for light in pywink.get_light_bulbs():
         _id = light.object_id() + light.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkLight(light, hass)])
+            add_entities([WinkLight(light, hass)])
     for light in pywink.get_light_groups():
         _id = light.object_id() + light.name()
         if _id not in hass.data[DOMAIN]['unique_ids']:
-            add_devices([WinkLight(light, hass)])
+            add_entities([WinkLight(light, hass)])
 
 
 class WinkLight(WinkDevice, Light):
@@ -78,7 +76,14 @@ class WinkLight(WinkDevice, Light):
     @property
     def supported_features(self):
         """Flag supported features."""
-        return SUPPORT_WINK
+        supports = SUPPORT_BRIGHTNESS
+        if self.wink.supports_temperature():
+            supports = supports | SUPPORT_COLOR_TEMP
+        if self.wink.supports_xy_color():
+            supports = supports | SUPPORT_COLOR
+        elif self.wink.supports_hue_saturation():
+            supports = supports | SUPPORT_COLOR
+        return supports
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""

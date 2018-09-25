@@ -96,7 +96,7 @@ def setup(hass, config):
     return True
 
 
-class MatrixBot(object):
+class MatrixBot:
     """The Matrix Bot."""
 
     def __init__(self, hass, config_file, homeserver, verify_ssl,
@@ -113,9 +113,6 @@ class MatrixBot(object):
         self._password = password
 
         self._listening_rooms = listening_rooms
-
-        # Logging in is deferred b/c it does I/O
-        self._setup_done = False
 
         # We have to fetch the aliases for every room to make sure we don't
         # join it twice by accident. However, fetching aliases is costly,
@@ -343,9 +340,5 @@ class MatrixBot(object):
 
     def handle_send_message(self, service):
         """Handle the send_message service."""
-        if not self._setup_done:
-            _LOGGER.warning("Could not send message: setup is not done!")
-            return
-
         self._send_message(service.data[ATTR_MESSAGE],
                            service.data[ATTR_TARGET])

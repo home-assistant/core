@@ -50,12 +50,11 @@ UNLATCH_SERVICE_SCHEMA = vol.Schema({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Nuki lock platform."""
     from pynuki import NukiBridge
     bridge = NukiBridge(config.get(CONF_HOST), config.get(CONF_TOKEN))
-    add_devices([NukiLock(lock) for lock in bridge.locks])
+    add_entities([NukiLock(lock) for lock in bridge.locks])
 
     def service_handler(service):
         """Service handler for nuki services."""

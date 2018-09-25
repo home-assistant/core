@@ -11,7 +11,7 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (CONF_HOST, CONF_PASSWORD)
 
-REQUIREMENTS = ['pyrainbird==0.1.3']
+REQUIREMENTS = ['pyrainbird==0.1.6']
 
 _LOGGER = logging.getLogger(__name__)
 
