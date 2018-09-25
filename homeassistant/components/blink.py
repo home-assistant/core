@@ -14,7 +14,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['blinkpy==0.8.1']
+REQUIREMENTS = ['blinkpy==0.8.3']
 
 _LOGGER = logging.getLogger(__name__)
 
