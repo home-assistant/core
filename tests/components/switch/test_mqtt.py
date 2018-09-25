@@ -2,13 +2,14 @@
 import unittest
 from unittest.mock import patch
 
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE,\
     ATTR_ASSUMED_STATE
 import homeassistant.core as ha
 import homeassistant.components.switch as switch
 from tests.common import (
-    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant, mock_coro)
+    mock_mqtt_component, fire_mqtt_message, get_test_home_assistant, mock_coro,
+    async_mock_mqtt_component, async_fire_mqtt_message)
 
 
 class TestSwitchMQTT(unittest.TestCase):
@@ -280,25 +281,28 @@ class TestSwitchMQTT(unittest.TestCase):
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_OFF, state.state)
 
-    def test_unique_id(self):
-        """Test unique id option only creates one switch per unique_id."""
-        assert setup_component(self.hass, switch.DOMAIN, {
-            switch.DOMAIN: [{
-                'platform': 'mqtt',
-                'name': 'Test 1',
-                'state_topic': 'test-topic',
-                'command_topic': 'command-topic',
-                'unique_id': 'TOTALLY_UNIQUE'
-            }, {
-                'platform': 'mqtt',
-                'name': 'Test 2',
-                'state_topic': 'test-topic',
-                'command_topic': 'command-topic',
-                'unique_id': 'TOTALLY_UNIQUE'
-            }]
-        })
 
-        fire_mqtt_message(self.hass, 'test-topic', 'payload')
-        self.hass.block_till_done()
-        assert len(self.hass.states.async_entity_ids()) == 2
-        # all switches group is 1, unique id created is 1
+async def test_unique_id(hass):
+    """Test unique id option only creates one switch per unique_id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, switch.DOMAIN, {
+        switch.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'state_topic': 'test-topic',
+            'command_topic': 'command-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'state_topic': 'test-topic',
+            'command_topic': 'command-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids()) == 2
+    # all switches group is 1, unique id created is 1
