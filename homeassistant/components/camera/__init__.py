@@ -84,62 +84,6 @@ class Image:
 
 
 @bind_hass
-def turn_off(hass, entity_id=None):
-    """Turn off camera."""
-    hass.add_job(async_turn_off, hass, entity_id)
-
-
-@bind_hass
-async def async_turn_off(hass, entity_id=None):
-    """Turn off camera."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-@bind_hass
-def turn_on(hass, entity_id=None):
-    """Turn on camera."""
-    hass.add_job(async_turn_on, hass, entity_id)
-
-
-@bind_hass
-async def async_turn_on(hass, entity_id=None):
-    """Turn on camera, and set operation mode."""
-    data = {}
-    if entity_id is not None:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data)
-
-
-@bind_hass
-def enable_motion_detection(hass, entity_id=None):
-    """Enable Motion Detection."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_ENABLE_MOTION, data))
-
-
-@bind_hass
-def disable_motion_detection(hass, entity_id=None):
-    """Disable Motion Detection."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else None
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_DISABLE_MOTION, data))
-
-
-@bind_hass
-@callback
-def async_snapshot(hass, filename, entity_id=None):
-    """Make a snapshot from a camera."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    data[ATTR_FILENAME] = filename
-
-    hass.async_add_job(hass.services.async_call(
-        DOMAIN, SERVICE_SNAPSHOT, data))
-
-
-@bind_hass
 async def async_get_image(hass, entity_id, timeout=10):
     """Fetch an image from a camera entity."""
     camera = _get_camera_from_entity_id(hass, entity_id)
