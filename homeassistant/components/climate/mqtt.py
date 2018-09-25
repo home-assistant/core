@@ -21,8 +21,9 @@ from homeassistant.components.climate import (
 from homeassistant.const import (
     STATE_ON, STATE_OFF, ATTR_TEMPERATURE, CONF_NAME, CONF_VALUE_TEMPLATE)
 from homeassistant.components.mqtt import (
-    CONF_AVAILABILITY_TOPIC, CONF_QOS, CONF_RETAIN, CONF_PAYLOAD_AVAILABLE,
-    CONF_PAYLOAD_NOT_AVAILABLE, MQTT_BASE_PLATFORM_SCHEMA, MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_QOS, CONF_RETAIN,
+    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
+    MQTT_BASE_PLATFORM_SCHEMA, MqttAvailability, MqttDiscoveryUpdate)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
                                           SPEED_HIGH)
@@ -153,6 +154,10 @@ def async_setup_platform(hass, config, async_add_entities,
         value_templates[key] = config.get(key)
         value_templates[key].hass = hass
 
+    discovery_hash = None
+    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
+        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
+
     async_add_entities([
         MqttClimate(
             hass,
@@ -194,11 +199,12 @@ def async_setup_platform(hass, config, async_add_entities,
             config.get(CONF_PAYLOAD_AVAILABLE),
             config.get(CONF_PAYLOAD_NOT_AVAILABLE),
             config.get(CONF_MIN_TEMP),
-            config.get(CONF_MAX_TEMP))
-    ])
+            config.get(CONF_MAX_TEMP),
+            discovery_hash,
+        )])
 
 
-class MqttClimate(MqttAvailability, ClimateDevice):
+class MqttClimate(MqttAvailability, MqttDiscoveryUpdate, ClimateDevice):
     """Representation of an MQTT climate device."""
 
     def __init__(self, hass, name, topic, value_templates, qos, retain,
@@ -207,10 +213,11 @@ class MqttClimate(MqttAvailability, ClimateDevice):
                  current_swing_mode, current_operation, aux, send_if_off,
                  payload_on, payload_off, availability_topic,
                  payload_available, payload_not_available,
-                 min_temp, max_temp):
+                 min_temp, max_temp, discovery_hash):
         """Initialize the climate device."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash)
         self.hass = hass
         self._name = name
         self._topic = topic
@@ -235,11 +242,13 @@ class MqttClimate(MqttAvailability, ClimateDevice):
         self._payload_off = payload_off
         self._min_temp = min_temp
         self._max_temp = max_temp
+        self._discovery_hash = discovery_hash
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Handle being added to home assistant."""
-        yield from super().async_added_to_hass()
+        yield from MqttAvailability.async_added_to_hass(self)
+        yield from MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
         def handle_current_temp_received(topic, payload, qos):
