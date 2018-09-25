@@ -37,7 +37,7 @@ CONFIG = {
 
 @pytest.fixture
 async def setup_comp(hass):
-    """Setup group cover component."""
+    """Set up group cover component."""
     with assert_setup_component(2, DOMAIN):
         await async_setup_component(hass, DOMAIN, CONFIG)
 

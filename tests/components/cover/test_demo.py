@@ -21,7 +21,7 @@ ENTITY_COVER = 'cover.living_room_window'
 
 @pytest.fixture
 async def setup_comp(hass):
-    """Setup demo cover component."""
+    """Set up demo cover component."""
     with assert_setup_component(1, DOMAIN):
         await async_setup_component(hass, DOMAIN, CONFIG)
 
