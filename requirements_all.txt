@@ -110,7 +110,7 @@ aioimaplib==0.7.13
 aiolifx==0.6.3
 
 # homeassistant.components.light.lifx
-aiolifx_effects==0.1.2
+aiolifx_effects==0.2.0
 
 # homeassistant.components.scene.hunterdouglas_powerview
 aiopvapi==1.5.4
