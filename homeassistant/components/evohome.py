@@ -14,6 +14,7 @@ https://home-assistant.io/components/climate.evohome/
 #   0-1 DHW controller, (a.k.a. Boiler)
 
 import logging
+
 from requests.exceptions import HTTPError
 import voluptuous as vol
 
