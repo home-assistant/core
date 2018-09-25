@@ -4,7 +4,7 @@ Support for a temperature control system (TCS, controller) with 0+ heating
 zones (e.g. TRVs, relays) and, optionally, a DHW controller.
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/climate.evohome/
+https://home-assistant.io/components/evohome/
 """
 
 # Glossary:
