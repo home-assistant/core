@@ -184,8 +184,14 @@ class YamahaDevice(MediaPlayerDevice):
         self._playback_support = self.receiver.get_playback_support()
         self._is_playback_supported = self.receiver.is_playback_supported(
             self._current_source)
-        self._sound_mode = self.receiver.surround_program
-        self._sound_mode_list = self.receiver.surround_programs()
+        try:
+            self._sound_mode = self.receiver.surround_program
+        except ParseError:
+            self._sound_mode = None
+        try:
+            self._sound_mode_list = self.receiver.surround_programs()
+        except ParseError:
+            self._sound_mode_list = None
 
     def build_source_list(self):
         """Build the source list."""
