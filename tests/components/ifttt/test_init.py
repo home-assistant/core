@@ -5,13 +5,6 @@ from homeassistant import data_entry_flow
 from homeassistant.core import callback
 from homeassistant.components import ifttt
 
-# @pytest.fixture
-# def mock_client(hass, aiohttp_client):
-#     """Create http client for webhooks."""
-#     hass.loop.run_until_complete(async_setup_component(hass, 'http', {}))
-#     return hass.loop.run_until_complete(aiohttp_client(hass.http.app))
-
-
 
 async def test_config_flow_registers_webhook(hass, aiohttp_client):
     """Test setting up IFTTT and sending webhook."""
@@ -21,7 +14,8 @@ async def test_config_flow_registers_webhook(hass, aiohttp_client):
         })
     assert result['type'] == data_entry_flow.RESULT_TYPE_FORM, result
 
-    result = await hass.config_entries.flow.async_configure(result['flow_id'], {})
+    result = await hass.config_entries.flow.async_configure(
+        result['flow_id'], {})
     assert result['type'] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     webhook_id = result['result'].data['webhook_id']
 
