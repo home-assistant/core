@@ -104,7 +104,7 @@ class DeviceRegistry:
                              model=_UNDEF,
                              name=_UNDEF,
                              sw_version=_UNDEF,
-                             hub_device_id=_UNDEF,):
+                             hub_device_id=_UNDEF):
         """Update device attributes."""
         old = self.devices[device_id]
 
@@ -124,19 +124,19 @@ class DeviceRegistry:
             changes['config_entries'] = config_entries
 
         for attr_name, value in (
-            ('connections', merge_connections),
-            ('identifiers', merge_identifiers),
+                ('connections', merge_connections),
+                ('identifiers', merge_identifiers),
         ):
             old_value = getattr(old, attr_name)
             if value is not _UNDEF and value != old_value:
                 changes[attr_name] = old_value | value
 
         for attr_name, value in (
-            ('manufacturer', manufacturer),
-            ('model', model),
-            ('name', name),
-            ('sw_version', sw_version),
-            ('hub_device_id', hub_device_id),
+                ('manufacturer', manufacturer),
+                ('model', model),
+                ('name', name),
+                ('sw_version', sw_version),
+                ('hub_device_id', hub_device_id),
         ):
             if value is not _UNDEF and value != getattr(old, attr_name):
                 changes[attr_name] = value
