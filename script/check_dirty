@@ -1,0 +1,2 @@
+#!/bin/bash
+[[ -z $(git ls-files --others --exclude-standard) ]] || { echo 'Tests are leaving files behind. Please fix'; exit 1; }
