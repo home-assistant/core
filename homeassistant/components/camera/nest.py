@@ -77,7 +77,6 @@ class NestCamera(Camera):
             'name': self.device.name_long,
             'manufacturer': 'Nest Labs',
             'model': "Camera",
-            'sw_version': self.device.software_version,
         }
 
     @property
