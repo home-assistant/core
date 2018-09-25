@@ -34,7 +34,7 @@ async def websocket_lovelace_config(hass, connection, msg):
     """Send lovelace UI config over websocket config."""
     error = None
     try:
-        config = await hass.async_add_job(
+        config = await hass.async_add_executor_job(
             load_yaml, hass.config.path('ui-lovelace.yaml'))
         message = websocket_api.result_message(
             msg['id'], config
