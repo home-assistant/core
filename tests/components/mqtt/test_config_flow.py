@@ -41,6 +41,11 @@ async def test_user_connection_works(hass, mock_try_connection,
     )
 
     assert result['type'] == 'create_entry'
+    assert result['result'].data == {
+        'broker': '127.0.0.1',
+        'port': 1883,
+        'discovery': False,
+    }
     # Check we tried the connection
     assert len(mock_try_connection.mock_calls) == 1
     # Check config entry got setup
