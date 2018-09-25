@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 @bind_hass
 def async_register(hass, webhook_id, handler):
     """Register a webhook."""
-    handlers = hass.data.setdefault(webhook_id, {})
+    handlers = hass.data.setdefault(DOMAIN, {})
 
     if webhook_id in handlers:
         raise ValueError('Handler is already defined!')
@@ -34,19 +34,19 @@ def async_register(hass, webhook_id, handler):
 @bind_hass
 def async_unregister(hass, webhook_id):
     """Remove a webhook."""
-    handlers = hass.data.setdefault(webhook_id, {})
+    handlers = hass.data.setdefault(DOMAIN, {})
     handlers.pop(webhook_id, None)
 
 
 @callback
-def async_generate_webhook_id():
+def async_generate_id():
     """Generate a webhook_id."""
     return generate_secret(entropy=32)
 
 
 @callback
 @bind_hass
-def async_generate_webhook_url(hass, webhook_id):
+def async_generate_url(hass, webhook_id):
     """Generate a webhook_id."""
     return "{}/api/webhook/{}".format(hass.config.api.base_url, webhook_id)
 
@@ -78,7 +78,7 @@ class WebhookView(HomeAssistantView):
 
         body = await request.text()
         try:
-            data = json.load(body) if body else {}
+            data = json.loads(body) if body else {}
         except ValueError:
             _LOGGER.warning(
                 'Received webhook %s with invalid JSON', webhook_id)

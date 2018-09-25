@@ -42,27 +42,16 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema({
 })
 
 CONFIG_SCHEMA = vol.Schema({
-    DOMAIN: vol.Schema({
+    vol.Optional(DOMAIN): vol.Schema({
         vol.Required(CONF_KEY): cv.string,
     }),
 }, extra=vol.ALLOW_EXTRA)
 
 
-def trigger(hass, event, value1=None, value2=None, value3=None):
-    """Trigger a Maker IFTTT recipe."""
-    data = {
-        ATTR_EVENT: event,
-        ATTR_VALUE1: value1,
-        ATTR_VALUE2: value2,
-        ATTR_VALUE3: value3,
-    }
-    hass.services.call(DOMAIN, SERVICE_TRIGGER, data)
-
-
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the IFTTT service component."""
     if DOMAIN not in config:
-        return
+        return True
 
     key = config[DOMAIN][CONF_KEY]
 
@@ -87,11 +76,12 @@ def async_setup(hass, config):
 
 async def handle_webhook(hass, webhook_id, data):
     """Handle webhook callback."""
-    data['webhook_id'] = webhook_id
+    if isinstance(data, dict):
+        data['webhook_id'] = webhook_id
     hass.bus.async_fire(EVENT_RECEIVED, data)
 
 
-def async_setup_entry(hass, entry):
+async def async_setup_entry(hass, entry):
     """Configure based on config entry."""
     hass.components.webhook.async_register(
         entry.data['webhook_id'], handle_webhook)
@@ -108,8 +98,6 @@ async def async_unload_entry(hass, entry):
 class ConfigFlow(config_entries.ConfigFlow):
     """Handle an IFTTT config flow."""
 
-    webhook_id = None
-
     async def async_step_user(self, user_input=None):
         """Handle a user initiated set up flow."""
         if self._async_current_entries():
@@ -121,25 +109,22 @@ class ConfigFlow(config_entries.ConfigFlow):
             if is_local(ip_address(url_parts.hostname)):
                 return self.async_abort(reason='not_internet_accessible')
         except ValueError:
-            return self.async_abort(reason='not_internet_accessible')
-
-        if self.webhook_id is None:
-            self.webhook_id = \
-                self.hass.components.webhook.async_generate_webhook_id()
+            # If it's not an IP address, it's very likely publicly accessible
+            pass
 
         if user_input is None:
             return self.async_show_form(
                 step_id='user',
             )
 
+        webhook_id = self.hass.components.webhook.async_generate_id()
         webhook_url = \
-            self.hass.components.webhook.async_generate_webhook_url(
-                self.webhook_id)
+            self.hass.components.webhook.async_generate_url(webhook_id)
 
         return self.async_create_entry(
             title='IFTTT Webhook',
             data={
-                CONF_WEBHOOK_ID: self.webhook_id
+                CONF_WEBHOOK_ID: webhook_id
             },
             description_placeholders={
                 'applet_url': 'https://ifttt.com/maker_webhooks',
