@@ -69,7 +69,8 @@ SUPPORT_ROOMBA_CARPET_BOOST = SUPPORT_ROOMBA | SUPPORT_FAN_SPEED
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the iRobot Roomba vacuum cleaner platform."""
     from roomba import Roomba
     if PLATFORM not in hass.data:
@@ -102,7 +103,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     roomba_vac = RoombaVacuum(name, roomba)
     hass.data[PLATFORM][host] = roomba_vac
 
-    async_add_devices([roomba_vac], update_before_add=True)
+    async_add_entities([roomba_vac], update_before_add=True)
 
 
 class RoombaVacuum(VacuumDevice):
@@ -284,7 +285,9 @@ class RoombaVacuum(VacuumDevice):
         software_version = state.get('softwareVer')
 
         # Error message in plain english
-        error_msg = self.vacuum.error_message
+        error_msg = 'None'
+        if hasattr(self.vacuum, 'error_message'):
+            error_msg = self.vacuum.error_message
 
         self._battery_level = state.get('batPct')
         self._status = self.vacuum.current_state

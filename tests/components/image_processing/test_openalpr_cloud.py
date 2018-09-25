@@ -12,11 +12,11 @@ from tests.common import (
     get_test_home_assistant, assert_setup_component, load_fixture, mock_coro)
 
 
-class TestOpenAlprCloudSetup(object):
+class TestOpenAlprCloudSetup:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def teardown_method(self):
@@ -24,7 +24,7 @@ class TestOpenAlprCloudSetup(object):
         self.hass.stop()
 
     def test_setup_platform(self):
-        """Setup platform with one entity."""
+        """Set up platform with one entity."""
         config = {
             ip.DOMAIN: {
                 'platform': 'openalpr_cloud',
@@ -45,7 +45,7 @@ class TestOpenAlprCloudSetup(object):
         assert self.hass.states.get('image_processing.openalpr_demo_camera')
 
     def test_setup_platform_name(self):
-        """Setup platform with one entity and set name."""
+        """Set up platform with one entity and set name."""
         config = {
             ip.DOMAIN: {
                 'platform': 'openalpr_cloud',
@@ -67,7 +67,7 @@ class TestOpenAlprCloudSetup(object):
         assert self.hass.states.get('image_processing.test_local')
 
     def test_setup_platform_without_api_key(self):
-        """Setup platform with one entity without api_key."""
+        """Set up platform with one entity without api_key."""
         config = {
             ip.DOMAIN: {
                 'platform': 'openalpr_cloud',
@@ -85,7 +85,7 @@ class TestOpenAlprCloudSetup(object):
             setup_component(self.hass, ip.DOMAIN, config)
 
     def test_setup_platform_without_region(self):
-        """Setup platform with one entity without region."""
+        """Set up platform with one entity without region."""
         config = {
             ip.DOMAIN: {
                 'platform': 'openalpr_cloud',
@@ -103,11 +103,11 @@ class TestOpenAlprCloudSetup(object):
             setup_component(self.hass, ip.DOMAIN, config)
 
 
-class TestOpenAlprCloud(object):
+class TestOpenAlprCloud:
     """Test class for image processing."""
 
     def setup_method(self):
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
         config = {
@@ -151,7 +151,7 @@ class TestOpenAlprCloud(object):
         self.hass.stop()
 
     def test_openalpr_process_image(self, aioclient_mock):
-        """Setup and scan a picture and test plates from event."""
+        """Set up and scan a picture and test plates from event."""
         aioclient_mock.post(
             OPENALPR_API_URL, params=self.params,
             text=load_fixture('alpr_cloud.json'), status=200
@@ -179,7 +179,7 @@ class TestOpenAlprCloud(object):
             'image_processing.test_local'
 
     def test_openalpr_process_image_api_error(self, aioclient_mock):
-        """Setup and scan a picture and test api error."""
+        """Set up and scan a picture and test api error."""
         aioclient_mock.post(
             OPENALPR_API_URL, params=self.params,
             text="{'error': 'error message'}", status=400
@@ -195,7 +195,7 @@ class TestOpenAlprCloud(object):
         assert len(self.alpr_events) == 0
 
     def test_openalpr_process_image_api_timeout(self, aioclient_mock):
-        """Setup and scan a picture and test api error."""
+        """Set up and scan a picture and test api error."""
         aioclient_mock.post(
             OPENALPR_API_URL, params=self.params,
             exc=asyncio.TimeoutError()

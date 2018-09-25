@@ -139,7 +139,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 14402
             }
         ], 200)
-    elif 'api/command' in url:
+    if 'api/command' in url:
         return MockResponse([
             {
                 "name": "RescanSeries",
@@ -150,7 +150,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 24
             }
         ], 200)
-    elif 'api/wanted/missing' in url or 'totalRecords' in url:
+    if 'api/wanted/missing' in url or 'totalRecords' in url:
         return MockResponse(
             {
                 "page": 1,
@@ -325,7 +325,7 @@ def mocked_requests_get(*args, **kwargs):
                     }
                 ]
             }, 200)
-    elif 'api/queue' in url:
+    if 'api/queue' in url:
         return MockResponse([
             {
                 "series": {
@@ -449,7 +449,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 1503378561
             }
         ], 200)
-    elif 'api/series' in url:
+    if 'api/series' in url:
         return MockResponse([
             {
                 "title": "Marvel's Daredevil",
@@ -540,7 +540,7 @@ def mocked_requests_get(*args, **kwargs):
                 "id": 7
             }
         ], 200)
-    elif 'api/diskspace' in url:
+    if 'api/diskspace' in url:
         return MockResponse([
             {
                 "path": "/data",
@@ -549,7 +549,7 @@ def mocked_requests_get(*args, **kwargs):
                 "totalSpace": 499738734592
             }
         ], 200)
-    elif 'api/system/status' in url:
+    if 'api/system/status' in url:
         return MockResponse({
             "version": "2.0.0.1121",
             "buildTime": "2014-02-08T20:49:36.5560392Z",
@@ -568,10 +568,9 @@ def mocked_requests_get(*args, **kwargs):
             "startOfWeek": 0,
             "urlBase": ""
         }, 200)
-    else:
-        return MockResponse({
-            "error": "Unauthorized"
-        }, 401)
+    return MockResponse({
+        "error": "Unauthorized"
+    }, 401)
 
 
 class TestSonarrSetup(unittest.TestCase):
@@ -580,7 +579,7 @@ class TestSonarrSetup(unittest.TestCase):
     # pylint: disable=invalid-name
     DEVICES = []
 
-    def add_devices(self, devices, update):
+    def add_entities(self, devices, update):
         """Mock add devices."""
         for device in devices:
             self.DEVICES.append(device)
@@ -608,7 +607,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'diskspace'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual('263.10', device.state)
@@ -635,7 +634,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'diskspace'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual('263.10', device.state)
@@ -662,7 +661,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'commands'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -689,7 +688,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'queue'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -716,7 +715,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'series'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -743,7 +742,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'wanted'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -770,7 +769,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'upcoming'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -801,7 +800,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'upcoming'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -828,7 +827,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'status'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual('2.0.0.1121', device.state)
@@ -855,7 +854,7 @@ class TestSonarrSetup(unittest.TestCase):
             ],
             "ssl": "true"
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(1, device.state)
@@ -883,7 +882,7 @@ class TestSonarrSetup(unittest.TestCase):
                 'upcoming'
             ]
         }
-        sonarr.setup_platform(self.hass, config, self.add_devices, None)
+        sonarr.setup_platform(self.hass, config, self.add_entities, None)
         for device in self.DEVICES:
             device.update()
             self.assertEqual(None, device.state)

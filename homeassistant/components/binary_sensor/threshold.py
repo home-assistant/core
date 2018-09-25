@@ -55,7 +55,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Threshold sensor."""
     entity_id = config.get(CONF_ENTITY_ID)
     name = config.get(CONF_NAME)
@@ -64,7 +65,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     hysteresis = config.get(CONF_HYSTERESIS)
     device_class = config.get(CONF_DEVICE_CLASS)
 
-    async_add_devices([ThresholdSensor(
+    async_add_entities([ThresholdSensor(
         hass, entity_id, name, lower, upper, hysteresis, device_class)], True)
 
 
@@ -86,7 +87,6 @@ class ThresholdSensor(BinarySensorDevice):
         self._state = False
         self.sensor_value = None
 
-        # pylint: disable=invalid-name
         @callback
         def async_threshold_sensor_state_listener(
                 entity, old_state, new_state):
@@ -129,9 +129,9 @@ class ThresholdSensor(BinarySensorDevice):
         if self._threshold_lower is not None and \
                 self._threshold_upper is not None:
             return TYPE_RANGE
-        elif self._threshold_lower is not None:
+        if self._threshold_lower is not None:
             return TYPE_LOWER
-        elif self._threshold_upper is not None:
+        if self._threshold_upper is not None:
             return TYPE_UPPER
 
     @property

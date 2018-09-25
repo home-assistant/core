@@ -18,7 +18,7 @@ def explore_module(package):
 
 
 def main():
-    """Main section of the script."""
+    """Run the script."""
     if not os.path.isfile('requirements_all.txt'):
         print('Run this from HA root dir')
         return

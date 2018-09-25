@@ -15,7 +15,7 @@ from homeassistant.helpers.entity import Entity
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Verisure platform."""
     sensors = []
     hub.update_overview()
@@ -38,7 +38,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for device_label in hub.get(
                 "$.eventCounts[?(@.deviceType=='MOUSE1')].deviceLabel")])
 
-    add_devices(sensors)
+    add_entities(sensors)
 
 
 class VerisureThermometer(Entity):
@@ -74,6 +74,7 @@ class VerisureThermometer(Entity):
         """Return the unit of measurement of this entity."""
         return TEMP_CELSIUS
 
+    # pylint: disable=no-self-use
     def update(self):
         """Update the sensor."""
         hub.update_overview()
@@ -112,6 +113,7 @@ class VerisureHygrometer(Entity):
         """Return the unit of measurement of this entity."""
         return '%'
 
+    # pylint: disable=no-self-use
     def update(self):
         """Update the sensor."""
         hub.update_overview()
@@ -150,6 +152,7 @@ class VerisureMouseDetection(Entity):
         """Return the unit of measurement of this entity."""
         return 'Mice'
 
+    # pylint: disable=no-self-use
     def update(self):
         """Update the sensor."""
         hub.update_overview()

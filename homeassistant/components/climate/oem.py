@@ -38,7 +38,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_AWAY_MODE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the oemthermostat platform."""
     from oemthermostat import Thermostat
 
@@ -55,7 +55,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except (ValueError, AssertionError, requests.RequestException):
         return False
 
-    add_devices((ThermostatDevice(hass, therm, name, away_temp), ), True)
+    add_entities((ThermostatDevice(hass, therm, name, away_temp), ), True)
 
 
 class ThermostatDevice(ClimateDevice):

@@ -16,7 +16,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['pexpect==4.0.1']
+REQUIREMENTS = ['pexpect==4.6.0']
 
 _DEVICES_REGEX = re.compile(
     r'(?P<name>([^\s]+)?)\s+' +
@@ -30,7 +30,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 def get_scanner(hass, config):
     """Validate the configuration and return a Aruba scanner."""
     scanner = ArubaDeviceScanner(config[DOMAIN])
@@ -95,10 +94,10 @@ class ArubaDeviceScanner(DeviceScanner):
         if query == 1:
             _LOGGER.error("Timeout")
             return
-        elif query == 2:
+        if query == 2:
             _LOGGER.error("Unexpected response from router")
             return
-        elif query == 3:
+        if query == 3:
             ssh.sendline('yes')
             ssh.expect('password:')
         elif query == 4:

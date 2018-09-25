@@ -2,7 +2,7 @@
 
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
+from homeassistant import data_entry_flow, config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.http.data_validator import RequestDataValidator
 
@@ -23,7 +23,7 @@ class _BaseFlowManagerView(HomeAssistantView):
             data.pop('data')
             return data
 
-        elif result['type'] != data_entry_flow.RESULT_TYPE_FORM:
+        if result['type'] != data_entry_flow.RESULT_TYPE_FORM:
             return result
 
         import voluptuous_serialize
@@ -44,7 +44,7 @@ class FlowManagerIndexView(_BaseFlowManagerView):
 
     @RequestDataValidator(vol.Schema({
         vol.Required('handler'): vol.Any(str, list),
-    }))
+    }, extra=vol.ALLOW_EXTRA))
     async def post(self, request, data):
         """Handle a POST request."""
         if isinstance(data['handler'], list):
@@ -53,7 +53,8 @@ class FlowManagerIndexView(_BaseFlowManagerView):
             handler = data['handler']
 
         try:
-            result = await self._flow_mgr.async_init(handler)
+            result = await self._flow_mgr.async_init(
+                handler, context={'source': config_entries.SOURCE_USER})
         except data_entry_flow.UnknownHandler:
             return self.json_message('Invalid handler specified', 404)
         except data_entry_flow.UnknownStep:

@@ -52,12 +52,21 @@ def test_invalid_json(mock_load_platform, hass, mqtt_mock, caplog):
 @asyncio.coroutine
 def test_only_valid_components(mock_load_platform, hass, mqtt_mock, caplog):
     """Test for a valid component."""
+    invalid_component = "timer"
+
     mock_load_platform.return_value = mock_coro()
     yield from async_start(hass, 'homeassistant', {})
 
-    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config', '{}')
+    async_fire_mqtt_message(hass, 'homeassistant/{}/bla/config'.format(
+        invalid_component
+    ), '{}')
+
     yield from hass.async_block_till_done()
-    assert 'Component climate is not supported' in caplog.text
+
+    assert 'Component {} is not supported'.format(
+        invalid_component
+    ) in caplog.text
+
     assert not mock_load_platform.called
 
 
@@ -95,6 +104,49 @@ def test_discover_fan(hass, mqtt_mock, caplog):
 
 
 @asyncio.coroutine
+def test_discover_climate(hass, mqtt_mock, caplog):
+    """Test discovering an MQTT climate component."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    data = (
+        '{ "name": "ClimateTest",'
+        '  "current_temperature_topic": "climate/bla/current_temp",'
+        '  "temperature_command_topic": "climate/bla/target_temp" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/climate/bla/config', data)
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('climate.ClimateTest')
+
+    assert state is not None
+    assert state.name == 'ClimateTest'
+    assert ('climate', 'bla') in hass.data[ALREADY_DISCOVERED]
+
+
+@asyncio.coroutine
+def test_discover_alarm_control_panel(hass, mqtt_mock, caplog):
+    """Test discovering an MQTT alarm control panel component."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    data = (
+        '{ "name": "AlarmControlPanelTest",'
+        '  "state_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(
+        hass, 'homeassistant/alarm_control_panel/bla/config', data)
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.AlarmControlPanelTest')
+
+    assert state is not None
+    assert state.name == 'AlarmControlPanelTest'
+    assert ('alarm_control_panel', 'bla') in hass.data[ALREADY_DISCOVERED]
+
+
+@asyncio.coroutine
 def test_discovery_incl_nodeid(hass, mqtt_mock, caplog):
     """Test sending in correct JSON with optional node_id included."""
     yield from async_start(hass, 'homeassistant', {})
@@ -129,3 +181,89 @@ def test_non_duplicate_discovery(hass, mqtt_mock, caplog):
     assert state_duplicate is None
     assert 'Component has already been discovered: ' \
            'binary_sensor bla' in caplog.text
+
+
+@asyncio.coroutine
+def test_discovery_removal(hass, mqtt_mock, caplog):
+    """Test expansion of abbreviated discovery payload."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
+                            data)
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('switch.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
+                            '')
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('switch.beer')
+    assert state is None
+
+
+@asyncio.coroutine
+def test_discovery_removal_light(hass, mqtt_mock, caplog):
+    """Test removal of discovered light."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            data)
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/light/bla/config',
+                            '')
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('light.beer')
+    assert state is None
+
+
+@asyncio.coroutine
+def test_discovery_removal_alarm(hass, mqtt_mock, caplog):
+    """Test removal of discovered alarm_control_panel."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass,
+                            'homeassistant/alarm_control_panel/bla/config',
+                            data)
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass,
+                            'homeassistant/alarm_control_panel/bla/config',
+                            '')
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('alarm_control_panel.beer')
+    assert state is None

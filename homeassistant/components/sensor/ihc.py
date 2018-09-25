@@ -3,8 +3,6 @@
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.ihc/
 """
-from xml.etree.ElementTree import Element
-
 import voluptuous as vol
 
 from homeassistant.components.ihc import (
@@ -32,8 +30,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the ihc sensor platform."""
+def setup_platform(hass, config, add_entities, discovery_info=None):
+    """Set up the IHC sensor platform."""
     ihc_controller = hass.data[IHC_DATA][IHC_CONTROLLER]
     info = hass.data[IHC_DATA][IHC_INFO]
     devices = []
@@ -55,14 +53,14 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             sensor = IHCSensor(ihc_controller, name, ihc_id, info, unit)
             devices.append(sensor)
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class IHCSensor(IHCDevice, Entity):
     """Implementation of the IHC sensor."""
 
     def __init__(self, ihc_controller, name, ihc_id: int, info: bool,
-                 unit, product: Element = None) -> None:
+                 unit, product=None) -> None:
         """Initialize the IHC sensor."""
         super().__init__(ihc_controller, name, ihc_id, info, product)
         self._state = None
@@ -79,6 +77,6 @@ class IHCSensor(IHCDevice, Entity):
         return self._unit_of_measurement
 
     def on_ihc_change(self, ihc_id, value):
-        """Callback when ihc resource changes."""
+        """Handle IHC resource change."""
         self._state = value
         self.schedule_update_ha_state()

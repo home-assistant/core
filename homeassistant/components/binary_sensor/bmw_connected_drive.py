@@ -31,7 +31,7 @@ SENSOR_TYPES_ELEC = {
 SENSOR_TYPES_ELEC.update(SENSOR_TYPES)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BMW sensors."""
     accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     device = BMWConnectedDriveSensor(account, vehicle, key,
                                                      value[0], value[1])
                     devices.append(device)
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class BMWConnectedDriveSensor(BinarySensorDevice):
@@ -71,7 +71,10 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
 
     @property
     def should_poll(self) -> bool:
-        """Data update is triggered from BMWConnectedDriveEntity."""
+        """Return False.
+
+        Data update is triggered from BMWConnectedDriveEntity.
+        """
         return False
 
     @property
@@ -115,14 +118,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             result['lights_parking'] = vehicle_state.parking_lights.value
         elif self._attribute == 'condition_based_services':
             for report in vehicle_state.condition_based_services:
-                service_type = report.service_type.lower().replace('_', ' ')
-                result['{} status'.format(service_type)] = report.state.value
-                if report.due_date is not None:
-                    result['{} date'.format(service_type)] = \
-                        report.due_date.strftime('%Y-%m-%d')
-                if report.due_distance is not None:
-                    result['{} distance'.format(service_type)] = \
-                        '{} km'.format(report.due_distance)
+                result.update(self._format_cbs_report(report))
         elif self._attribute == 'check_control_messages':
             check_control_messages = vehicle_state.check_control_messages
             if not check_control_messages:
@@ -131,15 +127,15 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
                 result['check_control_messages'] = check_control_messages
         elif self._attribute == 'charging_status':
             result['charging_status'] = vehicle_state.charging_status.value
-            # pylint: disable=W0212
+            # pylint: disable=protected-access
             result['last_charging_end_result'] = \
                 vehicle_state._attributes['lastChargingEndResult']
         if self._attribute == 'connection_status':
-            # pylint: disable=W0212
+            # pylint: disable=protected-access
             result['connection_status'] = \
                 vehicle_state._attributes['connectionStatus']
 
-        return result
+        return sorted(result.items())
 
     def update(self):
         """Read new state data from the library."""
@@ -173,9 +169,22 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         # device class plug: On means device is plugged in,
         #                    Off means device is unplugged
         if self._attribute == 'connection_status':
-            # pylint: disable=W0212
+            # pylint: disable=protected-access
             self._state = (vehicle_state._attributes['connectionStatus'] ==
                            'CONNECTED')
+
+    @staticmethod
+    def _format_cbs_report(report):
+        result = {}
+        service_type = report.service_type.lower().replace('_', ' ')
+        result['{} status'.format(service_type)] = report.state.value
+        if report.due_date is not None:
+            result['{} date'.format(service_type)] = \
+                report.due_date.strftime('%Y-%m-%d')
+        if report.due_distance is not None:
+            result['{} distance'.format(service_type)] = \
+                '{} km'.format(report.due_distance)
+        return result
 
     def update_callback(self):
         """Schedule a state update."""

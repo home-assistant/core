@@ -47,9 +47,9 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the RESTful switch."""
     body_off = config.get(CONF_BODY_OFF)
     body_on = config.get(CONF_BODY_ON)
@@ -81,7 +81,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         if req.status >= 400:
             _LOGGER.error("Got non-ok response from resource: %s", req.status)
         else:
-            async_add_devices([switch])
+            async_add_entities([switch])
     except (TypeError, ValueError):
         _LOGGER.error("Missing resource or schema in configuration. "
                       "Add http:// or https:// to your URL")

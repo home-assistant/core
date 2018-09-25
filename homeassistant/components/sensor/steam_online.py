@@ -36,15 +36,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Steam platform."""
     import steam as steamod
     steamod.api.key.set(config.get(CONF_API_KEY))
     # Initialize steammods app list before creating sensors
     # to benefit from internal caching of the list.
     steam_app_list = steamod.apps.app_list()
-    add_devices(
+    add_entities(
         [SteamSensor(account,
                      steamod,
                      steam_app_list)
@@ -77,7 +76,6 @@ class SteamSensor(Entity):
         """Return the state of the sensor."""
         return self._state
 
-    # pylint: disable=no-member
     def update(self):
         """Update device state."""
         try:

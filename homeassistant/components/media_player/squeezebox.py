@@ -4,26 +4,26 @@ Support for interfacing to the Logitech SqueezeBox API.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.squeezebox/
 """
-import logging
 import asyncio
-import urllib.parse
 import json
+import logging
+import urllib.parse
+
 import aiohttp
 import async_timeout
-
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    ATTR_MEDIA_ENQUEUE, SUPPORT_PLAY_MEDIA,
-    MEDIA_TYPE_MUSIC, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, PLATFORM_SCHEMA,
-    SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_PLAY, MediaPlayerDevice,
-    MEDIA_PLAYER_SCHEMA, DOMAIN, SUPPORT_SHUFFLE_SET, SUPPORT_CLEAR_PLAYLIST)
+    ATTR_MEDIA_ENQUEUE, DOMAIN, MEDIA_PLAYER_SCHEMA, MEDIA_TYPE_MUSIC,
+    PLATFORM_SCHEMA, SUPPORT_CLEAR_PLAYLIST, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
+    SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
+    SUPPORT_SHUFFLE_SET, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, CONF_PASSWORD, CONF_USERNAME, STATE_IDLE, STATE_OFF,
-    STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN, CONF_PORT, ATTR_COMMAND)
-import homeassistant.helpers.config_validation as cv
+    ATTR_COMMAND, CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME,
+    STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,7 +65,8 @@ SERVICE_TO_METHOD = {
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the squeezebox platform."""
     import socket
 
@@ -108,7 +109,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     players = yield from lms.create_players()
 
     hass.data[DATA_SQUEEZEBOX].extend(players)
-    async_add_devices(players)
+    async_add_entities(players)
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -143,7 +144,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     return True
 
 
-class LogitechMediaServer(object):
+class LogitechMediaServer:
     """Representation of a Logitech media server."""
 
     def __init__(self, hass, host, port, username, password):

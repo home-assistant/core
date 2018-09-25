@@ -16,11 +16,11 @@ class TestNotifyFile(unittest.TestCase):
     """Test the file notify."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
 
     def tearDown(self):  # pylint: disable=invalid-name
-        """"Stop down everything that was started."""
+        """Stop down everything that was started."""
         self.hass.stop()
 
     def test_bad_config(self):

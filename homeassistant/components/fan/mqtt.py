@@ -9,7 +9,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, STATE_ON, STATE_OFF,
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON)
@@ -78,12 +78,12 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                               async_add_devices, discovery_info=None):
+                               async_add_entities, discovery_info=None):
     """Set up the MQTT fan platform."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
 
-    async_add_devices([MqttFan(
+    async_add_entities([MqttFan(
         config.get(CONF_NAME),
         {
             key: config.get(key) for key in (

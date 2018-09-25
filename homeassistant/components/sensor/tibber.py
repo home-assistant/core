@@ -21,7 +21,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import dt as dt_util
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['pyTibber==0.4.1']
+REQUIREMENTS = ['pyTibber==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up the Tibber sensor."""
     import tibber
@@ -50,7 +50,7 @@ async def async_setup_platform(hass, config, async_add_devices,
     except (asyncio.TimeoutError, aiohttp.ClientError):
         raise PlatformNotReady()
 
-    async_add_devices(dev, True)
+    async_add_entities(dev, True)
 
 
 class TibberSensor(Entity):
@@ -123,7 +123,7 @@ class TibberSensor(Entity):
     async def _fetch_data(self):
         try:
             await self._tibber_home.update_info()
-            await  self._tibber_home.update_price_info()
+            await self._tibber_home.update_price_info()
         except (asyncio.TimeoutError, aiohttp.ClientError):
             return
         data = self._tibber_home.info['viewer']['home']
@@ -151,7 +151,7 @@ class TibberSensor(Entity):
             if now.date() == price_time.date():
                 max_price = max(max_price, price_total)
                 min_price = min(min_price, price_total)
-            self._state = state
-            self._device_state_attributes['max_price'] = max_price
-            self._device_state_attributes['min_price'] = min_price
+        self._state = state
+        self._device_state_attributes['max_price'] = max_price
+        self._device_state_attributes['min_price'] = min_price
         return state is not None

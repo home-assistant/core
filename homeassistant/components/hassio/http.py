@@ -22,23 +22,24 @@ _LOGGER = logging.getLogger(__name__)
 
 X_HASSIO = 'X-HASSIO-KEY'
 
-NO_TIMEOUT = {
-    re.compile(r'^homeassistant/update$'),
-    re.compile(r'^host/update$'),
-    re.compile(r'^supervisor/update$'),
-    re.compile(r'^addons/[^/]*/update$'),
-    re.compile(r'^addons/[^/]*/install$'),
-    re.compile(r'^addons/[^/]*/rebuild$'),
-    re.compile(r'^snapshots/.*/full$'),
-    re.compile(r'^snapshots/.*/partial$'),
-    re.compile(r'^snapshots/[^/]*/upload$'),
-    re.compile(r'^snapshots/[^/]*/download$'),
-}
+NO_TIMEOUT = re.compile(
+    r'^(?:'
+    r'|homeassistant/update'
+    r'|host/update'
+    r'|supervisor/update'
+    r'|addons/[^/]+/(?:update|install|rebuild)'
+    r'|snapshots/.+/full'
+    r'|snapshots/.+/partial'
+    r'|snapshots/[^/]+/(?:upload|download)'
+    r')$'
+)
 
-NO_AUTH = {
-    re.compile(r'^app-(es5|latest)/(index|hassio-app).html$'),
-    re.compile(r'^addons/[^/]*/logo$')
-}
+NO_AUTH = re.compile(
+    r'^(?:'
+    r'|app/.*'
+    r'|addons/[^/]+/logo'
+    r')$'
+)
 
 
 class HassIOView(HomeAssistantView):
@@ -128,15 +129,13 @@ def _create_response_log(client, data):
 
 def _get_timeout(path):
     """Return timeout for a URL path."""
-    for re_path in NO_TIMEOUT:
-        if re_path.match(path):
-            return 0
+    if NO_TIMEOUT.match(path):
+        return 0
     return 300
 
 
 def _need_auth(path):
     """Return if a path need authentication."""
-    for re_path in NO_AUTH:
-        if re_path.match(path):
-            return False
+    if NO_AUTH.match(path):
+        return False
     return True

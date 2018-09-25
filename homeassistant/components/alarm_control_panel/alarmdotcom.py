@@ -6,6 +6,7 @@ https://home-assistant.io/components/alarm_control_panel.alarmdotcom/
 """
 import asyncio
 import logging
+import re
 
 import voluptuous as vol
 
@@ -32,7 +33,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up a Alarm.com control panel."""
     name = config.get(CONF_NAME)
     code = config.get(CONF_CODE)
@@ -41,7 +43,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     alarmdotcom = AlarmDotCom(hass, name, code, username, password)
     yield from alarmdotcom.async_login()
-    async_add_devices([alarmdotcom])
+    async_add_entities([alarmdotcom])
 
 
 class AlarmDotCom(alarm.AlarmControlPanel):
@@ -79,17 +81,21 @@ class AlarmDotCom(alarm.AlarmControlPanel):
 
     @property
     def code_format(self):
-        """Return one or more characters if code is defined."""
-        return None if self._code is None else '.+'
+        """Return one or more digits/characters."""
+        if self._code is None:
+            return None
+        if isinstance(self._code, str) and re.search('^\\d+$', self._code):
+            return 'Number'
+        return 'Any'
 
     @property
     def state(self):
         """Return the state of the device."""
         if self._alarm.state.lower() == 'disarmed':
             return STATE_ALARM_DISARMED
-        elif self._alarm.state.lower() == 'armed stay':
+        if self._alarm.state.lower() == 'armed stay':
             return STATE_ALARM_ARMED_HOME
-        elif self._alarm.state.lower() == 'armed away':
+        if self._alarm.state.lower() == 'armed away':
             return STATE_ALARM_ARMED_AWAY
         return STATE_UNKNOWN
 

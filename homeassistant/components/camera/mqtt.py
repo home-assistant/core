@@ -11,7 +11,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import callback
-import homeassistant.components.mqtt as mqtt
+from homeassistant.components import mqtt
 from homeassistant.const import CONF_NAME
 from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
 from homeassistant.helpers import config_validation as cv
@@ -19,24 +19,28 @@ from homeassistant.helpers import config_validation as cv
 _LOGGER = logging.getLogger(__name__)
 
 CONF_TOPIC = 'topic'
+CONF_UNIQUE_ID = 'unique_id'
 DEFAULT_NAME = 'MQTT Camera'
 
 DEPENDENCIES = ['mqtt']
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string
 })
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the MQTT Camera."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
 
-    async_add_devices([MqttCamera(
+    async_add_entities([MqttCamera(
         config.get(CONF_NAME),
+        config.get(CONF_UNIQUE_ID),
         config.get(CONF_TOPIC)
     )])
 
@@ -44,11 +48,12 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class MqttCamera(Camera):
     """representation of a MQTT camera."""
 
-    def __init__(self, name, topic):
+    def __init__(self, name, unique_id, topic):
         """Initialize the MQTT Camera."""
         super().__init__()
 
         self._name = name
+        self._unique_id = unique_id
         self._topic = topic
         self._qos = 0
         self._last_image = None
@@ -62,6 +67,11 @@ class MqttCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
 
     @asyncio.coroutine
     def async_added_to_hass(self):

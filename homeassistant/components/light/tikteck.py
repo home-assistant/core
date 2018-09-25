@@ -31,8 +31,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# pylint: disable=unused-argument
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tikteck platform."""
     lights = []
     for address, device_config in config[CONF_DEVICES].items():
@@ -44,7 +43,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         if light.is_valid:
             lights.append(light)
 
-    add_devices(lights)
+    add_entities(lights)
 
 
 class TikteckLight(Light):

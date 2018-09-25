@@ -6,6 +6,7 @@ https://home-assistant.io/components/google_assistant/
 """
 import asyncio
 import logging
+from typing import Dict, Any
 
 import aiohttp
 import async_timeout
@@ -13,9 +14,7 @@ import async_timeout
 import voluptuous as vol
 
 # Typing imports
-# pylint: disable=using-constant-test,unused-import,ungrouped-imports
-from homeassistant.core import HomeAssistant  # NOQA
-from typing import Dict, Any  # NOQA
+from homeassistant.core import HomeAssistant
 
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv

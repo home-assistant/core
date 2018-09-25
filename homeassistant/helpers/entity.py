@@ -1,9 +1,9 @@
 """An abstract class for entities."""
 import asyncio
+from datetime import timedelta
 import logging
 import functools as ft
 from timeit import default_timer as timer
-
 from typing import Optional, List, Iterable
 
 from homeassistant.const import (
@@ -16,6 +16,7 @@ from homeassistant.config import DATA_CUSTOMIZE
 from homeassistant.exceptions import NoEntitySpecifiedError
 from homeassistant.util import ensure_unique_string, slugify
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 SLOW_UPDATE_WARNING = 10
@@ -56,10 +57,9 @@ def async_generate_entity_id(entity_id_format: str, name: Optional[str],
         entity_id_format.format(slugify(name)), current_ids)
 
 
-class Entity(object):
+class Entity:
     """An abstract class for Home Assistant entities."""
 
-    # pylint: disable=no-self-use
     # SAFE TO OVERWRITE
     # The properties and methods here are safe to overwrite when inheriting
     # this class. These may be used to customize the behavior of the entity.
@@ -82,6 +82,13 @@ class Entity(object):
 
     # Name in the entity registry
     registry_name = None
+
+    # Hold list for functions to call on remove.
+    _on_remove = None
+
+    # Context
+    _context = None
+    _context_set = None
 
     @property
     def should_poll(self) -> bool:
@@ -117,6 +124,14 @@ class Entity(object):
     @property
     def device_state_attributes(self):
         """Return device specific state attributes.
+
+        Implemented by platform classes.
+        """
+        return None
+
+    @property
+    def device_info(self):
+        """Return device specific attributes.
 
         Implemented by platform classes.
         """
@@ -171,17 +186,21 @@ class Entity(object):
         """Flag supported features."""
         return None
 
-    def update(self):
-        """Retrieve latest state.
-
-        For asyncio use coroutine async_update.
-        """
-        pass
+    @property
+    def context_recent_time(self):
+        """Time that a context is considered recent."""
+        return timedelta(seconds=5)
 
     # DO NOT OVERWRITE
     # These properties and methods are either managed by Home Assistant or they
     # are used to perform a very specific function. Overwriting these may
     # produce undesirable effects in the entity's operation.
+
+    @callback
+    def async_set_context(self, context):
+        """Set the context the entity currently operates under."""
+        self._context = context
+        self._context_set = dt_util.utcnow()
 
     @asyncio.coroutine
     def async_update_ha_state(self, force_refresh=False):
@@ -283,8 +302,14 @@ class Entity(object):
             # Could not convert state to float
             pass
 
+        if (self._context is not None and
+                dt_util.utcnow() - self._context_set >
+                self.context_recent_time):
+            self._context = None
+            self._context_set = None
+
         self.hass.states.async_set(
-            self.entity_id, state, attr, self.force_update)
+            self.entity_id, state, attr, self.force_update, self._context)
 
     def schedule_update_ha_state(self, force_refresh=False):
         """Schedule an update ha state change task.
@@ -320,10 +345,10 @@ class Entity(object):
             )
 
         try:
+            # pylint: disable=no-member
             if hasattr(self, 'async_update'):
-                # pylint: disable=no-member
                 yield from self.async_update()
-            else:
+            elif hasattr(self, 'update'):
                 yield from self.hass.async_add_job(self.update)
         finally:
             self._update_staged = False
@@ -332,8 +357,19 @@ class Entity(object):
             if self.parallel_updates:
                 self.parallel_updates.release()
 
+    @callback
+    def async_on_remove(self, func):
+        """Add a function to call when entity removed."""
+        if self._on_remove is None:
+            self._on_remove = []
+        self._on_remove.append(func)
+
     async def async_remove(self):
         """Remove entity from Home Assistant."""
+        if self._on_remove is not None:
+            while self._on_remove:
+                self._on_remove.pop()()
+
         if self.platform is not None:
             await self.platform.async_remove_entity(self.entity_id)
         else:
@@ -341,9 +377,19 @@ class Entity(object):
 
     @callback
     def async_registry_updated(self, old, new):
-        """Called when the entity registry has been updated."""
+        """Handle entity registry update."""
         self.registry_name = new.name
-        self.async_schedule_update_ha_state()
+
+        if new.entity_id == self.entity_id:
+            self.async_schedule_update_ha_state()
+            return
+
+        async def readd():
+            """Remove and add entity again."""
+            await self.async_remove()
+            await self.platform.async_add_entities([self])
+
+        self.hass.async_create_task(readd())
 
     def __eq__(self, other):
         """Return the comparison."""
@@ -372,7 +418,6 @@ class Entity(object):
 class ToggleEntity(Entity):
     """An abstract class for entities that can be turned on and off."""
 
-    # pylint: disable=no-self-use
     @property
     def state(self) -> str:
         """Return the state."""

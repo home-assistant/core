@@ -63,8 +63,8 @@ def async_setup(hass, base_config):
     _LOGGER.info("Connected to Lutron smartbridge at %s", config[CONF_HOST])
 
     for component in LUTRON_CASETA_COMPONENTS:
-        hass.async_add_job(discovery.async_load_platform(hass, component,
-                                                         DOMAIN, {}, config))
+        hass.async_create_task(discovery.async_load_platform(
+            hass, component, DOMAIN, {}, config))
 
     return True
 

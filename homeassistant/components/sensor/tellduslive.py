@@ -44,11 +44,11 @@ SENSOR_TYPES = {
 }
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Tellstick sensors."""
     if discovery_info is None:
         return
-    add_devices(TelldusLiveSensor(hass, sensor) for sensor in discovery_info)
+    add_entities(TelldusLiveSensor(hass, sensor) for sensor in discovery_info)
 
 
 class TelldusLiveSensor(TelldusLiveEntity):
@@ -96,11 +96,11 @@ class TelldusLiveSensor(TelldusLiveEntity):
         """Return the state of the sensor."""
         if not self.available:
             return None
-        elif self._type == SENSOR_TYPE_TEMPERATURE:
+        if self._type == SENSOR_TYPE_TEMPERATURE:
             return self._value_as_temperature
-        elif self._type == SENSOR_TYPE_HUMIDITY:
+        if self._type == SENSOR_TYPE_HUMIDITY:
             return self._value_as_humidity
-        elif self._type == SENSOR_TYPE_LUMINANCE:
+        if self._type == SENSOR_TYPE_LUMINANCE:
             return self._value_as_luminance
         return self._value
 

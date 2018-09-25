@@ -25,7 +25,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.util.temperature import convert as convert_temperature
 
-REQUIREMENTS = ['pysensibo==1.0.2']
+REQUIREMENTS = ['pysensibo==1.0.3']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,8 @@ FIELD_TO_FLAG = {
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up Sensibo devices."""
     import pysensibo
 
@@ -71,14 +72,15 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         for dev in (
                 yield from client.async_get_devices(_INITIAL_FETCH_FIELDS)):
             if config[CONF_ID] == ALL or dev['id'] in config[CONF_ID]:
-                devices.append(SensiboClimate(client, dev))
+                devices.append(SensiboClimate(
+                    client, dev, hass.config.units.temperature_unit))
     except (aiohttp.client_exceptions.ClientConnectorError,
             asyncio.TimeoutError):
         _LOGGER.exception('Failed to connect to Sensibo servers.')
         raise PlatformNotReady
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
         @asyncio.coroutine
         def async_assume_state(service):
@@ -106,7 +108,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class SensiboClimate(ClimateDevice):
     """Representation of a Sensibo device."""
 
-    def __init__(self, client, data):
+    def __init__(self, client, data, units):
         """Build SensiboClimate.
 
         client: aiohttp session.
@@ -115,6 +117,7 @@ class SensiboClimate(ClimateDevice):
         self._client = client
         self._id = data['id']
         self._external_state = None
+        self._units = units
         self._do_update(data)
 
     @property
@@ -139,7 +142,7 @@ class SensiboClimate(ClimateDevice):
             self._temperatures_list = self._current_capabilities[
                 'temperatures'].get(temperature_unit_key, {}).get('values', [])
         else:
-            self._temperature_unit = self.unit_of_measurement
+            self._temperature_unit = self._units
             self._temperatures_list = []
         self._supported_features = 0
         for key in self._ac_states:
@@ -154,7 +157,8 @@ class SensiboClimate(ClimateDevice):
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
-        return {ATTR_CURRENT_HUMIDITY: self.current_humidity}
+        return {ATTR_CURRENT_HUMIDITY: self.current_humidity,
+                'battery': self.current_battery}
 
     @property
     def temperature_unit(self):
@@ -174,7 +178,7 @@ class SensiboClimate(ClimateDevice):
     @property
     def target_temperature_step(self):
         """Return the supported step of target temperature."""
-        if self.temperature_unit == self.unit_of_measurement:
+        if self.temperature_unit == self.hass.config.units.temperature_unit:
             # We are working in same units as the a/c unit. Use whole degrees
             # like the API supports.
             return 1
@@ -190,6 +194,11 @@ class SensiboClimate(ClimateDevice):
     def current_humidity(self):
         """Return the current humidity."""
         return self._measurements['humidity']
+
+    @property
+    def current_battery(self):
+        """Return the current battery voltage."""
+        return self._measurements.get('batteryVoltage')
 
     @property
     def current_temperature(self):

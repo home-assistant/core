@@ -19,7 +19,7 @@ DEPENDENCIES = ['skybell']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the platform for a Skybell device."""
     skybell = hass.data.get(SKYBELL_DOMAIN)
 
@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for device in skybell.get_devices():
         sensors.append(SkybellLight(device))
 
-    add_devices(sensors, True)
+    add_entities(sensors, True)
 
 
 def _to_skybell_level(level):

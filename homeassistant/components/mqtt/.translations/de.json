@@ -1,0 +1,15 @@
+{
+    "config": {
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "Passwort",
+                    "username": "Benutzername"
+                },
+                "description": "Bitte gib die Verbindungsinformationen deines MQTT-Brokers ein.",
+                "title": "MQTT"
+            }
+        },
+        "title": "MQTT"
+    }
+}

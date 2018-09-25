@@ -90,22 +90,24 @@ light:
 
 import json
 import unittest
+from unittest.mock import patch
 
 from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE,
     ATTR_SUPPORTED_FEATURES)
 import homeassistant.components.light as light
+import homeassistant.core as ha
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message,
-    assert_setup_component)
+    assert_setup_component, mock_coro)
 
 
 class TestLightMQTTJSON(unittest.TestCase):
     """Test the MQTT JSON light."""
 
     def setUp(self):  # pylint: disable=invalid-name
-        """Setup things to be run when tests are started."""
+        """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
         self.mock_publish = mock_mqtt_component(self.hass)
 
@@ -113,8 +115,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         """Stop everything that was started."""
         self.hass.stop()
 
-    def test_fail_setup_if_no_command_topic(self): \
-            # pylint: disable=invalid-name
+    def test_fail_setup_if_no_command_topic(self):
         """Test if setup fails with no command topic."""
         with assert_setup_component(0, light.DOMAIN):
             assert setup_component(self.hass, light.DOMAIN, {
@@ -125,8 +126,7 @@ class TestLightMQTTJSON(unittest.TestCase):
             })
         self.assertIsNone(self.hass.states.get('light.test'))
 
-    def test_no_color_brightness_color_temp_white_val_if_no_topics(self): \
-            # pylint: disable=invalid-name
+    def test_no_color_brightness_color_temp_white_val_if_no_topics(self):
         """Test for no RGB, brightness, color temp, effect, white val or XY."""
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
@@ -161,8 +161,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertIsNone(state.attributes.get('xy_color'))
         self.assertIsNone(state.attributes.get('hs_color'))
 
-    def test_controlling_state_via_topic(self): \
-            # pylint: disable=invalid-name
+    def test_controlling_state_via_topic(self):
         """Test the controlling of the state via topic."""
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
@@ -281,25 +280,38 @@ class TestLightMQTTJSON(unittest.TestCase):
         light_state = self.hass.states.get('light.test')
         self.assertEqual(155, light_state.attributes.get('white_value'))
 
-    def test_sending_mqtt_commands_and_optimistic(self): \
-            # pylint: disable=invalid-name
+    def test_sending_mqtt_commands_and_optimistic(self):
         """Test the sending of command in optimistic mode."""
-        assert setup_component(self.hass, light.DOMAIN, {
-            light.DOMAIN: {
-                'platform': 'mqtt_json',
-                'name': 'test',
-                'command_topic': 'test_light_rgb/set',
-                'brightness': True,
-                'color_temp': True,
-                'effect': True,
-                'rgb': True,
-                'white_value': True,
-                'qos': 2
-            }
-        })
+        fake_state = ha.State('light.test', 'on', {'brightness': 95,
+                                                   'hs_color': [100, 100],
+                                                   'effect': 'random',
+                                                   'color_temp': 100,
+                                                   'white_value': 50})
+
+        with patch('homeassistant.components.light.mqtt_json'
+                   '.async_get_last_state',
+                   return_value=mock_coro(fake_state)):
+            assert setup_component(self.hass, light.DOMAIN, {
+                light.DOMAIN: {
+                    'platform': 'mqtt_json',
+                    'name': 'test',
+                    'command_topic': 'test_light_rgb/set',
+                    'brightness': True,
+                    'color_temp': True,
+                    'effect': True,
+                    'rgb': True,
+                    'white_value': True,
+                    'qos': 2
+                }
+            })
 
         state = self.hass.states.get('light.test')
-        self.assertEqual(STATE_OFF, state.state)
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(95, state.attributes.get('brightness'))
+        self.assertEqual((100, 100), state.attributes.get('hs_color'))
+        self.assertEqual('random', state.attributes.get('effect'))
+        self.assertEqual(100, state.attributes.get('color_temp'))
+        self.assertEqual(50, state.attributes.get('white_value'))
         self.assertEqual(191, state.attributes.get(ATTR_SUPPORTED_FEATURES))
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
@@ -365,8 +377,8 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(50, message_json["brightness"])
         self.assertEqual({
             'r': 0,
-            'g': 50,
-            'b': 4,
+            'g': 255,
+            'b': 21,
         }, message_json["color"])
         self.assertEqual("ON", message_json["state"])
 
@@ -397,8 +409,7 @@ class TestLightMQTTJSON(unittest.TestCase):
             's': 50.0,
         }, message_json["color"])
 
-    def test_flash_short_and_long(self): \
-            # pylint: disable=invalid-name
+    def test_flash_short_and_long(self):
         """Test for flash length being sent when included."""
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {
@@ -531,8 +542,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
         self.assertEqual(255, state.attributes.get('brightness'))
 
-    def test_invalid_color_brightness_and_white_values(self): \
-            # pylint: disable=invalid-name
+    def test_invalid_color_brightness_and_white_values(self):
         """Test that invalid color/brightness/white values are ignored."""
         assert setup_component(self.hass, light.DOMAIN, {
             light.DOMAIN: {

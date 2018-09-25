@@ -18,15 +18,14 @@ ICON = 'mdi:remote'
 CONF_SENSOR = 'sensor'
 
 
-# pylint: disable=unused-argument, too-many-function-args
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Kira sensor."""
     if discovery_info is not None:
         name = discovery_info.get(CONF_NAME)
         device = discovery_info.get(CONF_DEVICE)
         kira = hass.data[DOMAIN][CONF_SENSOR][name]
 
-        add_devices([KiraReceiver(device, kira)])
+        add_entities([KiraReceiver(device, kira)])
 
 
 class KiraReceiver(Entity):

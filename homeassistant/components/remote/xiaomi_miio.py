@@ -22,7 +22,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.dt import utcnow
 
-REQUIREMENTS = ['python-miio==0.3.9', 'construct==2.9.41']
+REQUIREMENTS = ['python-miio==0.4.1', 'construct==2.9.41']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,7 +62,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Xiaomi IR Remote (Chuangmi IR) platform."""
     from miio import ChuangmiIr, DeviceException
 
@@ -106,7 +107,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.data[DATA_KEY][host] = xiaomi_miio_remote
 
-    async_add_devices([xiaomi_miio_remote])
+    async_add_entities([xiaomi_miio_remote])
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -229,17 +230,16 @@ class XiaomiMiioRemote(RemoteDevice):
             return {'hidden': 'true'}
         return
 
-    # pylint: disable=R0201
     @asyncio.coroutine
     def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        _LOGGER.error("Device does not support turn_on, " +
+        _LOGGER.error("Device does not support turn_on, "
                       "please use 'remote.send_command' to send commands.")
 
     @asyncio.coroutine
     def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        _LOGGER.error("Device does not support turn_off, " +
+        _LOGGER.error("Device does not support turn_off, "
                       "please use 'remote.send_command' to send commands.")
 
     def _send_command(self, payload):
@@ -255,7 +255,7 @@ class XiaomiMiioRemote(RemoteDevice):
                 payload, ex)
 
     def send_command(self, command, **kwargs):
-        """Wrapper for _send_command."""
+        """Send a command."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS)
 
         delay = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)

@@ -34,9 +34,9 @@ NOTIFICATION_ID = 'leviton_notification'
 NOTIFICATION_TITLE = 'myLeviton Decora Setup'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Decora WiFi platform."""
-    # pylint: disable=import-error, no-member, no-name-in-module
+    # pylint: disable=import-error, no-name-in-module
     from decora_wifi import DecoraWiFiSession
     from decora_wifi.models.person import Person
     from decora_wifi.models.residential_account import ResidentialAccount
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 for switch in residence.get_iot_switches():
                     all_switches.append(switch)
 
-        add_devices(DecoraWifiLight(sw) for sw in all_switches)
+        add_entities(DecoraWifiLight(sw) for sw in all_switches)
     except ValueError:
         _LOGGER.error('Failed to communicate with myLeviton Service.')
 

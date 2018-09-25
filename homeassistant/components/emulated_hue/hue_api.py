@@ -237,11 +237,11 @@ class HueOneLightChangeView(HomeAssistantView):
                     # Convert 0-100 to a fan speed
                     if brightness == 0:
                         data[ATTR_SPEED] = SPEED_OFF
-                    elif brightness <= 33.3 and brightness > 0:
+                    elif 0 < brightness <= 33.3:
                         data[ATTR_SPEED] = SPEED_LOW
-                    elif brightness <= 66.6 and brightness > 33.3:
+                    elif 33.3 < brightness <= 66.6:
                         data[ATTR_SPEED] = SPEED_MEDIUM
-                    elif brightness <= 100 and brightness > 66.6:
+                    elif 66.6 < brightness <= 100:
                         data[ATTR_SPEED] = SPEED_HIGH
 
         if entity.domain in config.off_maps_to_on_domains:

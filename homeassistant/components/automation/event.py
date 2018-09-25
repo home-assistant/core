@@ -45,11 +45,11 @@ def async_trigger(hass, config, action):
                 # If event data doesn't match requested schema, skip event
                 return
 
-        hass.async_run_job(action, {
+        hass.async_run_job(action({
             'trigger': {
                 'platform': 'event',
                 'event': event,
             },
-        })
+        }, context=event.context))
 
     return hass.bus.async_listen(event_type, handle_event)
