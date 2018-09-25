@@ -1,12 +1,17 @@
 """The tests for the MQTT cover platform."""
 import unittest
 
-from homeassistant.setup import setup_component
-from homeassistant.const import STATE_OPEN, STATE_CLOSED, STATE_UNKNOWN, \
-    STATE_UNAVAILABLE, ATTR_ASSUMED_STATE
 import homeassistant.components.cover as cover
+from homeassistant.components.cover import (ATTR_POSITION, ATTR_TILT_POSITION)
 from homeassistant.components.cover.mqtt import MqttCover
 from homeassistant.components.mqtt.discovery import async_start
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE, ATTR_ENTITY_ID,
+    SERVICE_CLOSE_COVER, SERVICE_CLOSE_COVER_TILT, SERVICE_OPEN_COVER,
+    SERVICE_OPEN_COVER_TILT, SERVICE_SET_COVER_POSITION,
+    SERVICE_SET_COVER_TILT_POSITION, SERVICE_STOP_COVER,
+    STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN)
+from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, async_fire_mqtt_message,
@@ -117,7 +122,9 @@ class TestCoverMQTT(unittest.TestCase):
         self.assertEqual(STATE_UNKNOWN, state.state)
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
-        cover.open_cover(self.hass, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -126,7 +133,9 @@ class TestCoverMQTT(unittest.TestCase):
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_OPEN, state.state)
 
-        cover.close_cover(self.hass, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -149,7 +158,9 @@ class TestCoverMQTT(unittest.TestCase):
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
 
-        cover.open_cover(self.hass, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -172,7 +183,9 @@ class TestCoverMQTT(unittest.TestCase):
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
 
-        cover.close_cover(self.hass, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -195,7 +208,9 @@ class TestCoverMQTT(unittest.TestCase):
         state = self.hass.states.get('cover.test')
         self.assertEqual(STATE_UNKNOWN, state.state)
 
-        cover.stop_cover(self.hass, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_STOP_COVER,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -297,7 +312,9 @@ class TestCoverMQTT(unittest.TestCase):
             }
         }))
 
-        cover.set_cover_position(self.hass, 100, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: 'cover.test', ATTR_POSITION: 100}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -318,7 +335,9 @@ class TestCoverMQTT(unittest.TestCase):
             }
         }))
 
-        cover.set_cover_position(self.hass, 62, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: 'cover.test', ATTR_POSITION: 62}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -403,14 +422,18 @@ class TestCoverMQTT(unittest.TestCase):
             }
         }))
 
-        cover.open_cover_tilt(self.hass, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
             'tilt-command-topic', 100, 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        cover.close_cover_tilt(self.hass, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -435,14 +458,18 @@ class TestCoverMQTT(unittest.TestCase):
             }
         }))
 
-        cover.open_cover_tilt(self.hass, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_OPEN_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
             'tilt-command-topic', 400, 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        cover.close_cover_tilt(self.hass, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_CLOSE_COVER_TILT,
+            {ATTR_ENTITY_ID: 'cover.test'}, blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -542,7 +569,10 @@ class TestCoverMQTT(unittest.TestCase):
             }
         }))
 
-        cover.set_cover_tilt_position(self.hass, 50, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_SET_COVER_TILT_POSITION,
+            {ATTR_ENTITY_ID: 'cover.test', ATTR_TILT_POSITION: 50},
+            blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -569,7 +599,10 @@ class TestCoverMQTT(unittest.TestCase):
             }
         }))
 
-        cover.set_cover_tilt_position(self.hass, 50, 'cover.test')
+        self.hass.services.call(
+            cover.DOMAIN, SERVICE_SET_COVER_TILT_POSITION,
+            {ATTR_ENTITY_ID: 'cover.test', ATTR_TILT_POSITION: 50},
+            blocking=True)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
