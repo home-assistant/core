@@ -1,5 +1,4 @@
 """Tests for fan platforms."""
-
 import unittest
 
 from homeassistant.components.fan import FanEntity
