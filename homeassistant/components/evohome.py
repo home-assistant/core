@@ -14,7 +14,7 @@ https://home-assistant.io/components/climate.evohome/
 #   0-1 DHW controller, (a.k.a. Boiler)
 
 import logging
-import requests
+from requests.exceptions import HTTPError
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -84,7 +84,7 @@ def setup(hass, config):
         # ...then restore it to what it was before instantiating the client
         logging.getLogger().setLevel(log_level)
 
-    except requests.exceptions.HTTPError as err:
+    except HTTPError as err:
         if err.response.status_code == HTTP_BAD_REQUEST:
             _LOGGER.error(
                 "Failed to establish a connection with evohome web servers, "
