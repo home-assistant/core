@@ -1,7 +1,7 @@
 """The tests for the manual_mqtt Alarm Control Panel component."""
 from datetime import timedelta
 import unittest
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from homeassistant.setup import setup_component
 from homeassistant.const import (
@@ -23,6 +23,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
     def setUp(self):  # pylint: disable=invalid-name
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        self.hass.config_entries._async_schedule_save = Mock()
         self.mock_publish = mock_mqtt_component(self.hass)
 
     def tearDown(self):  # pylint: disable=invalid-name
