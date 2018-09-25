@@ -749,9 +749,11 @@ class TestZWaveDeviceEntityValues(unittest.TestCase):
         self.device_config = {'mock_component.registry_id': {
             zwave.CONF_IGNORED: True
         }}
-        self.registry.async_get_or_create(
-            'mock_component', zwave.DOMAIN, '567-1000',
-            suggested_object_id='registry_id')
+        with patch.object(self.registry, 'async_schedule_save'):
+            self.registry.async_get_or_create(
+                'mock_component', zwave.DOMAIN, '567-1000',
+                suggested_object_id='registry_id')
+
         zwave.ZWaveDeviceEntityValues(
             hass=self.hass,
             schema=self.mock_schema,
