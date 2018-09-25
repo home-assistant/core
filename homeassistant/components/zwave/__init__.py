@@ -89,6 +89,12 @@ SET_INDICATOR_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int)
 })
 
+SET_NODE_VALUE_SCHEMA = vol.Schema({
+    vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int),
+    vol.Required(const.ATTR_CONFIG_VALUE): vol.Coerce(int)
+})
+
 REFRESH_NODE_VALUE_SCHEMA = vol.Schema({
     vol.Required(const.ATTR_NODE_ID): vol.Coerce(int),
     vol.Required(const.ATTR_VALUE_ID): vol.Coerce(int)
@@ -523,6 +529,15 @@ async def async_setup(hass, config):
         node.values[value_id].refresh()
         _LOGGER.info("Node %s value %s refreshed", node_id, value_id)
 
+    def set_node_value(service):
+        """Set the specified value on a node."""
+        node_id = service.data.get(const.ATTR_NODE_ID)
+        value_id = service.data.get(const.ATTR_VALUE_ID)
+        value = service.data.get(const.ATTR_CONFIG_VALUE)
+        node = network.nodes[node_id]
+        node.values[value_id].data = value
+        _LOGGER.info("Node %s value %s set to %s", node_id, value_id, value)
+
     def print_config_parameter(service):
         """Print a config parameter from a node."""
         node_id = service.data.get(const.ATTR_NODE_ID)
@@ -696,6 +711,9 @@ async def async_setup(hass, config):
         hass.services.register(DOMAIN, const.SERVICE_SET_INDICATOR,
                                set_indicator,
                                schema=SET_INDICATOR_SCHEMA)
+        hass.services.register(DOMAIN, const.SERVICE_SET_NODE_VALUE,
+                               set_node_value,
+                               schema=SET_NODE_VALUE_SCHEMA)
         hass.services.register(DOMAIN, const.SERVICE_REFRESH_NODE_VALUE,
                                refresh_node_value,
                                schema=REFRESH_NODE_VALUE_SCHEMA)
