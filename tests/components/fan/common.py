@@ -1,4 +1,8 @@
-"""Collection of helper methods."""
+"""Collection of helper methods.
+
+All containing methods are legacy helpers that should not be used by new
+components. Instead call the service directly.
+"""
 from homeassistant.components.fan import (
     ATTR_DIRECTION, ATTR_SPEED, ATTR_OSCILLATING, DOMAIN,
     SERVICE_OSCILLATE, SERVICE_SET_DIRECTION, SERVICE_SET_SPEED)

@@ -1,4 +1,8 @@
-"""Collection of helper methods."""
+"""Collection of helper methods.
+
+All containing methods are legacy helpers that should not be used by new
+components. Instead call the service directly.
+"""
 from homeassistant.components.camera import (
     ATTR_FILENAME, DOMAIN, SERVICE_DISABLE_MOTION, SERVICE_ENABLE_MOTION,
     SERVICE_SNAPSHOT)

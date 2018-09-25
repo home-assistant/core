@@ -1,4 +1,8 @@
-"""Collection of helper methods."""
+"""Collection of helper methods.
+
+All containing methods are legacy helpers that should not be used by new
+components. Instead call the service directly.
+"""
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.components.counter import (
     DOMAIN, SERVICE_DECREMENT, SERVICE_INCREMENT, SERVICE_RESET)
