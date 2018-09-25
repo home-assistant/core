@@ -72,7 +72,7 @@ def test_get_entries(hass, client):
 @asyncio.coroutine
 def test_remove_entry(hass, client):
     """Test removing an entry via the API."""
-    entry = MockConfigEntry(domain='demo')
+    entry = MockConfigEntry(domain='demo', state=core_ce.ENTRY_STATE_LOADED)
     entry.add_to_hass(hass)
     resp = yield from client.delete(
         '/api/config/config_entries/entry/{}'.format(entry.entry_id))
