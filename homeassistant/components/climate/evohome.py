@@ -127,7 +127,7 @@ class EvoController(ClimateDevice):
 
         self._available = False  # should become True after first update()
 
-    def _handle_requests_exceptions(self, err_hint, err):
+    def _handle_requests_exceptions(self, err):
         # evohomeclient v2 api (>=0.2.7) exposes requests exceptions, incl.:
         # - HTTP_BAD_REQUEST, is usually Bad user credentials
         # - HTTP_TOO_MANY_REQUESTS, is api usuage limit exceeded
@@ -272,7 +272,7 @@ class EvoController(ClimateDevice):
         try:
             self._obj._set_status(operation_mode)                                      # noqa: E501; pylint: disable=protected-access
         except HTTPError as err:
-            self._handle_requests_exceptions("HTTPError", err)
+            self._handle_requests_exceptions(err)
 
     def set_operation_mode(self, operation_mode):
         """Set new target operation mode for the TCS.
@@ -297,7 +297,7 @@ class EvoController(ClimateDevice):
 
         except HTTPError as err:
             # check if we've exceeded the api rate limit
-            self._handle_requests_exceptions("HTTPError", err)
+            self._handle_requests_exceptions(err)
 
         else:
             evo_data['timers']['statusUpdated'] = datetime.now()
