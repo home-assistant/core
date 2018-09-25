@@ -340,7 +340,10 @@ class ConfigEntries:
         entry = self._entries.pop(found)
         self._async_schedule_save()
 
-        unloaded = await entry.async_unload(self.hass)
+        if entry.state == ENTRY_STATE_LOADED:
+            unloaded = await entry.async_unload(self.hass)
+        else:
+            unloaded = True
 
         device_registry = await \
             self.hass.helpers.device_registry.async_get_registry()
@@ -378,6 +381,12 @@ class ConfigEntries:
                 connection_class=entry.get('connection_class',
                                            CONN_CLASS_UNKNOWN))
             for entry in config['entries']]
+
+    @callback
+    def async_update_entry(self, entry, *, data):
+        """Update a config entry."""
+        entry.data = data
+        self._async_schedule_save()
 
     async def async_forward_entry_setup(self, entry, component):
         """Forward the setup of an entry to a different component.
