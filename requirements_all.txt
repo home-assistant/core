@@ -1014,6 +1014,9 @@ pynx584==0.4
 # homeassistant.components.openuv
 pyopenuv==1.0.4
 
+# homeassistant.components.light.opple
+pyoppleio==1.0.5
+
 # homeassistant.components.iota
 pyota==2.0.5
 
