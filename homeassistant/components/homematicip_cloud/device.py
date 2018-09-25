@@ -63,6 +63,7 @@ class HomematicipGenericDevice(Entity):
 
     @property
     def unique_id(self):
+        """Return a unique ID."""
         return "{}_{}".format(self.__class__.__name__, self._device.id)
 
     @property
