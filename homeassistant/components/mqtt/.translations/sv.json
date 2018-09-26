@@ -1,0 +1,13 @@
+{
+    "config": {
+        "step": {
+            "broker": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "port": "Port",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}
