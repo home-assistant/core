@@ -47,9 +47,7 @@ def save_json(filename: str, data: Union[List, Dict],
     """
     try:
         json_data = json.dumps(data, sort_keys=True, indent=4)
-        mode = 0o600 if private else 0o644
-        with open(os.open(filename, os.O_WRONLY | os.O_CREAT, mode),
-                  'w', encoding='utf-8') as fdesc:
+        with open(filename, 'w', encoding='utf-8') as fdesc:
             fdesc.write(json_data)
     except TypeError as error:
         _LOGGER.exception('Failed to serialize to JSON: %s',
