@@ -13,6 +13,7 @@ import homeassistant.util.dt as dt_util
 from tests.common import (
     fire_time_changed, get_test_home_assistant,
     mock_mqtt_component, fire_mqtt_message, assert_setup_component)
+from tests.components.alarm_control_panel import common
 
 CODE = 'HELLO_CODE'
 
@@ -70,7 +71,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_home(self.hass, CODE)
+        common.alarm_arm_home(self.hass, CODE)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_HOME,
@@ -95,7 +96,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_home(self.hass, CODE, entity_id)
+        common.alarm_arm_home(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -132,7 +133,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_home(self.hass, CODE + '2')
+        common.alarm_arm_home(self.hass, CODE + '2')
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
@@ -157,7 +158,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_away(self.hass, CODE, entity_id)
+        common.alarm_arm_away(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
@@ -185,7 +186,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_home(self.hass, 'abc')
+        common.alarm_arm_home(self.hass, 'abc')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
@@ -210,7 +211,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -247,7 +248,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_away(self.hass, CODE + '2')
+        common.alarm_arm_away(self.hass, CODE + '2')
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
@@ -272,7 +273,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_night(self.hass, CODE, entity_id)
+        common.alarm_arm_night(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_NIGHT,
@@ -297,7 +298,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_night(self.hass, CODE)
+        common.alarm_arm_night(self.hass, CODE)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -317,7 +318,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
                          self.hass.states.get(entity_id).state)
 
         # Do not go to the pending state when updating to the same state
-        alarm_control_panel.alarm_arm_night(self.hass, CODE, entity_id)
+        common.alarm_arm_night(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_NIGHT,
@@ -342,7 +343,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_night(self.hass, CODE + '2')
+        common.alarm_arm_night(self.hass, CODE + '2')
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
@@ -366,7 +367,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -401,13 +402,13 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
@@ -443,7 +444,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass)
+        common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
@@ -468,7 +469,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass)
+        common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
@@ -493,7 +494,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass)
+        common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -539,7 +540,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
@@ -576,7 +577,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
@@ -604,7 +605,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
@@ -640,7 +641,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
@@ -674,13 +675,13 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_away(self.hass, CODE, entity_id)
+        common.alarm_arm_away(self.hass, CODE, entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
@@ -695,7 +696,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_TRIGGERED,
@@ -728,13 +729,13 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass)
+        common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_disarm(self.hass, entity_id=entity_id)
+        common.alarm_disarm(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_DISARMED,
@@ -768,13 +769,13 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass)
+        common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_disarm(self.hass, entity_id=entity_id)
+        common.alarm_disarm(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -812,13 +813,13 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
@@ -858,13 +859,13 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
@@ -904,13 +905,13 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
@@ -962,13 +963,13 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
@@ -1011,7 +1012,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         entity_id = 'alarm_control_panel.test'
 
-        alarm_control_panel.alarm_arm_home(self.hass)
+        common.alarm_arm_home(self.hass)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -1043,7 +1044,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         entity_id = 'alarm_control_panel.test'
 
-        alarm_control_panel.alarm_arm_away(self.hass)
+        common.alarm_arm_away(self.hass)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -1075,7 +1076,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         entity_id = 'alarm_control_panel.test'
 
-        alarm_control_panel.alarm_arm_night(self.hass)
+        common.alarm_arm_night(self.hass)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -1109,7 +1110,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
 
         entity_id = 'alarm_control_panel.test'
 
-        alarm_control_panel.alarm_trigger(self.hass)
+        common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -1159,7 +1160,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_away(self.hass, CODE)
+        common.alarm_arm_away(self.hass, CODE)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
@@ -1169,7 +1170,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_ARMED_AWAY,
                          state.attributes['post_pending_state'])
 
-        alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+        common.alarm_trigger(self.hass, entity_id=entity_id)
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
@@ -1188,7 +1189,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
             state = self.hass.states.get(entity_id)
             self.assertEqual(STATE_ALARM_ARMED_AWAY, state.state)
 
-            alarm_control_panel.alarm_trigger(self.hass, entity_id=entity_id)
+            common.alarm_trigger(self.hass, entity_id=entity_id)
             self.hass.block_till_done()
 
             state = self.hass.states.get(entity_id)
@@ -1230,19 +1231,19 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_arm_home(self.hass, 'def')
+        common.alarm_arm_home(self.hass, 'def')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
         self.assertEqual(STATE_ALARM_ARMED_HOME, state.state)
 
-        alarm_control_panel.alarm_disarm(self.hass, 'def')
+        common.alarm_disarm(self.hass, 'def')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
         self.assertEqual(STATE_ALARM_ARMED_HOME, state.state)
 
-        alarm_control_panel.alarm_disarm(self.hass, 'abc')
+        common.alarm_disarm(self.hass, 'abc')
         self.hass.block_till_done()
 
         state = self.hass.states.get(entity_id)
@@ -1368,7 +1369,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.assertEqual(STATE_ALARM_DISARMED,
                          self.hass.states.get(entity_id).state)
 
-        alarm_control_panel.alarm_trigger(self.hass)
+        common.alarm_trigger(self.hass)
         self.hass.block_till_done()
 
         self.assertEqual(STATE_ALARM_PENDING,
@@ -1401,7 +1402,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # Arm in home mode
-        alarm_control_panel.alarm_arm_home(self.hass)
+        common.alarm_arm_home(self.hass)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/state', STATE_ALARM_PENDING, 0, True)
@@ -1417,7 +1418,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # Arm in away mode
-        alarm_control_panel.alarm_arm_away(self.hass)
+        common.alarm_arm_away(self.hass)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/state', STATE_ALARM_PENDING, 0, True)
@@ -1433,7 +1434,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # Arm in night mode
-        alarm_control_panel.alarm_arm_night(self.hass)
+        common.alarm_arm_night(self.hass)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/state', STATE_ALARM_PENDING, 0, True)
@@ -1449,7 +1450,7 @@ class TestAlarmControlPanelManualMqtt(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # Disarm
-        alarm_control_panel.alarm_disarm(self.hass)
+        common.alarm_disarm(self.hass)
         self.hass.block_till_done()
         self.mock_publish.async_publish.assert_called_once_with(
             'alarm/state', STATE_ALARM_DISARMED, 0, True)
