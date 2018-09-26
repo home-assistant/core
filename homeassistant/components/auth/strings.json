@@ -17,15 +17,15 @@
       "step": {
         "init": {
           "title": "Set up one-time password delivered by notify component",
-          "description": "Please select one of notify service:"
+          "description": "Please select one of the notification services:"
         },
         "setup": {
           "title": "Verify setup",
-          "description": "A one-time password have sent by **notify.{notify_service}**. Please input it in below:"
+          "description": "A one-time password has been sent via **notify.{notify_service}**. Please enter it below:"
         }
       },
       "abort": {
-        "no_available_service": "No available notify services."
+        "no_available_service": "No notification services available."
       },
       "error": {
         "invalid_code": "Invalid code, please try again."
