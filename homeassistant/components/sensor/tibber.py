@@ -15,7 +15,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN
-from homeassistant.core import callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity
@@ -182,7 +181,6 @@ class TibberSensorRT(Entity):
         await self._tibber_home.rt_subscribe(self.hass.loop,
                                              self._async_callback)
 
-    @callback
     async def _async_callback(self, payload):
         """Handle received data."""
         data = payload.get('data', {})
@@ -230,4 +228,5 @@ class TibberSensorRT(Entity):
     def unique_id(self):
         """Return a unique ID."""
         home = self._tibber_home.info['viewer']['home']
-        return home['meteringPointData']['consumptionEan'] + '_rt_consumption'
+        _id = home['meteringPointData']['consumptionEan']
+        return'{}_rt_consumption'.format(_id)
