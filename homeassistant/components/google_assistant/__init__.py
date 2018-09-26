@@ -42,19 +42,19 @@ ENTITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_ROOM_HINT): cv.string
 })
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: {
-            vol.Required(CONF_PROJECT_ID): cv.string,
-            vol.Optional(CONF_EXPOSE_BY_DEFAULT,
-                         default=DEFAULT_EXPOSE_BY_DEFAULT): cv.boolean,
-            vol.Optional(CONF_EXPOSED_DOMAINS,
-                         default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
-            vol.Optional(CONF_API_KEY): cv.string,
-            vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA}
-        }
-    },
-    extra=vol.PREVENT_EXTRA)
+GOOGLE_ASSISTANT_SCHEMA = vol.Schema({
+    vol.Required(CONF_PROJECT_ID): cv.string,
+    vol.Optional(CONF_EXPOSE_BY_DEFAULT,
+                 default=DEFAULT_EXPOSE_BY_DEFAULT): cv.boolean,
+    vol.Optional(CONF_EXPOSED_DOMAINS,
+                 default=DEFAULT_EXPOSED_DOMAINS): cv.ensure_list,
+    vol.Optional(CONF_API_KEY): cv.string,
+    vol.Optional(CONF_ENTITY_CONFIG): {cv.entity_id: ENTITY_SCHEMA}
+}, extra=vol.PREVENT_EXTRA)
+
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: GOOGLE_ASSISTANT_SCHEMA
+}, extra=vol.ALLOW_EXTRA)
 
 
 @bind_hass
