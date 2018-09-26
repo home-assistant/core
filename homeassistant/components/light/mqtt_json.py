@@ -6,6 +6,8 @@ https://home-assistant.io/components/light.mqtt_json/
 """
 import logging
 import json
+from typing import Optional
+
 import voluptuous as vol
 
 from homeassistant.core import callback
@@ -23,7 +25,7 @@ from homeassistant.const import (
 from homeassistant.components.mqtt import (
     CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
-    MqttAvailability)
+    MqttAvailability, MqttDiscoveryUpdate, ATTR_DISCOVERY_HASH)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.restore_state import async_get_last_state
@@ -87,6 +89,11 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     """Set up a MQTT JSON Light."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
+
+    discovery_hash = None
+    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
+        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
+
     async_add_entities([MqttJson(
         config.get(CONF_NAME),
         config.get(CONF_UNIQUE_ID),
@@ -116,20 +123,23 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
-        config.get(CONF_BRIGHTNESS_SCALE)
+        config.get(CONF_BRIGHTNESS_SCALE),
+        discovery_hash,
     )])
 
 
-class MqttJson(MqttAvailability, Light):
+class MqttJson(MqttAvailability, MqttDiscoveryUpdate, Light):
     """Representation of a MQTT JSON light."""
 
     def __init__(self, name, unique_id, effect_list, topic, qos, retain,
                  optimistic, brightness, color_temp, effect, rgb, white_value,
                  xy, hs, flash_times, availability_topic, payload_available,
-                 payload_not_available, brightness_scale):
+                 payload_not_available, brightness_scale,
+                 discovery_hash: Optional[str]):
         """Initialize MQTT JSON light."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash)
         self._name = name
         self._unique_id = unique_id
         self._effect_list = effect_list
@@ -180,7 +190,8 @@ class MqttJson(MqttAvailability, Light):
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
+        await MqttAvailability.async_added_to_hass(self)
+        await MqttDiscoveryUpdate.async_added_to_hass(self)
 
         last_state = await async_get_last_state(self.hass, self.entity_id)
 
