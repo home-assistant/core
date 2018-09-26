@@ -57,42 +57,6 @@ def is_locked(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_LOCKED)
 
 
-@bind_hass
-def lock(hass, entity_id=None, code=None):
-    """Lock all or specified locks."""
-    data = {}
-    if code:
-        data[ATTR_CODE] = code
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_LOCK, data)
-
-
-@bind_hass
-def unlock(hass, entity_id=None, code=None):
-    """Unlock all or specified locks."""
-    data = {}
-    if code:
-        data[ATTR_CODE] = code
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_UNLOCK, data)
-
-
-@bind_hass
-def open_lock(hass, entity_id=None, code=None):
-    """Open all or specified locks."""
-    data = {}
-    if code:
-        data[ATTR_CODE] = code
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_OPEN, data)
-
-
 @asyncio.coroutine
 def async_setup(hass, config):
     """Track states and offer events for locks."""
