@@ -8,6 +8,7 @@ import json
 import logging
 import re
 
+from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import CONF_STATE_TOPIC, ATTR_DISCOVERY_HASH
 from homeassistant.const import CONF_PLATFORM
@@ -24,6 +25,10 @@ SUPPORTED_COMPONENTS = [
     'binary_sensor', 'camera', 'cover', 'fan',
     'light', 'sensor', 'switch', 'lock', 'climate',
     'alarm_control_panel']
+
+CONFIG_ENTRY_PLATFORMS = {
+    'sensor': ['mqtt'],
+}
 
 ALLOWED_PLATFORMS = {
     'binary_sensor': ['mqtt'],
@@ -42,7 +47,7 @@ ALREADY_DISCOVERED = 'mqtt_discovered_components'
 MQTT_DISCOVERY_UPDATED = 'mqtt_discovery_updated_{}'
 
 
-async def async_start(hass, discovery_topic, hass_config):
+async def async_start(hass: HomeAssistantType, discovery_topic, hass_config, config_entry):
     """Initialize of MQTT Discovery."""
     async def async_device_message_received(topic, payload, qos):
         """Process the received message."""
@@ -98,8 +103,19 @@ async def async_start(hass, discovery_topic, hass_config):
 
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
 
-            await async_load_platform(
-                hass, component, platform, payload, hass_config)
+            if platform in CONFIG_ENTRY_PLATFORMS.get(component, []):
+                async_dispatcher_send(hass, 'mqtt_discovery_new_{}_{}'.format(component, platform),
+                                      payload)
+            else:
+                await async_load_platform(
+                    hass, component, platform, payload, hass_config)
+
+    # TODO: Do we have to load all MQTT platforms on-demand or is this OK too?
+    for component, platforms in CONFIG_ENTRY_PLATFORMS.items():
+        for platform in platforms:
+            # TODO: Modify config_entries.py to allow manual platform name selection
+            hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+                config_entry, component))
 
     await mqtt.async_subscribe(
         hass, discovery_topic + '/#', async_device_message_received, 0)

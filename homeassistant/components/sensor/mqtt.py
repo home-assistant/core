@@ -11,15 +11,16 @@ from typing import Optional
 
 import voluptuous as vol
 
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.core import callback
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
-    MqttAvailability, MqttDiscoveryUpdate)
+    MqttAvailability, MqttDiscoveryUpdate, MqttDevice)
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
-    CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS)
+    CONF_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_DEVICE_CLASS, CONF_DEVICE)
 from homeassistant.helpers.entity import Entity
 from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
@@ -48,11 +49,27 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
     # Integrations shouldn't never expose unique_id through configuration
     # this here is an exception because MQTT is a msg transport, not a protocol
     vol.Optional(CONF_UNIQUE_ID): cv.string,
+    vol.Optional(CONF_DEVICE): mqtt.MQTT_DEVICE_SCHEMA,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
+    """Setting up MQTT sensors through configuration.yaml"""
+    await _async_setup_platform(hass, config, async_add_entities, discovery_info)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Setting up MQTT sensors dynamically through MQTT discovery."""
+    async def async_discover_sensor(config):
+        """Discover and add a discovered MQTT sensor."""
+        await _async_setup_platform(hass, {}, async_add_entities, config)
+
+    async_dispatcher_connect(hass, 'mqtt_discovery_new_sensor_mqtt', async_discover_sensor)
+
+
+async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                                async_add_entities, discovery_info=None):
     """Set up MQTT Sensor."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -80,22 +97,24 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        config.get(CONF_DEVICE),
         discovery_hash,
     )])
 
 
-class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, Entity):
+class MqttSensor(MqttAvailability, MqttDiscoveryUpdate, MqttDevice, Entity):
     """Representation of a sensor that can be updated using MQTT."""
 
     def __init__(self, name, state_topic, qos, unit_of_measurement,
                  force_update, expire_after, icon, device_class: Optional[str],
                  value_template, json_attributes, unique_id: Optional[str],
                  availability_topic, payload_available, payload_not_available,
-                 discovery_hash):
+                 device_config: Optional[ConfigType], discovery_hash):
         """Initialize the sensor."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
         MqttDiscoveryUpdate.__init__(self, discovery_hash)
+        MqttDevice.__init__(self, device_config)
         self._state = STATE_UNKNOWN
         self._name = name
         self._state_topic = state_topic
