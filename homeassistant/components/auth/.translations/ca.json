@@ -1,8 +1,27 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "No hi ha serveis de notificaci\u00f3 disponibles."
+            },
+            "error": {
+                "invalid_code": "Codi inv\u00e0lid, si us plau torni a provar-ho."
+            },
+            "step": {
+                "init": {
+                    "description": "Seleccioneu un dels serveis de notificaci\u00f3:",
+                    "title": "Configureu una contrasenya d'un sol \u00fas a trav\u00e9s del component de notificacions"
+                },
+                "setup": {
+                    "description": "**notify.{notify_service}** ha enviat una contrasenya d'un sol \u00fas. Introdu\u00efu-la a continuaci\u00f3:",
+                    "title": "Verifiqueu la configuraci\u00f3"
+                }
+            },
+            "title": "Contrasenya d'un sol \u00fas del servei de notificacions"
+        },
         "totp": {
             "error": {
-                "invalid_code": "Codi no v\u00e0lid, si us plau torni a provar-ho. Si obteniu aquest error repetidament, assegureu-vos que la data i hora de Home Assistant sigui correcta i precisa."
+                "invalid_code": "Codi inv\u00e0lid, si us plau torni a provar-ho. Si obteniu aquest error repetidament, assegureu-vos que la data i hora de Home Assistant sigui correcta i precisa."
             },
             "step": {
                 "init": {

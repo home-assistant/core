@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "\u6c92\u6709\u53ef\u7528\u7684\u901a\u77e5\u670d\u52d9\u3002"
+            },
+            "error": {
+                "invalid_code": "\u9a57\u8b49\u78bc\u7121\u6548\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002"
+            },
+            "step": {
+                "init": {
+                    "description": "\u8acb\u9078\u64c7\u4e00\u9805\u901a\u77e5\u670d\u52d9\uff1a",
+                    "title": "\u8a2d\u5b9a\u4e00\u6b21\u6027\u5bc6\u78bc\u50b3\u9001\u7d44\u4ef6"
+                },
+                "setup": {
+                    "description": "\u4e00\u6b21\u6027\u5bc6\u78bc\u5df2\u900f\u904e **notify.{notify_service}** \u50b3\u9001\u3002\u8acb\u65bc\u4e0b\u65b9\u8f38\u5165\uff1a",
+                    "title": "\u9a57\u8b49\u8a2d\u5b9a"
+                }
+            },
+            "title": "\u901a\u77e5\u4e00\u6b21\u6027\u5bc6\u78bc"
+        },
         "totp": {
             "error": {
                 "invalid_code": "\u9a57\u8b49\u78bc\u7121\u6548\uff0c\u8acb\u518d\u8a66\u4e00\u6b21\u3002\u5047\u5982\u932f\u8aa4\u6301\u7e8c\u767c\u751f\uff0c\u8acb\u5148\u78ba\u5b9a\u60a8\u7684 Home Assistant \u7cfb\u7d71\u4e0a\u7684\u6642\u9593\u8a2d\u5b9a\u6b63\u78ba\u5f8c\uff0c\u518d\u8a66\u4e00\u6b21\u3002"

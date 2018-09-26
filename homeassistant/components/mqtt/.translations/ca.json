@@ -10,6 +10,7 @@
             "broker": {
                 "data": {
                     "broker": "Broker",
+                    "discovery": "Activar descobreix automaticament",
                     "password": "Contrasenya",
                     "port": "Port",
                     "username": "Nom d'usuari"
