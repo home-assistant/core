@@ -6,11 +6,11 @@ from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE,\
     ATTR_ASSUMED_STATE
 import homeassistant.core as ha
-import homeassistant.components.switch as switch
+from homeassistant.components import switch, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant, mock_coro,
-    async_mock_mqtt_component, async_fire_mqtt_message)
+    async_mock_mqtt_component, async_fire_mqtt_message, MockConfigEntry)
 
 
 class TestSwitchMQTT(unittest.TestCase):
@@ -311,7 +311,8 @@ async def test_unique_id(hass):
 
 async def test_discovery_removal_switch(hass, mqtt_mock, caplog):
     """Test expansion of discovered switch."""
-    await async_start(hass, 'homeassistant', {})
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
 
     data = (
         '{ "name": "Beer",'
