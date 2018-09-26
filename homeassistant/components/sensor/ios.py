@@ -47,6 +47,21 @@ class IOSSensor(Entity):
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
 
     @property
+    def device_info(self):
+        """Return information about the device."""
+        return {
+            'identifiers': {
+                (ios.DOMAIN,
+                 self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_PERMANENT_ID]),
+            },
+            'name': self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME],
+            'manufacturer': 'Apple',
+            'model': self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_TYPE],
+            'sw_version':
+            self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_SYSTEM_VERSION],
+        }
+
+    @property
     def name(self):
         """Return the name of the iOS sensor."""
         device_name = self._device[ios.ATTR_DEVICE][ios.ATTR_DEVICE_NAME]
