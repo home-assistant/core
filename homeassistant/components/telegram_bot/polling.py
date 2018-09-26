@@ -66,7 +66,7 @@ def message_handler(handler):
 
         def __init__(self):
             """Initialize the messages handler instance."""
-            super(MessageHandler, self).__init__(handler)
+            super().__init__(handler)
 
         def check_update(self, update):
             """Check is update valid."""
