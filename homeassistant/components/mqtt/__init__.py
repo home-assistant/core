@@ -5,13 +5,13 @@ For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/mqtt/
 """
 import asyncio
-from itertools import groupby
 import logging
-from operator import attrgetter
 import os
 import socket
 import ssl
 import time
+from itertools import groupby
+from operator import attrgetter
 from typing import Any, Callable, List, Optional, Union, cast  # noqa: F401
 
 import attr
@@ -19,13 +19,14 @@ import requests.certs
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT, CONF_PROTOCOL, CONF_USERNAME,
-    CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP)
+from homeassistant.const import (CONF_NAME, CONF_PASSWORD, CONF_PAYLOAD,
+                                 CONF_PORT, CONF_PROTOCOL, CONF_TYPE,
+                                 CONF_USERNAME, CONF_VALUE_TEMPLATE,
+                                 EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import template
+from homeassistant.helpers import config_validation as cv, device_registry, \
+    template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
     ConfigType, HomeAssistantType, ServiceDataType)
@@ -33,7 +34,6 @@ from homeassistant.loader import bind_hass
 from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.util.async_ import (
     run_callback_threadsafe, run_coroutine_threadsafe)
-
 # Loading the config flow file will register the flow
 from . import config_flow  # noqa  # pylint: disable=unused-import
 from .const import CONF_BROKER, CONF_DISCOVERY, DEFAULT_DISCOVERY
@@ -72,6 +72,13 @@ CONF_PAYLOAD_AVAILABLE = 'payload_available'
 CONF_PAYLOAD_NOT_AVAILABLE = 'payload_not_available'
 CONF_QOS = 'qos'
 CONF_RETAIN = 'retain'
+
+CONF_IDENTIFIERS = 'identifiers'
+CONF_CONNECTIONS = 'connections'
+CONF_IDENTIFIER = 'identifier'
+CONF_MANUFACTURER = 'manufacturer'
+CONF_MODEL = 'model'
+CONF_SW_VERSION = 'sw_version'
 
 PROTOCOL_31 = '3.1'
 PROTOCOL_311 = '3.1.1'
@@ -144,6 +151,15 @@ def valid_publish_topic(value: Any) -> str:
     return value
 
 
+def validate_device_has_at_least_one_identifier(value: ConfigType) -> \
+        ConfigType:
+    """Validate that a device info entry has at least one identifying value."""
+    if not value.get(CONF_IDENTIFIERS) and not value.get(CONF_CONNECTIONS):
+        raise vol.Invalid("Device must has at least one identifying value in"
+                          "'identifiers' and/or 'connections'")
+    return value
+
+
 _VALID_QOS_SCHEMA = vol.All(vol.Coerce(int), vol.In([0, 1, 2]))
 
 CLIENT_KEY_AUTH_MSG = 'client_key and client_cert must both be present in ' \
@@ -197,6 +213,18 @@ MQTT_AVAILABILITY_SCHEMA = vol.Schema({
     vol.Optional(CONF_PAYLOAD_NOT_AVAILABLE,
                  default=DEFAULT_PAYLOAD_NOT_AVAILABLE): cv.string,
 })
+
+MQTT_DEVICE_SCHEMA = vol.All(vol.Schema({
+    vol.Optional(CONF_IDENTIFIERS): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_CONNECTIONS): vol.All(cv.ensure_list, vol.Schema({
+        vol.Required(CONF_TYPE): vol.Any(*device_registry.CONNECTION_KEYS),
+        vol.Required(CONF_IDENTIFIER): cv.string,
+    })),
+    vol.Optional(CONF_MANUFACTURER): cv.string,
+    vol.Optional(CONF_MODEL): cv.string,
+    vol.Optional(CONF_NAME): cv.string,
+    vol.Optional(CONF_SW_VERSION): cv.string,
+}), validate_device_has_at_least_one_identifier)
 
 MQTT_BASE_PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(SCHEMA_BASE)
 
@@ -321,7 +349,8 @@ async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
 
 
 async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
-                                 hass_config: ConfigType) -> bool:
+                                 hass_config: ConfigType,
+                                 config_entry) -> bool:
     """Try to start the discovery of MQTT devices.
 
     This method is a coroutine.
@@ -334,7 +363,8 @@ async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
         return False
 
     success = await discovery.async_start(
-        hass, conf[CONF_DISCOVERY_PREFIX], hass_config)  # type: bool
+        hass, conf[CONF_DISCOVERY_PREFIX], hass_config,
+        config_entry)  # type: bool
 
     return success
 
@@ -525,7 +555,7 @@ async def async_setup_entry(hass, entry):
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(
-            hass, conf, hass.data[DATA_MQTT_HASS_CONFIG])
+            hass, conf, hass.data[DATA_MQTT_HASS_CONFIG], entry)
 
     return True
 
@@ -866,3 +896,43 @@ class MqttDiscoveryUpdate(Entity):
                 self.hass,
                 MQTT_DISCOVERY_UPDATED.format(self._discovery_hash),
                 discovery_callback)
+
+
+# TODO: Suggestions for a better name for this class?
+class MqttDevice(Entity):
+    """Mixin used for mqtt platforms that support the device registry."""
+
+    def __init__(self, device_config: Optional[ConfigType]) -> None:
+        """Initialize the device mixin."""
+        device_config = device_config or {}
+        self._device_identifiers = device_config.get(
+            CONF_IDENTIFIERS)  # type: Optional[List[str]]
+        self._device_connections = device_config.get(
+            CONF_CONNECTIONS)  # type: Optional[ConfigType]
+        self._device_manufacturer = device_config.get(
+            CONF_MANUFACTURER)  # type: Optional[str]
+        self._device_model = device_config.get(
+            CONF_MODEL)  # type: Optional[str]
+        self._device_name = device_config.get(CONF_NAME)  # type: Optional[str]
+        self._device_sw_version = device_config.get(
+            CONF_SW_VERSION)  # type: Optional[str]
+
+    @property
+    def device_info(self):
+        """Return a device description for device registry."""
+        if not (self._device_identifiers or self._device_connections):
+            # Has no identifiers, so skip
+            return None
+
+        return {
+            'identifiers': {
+                (DOMAIN, id_) for id_ in (self._device_identifiers or [])
+            },
+            'connections': {
+                (type_, id_) for type_, id_ in (self._device_connections or [])
+            },
+            'manufacturer': self._device_manufacturer,
+            'model': self._device_model,
+            'name': self._device_name,
+            'sw_version': self._device_sw_version,
+        }
