@@ -55,17 +55,19 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
-    """Setting up MQTT sensors through configuration.yaml"""
-    await _async_setup_platform(hass, config, async_add_entities, discovery_info)
+    """Set up MQTT sensors through configuration.yaml."""
+    await _async_setup_platform(hass, config, async_add_entities,
+                                discovery_info)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Setting up MQTT sensors dynamically through MQTT discovery."""
+    """Set up MQTT sensors dynamically through MQTT discovery."""
     async def async_discover_sensor(config):
         """Discover and add a discovered MQTT sensor."""
         await _async_setup_platform(hass, {}, async_add_entities, config)
 
-    async_dispatcher_connect(hass, 'mqtt_discovery_new_sensor_mqtt', async_discover_sensor)
+    async_dispatcher_connect(hass, 'mqtt_discovery_new_sensor_mqtt',
+                             async_discover_sensor)
 
 
 async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,

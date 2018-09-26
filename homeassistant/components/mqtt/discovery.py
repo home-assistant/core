@@ -8,12 +8,12 @@ import json
 import logging
 import re
 
-from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import CONF_STATE_TOPIC, ATTR_DISCOVERY_HASH
+from homeassistant.components.mqtt import ATTR_DISCOVERY_HASH, CONF_STATE_TOPIC
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,7 +47,8 @@ ALREADY_DISCOVERED = 'mqtt_discovered_components'
 MQTT_DISCOVERY_UPDATED = 'mqtt_discovery_updated_{}'
 
 
-async def async_start(hass: HomeAssistantType, discovery_topic, hass_config, config_entry):
+async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
+                      config_entry) -> bool:
     """Initialize of MQTT Discovery."""
     async def async_device_message_received(topic, payload, qos):
         """Process the received message."""
@@ -104,8 +105,8 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config, con
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
 
             if platform in CONFIG_ENTRY_PLATFORMS.get(component, []):
-                async_dispatcher_send(hass, 'mqtt_discovery_new_{}_{}'.format(component, platform),
-                                      payload)
+                async_dispatcher_send(hass, 'mqtt_discovery_new_{}_{}'.format(
+                    component, platform), payload)
             else:
                 await async_load_platform(
                     hass, component, platform, payload, hass_config)
@@ -113,9 +114,12 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config, con
     # TODO: Do we have to load all MQTT platforms on-demand or is this OK too?
     for component, platforms in CONFIG_ENTRY_PLATFORMS.items():
         for platform in platforms:
-            # TODO: Modify config_entries.py to allow manual platform name selection
-            hass.async_create_task(hass.config_entries.async_forward_entry_setup(
-                config_entry, component))
+            # TODO: Modify config_entries.py to allow manual platform name
+            # selection
+            hass.async_create_task(
+                hass.config_entries.async_forward_entry_setup(config_entry,
+                                                              component)
+            )
 
     await mqtt.async_subscribe(
         hass, discovery_topic + '/#', async_device_message_received, 0)

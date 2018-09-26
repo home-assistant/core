@@ -18,14 +18,15 @@ import attr
 import requests.certs
 import voluptuous as vol
 
-from homeassistant.helpers import device_registry
 from homeassistant import config_entries
-from homeassistant.const import (CONF_NAME, CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT, CONF_PROTOCOL,
-                                 CONF_TYPE, CONF_USERNAME, CONF_VALUE_TEMPLATE,
+from homeassistant.const import (CONF_NAME, CONF_PASSWORD, CONF_PAYLOAD,
+                                 CONF_PORT, CONF_PROTOCOL, CONF_TYPE,
+                                 CONF_USERNAME, CONF_VALUE_TEMPLATE,
                                  EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv, device_registry, \
+    template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import (
     ConfigType, HomeAssistantType, ServiceDataType)
@@ -150,11 +151,12 @@ def valid_publish_topic(value: Any) -> str:
     return value
 
 
-def validate_device_has_at_least_one_identifier(value: ConfigType) -> ConfigType:
+def validate_device_has_at_least_one_identifier(value: ConfigType) -> \
+        ConfigType:
     """Validate that a device info entry has at least one identifying value."""
     if not value.get(CONF_IDENTIFIERS) and not value.get(CONF_CONNECTIONS):
-        raise vol.Invalid("Device must has at least one identifying value in 'identifiers' and/or "
-                          "'connections'")
+        raise vol.Invalid("Device must has at least one identifying value in"
+                          "'identifiers' and/or 'connections'")
     return value
 
 
@@ -347,7 +349,8 @@ async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
 
 
 async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
-                                 hass_config: ConfigType, config_entry) -> bool:
+                                 hass_config: ConfigType,
+                                 config_entry) -> bool:
     """Try to start the discovery of MQTT devices.
 
     This method is a coroutine.
@@ -360,7 +363,8 @@ async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
         return False
 
     success = await discovery.async_start(
-        hass, conf[CONF_DISCOVERY_PREFIX], hass_config, config_entry)  # type: bool
+        hass, conf[CONF_DISCOVERY_PREFIX], hass_config,
+        config_entry)  # type: bool
 
     return success
 
@@ -901,12 +905,17 @@ class MqttDevice(Entity):
     def __init__(self, device_config: Optional[ConfigType]) -> None:
         """Initialize the device mixin."""
         device_config = device_config or {}
-        self._device_identifiers = device_config.get(CONF_IDENTIFIERS)  # type: Optional[List[str]]
-        self._device_connections = device_config.get(CONF_CONNECTIONS)  # type: Optional[ConfigType]
-        self._device_manufacturer = device_config.get(CONF_MANUFACTURER)  # type: Optional[str]
-        self._device_model = device_config.get(CONF_MODEL)  # type: Optional[str]
+        self._device_identifiers = device_config.get(
+            CONF_IDENTIFIERS)  # type: Optional[List[str]]
+        self._device_connections = device_config.get(
+            CONF_CONNECTIONS)  # type: Optional[ConfigType]
+        self._device_manufacturer = device_config.get(
+            CONF_MANUFACTURER)  # type: Optional[str]
+        self._device_model = device_config.get(
+            CONF_MODEL)  # type: Optional[str]
         self._device_name = device_config.get(CONF_NAME)  # type: Optional[str]
-        self._device_sw_version = device_config.get(CONF_SW_VERSION)  # type: Optional[str]
+        self._device_sw_version = device_config.get(
+            CONF_SW_VERSION)  # type: Optional[str]
 
     @property
     def device_info(self):
@@ -916,8 +925,12 @@ class MqttDevice(Entity):
             return None
 
         return {
-            'identifiers': {(DOMAIN, id_) for id_ in (self._device_identifiers or [])},
-            'connections': {(type_, id_) for type_, id_ in (self._device_connections or [])},
+            'identifiers': {
+                (DOMAIN, id_) for id_ in (self._device_identifiers or [])
+            },
+            'connections': {
+                (type_, id_) for type_, id_ in (self._device_connections or [])
+            },
             'manufacturer': self._device_manufacturer,
             'model': self._device_model,
             'name': self._device_name,
