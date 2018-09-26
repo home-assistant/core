@@ -317,7 +317,7 @@ class NestSensorDevice(Entity):
     @property
     def device_info(self):
         """Return information about the device."""
-        if not hasattr(self.device, 'name_log'):
+        if not hasattr(self.device, 'name_long'):
             name = self.structure.name
             model = "Structure"
         else:
