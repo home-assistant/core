@@ -134,13 +134,6 @@ def async_reload(hass):
 
 
 @bind_hass
-def set_visibility(hass, entity_id=None, visible=True):
-    """Hide or shows a group."""
-    data = {ATTR_ENTITY_ID: entity_id, ATTR_VISIBLE: visible}
-    hass.services.call(DOMAIN, SERVICE_SET_VISIBILITY, data)
-
-
-@bind_hass
 def set_group(hass, object_id, name=None, entity_ids=None, visible=None,
               icon=None, view=None, control=None, add=None):
     """Create/Update a group."""

@@ -10,7 +10,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, CONF_ICON, CONF_NAME
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
@@ -76,40 +75,6 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_ICON): cv.icon,
         }, _cv_input_select)})
 }, required=True, extra=vol.ALLOW_EXTRA)
-
-
-@bind_hass
-def select_option(hass, entity_id, option):
-    """Set value of input_select."""
-    hass.services.call(DOMAIN, SERVICE_SELECT_OPTION, {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_OPTION: option,
-    })
-
-
-@bind_hass
-def select_next(hass, entity_id):
-    """Set next value of input_select."""
-    hass.services.call(DOMAIN, SERVICE_SELECT_NEXT, {
-        ATTR_ENTITY_ID: entity_id,
-    })
-
-
-@bind_hass
-def select_previous(hass, entity_id):
-    """Set previous value of input_select."""
-    hass.services.call(DOMAIN, SERVICE_SELECT_PREVIOUS, {
-        ATTR_ENTITY_ID: entity_id,
-    })
-
-
-@bind_hass
-def set_options(hass, entity_id, options):
-    """Set options of input_select."""
-    hass.services.call(DOMAIN, SERVICE_SET_OPTIONS, {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_OPTIONS: options,
-    })
 
 
 @asyncio.coroutine
