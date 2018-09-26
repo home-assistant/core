@@ -3,6 +3,7 @@ import logging
 from typing import Union, List, Dict
 
 import json
+import os
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -38,14 +39,17 @@ def load_json(filename: str, default: Union[List, Dict, None] = None) \
     return {} if default is None else default
 
 
-def save_json(filename: str, data: Union[List, Dict]) -> None:
+def save_json(filename: str, data: Union[List, Dict],
+              private: bool = False) -> None:
     """Save JSON data to a file.
 
     Returns True on success.
     """
     try:
         json_data = json.dumps(data, sort_keys=True, indent=4)
-        with open(filename, 'w', encoding='utf-8') as fdesc:
+        mode = 0o600 if private else 0o644
+        with open(os.open(filename, os.O_WRONLY | os.O_CREAT, mode),
+                  'w', encoding='utf-8') as fdesc:
             fdesc.write(json_data)
     except TypeError as error:
         _LOGGER.exception('Failed to serialize to JSON: %s',

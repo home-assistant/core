@@ -67,7 +67,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         super().__init__(hass, config)
         self._users = None  # type: Optional[Dict[str, str]]
         self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY)
+            STORAGE_VERSION, STORAGE_KEY, private=True)
 
     @property
     def input_schema(self) -> vol.Schema:
