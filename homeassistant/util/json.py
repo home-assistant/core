@@ -3,7 +3,6 @@ import logging
 from typing import Union, List, Dict
 
 import json
-import os
 
 from homeassistant.exceptions import HomeAssistantError
 
