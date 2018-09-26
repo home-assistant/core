@@ -15,6 +15,7 @@ from tests.common import async_fire_time_changed, mock_coro
 MOCK_VERSION = 1
 MOCK_KEY = 'storage-test'
 MOCK_DATA = {'hello': 'world'}
+MOCK_DATA2 = {'goodbye': 'cruel world'}
 
 
 @pytest.fixture
@@ -28,6 +29,14 @@ async def test_loading(hass, store):
     await store.async_save(MOCK_DATA)
     data = await store.async_load()
     assert data == MOCK_DATA
+
+
+async def test_overwriting(hass, store):
+    """Test we can save, overwrite and reload data."""
+    await store.async_save(MOCK_DATA)
+    await store.async_save(MOCK_DATA2)
+    data = await store.async_load()
+    assert data == MOCK_DATA2
 
 
 async def test_loading_non_existing(hass, store):
