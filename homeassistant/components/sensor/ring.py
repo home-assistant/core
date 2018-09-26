@@ -66,16 +66,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     ring = hass.data[DATA_RING]
 
     sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in ring.chimes:
+    for device in ring.chimes:  # ring.chimes is doing I/O
+        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'chime' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
-        for device in ring.doorbells:
+    for device in ring.doorbells:  # ring.doorbells is doing I/O
+        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'doorbell' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
-        for device in ring.stickup_cams:
+    for device in ring.stickup_cams:  # ring.stickup_cams is doing I/O
+        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if 'stickup_cams' in SENSOR_TYPES[sensor_type][1]:
                 sensors.append(RingSensor(hass, device, sensor_type))
 
