@@ -7,7 +7,7 @@ from homeassistant.components.remote import (
     ATTR_ACTIVITY, ATTR_COMMAND, ATTR_DELAY_SECS, ATTR_DEVICE,
     ATTR_NUM_REPEATS, DOMAIN, SERVICE_SEND_COMMAND)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON)
+    ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON)
 from homeassistant.loader import bind_hass
 
 
@@ -33,19 +33,6 @@ def turn_off(hass, activity=None, entity_id=None):
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-@bind_hass
-def toggle(hass, activity=None, entity_id=None):
-    """Toggle all or specified remote."""
-    data = {}
-    if activity:
-        data[ATTR_ACTIVITY] = activity
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
 @bind_hass

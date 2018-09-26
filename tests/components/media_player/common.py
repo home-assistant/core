@@ -5,16 +5,15 @@ components. Instead call the service directly.
 """
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE, ATTR_MEDIA_CONTENT_ID, ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_ENQUEUE, ATTR_MEDIA_SEEK_POSITION, ATTR_MEDIA_SHUFFLE,
-    ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, ATTR_SOUND_MODE,
-    DOMAIN, SERVICE_CLEAR_PLAYLIST, SERVICE_PLAY_MEDIA,
-    SERVICE_SELECT_SOUND_MODE, SERVICE_SELECT_SOURCE)
+    ATTR_MEDIA_ENQUEUE, ATTR_MEDIA_SEEK_POSITION, ATTR_MEDIA_VOLUME_LEVEL,
+    ATTR_MEDIA_VOLUME_MUTED, DOMAIN, SERVICE_CLEAR_PLAYLIST,
+    SERVICE_PLAY_MEDIA, SERVICE_SELECT_SOURCE)
 from homeassistant.const import (
     ATTR_ENTITY_ID, SERVICE_MEDIA_NEXT_TRACK, SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY, SERVICE_MEDIA_PLAY_PAUSE, SERVICE_MEDIA_PREVIOUS_TRACK,
-    SERVICE_MEDIA_SEEK, SERVICE_MEDIA_STOP, SERVICE_SHUFFLE_SET,
-    SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON, SERVICE_VOLUME_DOWN,
-    SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET, SERVICE_VOLUME_UP)
+    SERVICE_MEDIA_SEEK, SERVICE_TOGGLE, SERVICE_TURN_OFF, SERVICE_TURN_ON,
+    SERVICE_VOLUME_DOWN, SERVICE_VOLUME_MUTE, SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP)
 from homeassistant.loader import bind_hass
 
 
@@ -97,13 +96,6 @@ def media_pause(hass, entity_id=None):
 
 
 @bind_hass
-def media_stop(hass, entity_id=None):
-    """Send the media player the stop command."""
-    data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
-    hass.services.call(DOMAIN, SERVICE_MEDIA_STOP, data)
-
-
-@bind_hass
 def media_next_track(hass, entity_id=None):
     """Send the media player the command for next track."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
@@ -152,29 +144,7 @@ def select_source(hass, source, entity_id=None):
 
 
 @bind_hass
-def select_sound_mode(hass, sound_mode, entity_id=None):
-    """Send the media player the command to select sound mode."""
-    data = {ATTR_SOUND_MODE: sound_mode}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SELECT_SOUND_MODE, data)
-
-
-@bind_hass
 def clear_playlist(hass, entity_id=None):
     """Send the media player the command for clear playlist."""
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
     hass.services.call(DOMAIN, SERVICE_CLEAR_PLAYLIST, data)
-
-
-@bind_hass
-def set_shuffle(hass, shuffle, entity_id=None):
-    """Send the media player the command to enable/disable shuffle mode."""
-    data = {ATTR_MEDIA_SHUFFLE: shuffle}
-
-    if entity_id:
-        data[ATTR_ENTITY_ID] = entity_id
-
-    hass.services.call(DOMAIN, SERVICE_SHUFFLE_SET, data)
