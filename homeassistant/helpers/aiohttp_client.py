@@ -56,6 +56,7 @@ def async_create_clientsession(hass, verify_ssl=True, auto_cleanup=True,
     clientsession = aiohttp.ClientSession(
         loop=hass.loop,
         connector=connector,
+        trust_env=True,
         headers={USER_AGENT: SERVER_SOFTWARE},
         **kwargs
     )
