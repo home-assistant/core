@@ -135,11 +135,6 @@ class NestBasicSensor(NestSensorDevice):
         """Return the device class of the sensor."""
         return SENSOR_DEVICE_CLASSES.get(self.variable)
 
-    @property
-    def unique_id(self):
-        """Return unique id based on serial and sensor."""
-        return "{}-{}".format(self.device.serial, self.variable)
-
     def update(self):
         """Retrieve latest state."""
         self._unit = SENSOR_UNITS.get(self.variable)
