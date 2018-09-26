@@ -10,6 +10,7 @@
             "broker": {
                 "data": {
                     "broker": "Po\u015brednik",
+                    "discovery": "W\u0142\u0105cz wykrywanie",
                     "password": "Has\u0142o",
                     "port": "Port",
                     "username": "Nazwa u\u017cytkownika"
