@@ -124,7 +124,10 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             if not check_control_messages:
                 result['check_control_messages'] = 'OK'
             else:
-                result['check_control_messages'] = check_control_messages
+                cbs_list = []
+                for message in check_control_messages:
+                    cbs_list.append(message['ccmDescriptionShort'])
+                result['check_control_messages'] = cbs_list
         elif self._attribute == 'charging_status':
             result['charging_status'] = vehicle_state.charging_status.value
             # pylint: disable=protected-access
