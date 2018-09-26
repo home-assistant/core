@@ -7,7 +7,7 @@ from homeassistant.components.fan import (
     ATTR_DIRECTION, ATTR_SPEED, ATTR_OSCILLATING, DOMAIN,
     SERVICE_OSCILLATE, SERVICE_SET_DIRECTION, SERVICE_SET_SPEED)
 from homeassistant.const import (
-    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TOGGLE, SERVICE_TURN_OFF)
+    ATTR_ENTITY_ID, SERVICE_TURN_ON, SERVICE_TURN_OFF)
 from homeassistant.loader import bind_hass
 
 
@@ -30,16 +30,6 @@ def turn_off(hass, entity_id: str = None) -> None:
     data = {ATTR_ENTITY_ID: entity_id} if entity_id else {}
 
     hass.services.call(DOMAIN, SERVICE_TURN_OFF, data)
-
-
-@bind_hass
-def toggle(hass, entity_id: str = None) -> None:
-    """Toggle all or specified fans."""
-    data = {
-        ATTR_ENTITY_ID: entity_id
-    }
-
-    hass.services.call(DOMAIN, SERVICE_TOGGLE, data)
 
 
 @bind_hass
