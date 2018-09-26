@@ -16,7 +16,7 @@ LOCAL_NETWORKS = (
 )
 
 
-def is_local(address) -> bool:
+def is_local(address: ip_address) -> bool:
     """Check if an address is local."""
     return address in LOCAL_IPS or \
         any(address in network for network in LOCAL_NETWORKS)

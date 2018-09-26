@@ -89,6 +89,6 @@ class WebhookView(HomeAssistantView):
             if response is None:
                 response = Response(status=200)
             return response
-        except Exception:  # pylint: disable-bare-except
+        except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error processing webhook %s", webhook_id)
             return Response(status=200)
