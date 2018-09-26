@@ -7,6 +7,7 @@ from homeassistant.components import fan
 from homeassistant.const import STATE_OFF, STATE_ON
 
 from tests.common import get_test_home_assistant
+from tests.components.fan import common
 
 FAN_ENTITY_ID = 'fan.living_room_fan'
 
@@ -34,11 +35,11 @@ class TestDemoFan(unittest.TestCase):
         """Test turning on the device."""
         self.assertEqual(STATE_OFF, self.get_entity().state)
 
-        fan.turn_on(self.hass, FAN_ENTITY_ID)
+        common.turn_on(self.hass, FAN_ENTITY_ID)
         self.hass.block_till_done()
         self.assertNotEqual(STATE_OFF, self.get_entity().state)
 
-        fan.turn_on(self.hass, FAN_ENTITY_ID, fan.SPEED_HIGH)
+        common.turn_on(self.hass, FAN_ENTITY_ID, fan.SPEED_HIGH)
         self.hass.block_till_done()
         self.assertEqual(STATE_ON, self.get_entity().state)
         self.assertEqual(fan.SPEED_HIGH,
@@ -48,11 +49,11 @@ class TestDemoFan(unittest.TestCase):
         """Test turning off the device."""
         self.assertEqual(STATE_OFF, self.get_entity().state)
 
-        fan.turn_on(self.hass, FAN_ENTITY_ID)
+        common.turn_on(self.hass, FAN_ENTITY_ID)
         self.hass.block_till_done()
         self.assertNotEqual(STATE_OFF, self.get_entity().state)
 
-        fan.turn_off(self.hass, FAN_ENTITY_ID)
+        common.turn_off(self.hass, FAN_ENTITY_ID)
         self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.get_entity().state)
 
@@ -60,11 +61,11 @@ class TestDemoFan(unittest.TestCase):
         """Test turning off all fans."""
         self.assertEqual(STATE_OFF, self.get_entity().state)
 
-        fan.turn_on(self.hass, FAN_ENTITY_ID)
+        common.turn_on(self.hass, FAN_ENTITY_ID)
         self.hass.block_till_done()
         self.assertNotEqual(STATE_OFF, self.get_entity().state)
 
-        fan.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
         self.assertEqual(STATE_OFF, self.get_entity().state)
 
@@ -72,7 +73,7 @@ class TestDemoFan(unittest.TestCase):
         """Test setting the direction of the device."""
         self.assertEqual(STATE_OFF, self.get_entity().state)
 
-        fan.set_direction(self.hass, FAN_ENTITY_ID, fan.DIRECTION_REVERSE)
+        common.set_direction(self.hass, FAN_ENTITY_ID, fan.DIRECTION_REVERSE)
         self.hass.block_till_done()
         self.assertEqual(fan.DIRECTION_REVERSE,
                          self.get_entity().attributes.get('direction'))
@@ -81,7 +82,7 @@ class TestDemoFan(unittest.TestCase):
         """Test setting the speed of the device."""
         self.assertEqual(STATE_OFF, self.get_entity().state)
 
-        fan.set_speed(self.hass, FAN_ENTITY_ID, fan.SPEED_LOW)
+        common.set_speed(self.hass, FAN_ENTITY_ID, fan.SPEED_LOW)
         self.hass.block_till_done()
         self.assertEqual(fan.SPEED_LOW,
                          self.get_entity().attributes.get('speed'))
@@ -90,11 +91,11 @@ class TestDemoFan(unittest.TestCase):
         """Test oscillating the fan."""
         self.assertFalse(self.get_entity().attributes.get('oscillating'))
 
-        fan.oscillate(self.hass, FAN_ENTITY_ID, True)
+        common.oscillate(self.hass, FAN_ENTITY_ID, True)
         self.hass.block_till_done()
         self.assertTrue(self.get_entity().attributes.get('oscillating'))
 
-        fan.oscillate(self.hass, FAN_ENTITY_ID, False)
+        common.oscillate(self.hass, FAN_ENTITY_ID, False)
         self.hass.block_till_done()
         self.assertFalse(self.get_entity().attributes.get('oscillating'))
 
@@ -102,6 +103,6 @@ class TestDemoFan(unittest.TestCase):
         """Test is on service call."""
         self.assertFalse(fan.is_on(self.hass, FAN_ENTITY_ID))
 
-        fan.turn_on(self.hass, FAN_ENTITY_ID)
+        common.turn_on(self.hass, FAN_ENTITY_ID)
         self.hass.block_till_done()
         self.assertTrue(fan.is_on(self.hass, FAN_ENTITY_ID))
