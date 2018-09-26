@@ -186,11 +186,11 @@ class YamahaDevice(MediaPlayerDevice):
             self._current_source)
         try:
             self._sound_mode = self.receiver.surround_program
-        except ParseError:
+        except:
             self._sound_mode = None
         try:
             self._sound_mode_list = self.receiver.surround_programs()
-        except ParseError:
+        except:
             self._sound_mode_list = None
 
     def build_source_list(self):
