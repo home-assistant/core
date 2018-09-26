@@ -105,7 +105,6 @@ Home Assistant. User need to record the token in secure place.
     "id": 11,
     "type": "auth/long_lived_access_token",
     "client_name": "GPS Logger",
-    "client_icon": null,
     "lifespan": 365
 }
 
