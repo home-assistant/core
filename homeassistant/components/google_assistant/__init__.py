@@ -19,7 +19,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.const import CONF_NAME
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.loader import bind_hass
 
 from .const import (
     DOMAIN, CONF_PROJECT_ID, CONF_CLIENT_ID, CONF_ACCESS_TOKEN,
@@ -61,12 +60,6 @@ CONFIG_SCHEMA = vol.Schema(
         }
     },
     extra=vol.ALLOW_EXTRA)
-
-
-@bind_hass
-def request_sync(hass):
-    """Request sync."""
-    hass.services.call(DOMAIN, SERVICE_REQUEST_SYNC)
 
 
 async def async_setup(hass: HomeAssistant, yaml_config: Dict[str, Any]):
