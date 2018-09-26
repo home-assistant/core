@@ -319,7 +319,7 @@ class NestSensorDevice(Entity):
         """Return information about the device."""
         if not hasattr(self.device, 'name_log'):
             name = self.structure.name
-            model = "Structure",
+            model = "Structure"
         else:
             name = self.device.name_long
             if self.device.is_thermostat:
