@@ -44,10 +44,16 @@ async def async_setup(hass, config):
     if conf is None:
         return True
 
-    known_hosts = await hass.async_add_executor_job(
+    configured_hosts = [entry.data['host'] for entry in
+                        hass.config_entries.async_entries(DOMAIN)]
+
+    legacy_hosts = await hass.async_add_executor_job(
         load_json, hass.config.path(CONFIG_FILE))
 
-    for host, info in known_hosts.items():
+    for host, info in legacy_hosts.items():
+        if host in configured_hosts:
+            continue
+
         info[CONF_HOST] = host
         info[CONF_IMPORT_GROUPS] = conf[CONF_ALLOW_TRADFRI_GROUPS]
 
@@ -58,7 +64,7 @@ async def async_setup(hass, config):
 
     host = conf.get(CONF_HOST)
 
-    if host is None or host in known_hosts:
+    if host is None or host in configured_hosts or host in legacy_hosts:
         return True
 
     hass.async_create_task(hass.config_entries.flow.async_init(
