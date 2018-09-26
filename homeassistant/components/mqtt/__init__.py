@@ -18,6 +18,7 @@ import attr
 import requests.certs
 import voluptuous as vol
 
+from homeassistant.helpers import device_registry
 from homeassistant import config_entries
 from homeassistant.const import (CONF_NAME, CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT, CONF_PROTOCOL,
                                  CONF_TYPE, CONF_USERNAME, CONF_VALUE_TEMPLATE,
@@ -214,7 +215,7 @@ MQTT_AVAILABILITY_SCHEMA = vol.Schema({
 MQTT_DEVICE_SCHEMA = vol.All(vol.Schema({
     vol.Optional(CONF_IDENTIFIERS): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(CONF_CONNECTIONS): vol.All(cv.ensure_list, vol.Schema({
-        vol.Required(CONF_TYPE): cv.string,
+        vol.Required(CONF_TYPE): vol.Any(*device_registry.CONNECTION_KEYS),
         vol.Required(CONF_IDENTIFIER): cv.string,
     })),
     vol.Optional(CONF_MANUFACTURER): cv.string,
