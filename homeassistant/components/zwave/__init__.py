@@ -264,7 +264,7 @@ async def async_setup(hass, config):
                                     ZWaveNetwork.SIGNAL_SCENE_EVENT,
                                     ZWaveNetwork.SIGNAL_NODE_EVENT,
                                     ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED,
-                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED
+                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED,
                                     ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD):
                 pprint(_obj_to_dict(value))
 
