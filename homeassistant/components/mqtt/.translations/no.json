@@ -10,6 +10,7 @@
             "broker": {
                 "data": {
                     "broker": "Megler",
+                    "discovery": "Aktiver oppdagelse",
                     "password": "Passord",
                     "port": "Port",
                     "username": "Brukernavn"
