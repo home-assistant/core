@@ -41,9 +41,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up a MJPEG IP Camera."""
     if discovery_info:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -82,23 +81,22 @@ class MjpegCamera(Camera):
                     self._username, password=self._password
                 )
 
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response from the camera."""
         # DigestAuth is not supported
         if self._authentication == HTTP_DIGEST_AUTHENTICATION or \
            self._still_image_url is None:
-            image = yield from self.hass.async_add_job(
+            image = await self.hass.async_add_job(
                 self.camera_image)
             return image
 
         websession = async_get_clientsession(self.hass)
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                response = yield from websession.get(
+                response = await websession.get(
                     self._still_image_url, auth=self._auth)
 
-                image = yield from response.read()
+                image = await response.read()
                 return image
 
         except asyncio.TimeoutError:
