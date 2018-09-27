@@ -15,6 +15,7 @@ from homeassistant.setup import async_prepare_setup_platform
 from homeassistant.core import callback
 from homeassistant.loader import bind_hass
 from homeassistant.components import group, zone
+from homeassistant.components.group import DOMAIN as DOMAIN_GROUP, SERVICE_SET
 from homeassistant.components.zone.zone import async_active_zone
 from homeassistant.config import load_yaml_config_file, async_log_exception
 from homeassistant.exceptions import HomeAssistantError
@@ -319,9 +320,13 @@ class DeviceTracker:
 
         # During init, we ignore the group
         if self.group and self.track_new:
-            self.group.async_set_group(
-                util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
-                name=GROUP_NAME_ALL_DEVICES, add=[device.entity_id])
+            self.hass.async_create_task(
+                self.hass.async_call(
+                    DOMAIN_GROUP, SERVICE_SET, dict(
+                        object_id=util.slugify(GROUP_NAME_ALL_DEVICES),
+                        visible=False,
+                        name=GROUP_NAME_ALL_DEVICES,
+                        add=[device.entity_id])))
 
         self.hass.bus.async_fire(EVENT_NEW_DEVICE, {
             ATTR_ENTITY_ID: device.entity_id,
@@ -354,10 +359,13 @@ class DeviceTracker:
         entity_ids = [dev.entity_id for dev in self.devices.values()
                       if dev.track]
 
-        self.group = self.hass.components.group
-        self.group.async_set_group(
-            util.slugify(GROUP_NAME_ALL_DEVICES), visible=False,
-            name=GROUP_NAME_ALL_DEVICES, entity_ids=entity_ids)
+        self.hass.async_create_task(
+            self.hass.services.async_call(
+                DOMAIN_GROUP, SERVICE_SET, dict(
+                    object_id=util.slugify(GROUP_NAME_ALL_DEVICES),
+                    visible=False,
+                    name=GROUP_NAME_ALL_DEVICES,
+                    entities=entity_ids)))
 
     @callback
     def async_update_stale(self, now: dt_util.dt.datetime):
