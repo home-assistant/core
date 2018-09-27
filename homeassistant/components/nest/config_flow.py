@@ -7,7 +7,7 @@ import os
 import async_timeout
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.json import load_json
@@ -49,10 +49,11 @@ class CodeInvalid(NestAuthError):
 
 
 @config_entries.HANDLERS.register(DOMAIN)
-class NestFlowHandler(data_entry_flow.FlowHandler):
+class NestFlowHandler(config_entries.ConfigFlow):
     """Handle a Nest config flow."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_PUSH
 
     def __init__(self):
         """Initialize the Nest config flow."""

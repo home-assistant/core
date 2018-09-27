@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Bridge j\u00e1 est\u00e1 configurada"
+        },
+        "error": {
+            "cannot_connect": "N\u00e3o \u00e9 poss\u00edvel ligar ao gateway.",
+            "invalid_key": "Falha ao registrar-se com a chave fornecida. Se o problema persistir, tente reiniciar o gateway.",
+            "timeout": "Tempo excedido a validar o c\u00f3digo."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Servidor",
+                    "security_code": "C\u00f3digo de Seguran\u00e7a"
+                },
+                "description": "Encontra o c\u00f3digo de seguran\u00e7a na base da gateway.",
+                "title": "Introduzir c\u00f3digo de seguran\u00e7a"
+            }
+        },
+        "title": ""
+    }
+}

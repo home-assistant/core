@@ -965,3 +965,21 @@ async def test_disallowed_duplicated_auth_mfa_module_config(hass):
     }
     with pytest.raises(Invalid):
         await config_util.async_process_ha_core_config(hass, core_config)
+
+
+def test_merge_split_component_definition(hass):
+    """Test components with trailing description in packages are merged."""
+    packages = {
+        'pack_1': {'light one': {'l1': None}},
+        'pack_2': {'light two': {'l2': None},
+                   'light three': {'l3': None}},
+    }
+    config = {
+        config_util.CONF_CORE: {config_util.CONF_PACKAGES: packages},
+    }
+    config_util.merge_packages_config(hass, config, packages)
+
+    assert len(config) == 4
+    assert len(config['light one']) == 1
+    assert len(config['light two']) == 1
+    assert len(config['light three']) == 1
