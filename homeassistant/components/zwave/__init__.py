@@ -265,7 +265,8 @@ async def async_setup(hass, config):
                                     ZWaveNetwork.SIGNAL_NODE_EVENT,
                                     ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED,
                                     ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED,
-                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD):
+                                    ZWaveNetwork
+                                    .SIGNAL_ALL_NODES_QUERIED_SOME_DEAD):
                 pprint(_obj_to_dict(value))
 
             print("")
@@ -361,7 +362,8 @@ async def async_setup(hass, config):
     dispatcher.connect(
         network_complete, ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED, weak=False)
     dispatcher.connect(
-        network_complete_some_dead, ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD, weak=False)
+        network_complete_some_dead, 
+        ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD, weak=False)
 
     def add_node(service):
         """Switch into inclusion mode."""
