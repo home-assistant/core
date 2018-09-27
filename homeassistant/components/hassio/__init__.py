@@ -21,6 +21,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
 from .handler import HassIO, HassioAPIError
+from .discovery import async_setup_discovery
 from .http import HassIOView
 
 _LOGGER = logging.getLogger(__name__)
@@ -280,5 +281,8 @@ def async_setup(hass, config):
                     SERVICE_CHECK_CONFIG):
         hass.services.async_register(
             HASS_DOMAIN, service, async_handle_core_service)
+
+    # Init discovery Hass.io feature
+    async_setup_discovery(hass, hassio)
 
     return True
