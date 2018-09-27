@@ -9,6 +9,7 @@
         "step": {
             "broker": {
                 "data": {
+                    "discovery": "Suche aktivieren",
                     "password": "Passwort",
                     "username": "Benutzername"
                 },
