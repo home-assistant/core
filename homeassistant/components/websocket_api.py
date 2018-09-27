@@ -408,7 +408,7 @@ class ActiveConnection:
                     handler, schema = handlers[msg['type']]
                     try:
                         handler(self.hass, self, schema(msg))
-                    except Exception:  # pylint: disable=bare-except
+                    except Exception:  # pylint: disable=broad-except
                         _LOGGER.exception('Error handling message: %s', msg)
                         self.to_write.put_nowait(error_message(
                             cur_id, ERR_UNKNOWN_ERROR,
