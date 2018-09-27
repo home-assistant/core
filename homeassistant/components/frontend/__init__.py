@@ -344,11 +344,12 @@ class AuthorizeView(HomeAssistantView):
             _is_latest(self.js_option, request)
 
         if latest:
-            location = '/frontend_latest/authorize.html'
+            base = 'frontend_latest'
         else:
-            location = '/frontend_es5/authorize.html'
+            base = 'frontend_es5'
 
-        location += '?{}'.format(request.query_string)
+        location = "/{}/authorize.html{}".format(
+            base, str(request.url.relative())[15:])
 
         return web.Response(status=302, headers={
             'location': location
