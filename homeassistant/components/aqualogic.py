@@ -8,7 +8,6 @@ from datetime import timedelta
 import logging
 import time
 import threading
-import socket
 
 import voluptuous as vol
 
@@ -17,7 +16,7 @@ from homeassistant.const import (CONF_HOST, CONF_PORT,
                                  EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import config_validation as cv
 
-REQUIREMENTS = ["aqualogic==0.11", "zope.event==4.3.0"]
+REQUIREMENTS = ["aqualogic==1.0"]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,30 +78,18 @@ class AquaLogicProcessor(threading.Thread):
     def run(self):
         """Event thread."""
         from aqualogic.core import AquaLogic
-        import zope.event
 
-        zope.event.subscribers.append(self.data_changed)
         while True:
-            try:
-                sock = socket.create_connection((self._host, self._port), 10)
+            self._panel = AquaLogic()
+            self._panel.connect(self._host, self._port)
+            self._panel.process(self.data_changed)
 
-                reader = sock.makefile(mode='rb')
-                writer = sock.makefile(mode='wb')
+            if self._shutdown:
+                return
 
-                self._panel = AquaLogic(reader, writer)
-                self._panel.process()
-
-                if self._shutdown:
-                    return
-
-                _LOGGER.error("Connection to %s:%d lost",
-                              self._host, self._port)
-            except socket.timeout:
-                _LOGGER.error("Connection to %s:%d timed out",
-                              self._host, self._port)
-            except IOError:
-                _LOGGER.exception("Error")
-                time.sleep(RECONNECT_INTERVAL.seconds)
+            _LOGGER.error("Connection to %s:%d lost",
+                          self._host, self._port)
+            time.sleep(RECONNECT_INTERVAL.seconds)
 
     @property
     def panel(self):
