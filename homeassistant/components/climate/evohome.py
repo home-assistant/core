@@ -119,11 +119,10 @@ class EvoController(ClimateDevice):
 
         self._config = evo_data['config'][GWS][0][TCS][0]
         self._params = evo_data['params']
-
-        self._status = {}
         self._timers = evo_data['timers']
+
         self._timers['statusUpdated'] = datetime.min
-        evo_data['schedules'] = {}
+        self._status = {}
 
         self._available = False  # should become True after first update()
 
@@ -270,7 +269,7 @@ class EvoController(ClimateDevice):
             operation_mode
         )
         try:
-            self._obj._set_status(operation_mode)                                      # noqa: E501; pylint: disable=protected-access
+            self._obj._set_status(operation_mode)                               # noqa: E501; pylint: disable=protected-access
         except HTTPError as err:
             self._handle_requests_exceptions(err)
 
