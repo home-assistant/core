@@ -74,7 +74,8 @@ def set_lights_xy(hass, lights, x_val, y_val, brightness, transition):
                     xy_color=[x_val, y_val],
                     brightness=brightness,
                     transition=transition,
-                    white_value=brightness))
+                    white_value=brightness,
+                    entity_id=light))
 
 
 def set_lights_temp(hass, lights, mired, brightness, transition):
@@ -85,7 +86,8 @@ def set_lights_temp(hass, lights, mired, brightness, transition):
                 LIGHT_DOMAIN, SERVICE_TURN_ON, dict(
                     color_temp=int(mired),
                     brightness=brightness,
-                    transition=transition))
+                    transition=transition,
+                    entity_id=light))
 
 
 def set_lights_rgb(hass, lights, rgb, transition):
@@ -95,7 +97,8 @@ def set_lights_rgb(hass, lights, rgb, transition):
             hass.services.call(
                 LIGHT_DOMAIN, SERVICE_TURN_ON, dict(
                     rgb_color=rgb,
-                    transition=transition))
+                    transition=transition,
+                    entity_id=light))
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
