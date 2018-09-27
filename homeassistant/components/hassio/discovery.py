@@ -41,7 +41,7 @@ def async_setup_discovery(hass, hassio):
     async def async_discovery_start_handler(event):
         """Process all exists discovery on startup."""
         try:
-            data = await hassio.receive_services_discovery()
+            data = await hassio.retrieve_services_discovery()
         except HassioAPIError as err:
             _LOGGER.error(
                 "Can't read discover %s info: %s", uuid, err)
