@@ -106,18 +106,19 @@ async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
 
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
 
-            if platform in CONFIG_ENTRY_PLATFORMS.get(component, []):
-                config_entries_key = '{}.{}'.format(component, platform)
-                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
-                    await hass.config_entries.async_forward_entry_setup(
-                        config_entry, component)
-                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
-
-                async_dispatcher_send(hass, MQTT_DISCOVERY_NEW.format(
-                    component, platform), payload)
-            else:
+            if platform not in CONFIG_ENTRY_PLATFORMS.get(component, []):
                 await async_load_platform(
                     hass, component, platform, payload, hass_config)
+                return
+
+            config_entries_key = '{}.{}'.format(component, platform)
+            if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                await hass.config_entries.async_forward_entry_setup(
+                    config_entry, component)
+                hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+
+            async_dispatcher_send(hass, MQTT_DISCOVERY_NEW.format(
+                component, platform), payload)
 
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
