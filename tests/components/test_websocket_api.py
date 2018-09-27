@@ -543,7 +543,6 @@ async def test_call_service_context_no_user(hass, aiohttp_client):
 
 async def test_handler_failing(hass, websocket_client):
     """Test a command that raises."""
-
     hass.components.websocket_api.async_register_command(
         'bla', Mock(side_effect=TypeError),
         wapi.BASE_COMMAND_MESSAGE_SCHEMA.extend({'type': 'bla'}))
