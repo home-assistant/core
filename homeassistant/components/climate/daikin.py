@@ -150,12 +150,12 @@ class DaikinClimate(ClimateDevice):
                 '',
                 self._api.device.represent(daikin_attr)[1]
             )
-            
+
             daikin_op_mode = DAIKIN_TO_HA_STATE[tmp_value]
             if daikin_op_mode is not None:
                 value = DAIKIN_TO_HA_STATE.get(daikin_op_mode)
             else:
-                value = tmp_value 
+                value = tmp_value
 
         if value is None:
             _LOGGER.error("Invalid value requested for key %s", key)
