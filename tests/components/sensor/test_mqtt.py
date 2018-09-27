@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import homeassistant.core as ha
 from homeassistant.setup import setup_component, async_setup_component
+from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.components.sensor as sensor
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
@@ -13,7 +14,7 @@ import homeassistant.util.dt as dt_util
 
 from tests.common import mock_mqtt_component, fire_mqtt_message, \
     assert_setup_component, async_fire_mqtt_message, \
-    async_mock_mqtt_component
+    async_mock_mqtt_component, MockConfigEntry
 from tests.common import get_test_home_assistant, mock_component
 
 
@@ -392,7 +393,8 @@ async def test_unique_id(hass):
 
 async def test_discovery_removal_sensor(hass, mqtt_mock, caplog):
     """Test removal of discovered sensor."""
-    await async_start(hass, 'homeassistant', {})
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
     data = (
         '{ "name": "Beer",'
         '  "status_topic": "test_topic" }'
