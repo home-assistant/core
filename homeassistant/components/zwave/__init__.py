@@ -349,7 +349,7 @@ async def async_setup(hass, config):
     def network_complete_some_dead():
         """Handle the querying of all nodes on network."""
         _LOGGER.info("Z-Wave network is complete. All nodes on the network "
-                     "have been queried, but some node ar mark dead")
+                     "have been queried, but some node are marked dead")
         hass.bus.fire(const.EVENT_NETWORK_COMPLETE_SOME_DEAD)
 
     dispatcher.connect(
