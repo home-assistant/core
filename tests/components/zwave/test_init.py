@@ -464,7 +464,7 @@ def test_network_complete_some_dead(hass, mock_openzwave):
     mock_receivers = []
 
     def mock_connect(receiver, signal, *args, **kwargs):
-        if signal == MockNetwork.SIGNAL_AWAKE_NODES_QUERIED_SOME_DEAD:
+        if signal == MockNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD:
             mock_receivers.append(receiver)
 
     with patch('pydispatch.dispatcher.connect', new=mock_connect):
@@ -477,7 +477,7 @@ def test_network_complete_some_dead(hass, mock_openzwave):
     def listener(event):
         events.append(event)
 
-    hass.bus.async_listen(const.EVENT_NETWORK_READY, listener)
+    hass.bus.async_listen(const.EVENT_NETWORK_COMPLETE, listener)
 
     hass.async_add_job(mock_receivers[0])
     yield from hass.async_block_till_done()
