@@ -38,6 +38,17 @@ class DeviceEntry:
     id = attr.ib(type=str, default=attr.Factory(lambda: uuid.uuid4().hex))
 
 
+def format_mac(mac):
+    """Format the mac address string for entry into dev reg."""
+    lower_mac = mac.lower()
+    if len(lower_mac) == 12:
+        # no : included
+        return ':'.join(lower_mac[i:i + 2] for i in range(0, 12, 2))
+
+    # Either with ':' included or not sure how formatted
+    return lower_mac
+
+
 class DeviceRegistry:
     """Class to hold a registry of devices."""
 
@@ -70,6 +81,12 @@ class DeviceRegistry:
 
         if connections is None:
             connections = set()
+
+        connections = {
+            (key, format_mac(value)) if key == CONNECTION_NETWORK_MAC
+            else (key, value)
+            for key, value in connections
+        }
 
         device = self.async_get_device(identifiers, connections)
 
