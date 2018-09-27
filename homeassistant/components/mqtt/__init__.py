@@ -21,7 +21,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT, CONF_PROTOCOL, CONF_USERNAME,
-    CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP)
+    CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -524,12 +524,8 @@ async def async_setup_entry(hass, entry):
         schema=MQTT_PUBLISH_SCHEMA)
 
     if conf.get(CONF_DISCOVERY):
-        async def async_setup_discovery(event):
-            await _async_setup_discovery(
-                hass, conf, hass.data[DATA_MQTT_HASS_CONFIG])
-
-        hass.bus.async_listen_once(
-            EVENT_HOMEASSISTANT_START, async_setup_discovery)
+        await _async_setup_discovery(
+            hass, conf, hass.data[DATA_MQTT_HASS_CONFIG])
 
     return True
 

@@ -110,7 +110,7 @@ aioimaplib==0.7.13
 aiolifx==0.6.3
 
 # homeassistant.components.light.lifx
-aiolifx_effects==0.1.2
+aiolifx_effects==0.2.0
 
 # homeassistant.components.scene.hunterdouglas_powerview
 aiopvapi==1.5.4
@@ -172,7 +172,7 @@ beautifulsoup4==4.6.3
 bellows==0.7.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.5.2
+bimmer_connected==0.5.3
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -455,7 +455,7 @@ hole==0.3.0
 holidays==0.9.7
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180924.0
+home-assistant-frontend==20180926.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -765,7 +765,7 @@ pyRFXtrx==0.23
 pySwitchmate==0.4.1
 
 # homeassistant.components.sensor.tibber
-pyTibber==0.5.1
+pyTibber==0.6.0
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
@@ -1072,7 +1072,7 @@ pysma==0.2
 pysnmp==4.4.5
 
 # homeassistant.components.sonos
-pysonos==0.0.2
+pysonos==0.0.3
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0

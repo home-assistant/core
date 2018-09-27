@@ -33,9 +33,7 @@ _LOGGER = logging.getLogger(__name__)
 
 # Quiet down pysonos logging to just actual problems.
 logging.getLogger('pysonos').setLevel(logging.WARNING)
-logging.getLogger('pysonos.events').setLevel(logging.ERROR)
 logging.getLogger('pysonos.data_structures_entry').setLevel(logging.ERROR)
-_SOCO_SERVICES_LOGGER = logging.getLogger('pysonos.services')
 
 SUPPORT_SONOS = SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE |\
     SUPPORT_PLAY | SUPPORT_PAUSE | SUPPORT_STOP | SUPPORT_SELECT_SOURCE |\
@@ -289,10 +287,6 @@ def soco_error(errorcodes=None):
             """Wrap for all soco UPnP exception."""
             from pysonos.exceptions import SoCoUPnPException, SoCoException
 
-            # Temporarily disable SoCo logging because it will log the
-            # UPnP exception otherwise
-            _SOCO_SERVICES_LOGGER.disabled = True
-
             try:
                 return funct(*args, **kwargs)
             except SoCoUPnPException as err:
@@ -302,8 +296,6 @@ def soco_error(errorcodes=None):
                     _LOGGER.error("Error on %s with %s", funct.__name__, err)
             except SoCoException as err:
                 _LOGGER.error("Error on %s with %s", funct.__name__, err)
-            finally:
-                _SOCO_SERVICES_LOGGER.disabled = False
 
         return wrapper
     return decorator

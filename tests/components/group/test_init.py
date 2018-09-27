@@ -12,6 +12,7 @@ from homeassistant.const import (
 import homeassistant.components.group as group
 
 from tests.common import get_test_home_assistant, assert_setup_component
+from tests.components.group import common
 
 
 class TestComponentsGroup(unittest.TestCase):
@@ -385,13 +386,13 @@ class TestComponentsGroup(unittest.TestCase):
         group_entity_id = group.ENTITY_ID_FORMAT.format('test_group')
 
         # Hide the group
-        group.set_visibility(self.hass, group_entity_id, False)
+        common.set_visibility(self.hass, group_entity_id, False)
         self.hass.block_till_done()
         group_state = self.hass.states.get(group_entity_id)
         self.assertTrue(group_state.attributes.get(ATTR_HIDDEN))
 
         # Show it again
-        group.set_visibility(self.hass, group_entity_id, True)
+        common.set_visibility(self.hass, group_entity_id, True)
         self.hass.block_till_done()
         group_state = self.hass.states.get(group_entity_id)
         self.assertIsNone(group_state.attributes.get(ATTR_HIDDEN))
