@@ -7,10 +7,10 @@ https://home-assistant.io/components/switch.rachio/
 from abc import abstractmethod
 from datetime import timedelta
 import logging
-import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
-from homeassistant.components.rachio import (DOMAIN as DOMAIN_RACHIO,
+from homeassistant.components.switch import SwitchDevice
+from homeassistant.components.rachio import (CONF_MANUAL_RUN_MINS,
+                                             DOMAIN as DOMAIN_RACHIO,
                                              KEY_DEVICE_ID,
                                              KEY_ENABLED,
                                              KEY_ID,
@@ -27,21 +27,11 @@ from homeassistant.components.rachio import (DOMAIN as DOMAIN_RACHIO,
                                              SUBTYPE_ZONE_COMPLETED,
                                              SUBTYPE_SLEEP_MODE_ON,
                                              SUBTYPE_SLEEP_MODE_OFF)
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_connect
 
 DEPENDENCIES = ['rachio']
 
 _LOGGER = logging.getLogger(__name__)
-
-# Manual run length
-CONF_MANUAL_RUN_MINS = 'manual_run_mins'
-DEFAULT_MANUAL_RUN_MINS = 10
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_MANUAL_RUN_MINS, default=DEFAULT_MANUAL_RUN_MINS):
-        cv.positive_int,
-})
 
 ATTR_ZONE_SUMMARY = 'Summary'
 ATTR_ZONE_NUMBER = 'Zone number'
@@ -49,7 +39,8 @@ ATTR_ZONE_NUMBER = 'Zone number'
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Rachio switches."""
-    manual_run_time = timedelta(minutes=config.get(CONF_MANUAL_RUN_MINS))
+    manual_run_time = timedelta(minutes=hass.data[DOMAIN_RACHIO].config.get(
+        CONF_MANUAL_RUN_MINS))
     _LOGGER.info("Rachio run time is %s", str(manual_run_time))
 
     # Add all zones from all controllers as switches
@@ -127,6 +118,11 @@ class RachioStandbySwitch(RachioSwitch):
         return "{} in standby mode".format(self._controller.name)
 
     @property
+    def unique_id(self) -> str:
+        """Return a unique id by combinining controller id and purpose."""
+        return "{}-standby".format(self._controller.controller_id)
+
+    @property
     def icon(self) -> str:
         """Return an icon for the standby switch."""
         return "mdi:power"
@@ -188,6 +184,12 @@ class RachioZone(RachioSwitch):
     def name(self) -> str:
         """Return the friendly name of the zone."""
         return self._zone_name
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique id by combinining controller id and zone number."""
+        return "{}-zone-{}".format(self._controller.controller_id,
+                                   self.zone_id)
 
     @property
     def icon(self) -> str:
