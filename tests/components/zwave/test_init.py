@@ -457,6 +457,7 @@ def test_network_complete(hass, mock_openzwave):
 
     assert len(events) == 1
 
+
 @asyncio.coroutine
 def test_network_complete_some_dead(hass, mock_openzwave):
     """Test Node network complete event."""
@@ -481,7 +482,8 @@ def test_network_complete_some_dead(hass, mock_openzwave):
     hass.async_add_job(mock_receivers[0])
     yield from hass.async_block_till_done()
 
-    assert len(events) == 1    
+    assert len(events) == 1
+
 
 class TestZWaveDeviceEntityValues(unittest.TestCase):
     """Tests for the ZWaveDeviceEntityValues helper."""
