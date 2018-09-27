@@ -8,9 +8,11 @@ from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE,\
 import homeassistant.core as ha
 import homeassistant.components.switch as switch
 from homeassistant.components.mqtt.discovery import async_start
+
 from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant, mock_coro,
     async_mock_mqtt_component, async_fire_mqtt_message)
+from tests.components.switch import common
 
 
 class TestSwitchMQTT(unittest.TestCase):
@@ -75,7 +77,7 @@ class TestSwitchMQTT(unittest.TestCase):
         self.assertEqual(STATE_ON, state.state)
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
-        switch.turn_on(self.hass, 'switch.test')
+        common.turn_on(self.hass, 'switch.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -84,7 +86,7 @@ class TestSwitchMQTT(unittest.TestCase):
         state = self.hass.states.get('switch.test')
         self.assertEqual(STATE_ON, state.state)
 
-        switch.turn_off(self.hass, 'switch.test')
+        common.turn_off(self.hass, 'switch.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
