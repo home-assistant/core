@@ -21,6 +21,11 @@ _LOGGER = logging.getLogger(__name__)
 X_HASSIO = 'X-HASSIO-KEY'
 
 
+class HassioAPIError(RuntimeError):
+    """Return if a API trow a error."""
+    pass
+
+
 def _api_bool(funct):
     """Return a boolean."""
     async def _wrapper(*argv, **kwargs):
@@ -36,9 +41,9 @@ def _api_data(funct):
     async def _wrapper(*argv, **kwargs):
         """Wrap function."""
         data = await funct(*argv, **kwargs)
-        if data and data['result'] == "ok":
+        if data['result'] == "ok":
             return data['data']
-        return None
+        raise HassioAPIError(data['message'])
 
     return _wrapper
 
@@ -91,6 +96,14 @@ class HassIO:
         """
         return self.send_command("/homeassistant/check", timeout=300)
 
+    @_api_data
+    def retrieve_services_discovery(self):
+        """Return all discovery data from Hass.io API.
+        
+        This method return a coroutine.
+        """
+        return self.send_command("/services/discovery", method="get")
+
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
         """Update Home Assistant API data on Hass.io."""
@@ -137,7 +150,7 @@ class HassIO:
                 if request.status not in (200, 400):
                     _LOGGER.error(
                         "%s return code %d.", command, request.status)
-                    return None
+                    raise HassioAPIError()
 
                 answer = yield from request.json()
                 return answer
@@ -148,4 +161,4 @@ class HassIO:
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on %s request %s", command, err)
 
-        return None
+        raise HassioAPIError()
