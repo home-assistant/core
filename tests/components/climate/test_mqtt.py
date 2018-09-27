@@ -6,7 +6,7 @@ from homeassistant.util.unit_system import (
     METRIC_SYSTEM
 )
 from homeassistant.setup import setup_component
-from homeassistant.components import climate, mqtt
+from homeassistant.components import climate
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.components.climate import (
     SUPPORT_OPERATION_MODE, SUPPORT_TARGET_TEMPERATURE,
@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (get_test_home_assistant, mock_mqtt_component,
                           async_fire_mqtt_message, fire_mqtt_message,
-                          mock_component, MockConfigEntry)
+                          mock_component)
 from tests.components.climate import common
 
 ENTITY_CLIMATE = 'climate.test'
@@ -656,8 +656,7 @@ class TestMQTTClimate(unittest.TestCase):
 
 async def test_discovery_removal_climate(hass, mqtt_mock, caplog):
     """Test removal of discovered climate."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, 'homeassistant', {}, entry)
+    await async_start(hass, 'homeassistant', {})
     data = (
         '{ "name": "Beer" }'
     )

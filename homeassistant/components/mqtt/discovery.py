@@ -50,7 +50,7 @@ MQTT_DISCOVERY_NEW = 'mqtt_discovery_new_{}_{}'
 
 
 async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
-                      config_entry) -> bool:
+                      config_entry=None) -> bool:
     """Initialize of MQTT Discovery."""
     async def async_device_message_received(topic, payload, qos):
         """Process the received message."""

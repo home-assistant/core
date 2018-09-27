@@ -2,13 +2,13 @@
 import unittest
 
 from homeassistant.setup import setup_component
-from homeassistant.components import fan, mqtt
+from homeassistant.components import fan
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 
 from tests.common import (
     mock_mqtt_component, async_fire_mqtt_message, fire_mqtt_message,
-    get_test_home_assistant, MockConfigEntry)
+    get_test_home_assistant)
 
 
 class TestMqttFan(unittest.TestCase):
@@ -108,8 +108,7 @@ class TestMqttFan(unittest.TestCase):
 
 async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
     """Test removal of discovered fan."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, 'homeassistant', {}, entry)
+    await async_start(hass, 'homeassistant', {})
     data = (
         '{ "name": "Beer",'
         '  "command_topic": "test_topic" }'

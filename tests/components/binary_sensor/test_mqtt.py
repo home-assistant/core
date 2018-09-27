@@ -4,7 +4,6 @@ import unittest
 import homeassistant.core as ha
 from homeassistant.setup import setup_component, async_setup_component
 import homeassistant.components.binary_sensor as binary_sensor
-from homeassistant.components import mqtt
 from homeassistant.components.mqtt.discovery import async_start
 
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -12,8 +11,7 @@ from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
 
 from tests.common import (
     get_test_home_assistant, fire_mqtt_message, async_fire_mqtt_message,
-    mock_component, mock_mqtt_component, async_mock_mqtt_component,
-    MockConfigEntry)
+    mock_component, mock_mqtt_component, async_mock_mqtt_component)
 
 
 class TestSensorMQTT(unittest.TestCase):
@@ -233,8 +231,7 @@ async def test_unique_id(hass):
 
 async def test_discovery_removal_binary_sensor(hass, mqtt_mock, caplog):
     """Test removal of discovered binary_sensor."""
-    entry = MockConfigEntry(domain=mqtt.DOMAIN)
-    await async_start(hass, 'homeassistant', {}, entry)
+    await async_start(hass, 'homeassistant', {})
     data = (
         '{ "name": "Beer",'
         '  "status_topic": "test_topic" }'
