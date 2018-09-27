@@ -6,12 +6,12 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED, STATE_ALARM_ARMED_HOME, STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNAVAILABLE,
     STATE_UNKNOWN)
-from homeassistant.components import alarm_control_panel
+from homeassistant.components import alarm_control_panel, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 
 from tests.common import (
     mock_mqtt_component, async_fire_mqtt_message, fire_mqtt_message,
-    get_test_home_assistant, assert_setup_component)
+    get_test_home_assistant, assert_setup_component, MockConfigEntry)
 from tests.components.alarm_control_panel import common
 
 CODE = 'HELLO_CODE'
@@ -245,7 +245,8 @@ class TestAlarmControlPanelMQTT(unittest.TestCase):
 
 async def test_discovery_removal_alarm(hass, mqtt_mock, caplog):
     """Test removal of discovered alarm_control_panel."""
-    await async_start(hass, 'homeassistant', {})
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
 
     data = (
         '{ "name": "Beer",'
