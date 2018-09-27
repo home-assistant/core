@@ -218,7 +218,7 @@ class XiaomiDevice(Entity):
         self._get_from_hub = xiaomi_hub.get_from_hub
         self._device_state_attributes = {}
         self._remove_unavailability_tracker = None
-        xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
+        self._xiaomi_hub = xiaomi_hub
         self.parse_data(device['data'], device['raw_data'])
         self.parse_voltage(device['data'])
 
@@ -236,6 +236,7 @@ class XiaomiDevice(Entity):
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Start unavailability tracking."""
+        self._xiaomi_hub.callbacks[self._sid].append(self._add_push_data_job)
         self._async_track_unavailable()
 
     @property

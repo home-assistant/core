@@ -99,9 +99,11 @@ from homeassistant.const import (
 import homeassistant.components.light as light
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.core as ha
+
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, fire_mqtt_message,
     assert_setup_component, mock_coro, async_fire_mqtt_message)
+from tests.components.light import common
 
 
 class TestLightMQTTJSON(unittest.TestCase):
@@ -316,7 +318,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(191, state.attributes.get(ATTR_SUPPORTED_FEATURES))
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
-        light.turn_on(self.hass, 'light.test')
+        common.turn_on(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -325,7 +327,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
-        light.turn_off(self.hass, 'light.test')
+        common.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -334,9 +336,9 @@ class TestLightMQTTJSON(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        light.turn_on(self.hass, 'light.test',
-                      brightness=50, color_temp=155, effect='colorloop',
-                      white_value=170)
+        common.turn_on(self.hass, 'light.test',
+                       brightness=50, color_temp=155, effect='colorloop',
+                       white_value=170)
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -362,8 +364,8 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(170, state.attributes['white_value'])
 
         # Test a color command
-        light.turn_on(self.hass, 'light.test',
-                      brightness=50, hs_color=(125, 100))
+        common.turn_on(self.hass, 'light.test',
+                       brightness=50, hs_color=(125, 100))
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -399,7 +401,7 @@ class TestLightMQTTJSON(unittest.TestCase):
             }
         })
 
-        light.turn_on(self.hass, 'light.test', hs_color=(180.0, 50.0))
+        common.turn_on(self.hass, 'light.test', hs_color=(180.0, 50.0))
         self.hass.block_till_done()
 
         message_json = json.loads(
@@ -428,7 +430,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
         self.assertEqual(40, state.attributes.get(ATTR_SUPPORTED_FEATURES))
 
-        light.turn_on(self.hass, 'light.test', flash="short")
+        common.turn_on(self.hass, 'light.test', flash="short")
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -444,7 +446,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual("ON", message_json["state"])
 
         self.mock_publish.async_publish.reset_mock()
-        light.turn_on(self.hass, 'light.test', flash="long")
+        common.turn_on(self.hass, 'light.test', flash="long")
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -475,7 +477,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
         self.assertEqual(40, state.attributes.get(ATTR_SUPPORTED_FEATURES))
 
-        light.turn_on(self.hass, 'light.test', transition=10)
+        common.turn_on(self.hass, 'light.test', transition=10)
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',
@@ -491,7 +493,7 @@ class TestLightMQTTJSON(unittest.TestCase):
         self.assertEqual("ON", message_json["state"])
 
         # Transition back off
-        light.turn_off(self.hass, 'light.test', transition=10)
+        common.turn_off(self.hass, 'light.test', transition=10)
         self.hass.block_till_done()
 
         self.assertEqual('test_light_rgb/set',

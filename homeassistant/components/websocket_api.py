@@ -40,6 +40,7 @@ ERR_ID_REUSE = 1
 ERR_INVALID_FORMAT = 2
 ERR_NOT_FOUND = 3
 ERR_UNKNOWN_COMMAND = 4
+ERR_UNKNOWN_ERROR = 5
 
 TYPE_AUTH = 'auth'
 TYPE_AUTH_INVALID = 'auth_invalid'
@@ -405,7 +406,13 @@ class ActiveConnection:
 
                 else:
                     handler, schema = handlers[msg['type']]
-                    handler(self.hass, self, schema(msg))
+                    try:
+                        handler(self.hass, self, schema(msg))
+                    except Exception:  # pylint: disable=broad-except
+                        _LOGGER.exception('Error handling message: %s', msg)
+                        self.to_write.put_nowait(error_message(
+                            cur_id, ERR_UNKNOWN_ERROR,
+                            'Unknown error.'))
 
                 last_id = cur_id
                 msg = await wsock.receive_json()

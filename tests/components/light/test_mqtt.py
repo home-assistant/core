@@ -148,9 +148,11 @@ from homeassistant.const import (
 import homeassistant.components.light as light
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.core as ha
+
 from tests.common import (
     assert_setup_component, get_test_home_assistant, mock_mqtt_component,
     async_fire_mqtt_message, fire_mqtt_message, mock_coro)
+from tests.components.light import common
 
 
 class TestLightMQTT(unittest.TestCase):
@@ -506,7 +508,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(50, state.attributes.get('white_value'))
         self.assertTrue(state.attributes.get(ATTR_ASSUMED_STATE))
 
-        light.turn_on(self.hass, 'light.test')
+        common.turn_on(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -515,7 +517,7 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_ON, state.state)
 
-        light.turn_off(self.hass, 'light.test')
+        common.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -525,10 +527,10 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         self.mock_publish.reset_mock()
-        light.turn_on(self.hass, 'light.test',
-                      brightness=50, xy_color=[0.123, 0.123])
-        light.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 0],
-                      white_value=80)
+        common.turn_on(self.hass, 'light.test',
+                       brightness=50, xy_color=[0.123, 0.123])
+        common.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 0],
+                       white_value=80)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_has_calls([
@@ -566,7 +568,7 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        light.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 64])
+        common.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 64])
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_has_calls([
@@ -714,7 +716,7 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        light.turn_on(self.hass, 'light.test', brightness=50)
+        common.turn_on(self.hass, 'light.test', brightness=50)
         self.hass.block_till_done()
 
         # Should get the following MQTT messages.
@@ -726,7 +728,7 @@ class TestLightMQTT(unittest.TestCase):
         ], any_order=True)
         self.mock_publish.async_publish.reset_mock()
 
-        light.turn_off(self.hass, 'light.test')
+        common.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -747,7 +749,7 @@ class TestLightMQTT(unittest.TestCase):
         state = self.hass.states.get('light.test')
         self.assertEqual(STATE_OFF, state.state)
 
-        light.turn_on(self.hass, 'light.test', brightness=50)
+        common.turn_on(self.hass, 'light.test', brightness=50)
         self.hass.block_till_done()
 
         # Should get the following MQTT messages.
@@ -759,7 +761,7 @@ class TestLightMQTT(unittest.TestCase):
         ], any_order=True)
         self.mock_publish.async_publish.reset_mock()
 
-        light.turn_off(self.hass, 'light.test')
+        common.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -783,7 +785,7 @@ class TestLightMQTT(unittest.TestCase):
         self.assertEqual(STATE_OFF, state.state)
 
         # Turn on w/ no brightness - should set to max
-        light.turn_on(self.hass, 'light.test')
+        common.turn_on(self.hass, 'light.test')
         self.hass.block_till_done()
 
         # Should get the following MQTT messages.
@@ -792,7 +794,7 @@ class TestLightMQTT(unittest.TestCase):
             'test_light/bright', 255, 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        light.turn_off(self.hass, 'light.test')
+        common.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
@@ -800,19 +802,19 @@ class TestLightMQTT(unittest.TestCase):
         self.mock_publish.async_publish.reset_mock()
 
         # Turn on w/ brightness
-        light.turn_on(self.hass, 'light.test', brightness=50)
+        common.turn_on(self.hass, 'light.test', brightness=50)
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_called_once_with(
             'test_light/bright', 50, 0, False)
         self.mock_publish.async_publish.reset_mock()
 
-        light.turn_off(self.hass, 'light.test')
+        common.turn_off(self.hass, 'light.test')
         self.hass.block_till_done()
 
         # Turn on w/ just a color to insure brightness gets
         # added and sent.
-        light.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 0])
+        common.turn_on(self.hass, 'light.test', rgb_color=[255, 128, 0])
         self.hass.block_till_done()
 
         self.mock_publish.async_publish.assert_has_calls([
