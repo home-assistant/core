@@ -294,10 +294,18 @@ async def test_onboarding_load(mock_http_client):
 
 async def test_auth_authorize(mock_http_client):
     """Test the authorize endpoint works."""
-    resp = await mock_http_client.get('/auth/authorize?hello=world')
-    assert resp.url.query_string == 'hello=world'
-    assert resp.url.path == '/frontend_es5/authorize.html'
+    resp = await mock_http_client.get(
+        '/auth/authorize?response_type=code&client_id=https://localhost/&'
+        'redirect_uri=https://localhost/&state=123%23456')
 
-    resp = await mock_http_client.get('/auth/authorize?latest&hello=world')
-    assert resp.url.query_string == 'latest&hello=world'
-    assert resp.url.path == '/frontend_latest/authorize.html'
+    assert str(resp.url.relative()) == (
+        '/frontend_es5/authorize.html?response_type=code&client_id='
+        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
+
+    resp = await mock_http_client.get(
+        '/auth/authorize?latest&response_type=code&client_id='
+        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
+
+    assert str(resp.url.relative()) == (
+        '/frontend_latest/authorize.html?latest&response_type=code&client_id='
+        'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
