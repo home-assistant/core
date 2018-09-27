@@ -138,10 +138,12 @@ def is_hassio(hass):
 def async_check_config(hass):
     """Check configuration over Hass.io API."""
     hassio = hass.data[DOMAIN]
-    result = yield from hassio.check_homeassistant_config()
 
-    if not result:
-        return "Hass.io config check API error"
+    try:
+        result = yield from hassio.check_homeassistant_config()
+    except HassioAPIError as err:
+        _LOGGER.error("Error on Hass.io API: %s", err)
+
     if result['result'] == "error":
         return result['message']
     return None
@@ -150,16 +152,11 @@ def async_check_config(hass):
 @asyncio.coroutine
 def async_setup(hass, config):
     """Set up the Hass.io component."""
-    try:
-        host = os.environ['HASSIO']
-    except KeyError:
-        _LOGGER.error("Missing HASSIO environment variable.")
-        return False
-
-    try:
-        os.environ['HASSIO_TOKEN']
-    except KeyError:
-        _LOGGER.error("Missing HASSIO_TOKEN environment variable.")
+    # Check local setup
+    for env in ('HASSIO', 'HASSIO_TOKEN'):
+        if os.environ.get(env):
+            continue
+        _LOGGER.error("Missing %s environment variable.", env)
         return False
 
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
@@ -233,13 +230,13 @@ def async_setup(hass, config):
             payload = data
 
         # Call API
-        ret = yield from hassio.send_command(
-            api_command.format(addon=addon, snapshot=snapshot),
-            payload=payload, timeout=MAP_SERVICE_API[service.service][2]
-        )
-
-        if not ret or ret['result'] != "ok":
-            _LOGGER.error("Error on Hass.io API: %s", ret['message'])
+        try:
+            ret = yield from hassio.send_command(
+                api_command.format(addon=addon, snapshot=snapshot),
+                payload=payload, timeout=MAP_SERVICE_API[service.service][2]
+            )
+        except HassioAPIError as err:
+            _LOGGER.error("Error on Hass.io API: %s", err)
 
     for service, settings in MAP_SERVICE_API.items():
         hass.services.async_register(
@@ -248,9 +245,11 @@ def async_setup(hass, config):
     @asyncio.coroutine
     def update_homeassistant_version(now):
         """Update last available Home Assistant version."""
-        data = yield from hassio.get_homeassistant_info()
-        if data:
+        try:
+            data = yield from hassio.get_homeassistant_info()
             hass.data[DATA_HOMEASSISTANT_VERSION] = data['last_version']
+        except HassioAPIError as err:
+            _LOGGER.warning("Can't read last version: %s", err)
 
         hass.helpers.event.async_track_point_in_utc_time(
             update_homeassistant_version, utcnow() + HASSIO_UPDATE_INTERVAL)
