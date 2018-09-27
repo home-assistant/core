@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import utcnow
 
-from .handler import HassIO
+from .handler import HassIO, HassioAPIError
 from .http import HassIOView
 
 _LOGGER = logging.getLogger(__name__)
