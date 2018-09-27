@@ -362,7 +362,7 @@ async def async_setup(hass, config):
     dispatcher.connect(
         network_complete, ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED, weak=False)
     dispatcher.connect(
-        network_complete_some_dead, 
+        network_complete_some_dead,
         ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD, weak=False)
 
     def add_node(service):
