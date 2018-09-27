@@ -68,6 +68,7 @@ STATE_IDLE = STATE_IDLE
 STATE_PAUSED = STATE_PAUSED
 STATE_RETURNING = 'returning'
 STATE_ERROR = 'error'
+STATE_REMOTE_CONTROL = 'remote control'
 
 DEFAULT_NAME = 'Vacuum cleaner robot'
 
