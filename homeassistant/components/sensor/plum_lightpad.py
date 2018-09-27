@@ -4,7 +4,6 @@ Support for Plum Lightpad switches.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.plum_lightpad
 """
-
 from homeassistant.components.plum_lightpad import (
     PLUM_DATA, LOGICAL_LOAD_LOCATED)
 from homeassistant.helpers.entity import Entity
@@ -37,7 +36,9 @@ class PowerSensor(Entity):
         self._name = load.name
         self._power = load.power
 
-        load.add_event_listener('power', self.power_event)
+    async def async_added_to_hass(self):
+        """Subscribe to power events."""
+        self._logical_load.add_event_listener('power', self.power_event)
 
     def power_event(self, event):
         """Handler for power event updates."""

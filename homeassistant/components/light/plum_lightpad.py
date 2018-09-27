@@ -45,17 +45,14 @@ class PlumLight(Light):
         self._load = load
         self._brightness = load.level
 
+    async def async_added_to_hass(self):
+        """Subscribe to dimmerchange events."""
         self._load.add_event_listener('dimmerchange', self.dimmerchange)
 
     def dimmerchange(self, event):
         """Change event handler updating the brightness."""
         self._brightness = event['level']
         self.schedule_update_ha_state()
-
-    @property
-    def llid(self):
-        """Return the Logical Load ID (llid) associated with the load."""
-        return self._load.llid
 
     @property
     def should_poll(self):
@@ -78,23 +75,9 @@ class PlumLight(Light):
         return self._brightness > 0
 
     @property
-    def dimmable(self):
-        """Return whether the load is configured as dimmable."""
-        return self._load.dimmable
-
-    @property
-    def device_state_attributes(self):
-        """Additional State attributes."""
-        return {
-            'llid': self.llid,
-            'brightness': self.brightness,
-            'dimmable': self.dimmable
-        }
-
-    @property
     def supported_features(self):
         """Flag supported features."""
-        if self.dimmable:
+        if self._load.dimmable:
             return SUPPORT_BRIGHTNESS
         return None
 
@@ -123,7 +106,11 @@ class GlowRing(Light):
         self._blue = lightpad.glow_color['blue']
         self._white = lightpad.glow_color['white']
         self._brightness = lightpad.glow_intensity * 255.0
-        lightpad.add_event_listener('configchange', self.configchange_event)
+
+    async def async_added_to_hass(self):
+        """Subscribe to configchange events."""
+        self._lightpad.add_event_listener('configchange',
+                                          self.configchange_event)
 
     def configchange_event(self, event):
         """Configuration change event handling."""
@@ -200,18 +187,6 @@ class GlowRing(Light):
         """Flag supported features."""
         return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
-    @property
-    def device_state_attributes(self):
-        """Additional attributes listed for the device."""
-        return {
-            'red': self._red,
-            'green': self._green,
-            'blue': self._blue,
-            'white': self._white,
-            'glowTimeout': self._lightpad.glow_timeout,
-            'glowFade': self._lightpad.glow_fade,
-        }
-
     def turn_on(self, **kwargs):
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -221,7 +196,7 @@ class GlowRing(Light):
             hs_color = kwargs[ATTR_HS_COLOR]
             red, green, blue = color_util.color_hs_to_RGB(*hs_color)
             self._red, self._green, self._blue = red, green, blue
-            self._lightpad.set_glow_color(red, green, blue, self.white_value)
+            self._lightpad.set_glow_color(red, green, blue, 0)
         else:
             self._lightpad.set_config({"glowEnabled": True})
 

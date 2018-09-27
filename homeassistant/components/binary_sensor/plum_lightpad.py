@@ -4,7 +4,6 @@ Support for Plum Lightpad switches.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.plum_lightpad
 """
-
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.plum_lightpad import PLUM_DATA, LIGHTPAD_LOCATED
 from homeassistant.helpers.event import async_call_later
@@ -39,7 +38,9 @@ class PlumMotionSensor(BinarySensorDevice):
         self._signal = None
         self._latest_motion = None
 
-        lightpad.add_event_listener('pirSignal', self.motion_detected)
+    async def async_added_to_hass(self):
+        """Subscribe to pirSignal events."""
+        self._lightpad.add_event_listener('pirSignal', self.motion_detected)
 
     def motion_detected(self, event):
         """Motion Detected handler."""
