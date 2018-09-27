@@ -88,7 +88,7 @@ def async_setup(hass, config):
         """Turn on lights."""
         if not device_tracker.is_on() or light.is_on(light_id):
             return
-        hass.async_add_job(
+        hass.async_create_task(
             hass.services.async_call(
                 DOMAIN_LIGHT, SERVICE_TURN_ON, dict(
                     entity_id=light_id,
@@ -143,7 +143,7 @@ def async_setup(hass, config):
         # Do we need lights?
         if light_needed:
             logger.info("Home coming event for %s. Turning lights on", entity)
-            hass.async_add_job(
+            hass.async_create_task(
                 hass.services.async_call(
                     DOMAIN_LIGHT, SERVICE_TURN_ON,
                     dict(entity_id=light_ids, profile=light_profile)))
@@ -159,7 +159,7 @@ def async_setup(hass, config):
             # when the fading in started and turn it on if so
             for index, light_id in enumerate(light_ids):
                 if now > start_point + index * LIGHT_TRANSITION_TIME:
-                    hass.async_add_job(
+                    hass.async_create_task(
                         hass.services.async_call(
                             DOMAIN_LIGHT, SERVICE_TURN_ON,
                             dict(entity_id=light_id)))
@@ -184,7 +184,7 @@ def async_setup(hass, config):
 
         logger.info(
             "Everyone has left but there are lights on. Turning them off")
-        hass.async_add_job(
+        hass.async_create_task(
             hass.services.async_call(
                 DOMAIN_LIGHT, SERVICE_TURN_OFF, dict(entity_id=light_ids)))
 
