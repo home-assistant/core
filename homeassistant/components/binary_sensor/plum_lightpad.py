@@ -8,9 +8,8 @@ import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.components.light import PLATFORM_SCHEMA
-from homeassistant.components.plum_lightpad import PLUM_DATA
+from homeassistant.components.plum_lightpad import PLUM_DATA, LIGHTPAD_LOCATED
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import dt as dt_util
@@ -28,17 +27,14 @@ async def async_setup_platform(hass, config, add_devices,
     """Set up the motion sensors for the Plum Lightpad  platform."""
     plum = hass.data[PLUM_DATA]
 
-    @callback
-    async def new_lightpad(lightpad):
-        """Callback when a new lightpad is discovered."""
+    async def new_lightpad(event):
+        """Callback when a new Lightpad is discovered."""
+        lightpad = plum.get_lightpad(event.data['lpid'])
         add_devices([
             PlumMotionSensor(lightpad=lightpad, hass=hass),
         ])
 
-    plum.add_lightpad_listener(new_lightpad)
-
-    for lightpad in plum.lightpads.values():
-        await new_lightpad(lightpad)
+    hass.bus.async_listen(LIGHTPAD_LOCATED, new_lightpad)
 
 
 class PlumMotionSensor(BinarySensorDevice):

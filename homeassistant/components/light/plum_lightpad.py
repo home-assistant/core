@@ -9,9 +9,9 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS, ATTR_HS_COLOR, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR, Light)
-from homeassistant.components.plum_lightpad import PLUM_DATA
+from homeassistant.components.plum_lightpad import PLUM_DATA,\
+    LOGICAL_LOAD_LOCATED, LIGHTPAD_LOCATED
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.color as color_util
 
@@ -28,29 +28,23 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Setup the Plum Lightpad Light."""
     plum = hass.data[PLUM_DATA]
 
-    @callback
-    async def new_load(logical_load):
+    async def new_load(event):
         """Callback handler when a new logical load is discovered."""
+        logical_load = plum.get_load(event.data['llid'])
         async_add_entities([
             PlumLight(load=logical_load)
         ])
 
-    plum.add_load_listener(new_load)
+    hass.bus.async_listen(LOGICAL_LOAD_LOCATED, new_load)
 
-    for load in plum.loads.values():
-        await new_load(load)
-
-    @callback
-    async def new_lightpad(lightpad):
+    async def new_lightpad(event):
         """Callback when a new Lightpad is discovered."""
+        lightpad = plum.get_lightpad(event.data['lpid'])
         async_add_entities([
             GlowRing(lightpad=lightpad)
         ])
 
-    plum.add_lightpad_listener(new_lightpad)
-
-    for lightpad in plum.lightpads.values():
-        await new_lightpad(lightpad)
+    hass.bus.async_listen(LIGHTPAD_LOCATED, new_lightpad)
 
 
 class PlumLight(Light):

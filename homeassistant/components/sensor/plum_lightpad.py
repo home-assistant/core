@@ -7,9 +7,9 @@ https://home-assistant.io/components/light.plum_lightpad
 import voluptuous as vol
 
 from homeassistant.components.light import PLATFORM_SCHEMA
-from homeassistant.components.plum_lightpad import PLUM_DATA
+from homeassistant.components.plum_lightpad import PLUM_DATA,\
+    LOGICAL_LOAD_LOCATED
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
@@ -27,17 +27,14 @@ async def async_setup_platform(hass, config, add_devices,
     """Setup the Power Sensor support within Plum Lightpads."""
     plum = hass.data[PLUM_DATA]
 
-    @callback
-    async def new_load(logical_load):
-        """Callback when a new Load is discovered."""
+    async def new_load(event):
+        """Callback handler when a new logical load is discovered."""
+        logical_load = plum.get_load(event.data['llid'])
         add_devices([
             PowerSensor(load=logical_load)
         ])
 
-    plum.add_load_listener(new_load)
-
-    for load in plum.loads.values():
-        await new_load(load)
+    hass.bus.async_listen(LOGICAL_LOAD_LOCATED, new_load)
 
 
 class PowerSensor(Entity):

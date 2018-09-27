@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP)
-from homeassistant.core import callback
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
@@ -28,9 +27,11 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 PLUM_DATA = 'plum'
+LIGHTPAD_LOCATED = 'plum.lightpad.found'
+LOGICAL_LOAD_LOCATED = 'plum.logicalLoad.found'
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Setup the Plum Lightpad component."""
     from plumlightpad import Plum
 
@@ -39,17 +40,26 @@ def setup(hass, config):
 
     hass.data[PLUM_DATA] = plum
 
-    @callback
-    def cleanup(event):
+    async def cleanup(event):
         """Clean up resources."""
-        plum.cleanup()
+        await plum.cleanup()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, cleanup)
+
+    await plum.loadCloudData()
 
     discovery.load_platform(hass, 'light', DOMAIN, None, conf)
     discovery.load_platform(hass, 'sensor', DOMAIN, None, conf)
     discovery.load_platform(hass, 'binary_sensor', DOMAIN, None, conf)
 
-    hass.add_job(plum.discover(hass.loop))
+    async def new_load(event_data):
+        """Called when a new LogicalLoad is detected."""
+        hass.bus.async_fire(LOGICAL_LOAD_LOCATED, event_data)
+
+    async def new_lightpad(event_data):
+        """Called when a new Lightpad is detected."""
+        hass.bus.async_fire(LIGHTPAD_LOCATED, event_data)
+
+    hass.async_add_job(plum.discover(hass.loop, new_load, new_lightpad))
 
     return True
