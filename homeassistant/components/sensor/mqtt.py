@@ -12,10 +12,12 @@ from typing import Optional
 import voluptuous as vol
 
 from homeassistant.core import callback
+from homeassistant.components import sensor
 from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
     MqttAvailability, MqttDiscoveryUpdate)
+from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 from homeassistant.components.sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.const import (
     CONF_FORCE_UPDATE, CONF_NAME, CONF_VALUE_TEMPLATE, STATE_UNKNOWN,
@@ -24,6 +26,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.components import mqtt
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
@@ -53,7 +56,24 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
-    """Set up MQTT Sensor."""
+    """Set up MQTT sensors through configuration.yaml."""
+    await _async_setup_platform(hass, config, async_add_entities,
+                                discovery_info)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up MQTT sensors dynamically through MQTT discovery."""
+    async def async_discover_sensor(config):
+        """Discover and add a discovered MQTT sensor."""
+        await _async_setup_platform(hass, {}, async_add_entities, config)
+
+    async_dispatcher_connect(hass,
+                             MQTT_DISCOVERY_NEW.format(sensor.DOMAIN, 'mqtt'),
+                             async_discover_sensor)
+
+
+async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                                async_add_entities, discovery_info=None):
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
 
