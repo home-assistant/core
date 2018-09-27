@@ -8,8 +8,7 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 
-from . import DOMAIN as HASSIO_DOMAIN
-from .handler import HassIO, HassioAPIError
+from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
 
