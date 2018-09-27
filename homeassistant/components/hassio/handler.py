@@ -102,10 +102,19 @@ class HassIO:
     @_api_data
     def retrieve_services_discovery(self):
         """Return all discovery data from Hass.io API.
-        
+
         This method return a coroutine.
         """
         return self.send_command("/services/discovery", method="get")
+
+    @_api_data
+    def get_services_discovery_entry(self, uuid):
+        """Return a single discovery data entry.
+
+        This method return a coroutine.
+        """
+        return self.send_command(
+            "/services/discovery/{}".format(uuid), method="get")
 
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
