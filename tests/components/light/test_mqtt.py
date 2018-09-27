@@ -145,7 +145,7 @@ from unittest.mock import patch
 from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
-from homeassistant.components import light
+import homeassistant.components.light as light
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.core as ha
 from tests.common import (

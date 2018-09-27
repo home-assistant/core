@@ -4,7 +4,7 @@ import unittest
 from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_LOCKED, STATE_UNLOCKED, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
-from homeassistant.components import lock
+import homeassistant.components.lock as lock
 from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (
     mock_mqtt_component, async_fire_mqtt_message, fire_mqtt_message,

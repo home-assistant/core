@@ -6,7 +6,7 @@ from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import STATE_ON, STATE_OFF, STATE_UNAVAILABLE,\
     ATTR_ASSUMED_STATE
 import homeassistant.core as ha
-from homeassistant.components import switch
+import homeassistant.components.switch as switch
 from homeassistant.components.mqtt.discovery import async_start
 from tests.common import (
     mock_mqtt_component, fire_mqtt_message, get_test_home_assistant, mock_coro,
