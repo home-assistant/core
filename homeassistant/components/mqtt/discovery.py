@@ -13,6 +13,7 @@ from homeassistant.components.mqtt import CONF_STATE_TOPIC, ATTR_DISCOVERY_HASH
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.typing import HomeAssistantType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,11 +39,18 @@ ALLOWED_PLATFORMS = {
     'alarm_control_panel': ['mqtt'],
 }
 
+CONFIG_ENTRY_PLATFORMS = {
+    'sensor': ['mqtt'],
+}
+
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
+CONFIG_ENTRY_IS_SETUP = 'mqtt_config_entry_is_setup'
 MQTT_DISCOVERY_UPDATED = 'mqtt_discovery_updated_{}'
+MQTT_DISCOVERY_NEW = 'mqtt_discovery_new_{}_{}'
 
 
-async def async_start(hass, discovery_topic, hass_config):
+async def async_start(hass: HomeAssistantType, discovery_topic, hass_config,
+                      config_entry=None) -> bool:
     """Initialize of MQTT Discovery."""
     async def async_device_message_received(topic, payload, qos):
         """Process the received message."""
@@ -98,8 +106,21 @@ async def async_start(hass, discovery_topic, hass_config):
 
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
 
-            await async_load_platform(
-                hass, component, platform, payload, hass_config)
+            if platform not in CONFIG_ENTRY_PLATFORMS.get(component, []):
+                await async_load_platform(
+                    hass, component, platform, payload, hass_config)
+                return
+
+            config_entries_key = '{}.{}'.format(component, platform)
+            if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
+                await hass.config_entries.async_forward_entry_setup(
+                    config_entry, component)
+                hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
+
+            async_dispatcher_send(hass, MQTT_DISCOVERY_NEW.format(
+                component, platform), payload)
+
+    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     await mqtt.async_subscribe(
         hass, discovery_topic + '/#', async_device_message_received, 0)
