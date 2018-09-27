@@ -4,22 +4,13 @@ Support for Plum Lightpad switches.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/light.plum_lightpad
 """
-import voluptuous as vol
 
-from homeassistant.components.light import PLATFORM_SCHEMA
-from homeassistant.components.plum_lightpad import PLUM_DATA,\
-    LOGICAL_LOAD_LOCATED
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.components.plum_lightpad import (
+    PLUM_DATA, LOGICAL_LOAD_LOCATED)
 from homeassistant.helpers.entity import Entity
 
 DEPENDENCIES = ['plum_lightpad']
 WATTS = 'Watts'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Required(CONF_USERNAME): cv.string,
-    vol.Required(CONF_PASSWORD): cv.string,
-})
 
 
 async def async_setup_platform(hass, config, add_devices,
