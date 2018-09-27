@@ -320,7 +320,7 @@ class DeviceTracker:
 
         # During init, we ignore the group
         if self.group and self.track_new:
-            self.hass.async_add_job(
+            self.hass.async_create_task(
                 self.hass.async_call(
                     DOMAIN_GROUP, SERVICE_SET, dict(
                         object_id=util.slugify(GROUP_NAME_ALL_DEVICES),
@@ -359,7 +359,7 @@ class DeviceTracker:
         entity_ids = [dev.entity_id for dev in self.devices.values()
                       if dev.track]
 
-        self.hass.async_add_job(
+        self.hass.async_create_task(
             self.hass.services.async_call(
                 DOMAIN_GROUP, SERVICE_SET, dict(
                     object_id=util.slugify(GROUP_NAME_ALL_DEVICES),

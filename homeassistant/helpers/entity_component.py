@@ -190,7 +190,7 @@ class EntityComponent:
                sorted(self.entities,
                       key=lambda entity: entity.name or entity.entity_id)]
 
-        self.hass.async_add_job(
+        self.hass.async_create_task(
             self.hass.services.async_call(
                 'group', 'set', dict(
                     object_id=slugify(self.group_name),
