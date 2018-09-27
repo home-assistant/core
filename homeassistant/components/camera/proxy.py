@@ -7,17 +7,15 @@ https://www.home-assistant.io/components/camera.proxy/
 import asyncio
 import logging
 
-import aiohttp
-import async_timeout
 import voluptuous as vol
 
 from homeassistant.components.camera import PLATFORM_SCHEMA, Camera
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME, HTTP_HEADER_HA_AUTH
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import (
-    async_aiohttp_proxy_web, async_get_clientsession)
 from homeassistant.util.async_ import run_coroutine_threadsafe
 import homeassistant.util.dt as dt_util
+from . import async_get_still_stream
 
 REQUIREMENTS = ['pillow==5.2.0']
 
@@ -158,22 +156,14 @@ class ProxyCamera(Camera):
             return self._last_image
 
         self._last_image_time = now
-        url = "{}/api/camera_proxy/{}".format(
-            self.hass.config.api.base_url, self._proxied_camera)
-        try:
-            websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(10, loop=self.hass.loop):
-                response = await websession.get(url, headers=self._headers)
-            image = await response.read()
-        except asyncio.TimeoutError:
-            _LOGGER.error("Timeout getting camera image")
-            return self._last_image
-        except aiohttp.ClientError as err:
-            _LOGGER.error("Error getting new camera image: %s", err)
+        image = await self.hass.components.camera.async_get_image(
+            self._proxied_camera)
+        if not image:
+            _LOGGER.error("Error getting original camera image")
             return self._last_image
 
         image = await self.hass.async_add_job(
-            _resize_image, image, self._image_opts)
+            _resize_image, image.content, self._image_opts)
 
         if self._cache_images:
             self._last_image = image
@@ -181,56 +171,28 @@ class ProxyCamera(Camera):
 
     async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from camera images."""
-        websession = async_get_clientsession(self.hass)
-        url = "{}/api/camera_proxy_stream/{}".format(
-            self.hass.config.api.base_url, self._proxied_camera)
-        stream_coro = websession.get(url, headers=self._headers)
-
         if not self._stream_opts:
-            return await async_aiohttp_proxy_web(
-                self.hass, request, stream_coro)
+            return await self.hass.components.camera.async_get_mjpeg_stream(
+                request, self._proxied_camera)
 
-        response = aiohttp.web.StreamResponse()
-        response.content_type = (
-            'multipart/x-mixed-replace; boundary=--frameboundary')
-        await response.prepare(request)
-
-        async def write(img_bytes):
-            """Write image to stream."""
-            await response.write(bytes(
-                '--frameboundary\r\n'
-                'Content-Type: {}\r\n'
-                'Content-Length: {}\r\n\r\n'.format(
-                    self.content_type, len(img_bytes)),
-                'utf-8') + img_bytes + b'\r\n')
-
-        with async_timeout.timeout(10, loop=self.hass.loop):
-            req = await stream_coro
-
-        try:
-            # This would be nicer as an async generator
-            # But that would only be supported for python >=3.6
-            data = b''
-            stream = req.content
-            while True:
-                chunk = await stream.read(102400)
-                if not chunk:
-                    break
-                data += chunk
-                jpg_start = data.find(b'\xff\xd8')
-                jpg_end = data.find(b'\xff\xd9')
-                if jpg_start != -1 and jpg_end != -1:
-                    image = data[jpg_start:jpg_end + 2]
-                    image = await self.hass.async_add_job(
-                        _resize_image, image, self._stream_opts)
-                    await write(image)
-                    data = data[jpg_end + 2:]
-        finally:
-            req.close()
-
-        return response
+        return await async_get_still_stream(
+            request, self._async_stream_image,
+            self.content_type, self.frame_interval)
 
     @property
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+    async def _async_stream_image(self):
+        """Return a still image response from the camera."""
+        try:
+            image = await self.hass.components.camera.async_get_image(
+                self._proxied_camera)
+            if not image:
+                return None
+        except HomeAssistantError:
+            raise asyncio.CancelledError
+
+        return await self.hass.async_add_job(
+            _resize_image, image.content, self._stream_opts)

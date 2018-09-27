@@ -4,6 +4,7 @@ Sensor for Last.fm account status.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.lastfm/
 """
+import logging
 import re
 
 import voluptuous as vol
@@ -14,6 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 
 REQUIREMENTS = ['pylast==2.4.0']
+
+_LOGGER = logging.getLogger(__name__)
 
 ATTR_LAST_PLAYED = 'last_played'
 ATTR_PLAY_COUNT = 'play_count'
@@ -30,13 +33,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the Last.fm platform."""
+    """Set up the Last.fm sensor platform."""
     import pylast as lastfm
-    network = lastfm.LastFMNetwork(api_key=config.get(CONF_API_KEY))
+    from pylast import WSError
 
-    add_entities(
-        [LastfmSensor(
-            username, network) for username in config.get(CONF_USERS)], True)
+    api_key = config[CONF_API_KEY]
+    users = config.get(CONF_USERS)
+
+    lastfm_api = lastfm.LastFMNetwork(api_key=api_key)
+
+    entities = []
+    for username in users:
+        try:
+            lastfm_api.get_user(username).get_image()
+            entities.append(LastfmSensor(username, lastfm_api))
+        except WSError as error:
+            _LOGGER.error(error)
+            return
+
+    add_entities(entities, True)
 
 
 class LastfmSensor(Entity):

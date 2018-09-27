@@ -17,7 +17,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify
 
-REQUIREMENTS = ['pyRFXtrx==0.22.1']
+REQUIREMENTS = ['pyRFXtrx==0.23']
 
 DOMAIN = 'rfxtrx'
 

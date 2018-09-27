@@ -13,7 +13,6 @@ import os
 import socket
 import time
 import ssl
-import re
 import requests.certs
 import attr
 
@@ -550,6 +549,7 @@ class MQTT:
         This method must be run in the event loop and returns a coroutine.
         """
         async with self._paho_lock:
+            _LOGGER.debug("Transmitting message on %s: %s", topic, payload)
             await self.hass.async_add_job(
                 self._mqttc.publish, topic, payload, qos, retain)
 
@@ -726,23 +726,14 @@ def _raise_on_error(result_code: int) -> None:
 
 def _match_topic(subscription: str, topic: str) -> bool:
     """Test if topic matches subscription."""
-    reg_ex_parts = []  # type: List[str]
-    suffix = ""
-    if subscription.endswith('#'):
-        subscription = subscription[:-2]
-        suffix = "(.*)"
-    sub_parts = subscription.split('/')
-    for sub_part in sub_parts:
-        if sub_part == "+":
-            reg_ex_parts.append(r"([^\/]+)")
-        else:
-            reg_ex_parts.append(re.escape(sub_part))
-
-    reg_ex = "^" + (r'\/'.join(reg_ex_parts)) + suffix + "$"
-
-    reg = re.compile(reg_ex)
-
-    return reg.match(topic) is not None
+    from paho.mqtt.matcher import MQTTMatcher
+    matcher = MQTTMatcher()
+    matcher[subscription] = True
+    try:
+        next(matcher.iter_match(topic))
+        return True
+    except StopIteration:
+        return False
 
 
 class MqttAvailability(Entity):

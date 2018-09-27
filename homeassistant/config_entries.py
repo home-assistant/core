@@ -141,6 +141,7 @@ FLOWS = [
     'homematicip_cloud',
     'hue',
     'nest',
+    'openuv',
     'sonos',
     'zone',
 ]
@@ -324,6 +325,14 @@ class ConfigEntries:
         self._async_schedule_save()
 
         unloaded = await entry.async_unload(self.hass)
+
+        device_registry = await \
+            self.hass.helpers.device_registry.async_get_registry()
+        device_registry.async_clear_config_entry(entry_id)
+
+        entity_registry = await \
+            self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry.async_clear_config_entry(entry_id)
 
         return {
             'require_restart': not unloaded
