@@ -309,8 +309,3 @@ async def test_auth_authorize(mock_http_client):
     assert str(resp.url.relative()) == (
         '/frontend_latest/authorize.html?latest&response_type=code&client_id='
         'https://localhost/&redirect_uri=https://localhost/&state=123%23456')
-
-
-    # resp = await mock_http_client.get('/auth/authorize?latest&hello=world#yoyo')
-    # assert resp.url.raw_query_string == 'latest&hello=world#yoyo'
-    # assert resp.url.path == '/frontend_latest/authorize.html'
