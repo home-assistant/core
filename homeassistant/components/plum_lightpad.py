@@ -13,7 +13,7 @@ from homeassistant.const import (
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 
-REQUIREMENTS = ['plumlightpad==0.0.9']
+REQUIREMENTS = ['plumlightpad==0.0.10']
 
 _LOGGER = logging.getLogger(__name__)
 
