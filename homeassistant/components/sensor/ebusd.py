@@ -117,7 +117,7 @@ def timer_format(string):
     return ' - '.join(_r)
 
 
-class EbusdData(object):
+class EbusdData:
     """Get the latest data from Ebusd."""
 
     def __init__(self, address, circuit):
