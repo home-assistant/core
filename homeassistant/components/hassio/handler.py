@@ -30,8 +30,11 @@ def _api_bool(funct):
     """Return a boolean."""
     async def _wrapper(*argv, **kwargs):
         """Wrap function."""
-        data = await funct(*argv, **kwargs)
-        return data and data['result'] == "ok"
+        try:
+            data = await funct(*argv, **kwargs)
+            return data['result'] == "ok"
+        except HassioAPIError:
+            return False
 
     return _wrapper
 
