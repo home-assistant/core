@@ -11,23 +11,24 @@ import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_NAME)
-from homeassistant.util import Throttle
+    CONF_USERNAME, CONF_PASSWORD, CONF_NAME, CONF_SCAN_INTERVAL)
 
-REQUIREMENTS = ['blinkpy==0.8.3']
+REQUIREMENTS = ['blinkpy==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 DOMAIN = 'blink'
 DEFAULT_BRAND = 'blink'
 DEFAULT_ATTRIBUTION = "Data provided by immedia-semi.com"
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
+SIGNAL_UPDATE_BLINK = "blink_update"
+SCAN_INTERVAL = timedelta(seconds=60)
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string
+        vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
+            cv.time_period,
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -42,29 +43,33 @@ class BlinkSystem:
 
     def __init__(self, config_info):
         """Initialize the system."""
-        import blinkpy.blinkpy as blink
-        self.blink = blink.Blink(username=config_info[DOMAIN][CONF_USERNAME],
-                                 password=config_info[DOMAIN][CONF_PASSWORD])
+        from blinkpy import blinkpy
+        username = config_info.get(CONF_USERNAME)
+        password = config_info.get(CONF_PASSWORD)
+        self.blink = blinkpy.Blink(username=username,
+                                   password=password)
+        self.blink.refresh_rate = scan_interval.total_seconds()
         self.blink.start()
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def refresh(self):
-        """Refresh the blink cameras."""
-        self.blink.refresh()
 
 
 def setup(hass, config):
     """Set up Blink System."""
-    hass.data[DOMAIN] = BlinkSystem(config)
+    hass.data[DOMAIN] = BlinkSystem(config).blink
 
     def trigger_camera(call):
         """Trigger a camera."""
-        cameras = hass.data[DOMAIN].blink.cameras
+        cameras = hass.data[DOMAIN].blink.sync.cameras
         name = call.data.get(CONF_NAME, '')
         if name in cameras:
             cameras[name].snap_picture()
-        hass.data[DOMAIN].blink.refresh()
+        hass.data[DOMAIN].refresh()
 
+    def blink_refresh(event_time):
+        """Call blink to refresh info."""
+        _LOGGER.info("Updating Blink component")
+        hass.data[DOMAIN].refresh()
+
+    hass.services.register(DOMAIN, 'update', blink_refresh)
     hass.services.register(
         DOMAIN, SERVICE_TRIGGER, trigger_camera, schema=SERVICE_TRIGGER_SCHEMA
     )

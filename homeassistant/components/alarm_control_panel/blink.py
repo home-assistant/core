@@ -37,7 +37,7 @@ class BlinkSyncModule(AlarmControlPanel):
     def __init__(self, data, name):
         """Initialize the alarm control panel."""
         self.data = data
-        self.sync = data.blink
+        self.sync = data.sync
         self._name = name
         self._state = None
 
@@ -77,14 +77,11 @@ class BlinkSyncModule(AlarmControlPanel):
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         self.sync.arm = False
-        self.sync.refresh()
 
     def alarm_arm_away(self, code=None):
         """Send arm command."""
         self.sync.arm = True
-        self.sync.refresh()
 
     def alarm_arm_home(self, code=None):
         """Send arm command."""
         self.sync.arm = True
-        self.sync.refresh()

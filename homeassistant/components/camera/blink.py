@@ -4,19 +4,21 @@ Support for Blink system camera.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.blink/
 """
-from datetime import timedelta
 import logging
 import requests
 
+import voluptuous as vol
+
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.blink import DOMAIN, DEFAULT_BRAND
-from homeassistant.components.camera import Camera
-from homeassistant.util import Throttle
+from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
+from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.helpers.aiohttp_client import (
+    async_get_clientsession, async_aiohttp_proxy_web)
 
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['blink']
-
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=60)
 
 ATTR_VIDEO_CLIP = 'video'
 ATTR_IMAGE = 'image'
@@ -26,7 +28,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Blink Camera."""
     data = hass.data[DOMAIN]
     devs = list()
-    for name in data.blink.cameras:
+    for name in data.sync.cameras:
         devs.append(BlinkCamera(hass, config, data, name))
 
     add_entities(devs)
@@ -41,7 +43,7 @@ class BlinkCamera(Camera):
         self.data = data
         self.hass = hass
         self._name = name
-        self._camera = self.data.blink.cameras[name]
+        self._camera = self.data.sync.cameras[name]
         self.attr = dict()
         self.response = None
         self.current_image = None
@@ -59,24 +61,6 @@ class BlinkCamera(Camera):
         self.attr = self._camera.attributes
         self.attr['brand'] = self.brand
         return self.attr
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def request_image(self):
-        """Request a new image from Blink servers."""
-        _LOGGER.debug("Requesting new image from blink servers")
-        header = self._camera.header
-        self.response = requests.get(
-            self.current_image, headers=header, stream=True)
-
-    def check_for_new_image(self):
-        """Check if new thumbnail since last update."""
-        self.data.refresh()
-        self.current_image = self._camera.image_refresh()
-        if self.current_image is not self.last_image:
-            self.attr = self._camera.attributes
-            self.last_image = self.current_image
-            return True
-        return False
 
     def enable_motion_detection(self):
         """Enable motion detection for the camera."""
@@ -97,8 +81,8 @@ class BlinkCamera(Camera):
 
     def camera_image(self):
         """Return a still image response from the camera."""
-        if self.check_for_new_image():
-            self.request_image()
-        if self.response is None:
-            return None
-        return self.response.content
+        return self._camera.image_from_cache.content
+
+    async def handle_async_mjpeg_stream(self, request):
+        """Generate an HTTP MJPEG stream from the camera."""
+        return await self._camera.video_from_cache

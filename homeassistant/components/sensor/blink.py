@@ -43,7 +43,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Blink sensor."""
     data = hass.data[DOMAIN]
     devs = list()
-    for index, name in enumerate(data.blink.cameras):
+    for index, name in enumerate(data.sync.cameras):
         for sensor_type in SENSOR_TYPES:
             devs.append(BlinkSensor(name, sensor_type, index, data))
 
@@ -61,7 +61,7 @@ class BlinkSensor(Entity):
         self._type = sensor_type
         self.data = data
         self.index = index
-        self._camera = self.data.blink.cameras[name]
+        self._camera = self.data.sync.cameras[name]
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
         self._icon = SENSOR_TYPES[sensor_type][2]
@@ -88,6 +88,7 @@ class BlinkSensor(Entity):
 
     def update(self):
         """Retrieve sensor data from the camera."""
+        self.data.refresh()
         try:
             self._state = self._camera.attributes[self._type]
         except KeyError:
