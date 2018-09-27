@@ -4,31 +4,31 @@ Support for MQTT JSON lights.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/light.mqtt_json/
 """
-import logging
 import json
+import logging
 from typing import Optional
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.components import mqtt
 from homeassistant.components.light import (
-    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH,
-    ATTR_TRANSITION, ATTR_WHITE_VALUE, ATTR_HS_COLOR,
-    FLASH_LONG, FLASH_SHORT, Light, PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR_TEMP, SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_COLOR,
-    SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE)
+    ATTR_BRIGHTNESS, ATTR_COLOR_TEMP, ATTR_EFFECT, ATTR_FLASH, ATTR_HS_COLOR,
+    ATTR_TRANSITION, ATTR_WHITE_VALUE, FLASH_LONG, FLASH_SHORT,
+    PLATFORM_SCHEMA, SUPPORT_BRIGHTNESS, SUPPORT_COLOR, SUPPORT_COLOR_TEMP,
+    SUPPORT_EFFECT, SUPPORT_FLASH, SUPPORT_TRANSITION, SUPPORT_WHITE_VALUE,
+    Light)
 from homeassistant.components.light.mqtt import CONF_BRIGHTNESS_SCALE
-from homeassistant.const import (
-    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, STATE_ON,
-    CONF_NAME, CONF_OPTIMISTIC, CONF_RGB, CONF_WHITE_VALUE, CONF_XY)
 from homeassistant.components.mqtt import (
-    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_COMMAND_TOPIC,
     CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
-    MqttAvailability, MqttDiscoveryUpdate, ATTR_DISCOVERY_HASH)
+    CONF_STATE_TOPIC, MqttAvailability, MqttDiscoveryUpdate)
+from homeassistant.const import (
+    CONF_BRIGHTNESS, CONF_COLOR_TEMP, CONF_EFFECT, CONF_NAME, CONF_OPTIMISTIC,
+    CONF_RGB, CONF_WHITE_VALUE, CONF_XY, STATE_ON)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.helpers.restore_state import async_get_last_state
+from homeassistant.helpers.typing import ConfigType, HomeAssistantType
 import homeassistant.util.color as color_util
 
 _LOGGER = logging.getLogger(__name__)
