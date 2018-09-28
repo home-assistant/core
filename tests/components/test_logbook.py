@@ -4,8 +4,6 @@ import logging
 from datetime import timedelta
 import unittest
 
-import attr
-
 from homeassistant.components import sun
 import homeassistant.core as ha
 from homeassistant.const import (
@@ -13,6 +11,7 @@ from homeassistant.const import (
     ATTR_HIDDEN, STATE_NOT_HOME, STATE_ON, STATE_OFF)
 import homeassistant.util.dt as dt_util
 from homeassistant.components import logbook, recorder
+from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import (
@@ -101,7 +100,7 @@ class TestComponentLogbook(unittest.TestCase):
         eventB = self.create_state_changed_event(pointB, entity_id, 20)
         eventC = self.create_state_changed_event(pointC, entity_id, 30)
 
-        entries = list(logbook.humanify((eventA, eventB, eventC)))
+        entries = list(logbook.humanify(self.hass, (eventA, eventB, eventC)))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(
@@ -118,7 +117,7 @@ class TestComponentLogbook(unittest.TestCase):
         eventA = self.create_state_changed_event(
             pointA, entity_id, 10, attributes)
 
-        entries = list(logbook.humanify((eventA,)))
+        entries = list(logbook.humanify(self.hass, (eventA,)))
 
         self.assertEqual(0, len(entries))
 
@@ -135,7 +134,7 @@ class TestComponentLogbook(unittest.TestCase):
 
         events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
                                           eventA, eventB), {})
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(
@@ -157,7 +156,7 @@ class TestComponentLogbook(unittest.TestCase):
 
         events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
                                           eventA, eventB), {})
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(
@@ -179,7 +178,7 @@ class TestComponentLogbook(unittest.TestCase):
 
         events = logbook._exclude_events((ha.Event(EVENT_HOMEASSISTANT_STOP),
                                           eventA, eventB), {})
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(
@@ -205,7 +204,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
             config[logbook.DOMAIN])
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(
@@ -231,7 +230,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_START), eventA, eventB),
             config[logbook.DOMAIN])
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(entries[0], name='Home Assistant', message='started',
@@ -268,7 +267,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
             config[logbook.DOMAIN])
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(
@@ -294,7 +293,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_STOP), eventA, eventB),
             config[logbook.DOMAIN])
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(
@@ -320,7 +319,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_START), eventA, eventB),
             config[logbook.DOMAIN])
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(2, len(entries))
         self.assert_entry(entries[0], name='Home Assistant', message='started',
@@ -354,7 +353,7 @@ class TestComponentLogbook(unittest.TestCase):
         events = logbook._exclude_events(
             (ha.Event(EVENT_HOMEASSISTANT_START), eventA1, eventA2, eventA3,
              eventB1, eventB2), config[logbook.DOMAIN])
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(3, len(entries))
         self.assert_entry(entries[0], name='Home Assistant', message='started',
@@ -375,7 +374,7 @@ class TestComponentLogbook(unittest.TestCase):
                                                  {'auto': True})
 
         events = logbook._exclude_events((eventA, eventB), {})
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(1, len(entries))
         self.assert_entry(entries[0], pointA, 'bla', domain='switch',
@@ -393,7 +392,7 @@ class TestComponentLogbook(unittest.TestCase):
             pointA, entity_id2, 20, last_changed=pointA, last_updated=pointB)
 
         events = logbook._exclude_events((eventA, eventB), {})
-        entries = list(logbook.humanify(events))
+        entries = list(logbook.humanify(self.hass, events))
 
         self.assertEqual(1, len(entries))
         self.assert_entry(entries[0], pointA, 'bla', domain='switch',
@@ -404,7 +403,7 @@ class TestComponentLogbook(unittest.TestCase):
 
         Events that are occurring in the same minute.
         """
-        entries = list(logbook.humanify((
+        entries = list(logbook.humanify(self.hass, (
             ha.Event(EVENT_HOMEASSISTANT_STOP),
             ha.Event(EVENT_HOMEASSISTANT_START),
             )))
@@ -419,7 +418,7 @@ class TestComponentLogbook(unittest.TestCase):
         entity_id = 'switch.bla'
         pointA = dt_util.utcnow()
 
-        entries = list(logbook.humanify((
+        entries = list(logbook.humanify(self.hass, (
             ha.Event(EVENT_HOMEASSISTANT_START),
             self.create_state_changed_event(pointA, entity_id, 10)
             )))
@@ -500,7 +499,7 @@ class TestComponentLogbook(unittest.TestCase):
         message = 'has a custom entry'
         entity_id = 'sun.sun'
 
-        entries = list(logbook.humanify((
+        entries = list(logbook.humanify(self.hass, (
             ha.Event(logbook.EVENT_LOGBOOK_ENTRY, {
                 logbook.ATTR_NAME: name,
                 logbook.ATTR_MESSAGE: message,
@@ -557,3 +556,44 @@ async def test_logbook_view(hass, aiohttp_client):
     response = await client.get(
         '/api/logbook/{}'.format(dt_util.utcnow().isoformat()))
     assert response.status == 200
+
+
+async def test_humanify_alexa_event(hass):
+    """Test humanifying Alexa event."""
+    hass.states.async_set('light.kitchen', 'on', {
+        'friendly_name': 'Kitchen Light'
+    })
+
+    results = list(logbook.humanify(hass, [
+        ha.Event(EVENT_ALEXA_SMART_HOME, {
+            'namespace': 'Alexa.Discovery',
+            'name': 'Discover',
+        }),
+        ha.Event(EVENT_ALEXA_SMART_HOME, {
+            'namespace': 'Alexa.PowerController',
+            'name': 'TurnOn',
+            'entity_id': 'light.kitchen'
+        }),
+        ha.Event(EVENT_ALEXA_SMART_HOME, {
+            'namespace': 'Alexa.PowerController',
+            'name': 'TurnOn',
+            'entity_id': 'light.non_existing'
+        }),
+
+    ]))
+
+    event1, event2, event3 = results
+
+    assert event1.name == 'Amazon Alexa'
+    assert event1.message == 'send command Alexa.Discovery/Discover'
+    assert event1.entity_id is None
+
+    assert event2.name == 'Amazon Alexa'
+    assert event2.message == \
+        'send command Alexa.PowerController/TurnOn for Kitchen Light'
+    assert event2.entity_id == 'light.kitchen'
+
+    assert event3.name == 'Amazon Alexa'
+    assert event3.message == \
+        'send command Alexa.PowerController/TurnOn for light.non_existing'
+    assert event3.entity_id == 'light.non_existing'

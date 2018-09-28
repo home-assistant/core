@@ -18,8 +18,9 @@ from homeassistant.const import (
     CONF_INCLUDE, EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGBOOK_ENTRY, EVENT_STATE_CHANGED, HTTP_BAD_REQUEST, STATE_NOT_HOME,
     STATE_OFF, STATE_ON)
-from homeassistant.core import DOMAIN as HA_DOMAIN
-from homeassistant.core import State, callback, split_entity_id
+from homeassistant.core import (
+    DOMAIN as HA_DOMAIN, State, callback, split_entity_id)
+from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 
@@ -54,7 +55,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 ALL_EVENT_TYPES = [
     EVENT_STATE_CHANGED, EVENT_LOGBOOK_ENTRY,
-    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+    EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
+    EVENT_ALEXA_SMART_HOME
 ]
 
 LOG_MESSAGE_SCHEMA = vol.Schema({
@@ -155,7 +157,7 @@ class Entry:
     context_user_id = attr.ib(type=str, default=None)
 
 
-def humanify(events):
+def humanify(hass, events):
     """Generate a converted list of events into Entry objects.
 
     Will try to group events if possible:
@@ -273,6 +275,29 @@ def humanify(events):
                     context_user_id=event.context.user_id
                 )
 
+            elif event.event_type == EVENT_ALEXA_SMART_HOME:
+                data = event.data
+                entity_id = data.get('entity_id')
+
+                if entity_id:
+                    state = hass.states.get(entity_id)
+                    name = state.name if state else entity_id
+                    message = "send command {}/{} for {}".format(
+                        data['namespace'], data['name'], name)
+                else:
+                    message = "send command {}/{}".format(
+                        data['namespace'], data['name'])
+
+                yield Entry(
+                    when=event.time_fired,
+                    name='Amazon Alexa',
+                    message=message,
+                    domain='alexa',
+                    entity_id=entity_id,
+                    context_id=event.context.id,
+                    context_user_id=event.context.user_id
+                )
+
 
 def _get_events(hass, config, start_day, end_day):
     """Get events for a period of time."""
@@ -289,7 +314,7 @@ def _get_events(hass, config, start_day, end_day):
             .filter((States.last_updated == States.last_changed)
                     | (States.state_id.is_(None)))
         events = execute(query)
-    return humanify(_exclude_events(events, config))
+    return humanify(hass, _exclude_events(events, config))
 
 
 def _exclude_events(events, config):
