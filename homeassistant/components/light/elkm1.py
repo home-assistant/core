@@ -9,13 +9,15 @@ from homeassistant.components.light import (ATTR_BRIGHTNESS,
                                             SUPPORT_BRIGHTNESS, Light)
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 
-from homeassistant.components.elkm1 import DOMAIN, ElkDeviceBase, create_elk_devices
+from homeassistant.components.elkm1 import (DOMAIN, ElkDeviceBase,
+                                            create_elk_devices)
 
 DEPENDENCIES = [DOMAIN]
 
 
 # pylint: disable=unused-argument
-async def async_setup_platform(hass, config, async_add_devices, discovery_info):
+async def async_setup_platform(hass, config, async_add_devices,
+                               discovery_info):
     """Setup the Elk light platform."""
     elk = hass.data[DOMAIN]['elk']
     async_add_devices(create_elk_devices(hass, elk.lights,
