@@ -27,7 +27,7 @@ VALID_CONFIG_WITH_CATEGORIES = {
         }
     ]
 }
-VALID_CONFIG_WITHOUT_CATEGORIES = {
+VALID_CONFIG = {
     sensor.DOMAIN: [
         {
             'platform': 'geo_rss_events',
@@ -82,7 +82,7 @@ class TestGeoRssServiceUpdater(unittest.TestCase):
         with patch('homeassistant.util.dt.utcnow', return_value=utcnow):
             with assert_setup_component(1, sensor.DOMAIN):
                 self.assertTrue(setup_component(self.hass, sensor.DOMAIN,
-                                                VALID_CONFIG_WITHOUT_CATEGORIES))
+                                                VALID_CONFIG))
                 # Artificially trigger update.
                 self.hass.bus.fire(EVENT_HOMEASSISTANT_START)
                 # Collect events.
