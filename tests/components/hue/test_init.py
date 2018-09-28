@@ -182,7 +182,7 @@ async def test_config_passed_to_config_entry(hass):
 
     assert len(mock_registry.mock_calls) == 1
     assert mock_registry.mock_calls[0][2] == {
-        'config_entry': entry.entry_id,
+        'config_entry_id': entry.entry_id,
         'connections': {
             ('mac', 'mock-mac')
         },
@@ -192,7 +192,7 @@ async def test_config_passed_to_config_entry(hass):
         'manufacturer': 'Signify',
         'name': 'mock-name',
         'model': 'mock-modelid',
-        'sw_version': 'mock-swversion'
+        'sw_version': 'mock-swversion',
     }
 
 

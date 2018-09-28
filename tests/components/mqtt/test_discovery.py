@@ -181,3 +181,31 @@ def test_non_duplicate_discovery(hass, mqtt_mock, caplog):
     assert state_duplicate is None
     assert 'Component has already been discovered: ' \
            'binary_sensor bla' in caplog.text
+
+
+@asyncio.coroutine
+def test_discovery_removal(hass, mqtt_mock, caplog):
+    """Test expansion of abbreviated discovery payload."""
+    yield from async_start(hass, 'homeassistant', {})
+
+    data = (
+        '{ "name": "Beer",'
+        '  "status_topic": "test_topic",'
+        '  "command_topic": "test_topic" }'
+    )
+
+    async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
+                            data)
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('switch.beer')
+    assert state is not None
+    assert state.name == 'Beer'
+
+    async_fire_mqtt_message(hass, 'homeassistant/switch/bla/config',
+                            '')
+    yield from hass.async_block_till_done()
+    yield from hass.async_block_till_done()
+
+    state = hass.states.get('switch.beer')
+    assert state is None

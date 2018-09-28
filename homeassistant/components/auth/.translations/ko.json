@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "\uc0ac\uc6a9 \uac00\ub2a5\ud55c \uc54c\ub9bc \uc11c\ube44\uc2a4\uac00 \uc5c6\uc2b5\ub2c8\ub2e4."
+            },
+            "error": {
+                "invalid_code": "\uc798\ubabb\ub41c \ucf54\ub4dc\uc785\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694."
+            },
+            "step": {
+                "init": {
+                    "description": "\uc54c\ub9bc \uc11c\ube44\uc2a4 \uc911 \ud558\ub098\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694:",
+                    "title": "\uc54c\ub9bc \uad6c\uc131\uc694\uc18c\uac00 \uc81c\uacf5\ud558\ub294 \uc77c\ud68c\uc6a9 \ube44\ubc00\ubc88\ud638 \uc124\uc815"
+                },
+                "setup": {
+                    "description": "**notify.{notify_service}** \uc5d0\uc11c \uc77c\ud68c\uc6a9 \ube44\ubc00\ubc88\ud638\ub97c \ubcf4\ub0c8\uc2b5\ub2c8\ub2e4. \uc544\ub798\uc758 \uacf5\ub780\uc5d0 \uc785\ub825\ud574 \uc8fc\uc138\uc694:",
+                    "title": "\uc124\uc815 \ud655\uc778"
+                }
+            },
+            "title": "\uc77c\ud68c\uc6a9 \ube44\ubc00\ubc88\ud638 \uc54c\ub9bc"
+        },
         "totp": {
             "error": {
                 "invalid_code": "\uc798\ubabb\ub41c \ucf54\ub4dc \uc785\ub2c8\ub2e4. \ub2e4\uc2dc \uc2dc\ub3c4\ud574\uc8fc\uc138\uc694. \uc774 \uc624\ub958\uac00 \uc9c0\uc18d\uc801\uc73c\ub85c \ubc1c\uc0dd\ud55c\ub2e4\uba74 Home Assistant \uc758 \uc2dc\uac04\uc124\uc815\uc774 \uc62c\ubc14\ub978\uc9c0 \ud655\uc778\ud574\ubcf4\uc138\uc694."

@@ -77,7 +77,7 @@ class InsecureExampleModule(MultiFactorAuthModule):
                 return True
         return False
 
-    async def async_validation(
+    async def async_validate(
             self, user_id: str, user_input: Dict[str, Any]) -> bool:
         """Return True if validation passed."""
         for data in self._data:

@@ -1,11 +1,13 @@
 """The tests for the REST binary sensor platform."""
 import unittest
+from pytest import raises
 from unittest.mock import patch, Mock
 
 import requests
 from requests.exceptions import Timeout, MissingSchema
 import requests_mock
 
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 import homeassistant.components.binary_sensor as binary_sensor
 import homeassistant.components.binary_sensor.rest as rest
@@ -18,9 +20,18 @@ from tests.common import get_test_home_assistant, assert_setup_component
 class TestRestBinarySensorSetup(unittest.TestCase):
     """Tests for setting up the REST binary sensor platform."""
 
+    DEVICES = []
+
+    def add_devices(self, devices, update_before_add=False):
+        """Mock add devices."""
+        for device in devices:
+            self.DEVICES.append(device)
+
     def setUp(self):
         """Set up things to be run when tests are started."""
         self.hass = get_test_home_assistant()
+        # Reset for this test.
+        self.DEVICES = []
 
     def tearDown(self):
         """Stop everything that was started."""
@@ -45,76 +56,80 @@ class TestRestBinarySensorSetup(unittest.TestCase):
            side_effect=requests.exceptions.ConnectionError())
     def test_setup_failed_connect(self, mock_req):
         """Test setup when connection error occurs."""
-        self.assertFalse(rest.setup_platform(self.hass, {
-            'platform': 'rest',
-            'resource': 'http://localhost',
-        }, lambda devices, update=True: None))
+        with raises(PlatformNotReady):
+            rest.setup_platform(self.hass, {
+                'platform': 'rest',
+                'resource': 'http://localhost',
+            }, self.add_devices, None)
+        self.assertEqual(len(self.DEVICES), 0)
 
     @patch('requests.Session.send', side_effect=Timeout())
     def test_setup_timeout(self, mock_req):
         """Test setup when connection timeout occurs."""
-        self.assertFalse(rest.setup_platform(self.hass, {
-            'platform': 'rest',
-            'resource': 'http://localhost',
-        }, lambda devices, update=True: None))
+        with raises(PlatformNotReady):
+            rest.setup_platform(self.hass, {
+                'platform': 'rest',
+                'resource': 'http://localhost',
+            }, self.add_devices, None)
+        self.assertEqual(len(self.DEVICES), 0)
 
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):
         """Test setup with minimum configuration."""
         mock_req.get('http://localhost', status_code=200)
-        self.assertTrue(setup_component(self.hass, 'binary_sensor', {
-            'binary_sensor': {
-                'platform': 'rest',
-                'resource': 'http://localhost'
-            }
-        }))
-        self.assertEqual(2, mock_req.call_count)
-        assert_setup_component(1, 'switch')
+        with assert_setup_component(1, 'binary_sensor'):
+            self.assertTrue(setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'rest',
+                    'resource': 'http://localhost'
+                }
+            }))
+        self.assertEqual(1, mock_req.call_count)
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
         """Test setup with valid configuration."""
         mock_req.get('http://localhost', status_code=200)
-        self.assertTrue(setup_component(self.hass, 'binary_sensor', {
-            'binary_sensor': {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-                'method': 'GET',
-                'value_template': '{{ value_json.key }}',
-                'name': 'foo',
-                'unit_of_measurement': 'MB',
-                'verify_ssl': 'true',
-                'authentication': 'basic',
-                'username': 'my username',
-                'password': 'my password',
-                'headers': {'Accept': 'application/json'}
-            }
-        }))
-        self.assertEqual(2, mock_req.call_count)
-        assert_setup_component(1, 'binary_sensor')
+        with assert_setup_component(1, 'binary_sensor'):
+            self.assertTrue(setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'rest',
+                    'resource': 'http://localhost',
+                    'method': 'GET',
+                    'value_template': '{{ value_json.key }}',
+                    'name': 'foo',
+                    'unit_of_measurement': 'MB',
+                    'verify_ssl': 'true',
+                    'authentication': 'basic',
+                    'username': 'my username',
+                    'password': 'my password',
+                    'headers': {'Accept': 'application/json'}
+                }
+            }))
+        self.assertEqual(1, mock_req.call_count)
 
     @requests_mock.Mocker()
     def test_setup_post(self, mock_req):
         """Test setup with valid configuration."""
         mock_req.post('http://localhost', status_code=200)
-        self.assertTrue(setup_component(self.hass, 'binary_sensor', {
-            'binary_sensor': {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-                'method': 'POST',
-                'value_template': '{{ value_json.key }}',
-                'payload': '{ "device": "toaster"}',
-                'name': 'foo',
-                'unit_of_measurement': 'MB',
-                'verify_ssl': 'true',
-                'authentication': 'basic',
-                'username': 'my username',
-                'password': 'my password',
-                'headers': {'Accept': 'application/json'}
-            }
-        }))
-        self.assertEqual(2, mock_req.call_count)
-        assert_setup_component(1, 'binary_sensor')
+        with assert_setup_component(1, 'binary_sensor'):
+            self.assertTrue(setup_component(self.hass, 'binary_sensor', {
+                'binary_sensor': {
+                    'platform': 'rest',
+                    'resource': 'http://localhost',
+                    'method': 'POST',
+                    'value_template': '{{ value_json.key }}',
+                    'payload': '{ "device": "toaster"}',
+                    'name': 'foo',
+                    'unit_of_measurement': 'MB',
+                    'verify_ssl': 'true',
+                    'authentication': 'basic',
+                    'username': 'my username',
+                    'password': 'my password',
+                    'headers': {'Accept': 'application/json'}
+                }
+            }))
+        self.assertEqual(1, mock_req.call_count)
 
 
 class TestRestBinarySensor(unittest.TestCase):

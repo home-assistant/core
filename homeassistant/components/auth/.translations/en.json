@@ -1,5 +1,24 @@
 {
     "mfa_setup": {
+        "notify": {
+            "abort": {
+                "no_available_service": "No notification services available."
+            },
+            "error": {
+                "invalid_code": "Invalid code, please try again."
+            },
+            "step": {
+                "init": {
+                    "description": "Please select one of the notification services:",
+                    "title": "Set up one-time password delivered by notify component"
+                },
+                "setup": {
+                    "description": "A one-time password has been sent via **notify.{notify_service}**. Please enter it below:",
+                    "title": "Verify setup"
+                }
+            },
+            "title": "Notify One-Time Password"
+        },
         "totp": {
             "error": {
                 "invalid_code": "Invalid code, please try again. If you get this error consistently, please make sure the clock of your Home Assistant system is accurate."
