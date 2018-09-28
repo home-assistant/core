@@ -48,6 +48,7 @@ CONFIG_ENTRY_HANDLERS = {
     SERVICE_DECONZ: 'deconz',
     'google_cast': 'cast',
     SERVICE_HUE: 'hue',
+    SERVICE_IKEA_TRADFRI: 'tradfri',
     'sonos': 'sonos',
 }
 
@@ -55,7 +56,6 @@ SERVICE_HANDLERS = {
     SERVICE_HASS_IOS_APP: ('ios', None),
     SERVICE_NETGEAR: ('device_tracker', None),
     SERVICE_WEMO: ('wemo', None),
-    SERVICE_IKEA_TRADFRI: ('tradfri', None),
     SERVICE_HASSIO: ('hassio', None),
     SERVICE_AXIS: ('axis', None),
     SERVICE_APPLE_TV: ('apple_tv', None),

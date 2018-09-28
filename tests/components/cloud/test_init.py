@@ -30,6 +30,7 @@ def test_constructor_loads_info_from_constant():
             'region': 'test-region',
             'relayer': 'test-relayer',
             'google_actions_sync_url': 'test-google_actions_sync_url',
+            'subscription_info_url': 'test-subscription-info-url'
         }
     }), patch('homeassistant.components.cloud.Cloud._fetch_jwt_keyset',
               return_value=mock_coro(True)):
@@ -45,6 +46,7 @@ def test_constructor_loads_info_from_constant():
     assert cl.region == 'test-region'
     assert cl.relayer == 'test-relayer'
     assert cl.google_actions_sync_url == 'test-google_actions_sync_url'
+    assert cl.subscription_info_url == 'test-subscription-info-url'
 
 
 @asyncio.coroutine
@@ -139,9 +141,9 @@ def test_write_user_info():
 
 
 @asyncio.coroutine
-def test_subscription_expired():
+def test_subscription_expired(hass):
     """Test subscription being expired."""
-    cl = cloud.Cloud(None, cloud.MODE_DEV, None, None)
+    cl = cloud.Cloud(hass, cloud.MODE_DEV, None, None)
     token_val = {
         'custom:sub-exp': '2017-11-13'
     }
@@ -152,9 +154,9 @@ def test_subscription_expired():
 
 
 @asyncio.coroutine
-def test_subscription_not_expired():
+def test_subscription_not_expired(hass):
     """Test subscription not being expired."""
-    cl = cloud.Cloud(None, cloud.MODE_DEV, None, None)
+    cl = cloud.Cloud(hass, cloud.MODE_DEV, None, None)
     token_val = {
         'custom:sub-exp': '2017-11-13'
     }

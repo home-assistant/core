@@ -76,7 +76,7 @@ async def async_setup(hass, config):
     """Set up the updater component."""
     if 'dev' in current_version:
         # This component only makes sense in release versions
-        _LOGGER.warning("Running on 'dev', only analytics will be submitted")
+        _LOGGER.info("Running on 'dev', only analytics will be submitted")
 
     config = config.get(DOMAIN, {})
     if config.get(CONF_REPORTING):

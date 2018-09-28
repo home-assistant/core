@@ -9,15 +9,15 @@ import logging
 import datetime
 
 import voluptuous as vol
-# from voluptuous.humanize import humanize_error
 
+from homeassistant import config_entries
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (HTTP_INTERNAL_SERVER_ERROR,
                                  HTTP_BAD_REQUEST)
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import (
+    config_validation as cv, discovery, config_entry_flow)
 from homeassistant.util.json import load_json, save_json
 
 
@@ -164,62 +164,70 @@ IDENTIFY_SCHEMA = vol.Schema({
 
 CONFIGURATION_FILE = '.ios.conf'
 
-CONFIG_FILE = {ATTR_DEVICES: {}}
 
-CONFIG_FILE_PATH = ""
-
-
-def devices_with_push():
+def devices_with_push(hass):
     """Return a dictionary of push enabled targets."""
     targets = {}
-    for device_name, device in CONFIG_FILE[ATTR_DEVICES].items():
+    for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items():
         if device.get(ATTR_PUSH_ID) is not None:
             targets[device_name] = device.get(ATTR_PUSH_ID)
     return targets
 
 
-def enabled_push_ids():
+def enabled_push_ids(hass):
     """Return a list of push enabled target push IDs."""
     push_ids = list()
-    for device in CONFIG_FILE[ATTR_DEVICES].values():
+    for device in hass.data[DOMAIN][ATTR_DEVICES].values():
         if device.get(ATTR_PUSH_ID) is not None:
             push_ids.append(device.get(ATTR_PUSH_ID))
     return push_ids
 
 
-def devices():
+def devices(hass):
     """Return a dictionary of all identified devices."""
-    return CONFIG_FILE[ATTR_DEVICES]
+    return hass.data[DOMAIN][ATTR_DEVICES]
 
 
-def device_name_for_push_id(push_id):
+def device_name_for_push_id(hass, push_id):
     """Return the device name for the push ID."""
-    for device_name, device in CONFIG_FILE[ATTR_DEVICES].items():
+    for device_name, device in hass.data[DOMAIN][ATTR_DEVICES].items():
         if device.get(ATTR_PUSH_ID) is push_id:
             return device_name
     return None
 
 
-def setup(hass, config):
+async def async_setup(hass, config):
     """Set up the iOS component."""
-    global CONFIG_FILE
-    global CONFIG_FILE_PATH
+    conf = config.get(DOMAIN)
 
-    CONFIG_FILE_PATH = hass.config.path(CONFIGURATION_FILE)
+    ios_config = await hass.async_add_executor_job(
+        load_json, hass.config.path(CONFIGURATION_FILE))
 
-    CONFIG_FILE = load_json(CONFIG_FILE_PATH)
+    if ios_config == {}:
+        ios_config[ATTR_DEVICES] = {}
 
-    if CONFIG_FILE == {}:
-        CONFIG_FILE[ATTR_DEVICES] = {}
+    ios_config[CONF_PUSH] = (conf or {}).get(CONF_PUSH, {})
 
+    hass.data[DOMAIN] = ios_config
+
+    # No entry support for notify component yet
     discovery.load_platform(hass, 'notify', DOMAIN, {}, config)
 
-    discovery.load_platform(hass, 'sensor', DOMAIN, {}, config)
+    if conf is not None:
+        hass.async_create_task(hass.config_entries.flow.async_init(
+            DOMAIN, context={'source': config_entries.SOURCE_IMPORT}))
 
-    hass.http.register_view(iOSIdentifyDeviceView)
+    return True
 
-    app_config = config.get(DOMAIN, {})
-    hass.http.register_view(iOSPushConfigView(app_config.get(CONF_PUSH, {})))
+
+async def async_setup_entry(hass, entry):
+    """Set up an iOS entry."""
+    hass.async_create_task(
+        hass.config_entries.async_forward_entry_setup(entry, 'sensor'))
+
+    hass.http.register_view(
+        iOSIdentifyDeviceView(hass.config.path(CONFIGURATION_FILE)))
+    hass.http.register_view(iOSPushConfigView(hass.data[DOMAIN][CONF_PUSH]))
 
     return True
 
@@ -247,6 +255,10 @@ class iOSIdentifyDeviceView(HomeAssistantView):
     url = '/api/ios/identify'
     name = 'api:ios:identify'
 
+    def __init__(self, config_path):
+        """Initiliaze the view."""
+        self._config_path = config_path
+
     @asyncio.coroutine
     def post(self, request):
         """Handle the POST request for device identification."""
@@ -255,23 +267,31 @@ class iOSIdentifyDeviceView(HomeAssistantView):
         except ValueError:
             return self.json_message("Invalid JSON", HTTP_BAD_REQUEST)
 
+        hass = request.app['hass']
+
         # Commented for now while iOS app is getting frequent updates
         # try:
         #     data = IDENTIFY_SCHEMA(req_data)
         # except vol.Invalid as ex:
-        #     return self.json_message(humanize_error(request.json, ex),
-        #                              HTTP_BAD_REQUEST)
+        #     return self.json_message(
+        #         vol.humanize.humanize_error(request.json, ex),
+        #         HTTP_BAD_REQUEST)
 
         data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
 
         name = data.get(ATTR_DEVICE_ID)
 
-        CONFIG_FILE[ATTR_DEVICES][name] = data
+        hass.data[DOMAIN][ATTR_DEVICES][name] = data
 
         try:
-            save_json(CONFIG_FILE_PATH, CONFIG_FILE)
+            save_json(self._config_path, hass.data[DOMAIN])
         except HomeAssistantError:
             return self.json_message("Error saving device.",
                                      HTTP_INTERNAL_SERVER_ERROR)
 
         return self.json({"status": "registered"})
+
+
+config_entry_flow.register_discovery_flow(
+    DOMAIN, 'Home Assistant iOS', lambda *_: True,
+    config_entries.CONN_CLASS_CLOUD_PUSH)
