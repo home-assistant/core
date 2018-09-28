@@ -40,7 +40,14 @@ ALLOWED_PLATFORMS = {
 }
 
 CONFIG_ENTRY_PLATFORMS = {
+    'binary_sensor': ['mqtt'],
+    'camera': ['mqtt'],
+    'cover': ['mqtt'],
+    'light': ['mqtt'],
     'sensor': ['mqtt'],
+    'switch': ['mqtt'],
+    'climate': ['mqtt'],
+    'alarm_control_panel': ['mqtt'],
 }
 
 ALREADY_DISCOVERED = 'mqtt_discovered_components'
