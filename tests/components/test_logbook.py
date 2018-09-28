@@ -399,17 +399,6 @@ class TestComponentLogbook(unittest.TestCase):
         self.assert_entry(entries[0], pointA, 'bla', domain='switch',
                           entity_id=entity_id)
 
-    def test_entry_to_dict(self):
-        """Test conversion of entry to dict."""
-        entry = logbook.Entry(
-            dt_util.utcnow(), 'Alarm', 'is triggered', 'switch', 'test_switch'
-        )
-        data = attr.asdict(entry)
-        self.assertEqual('Alarm', data.get(logbook.ATTR_NAME))
-        self.assertEqual('is triggered', data.get(logbook.ATTR_MESSAGE))
-        self.assertEqual('switch', data.get(logbook.ATTR_DOMAIN))
-        self.assertEqual('test_switch', data.get(logbook.ATTR_ENTITY_ID))
-
     def test_home_assistant_start_stop_grouped(self):
         """Test if HA start and stop events are grouped.
 

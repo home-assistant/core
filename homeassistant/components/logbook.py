@@ -150,7 +150,9 @@ class Entry:
     name = attr.ib(type=str)
     message = attr.ib(type=str)
     domain = attr.ib(type=str)
+    context_id = attr.ib(type=str)
     entity_id = attr.ib(type=str, default=None)
+    context_user_id = attr.ib(type=str, default=None)
 
 
 def humanify(events):
@@ -215,19 +217,27 @@ def humanify(events):
                     continue
 
                 yield Entry(
-                    event.time_fired,
+                    when=event.time_fired,
                     name=to_state.name,
                     message=_entry_message_from_state(domain, to_state),
                     domain=domain,
-                    entity_id=to_state.entity_id)
+                    entity_id=to_state.entity_id,
+                    context_id=event.context.id,
+                    context_user_id=event.context.user_id
+                )
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
                 if start_stop_events.get(event.time_fired.minute) == 2:
                     continue
 
                 yield Entry(
-                    event.time_fired, "Home Assistant", "started",
-                    domain=HA_DOMAIN)
+                    when=event.time_fired,
+                    name="Home Assistant",
+                    message="started",
+                    domain=HA_DOMAIN,
+                    context_id=event.context.id,
+                    context_user_id=event.context.user_id
+                )
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
                 if start_stop_events.get(event.time_fired.minute) == 2:
@@ -236,8 +246,13 @@ def humanify(events):
                     action = "stopped"
 
                 yield Entry(
-                    event.time_fired, "Home Assistant", action,
-                    domain=HA_DOMAIN)
+                    when=event.time_fired,
+                    name="Home Assistant",
+                    message=action,
+                    domain=HA_DOMAIN,
+                    context_id=event.context.id,
+                    context_user_id=event.context.user_id
+                )
 
             elif event.event_type == EVENT_LOGBOOK_ENTRY:
                 domain = event.data.get(ATTR_DOMAIN)
@@ -249,9 +264,14 @@ def humanify(events):
                         pass
 
                 yield Entry(
-                    event.time_fired, event.data.get(ATTR_NAME),
-                    event.data.get(ATTR_MESSAGE), domain,
-                    entity_id)
+                    when=event.time_fired,
+                    name=event.data.get(ATTR_NAME),
+                    message=event.data.get(ATTR_MESSAGE),
+                    domain=domain,
+                    entity_id=entity_id,
+                    context_id=event.context.id,
+                    context_user_id=event.context.user_id
+                )
 
 
 def _get_events(hass, config, start_day, end_day):
