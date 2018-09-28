@@ -11,9 +11,6 @@ import voluptuous as vol
 
 from homeassistant.components.wirelesstag import (
     DOMAIN as WIRELESSTAG_DOMAIN,
-    WIRELESSTAG_TYPE_13BIT, WIRELESSTAG_TYPE_WATER,
-    WIRELESSTAG_TYPE_ALSPRO,
-    WIRELESSTAG_TYPE_WEMO_DEVICE,
     WirelessTagBaseSensor)
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchDevice
 from homeassistant.const import (
@@ -53,7 +50,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     tags = platform.load_tags()
     for switch_type in config.get(CONF_MONITORED_CONDITIONS):
         for _, tag in tags.items():
-            if switch_type in WirelessTagSwitch.allowed_switches(tag):
+            if switch_type in tag.allowed_monitoring_types:
                 switches.append(WirelessTagSwitch(platform, tag, switch_type))
 
     add_entities(switches, True)
@@ -61,30 +58,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class WirelessTagSwitch(WirelessTagBaseSensor, SwitchDevice):
     """A switch implementation for Wireless Sensor Tags."""
-
-    @classmethod
-    def allowed_switches(cls, tag):
-        """Return allowed switch types for wireless tag."""
-        all_sensors = SWITCH_TYPES.keys()
-        sensors_per_tag_spec = {
-            WIRELESSTAG_TYPE_13BIT: [
-                ARM_TEMPERATURE, ARM_HUMIDITY, ARM_MOTION],
-            WIRELESSTAG_TYPE_WATER: [
-                ARM_TEMPERATURE, ARM_MOISTURE],
-            WIRELESSTAG_TYPE_ALSPRO: [
-                ARM_TEMPERATURE, ARM_HUMIDITY, ARM_MOTION, ARM_LIGHT],
-            WIRELESSTAG_TYPE_WEMO_DEVICE: []
-        }
-
-        tag_type = tag.tag_type
-
-        result = (
-            sensors_per_tag_spec[tag_type]
-            if tag_type in sensors_per_tag_spec else all_sensors)
-        _LOGGER.info("Allowed switches: %s tag_type: %s",
-                     str(result), tag_type)
-
-        return result
 
     def __init__(self, api, tag, switch_type):
         """Initialize a switch for Wireless Sensor Tag."""

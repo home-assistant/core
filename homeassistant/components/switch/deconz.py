@@ -92,6 +92,7 @@ class DeconzSwitch(SwitchDevice):
                 self._switch.uniqueid.count(':') != 7):
             return None
         serial = self._switch.uniqueid.split('-', 1)[0]
+        bridgeid = self.hass.data[DATA_DECONZ].config.bridgeid
         return {
             'connections': {(CONNECTION_ZIGBEE, serial)},
             'identifiers': {(DECONZ_DOMAIN, serial)},
@@ -99,6 +100,7 @@ class DeconzSwitch(SwitchDevice):
             'model': self._switch.modelid,
             'name': self._switch.name,
             'sw_version': self._switch.swversion,
+            'via_hub': (DECONZ_DOMAIN, bridgeid),
         }
 
 

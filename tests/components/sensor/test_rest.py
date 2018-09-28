@@ -1,11 +1,13 @@
 """The tests for the REST sensor platform."""
 import unittest
+from pytest import raises
 from unittest.mock import patch, Mock
 
 import requests
 from requests.exceptions import Timeout, MissingSchema, RequestException
 import requests_mock
 
+from homeassistant.exceptions import PlatformNotReady
 from homeassistant.setup import setup_component
 import homeassistant.components.sensor as sensor
 import homeassistant.components.sensor.rest as rest
@@ -45,76 +47,78 @@ class TestRestSensorSetup(unittest.TestCase):
            side_effect=requests.exceptions.ConnectionError())
     def test_setup_failed_connect(self, mock_req):
         """Test setup when connection error occurs."""
-        self.assertTrue(rest.setup_platform(self.hass, {
-            'platform': 'rest',
-            'resource': 'http://localhost',
-        }, lambda devices, update=True: None) is None)
+        with raises(PlatformNotReady):
+            rest.setup_platform(self.hass, {
+                'platform': 'rest',
+                'resource': 'http://localhost',
+            }, lambda devices, update=True: None)
 
     @patch('requests.Session.send', side_effect=Timeout())
     def test_setup_timeout(self, mock_req):
         """Test setup when connection timeout occurs."""
-        self.assertTrue(rest.setup_platform(self.hass, {
-            'platform': 'rest',
-            'resource': 'http://localhost',
-        }, lambda devices, update=True: None) is None)
+        with raises(PlatformNotReady):
+            rest.setup_platform(self.hass, {
+                'platform': 'rest',
+                'resource': 'http://localhost',
+            }, lambda devices, update=True: None)
 
     @requests_mock.Mocker()
     def test_setup_minimum(self, mock_req):
         """Test setup with minimum configuration."""
         mock_req.get('http://localhost', status_code=200)
-        self.assertTrue(setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'rest',
-                'resource': 'http://localhost'
-            }
-        }))
+        with assert_setup_component(1, 'sensor'):
+            self.assertTrue(setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'rest',
+                    'resource': 'http://localhost'
+                }
+            }))
         self.assertEqual(2, mock_req.call_count)
-        assert_setup_component(1, 'switch')
 
     @requests_mock.Mocker()
     def test_setup_get(self, mock_req):
         """Test setup with valid configuration."""
         mock_req.get('http://localhost', status_code=200)
-        self.assertTrue(setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-                'method': 'GET',
-                'value_template': '{{ value_json.key }}',
-                'name': 'foo',
-                'unit_of_measurement': 'MB',
-                'verify_ssl': 'true',
-                'authentication': 'basic',
-                'username': 'my username',
-                'password': 'my password',
-                'headers': {'Accept': 'application/json'}
-            }
-        }))
+        with assert_setup_component(1, 'sensor'):
+            self.assertTrue(setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'rest',
+                    'resource': 'http://localhost',
+                    'method': 'GET',
+                    'value_template': '{{ value_json.key }}',
+                    'name': 'foo',
+                    'unit_of_measurement': 'MB',
+                    'verify_ssl': 'true',
+                    'authentication': 'basic',
+                    'username': 'my username',
+                    'password': 'my password',
+                    'headers': {'Accept': 'application/json'}
+                }
+            }))
         self.assertEqual(2, mock_req.call_count)
-        assert_setup_component(1, 'sensor')
 
     @requests_mock.Mocker()
     def test_setup_post(self, mock_req):
         """Test setup with valid configuration."""
         mock_req.post('http://localhost', status_code=200)
-        self.assertTrue(setup_component(self.hass, 'sensor', {
-            'sensor': {
-                'platform': 'rest',
-                'resource': 'http://localhost',
-                'method': 'POST',
-                'value_template': '{{ value_json.key }}',
-                'payload': '{ "device": "toaster"}',
-                'name': 'foo',
-                'unit_of_measurement': 'MB',
-                'verify_ssl': 'true',
-                'authentication': 'basic',
-                'username': 'my username',
-                'password': 'my password',
-                'headers': {'Accept': 'application/json'}
-            }
-        }))
+        with assert_setup_component(1, 'sensor'):
+            self.assertTrue(setup_component(self.hass, 'sensor', {
+                'sensor': {
+                    'platform': 'rest',
+                    'resource': 'http://localhost',
+                    'method': 'POST',
+                    'value_template': '{{ value_json.key }}',
+                    'payload': '{ "device": "toaster"}',
+                    'name': 'foo',
+                    'unit_of_measurement': 'MB',
+                    'verify_ssl': 'true',
+                    'authentication': 'basic',
+                    'username': 'my username',
+                    'password': 'my password',
+                    'headers': {'Accept': 'application/json'}
+                }
+            }))
         self.assertEqual(2, mock_req.call_count)
-        assert_setup_component(1, 'sensor')
 
 
 class TestRestSensor(unittest.TestCase):

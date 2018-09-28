@@ -107,6 +107,11 @@ class Script():
                             cv.time_period,
                             cv.positive_timedelta)(
                                 delay.async_render(variables))
+                    elif isinstance(delay, dict):
+                        delay_data = {}
+                        delay_data.update(
+                            template.render_complex(delay, variables))
+                        delay = cv.time_period(delay_data)
                 except (TemplateError, vol.Invalid) as ex:
                     _LOGGER.error("Error rendering '%s' delay template: %s",
                                   self.name, ex)

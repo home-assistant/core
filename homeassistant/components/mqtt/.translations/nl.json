@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "password": "Wachtwoord",
+                    "port": "Poort",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "MQTT",
+                "title": "MQTT"
+            }
+        },
+        "title": "MQTT"
+    }
+}

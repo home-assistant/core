@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "El punt d'acc\u00e9s ja est\u00e0 configurat",
-            "conection_aborted": "No s'ha pogut connectar al servidor HMIP",
             "connection_aborted": "No s'ha pogut connectar al servidor HMIP",
             "unknown": "S'ha produ\u00eft un error desconegut."
         },

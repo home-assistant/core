@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 import functools as ft
 from timeit import default_timer as timer
-
 from typing import Optional, List, Iterable
 
 from homeassistant.const import (
