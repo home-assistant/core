@@ -145,13 +145,13 @@ from unittest.mock import patch
 from homeassistant.setup import setup_component
 from homeassistant.const import (
     STATE_ON, STATE_OFF, STATE_UNAVAILABLE, ATTR_ASSUMED_STATE)
-import homeassistant.components.light as light
+from homeassistant.components import light, mqtt
 from homeassistant.components.mqtt.discovery import async_start
 import homeassistant.core as ha
 
 from tests.common import (
     assert_setup_component, get_test_home_assistant, mock_mqtt_component,
-    async_fire_mqtt_message, fire_mqtt_message, mock_coro)
+    async_fire_mqtt_message, fire_mqtt_message, mock_coro, MockConfigEntry)
 from tests.components.light import common
 
 
@@ -883,7 +883,8 @@ class TestLightMQTT(unittest.TestCase):
 
 async def test_discovery_removal_light(hass, mqtt_mock, caplog):
     """Test removal of discovered light."""
-    await async_start(hass, 'homeassistant', {})
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
 
     data = (
         '{ "name": "Beer",'

@@ -21,7 +21,10 @@ from homeassistant.components.mqtt import (
     ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
     CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate)
+from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,17 +49,28 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_entities, discovery_info=None):
+    """Set up MQTT alarm control panel through configuration.yaml."""
+    await _async_setup_entity(hass, config, async_add_entities)
+
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up MQTT alarm control panel dynamically through MQTT discovery."""
+    async def async_discover(discovery_payload):
+        """Discover and add an MQTT alarm control panel."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(hass, config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
+
+    async_dispatcher_connect(
+        hass, MQTT_DISCOVERY_NEW.format(alarm.DOMAIN, 'mqtt'),
+        async_discover)
+
+
+async def _async_setup_entity(hass, config, async_add_entities,
+                              discovery_hash=None):
     """Set up the MQTT Alarm Control Panel platform."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
-
-    discovery_hash = None
-    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
-        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
-
     async_add_entities([MqttAlarm(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),

@@ -1,7 +1,7 @@
 """The tests for the MQTT cover platform."""
 import unittest
 
-import homeassistant.components.cover as cover
+from homeassistant.components import cover, mqtt
 from homeassistant.components.cover import (ATTR_POSITION, ATTR_TILT_POSITION)
 from homeassistant.components.cover.mqtt import MqttCover
 from homeassistant.components.mqtt.discovery import async_start
@@ -15,7 +15,7 @@ from homeassistant.setup import setup_component
 
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, async_fire_mqtt_message,
-    fire_mqtt_message)
+    fire_mqtt_message, MockConfigEntry)
 
 
 class TestCoverMQTT(unittest.TestCase):
@@ -761,7 +761,8 @@ class TestCoverMQTT(unittest.TestCase):
 
 async def test_discovery_removal_cover(hass, mqtt_mock, caplog):
     """Test removal of discovered cover."""
-    await async_start(hass, 'homeassistant', {})
+    entry = MockConfigEntry(domain=mqtt.DOMAIN)
+    await async_start(hass, 'homeassistant', {}, entry)
     data = (
         '{ "name": "Beer",'
         '  "command_topic": "test_topic" }'
