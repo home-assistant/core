@@ -9,10 +9,10 @@ from homeassistant.util.json import (SerializationError,
 from homeassistant.exceptions import HomeAssistantError
 
 # Test data that can be saved as JSON
-TEST_JSON_A = {"a" : 1, "B" : "two"}
-TEST_JSON_B = {"a" : "one", "B" : 2}
+TEST_JSON_A = {"a": 1, "B": "two"}
+TEST_JSON_B = {"a": "one", "B": 2}
 # Test data that can not be saved as JSON (keys must be strings)
-TEST_BAD_OBJECT = {("A",) : 1}
+TEST_BAD_OBJECT = {("A",): 1}
 # Test data that can not be loaded as JSON
 TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
 
