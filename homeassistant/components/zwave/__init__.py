@@ -275,7 +275,9 @@ async def async_setup(hass, config):
                                     ZWaveNetwork.SIGNAL_SCENE_EVENT,
                                     ZWaveNetwork.SIGNAL_NODE_EVENT,
                                     ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED,
-                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED):
+                                    ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED,
+                                    ZWaveNetwork
+                                    .SIGNAL_ALL_NODES_QUERIED_SOME_DEAD):
                 pprint(_obj_to_dict(value))
 
             print("")
@@ -356,6 +358,12 @@ async def async_setup(hass, config):
                      "have been queried")
         hass.bus.fire(const.EVENT_NETWORK_COMPLETE)
 
+    def network_complete_some_dead():
+        """Handle the querying of all nodes on network."""
+        _LOGGER.info("Z-Wave network is complete. All nodes on the network "
+                     "have been queried, but some node are marked dead")
+        hass.bus.fire(const.EVENT_NETWORK_COMPLETE_SOME_DEAD)
+
     dispatcher.connect(
         value_added, ZWaveNetwork.SIGNAL_VALUE_ADDED, weak=False)
     dispatcher.connect(
@@ -364,6 +372,9 @@ async def async_setup(hass, config):
         network_ready, ZWaveNetwork.SIGNAL_AWAKE_NODES_QUERIED, weak=False)
     dispatcher.connect(
         network_complete, ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED, weak=False)
+    dispatcher.connect(
+        network_complete_some_dead,
+        ZWaveNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD, weak=False)
 
     def add_node(service):
         """Switch into inclusion mode."""
