@@ -11,11 +11,11 @@ from homeassistant.const import (
     SERVICE_OPEN_COVER_TILT, SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION, SERVICE_STOP_COVER,
     STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN)
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 
 from tests.common import (
     get_test_home_assistant, mock_mqtt_component, async_fire_mqtt_message,
-    fire_mqtt_message, MockConfigEntry)
+    fire_mqtt_message, MockConfigEntry, async_mock_mqtt_component)
 
 
 class TestCoverMQTT(unittest.TestCase):
@@ -779,3 +779,26 @@ async def test_discovery_removal_cover(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     state = hass.states.get('cover.beer')
     assert state is None
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one cover per id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, cover.DOMAIN, {
+        cover.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'state_topic': 'test-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'state_topic': 'test-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(cover.DOMAIN)) == 1
