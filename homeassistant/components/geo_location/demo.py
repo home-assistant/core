@@ -8,7 +8,6 @@ import logging
 import random
 from datetime import timedelta
 from math import pi, cos, sin, radians
-
 from typing import Optional
 
 from homeassistant.components.geo_location import GeoLocationEvent

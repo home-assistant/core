@@ -1529,3 +1529,8 @@ async def async_api_reportstate(hass, config, request, context, entity):
         name='StateReport',
         context={'properties': properties}
     )
+
+
+def turned_off_response(message):
+    """Return a device turned off response."""
+    return api_error(message[API_DIRECTIVE], error_type='BRIDGE_UNREACHABLE')

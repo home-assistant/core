@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
     models as auth_models, auth_store, const as auth_const)
-from homeassistant.auth.mfa_modules import SESSION_EXPIRATION
+from homeassistant.auth.const import MFA_SESSION_EXPIRATION
 from homeassistant.util import dt as dt_util
 from tests.common import (
     MockUser, ensure_auth_manager_loaded, flush_store, CLIENT_ID)
@@ -720,7 +720,7 @@ async def test_auth_module_expired_session(mock_hass):
     assert step['step_id'] == 'mfa'
 
     with patch('homeassistant.util.dt.utcnow',
-               return_value=dt_util.utcnow() + SESSION_EXPIRATION):
+               return_value=dt_util.utcnow() + MFA_SESSION_EXPIRATION):
         step = await manager.login_flow.async_configure(step['flow_id'], {
             'pin': 'test-pin',
         })
