@@ -458,6 +458,33 @@ def test_network_complete(hass, mock_openzwave):
     assert len(events) == 1
 
 
+@asyncio.coroutine
+def test_network_complete_some_dead(hass, mock_openzwave):
+    """Test Node network complete some dead event."""
+    mock_receivers = []
+
+    def mock_connect(receiver, signal, *args, **kwargs):
+        if signal == MockNetwork.SIGNAL_ALL_NODES_QUERIED_SOME_DEAD:
+            mock_receivers.append(receiver)
+
+    with patch('pydispatch.dispatcher.connect', new=mock_connect):
+        yield from async_setup_component(hass, 'zwave', {'zwave': {}})
+
+    assert len(mock_receivers) == 1
+
+    events = []
+
+    def listener(event):
+        events.append(event)
+
+    hass.bus.async_listen(const.EVENT_NETWORK_COMPLETE_SOME_DEAD, listener)
+
+    hass.async_add_job(mock_receivers[0])
+    yield from hass.async_block_till_done()
+
+    assert len(events) == 1
+
+
 class TestZWaveDeviceEntityValues(unittest.TestCase):
     """Tests for the ZWaveDeviceEntityValues helper."""
 
