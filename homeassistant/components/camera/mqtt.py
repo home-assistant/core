@@ -37,27 +37,23 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
     """Set up MQTT camera through configuration.yaml."""
-    await _async_setup_platform(hass, config, async_add_entities,
-                                discovery_info)
+    await _async_setup_entity(hass, config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT camera dynamically through MQTT discovery."""
-    async def async_discover(config):
+    async def async_discover(discovery_payload):
         """Discover and add a MQTT camera."""
-        await _async_setup_platform(hass, {}, async_add_entities, config)
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(hass, config, async_add_entities)
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(camera.DOMAIN, 'mqtt'),
         async_discover)
 
 
-async def _async_setup_platform(hass, config, async_add_entities,
-                                discovery_info=None):
+async def _async_setup_entity(hass, config, async_add_entities):
     """Set up the MQTT Camera."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
-
     async_add_entities([MqttCamera(
         config.get(CONF_NAME),
         config.get(CONF_UNIQUE_ID),

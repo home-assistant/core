@@ -99,37 +99,31 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
     """Set up MQTT cover through configuration.yaml."""
-    await _async_setup_platform(hass, config, async_add_entities,
-                                discovery_info)
+    await _async_setup_entity(hass, config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT cover dynamically through MQTT discovery."""
-    async def async_discover(config):
+    async def async_discover(discovery_payload):
         """Discover and add an MQTT cover."""
-        await _async_setup_platform(hass, {}, async_add_entities, config)
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(hass, config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(
         hass, MQTT_DISCOVERY_NEW.format(cover.DOMAIN, 'mqtt'),
         async_discover)
 
 
-async def _async_setup_platform(hass, config, async_add_entities,
-                                discovery_info=None):
+async def _async_setup_entity(hass, config, async_add_entities,
+                              discovery_hash=None):
     """Set up the MQTT Cover."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
-
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
     set_position_template = config.get(CONF_SET_POSITION_TEMPLATE)
     if set_position_template is not None:
         set_position_template.hass = hass
-
-    discovery_hash = None
-    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
-        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
 
     async_add_entities([MqttCover(
         config.get(CONF_NAME),
@@ -157,7 +151,7 @@ async def _async_setup_platform(hass, config, async_add_entities,
         config.get(CONF_TILT_INVERT_STATE),
         config.get(CONF_POSITION_TOPIC),
         set_position_template,
-        discovery_hash,
+        discovery_hash
     )])
 
 
