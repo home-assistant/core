@@ -6,7 +6,6 @@ https://home-assistant.io/components/blink/
 """
 import logging
 from datetime import timedelta
-
 import asyncio
 import voluptuous as vol
 
