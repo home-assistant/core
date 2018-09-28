@@ -21,8 +21,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import (
     CONF_PASSWORD, CONF_PAYLOAD, CONF_PORT, CONF_PROTOCOL, CONF_USERNAME,
-    CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP, CONF_TYPE, CONF_NAME,
-    CONF_DEVICE)
+    CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP, CONF_TYPE, CONF_NAME)
 from homeassistant.core import Event, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry
