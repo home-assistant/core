@@ -4,7 +4,6 @@ Support for Blink Home Camera System.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/blink/
 """
-from datetime import timedelta
 import logging
 
 import voluptuous as vol
@@ -21,14 +20,14 @@ DOMAIN = 'blink'
 DEFAULT_BRAND = 'blink'
 DEFAULT_ATTRIBUTION = "Data provided by immedia-semi.com"
 SIGNAL_UPDATE_BLINK = "blink_update"
-SCAN_INTERVAL = timedelta(seconds=60)
+SCAN_INTERVAL = 60
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string
+        vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL):
-            cv.time_period,
+            cv.positive_int
     })
 }, extra=vol.ALLOW_EXTRA)
 
@@ -38,23 +37,16 @@ SERVICE_TRIGGER_SCHEMA = vol.Schema({
 })
 
 
-class BlinkSystem:
-    """Blink System class."""
-
-    def __init__(self, config_info):
-        """Initialize the system."""
-        from blinkpy import blinkpy
-        username = config_info.get(CONF_USERNAME)
-        password = config_info.get(CONF_PASSWORD)
-        self.blink = blinkpy.Blink(username=username,
-                                   password=password)
-        self.blink.refresh_rate = scan_interval.total_seconds()
-        self.blink.start()
-
-
 def setup(hass, config):
     """Set up Blink System."""
-    hass.data[DOMAIN] = BlinkSystem(config).blink
+    from blinkpy import blinkpy
+    username = config[DOMAIN].get(CONF_USERNAME)
+    password = config[DOMAIN].get(CONF_PASSWORD)
+    scan_interval = config[DOMAIN].get(CONF_SCAN_INTERVAL)
+    hass.data[DOMAIN] = blinkpy.Blink(username=username,
+                                      password=password)
+    hass.data[DOMAIN].refresh_rate = scan_interval
+    hass.data[DOMAIN].start()
 
     def trigger_camera(call):
         """Trigger a camera."""

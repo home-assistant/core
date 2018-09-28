@@ -5,16 +5,9 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/camera.blink/
 """
 import logging
-import requests
 
-import voluptuous as vol
-
-import homeassistant.helpers.config_validation as cv
 from homeassistant.components.blink import DOMAIN, DEFAULT_BRAND
-from homeassistant.components.camera import Camera, PLATFORM_SCHEMA
-from homeassistant.components.ffmpeg import DATA_FFMPEG
-from homeassistant.helpers.aiohttp_client import (
-    async_get_clientsession, async_aiohttp_proxy_web)
+from homeassistant.components.camera import Camera
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +75,3 @@ class BlinkCamera(Camera):
     def camera_image(self):
         """Return a still image response from the camera."""
         return self._camera.image_from_cache.content
-
-    async def handle_async_mjpeg_stream(self, request):
-        """Generate an HTTP MJPEG stream from the camera."""
-        return await self._camera.video_from_cache
