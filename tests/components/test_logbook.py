@@ -4,6 +4,8 @@ import logging
 from datetime import timedelta
 import unittest
 
+import attr
+
 from homeassistant.components import sun
 import homeassistant.core as ha
 from homeassistant.const import (
@@ -402,7 +404,7 @@ class TestComponentLogbook(unittest.TestCase):
         entry = logbook.Entry(
             dt_util.utcnow(), 'Alarm', 'is triggered', 'switch', 'test_switch'
         )
-        data = entry.as_dict()
+        data = attr.asdict(entry)
         self.assertEqual('Alarm', data.get(logbook.ATTR_NAME))
         self.assertEqual('is triggered', data.get(logbook.ATTR_MESSAGE))
         self.assertEqual('switch', data.get(logbook.ATTR_DOMAIN))

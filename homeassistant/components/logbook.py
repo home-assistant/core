@@ -8,6 +8,7 @@ from datetime import timedelta
 from itertools import groupby
 import logging
 
+import attr
 import voluptuous as vol
 
 from homeassistant.components import sun
@@ -134,33 +135,22 @@ class LogbookView(HomeAssistantView):
 
         def json_events():
             """Fetch events and generate JSON."""
-            return self.json(list(
-                _get_events(hass, self.config, start_day, end_day)))
+            return self.json([
+                attr.asdict(entry) for entry in
+                _get_events(hass, self.config, start_day, end_day)])
 
         return await hass.async_add_job(json_events)
 
 
+@attr.s(slots=True, frozen=True)
 class Entry:
     """A human readable version of the log."""
 
-    def __init__(self, when=None, name=None, message=None, domain=None,
-                 entity_id=None):
-        """Initialize the entry."""
-        self.when = when
-        self.name = name
-        self.message = message
-        self.domain = domain
-        self.entity_id = entity_id
-
-    def as_dict(self):
-        """Convert entry to a dict to be used within JSON."""
-        return {
-            'when': self.when,
-            'name': self.name,
-            'message': self.message,
-            'domain': self.domain,
-            'entity_id': self.entity_id,
-        }
+    when = attr.ib(type=str)
+    name = attr.ib(type=str)
+    message = attr.ib(type=str)
+    domain = attr.ib(type=str)
+    entity_id = attr.ib(type=str, default=None)
 
 
 def humanify(events):
