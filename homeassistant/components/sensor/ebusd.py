@@ -13,7 +13,7 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_HOST, CONF_PORT, CONF_MONITORED_VARIABLES,
+    CONF_NAME, CONF_HOST, CONF_PORT, CONF_MONITORED_CONDITIONS,
     STATE_ON, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -106,7 +106,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=[]):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)])
 })
 
@@ -126,7 +126,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         sock.close()
 
         dev = []
-        for variable in config[CONF_MONITORED_VARIABLES]:
+        for variable in config[CONF_MONITORED_CONDITIONS]:
             dev.append(Ebusd(data, variable, name))
 
         add_devices(dev)
