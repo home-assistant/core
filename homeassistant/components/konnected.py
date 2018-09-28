@@ -7,7 +7,9 @@ https://home-assistant.io/components/konnected/
 import logging
 import hmac
 import json
+import time
 import voluptuous as vol
+import konnected
 
 from aiohttp.hdrs import AUTHORIZATION
 from aiohttp.web import Request, Response
@@ -16,17 +18,17 @@ from homeassistant.components.binary_sensor import DEVICE_CLASSES_SCHEMA
 from homeassistant.components.discovery import SERVICE_KONNECTED
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
-    HTTP_BAD_REQUEST, HTTP_NOT_FOUND, HTTP_UNAUTHORIZED,
-    CONF_DEVICES, CONF_BINARY_SENSORS, CONF_SWITCHES, CONF_HOST, CONF_PORT,
-    CONF_ID, CONF_NAME, CONF_TYPE, CONF_PIN, CONF_ZONE, CONF_ACCESS_TOKEN,
-    ATTR_ENTITY_ID, ATTR_STATE, STATE_ON)
+    EVENT_HOMEASSISTANT_START, HTTP_BAD_REQUEST, HTTP_NOT_FOUND,
+    HTTP_UNAUTHORIZED, CONF_DEVICES, CONF_BINARY_SENSORS, CONF_SWITCHES,
+    CONF_HOST, CONF_PORT, CONF_ID, CONF_NAME, CONF_TYPE, CONF_PIN, CONF_ZONE,
+    CONF_ACCESS_TOKEN, ATTR_ENTITY_ID, ATTR_STATE, STATE_ON)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers import discovery
 from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['konnected==0.1.2']
+REQUIREMENTS = ['konnected==0.1.3']
 
 DOMAIN = 'konnected'
 
@@ -81,6 +83,8 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [_BINARY_SENSOR_SCHEMA]),
                 vol.Optional(CONF_SWITCHES): vol.All(
                     cv.ensure_list, [_SWITCH_SCHEMA]),
+                vol.Optional(CONF_HOST): cv.string,
+                vol.Optional(CONF_PORT): cv.positive_int,
             }],
         }),
     },
@@ -119,6 +123,35 @@ async def async_setup(hass, config):
                             " but not specified in configuration.yaml",
                             discovered.device_id)
 
+    def manual_discovery(event):
+        """Init devices on the network with manually assigned addresses."""
+        specified = list(filter(  # list of devices where host and port is set
+            lambda dev: dev.get(CONF_HOST) and dev.get(CONF_PORT),
+            cfg.get(CONF_DEVICES)))
+
+        while specified:
+            for dev in specified:
+                _LOGGER.debug("Discovering Konnected device %s at %s:%s",
+                              dev.get(CONF_ID),
+                              dev.get(CONF_HOST),
+                              dev.get(CONF_PORT))
+                try:
+                    discovered = DiscoveredDevice(hass,
+                                                  dev.get(CONF_HOST),
+                                                  dev.get(CONF_PORT))
+                    if discovered.is_configured:
+                        discovered.setup()
+                        specified.remove(dev)
+                    else:
+                        _LOGGER.err("""
+                            Konnected device %s was manually configured, but
+                            its mac address is not found in configuration.yaml
+                        """, discovered.device_id)
+                except konnected.Client.ClientError as err:
+                    _LOGGER.error(err)
+                    time.sleep(10)  # try again in 10 seconds
+
+    # Initialize devices specified in the configuration on boot
     for device in cfg.get(CONF_DEVICES):
         ConfiguredDevice(hass, device).save_data()
 
@@ -128,6 +161,7 @@ async def async_setup(hass, config):
         device_discovered)
 
     hass.http.register_view(KonnectedView(access_token))
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, manual_discovery)
 
     return True
 
@@ -214,7 +248,6 @@ class DiscoveredDevice:
         self.host = host
         self.port = port
 
-        import konnected
         self.client = konnected.Client(host, str(port))
         self.status = self.client.get_status()
 
