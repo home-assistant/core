@@ -16,7 +16,8 @@ import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import (
-    CONF_NAME, CONF_ENTITY_ID, CONF_STATE, CONF_TYPE)
+    CONF_NAME, CONF_ENTITY_ID, CONF_STATE, CONF_TYPE,
+    EVENT_HOMEASSISTANT_START)
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import async_track_state_change
@@ -82,7 +83,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             template.hass = hass
 
     add_entities([HistoryStatsSensor(hass, entity_id, entity_state, start, end,
-                                     duration, sensor_type, name)], True)
+                                     duration, sensor_type, name)])
 
     return True
 
@@ -94,8 +95,6 @@ class HistoryStatsSensor(Entity):
             self, hass, entity_id, entity_state, start, end, duration,
             sensor_type, name):
         """Initialize the HistoryStats sensor."""
-        self._hass = hass
-
         self._entity_id = entity_id
         self._entity_state = entity_state
         self._duration = duration
@@ -109,15 +108,19 @@ class HistoryStatsSensor(Entity):
         self.value = None
         self.count = None
 
-    async def async_added_to_hass(self):
-        """Register state tracking."""
         @callback
-        def force_refresh(*args):
-            """Force the component to refresh."""
-            self.async_schedule_update_ha_state(True)
+        def start_refresh():
+            """Register state tracking."""
+            @callback
+            def force_refresh(*args):
+                """Force the component to refresh."""
+                self.async_schedule_update_ha_state(True)
 
-        # Update value when tracked entity changes its state
-        async_track_state_change(self.hass, self._entity_id, force_refresh)
+            force_refresh()
+            async_track_state_change(self.hass, self._entity_id, force_refresh)
+
+        # Delay first refresh to keep startup fast
+        hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_refresh)
 
     @property
     def name(self):
