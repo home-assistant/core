@@ -1,0 +1,67 @@
+"""Test Home Assistant json utility functions."""
+import os
+import unittest
+import sys
+from tempfile import mkdtemp
+
+from homeassistant.util.json import (SerializationError, WriteError,
+                                     load_json, save_json)
+from homeassistant.exceptions import HomeAssistantError
+
+# Test data that can be saved as JSON
+TEST_JSON_A = {"a":1, "B":"two"}
+TEST_JSON_B = {"a":"one", "B":2}
+# Test data that can not be saved as JSON (keys must be strings)
+TEST_BAD_OBJECT = {("A",):1}
+# Test data that can not be loaded as JSON
+TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
+
+class TestJSON(unittest.TestCase):
+    """Test util.json save and load"""
+
+    def setUp(self):
+        self.tmp_dir = mkdtemp()
+
+    def tearDown(self):
+        for fname in os.listdir(self.tmp_dir):
+            os.remove(os.path.join(self.tmp_dir, fname))
+        os.rmdir(self.tmp_dir)
+        
+    def path_for(self, leaf_name):
+        return os.path.join(self.tmp_dir, leaf_name+".json")
+
+    def test_save_and_load(self):
+        fname = self.path_for("test1")
+        save_json(fname, TEST_JSON_A)
+        data = load_json(fname)
+        self.assertEqual(data, TEST_JSON_A)
+
+    # Skipped on Windows
+    @unittest.skipIf(sys.platform.startswith('win'),
+                     "private permissions not supported on Windows")
+    def test_save_and_load_private(self):
+        fname = self.path_for("test2")
+        save_json(fname, TEST_JSON_A, private=True)
+        data = load_json(fname)
+        self.assertEqual(data, TEST_JSON_A)
+        stats = os.stat(fname)
+        self.assertEqual(stats.st_mode & 0o77, 0)
+
+    def test_overwrite_and_reload(self):
+        fname = self.path_for("test3")
+        save_json(fname, TEST_JSON_A)
+        save_json(fname, TEST_JSON_B)
+        data = load_json(fname)
+        self.assertEqual(data, TEST_JSON_B)
+        
+    def test_save_bad_data(self):
+        fname = self.path_for("test4")
+        with self.assertRaises(SerializationError):
+            save_json(fname, TEST_BAD_OBJECT)
+
+    def test_load_bad_data(self):
+        fname = self.path_for("test5")
+        with open(fname, "w") as fh:
+            fh.write(TEST_BAD_SERIALIED)
+        with self.assertRaises(HomeAssistantError):
+            data = load_json(fname)
