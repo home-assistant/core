@@ -9,12 +9,14 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
+import homeassistant.helpers.config_validation as cv
 
+from homeassistant.core import ServiceCall
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE)
+    DEVICE_CLASS_TEMPERATURE, ATTR_ENTITY_ID)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +34,11 @@ DEVICE_CLASSES = [
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
 
+SERVICE_FORCE_UPDATE = "force_update"
+SENSOR_UPDATE_SERVICE_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id
+})
+
 
 async def async_setup(hass, config):
     """Track states and offer events for sensors."""
@@ -39,6 +46,17 @@ async def async_setup(hass, config):
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL)
 
     await component.async_setup(config)
+
+    async def async_schedule_forced_update(call: ServiceCall):
+        """Handle sensor force_update service calls"""
+        entity_id = call.data[ATTR_ENTITY_ID]
+        entity = component.get_entity(entity_id)
+        entity.async_schedule_update_ha_state(True)
+
+    hass.services.async_register(DOMAIN, SERVICE_FORCE_UPDATE,
+                                 async_schedule_forced_update,
+                                 SENSOR_UPDATE_SERVICE_SCHEMA)
+
     return True
 
 
