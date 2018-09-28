@@ -51,6 +51,7 @@ TEST_REQUIREMENTS = (
     'foobot_async',
     'gTTS-token',
     'geojson_client',
+    'georss_client',
     'hangups',
     'HAP-python',
     'ha-ffmpeg',
