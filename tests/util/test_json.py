@@ -21,11 +21,11 @@ class TestJSON(unittest.TestCase):
     """Test util.json save and load."""
 
     def setUp(self):
-        """Setting up for tests."""
+        """Set up for tests."""
         self.tmp_dir = mkdtemp()
 
     def tearDown(self):
-        """Cleaning up after tests."""
+        """Clean up after tests."""
         for fname in os.listdir(self.tmp_dir):
             os.remove(os.path.join(self.tmp_dir, fname))
         os.rmdir(self.tmp_dir)
