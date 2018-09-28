@@ -98,13 +98,12 @@ def is_on(hass, entity_id: str = None) -> bool:
     return state.attributes[ATTR_SPEED] not in [SPEED_OFF, STATE_UNKNOWN]
 
 
-@asyncio.coroutine
-def async_setup(hass, config: dict):
+async def async_setup(hass, config: dict):
     """Expose fan control via statemachine and services."""
-    component = EntityComponent(
+    component = hass.data[DOMAIN] = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_FANS)
 
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
     component.async_register_entity_service(
         SERVICE_TURN_ON, FAN_TURN_ON_SCHEMA,
@@ -132,6 +131,16 @@ def async_setup(hass, config: dict):
     )
 
     return True
+
+
+async def async_setup_entry(hass, entry):
+    """Set up a config entry."""
+    return await hass.data[DOMAIN].async_setup_entry(entry)
+
+
+async def async_unload_entry(hass, entry):
+    """Unload a config entry."""
+    return await hass.data[DOMAIN].async_unload_entry(entry)
 
 
 class FanEntity(ToggleEntity):
