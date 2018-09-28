@@ -11,6 +11,7 @@ import logging
 import attr
 import voluptuous as vol
 
+from homeassistant.loader import bind_hass
 from homeassistant.components import sun
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
@@ -67,11 +68,13 @@ LOG_MESSAGE_SCHEMA = vol.Schema({
 })
 
 
+@bind_hass
 def log_entry(hass, name, message, domain=None, entity_id=None):
     """Add an entry to the logbook."""
     hass.add_job(async_log_entry, hass, name, message, domain, entity_id)
 
 
+@bind_hass
 def async_log_entry(hass, name, message, domain=None, entity_id=None):
     """Add an entry to the logbook."""
     data = {
