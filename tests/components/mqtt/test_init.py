@@ -190,6 +190,55 @@ class TestMQTTComponent(unittest.TestCase):
         # Topic names beginning with $ SHOULD NOT be used, but can
         mqtt.valid_publish_topic('$SYS/')
 
+    def test_entity_device_info_schema(self):
+        """Test MQTT entity device info validation."""
+        # just identifier
+        mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
+            'identifiers': ['abcd']
+        })
+        # just connection
+        mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
+            'connections': [{
+                'type': 'mac',
+                'identifier': '02:5b:26:a8:dc:12'
+            }]
+        })
+        # full device info
+        mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA({
+            'identifiers': ['helloworld', 'hello'],
+            'connections': [{
+                "type": "mac",
+                "identifier": "02:5b:26:a8:dc:12",
+            }, {
+                "type": "zigbee",
+                "identifier": "zigbee_id"
+            }],
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        })
+        # no identifiers
+        self.assertRaises(vol.Invalid, mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA, {
+            'manufacturer': 'Whatever',
+            'name': 'Beer',
+            'model': 'Glass',
+            'sw_version': '0.1-beta',
+        })
+        # empty identifiers
+        self.assertRaises(vol.Invalid, mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA, {
+            'identifiers': [],
+            'connections': [],
+            'name': 'Beer',
+        })
+        # invalid connection type
+        self.assertRaises(vol.Invalid, mqtt.MQTT_ENTITY_DEVICE_INFO_SCHEMA, {
+            'connections': [{
+                'type': 'invalid',
+                'identifier': 'empty'
+            }]
+        })
+
 
 # pylint: disable=invalid-name
 class TestMQTTCallbacks(unittest.TestCase):
