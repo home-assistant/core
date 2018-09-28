@@ -4,17 +4,18 @@ import unittest
 import sys
 from tempfile import mkdtemp
 
-from homeassistant.util.json import (SerializationError, WriteError,
+from homeassistant.util.json import (SerializationError,
                                      load_json, save_json)
 from homeassistant.exceptions import HomeAssistantError
 
 # Test data that can be saved as JSON
-TEST_JSON_A = {"a":1, "B":"two"}
-TEST_JSON_B = {"a":"one", "B":2}
+TEST_JSON_A = {"a" : 1, "B" : "two"}
+TEST_JSON_B = {"a" : "one", "B" : 2}
 # Test data that can not be saved as JSON (keys must be strings)
-TEST_BAD_OBJECT = {("A",):1}
+TEST_BAD_OBJECT = {("A",) : 1}
 # Test data that can not be loaded as JSON
 TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
+
 
 class TestJSON(unittest.TestCase):
     """Test util.json save and load"""
@@ -26,7 +27,7 @@ class TestJSON(unittest.TestCase):
         for fname in os.listdir(self.tmp_dir):
             os.remove(os.path.join(self.tmp_dir, fname))
         os.rmdir(self.tmp_dir)
-        
+
     def path_for(self, leaf_name):
         return os.path.join(self.tmp_dir, leaf_name+".json")
 
@@ -53,7 +54,7 @@ class TestJSON(unittest.TestCase):
         save_json(fname, TEST_JSON_B)
         data = load_json(fname)
         self.assertEqual(data, TEST_JSON_B)
-        
+
     def test_save_bad_data(self):
         fname = self.path_for("test4")
         with self.assertRaises(SerializationError):
@@ -64,4 +65,4 @@ class TestJSON(unittest.TestCase):
         with open(fname, "w") as fh:
             fh.write(TEST_BAD_SERIALIED)
         with self.assertRaises(HomeAssistantError):
-            data = load_json(fname)
+            load_json(fname)
