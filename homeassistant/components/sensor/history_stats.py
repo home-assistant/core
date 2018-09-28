@@ -109,7 +109,7 @@ class HistoryStatsSensor(Entity):
         self.count = None
 
         @callback
-        def start_refresh():
+        def start_refresh(*args):
             """Register state tracking."""
             @callback
             def force_refresh(*args):
