@@ -57,33 +57,28 @@ PLATFORM_SCHEMA = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend({
 async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
                                async_add_entities, discovery_info=None):
     """Set up MQTT sensors through configuration.yaml."""
-    await _async_setup_platform(hass, config, async_add_entities,
-                                discovery_info)
+    await _async_setup_entity(hass, config, async_add_entities)
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up MQTT sensors dynamically through MQTT discovery."""
-    async def async_discover_sensor(config):
+    async def async_discover_sensor(discovery_payload):
         """Discover and add a discovered MQTT sensor."""
-        await _async_setup_platform(hass, {}, async_add_entities, config)
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(hass, config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
 
     async_dispatcher_connect(hass,
                              MQTT_DISCOVERY_NEW.format(sensor.DOMAIN, 'mqtt'),
                              async_discover_sensor)
 
 
-async def _async_setup_platform(hass: HomeAssistantType, config: ConfigType,
-                                async_add_entities, discovery_info=None):
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
-
+async def _async_setup_entity(hass: HomeAssistantType, config: ConfigType,
+                              async_add_entities, discovery_hash=None):
+    """Set up MQTT sensor."""
     value_template = config.get(CONF_VALUE_TEMPLATE)
     if value_template is not None:
         value_template.hass = hass
-
-    discovery_hash = None
-    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
-        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
 
     async_add_entities([MqttSensor(
         config.get(CONF_NAME),
