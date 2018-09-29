@@ -11,7 +11,8 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA, SOURCE_TYPE_GPS)
-from homeassistant.const import ATTR_ID, CONF_PASSWORD, CONF_USERNAME, ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL
+from homeassistant.const import ATTR_ID, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import ATTR_BATTERY_CHARGING, ATTR_BATTERY_LEVEL
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 from homeassistant.helpers.typing import ConfigType
