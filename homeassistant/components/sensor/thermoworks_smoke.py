@@ -14,21 +14,22 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import TEMP_FAHRENHEIT, CONF_EMAIL, CONF_PASSWORD,\
-    CONF_MONITORED_VARIABLES, CONF_EXCLUDE, ATTR_BATTERY_LEVEL
+    CONF_MONITORED_CONDITIONS, CONF_EXCLUDE, ATTR_BATTERY_LEVEL
 from homeassistant.helpers.entity import Entity
 
-REQUIREMENTS = ['thermoworks_smoke==0.1.6']
+REQUIREMENTS = ['thermoworks_smoke==0.1.6', 'stringcase==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 PROBE_1 = 'probe1'
 PROBE_2 = 'probe2'
-PROBE_1_MIN = 'probe1Min'
-PROBE_1_MAX = 'probe1Max'
-PROBE_2_MIN = 'probe2Min'
-PROBE_2_MAX = 'probe2Max'
+PROBE_1_MIN = 'probe1_min'
+PROBE_1_MAX = 'probe1_max'
+PROBE_2_MIN = 'probe2_min'
+PROBE_2_MAX = 'probe2_max'
 BATTERY_LEVEL = 'battery'
 
+# map types to labels
 SENSOR_TYPES = {
     PROBE_1: 'Probe 1',
     PROBE_2: 'Probe 2',
@@ -41,7 +42,7 @@ SENSOR_TYPES = {
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
-    vol.Optional(CONF_MONITORED_VARIABLES, default=[PROBE_1, PROBE_2]):
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=[PROBE_1, PROBE_2]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_EXCLUDE, default=[]):
         vol.All(cv.ensure_list),
@@ -55,7 +56,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     email = config[CONF_EMAIL]
     password = config[CONF_PASSWORD]
-    monitored_variables = config[CONF_MONITORED_VARIABLES]
+    monitored_variables = config[CONF_MONITORED_CONDITIONS]
     excluded = config[CONF_EXCLUDE]
 
     try:
@@ -130,11 +131,12 @@ class ThermoworksSmokeSensor(Entity):
 
     def update(self):
         """Get the monitored data from firebase."""
+        from stringcase import camelcase, snakecase
         try:
             values = self.mgr.data(self.serial)
 
             # set state from data based on type of sensor
-            self._state = values.get(self.type)
+            self._state = values.get(camelcase(self.type))
 
             # set units
             self.update_unit()
@@ -157,12 +159,11 @@ class ThermoworksSmokeSensor(Entity):
                             or
                             (self.type == PROBE_2 and key.find(PROBE_1) == -1)
                     ):
-                        # strip probe label
-                        key = key.replace(self.type, '')
-                        # ensure first char is lowercase
-                        key = key[:1].lower() + key[1:]
                         if key == BATTERY_LEVEL:
                             key = ATTR_BATTERY_LEVEL
+                        else:
+                            # strip probe label and convert to snake_case
+                            key = snakecase(key.replace(self.type, ''))
                         # add to attrs
                         if key:
                             self._attributes[key] = val
