@@ -148,7 +148,7 @@ class TestAutomationZone(unittest.TestCase):
         })
         self.hass.block_till_done()
 
-        automation.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
 
         self.hass.states.set('test.entity', 'hello', {
