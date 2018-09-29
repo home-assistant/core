@@ -28,6 +28,7 @@ DEVICE_CLASSES = [
     DEVICE_CLASS_HUMIDITY,  # % of humidity in the air
     DEVICE_CLASS_ILLUMINANCE,  # current light level (lx/lm)
     DEVICE_CLASS_TEMPERATURE,  # temperature (C/F)
+    DEVICE_CLASS_PRESSURE,  # pressure (hPa/mbar)
 ]
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.In(DEVICE_CLASSES))
