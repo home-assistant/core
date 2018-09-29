@@ -1,5 +1,5 @@
 """
-Provide functionality to interact with AndroidTv and Android devices on the network.
+Provide functionality to interact with AndroidT devices on the network.
 Example config:
 
 media_player:
@@ -20,16 +20,15 @@ import voluptuous as vol
 
 from homeassistant.components.media_player import (
     DOMAIN, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
+    SUPPORT_PAUSE, SUPPORT_PLAY,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_TURN_OFF,
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT,
+    ATTR_ENTITY_ID, CONF_DEVICES, CONF_NAME, CONF_PORT,
     CONF_SCAN_INTERVAL, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-import homeassistant.util.dt as dt_util
 from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['pure-python-adb>=0.1.5.dev0']
@@ -196,7 +195,7 @@ class AndroidTv(MediaPlayerDevice):
         self._state = None
         self._app_id = None
         self._app_name = None
-        self._current_device = None
+        self._device = None
         _LOGGER.info("its all good man")
 
     def _init_regular_updates(self):
@@ -228,7 +227,7 @@ class AndroidTv(MediaPlayerDevice):
                 winOutput = self._device.shell('dumpsys window windows')
 
                 self._state = self.get_state(powerOutput, audioOutput)
-                self._muted, self._current_device, self._volume=self.get_audio(
+                self._muted, self._device, self._volume = self.get_audio(
                     audioOutput)
                 self._app_id = self.get_app_id(winOutput)
                 self._app_name = self.get_app_name(self._app_id)
@@ -324,7 +323,7 @@ class AndroidTv(MediaPlayerDevice):
     @property
     def source(self):
         """Return the current playback device."""
-        return self._current_device
+        return self._device
 
     @property
     def app_id(self):
