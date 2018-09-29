@@ -52,9 +52,8 @@ dsmr_parser==0.11
 # homeassistant.components.sensor.season
 ephem==3.7.6.0
 
-# homeassistant.components.evohome
 # homeassistant.components.climate.honeywell
-evohomeclient==0.2.7
+evohomeclient==0.2.5
 
 # homeassistant.components.feedreader
 # homeassistant.components.sensor.geo_rss_events
@@ -102,6 +101,9 @@ libpurecoollink==0.4.2
 
 # homeassistant.components.media_player.soundtouch
 libsoundtouch==0.7.2
+
+# homeassistant.components.device_tracker.google_maps
+locationsharinglib==3.0.2
 
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
@@ -170,7 +172,7 @@ pyotp==2.2.6
 pyqwikswitch==0.8
 
 # homeassistant.components.sonos
-pysonos==0.0.3
+pysonos==0.0.2
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0

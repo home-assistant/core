@@ -110,7 +110,7 @@ aioimaplib==0.7.13
 aiolifx==0.6.3
 
 # homeassistant.components.light.lifx
-aiolifx_effects==0.2.0
+aiolifx_effects==0.1.2
 
 # homeassistant.components.scene.hunterdouglas_powerview
 aiopvapi==1.5.4
@@ -172,7 +172,7 @@ beautifulsoup4==4.6.3
 bellows==0.7.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.5.3
+bimmer_connected==0.5.2
 
 # homeassistant.components.blink
 blinkpy==0.6.0
@@ -338,9 +338,8 @@ eternalegypt==0.0.5
 # homeassistant.components.keyboard_remote
 # evdev==0.6.1
 
-# homeassistant.components.evohome
 # homeassistant.components.climate.honeywell
-evohomeclient==0.2.7
+evohomeclient==0.2.5
 
 # homeassistant.components.image_processing.dlib_face_detect
 # homeassistant.components.image_processing.dlib_face_identify
@@ -491,6 +490,9 @@ ihcsdk==2.2.0
 # homeassistant.components.sensor.influxdb
 influxdb==5.0.0
 
+# homeassistant.components.insteon_plm
+insteonplm==0.11.7
+
 # homeassistant.components.insteon
 insteonplm==0.14.2
 
@@ -558,7 +560,7 @@ liveboxplaytv==2.0.2
 lmnotify==0.0.4
 
 # homeassistant.components.device_tracker.google_maps
-locationsharinglib==2.0.11
+locationsharinglib==3.0.2
 
 # homeassistant.components.logi_circle
 logi_circle==0.1.7
@@ -765,7 +767,7 @@ pyRFXtrx==0.23
 pySwitchmate==0.4.1
 
 # homeassistant.components.sensor.tibber
-pyTibber==0.6.0
+pyTibber==0.5.1
 
 # homeassistant.components.switch.dlink
 pyW215==0.6.0
@@ -795,7 +797,7 @@ pyasn1-modules==0.1.5
 pyasn1==0.3.7
 
 # homeassistant.components.netatmo
-pyatmo==1.2
+pyatmo==1.1.1
 
 # homeassistant.components.apple_tv
 pyatv==0.3.10
@@ -1015,9 +1017,6 @@ pynx584==0.4
 # homeassistant.components.openuv
 pyopenuv==1.0.4
 
-# homeassistant.components.light.opple
-pyoppleio==1.0.5
-
 # homeassistant.components.iota
 pyota==2.0.5
 
@@ -1072,7 +1071,7 @@ pysma==0.2
 pysnmp==4.4.5
 
 # homeassistant.components.sonos
-pysonos==0.0.3
+pysonos==0.0.2
 
 # homeassistant.components.spc
 pyspcwebgw==0.4.0
@@ -1117,9 +1116,6 @@ python-forecastio==1.4.0
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a
-
-# homeassistant.components.sensor.gitlab_ci
-python-gitlab==1.6.0
 
 # homeassistant.components.sensor.hp_ilo
 python-hpilo==3.9
