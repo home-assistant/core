@@ -111,7 +111,7 @@ async def test_hassio_single_instance(hass):
 
 
 async def test_hassio_confirm(hass, mock_try_connection,
-                               mock_finish_setup):
+                              mock_finish_setup):
     """Test we can finish a config flow."""
     mock_try_connection.return_value = True
 
