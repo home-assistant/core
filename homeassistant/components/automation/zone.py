@@ -71,5 +71,5 @@ async def async_trigger(hass, config, action):
     return async_track_state_change(hass, entity_id or entity_id_pattern,
                                     zone_automation_listener,
                                     MATCH_ALL, MATCH_ALL,
-                                    entity_id_with_pattern=
-                                    bool(entity_id_pattern))
+                                    entity_id_with_pattern=bool(
+                                        entity_id_pattern))
