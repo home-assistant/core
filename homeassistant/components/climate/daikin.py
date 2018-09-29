@@ -182,7 +182,7 @@ class DaikinClimate(ClimateDevice):
 
             daikin_attr = HA_ATTR_TO_DAIKIN.get(attr)
             if daikin_attr is not None:
-                if value.title() in self._list[attr]:
+                if value in self._list[attr]:
                     values[daikin_attr] = value.lower()
                 else:
                     _LOGGER.error("Invalid value %s for %s", attr, value)
