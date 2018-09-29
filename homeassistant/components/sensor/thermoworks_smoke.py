@@ -104,7 +104,7 @@ class ThermoworksSmokeSensor(Entity):
 
     @property
     def unique_id(self):
-        """Return the unique id for the sensor"""
+        """Return the unique id for the sensor."""
         return self._unique_id
 
     @property
