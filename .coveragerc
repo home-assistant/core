@@ -662,6 +662,7 @@ omit =
     homeassistant/components/sensor/duke_energy.py
     homeassistant/components/sensor/dwd_weather_warnings.py
     homeassistant/components/sensor/ebox.py
+	homeassistant/components/sensor/ebusd.py
     homeassistant/components/sensor/eddystone_temperature.py
     homeassistant/components/sensor/eliqonline.py
     homeassistant/components/sensor/emoncms.py
