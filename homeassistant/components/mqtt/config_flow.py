@@ -90,14 +90,14 @@ class FlowHandler(config_entries.ConfigFlow):
             if can_connect:
                 data.update(user_input)
                 return self.async_create_entry(
-                    title=data['provider'], data=data)
+                    title=data['addon'], data=data)
 
             errors['base'] = 'cannot_connect'
 
         return self.async_show_form(
             step_id='hassio_confirm',
             description_placeholders={
-                'provider': self._hassio_discovery['provider']
+                'addon': self._hassio_discovery['addon']
             },
             data_schema=vol.Schema({
                 vol.Optional(CONF_DISCOVERY, default=DEFAULT_DISCOVERY): bool
