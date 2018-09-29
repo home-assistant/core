@@ -15,14 +15,15 @@ from homeassistant.core import callback
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.const import CONF_UNIT_SYSTEM
+from homeassistant.const import ATTR_ID
+from homeassistant.const import CONF_ID
 from homeassistant.helpers.entity import Entity
 #from homeassistant.helpers.icon import icon_for_battery_level
 import homeassistant.helpers.config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
 
-REQUIREMENTS = ['monzo-test==0.6.0']
+REQUIREMENTS = ['monzotomtest==0.6.1']
 
 _CONFIGURING = {}
 _LOGGER = logging.getLogger(__name__)
@@ -33,6 +34,7 @@ ATTR_CLIENT_ID = 'client_id'
 ATTR_CLIENT_SECRET = 'client_secret'
 ATTR_LAST_SAVED_AT = 'last_saved_at'
 
+CONF_MONITORED_RESOURCES = 'monitored_resources'
 CONF_ATTRIBUTION = 'Data provided by Monzo.com'
 
 DEPENDENCIES = ['http']
@@ -40,7 +42,7 @@ DEPENDENCIES = ['http']
 MONZO_AUTH_CALLBACK_PATH = '/api/monzo/callback'
 MONZO_AUTH_START = '/api/monzo'
 MONZO_CONFIG_FILE = 'monzo.conf'
-MONZO_DEFAULT_RESOURCES = []
+MONZO_DEFAULT_RESOURCES = ['balance']
 
 SCAN_INTERVAL = datetime.timedelta(minutes=30)
 
@@ -49,10 +51,15 @@ DEFAULT_CONFIG = {
     'client_secret': 'CLIENT_SECRET_HERE'
 }
 
+MONZO_RESOURCES_LIST = {
+    'balance': ['Account Balance', 'GBP', 'cash'],
+    'dailyspend': ['Spent Today', 'GBP', 'cash']
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_UNIT_SYSTEM, default='default'):
-        vol.In(['en_GB', 'en_US', 'metric', 'default'])
+    vol.Optional(CONF_MONITORED_RESOURCES, default=MONZO_DEFAULT_RESOURCES):
+        vol.All(cv.ensure_list, [vol.In(MONZO_RESOURCES_LIST)]),
+    vol.Optional(CONF_ID, default=""): cv.string
 })
 
 
@@ -145,7 +152,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     expires_at = config_file.get(ATTR_LAST_SAVED_AT)
     if None not in (access_token, refresh_token):
         # Load existing OAuth session
-        authd_client = monzo.Monzo(client_id = config_file.get(ATTR_CLIENT_ID),
+        authd_client = monzo.MonzoOAuth2Client(client_id = config_file.get(ATTR_CLIENT_ID),
                                      client_secret = config_file.get(ATTR_CLIENT_SECRET),
                                      access_token=access_token,
                                      refresh_token=refresh_token,
@@ -155,25 +162,30 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         if int(time.time()) - expires_at > 3600:
             authd_client.client.refresh_token()
 
+        client = monzo.Monzo.from_oauth_session(authd_client)
+        account_id = config.get(CONF_ID)
+
         #Create sensors to be added to hass
         dev = []
-        dev.append(MonzoSensor(authd_client, config_path, resource,
-                               hass.config.units.is_metric, clock_format))
+        print("making a sensor")
+        for resource in config.get(CONF_MONITORED_RESOURCES):
+                dev.append(MonzoSensor(client, config_path, resource, account_id))
+
         add_entities(dev, True)
 
     else:
         # No existing OAuth session
         # Need to authenticate
-
-        oauth = monzo.Monzo(
-            client_id = config_file.get(ATTR_CLIENT_ID),
-            client_secret = config_file.get(ATTR_CLIENT_SECRET))
-
+        print("trying to reauth")
         redirect_uri = '{}{}'.format(hass.config.api.base_url,
                                      MONZO_AUTH_CALLBACK_PATH)
 
-        monzo_auth_start_url, _ = oauth.oauth_session.authorize_token_url(
-            redirect_uri=redirect_uri)
+        oauth = monzo.MonzoOAuth2Client(
+            client_id = config_file.get(ATTR_CLIENT_ID),
+            client_secret = config_file.get(ATTR_CLIENT_SECRET),
+            redirect_uri = redirect_uri)
+
+        monzo_auth_start_url, _ = oauth.authorize_token_url()
 
         hass.http.register_redirect(MONZO_AUTH_START, monzo_auth_start_url)
         hass.http.register_view(MonzoAuthCallbackView(
@@ -261,18 +273,22 @@ class MonzoAuthCallbackView(HomeAssistantView):
 class MonzoSensor(Entity):
     """Implementation of a Monzo sensor."""
 
-    def __init__(self, client, config_path, extra=None):
+    def __init__(self, client, config_path, resource_type, account_id,extra=None):
         """Initialize the Monzo sensor."""
         self.client = client
         self.config_path = config_path
+        self.resource_type = resource_type
         self.extra = extra
         self._name = 'Monzo Balance'
-        #self._name = FITBIT_RESOURCES_LIST[self.resource_type][0]
-
-        if self.extra:
-            self._name = '{0} Battery'.format(self.extra.get('deviceVersion'))
-        self._unit_of_measurement = 'GBP'
+        print("made a sensor")
+        self._name = MONZO_RESOURCES_LIST[self.resource_type][0]
+        self._unit_of_measurement = MONZO_RESOURCES_LIST[self.resource_type][1]
         self._state = 0
+
+        if account_id == "":
+            self._account_id = self.client.get_first_account()['id']
+        else:
+            self._account_id = account_id
 
     @property
     def name(self):
@@ -292,71 +308,32 @@ class MonzoSensor(Entity):
     @property
     def icon(self):
         """Icon to use in the frontend, if any."""
-        return 'mdi:{}'.format('cash')
+        return 'mdi:{}'.format(MONZO_RESOURCES_LIST[self.resource_type][2])
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         attrs = {}
 
+        attrs[ATTR_ID] = self._account_id
         attrs[ATTR_ATTRIBUTION] = CONF_ATTRIBUTION
 
         return attrs
 
     def update(self):
         """Get the latest data from the Monzo API and update the states."""
-        #if self.resource_type == 'devices/battery' and self.extra:
-        #    self._state = self.extra.get('battery')
-        #else:
-        #    container = self.resource_type.replace("/", "-")
-        #    response = self.client.time_series(self.resource_type, period='7d')
-        #    raw_state = response[container][-1].get('value')
-        #    if self.resource_type == 'activities/distance':
-        #        self._state = format(float(raw_state), '.2f')
-        #    elif self.resource_type == 'activities/tracker/distance':
-        #        self._state = format(float(raw_state), '.2f')
-        #    elif self.resource_type == 'body/bmi':
-        #        self._state = format(float(raw_state), '.1f')
-        #    elif self.resource_type == 'body/fat':
-        #        self._state = format(float(raw_state), '.1f')
-        #    elif self.resource_type == 'body/weight':
-        #        self._state = format(float(raw_state), '.1f')
-        #    elif self.resource_type == 'sleep/startTime':
-        #        if raw_state == '':
-        #            self._state = '-'
-        #        elif self.clock_format == '12H':
-        #            hours, minutes = raw_state.split(':')
-        #            hours, minutes = int(hours), int(minutes)
-        #            setting = 'AM'
-        #            if hours > 12:
-        #                setting = 'PM'
-        #                hours -= 12
-        #            elif hours == 0:
-        #                hours = 12
-        #            self._state = '{}:{:02d} {}'.format(hours, minutes,
-        #                                                setting)
-        #        else:
-        #            self._state = raw_state
-        #    else:
-        #        if self.is_metric:
-        #            self._state = raw_state
-        #        else:
-        #            try:
-        #                self._state = '{0:,}'.format(int(raw_state))
-        #            except TypeError:
-        #                self._state = raw_state
-#
-        #if self.resource_type == 'activities/heart':
-        #    self._state = response[container][-1]. \
-        #            get('value').get('restingHeartRate')
 
-        self._state = self.client.get_balance(self.client.get_first_account()['id'])
-        token = self.client.client.session.token
+        if self.resource_type == 'balance':
+            self._state = self.client.get_balance(self._account_id)['balance'] / 100
+        elif self.resource_type == 'dailyspend':
+            self._state = self.client.get_balance(self._account_id)['spend_today'] / 100
+
+        token = self.client.oauth_session.session.token
         config_contents = {
             ATTR_ACCESS_TOKEN: token.get('access_token'),
             ATTR_REFRESH_TOKEN: token.get('refresh_token'),
-            ATTR_CLIENT_ID: self.client.client.client_id,
-            ATTR_CLIENT_SECRET: self.client.client.client_secret,
+            ATTR_CLIENT_ID: self.client.oauth_session.client_id,
+            ATTR_CLIENT_SECRET: self.client.oauth_session.client_secret,
             ATTR_LAST_SAVED_AT: int(time.time())
         }
         save_json(self.config_path, config_contents)
