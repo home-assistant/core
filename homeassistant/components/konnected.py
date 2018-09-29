@@ -28,7 +28,7 @@ from homeassistant.helpers import config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['konnected==0.1.3']
+REQUIREMENTS = ['konnected==0.1.4']
 
 DOMAIN = 'konnected'
 
@@ -38,6 +38,8 @@ CONF_MOMENTARY = 'momentary'
 CONF_PAUSE = 'pause'
 CONF_REPEAT = 'repeat'
 CONF_INVERSE = 'inverse'
+CONF_BLINK = 'blink'
+CONF_DISCOVERY = 'discovery'
 
 STATE_LOW = 'low'
 STATE_HIGH = 'high'
@@ -85,6 +87,8 @@ CONFIG_SCHEMA = vol.Schema(
                     cv.ensure_list, [_SWITCH_SCHEMA]),
                 vol.Optional(CONF_HOST): cv.string,
                 vol.Optional(CONF_PORT): cv.positive_int,
+                vol.Optional(CONF_BLINK): cv.boolean,
+                vol.Optional(CONF_DISCOVERY): cv.boolean,
             }],
         }),
     },
@@ -222,6 +226,8 @@ class ConfiguredDevice:
         device_data = {
             CONF_BINARY_SENSORS: sensors,
             CONF_SWITCHES: actuators,
+            CONF_BLINK: self.config.get(CONF_BLINK),
+            CONF_DISCOVERY: self.config.get(CONF_DISCOVERY)
         }
 
         if CONF_DEVICES not in self.hass.data[DOMAIN]:
@@ -339,13 +345,19 @@ class DiscoveredDevice:
 
         if (desired_sensor_configuration != current_sensor_configuration) or \
                 (current_actuator_config != desired_actuator_config) or \
-                (current_api_endpoint != desired_api_endpoint):
+                (current_api_endpoint != desired_api_endpoint) or \
+                (self.status.get(CONF_BLINK) !=
+                 self.stored_configuration.get(CONF_BLINK)) or \
+                (self.status.get(CONF_DISCOVERY) !=
+                 self.stored_configuration.get(CONF_DISCOVERY)):
             _LOGGER.info('pushing settings to device %s', self.device_id)
             self.client.put_settings(
                 desired_sensor_configuration,
                 desired_actuator_config,
                 self.hass.data[DOMAIN].get(CONF_ACCESS_TOKEN),
-                desired_api_endpoint
+                desired_api_endpoint,
+                blink=self.stored_configuration.get(CONF_BLINK),
+                discovery=self.stored_configuration.get(CONF_DISCOVERY)
             )
 
 
