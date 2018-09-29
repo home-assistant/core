@@ -59,6 +59,11 @@ def async_setup(hass, config):
     def init_local_sdcard(service):
         yield from _init_local_sdcard(hass, service)
 
+    @asyncio.coroutine
+    def flush_logs(service):
+        import os
+        os.system("pm2 flush")
+
     # register services
     hass.services.async_register(
         DOMAIN, 'change_host_name', change_host_name)
@@ -80,6 +85,8 @@ def async_setup(hass, config):
         DOMAIN, 'led', led)
     hass.services.async_register(
         DOMAIN, 'init_local_sdcard', init_local_sdcard)
+    hass.services.async_register(
+        DOMAIN, 'flush_logs', flush_logs)
     return True
 
 

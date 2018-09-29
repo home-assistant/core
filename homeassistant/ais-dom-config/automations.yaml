@@ -400,3 +400,12 @@
     - service: ais_bookmarks.play_favorite
       data_template:
         favorite: "{{ states('input_select.ais_bookmark_favorites') }}"
+
+- id: '201809291519123'
+  alias: 'Flush logs'
+  hide_entity: True
+  trigger:
+    platform: time
+    at: '21:35:00'
+  action:
+    - service: ais_shell_command.flush_logs
