@@ -99,6 +99,66 @@ class TestAutomationZone(unittest.TestCase):
 
         self.assertEqual(1, len(self.calls))
 
+    def test_if_fires_on_zone_enter_with_pattern(self):
+        """Test for firing on zone enter with an entity id pattern."""
+        context = Context()
+        self.hass.states.set('test.entity', 'hello', {
+            'latitude': 32.881011,
+            'longitude': -117.234758
+        })
+        self.hass.block_till_done()
+
+        assert setup_component(self.hass, automation.DOMAIN, {
+            automation.DOMAIN: {
+                'trigger': {
+                    'platform': 'zone',
+                    'entity_id_pattern': 'test.ent*',
+                    'zone': 'zone.test',
+                    'event': 'enter',
+                },
+                'action': {
+                    'service': 'test.automation',
+                    'data_template': {
+                        'some': '{{ trigger.%s }}' % '}} - {{ trigger.'.join((
+                            'platform', 'entity_id',
+                            'from_state.state', 'to_state.state',
+                            'zone.name'))
+                    },
+
+                }
+            }
+        })
+
+        self.hass.states.set('test.entity', 'hello', {
+            'latitude': 32.880586,
+            'longitude': -117.237564
+        }, context=context)
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(self.calls))
+        assert self.calls[0].context is context
+        self.assertEqual(
+            'zone - test.entity - hello - hello - test',
+            self.calls[0].data['some'])
+
+        # Set out of zone again so we can trigger call
+        self.hass.states.set('test.entity', 'hello', {
+            'latitude': 32.881011,
+            'longitude': -117.234758
+        })
+        self.hass.block_till_done()
+
+        automation.turn_off(self.hass)
+        self.hass.block_till_done()
+
+        self.hass.states.set('test.entity', 'hello', {
+            'latitude': 32.880586,
+            'longitude': -117.237564
+        })
+        self.hass.block_till_done()
+
+        self.assertEqual(1, len(self.calls))
+
     def test_if_not_fires_for_enter_on_zone_leave(self):
         """Test for not firing on zone leave."""
         self.hass.states.set('test.entity', 'hello', {

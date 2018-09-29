@@ -1,4 +1,6 @@
 """Helpers for listening to events."""
+import fnmatch
+import re
 from datetime import timedelta
 import functools as ft
 
@@ -39,7 +41,7 @@ def threaded_listener_factory(async_factory):
 @callback
 @bind_hass
 def async_track_state_change(hass, entity_ids, action, from_state=None,
-                             to_state=None):
+                             to_state=None, entity_id_with_pattern=False):
     """Track specific state changes.
 
     entity_ids, from_state and to_state can be string or list.
@@ -63,9 +65,18 @@ def async_track_state_change(hass, entity_ids, action, from_state=None,
     @callback
     def state_change_listener(event):
         """Handle specific state changes."""
-        if entity_ids != MATCH_ALL and \
+        if entity_ids != MATCH_ALL and not entity_id_with_pattern and \
            event.data.get('entity_id') not in entity_ids:
             return
+
+        if entity_id_with_pattern:
+            # Check if the event's entity id matches any wildcard definition.
+            for entity_id in entity_ids:
+                if re.compile(fnmatch.translate(entity_id)).match(
+                        event.data.get('entity_id')):
+                    break
+            else:
+                return
 
         old_state = event.data.get('old_state')
         if old_state is not None:

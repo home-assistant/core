@@ -13,22 +13,30 @@ from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers import (
     condition, config_validation as cv, location)
 
+CONF_ENTITY_ID_PATTERN = 'entity_id_pattern'
+
 EVENT_ENTER = 'enter'
 EVENT_LEAVE = 'leave'
 DEFAULT_EVENT = EVENT_ENTER
 
-TRIGGER_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): 'zone',
-    vol.Required(CONF_ENTITY_ID): cv.entity_ids,
-    vol.Required(CONF_ZONE): cv.entity_id,
-    vol.Required(CONF_EVENT, default=DEFAULT_EVENT):
-        vol.Any(EVENT_ENTER, EVENT_LEAVE),
-})
+TRIGGER_SCHEMA = vol.All(
+    vol.Schema({
+        vol.Required(CONF_PLATFORM): 'zone',
+        vol.Exclusive(CONF_ENTITY_ID, 'entity_ids'): cv.entity_ids,
+        vol.Exclusive(CONF_ENTITY_ID_PATTERN, 'entity_ids'): cv.string,
+        vol.Required(CONF_ZONE): cv.entity_id,
+        vol.Required(CONF_EVENT, default=DEFAULT_EVENT):
+            vol.Any(EVENT_ENTER, EVENT_LEAVE),
+    }),
+    # Make sure either entity id or entity id pattern are defined.
+    cv.has_at_least_one_key(CONF_ENTITY_ID, CONF_ENTITY_ID_PATTERN)
+)
 
 
 async def async_trigger(hass, config, action):
     """Listen for state changes based on configuration."""
     entity_id = config.get(CONF_ENTITY_ID)
+    entity_id_pattern = config.get(CONF_ENTITY_ID_PATTERN)
     zone_entity_id = config.get(CONF_ZONE)
     event = config.get(CONF_EVENT)
 
@@ -60,5 +68,8 @@ async def async_trigger(hass, config, action):
                 },
             }, context=to_s.context))
 
-    return async_track_state_change(hass, entity_id, zone_automation_listener,
-                                    MATCH_ALL, MATCH_ALL)
+    return async_track_state_change(hass, entity_id or entity_id_pattern,
+                                    zone_automation_listener,
+                                    MATCH_ALL, MATCH_ALL,
+                                    entity_id_with_pattern=
+                                    bool(entity_id_pattern))
