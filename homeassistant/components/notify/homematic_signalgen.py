@@ -49,26 +49,26 @@ class HomematicSignalGeneratorNotificationService(BaseNotificationService):
 
     def send_message(self, message="", **kwargs):
         """Send a notification to the signal generator."""
-        valueForSigGen = self.value
+        value_for_sig_gen = self.value
 
-        dataFromMsg = kwargs.get(ATTR_DATA)
-        if dataFromMsg is not None:
-            if 'value' in dataFromMsg:
-                valueForSigGen = dataFromMsg['value']
+        data_from_msg = kwargs.get(ATTR_DATA)
+        if data_from_msg is not None:
+            if 'value' in data_from_msg:
+                value_for_sig_gen = data_from_msg['value']
 
-        templ = template.Template(valueForSigGen, self.hass)
-        valueForSigGen = template.render_complex(templ, None)
+        templ = template.Template(value_for_sig_gen, self.hass)
+        value_for_sig_gen = template.render_complex(templ, None)
 
-        if valueForSigGen is None:
+        if value_for_sig_gen is None:
             _LOGGER.error("Value is null: Not invoking homematic signal " +
                           "generator.")
 
         data = {
             ATTR_ADDRESS: self.address,
             ATTR_CHANNEL: 2,
-            ATTR_PARAM: "SUBMIT",
-            ATTR_VALUE: valueForSigGen
+            ATTR_PARAM: 'SUBMIT',
+            ATTR_VALUE: value_for_sig_gen
         }
-        _LOGGER.debug('Calling service: domain=' + DOMAIN + ';service='
-                      + SERVICE_SET_DEVICE_VALUE + ';data=' + str(data))
+        _LOGGER.debug("Calling service: domain=%s;service=%s;data=%s",
+                      DOMAIN, SERVICE_SET_DEVICE_VALUE, str(data))
         self.hass.services.call(DOMAIN, SERVICE_SET_DEVICE_VALUE, data)
