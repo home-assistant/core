@@ -16,7 +16,8 @@ DEPENDENCIES = ['apple_tv']
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Apple TV remote platform."""
     if not discovery_info:
         return
@@ -25,7 +26,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     host = discovery_info[CONF_HOST]
     atv = hass.data[DATA_APPLE_TV][host][ATTR_ATV]
     power = hass.data[DATA_APPLE_TV][host][ATTR_POWER]
-    async_add_devices([AppleTVRemote(atv, power, name)])
+    async_add_entities([AppleTVRemote(atv, power, name)])
 
 
 class AppleTVRemote(remote.RemoteDevice):

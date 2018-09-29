@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Only a single configuration of MQTT is allowed."
+        },
+        "error": {
+            "cannot_connect": "Unable to connect to the broker."
+        },
+        "step": {
+            "broker": {
+                "data": {
+                    "broker": "Broker",
+                    "discovery": "Enable discovery",
+                    "password": "Password",
+                    "port": "Port",
+                    "username": "Username"
+                },
+                "description": "Please enter the connection information of your MQTT broker.",
+                "title": "MQTT"
+            }
+        },
+        "title": "MQTT"
+    }
+}

@@ -24,7 +24,7 @@ USER_SCHEMA = vol.Schema({
 CONFIG_SCHEMA = AUTH_PROVIDER_SCHEMA.extend({
 }, extra=vol.PREVENT_EXTRA)
 
-LEGACY_USER = 'homeassistant'
+LEGACY_USER_NAME = 'Legacy API password user'
 
 
 class InvalidAuthError(HomeAssistantError):
@@ -43,15 +43,8 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
 
     @callback
     def async_validate_login(self, password: str) -> None:
-        """Helper to validate a username and password."""
+        """Validate a username and password."""
         hass_http = getattr(self.hass, 'http', None)  # type: HomeAssistantHTTP
-
-        if not hass_http:
-            raise ValueError('http component is not loaded')
-
-        if hass_http.api_password is None:
-            raise ValueError('http component is not configured using'
-                             ' api_password')
 
         if not hmac.compare_digest(hass_http.api_password.encode('utf-8'),
                                    password.encode('utf-8')):
@@ -59,23 +52,21 @@ class LegacyApiPasswordAuthProvider(AuthProvider):
 
     async def async_get_or_create_credentials(
             self, flow_result: Dict[str, str]) -> Credentials:
-        """Return LEGACY_USER always."""
-        for credential in await self.async_credentials():
-            if credential.data['username'] == LEGACY_USER:
-                return credential
+        """Return credentials for this login."""
+        credentials = await self.async_credentials()
+        if credentials:
+            return credentials[0]
 
-        return self.async_create_credentials({
-            'username': LEGACY_USER
-        })
+        return self.async_create_credentials({})
 
     async def async_user_meta_for_credentials(
             self, credentials: Credentials) -> UserMeta:
         """
-        Set name as LEGACY_USER always.
+        Return info for the user.
 
         Will be used to populate info when creating a new user.
         """
-        return UserMeta(name=LEGACY_USER, is_active=True)
+        return UserMeta(name=LEGACY_USER_NAME, is_active=True)
 
 
 class LegacyLoginFlow(LoginFlow):
@@ -86,6 +77,12 @@ class LegacyLoginFlow(LoginFlow):
             -> Dict[str, Any]:
         """Handle the step of the form."""
         errors = {}
+
+        hass_http = getattr(self.hass, 'http', None)
+        if hass_http is None or not hass_http.api_password:
+            return self.async_abort(
+                reason='no_api_password_set'
+            )
 
         if user_input is not None:
             try:

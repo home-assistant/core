@@ -49,27 +49,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
     """Set up cover(s) for KNX platform."""
     if discovery_info is not None:
-        async_add_devices_discovery(hass, discovery_info, async_add_devices)
+        async_add_entities_discovery(hass, discovery_info, async_add_entities)
     else:
-        async_add_devices_config(hass, config, async_add_devices)
+        async_add_entities_config(hass, config, async_add_entities)
 
 
 @callback
-def async_add_devices_discovery(hass, discovery_info, async_add_devices):
+def async_add_entities_discovery(hass, discovery_info, async_add_entities):
     """Set up covers for KNX platform configured via xknx.yaml."""
     entities = []
     for device_name in discovery_info[ATTR_DISCOVER_DEVICES]:
         device = hass.data[DATA_KNX].xknx.devices[device_name]
         entities.append(KNXCover(hass, device))
-    async_add_devices(entities)
+    async_add_entities(entities)
 
 
 @callback
-def async_add_devices_config(hass, config, async_add_devices):
+def async_add_entities_config(hass, config, async_add_entities):
     """Set up cover for KNX platform configured within platform."""
     import xknx
     cover = xknx.devices.Cover(
@@ -88,7 +88,7 @@ def async_add_devices_config(hass, config, async_add_devices):
         invert_angle=config.get(CONF_INVERT_ANGLE))
 
     hass.data[DATA_KNX].xknx.devices.add(cover)
-    async_add_devices([KNXCover(hass, cover)])
+    async_add_entities([KNXCover(hass, cover)])
 
 
 class KNXCover(CoverDevice):
@@ -96,7 +96,7 @@ class KNXCover(CoverDevice):
 
     def __init__(self, hass, device):
         """Initialize the cover."""
-        self._device = device
+        self.device = device
         self.hass = hass
         self.async_register_callbacks()
 
@@ -108,12 +108,12 @@ class KNXCover(CoverDevice):
         async def after_update_callback(device):
             """Call after device was updated."""
             await self.async_update_ha_state()
-        self._device.register_device_updated_cb(after_update_callback)
+        self.device.register_device_updated_cb(after_update_callback)
 
     @property
     def name(self):
         """Return the name of the KNX device."""
-        return self._device.name
+        return self.device.name
 
     @property
     def available(self):
@@ -130,56 +130,56 @@ class KNXCover(CoverDevice):
         """Flag supported features."""
         supported_features = SUPPORT_OPEN | SUPPORT_CLOSE | \
             SUPPORT_SET_POSITION | SUPPORT_STOP
-        if self._device.supports_angle:
+        if self.device.supports_angle:
             supported_features |= SUPPORT_SET_TILT_POSITION
         return supported_features
 
     @property
     def current_cover_position(self):
         """Return the current position of the cover."""
-        return self._device.current_position()
+        return self.device.current_position()
 
     @property
     def is_closed(self):
         """Return if the cover is closed."""
-        return self._device.is_closed()
+        return self.device.is_closed()
 
     async def async_close_cover(self, **kwargs):
         """Close the cover."""
-        if not self._device.is_closed():
-            await self._device.set_down()
+        if not self.device.is_closed():
+            await self.device.set_down()
             self.start_auto_updater()
 
     async def async_open_cover(self, **kwargs):
         """Open the cover."""
-        if not self._device.is_open():
-            await self._device.set_up()
+        if not self.device.is_open():
+            await self.device.set_up()
             self.start_auto_updater()
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
-            await self._device.set_position(position)
+            await self.device.set_position(position)
             self.start_auto_updater()
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""
-        await self._device.stop()
+        await self.device.stop()
         self.stop_auto_updater()
 
     @property
     def current_cover_tilt_position(self):
         """Return current tilt position of cover."""
-        if not self._device.supports_angle:
+        if not self.device.supports_angle:
             return None
-        return self._device.current_angle()
+        return self.device.current_angle()
 
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         if ATTR_TILT_POSITION in kwargs:
             tilt_position = kwargs[ATTR_TILT_POSITION]
-            await self._device.set_angle(tilt_position)
+            await self.device.set_angle(tilt_position)
 
     def start_auto_updater(self):
         """Start the autoupdater to update HASS while cover is moving."""
@@ -197,7 +197,7 @@ class KNXCover(CoverDevice):
     def auto_updater_hook(self, now):
         """Call for the autoupdater."""
         self.async_schedule_update_ha_state()
-        if self._device.position_reached():
+        if self.device.position_reached():
             self.stop_auto_updater()
 
-        self.hass.add_job(self._device.auto_stop_if_necessary())
+        self.hass.add_job(self.device.auto_stop_if_necessary())

@@ -16,7 +16,7 @@ DEPENDENCIES = ['bmw_connected_drive']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BMW Connected Drive lock."""
     accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
@@ -27,7 +27,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
             for vehicle in account.account.vehicles:
                 device = BMWLock(account, vehicle, 'lock', 'BMW lock')
                 devices.append(device)
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class BMWLock(LockDevice):

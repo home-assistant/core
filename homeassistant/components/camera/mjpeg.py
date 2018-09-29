@@ -42,11 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up a MJPEG IP Camera."""
     if discovery_info:
         config = PLATFORM_SCHEMA(discovery_info)
-    async_add_devices([MjpegCamera(hass, config)])
+    async_add_entities([MjpegCamera(config)])
 
 
 def extract_image_from_mjpeg(stream):
@@ -64,7 +65,7 @@ def extract_image_from_mjpeg(stream):
 class MjpegCamera(Camera):
     """An implementation of an IP camera that is reachable over a URL."""
 
-    def __init__(self, hass, device_info):
+    def __init__(self, device_info):
         """Initialize a MJPEG camera."""
         super().__init__()
         self._name = device_info.get(CONF_NAME)

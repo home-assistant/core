@@ -14,6 +14,7 @@ from homeassistant.util.async_ import run_coroutine_threadsafe
 from tests.common import (
     get_test_home_assistant, get_test_instance_port, assert_setup_component,
     mock_coro)
+from tests.components.camera import common
 
 
 @pytest.fixture
@@ -126,7 +127,7 @@ def test_snapshot_service(hass, mock_camera):
     with patch('homeassistant.components.camera.open', mopen, create=True), \
             patch.object(hass.config, 'is_allowed_path',
                          return_value=True):
-        hass.components.camera.async_snapshot('/tmp/bla')
+        common.async_snapshot(hass, '/tmp/bla')
         yield from hass.async_block_till_done()
 
         mock_write = mopen().write

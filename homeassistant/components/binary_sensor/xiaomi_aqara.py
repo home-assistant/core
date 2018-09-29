@@ -19,7 +19,7 @@ DENSITY = 'density'
 ATTR_DENSITY = 'Density'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Perform the setup for Xiaomi devices."""
     devices = []
     for (_, gateway) in hass.data[PY_XIAOMI_GATEWAY].gateways.items():
@@ -65,7 +65,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                                             'dual_channel', hass, gateway))
             elif model in ['cube', 'sensor_cube', 'sensor_cube.aqgl01']:
                 devices.append(XiaomiCube(device, hass, gateway))
-    add_devices(devices)
+    add_entities(devices)
 
 
 class XiaomiBinarySensor(XiaomiDevice, BinarySensorDevice):
@@ -374,11 +374,11 @@ class XiaomiCube(XiaomiBinarySensor):
         self._last_action = None
         self._state = False
         if 'proto' not in device or int(device['proto'][0:1]) == 1:
-            self._data_key = 'status'
+            data_key = 'status'
         else:
-            self._data_key = 'cube_status'
+            data_key = 'cube_status'
         XiaomiBinarySensor.__init__(self, device, 'Cube', xiaomi_hub,
-                                    None, None)
+                                    data_key, None)
 
     @property
     def device_state_attributes(self):

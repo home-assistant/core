@@ -27,17 +27,17 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def debounce(func):
-    """Decorator function. Debounce callbacks form HomeKit."""
+    """Decorate function to debounce callbacks from HomeKit."""
     @ha_callback
     def call_later_listener(self, *args):
-        """Callback listener called from call_later."""
+        """Handle call_later callback."""
         debounce_params = self.debounce.pop(func.__name__, None)
         if debounce_params:
             self.hass.async_add_job(func, self, *debounce_params[1:])
 
     @wraps(func)
     def wrapper(self, *args):
-        """Wrapper starts async timer."""
+        """Start async timer."""
         debounce_params = self.debounce.pop(func.__name__, None)
         if debounce_params:
             debounce_params[0]()  # remove listener
@@ -88,7 +88,7 @@ class HomeAccessory(Accessory):
             CHAR_STATUS_LOW_BATTERY, value=0)
 
     async def run(self):
-        """Method called by accessory after driver is started.
+        """Handle accessory driver started event.
 
         Run inside the HAP-python event loop.
         """
@@ -100,7 +100,7 @@ class HomeAccessory(Accessory):
     @ha_callback
     def update_state_callback(self, entity_id=None, old_state=None,
                               new_state=None):
-        """Callback from state change listener."""
+        """Handle state change listener callback."""
         _LOGGER.debug('New_state: %s', new_state)
         if new_state is None:
             return
@@ -131,7 +131,7 @@ class HomeAccessory(Accessory):
                       hk_charging)
 
     def update_state(self, new_state):
-        """Method called on state change to update HomeKit value.
+        """Handle state change to update HomeKit value.
 
         Overridden by accessory types.
         """

@@ -39,7 +39,7 @@ SUPPORT_FLAGS = (SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE |
                  SUPPORT_AWAY_MODE)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the NetAtmo Thermostat."""
     netatmo = hass.components.netatmo
     device = config.get(CONF_RELAY)
@@ -52,7 +52,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                 if config[CONF_THERMOSTAT] != [] and \
                    module_name not in config[CONF_THERMOSTAT]:
                     continue
-            add_devices([NetatmoThermostat(data, module_name)], True)
+            add_entities([NetatmoThermostat(data, module_name)], True)
     except pyatmo.NoDevice:
         return None
 

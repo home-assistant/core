@@ -98,13 +98,13 @@ class QSToggleEntity(QSEntity):
 
     def __init__(self, qsid, qsusb):
         """Initialize the ToggleEntity."""
-        self._device = qsusb.devices[qsid]
-        super().__init__(qsid, self._device.name)
+        self.device = qsusb.devices[qsid]
+        super().__init__(qsid, self.device.name)
 
     @property
     def is_on(self):
         """Check if device is on (non-zero)."""
-        return self._device.value > 0
+        return self.device.value > 0
 
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""

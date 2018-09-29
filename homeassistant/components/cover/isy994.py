@@ -26,7 +26,7 @@ VALUE_TO_STATE = {
 
 
 def setup_platform(hass, config: ConfigType,
-                   add_devices: Callable[[list], None], discovery_info=None):
+                   add_entities: Callable[[list], None], discovery_info=None):
     """Set up the ISY994 cover platform."""
     devices = []
     for node in hass.data[ISY994_NODES][DOMAIN]:
@@ -35,7 +35,7 @@ def setup_platform(hass, config: ConfigType,
     for name, status, actions in hass.data[ISY994_PROGRAMS][DOMAIN]:
         devices.append(ISYCoverProgram(name, status, actions))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class ISYCoverDevice(ISYDevice, CoverDevice):
@@ -44,6 +44,8 @@ class ISYCoverDevice(ISYDevice, CoverDevice):
     @property
     def current_cover_position(self) -> int:
         """Return the current cover position."""
+        if self.is_unknown() or self.value is None:
+            return None
         return sorted((0, self.value, 100))[1]
 
     @property

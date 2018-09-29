@@ -19,7 +19,6 @@ COMMENT_REQUIREMENTS = (
     'bluepy',
     'opencv-python',
     'python-lirc',
-    'gattlib',
     'pyuserinput',
     'evdev',
     'pycups',
@@ -34,6 +33,7 @@ COMMENT_REQUIREMENTS = (
     'credstash',
     'bme680',
     'homekit',
+    'py_noaa',
 )
 
 TEST_REQUIREMENTS = (
@@ -50,10 +50,13 @@ TEST_REQUIREMENTS = (
     'feedparser',
     'foobot_async',
     'gTTS-token',
+    'geojson_client',
+    'hangups',
     'HAP-python',
     'ha-ffmpeg',
     'haversine',
     'hbmqtt',
+    'hdate',
     'holidays',
     'home-assistant-frontend',
     'homematicip',
@@ -72,12 +75,15 @@ TEST_REQUIREMENTS = (
     'pyblackbird',
     'pydeconz',
     'pydispatcher',
-    'PyJWT',
     'pylitejet',
     'pymonoprice',
     'pynx584',
+    'pyopenuv',
+    'pyotp',
+    'pysonos',
     'pyqwikswitch',
     'PyRMVtransport',
+    'pyspcwebgw',
     'python-forecastio',
     'python-nest',
     'pytradfri\[async\]',
@@ -89,12 +95,10 @@ TEST_REQUIREMENTS = (
     'ring_doorbell',
     'rxv',
     'sleepyq',
-    'SoCo',
     'somecomfort',
     'sqlalchemy',
     'statsd',
     'uvcclient',
-    'voluptuous-serialize',
     'warrant',
     'yahoo-finance',
     'pythonwhois',
@@ -104,7 +108,8 @@ TEST_REQUIREMENTS = (
 
 IGNORE_PACKAGES = (
     'homeassistant.components.recorder.models',
-    'homeassistant.components.homekit.*'
+    'homeassistant.components.homekit.*',
+    'homeassistant.components.hangouts.hangups_utils'
 )
 
 IGNORE_PIN = ('colorlog>2.1,<3', 'keyring>=9.3,<10.0', 'urllib3')
@@ -113,13 +118,15 @@ IGNORE_REQ = (
     'colorama<=1',  # Windows only requirement in check_config
 )
 
-URL_PIN = ('https://home-assistant.io/developers/code_review_platform/'
-           '#1-requirements')
+URL_PIN = ('https://developers.home-assistant.io/docs/'
+           'creating_platform_code_review.html#1-requirements')
 
 
 CONSTRAINT_PATH = os.path.join(os.path.dirname(__file__),
                                '../homeassistant/package_constraints.txt')
 CONSTRAINT_BASE = """
+pycryptodome>=3.6.6
+
 # Breaks Python 3.6 and is not needed for our supported Python versions
 enum34==1000000000.0.0
 
@@ -155,7 +162,7 @@ def core_requirements():
 
 
 def comment_requirement(req):
-    """Some requirements don't install on all systems."""
+    """Comment out requirement. Some don't install on all systems."""
     return any(ign in req for ign in COMMENT_REQUIREMENTS)
 
 
@@ -294,7 +301,7 @@ def validate_constraints_file(data):
 
 
 def main(validate):
-    """Main section of the script."""
+    """Run the script."""
     if not os.path.isfile('requirements_all.txt'):
         print('Run this from HA root dir')
         return 1

@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Accesspoint is reeds geconfigureerd",
-            "conection_aborted": "Kon geen verbinding maken met de HMIP-server",
+            "already_configured": "Accesspoint is al geconfigureerd",
+            "connection_aborted": "Kon geen verbinding maken met de HMIP-server",
             "unknown": "Er is een onbekende fout opgetreden."
         },
         "error": {
@@ -18,11 +18,11 @@
                     "name": "Naam (optioneel, gebruikt als naamprefix voor alle apparaten)",
                     "pin": "Pin-Code (optioneel)"
                 },
-                "title": "Kies HomematicIP Accesspoint"
+                "title": "Kies HomematicIP accesspoint"
             },
             "link": {
-                "description": "Druk op de blauwe knop op de accesspoint en de verzendknop om HomematicIP met de Home Assistant te registreren. \n\n![Locatie van knop op brug](/static/images/config_flows/\nconfig_homematicip_cloud.png)",
-                "title": "Link Accesspoint"
+                "description": "Druk op de blauwe knop op het accesspoint en de verzendknop om HomematicIP bij Home Assistant te registreren. \n\n![Locatie van knop op bridge](/static/images/config_flows/\nconfig_homematicip_cloud.png)",
+                "title": "Link accesspoint"
             }
         },
         "title": "HomematicIP Cloud"

@@ -15,7 +15,7 @@ _LOGGER = logging.getLogger(__name__)
 DEPENDENCIES = ['homematic']
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Homematic lock platform."""
     if discovery_info is None:
         return
@@ -24,7 +24,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
         devices.append(HMLock(conf))
 
-    add_devices(devices)
+    add_entities(devices)
 
 
 class HMLock(HMDevice, LockDevice):

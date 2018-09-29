@@ -24,12 +24,12 @@ HMIP_ZONE_HOME = 'INTERNAL'
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud alarm control devices."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP alarm control panel from a config entry."""
     from homematicip.aio.group import AsyncSecurityZoneGroup
 
@@ -40,7 +40,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             devices.append(HomematicipSecurityZone(home, group))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipSecurityZone(HomematicipGenericDevice, AlarmControlPanel):

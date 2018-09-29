@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "O ponto de acesso j\u00e1 se encontra configurado",
-            "conection_aborted": "N\u00e3o foi poss\u00edvel ligar ao servidor HMIP",
+            "connection_aborted": "N\u00e3o foi poss\u00edvel ligar ao servidor HMIP",
             "unknown": "Ocorreu um erro desconhecido."
         },
         "error": {

@@ -59,7 +59,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the sensor platform."""
     websession = async_get_clientsession(hass)
     apikey = config.get(CONF_API_KEY)
@@ -75,7 +76,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensors = []
     for variable in config[CONF_MONITORED_VARIABLES]:
         sensors.append(TekSavvySensor(ts_data, variable, name))
-    async_add_devices(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class TekSavvySensor(Entity):

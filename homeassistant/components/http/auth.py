@@ -30,8 +30,10 @@ def setup_auth(app, trusted_networks, use_auth,
         if use_auth and (HTTP_HEADER_HA_AUTH in request.headers or
                          DATA_API_PASSWORD in request.query):
             if request.path not in old_auth_warning:
-                _LOGGER.warning('Please change to use bearer token access %s',
-                                request.path)
+                _LOGGER.log(
+                    logging.INFO if support_legacy else logging.WARNING,
+                    'You need to use a bearer token to access %s from %s',
+                    request.path, request[KEY_REAL_IP])
                 old_auth_warning.add(request.path)
 
         legacy_auth = (not use_auth or support_legacy) and api_password

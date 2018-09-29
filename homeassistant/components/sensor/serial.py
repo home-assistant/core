@@ -36,7 +36,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the Serial sensor platform."""
     name = config.get(CONF_NAME)
     port = config.get(CONF_SERIAL_PORT)
@@ -50,7 +51,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP, sensor.stop_serial_read())
-    async_add_devices([sensor], True)
+    async_add_entities([sensor], True)
 
 
 class SerialSensor(Entity):

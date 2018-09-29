@@ -39,7 +39,7 @@ EPH_TO_HA_STATE = {
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ephember thermostat."""
     from pyephember.pyephember import EphEmber
 
@@ -50,7 +50,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
         ember = EphEmber(username, password)
         zones = ember.get_zones()
         for zone in zones:
-            add_devices([EphEmberThermostat(ember, zone)])
+            add_entities([EphEmberThermostat(ember, zone)])
     except RuntimeError:
         _LOGGER.error("Cannot connect to EphEmber")
         return

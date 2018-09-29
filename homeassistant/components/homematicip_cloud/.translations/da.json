@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "invalid_pin": "Ugyldig PIN, pr\u00f8v igen."
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "pin": "Pin kode (valgfri)"
+                }
+            }
+        }
+    }
+}

@@ -19,21 +19,15 @@ DEPENDENCIES = ['tradfri']
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-async def async_setup_platform(hass, config, async_add_devices,
-                               discovery_info=None):
-    """Set up the IKEA Tradfri device platform."""
-    if discovery_info is None:
-        return
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up a Tradfri config entry."""
+    api = hass.data[KEY_API][config_entry.entry_id]
+    gateway = hass.data[KEY_GATEWAY][config_entry.entry_id]
 
-    gateway_id = discovery_info['gateway']
-    api = hass.data[KEY_API][gateway_id]
-    gateway = hass.data[KEY_GATEWAY][gateway_id]
-
-    devices_command = gateway.get_devices()
-    devices_commands = await api(devices_command)
+    devices_commands = await api(gateway.get_devices())
     all_devices = await api(devices_commands)
-    devices = [dev for dev in all_devices if not dev.has_light_control]
-    async_add_devices(TradfriDevice(device, api) for device in devices)
+    devices = (dev for dev in all_devices if not dev.has_light_control)
+    async_add_entities(TradfriDevice(device, api) for device in devices)
 
 
 class TradfriDevice(Entity):

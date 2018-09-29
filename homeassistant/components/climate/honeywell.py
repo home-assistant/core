@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_USERNAME, TEMP_CELSIUS, TEMP_FAHRENHEIT,
     ATTR_TEMPERATURE, CONF_REGION)
 
-REQUIREMENTS = ['evohomeclient==0.2.5', 'somecomfort==0.5.2']
+REQUIREMENTS = ['evohomeclient==0.2.7', 'somecomfort==0.5.2']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,19 +51,19 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Honeywell thermostat."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
     region = config.get(CONF_REGION)
 
     if region == 'us':
-        return _setup_us(username, password, config, add_devices)
+        return _setup_us(username, password, config, add_entities)
 
-    return _setup_round(username, password, config, add_devices)
+    return _setup_round(username, password, config, add_entities)
 
 
-def _setup_round(username, password, config, add_devices):
+def _setup_round(username, password, config, add_entities):
     """Set up the rounding function."""
     from evohomeclient import EvohomeClient
 
@@ -73,7 +73,7 @@ def _setup_round(username, password, config, add_devices):
     try:
         zones = evo_api.temperatures(force_refresh=True)
         for i, zone in enumerate(zones):
-            add_devices(
+            add_entities(
                 [RoundThermostat(evo_api, zone['id'], i == 0, away_temp)],
                 True
             )
@@ -85,7 +85,7 @@ def _setup_round(username, password, config, add_devices):
 
 
 # config will be used later
-def _setup_us(username, password, config, add_devices):
+def _setup_us(username, password, config, add_entities):
     """Set up the user."""
     import somecomfort
 
@@ -103,12 +103,12 @@ def _setup_us(username, password, config, add_devices):
     cool_away_temp = config.get(CONF_COOL_AWAY_TEMPERATURE)
     heat_away_temp = config.get(CONF_HEAT_AWAY_TEMPERATURE)
 
-    add_devices([HoneywellUSThermostat(client, device, cool_away_temp,
-                                       heat_away_temp, username, password)
-                 for location in client.locations_by_id.values()
-                 for device in location.devices_by_id.values()
-                 if ((not loc_id or location.locationid == loc_id) and
-                     (not dev_id or device.deviceid == dev_id))])
+    add_entities([HoneywellUSThermostat(client, device, cool_away_temp,
+                                        heat_away_temp, username, password)
+                  for location in client.locations_by_id.values()
+                  for device in location.devices_by_id.values()
+                  if ((not loc_id or location.locationid == loc_id) and
+                      (not dev_id or device.deviceid == dev_id))])
     return True
 
 

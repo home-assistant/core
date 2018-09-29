@@ -31,7 +31,7 @@ SENSOR_TYPES_ELEC = {
 SENSOR_TYPES_ELEC.update(SENSOR_TYPES)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the BMW sensors."""
     accounts = hass.data[BMW_DOMAIN]
     _LOGGER.debug('Found BMW accounts: %s',
@@ -51,7 +51,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     device = BMWConnectedDriveSensor(account, vehicle, key,
                                                      value[0], value[1])
                     devices.append(device)
-    add_devices(devices, True)
+    add_entities(devices, True)
 
 
 class BMWConnectedDriveSensor(BinarySensorDevice):
@@ -71,7 +71,10 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
 
     @property
     def should_poll(self) -> bool:
-        """Data update is triggered from BMWConnectedDriveEntity."""
+        """Return False.
+
+        Data update is triggered from BMWConnectedDriveEntity.
+        """
         return False
 
     @property
@@ -121,7 +124,10 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
             if not check_control_messages:
                 result['check_control_messages'] = 'OK'
             else:
-                result['check_control_messages'] = check_control_messages
+                cbs_list = []
+                for message in check_control_messages:
+                    cbs_list.append(message['ccmDescriptionShort'])
+                result['check_control_messages'] = cbs_list
         elif self._attribute == 'charging_status':
             result['charging_status'] = vehicle_state.charging_status.value
             # pylint: disable=protected-access

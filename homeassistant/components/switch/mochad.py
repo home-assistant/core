@@ -29,10 +29,10 @@ PLATFORM_SCHEMA = vol.Schema({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up X10 switches over a mochad controller."""
     devs = config.get(CONF_DEVICES)
-    add_devices([MochadSwitch(
+    add_entities([MochadSwitch(
         hass, mochad.CONTROLLER.ctrl, dev) for dev in devs])
     return True
 

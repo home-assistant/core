@@ -12,9 +12,9 @@ import voluptuous as vol
 from homeassistant.core import callback
 from homeassistant.components.lock import LockDevice
 from homeassistant.components.mqtt import (
-    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
-    MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
+    CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate)
 from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE)
 from homeassistant.components import mqtt
@@ -42,7 +42,8 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(hass, config, async_add_entities,
+                         discovery_info=None):
     """Set up the MQTT lock."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
@@ -51,7 +52,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if value_template is not None:
         value_template.hass = hass
 
-    async_add_devices([MqttLock(
+    discovery_hash = None
+    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
+        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
+
+    async_add_entities([MqttLock(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
         config.get(CONF_COMMAND_TOPIC),
@@ -63,19 +68,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         value_template,
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE)
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        discovery_hash,
     )])
 
 
-class MqttLock(MqttAvailability, LockDevice):
+class MqttLock(MqttAvailability, MqttDiscoveryUpdate, LockDevice):
     """Representation of a lock that can be toggled using MQTT."""
 
     def __init__(self, name, state_topic, command_topic, qos, retain,
                  payload_lock, payload_unlock, optimistic, value_template,
-                 availability_topic, payload_available, payload_not_available):
+                 availability_topic, payload_available, payload_not_available,
+                 discovery_hash):
         """Initialize the lock."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash)
         self._state = False
         self._name = name
         self._state_topic = state_topic
@@ -86,11 +94,13 @@ class MqttLock(MqttAvailability, LockDevice):
         self._payload_unlock = payload_unlock
         self._optimistic = optimistic
         self._template = value_template
+        self._discovery_hash = discovery_hash
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        yield from super().async_added_to_hass()
+        yield from MqttAvailability.async_added_to_hass(self)
+        yield from MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
         def message_received(topic, payload, qos):

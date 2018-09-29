@@ -11,7 +11,6 @@ import logging
 import voluptuous as vol
 
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_DOMAIN
-from homeassistant.loader import bind_hass
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -38,15 +37,6 @@ CONFIG_SCHEMA = vol.Schema({
 SERVICE_TXT_SCHEMA = vol.Schema({
     vol.Required(ATTR_TXT): vol.Any(None, cv.string)
 })
-
-
-@bind_hass
-@asyncio.coroutine
-def async_set_txt(hass, txt):
-    """Set the txt record. Pass in None to remove it."""
-    yield from hass.services.async_call(DOMAIN, SERVICE_SET_TXT, {
-        ATTR_TXT: txt
-    }, blocking=True)
 
 
 @asyncio.coroutine

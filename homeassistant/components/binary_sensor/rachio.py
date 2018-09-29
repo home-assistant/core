@@ -24,13 +24,13 @@ DEPENDENCIES = ['rachio']
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Rachio binary sensors."""
     devices = []
     for controller in hass.data[DOMAIN_RACHIO].controllers:
         devices.append(RachioControllerOnlineBinarySensor(hass, controller))
 
-    add_devices(devices)
+    add_entities(devices)
     _LOGGER.info("%d Rachio binary sensor(s) added", len(devices))
 
 
@@ -91,6 +91,11 @@ class RachioControllerOnlineBinarySensor(RachioControllerBinarySensor):
     def name(self) -> str:
         """Return the name of this sensor including the controller name."""
         return "{} online".format(self._controller.name)
+
+    @property
+    def unique_id(self) -> str:
+        """Return a unique id for this entity."""
+        return "{}-online".format(self._controller.controller_id)
 
     @property
     def device_class(self) -> str:

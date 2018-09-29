@@ -7,19 +7,18 @@ https://home-assistant.io/components/media_player.apple_tv/
 import asyncio
 import logging
 
-from homeassistant.core import callback
 from homeassistant.components.apple_tv import (
     ATTR_ATV, ATTR_POWER, DATA_APPLE_TV, DATA_ENTITIES)
 from homeassistant.components.media_player import (
-    SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
-    SUPPORT_STOP, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_TURN_ON,
-    SUPPORT_TURN_OFF, MediaPlayerDevice, MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_VIDEO, MEDIA_TYPE_TVSHOW)
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SEEK, SUPPORT_STOP, SUPPORT_TURN_OFF, SUPPORT_TURN_ON,
+    MediaPlayerDevice)
 from homeassistant.const import (
-    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_STANDBY, CONF_HOST,
-    STATE_OFF, CONF_NAME, EVENT_HOMEASSISTANT_STOP)
+    CONF_HOST, CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_IDLE, STATE_OFF,
+    STATE_PAUSED, STATE_PLAYING, STATE_STANDBY)
+from homeassistant.core import callback
 import homeassistant.util.dt as dt_util
-
 
 DEPENDENCIES = ['apple_tv']
 
@@ -31,7 +30,8 @@ SUPPORT_APPLE_TV = SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_PLAY_MEDIA | \
 
 
 @asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def async_setup_platform(
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Apple TV platform."""
     if not discovery_info:
         return
@@ -56,7 +56,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if entity not in hass.data[DATA_ENTITIES]:
         hass.data[DATA_ENTITIES].append(entity)
 
-    async_add_devices([entity])
+    async_add_entities([entity])
 
 
 class AppleTvDevice(MediaPlayerDevice):

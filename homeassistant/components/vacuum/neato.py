@@ -36,13 +36,13 @@ ATTR_CLEAN_SUSP_COUNT = 'clean_suspension_count'
 ATTR_CLEAN_SUSP_TIME = 'clean_suspension_time'
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Neato vacuum."""
     dev = []
     for robot in hass.data[NEATO_ROBOTS]:
         dev.append(NeatoConnectedVacuum(hass, robot))
     _LOGGER.debug("Adding vacuums %s", dev)
-    add_devices(dev, True)
+    add_entities(dev, True)
 
 
 class NeatoConnectedVacuum(StateVacuumDevice):
@@ -75,6 +75,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
                 requests.exceptions.HTTPError) as ex:
             _LOGGER.warning("Neato connection error: %s", ex)
             self._state = None
+            self._clean_state = STATE_ERROR
+            self._status_state = 'Robot Offline'
             return
         _LOGGER.debug('self._state=%s', self._state)
         if self._state['state'] == 1:
@@ -188,6 +190,8 @@ class NeatoConnectedVacuum(StateVacuumDevice):
 
     def return_to_base(self, **kwargs):
         """Set the vacuum cleaner to return to the dock."""
+        if self._clean_state == STATE_CLEANING:
+            self.robot.pause_cleaning()
         self._clean_state = STATE_RETURNING
         self.robot.send_to_base()
 

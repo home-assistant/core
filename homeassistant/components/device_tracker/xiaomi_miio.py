@@ -73,5 +73,8 @@ class XiaomiMiioDeviceScanner(DeviceScanner):
         return devices
 
     async def async_get_device_name(self, device):
-        """The repeater doesn't provide the name of the associated device."""
+        """Return None.
+
+        The repeater doesn't provide the name of the associated device.
+        """
         return None

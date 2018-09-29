@@ -323,7 +323,7 @@ class TestComponentsDeviceTracker(unittest.TestCase):
 
         @callback
         def listener(event):
-            """Helper method that will verify our event got called."""
+            """Record that our event got called."""
             test_events.append(event)
 
         self.hass.bus.listen("device_tracker_new_device", listener)

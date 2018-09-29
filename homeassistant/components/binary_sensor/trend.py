@@ -57,7 +57,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the trend sensors."""
     sensors = []
 
@@ -80,7 +80,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     if not sensors:
         _LOGGER.error("No sensors added")
         return False
-    add_devices(sensors)
+    add_entities(sensors)
     return True
 
 

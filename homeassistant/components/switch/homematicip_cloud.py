@@ -21,12 +21,12 @@ ATTR_PROFILE_MODE = 'profile_mode'
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the HomematicIP Cloud switch devices."""
     pass
 
 
-async def async_setup_entry(hass, config_entry, async_add_devices):
+async def async_setup_entry(hass, config_entry, async_add_entities):
     """Set up the HomematicIP switch from a config entry."""
     from homematicip.device import (
         PlugableSwitch, PlugableSwitchMeasuring, BrandSwitchMeasuring)
@@ -45,7 +45,7 @@ async def async_setup_entry(hass, config_entry, async_add_devices):
             devices.append(HomematicipSwitch(home, device))
 
     if devices:
-        async_add_devices(devices)
+        async_add_entities(devices)
 
 
 class HomematicipSwitch(HomematicipGenericDevice, SwitchDevice):

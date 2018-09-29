@@ -39,8 +39,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up a Ring Door Bell and StickUp Camera."""
     ring = hass.data[DATA_RING]
 
@@ -66,14 +65,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                   ''' following cameras: {}.'''.format(cameras)
 
         _LOGGER.error(err_msg)
-        hass.components.persistent_notification.async_create(
+        hass.components.persistent_notification.create(
             'Error: {}<br />'
             'You will need to restart hass after fixing.'
             ''.format(err_msg),
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID)
 
-    async_add_devices(cams, True)
+    add_entities(cams, True)
     return True
 
 

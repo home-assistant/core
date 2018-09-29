@@ -1,28 +1,12 @@
 """Tests for Vanderbilt SPC binary sensor platform."""
-import asyncio
-
-import pytest
-
-from homeassistant.components.spc import SpcRegistry
 from homeassistant.components.binary_sensor import spc
-from tests.common import async_test_home_assistant
 
 
-@pytest.fixture
-def hass(loop):
-    """Home Assistant fixture with device mapping registry."""
-    hass = loop.run_until_complete(async_test_home_assistant(loop))
-    hass.data['spc_registry'] = SpcRegistry()
-    yield hass
-    loop.run_until_complete(hass.async_stop())
-
-
-@asyncio.coroutine
-def test_setup_platform(hass):
+async def test_setup_platform(hass):
     """Test autodiscovery of supported device types."""
     added_entities = []
 
-    zones = {'devices': [{
+    zone_defs = [{
         'id': '1',
         'type': '3',
         'zone_name': 'Kitchen smoke',
@@ -46,16 +30,20 @@ def test_setup_platform(hass):
         'area_name': 'House',
         'input': '1',
         'status': '0',
-    }]}
+    }]
 
     def add_entities(entities):
         nonlocal added_entities
         added_entities = list(entities)
 
-    yield from spc.async_setup_platform(hass=hass,
-                                        config={},
-                                        async_add_devices=add_entities,
-                                        discovery_info=zones)
+    from pyspcwebgw import Zone
+
+    zones = [Zone(area=None, spc_zone=z) for z in zone_defs]
+
+    await spc.async_setup_platform(hass=hass,
+                                   config={},
+                                   async_add_entities=add_entities,
+                                   discovery_info={'devices': zones})
 
     assert len(added_entities) == 3
     assert added_entities[0].device_class == 'smoke'

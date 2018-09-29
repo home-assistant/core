@@ -4,7 +4,6 @@ from datetime import timedelta
 import logging
 import functools as ft
 from timeit import default_timer as timer
-
 from typing import Optional, List, Iterable
 
 from homeassistant.const import (
@@ -131,7 +130,7 @@ class Entity:
         return None
 
     @property
-    def device(self):
+    def device_info(self):
         """Return device specific attributes.
 
         Implemented by platform classes.
@@ -378,7 +377,7 @@ class Entity:
 
     @callback
     def async_registry_updated(self, old, new):
-        """Called when the entity registry has been updated."""
+        """Handle entity registry update."""
         self.registry_name = new.name
 
         if new.entity_id == self.entity_id:

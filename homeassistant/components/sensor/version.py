@@ -23,11 +23,11 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 
 async def async_setup_platform(
-        hass, config, async_add_devices, discovery_info=None):
+        hass, config, async_add_entities, discovery_info=None):
     """Set up the Version sensor platform."""
     name = config.get(CONF_NAME)
 
-    async_add_devices([VersionSensor(name)])
+    async_add_entities([VersionSensor(name)])
 
 
 class VersionSensor(Entity):

@@ -123,7 +123,7 @@ class TestHelpersDiscovery:
             component_calls.append(1)
             return True
 
-        def setup_platform(hass, config, add_devices_callback,
+        def setup_platform(hass, config, add_entities_callback,
                            discovery_info=None):
             """Set up mock platform."""
             platform_calls.append('disc' if discovery_info else 'component')
@@ -154,7 +154,7 @@ class TestHelpersDiscovery:
         assert 'test_component' in self.hass.config.components
         assert 'switch' in self.hass.config.components
 
-    @patch('homeassistant.bootstrap.async_register_signal_handling')
+    @patch('homeassistant.helpers.signal.async_register_signal_handling')
     def test_1st_discovers_2nd_component(self, mock_signal):
         """Test that we don't break if one component discovers the other.
 

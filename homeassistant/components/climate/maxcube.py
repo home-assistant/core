@@ -22,7 +22,7 @@ STATE_VACATION = 'vacation'
 SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_OPERATION_MODE
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(hass, config, add_entities, discovery_info=None):
     """Iterate through all MAX! Devices and add thermostats."""
     devices = []
     for handler in hass.data[DATA_KEY].values():
@@ -36,7 +36,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
                     MaxCubeClimate(handler, name, device.rf_address))
 
     if devices:
-        add_devices(devices)
+        add_entities(devices)
 
 
 class MaxCubeClimate(ClimateDevice):

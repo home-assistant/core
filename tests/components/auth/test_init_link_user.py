@@ -5,7 +5,7 @@ from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI
 
 
 async def async_get_code(hass, aiohttp_client):
-    """Helper for link user tests that returns authorization code."""
+    """Return authorization code for link user tests."""
     config = [{
         'name': 'Example',
         'type': 'insecure_example',
