@@ -38,7 +38,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Android'
 DEFAULT_PORT = 5555
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
+SCAN_INTERVAL = timedelta(seconds=10)
 
 SUPPORT_ANDROIDTV = (SUPPORT_NEXT_TRACK | SUPPORT_PAUSE |
                      SUPPORT_PLAY | SUPPORT_PREVIOUS_TRACK |
@@ -50,7 +50,7 @@ SUPPORT_ANDROIDTV = (SUPPORT_NEXT_TRACK | SUPPORT_PAUSE |
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
+    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -132,7 +132,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             ADBdev = client.device(uri)
             if ADBdev is None:
                 _LOGGER.error(
-                    "Could not connect to {}, adb server running but device is not connected to it.".format(uri))
+                    "Can't reach adb server, is it running ?")
                 raise PlatformNotReady
 
             device = {'name': name,
@@ -144,7 +144,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             hass.data[DATA_KEY][host] = androidtv
         except RuntimeError:
             _LOGGER.error(
-                "Error setting up AndroidTv at {} -- could not connect to the adb server, is it running ?".format(uri))
+                "Can't reach adb server, is it running ?")
             raise PlatformNotReady
 
     add_entities(androidtvs, True)
@@ -212,7 +212,7 @@ class AndroidTv(MediaPlayerDevice):
             # Can't connect to adb server
             if self._available:
                 _LOGGER.error(
-                    "Error updating {} -- could not connect to the adb server, is it running ?".format(self._name))
+                    "Can't reach adb server, is it running ?")
                 _LOGGER.warning(
                     "Device {} became unavailable.".format(self._name))
                 self._available = False
@@ -228,14 +228,14 @@ class AndroidTv(MediaPlayerDevice):
                 winOutput = self._device.shell('dumpsys window windows')
 
                 self._state = self.get_state(powerOutput, audioOutput)
-                self._muted, self._current_device, self._volume = self.get_audio(
+                self._muted, self._current_device, self._volume=self.get_audio(
                     audioOutput)
                 self._app_id = self.get_app_id(winOutput)
                 self._app_name = self.get_app_name(self._app_id)
 
             elif self._available:
                 _LOGGER.error(
-                    "Error updating {} -- the adb server is not connected to the device.".format(self._name))
+                    "ADB server not connected to {}".format(self._name))
                 _LOGGER.warning(
                     "Device {} became unavailable.".format(self._name))
                 self._available = False
@@ -254,7 +254,7 @@ class AndroidTv(MediaPlayerDevice):
         return state
 
     def get_audio(self, audioOutput):
-        """Process sys output and return the volume, muted state, and device."""
+        """Process sys output and return the volume, muted state and device."""
         import re
         blockPattern = 'STREAM_MUSIC(.*?)- STREAM'
         streamBlock = re.findall(
