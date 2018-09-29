@@ -5,7 +5,6 @@ import unittest
 from homeassistant.setup import setup_component
 import homeassistant.components.notify as notify
 from tests.common import assert_setup_component, get_test_home_assistant
-import homeassistant.components.homematic
 
 
 class TestHomematicSignalGen(unittest.TestCase):

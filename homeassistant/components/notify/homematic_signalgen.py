@@ -8,12 +8,13 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.const import (CONF_ADDRESS)
+from homeassistant.components.homematic import (
+    ATTR_ADDRESS, ATTR_CHANNEL, ATTR_PARAM, ATTR_VALUE, DOMAIN,
+    SERVICE_SET_DEVICE_VALUE)
 from homeassistant.components.notify import (
-    BaseNotificationService, PLATFORM_SCHEMA, ATTR_DATA)
+    ATTR_DATA, PLATFORM_SCHEMA, BaseNotificationService)
+from homeassistant.const import CONF_ADDRESS
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.homematic import (DOMAIN, SERVICE_SET_DEVICE_VALUE,
-    ATTR_ADDRESS, ATTR_CHANNEL, ATTR_PARAM, ATTR_VALUE)
 import homeassistant.helpers.template as template
 
 _LOGGER = logging.getLogger(__name__)
