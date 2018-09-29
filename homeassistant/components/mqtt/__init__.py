@@ -412,7 +412,7 @@ async def async_setup_entry(hass, entry):
     if conf is None:
         data = dict(entry.data)
         # Entry data that is not valid config
-        data.pop('provider', None)
+        data.pop('addon', None)
         conf = CONFIG_SCHEMA({
             DOMAIN: data,
         })[DOMAIN]
