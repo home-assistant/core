@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.config_validation import PLATFORM_SCHEMA  # noqa
 from homeassistant.const import (
     DEVICE_CLASS_BATTERY, DEVICE_CLASS_HUMIDITY, DEVICE_CLASS_ILLUMINANCE,
-    DEVICE_CLASS_TEMPERATURE)
+    DEVICE_CLASS_TEMPERATURE, DEVICE_CLASS_PRESSURE)
 
 _LOGGER = logging.getLogger(__name__)
 
