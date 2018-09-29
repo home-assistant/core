@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/cover.mqtt/
 """
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
@@ -49,6 +50,7 @@ CONF_TILT_MIN = 'tilt_min'
 CONF_TILT_MAX = 'tilt_max'
 CONF_TILT_STATE_OPTIMISTIC = 'tilt_optimistic'
 CONF_TILT_INVERT_STATE = 'tilt_invert_state'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Cover'
 DEFAULT_PAYLOAD_OPEN = 'OPEN'
@@ -93,6 +95,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
                  default=DEFAULT_TILT_OPTIMISTIC): cv.boolean,
     vol.Optional(CONF_TILT_INVERT_STATE,
                  default=DEFAULT_TILT_INVERT_STATE): cv.boolean,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -151,6 +154,7 @@ async def _async_setup_entity(hass, config, async_add_entities,
         config.get(CONF_TILT_INVERT_STATE),
         config.get(CONF_POSITION_TOPIC),
         set_position_template,
+        config.get(CONF_UNIQUE_ID),
         discovery_hash
     )])
 
@@ -165,7 +169,7 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, CoverDevice):
                  optimistic, value_template, tilt_open_position,
                  tilt_closed_position, tilt_min, tilt_max, tilt_optimistic,
                  tilt_invert, position_topic, set_position_template,
-                 discovery_hash):
+                 unique_id: Optional[str], discovery_hash):
         """Initialize the cover."""
         MqttAvailability.__init__(self, availability_topic, qos,
                                   payload_available, payload_not_available)
@@ -195,6 +199,7 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, CoverDevice):
         self._tilt_invert = tilt_invert
         self._position_topic = position_topic
         self._set_position_template = set_position_template
+        self._unique_id = unique_id
         self._discovery_hash = discovery_hash
 
     async def async_added_to_hass(self):
@@ -412,3 +417,8 @@ class MqttCover(MqttAvailability, MqttDiscoveryUpdate, CoverDevice):
         if self._tilt_invert:
             position = self._tilt_max - position + offset
         return position
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
