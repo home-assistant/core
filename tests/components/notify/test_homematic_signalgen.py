@@ -70,4 +70,3 @@ class TestHomematicSignalGen(unittest.TestCase):
         with assert_setup_component(0) as handle_config:
             assert setup_component(self.hass, notify.DOMAIN, config)
         assert not handle_config[notify.DOMAIN]
-

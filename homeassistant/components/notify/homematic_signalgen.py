@@ -60,7 +60,8 @@ class HomematicSignalGeneratorNotificationService(BaseNotificationService):
         valueForSigGen = template.render_complex(templ, None)
 
         if valueForSigGen is None:
-            _LOGGER.error("Value is null: Not invoking homematic signal generator.")
+            _LOGGER.error("Value is null: Not invoking homematic signal " +
+                          "generator.")
 
         data = {
             ATTR_ADDRESS: self.address,
@@ -68,6 +69,6 @@ class HomematicSignalGeneratorNotificationService(BaseNotificationService):
             ATTR_PARAM: "SUBMIT",
             ATTR_VALUE: valueForSigGen
         }
-        _LOGGER.debug('Calling service: domain=' + DOMAIN + ';service=' + SERVICE_SET_DEVICE_VALUE +
-                      ';data=' + str(data))
+        _LOGGER.debug('Calling service: domain=' + DOMAIN + ';service='
+                      + SERVICE_SET_DEVICE_VALUE + ';data=' + str(data))
         self.hass.services.call(DOMAIN, SERVICE_SET_DEVICE_VALUE, data)
