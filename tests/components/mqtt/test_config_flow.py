@@ -118,7 +118,7 @@ async def test_hassio_confirm(hass, mock_try_connection,
     result = await hass.config_entries.flow.async_init(
         'mqtt',
         data={
-            'provider': 'Mock Addon',
+            'addon': 'Mock Addon',
             'broker': 'mock-broker',
             'port': 1883,
             'username': 'mock-user',
@@ -130,7 +130,7 @@ async def test_hassio_confirm(hass, mock_try_connection,
     assert result['type'] == 'form'
     assert result['step_id'] == 'hassio_confirm'
     assert result['description_placeholders'] == {
-        'provider': 'Mock Addon',
+        'addon': 'Mock Addon',
     }
 
     result = await hass.config_entries.flow.async_configure(
@@ -141,7 +141,7 @@ async def test_hassio_confirm(hass, mock_try_connection,
 
     assert result['type'] == 'create_entry'
     assert result['result'].data == {
-        'provider': 'Mock Addon',
+        'addon': 'Mock Addon',
         'broker': 'mock-broker',
         'port': 1883,
         'username': 'mock-user',
