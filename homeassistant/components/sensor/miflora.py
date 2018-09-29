@@ -83,6 +83,13 @@ async def async_setup_platform(hass, config, async_add_entities,
         devs.append(MiFloraSensor(
             poller, parameter, name, unit, force_update, median))
 
+    @callback
+    def on_ha_start(_):
+        for dev in devs:
+            dev.async_schedule_update_ha_state(True)
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, on_ha_start)
+
     async_add_entities(devs)
 
 
@@ -102,14 +109,6 @@ class MiFloraSensor(Entity):
         # single outliers, while  median of 5 will filter double outliers
         # Use median_count = 1 if no filtering is required.
         self.median_count = median
-
-    async def async_added_to_hass(self):
-        """Set initial state."""
-        @callback
-        def on_startup():
-            self.async_schedule_update_ha_state(True)
-
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, on_startup)
 
     @property
     def name(self):
