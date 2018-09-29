@@ -1,8 +1,17 @@
 """
-Provide functionality to interact with vlc devices on the network.
+Provide functionality to interact with AndroidTv and Android devices on the network.
+Example config:
+
+media_player:
+  - platform: androidtv
+    devices:
+      192.168.1.37:
+        name: MIBOX3 ANDROID TV
+        port: 5555
+        scan_interval: 10
 
 For more details about this platform, please refer to the documentation at
-https://home-assistant.io/components/media_player.vlc/
+https://home-assistant.io/components/media_player.androidtv/
 """
 
 import logging
@@ -13,8 +22,7 @@ from homeassistant.components.media_player import (
     DOMAIN, MediaPlayerDevice, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
     SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA,
     SUPPORT_PREVIOUS_TRACK, SUPPORT_STOP, SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP
-)
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
 
 from homeassistant.const import (
     ATTR_ENTITY_ID, CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT,
@@ -28,10 +36,9 @@ REQUIREMENTS = ['pure-python-adb>=0.1.5.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_NAME = 'AndroidTv'
+DEFAULT_NAME = 'Android'
 DEFAULT_PORT = 5555
-
-SCAN_INTERVAL = timedelta(seconds=10)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 
 SUPPORT_ANDROIDTV = (SUPPORT_NEXT_TRACK | SUPPORT_PAUSE |
                      SUPPORT_PLAY | SUPPORT_PREVIOUS_TRACK |
@@ -43,7 +50,7 @@ SUPPORT_ANDROIDTV = (SUPPORT_NEXT_TRACK | SUPPORT_PAUSE |
 DEVICE_SCHEMA = vol.Schema({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
+    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): cv.time_period,
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -102,7 +109,7 @@ ACTIONS = {
     "yellow": "185"
 }
 
-DATA_KEY = 'media_player.androidtv'
+DATA_KEY = '{}.androidtv'.format(DOMAIN)
 
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
@@ -144,7 +151,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     def service(service):
         """Dispatch service calls to target entities."""
-
         params = {key: value for key, value in service.data.items()
                   if key != ATTR_ENTITY_ID}
 
@@ -171,13 +177,13 @@ class AndroidTv(MediaPlayerDevice):
     """Representation of an AndroidTv device."""
 
     def __init__(self, device):
-        """Initialize the vlc device."""
+        """Initialize the Android device."""
         from adb.client import Client as AdbClient
         host = device['ipaddr']
         port = device['port']
         name = device['name']
         scan_interval = device['scan_interval']
-        self._scan_interval =scan_interval
+        self._scan_interval = scan_interval
 
         self._uri = host + ':' + port
         self._client = AdbClient(host="127.0.0.1", port=5037)
@@ -195,7 +201,8 @@ class AndroidTv(MediaPlayerDevice):
 
     def _init_regular_updates(self):
         """Schedule regular updates at the specified interval."""
-        track_time_interval(self._hass, lambda now: self.update(), self._scan_interval)
+        track_time_interval(
+            self._hass, lambda now: self.update(), self._scan_interval)
 
     def update(self):
         """Get the latest details from the device."""
@@ -221,20 +228,20 @@ class AndroidTv(MediaPlayerDevice):
                 winOutput = self._device.shell('dumpsys window windows')
 
                 self._state = self.get_state(powerOutput, audioOutput)
-                self._muted, self._current_device, self._volume = self.get_audio(audioOutput)
+                self._muted, self._current_device, self._volume = self.get_audio(
+                    audioOutput)
                 self._app_id = self.get_app_id(winOutput)
                 self._app_name = self.get_app_name(self._app_id)
 
-            else:
-                # Device is not connected to the adb server
-                if self._available:
-                    _LOGGER.error(
+            elif self._available:
+                _LOGGER.error(
                     "Error updating {} -- the adb server is not connected to the device.".format(self._name))
-                    _LOGGER.warning(
-                        "Device {} became unavailable.".format(self._name))
-                    self._available = False
+                _LOGGER.warning(
+                    "Device {} became unavailable.".format(self._name))
+                self._available = False
 
     def get_state(self, powerOutput, audioOutput):
+        """Process sys output and return the device state."""
         if 'Display Power: state=ON' not in powerOutput:
             return STATE_OFF
         elif 'started' in audioOutput:
@@ -243,10 +250,11 @@ class AndroidTv(MediaPlayerDevice):
             state = STATE_PAUSED
         else:
             state = STATE_IDLE
-        
+
         return state
 
     def get_audio(self, audioOutput):
+        """Process sys output and return the volume, muted state, and device."""
         import re
         blockPattern = 'STREAM_MUSIC(.*?)- STREAM'
         streamBlock = re.findall(
@@ -258,7 +266,7 @@ class AndroidTv(MediaPlayerDevice):
 
         mutedPattern = 'Muted: (.*?)\W'
         muted = re.findall(mutedPattern, streamBlock,
-                            re.DOTALL | re.MULTILINE)[0]
+                           re.DOTALL | re.MULTILINE)[0]
 
         volumePattern = device + '\): (\d{1,})'
         volumeLevel = re.findall(
@@ -274,13 +282,15 @@ class AndroidTv(MediaPlayerDevice):
         return muted, device, volume
 
     def get_app_id(self, winOutput):
+        """Process sys output and return the current app id."""
         winOutput = winOutput.splitlines()
         for line in winOutput:
             if 'mCurrentFocus' in line:
                 currentApp = line.split(' ')[4].split('/')[0]
                 return currentApp
-    
+
     def get_app_name(self, app_id):
+        """Return the app name from its id and known apps."""
         i = 0
         for app in KNOWN_APPS:
             if app in app_id:
@@ -288,7 +298,7 @@ class AndroidTv(MediaPlayerDevice):
                 i += 1
         if i == 0:
             app_name = None
-        
+
         return app_name
 
     @property
