@@ -189,6 +189,7 @@ class ConfiguredDoorbird():
         return self._token
 
     def get_event_data(self):
+        """Get data to pass along with HA event."""
         return {
             'timestamp': datetime.datetime.now(),
             'live_video_url': self._device.live_video_url,
@@ -215,11 +216,11 @@ class DoorbirdRequestView(HomeAssistantView):
     def get(self, request, sensor):
         """Respond to requests from the device."""
 
-        requestToken = request.query.get('token')
+        request_token = request.query.get('token')
 
-        authenticated = requestToken == self._token
+        authenticated = request_token == self._token
 
-        if requestToken == '' or not authenticated:
+        if request_token == '' or not authenticated:
             return self.json_message('Unauthorized.')
 
         hass = request.app['hass']
@@ -227,10 +228,10 @@ class DoorbirdRequestView(HomeAssistantView):
         doorstation = get_doorstation_by_slug(hass, sensor)
 
         if doorstation is not None:
-            eventData = doorstation.get_event_data()
+            event_data = doorstation.get_event_data()
         else:
-            eventData = {}
+            event_data = {}
 
-        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor), eventData)
+        hass.bus.async_fire('{}_{}'.format(DOMAIN, sensor), event_data)
 
         return 'OK'
