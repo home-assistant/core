@@ -4,7 +4,6 @@ Provides functionality to interact with fans.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/fan/
 """
-import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
