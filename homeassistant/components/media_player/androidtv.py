@@ -25,8 +25,8 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_DEVICES, CONF_NAME, CONF_PORT,
-    CONF_SCAN_INTERVAL, STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF)
+    ATTR_ENTITY_ID, CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT,
+    STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
@@ -36,34 +36,7 @@ REQUIREMENTS = ['pure-python-adb==0.1.5.dev0']
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_NAME = 'Android'
-DEFAULT_PORT = 5555
-SCAN_INTERVAL = timedelta(seconds=10)
-
-SUPPORT_ANDROIDTV = (SUPPORT_NEXT_TRACK | SUPPORT_PAUSE |
-                     SUPPORT_PLAY | SUPPORT_PREVIOUS_TRACK |
-                     SUPPORT_TURN_OFF | SUPPORT_TURN_ON |
-                     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP |
-                     SUPPORT_STOP)
-
-
-DEVICE_SCHEMA = vol.Schema({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    vol.Optional(CONF_SCAN_INTERVAL, default=SCAN_INTERVAL): cv.time_period,
-})
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_DEVICES, default={}): {cv.string: DEVICE_SCHEMA}, })
-
-KNOWN_APPS = {
-    "dream": "Screensaver",
-    "kodi": "Kodi",
-    "netfilx": "Netflix",
-    "plex": "Plex",
-    "spotify": "Spotify",
-    "tvlauncher": "Homescreen",
-    "youtube": "Youtube"
-}
+DEFAULT_PORT = '5555'
 
 ACTIONS = {
     "back": "4",
@@ -108,8 +81,44 @@ ACTIONS = {
     "yellow": "185"
 }
 
-DATA_KEY = '{}.androidtv'.format(DOMAIN)
+KNOWN_APPS = {
+    "dream": "Screensaver",
+    "kodi": "Kodi",
+    "netfilx": "Netflix",
+    "plex": "Plex",
+    "spotify": "Spotify",
+    "tvlauncher": "Homescreen",
+    "youtube": "Youtube"
+}
 
+SUPPORT_ANDROIDTV = (SUPPORT_NEXT_TRACK | SUPPORT_PAUSE |
+                     SUPPORT_PLAY | SUPPORT_PREVIOUS_TRACK |
+                     SUPPORT_TURN_OFF | SUPPORT_TURN_ON |
+                     SUPPORT_VOLUME_MUTE | SUPPORT_VOLUME_STEP |
+                     SUPPORT_STOP)
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Required(CONF_HOST): cv.string,
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.All(cv.port, cv.string),
+})
+
+SERVICE_ACTION_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required('action'): vol.In(ACTIONS),
+})
+
+SERVICE_INTENT_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required('intent'): cv.string,
+})
+
+SERVICE_KEY_SCHEMA = vol.Schema({
+    vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
+    vol.Required('key'): cv.string,
+})
+
+DATA_KEY = '{}.androidtv'.format(DOMAIN)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the androidtv platform."""
@@ -119,74 +128,81 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     from adb.client import Client as AdbClient
     client = AdbClient(host="127.0.0.1", port=5037)
 
-    androidtvs = []
-    for host, device_config in config[CONF_DEVICES].items():
-        name = device_config[CONF_NAME]
-        port = str(device_config[CONF_PORT])
-        scan_interval = device_config[CONF_SCAN_INTERVAL]
-        uri = host + ':' + port
+    host = config.get(CONF_HOST)
+    name = config.get(CONF_NAME)
+    port = config.get(CONF_PORT)
+    uri = "{}:{}".format(host, port)
 
-        try:
-            adb_device = client.device(uri)
-            if adb_device is None:
-                _LOGGER.error(
-                    "Can't reach adb server, is it running ?")
-                raise PlatformNotReady
-
-            device = {'name': name,
-                      'ipaddr': host,
-                      'port': port,
-                      'scan_interval': scan_interval}
-            androidtv = AndroidTv(device)
-            androidtvs.append(androidtv)
-            hass.data[DATA_KEY][host] = androidtv
-        except RuntimeError:
+    try:
+        adb_device = client.device(uri)
+        if adb_device is None:
             _LOGGER.error(
-                "Can't reach adb server, is it running ?")
+                "ADB server not connected to {}".format(name))
             raise PlatformNotReady
 
-    add_entities(androidtvs, True)
+        androidtv = AndroidTv(name, uri, client, adb_device)
 
-    def service(service):
+        add_entities([androidtv])
+        if host in hass.data[DATA_KEY]:
+            _LOGGER.warning(
+                "Platform already setup on {}, skipping.".format(host))
+        else:
+            hass.data[DATA_KEY][host] = androidtv
+
+    except RuntimeError:
+        _LOGGER.error(
+            "Can't reach adb server, is it running ?")
+        raise PlatformNotReady
+
+    def service_action(service):
         """Dispatch service calls to target entities."""
         params = {key: value for key, value in service.data.items()
                   if key != ATTR_ENTITY_ID}
 
-        entity_ids = service.data.get(ATTR_ENTITY_ID)
-        if entity_ids:
-            target_devices = [dev for dev in hass.data[DATA_KEY].values()
-                              if dev.entity_id in entity_ids]
-        else:
-            target_devices = hass.data[DATA_KEY].values()
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        target_devices = [dev for dev in hass.data[DATA_KEY].values()
+                            if dev.entity_id in entity_id]
 
         for target_device in target_devices:
-            if len(params.keys()) == 1:
-                if 'action' in params:
-                    target_device.do_action(params['action'])
-                elif 'intent' in params:
-                    target_device.start_intent(params['intent'])
-                elif 'key' in params:
-                    target_device.input_key(params['key'])
+            target_device.do_action(params['action'])
 
-    hass.services.register(DOMAIN, 'androidtv_action', service)
+    def service_intent(service):
+        """Dispatch service calls to target entities."""
+        params = {key: value for key, value in service.data.items()
+                  if key != ATTR_ENTITY_ID}
+
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        target_devices = [dev for dev in hass.data[DATA_KEY].values()
+                            if dev.entity_id in entity_id]
+
+        for target_device in target_devices:
+            target_device.start_intent(params['intent'])
+
+    def service_key(service):
+        """Dispatch service calls to target entities."""
+        params = {key: value for key, value in service.data.items()
+                  if key != ATTR_ENTITY_ID}
+
+        entity_id = service.data.get(ATTR_ENTITY_ID)
+        target_devices = [dev for dev in hass.data[DATA_KEY].values()
+                            if dev.entity_id in entity_id]
+
+        for target_device in target_devices:
+            target_device.input_key(params['key'])
+
+    hass.services.register(DOMAIN, 'androidtv_action', service_action, schema=SERVICE_ACTION_SCHEMA)
+    hass.services.register(DOMAIN, 'androidtv_intent', service_intent, schema=SERVICE_INTENT_SCHEMA)
+    hass.services.register(DOMAIN, 'androidtv_key', service_key, schema=SERVICE_KEY_SCHEMA)
 
 
 class AndroidTv(MediaPlayerDevice):
     """Representation of an AndroidTv device."""
 
-    def __init__(self, device):
+    def __init__(self, name, uri, client, adb_device):
         """Initialize the Android device."""
-        from adb.client import Client as AdbClient
-        host = device['ipaddr']
-        port = device['port']
-        name = device['name']
-        scan_interval = device['scan_interval']
-        self._scan_interval = scan_interval
-
-        self._uri = host + ':' + port
-        self._client = AdbClient(host="127.0.0.1", port=5037)
-        self._device = self._client.device(self._uri)
-
+        self._client = client
+        self._adb_device = adb_device
+        self._uri = uri
         self._name = name
         self._available = None
         self._volume = None
@@ -195,12 +211,6 @@ class AndroidTv(MediaPlayerDevice):
         self._app_id = None
         self._app_name = None
         self._device = None
-        _LOGGER.info("its all good man")
-
-    def _init_regular_updates(self):
-        """Schedule regular updates at the specified interval."""
-        track_time_interval(
-            self._hass, lambda now: self.update(), self._scan_interval)
 
     def update(self):
         """Get the latest details from the device."""
@@ -221,9 +231,9 @@ class AndroidTv(MediaPlayerDevice):
                     _LOGGER.info("Device {} reconnected.".format(self._name))
                     self._available = True
 
-                power_output = self._device.shell('dumpsys power')
-                audio_output = self._device.shell('dumpsys audio')
-                win_output = self._device.shell('dumpsys window windows')
+                power_output = self._adb_device.shell('dumpsys power')
+                audio_output = self._adb_device.shell('dumpsys audio')
+                win_output = self._adb_device.shell('dumpsys window windows')
 
                 self._state = self.get_state(power_output, audio_output)
                 self._muted, self._device, self._volume = self.get_audio(
@@ -241,7 +251,7 @@ class AndroidTv(MediaPlayerDevice):
     def get_state(self, power_output, audio_output):
         """Process sys outputs and return the device state."""
         if 'Display Power: state=ON' not in power_output:
-            return STATE_OFF
+            state = STATE_OFF
         elif 'started' in audio_output:
             state = STATE_PLAYING
         elif 'paused' in audio_output:
@@ -347,67 +357,62 @@ class AndroidTv(MediaPlayerDevice):
 
     def turn_on(self):
         """Instruct the tv to turn on."""
-        self._device.shell('input keyevent 26')
+        self._adb_device.shell('input keyevent 26')
 
     def turn_off(self):
         """Instruct the tv to turn off."""
-        self._device.shell('input keyevent 26')
+        self._adb_device.shell('input keyevent 26')
 
     def media_play(self):
         """Send play command."""
-        self._device.shell('input keyevent 126')
+        self._adb_device.shell('input keyevent 126')
         self._state = STATE_PLAYING
 
     def media_pause(self):
         """Send pause command."""
-        self._device.shell('input keyevent 127')
+        self._adb_device.shell('input keyevent 127')
         self._state = STATE_PAUSED
 
     def media_play_pause(self):
         """Send play/pause command."""
-        self._device.shell('input keyevent 85')
+        self._adb_device.shell('input keyevent 85')
 
     def media_stop(self):
         """Send stop command."""
-        self._device.shell('input keyevent 86')
+        self._adb_device.shell('input keyevent 86')
         self._state = STATE_IDLE
 
     def mute_volume(self, mute):
         """Mute the volume."""
-        self._device.shell('input keyevent 164')
+        self._adb_device.shell('input keyevent 164')
         self._muted = mute
 
     def volume_up(self):
         """Increment the volume level."""
-        self._device.shell('input keyevent 24')
+        self._adb_device.shell('input keyevent 24')
 
     def volume_down(self):
         """Decrement the volume level."""
-        self._device.shell('input keyevent 25')
+        self._adb_device.shell('input keyevent 25')
 
     def media_previous_track(self):
         """Send previous track command."""
-        self._device.shell('input keyevent 88')
+        self._adb_device.shell('input keyevent 88')
 
     def media_next_track(self):
         """Send next track command."""
-        self._device.shell('input keyevent 87')
+        self._adb_device.shell('input keyevent 87')
 
     def input_key(self, key):
         """Input the key to the device."""
-        _LOGGER.info('Sendind key {} to device'.format(key))
-        self._device.shell("input keyevent {}".format(key))
+        self._adb_device.shell("input keyevent {}".format(key))
 
     def start_intent(self, uri):
         """Start an intent on the device."""
-        _LOGGER.info('Starting activity with intent' + uri)
-        out = self._device.shell(
+        self._adb_device.shell(
             "am start -a android.intent.action.VIEW -d {}".format(uri))
-        _LOGGER.info(out)
 
     def do_action(self, action):
         """Input the key corresponding to the action."""
         if action in ACTIONS:
-            self._device.shell("input keyevent {}".format(ACTIONS[action]))
-        else:
-            _LOGGER.info('Unknown action "{}"'.format(action))
+            self._adb_device.shell("input keyevent {}".format(ACTIONS[action]))
