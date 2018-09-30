@@ -9,7 +9,7 @@ import logging
 from homeassistant.core import callback
 from homeassistant.components.switch import (
     SwitchDevice,
-    PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA
+    PLATFORM_SCHEMA
 )
 from homeassistant.components.tradfri import (
     KEY_GATEWAY, KEY_API, DOMAIN as TRADFRI_DOMAIN)
@@ -19,7 +19,6 @@ from homeassistant.components.tradfri.const import (
 _LOGGER = logging.getLogger(__name__)
 
 DEPENDENCIES = ['tradfri']
-PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA
 IKEA = 'IKEA of Sweden'
 TRADFRI_SWITCH_MANAGER = 'Tradfri Switch Manager'
 
