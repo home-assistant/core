@@ -85,6 +85,7 @@ class KylinMock(object):
 
 
 class KylinNoDataMock(KylinMock):
+    """Mock class for the kylin.Kylin object."""
 
     def __init__(self, port, timeout=0):
         """Initialize Kylin bject."""
@@ -92,6 +93,7 @@ class KylinNoDataMock(KylinMock):
         self.timeout = timeout
 
     def readframe(self):
+        """Read frame which returns no data."""
         return None
 
 
@@ -142,6 +144,7 @@ class TestTeleinfoSensor(unittest.TestCase):
 
     @mock.patch('homeassistant.components.sensor.teleinfo.TeleinfoData.update')
     def test_teleinfo_check_update(self, mock_teleinfo_data):
+        """Test setup platform when update returns no data."""
         mock_imports()
         mock_teleinfo_data.return_value = None
         add_devices = mock.MagicMock()
@@ -149,6 +152,7 @@ class TestTeleinfoSensor(unittest.TestCase):
 
     @mock.patch('kylin.Kylin')
     def test_teleinfo_no_data_returned(self, mock_kylin):
+        """Test setup platform when read returns no data."""
         mock_kylin.return_value = KylinNoDataMock(80, 10)
         add_devices = mock.MagicMock()
         teleinfo.setup_platform(self.hass, VALID_CONFIG_MINIMAL, add_devices)
