@@ -13,7 +13,7 @@ from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA, AlarmControlPanel)
 from homeassistant.const import (
     CONF_CODE, CONF_NAME, CONF_PASSWORD, CONF_USERNAME, STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED, STATE_UNKNOWN)
+    STATE_ALARM_ARMED_HOME, STATE_ALARM_DISARMED)
 from homeassistant.helpers import aiohttp_client, config_validation as cv
 from homeassistant.util.json import load_json, save_json
 
