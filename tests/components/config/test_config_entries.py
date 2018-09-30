@@ -206,6 +206,8 @@ def test_create_account(hass, client):
         'title': 'Test Entry',
         'type': 'create_entry',
         'version': 1,
+        'description': None,
+        'description_placeholders': None,
     }
 
 
@@ -266,6 +268,8 @@ def test_two_step_flow(hass, client):
             'type': 'create_entry',
             'title': 'user-title',
             'version': 1,
+            'description': None,
+            'description_placeholders': None,
         }
 
 
