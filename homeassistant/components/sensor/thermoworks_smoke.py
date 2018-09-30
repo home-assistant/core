@@ -34,6 +34,8 @@ PROBE_2_MAX = 'probe2_max'
 BATTERY_LEVEL = 'battery'
 FIRMWARE = 'firmware'
 
+SERIAL_REGEX = '^(?:[0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$'
+
 # map types to labels
 SENSOR_TYPES = {
     PROBE_1: 'Probe 1',
@@ -50,7 +52,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_MONITORED_CONDITIONS, default=[PROBE_1, PROBE_2]):
         vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_EXCLUDE, default=[]):
-        vol.All(cv.ensure_list),
+        vol.All(cv.ensure_list, [cv.matches_regex(SERIAL_REGEX)]),
 })
 
 
