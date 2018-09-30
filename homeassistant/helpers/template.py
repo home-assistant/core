@@ -590,6 +590,52 @@ def bitwise_or(first_value, second_value):
     return first_value | second_value
 
 
+def closest_match(value, items):
+    """Find closest match using Levenstein distance."""
+    max_score = -1
+    best_match = None
+
+    def levenshtein_distance(string1, string2):
+        if string1 == string2:
+            return 0
+        rows = len(string1)+1
+        cols = len(string2)+1
+
+        if not string1:
+            return cols-1
+        if not string2:
+            return rows-1
+
+        prev = None
+        cur = range(cols)
+        for row in range(1, rows):
+            prev, cur = cur, [row] + [0]*(cols-1)
+            for col in range(1, cols):
+                deletion = prev[col] + 1
+                insertion = cur[col-1] + 1
+                edit = prev[col-1] + (
+                    0 if string1[row-1] == string2[col-1] else 1)
+                cur[col] = min(edit, deletion, insertion)
+
+        return cur[-1]
+
+    for item in items:
+        if value == item:
+            max_score = 1
+            best_match = item
+            break
+        else:
+            ratio = 1/(
+                1+levenshtein_distance(
+                    value.lower(), item.lower()))
+            if ratio > max_score:
+                max_score = ratio
+                best_match = item
+
+    _LOGGER.debug("Best match <%s> for <%s> in <%s>", best_match, value, list)
+    return best_match
+
+
 @contextfilter
 def random_every_time(context, values):
     """Choose a random value.
@@ -629,6 +675,8 @@ ENV.filters['regex_search'] = regex_search
 ENV.filters['regex_findall_index'] = regex_findall_index
 ENV.filters['bitwise_and'] = bitwise_and
 ENV.filters['bitwise_or'] = bitwise_or
+ENV.filters['regex_search'] = regex_search
+ENV.globals['closest_match'] = closest_match
 ENV.globals['log'] = logarithm
 ENV.globals['sin'] = sine
 ENV.globals['cos'] = cosine
