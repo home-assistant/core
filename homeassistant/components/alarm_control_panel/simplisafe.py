@@ -49,7 +49,7 @@ async def async_setup_platform(
 
     websession = aiohttp_client.async_get_clientsession(hass)
 
-    config_data = await hass.async_add_job(
+    config_data = await hass.async_add_executor_job(
         load_json, hass.config.path(DATA_FILE))
 
     try:
@@ -71,7 +71,7 @@ async def async_setup_platform(
         return
 
     config_data = {'refresh_token': simplisafe.refresh_token}
-    await hass.async_add_job(
+    await hass.async_add_executor_job(
         save_json, hass.config.path(DATA_FILE), config_data)
 
     systems = await simplisafe.get_systems()
@@ -88,7 +88,7 @@ class SimpliSafeAlarm(AlarmControlPanel):
         self._code = str(code) if code else None
         self._name = name
         self._system = system
-        self._state = STATE_UNKNOWN
+        self._state = None
 
     @property
     def unique_id(self):
@@ -165,7 +165,7 @@ class SimpliSafeAlarm(AlarmControlPanel):
                 self._system.SystemStates.exit_delay):
             self._state = STATE_ALARM_ARMED_AWAY
         else:
-            self._state = STATE_UNKNOWN
+            self._state = None
 
         self._attrs[ATTR_ALARM_ACTIVE] = self._system.alarm_going_off
         if self._system.temperature:
