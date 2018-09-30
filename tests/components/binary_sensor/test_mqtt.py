@@ -1,6 +1,7 @@
 """The tests for the  MQTT binary sensor platform."""
 import json
 import unittest
+from datetime import timedelta
 
 import homeassistant.core as ha
 from homeassistant.setup import setup_component, async_setup_component
@@ -9,6 +10,8 @@ from homeassistant.components.mqtt.discovery import async_start
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.const import EVENT_STATE_CHANGED, STATE_UNAVAILABLE
+
+import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, fire_mqtt_message, async_fire_mqtt_message,
@@ -208,6 +211,50 @@ class TestSensorMQTT(unittest.TestCase):
         fire_mqtt_message(self.hass, 'test-topic', 'ON')
         self.hass.block_till_done()
         self.assertEqual(2, len(events))
+
+    def test_off_delay(self):
+        """Test off_delay option."""
+        mock_component(self.hass, 'mqtt')
+        assert setup_component(self.hass, binary_sensor.DOMAIN, {
+            binary_sensor.DOMAIN: {
+                'platform': 'mqtt',
+                'name': 'test',
+                'state_topic': 'test-topic',
+                'payload_on': 'ON',
+                'payload_off': 'OFF',
+                'off_delay': {'seconds': 30},
+                'force_update': True
+            }
+        })
+
+        events = []
+
+        @ha.callback
+        def callback(event):
+            """Verify event got called."""
+            events.append(event)
+
+        self.hass.bus.listen(EVENT_STATE_CHANGED, callback)
+
+        fire_mqtt_message(self.hass, 'test-topic', 'ON')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(1, len(events))
+
+        fire_mqtt_message(self.hass, 'test-topic', 'ON')
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(STATE_ON, state.state)
+        self.assertEqual(2, len(events))
+
+        self.hass.bus.fire(
+           ha.EVENT_TIME_CHANGED,
+           {ha.ATTR_NOW: dt_util.utcnow() + timedelta(seconds=30)})
+        self.hass.block_till_done()
+        state = self.hass.states.get('binary_sensor.test')
+        self.assertEqual(STATE_OFF, state.state)
+        self.assertEqual(3, len(events))
 
 
 async def test_unique_id(hass):
