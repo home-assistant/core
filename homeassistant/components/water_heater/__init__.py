@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_TEMPERATURE, SERVICE_TURN_ON, SERVICE_TURN_OFF,
     STATE_ON, STATE_OFF, STATE_UNKNOWN, TEMP_CELSIUS, PRECISION_WHOLE,
-    PRECISION_TENTHS, )
+    PRECISION_TENTHS, TEMP_FAHRENHEIT )
 
 DEFAULT_MIN_TEMP = 110
 DEFAULT_MAX_TEMP = 140
@@ -289,13 +289,13 @@ class WaterHeaterDevice(Entity):
     @property
     def min_temp(self):
         """Return the minimum temperature."""
-        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_CELSIUS,
+        return convert_temperature(DEFAULT_MIN_TEMP, TEMP_FAHRENHEIT,
                                    self.temperature_unit)
 
     @property
     def max_temp(self):
         """Return the maximum temperature."""
-        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_CELSIUS,
+        return convert_temperature(DEFAULT_MAX_TEMP, TEMP_FAHRENHEIT,
                                    self.temperature_unit)
 
 
