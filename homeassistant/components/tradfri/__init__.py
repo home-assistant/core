@@ -17,7 +17,7 @@ from .const import (
 
 from . import config_flow  # noqa  pylint_disable=unused-import
 
-REQUIREMENTS = ['pytradfri[async]==5.5.1']
+REQUIREMENTS = ['pytradfri[async]==5.6.0']
 
 DOMAIN = 'tradfri'
 CONFIG_FILE = '.tradfri_psk.conf'
@@ -118,6 +118,9 @@ async def async_setup_entry(hass, entry):
     ))
     hass.async_create_task(hass.config_entries.async_forward_entry_setup(
         entry, 'sensor'
+    ))
+    hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+        entry, 'switch'
     ))
 
     return True
