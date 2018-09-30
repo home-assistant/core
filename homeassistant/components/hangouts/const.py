@@ -3,7 +3,8 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.components.notify \
+    import ATTR_MESSAGE, ATTR_TARGET, ATTR_DATA
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger('homeassistant.components.hangouts')
@@ -24,10 +25,13 @@ CONF_INTENT_TYPE = 'intent_type'
 CONF_SENTENCES = 'sentences'
 CONF_MATCHERS = 'matchers'
 
+INTENT_HELP = 'HangoutsHelp'
+
 EVENT_HANGOUTS_CONNECTED = 'hangouts_connected'
 EVENT_HANGOUTS_DISCONNECTED = 'hangouts_disconnected'
 EVENT_HANGOUTS_USERS_CHANGED = 'hangouts_users_changed'
 EVENT_HANGOUTS_CONVERSATIONS_CHANGED = 'hangouts_conversations_changed'
+EVENT_HANGOUTS_CONVERSATIONS_RESOLVED = 'hangouts_conversations_resolved'
 EVENT_HANGOUTS_MESSAGE_RECEIVED = 'hangouts_message_received'
 
 CONF_CONVERSATION_ID = 'id'
@@ -53,10 +57,15 @@ MESSAGE_SEGMENT_SCHEMA = vol.Schema({
     vol.Optional('parse_str'): cv.boolean,
     vol.Optional('link_target'): cv.string
 })
+MESSAGE_DATA_SCHEMA = vol.Schema({
+    vol.Optional('image_file'): cv.string,
+    vol.Optional('image_url'): cv.string
+})
 
 MESSAGE_SCHEMA = vol.Schema({
     vol.Required(ATTR_TARGET): [TARGETS_SCHEMA],
-    vol.Required(ATTR_MESSAGE): [MESSAGE_SEGMENT_SCHEMA]
+    vol.Required(ATTR_MESSAGE): [MESSAGE_SEGMENT_SCHEMA],
+    vol.Optional(ATTR_DATA): MESSAGE_DATA_SCHEMA
 })
 
 INTENT_SCHEMA = vol.All(

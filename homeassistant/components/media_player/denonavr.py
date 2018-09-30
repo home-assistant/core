@@ -5,35 +5,37 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.denon/
 """
 
-import logging
 from collections import namedtuple
+import logging
+
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
-    SUPPORT_PAUSE, SUPPORT_NEXT_TRACK, SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP,
-    SUPPORT_SELECT_SOURCE, SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_PLAY_MEDIA, MEDIA_TYPE_CHANNEL, MediaPlayerDevice,
-    PLATFORM_SCHEMA, SUPPORT_TURN_ON, MEDIA_TYPE_MUSIC,
-    SUPPORT_VOLUME_SET, SUPPORT_PLAY)
+    MEDIA_TYPE_CHANNEL, MEDIA_TYPE_MUSIC, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK,
+    SUPPORT_PAUSE, SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
+    SUPPORT_SELECT_SOUND_MODE, SUPPORT_SELECT_SOURCE, SUPPORT_TURN_OFF,
+    SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET,
+    SUPPORT_VOLUME_STEP, MediaPlayerDevice)
 from homeassistant.const import (
-    CONF_HOST, STATE_OFF, STATE_PLAYING, STATE_PAUSED,
-    CONF_NAME, STATE_ON, CONF_ZONE, CONF_TIMEOUT)
+    CONF_HOST, CONF_NAME, CONF_TIMEOUT, CONF_ZONE, STATE_OFF, STATE_ON,
+    STATE_PAUSED, STATE_PLAYING)
 import homeassistant.helpers.config_validation as cv
 
 REQUIREMENTS = ['denonavr==0.7.5']
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_SOUND_MODE_RAW = 'sound_mode_raw'
+
+CONF_INVALID_ZONES_ERR = 'Invalid Zone (expected Zone2 or Zone3)'
+CONF_SHOW_ALL_SOURCES = 'show_all_sources'
+CONF_VALID_ZONES = ['Zone2', 'Zone3']
+CONF_ZONES = 'zones'
+
 DEFAULT_SHOW_SOURCES = False
 DEFAULT_TIMEOUT = 2
-CONF_SHOW_ALL_SOURCES = 'show_all_sources'
-CONF_ZONES = 'zones'
-CONF_VALID_ZONES = ['Zone2', 'Zone3']
-CONF_INVALID_ZONES_ERR = 'Invalid Zone (expected Zone2 or Zone3)'
-KEY_DENON_CACHE = 'denonavr_hosts'
 
-ATTR_SOUND_MODE_RAW = 'sound_mode_raw'
+KEY_DENON_CACHE = 'denonavr_hosts'
 
 SUPPORT_DENON = SUPPORT_VOLUME_STEP | SUPPORT_VOLUME_MUTE | \
     SUPPORT_TURN_ON | SUPPORT_TURN_OFF | \

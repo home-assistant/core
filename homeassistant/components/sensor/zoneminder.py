@@ -8,12 +8,11 @@ import logging
 
 import voluptuous as vol
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.components.zoneminder import DOMAIN as ZONEMINDER_DOMAIN
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.helpers.entity import Entity
-from homeassistant.components import zoneminder
-import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,20 +42,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the ZoneMinder sensor platform."""
     include_archived = config.get(CONF_INCLUDE_ARCHIVED)
 
-    sensors = []
+    zm_client = hass.data[ZONEMINDER_DOMAIN]
+    monitors = zm_client.get_monitors()
+    if not monitors:
+        _LOGGER.warning('Could not fetch any monitors from ZoneMinder')
 
-    monitors = zoneminder.get_state('api/monitors.json')
-    for i in monitors['monitors']:
-        sensors.append(
-            ZMSensorMonitors(int(i['Monitor']['Id']), i['Monitor']['Name'])
-        )
+    sensors = []
+    for monitor in monitors:
+        sensors.append(ZMSensorMonitors(monitor))
 
         for sensor in config[CONF_MONITORED_CONDITIONS]:
-            sensors.append(
-                ZMSensorEvents(int(i['Monitor']['Id']),
-                               i['Monitor']['Name'],
-                               include_archived, sensor)
-            )
+            sensors.append(ZMSensorEvents(monitor, include_archived, sensor))
 
     add_entities(sensors)
 
@@ -64,16 +60,15 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class ZMSensorMonitors(Entity):
     """Get the status of each ZoneMinder monitor."""
 
-    def __init__(self, monitor_id, monitor_name):
+    def __init__(self, monitor):
         """Initialize monitor sensor."""
-        self._monitor_id = monitor_id
-        self._monitor_name = monitor_name
-        self._state = None
+        self._monitor = monitor
+        self._state = monitor.function.value
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} Status'.format(self._monitor_name)
+        return '{} Status'.format(self._monitor.name)
 
     @property
     def state(self):
@@ -82,32 +77,28 @@ class ZMSensorMonitors(Entity):
 
     def update(self):
         """Update the sensor."""
-        monitor = zoneminder.get_state(
-            'api/monitors/{}.json'.format(self._monitor_id)
-        )
-        if monitor['monitor']['Monitor']['Function'] is None:
-            self._state = STATE_UNKNOWN
+        state = self._monitor.function
+        if not state:
+            self._state = None
         else:
-            self._state = monitor['monitor']['Monitor']['Function']
+            self._state = state.value
 
 
 class ZMSensorEvents(Entity):
     """Get the number of events for each monitor."""
 
-    def __init__(self, monitor_id, monitor_name, include_archived,
-                 sensor_type):
+    def __init__(self, monitor, include_archived, sensor_type):
         """Initialize event sensor."""
-        self._monitor_id = monitor_id
-        self._monitor_name = monitor_name
+        from zoneminder.monitor import TimePeriod
+        self._monitor = monitor
         self._include_archived = include_archived
-        self._type = sensor_type
-        self._name = SENSOR_TYPES[sensor_type][0]
+        self.time_period = TimePeriod.get_time_period(sensor_type)
         self._state = None
 
     @property
     def name(self):
         """Return the name of the sensor."""
-        return '{} {}'.format(self._monitor_name, self._name)
+        return '{} {}'.format(self._monitor.name, self.time_period.title)
 
     @property
     def unit_of_measurement(self):
@@ -121,22 +112,5 @@ class ZMSensorEvents(Entity):
 
     def update(self):
         """Update the sensor."""
-        date_filter = '1%20{}'.format(self._type)
-        if self._type == 'all':
-            # The consoleEvents API uses DATE_SUB, so give it
-            # something large
-            date_filter = '100%20year'
-
-        archived_filter = '/Archived=:0'
-        if self._include_archived:
-            archived_filter = ''
-
-        event = zoneminder.get_state(
-            'api/events/consoleEvents/{}{}.json'.format(date_filter,
-                                                        archived_filter)
-        )
-
-        try:
-            self._state = event['results'][str(self._monitor_id)]
-        except (TypeError, KeyError):
-            self._state = '0'
+        self._state = self._monitor.get_events(
+            self.time_period, self._include_archived)

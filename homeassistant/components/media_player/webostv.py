@@ -8,12 +8,11 @@ import asyncio
 from datetime import timedelta
 import logging
 from urllib.parse import urlparse
-
-# pylint: disable=unused-import
-from typing import Dict  # noqa: F401
+from typing import Dict  # noqa: F401 pylint: disable=unused-import
 
 import voluptuous as vol
 
+from homeassistant import util
 from homeassistant.components.media_player import (
     MEDIA_TYPE_CHANNEL, PLATFORM_SCHEMA, SUPPORT_NEXT_TRACK, SUPPORT_PAUSE,
     SUPPORT_PLAY, SUPPORT_PLAY_MEDIA, SUPPORT_PREVIOUS_TRACK,
@@ -24,9 +23,8 @@ from homeassistant.const import (
     STATE_OFF, STATE_PAUSED, STATE_PLAYING, STATE_UNKNOWN)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.script import Script
-from homeassistant import util
 
-REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==3.2']
+REQUIREMENTS = ['pylgtv==0.1.7', 'websockets==6.0']
 
 _CONFIGURING = {}  # type: Dict[str, str]
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 CONF_SOURCES = 'sources'
 CONF_ON_ACTION = 'turn_on_action'
 
-DEFAULT_NAME = 'LG webOS Smart TV'
+DEFAULT_NAME = "LG webOS Smart TV"
 LIVETV_APP_ID = 'com.webos.app.livetv'
 
 WEBOSTV_CONFIG_FILE = 'webostv.conf'

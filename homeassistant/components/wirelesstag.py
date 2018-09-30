@@ -4,6 +4,7 @@ Wireless Sensor Tags platform support.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/wirelesstag/
 """
+
 import logging
 
 from requests.exceptions import HTTPError, ConnectTimeout
@@ -11,17 +12,18 @@ import voluptuous as vol
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL, ATTR_VOLTAGE, CONF_USERNAME, CONF_PASSWORD)
 import homeassistant.helpers.config_validation as cv
+from homeassistant import util
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.dispatcher import (
     dispatcher_send)
 
-REQUIREMENTS = ['wirelesstagpy==0.3.0']
+REQUIREMENTS = ['wirelesstagpy==0.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 
 
-# straight of signal in dBm
-ATTR_TAG_SIGNAL_STRAIGHT = 'signal_straight'
+# strength of signal in dBm
+ATTR_TAG_SIGNAL_STRENGTH = 'signal_strength'
 # indicates if tag is out of range or not
 ATTR_TAG_OUT_OF_RANGE = 'out_of_range'
 # number in percents from max power of tag receiver
@@ -34,13 +36,13 @@ NOTIFICATION_TITLE = "Wireless Sensor Tag Setup"
 DOMAIN = 'wirelesstag'
 DEFAULT_ENTITY_NAMESPACE = 'wirelesstag'
 
-WIRELESSTAG_TYPE_13BIT = 13
-WIRELESSTAG_TYPE_ALSPRO = 26
-WIRELESSTAG_TYPE_WATER = 32
-WIRELESSTAG_TYPE_WEMO_DEVICE = 82
+# template for signal - first parameter is tag_id,
+# second, tag manager mac address
+SIGNAL_TAG_UPDATE = 'wirelesstag.tag_info_updated_{}_{}'
 
-SIGNAL_TAG_UPDATE = 'wirelesstag.tag_info_updated_{}'
-SIGNAL_BINARY_EVENT_UPDATE = 'wirelesstag.binary_event_updated_{}_{}'
+# template for signal - tag_id, sensor type and
+# tag manager mac address
+SIGNAL_BINARY_EVENT_UPDATE = 'wirelesstag.binary_event_updated_{}_{}_{}'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -58,6 +60,12 @@ class WirelessTagPlatform:
         self.hass = hass
         self.api = api
         self.tags = {}
+        self._local_base_url = None
+
+    @property
+    def tag_manager_macs(self):
+        """Return list of tag managers mac addresses in user account."""
+        return self.api.mac_addresses
 
     def load_tags(self):
         """Load tags from remote server."""
@@ -69,72 +77,84 @@ class WirelessTagPlatform:
         func_name = 'arm_{}'.format(switch.sensor_type)
         arm_func = getattr(self.api, func_name)
         if arm_func is not None:
-            arm_func(switch.tag_id)
+            arm_func(switch.tag_id, switch.tag_manager_mac)
 
     def disarm(self, switch):
         """Disarm entity sensor monitoring."""
         func_name = 'disarm_{}'.format(switch.sensor_type)
         disarm_func = getattr(self.api, func_name)
         if disarm_func is not None:
-            disarm_func(switch.tag_id)
+            disarm_func(switch.tag_id, switch.tag_manager_mac)
 
-    # pylint: disable=no-self-use
-    def make_push_notitication(self, name, url, content):
-        """Create notification config."""
-        from wirelesstagpy import NotificationConfig
-        return NotificationConfig(name, {
-            'url': url, 'verb': 'POST',
-            'content': content, 'disabled': False, 'nat': True})
-
-    def install_push_notifications(self, binary_sensors):
-        """Set up local push notification from tag manager."""
-        _LOGGER.info("Registering local push notifications.")
+    def make_notifications(self, binary_sensors, mac):
+        """Create configurations for push notifications."""
+        _LOGGER.info("Creating configurations for push notifications.")
         configs = []
 
-        binary_url = self.binary_event_callback_url
-        for event in binary_sensors:
-            for state, name in event.binary_spec.items():
-                content = ('{"type": "' + event.device_class +
-                           '", "id":{' + str(event.tag_id_index_template) +
-                           '}, "state": \"' + state + '\"}')
-                config = self.make_push_notitication(name, binary_url, content)
-                configs.append(config)
+        bi_url = self.binary_event_callback_url
+        for bi_sensor in binary_sensors:
+            configs.extend(bi_sensor.event.build_notifications(bi_url, mac))
 
-        content = ("{\"name\":\"{0}\",\"id\":{1},\"temp\":{2}," +
-                   "\"cap\":{3},\"lux\":{4}}")
         update_url = self.update_callback_url
-        update_config = self.make_push_notitication(
-            'update', update_url, content)
-        configs.append(update_config)
+        from wirelesstagpy import NotificationConfig as NC
+        update_config = NC.make_config_for_update_event(update_url, mac)
 
-        result = self.api.install_push_notification(0, configs, True)
-        if not result:
-            self.hass.components.persistent_notification.create(
-                "Error: failed to install local push notifications<br />",
-                title="Wireless Sensor Tag Setup Local Push Notifications",
-                notification_id="wirelesstag_failed_push_notification")
-        else:
-            _LOGGER.info("Installed push notifications for all tags.")
+        configs.append(update_config)
+        return configs
+
+    def install_push_notifications(self, binary_sensors):
+        """Register local push notification from tag manager."""
+        _LOGGER.info("Registering local push notifications.")
+        for mac in self.tag_manager_macs:
+            configs = self.make_notifications(binary_sensors, mac)
+            # install notifications for all tags in tag manager
+            # specified by mac
+            result = self.api.install_push_notification(0, configs, True, mac)
+            if not result:
+                self.hass.components.persistent_notification.create(
+                    "Error: failed to install local push notifications <br />",
+                    title="Wireless Sensor Tag Setup Local Push Notifications",
+                    notification_id="wirelesstag_failed_push_notification")
+            else:
+                _LOGGER.info("Installed push notifications for all\
+                             tags in %s.", mac)
+
+    @property
+    def local_base_url(self):
+        """Define base url of hass in local network."""
+        if self._local_base_url is None:
+            self._local_base_url = "http://{}".format(util.get_local_ip())
+
+            port = self.hass.config.api.port
+            if port is not None:
+                self._local_base_url += ':{}'.format(port)
+        return self._local_base_url
 
     @property
     def update_callback_url(self):
         """Return url for local push notifications(update event)."""
         return '{}/api/events/wirelesstag_update_tags'.format(
-            self.hass.config.api.base_url)
+            self.local_base_url)
 
     @property
     def binary_event_callback_url(self):
         """Return url for local push notifications(binary event)."""
         return '{}/api/events/wirelesstag_binary_event'.format(
-            self.hass.config.api.base_url)
+            self.local_base_url)
 
     def handle_update_tags_event(self, event):
         """Handle push event from wireless tag manager."""
         _LOGGER.info("push notification for update arrived: %s", event)
-        dispatcher_send(
-            self.hass,
-            SIGNAL_TAG_UPDATE.format(event.data.get('id')),
-            event)
+        try:
+            tag_id = event.data.get('id')
+            mac = event.data.get('mac')
+            dispatcher_send(
+                self.hass,
+                SIGNAL_TAG_UPDATE.format(tag_id, mac),
+                event)
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.error("Unable to handle tag update event:\
+                          %s error: %s", str(event), str(ex))
 
     def handle_binary_event(self, event):
         """Handle push notifications for binary (on/off) events."""
@@ -142,12 +162,13 @@ class WirelessTagPlatform:
         try:
             tag_id = event.data.get('id')
             event_type = event.data.get('type')
+            mac = event.data.get('mac')
             dispatcher_send(
                 self.hass,
-                SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type),
+                SIGNAL_BINARY_EVENT_UPDATE.format(tag_id, event_type, mac),
                 event)
         except Exception as ex:  # pylint: disable=broad-except
-            _LOGGER.error("Unable to handle binary event:\
+            _LOGGER.error("Unable to handle tag binary event:\
                           %s error: %s", str(event), str(ex))
 
 
@@ -193,6 +214,7 @@ class WirelessTagBaseSensor(Entity):
         self._tag = tag
         self._uuid = self._tag.uuid
         self.tag_id = self._tag.tag_id
+        self.tag_manager_mac = self._tag.tag_manager_mac
         self._name = self._tag.name
         self._state = None
 
@@ -251,8 +273,8 @@ class WirelessTagBaseSensor(Entity):
         return {
             ATTR_BATTERY_LEVEL: self._tag.battery_remaining,
             ATTR_VOLTAGE: '{:.2f}V'.format(self._tag.battery_volts),
-            ATTR_TAG_SIGNAL_STRAIGHT: '{}dBm'.format(
-                self._tag.signal_straight),
+            ATTR_TAG_SIGNAL_STRENGTH: '{}dBm'.format(
+                self._tag.signal_strength),
             ATTR_TAG_OUT_OF_RANGE: not self._tag.is_in_range,
             ATTR_TAG_POWER_CONSUMPTION: '{:.2f}%'.format(
                 self._tag.power_consumption)

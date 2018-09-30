@@ -81,40 +81,65 @@ class Light(zha.Entity, light.Light):
 
     async def async_turn_on(self, **kwargs):
         """Turn the entity on."""
+        from zigpy.exceptions import DeliveryError
+
         duration = kwargs.get(light.ATTR_TRANSITION, DEFAULT_DURATION)
         duration = duration * 10  # tenths of s
         if light.ATTR_COLOR_TEMP in kwargs:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
-            await self._endpoint.light_color.move_to_color_temp(
-                temperature, duration)
+            try:
+                res = await self._endpoint.light_color.move_to_color_temp(
+                    temperature, duration)
+                _LOGGER.debug("%s: moved to %i color temp: %s",
+                              self.entity_id, temperature, res)
+            except DeliveryError as ex:
+                _LOGGER.error("%s: Couldn't change color temp: %s",
+                              self.entity_id, ex)
+                return
             self._color_temp = temperature
 
         if light.ATTR_HS_COLOR in kwargs:
             self._hs_color = kwargs[light.ATTR_HS_COLOR]
             xy_color = color_util.color_hs_to_xy(*self._hs_color)
-            await self._endpoint.light_color.move_to_color(
-                int(xy_color[0] * 65535),
-                int(xy_color[1] * 65535),
-                duration,
-            )
+            try:
+                res = await self._endpoint.light_color.move_to_color(
+                    int(xy_color[0] * 65535),
+                    int(xy_color[1] * 65535),
+                    duration,
+                )
+                _LOGGER.debug("%s: moved XY color to (%1.2f, %1.2f): %s",
+                              self.entity_id, xy_color[0], xy_color[1], res)
+            except DeliveryError as ex:
+                _LOGGER.error("%s: Couldn't change color temp: %s",
+                              self.entity_id, ex)
+                return
 
         if self._brightness is not None:
             brightness = kwargs.get(
                 light.ATTR_BRIGHTNESS, self._brightness or 255)
             self._brightness = brightness
             # Move to level with on/off:
-            await self._endpoint.level.move_to_level_with_on_off(
-                brightness,
-                duration
-            )
+            try:
+                res = await self._endpoint.level.move_to_level_with_on_off(
+                    brightness,
+                    duration
+                )
+                _LOGGER.debug("%s: moved to %i level with on/off: %s",
+                              self.entity_id, brightness, res)
+            except DeliveryError as ex:
+                _LOGGER.error("%s: Couldn't change brightness level: %s",
+                              self.entity_id, ex)
+                return
             self._state = 1
             self.async_schedule_update_ha_state()
             return
-        from zigpy.exceptions import DeliveryError
+
         try:
-            await self._endpoint.on_off.on()
+            res = await self._endpoint.on_off.on()
+            _LOGGER.debug("%s was turned on: %s", self.entity_id, res)
         except DeliveryError as ex:
-            _LOGGER.error("Unable to turn the light on: %s", ex)
+            _LOGGER.error("%s: Unable to turn the light on: %s",
+                          self.entity_id, ex)
             return
 
         self._state = 1
@@ -124,9 +149,11 @@ class Light(zha.Entity, light.Light):
         """Turn the entity off."""
         from zigpy.exceptions import DeliveryError
         try:
-            await self._endpoint.on_off.off()
+            res = await self._endpoint.on_off.off()
+            _LOGGER.debug("%s was turned off: %s", self.entity_id, res)
         except DeliveryError as ex:
-            _LOGGER.error("Unable to turn the light off: %s", ex)
+            _LOGGER.error("%s: Unable to turn the light off: %s",
+                          self.entity_id, ex)
             return
 
         self._state = 0
@@ -154,23 +181,31 @@ class Light(zha.Entity, light.Light):
 
     async def async_update(self):
         """Retrieve latest state."""
-        result = await zha.safe_read(self._endpoint.on_off, ['on_off'])
+        result = await zha.safe_read(self._endpoint.on_off, ['on_off'],
+                                     allow_cache=False,
+                                     only_cache=(not self._initialized))
         self._state = result.get('on_off', self._state)
 
         if self._supported_features & light.SUPPORT_BRIGHTNESS:
             result = await zha.safe_read(self._endpoint.level,
-                                         ['current_level'])
+                                         ['current_level'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
             self._brightness = result.get('current_level', self._brightness)
 
         if self._supported_features & light.SUPPORT_COLOR_TEMP:
             result = await zha.safe_read(self._endpoint.light_color,
-                                         ['color_temperature'])
+                                         ['color_temperature'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
             self._color_temp = result.get('color_temperature',
                                           self._color_temp)
 
         if self._supported_features & light.SUPPORT_COLOR:
             result = await zha.safe_read(self._endpoint.light_color,
-                                         ['current_x', 'current_y'])
+                                         ['current_x', 'current_y'],
+                                         allow_cache=False,
+                                         only_cache=(not self._initialized))
             if 'current_x' in result and 'current_y' in result:
                 xy_color = (round(result['current_x']/65535, 3),
                             round(result['current_y']/65535, 3))

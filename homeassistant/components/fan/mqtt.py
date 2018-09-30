@@ -5,6 +5,7 @@ For more details about this platform, please refer to the documentation
 https://home-assistant.io/components/fan.mqtt/
 """
 import logging
+from typing import Optional
 
 import voluptuous as vol
 
@@ -14,9 +15,9 @@ from homeassistant.const import (
     CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, STATE_ON, STATE_OFF,
     CONF_PAYLOAD_OFF, CONF_PAYLOAD_ON)
 from homeassistant.components.mqtt import (
-    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS, CONF_RETAIN,
-    MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
+    CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 from homeassistant.components.fan import (SPEED_LOW, SPEED_MEDIUM,
@@ -41,6 +42,7 @@ CONF_PAYLOAD_LOW_SPEED = 'payload_low_speed'
 CONF_PAYLOAD_MEDIUM_SPEED = 'payload_medium_speed'
 CONF_PAYLOAD_HIGH_SPEED = 'payload_high_speed'
 CONF_SPEED_LIST = 'speeds'
+CONF_UNIQUE_ID = 'unique_id'
 
 DEFAULT_NAME = 'MQTT Fan'
 DEFAULT_PAYLOAD_ON = 'ON'
@@ -74,6 +76,7 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend({
                  default=[SPEED_OFF, SPEED_LOW,
                           SPEED_MEDIUM, SPEED_HIGH]): cv.ensure_list,
     vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
+    vol.Optional(CONF_UNIQUE_ID): cv.string,
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
@@ -82,6 +85,10 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
     """Set up the MQTT fan platform."""
     if discovery_info is not None:
         config = PLATFORM_SCHEMA(discovery_info)
+
+    discovery_hash = None
+    if discovery_info is not None and ATTR_DISCOVERY_HASH in discovery_info:
+        discovery_hash = discovery_info[ATTR_DISCOVERY_HASH]
 
     async_add_entities([MqttFan(
         config.get(CONF_NAME),
@@ -116,18 +123,22 @@ async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
         config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        config.get(CONF_UNIQUE_ID),
+        discovery_hash,
     )])
 
 
-class MqttFan(MqttAvailability, FanEntity):
+class MqttFan(MqttAvailability, MqttDiscoveryUpdate, FanEntity):
     """A MQTT fan component."""
 
     def __init__(self, name, topic, templates, qos, retain, payload,
                  speed_list, optimistic, availability_topic, payload_available,
-                 payload_not_available):
+                 payload_not_available, unique_id: Optional[str],
+                 discovery_hash):
         """Initialize the MQTT fan."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash)
         self._name = name
         self._topic = topic
         self._qos = qos
@@ -148,10 +159,13 @@ class MqttFan(MqttAvailability, FanEntity):
                                      is not None and SUPPORT_OSCILLATE)
         self._supported_features |= (topic[CONF_SPEED_STATE_TOPIC]
                                      is not None and SUPPORT_SET_SPEED)
+        self._unique_id = unique_id
+        self._discovery_hash = discovery_hash
 
     async def async_added_to_hass(self):
         """Subscribe to MQTT events."""
-        await super().async_added_to_hass()
+        await MqttAvailability.async_added_to_hass(self)
+        await MqttDiscoveryUpdate.async_added_to_hass(self)
 
         templates = {}
         for key, tpl in list(self._templates.items()):
@@ -315,3 +329,8 @@ class MqttFan(MqttAvailability, FanEntity):
         if self._optimistic_oscillation:
             self._oscillation = oscillating
             self.async_schedule_update_ha_state()
+
+    @property
+    def unique_id(self):
+        """Return a unique ID."""
+        return self._unique_id
