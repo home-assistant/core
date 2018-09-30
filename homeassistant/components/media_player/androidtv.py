@@ -1,4 +1,3 @@
-# /usr/bin/python3
 """
 Provide functionality to interact with AndroidT devices on the network.
 Example config:
@@ -114,7 +113,6 @@ DATA_KEY = '{}.androidtv'.format(DOMAIN)
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the androidtv platform."""
-
     if DATA_KEY not in hass.data:
         hass.data[DATA_KEY] = {}
 
@@ -380,11 +378,11 @@ class AndroidTv(MediaPlayerDevice):
         self._muted = mute
 
     def volume_up(self):
-        """"Increment the volume level."""
+        """Increment the volume level."""
         self._device.shell('input keyevent 24')
 
     def volume_down(self):
-        """"Decrement the volume level."""
+        """Decrement the volume level."""
         self._device.shell('input keyevent 25')
 
     def media_previous_track(self):
