@@ -137,11 +137,11 @@ class TestTeleinfoSensor(unittest.TestCase):
     def test_teleinfo_setup_platform_with_error(self, mock_kylin):
         """Test Teleinfo with Serial exception raised."""
         add_devices = mock.MagicMock()
-        self.assertIsNone(
-            teleinfo.setup_platform(self.hass, VALID_CONFIG_MINIMAL, add_devices))
+        self.assertIsNone(teleinfo.setup_platform(
+            self.hass, VALID_CONFIG_MINIMAL, add_devices))
 
     @mock.patch('homeassistant.components.sensor.teleinfo.TeleinfoData.update')
-    def test_teleinfo_no_data_returned(self, mock_teleinfo_data):
+    def test_teleinfo_check_update(self, mock_teleinfo_data):
         mock_imports()
         mock_teleinfo_data.return_value = None
         add_devices = mock.MagicMock()
