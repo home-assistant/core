@@ -15,10 +15,10 @@ from typing import Optional
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.components.geo_location import GeoLocationEvent
+from homeassistant.components.geo_location import GeoLocationEvent, \
+    PLATFORM_SCHEMA
 from homeassistant.const import CONF_RADIUS, CONF_SCAN_INTERVAL, \
     EVENT_HOMEASSISTANT_START, ATTR_ATTRIBUTION
-from homeassistant.components.geo_location import PLATFORM_SCHEMA
 from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['geojson_client==0.1']
