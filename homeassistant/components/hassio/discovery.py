@@ -7,13 +7,11 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
+from homeassistant.components.http import HomeAssistantView
 
 from .handler import HassioAPIError
 
 _LOGGER = logging.getLogger(__name__)
-
-EVENT_DISCOVERY_ADD = 'hassio_discovery_add'
-EVENT_DISCOVERY_DEL = 'hassio_discovery_del'
 
 ATTR_UUID = 'uuid'
 ATTR_DISCOVERY = 'discovery'
@@ -22,22 +20,9 @@ ATTR_DISCOVERY = 'discovery'
 @callback
 def async_setup_discovery(hass, hassio):
     """Discovery setup."""
-    async def async_discovery_event_handler(event):
-        """Handle events from Hass.io discovery."""
-        uuid = event.data[ATTR_UUID]
+    hassio_discovery = HassIODiscovery(hass, hassio)
 
-        try:
-            data = await hassio.get_services_discovery(uuid)
-        except HassioAPIError as err:
-            _LOGGER.error(
-                "Can't read discover %s info: %s", uuid, err)
-            return
-
-        hass.async_add_job(async_process_discovery, hass, data)
-
-    hass.bus.async_listen(
-        EVENT_DISCOVERY_ADD, async_discovery_event_handler)
-
+    # Handle exists discovery messages
     async def async_discovery_start_handler(event):
         """Process all exists discovery on startup."""
         try:
@@ -48,12 +33,25 @@ def async_setup_discovery(hass, hassio):
             return
 
         for discovery in data[ATTR_DISCOVERY]:
-            hass.async_add_job(async_process_discovery, hass, discovery)
+            hass.async_create_taks(hassio_discovery.async_process(discovery)
 
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_START, async_discovery_start_handler)
 
+    hass.http.register_view(hassio_discovery)
 
-@callback
-def async_process_discovery(hass, data):
-    """Process a discovery request."""
+
+class HassIODiscovery(HomeAssistantView):
+    """Hass.io view to handle base part."""
+
+    name = "api:hassio_push:discovery"
+    url = "/api/hassio_push/discovery/{uuid}"
+
+    async def post(self, request):
+        """Handle new discovery requests."""
+
+    async def delete(self, request):
+        """Handle remove discovery requests."""
+
+    async def async_process(self, data):
+        """Process discovery data."""
