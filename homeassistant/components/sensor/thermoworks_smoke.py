@@ -42,6 +42,11 @@ SENSOR_TYPES = {
     PROBE_2_MAX: 'Probe 2 Max',
 }
 
+# exclude these keys from thermoworks data
+EXCLUDE_KEYS = [
+    FIRMWARE
+]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
@@ -98,7 +103,6 @@ class ThermoworksSmokeSensor(Entity):
             serial=serial, type=sensor_type)
         self.serial = serial
         self.mgr = mgr
-        self.firmware_version = ''
         self.update_unit()
 
     @property
@@ -166,10 +170,8 @@ class ThermoworksSmokeSensor(Entity):
                         else:
                             # strip probe label and convert to snake_case
                             key = snakecase(key.replace(self.type, ''))
-                        if key == FIRMWARE:
-                            self.firmware_version = val
-                        elif key:
-                            # add to attrs
+                        # add to attrs
+                        if key and key not in EXCLUDE_KEYS:
                             self._attributes[key] = val
                 # store actual unit because attributes are not converted
                 self._attributes['unit_of_min_max'] = self._unit_of_measurement
