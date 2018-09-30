@@ -9,7 +9,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.components.frontend import (
     DOMAIN, CONF_JS_VERSION, CONF_THEMES, CONF_EXTRA_HTML_URL,
     CONF_EXTRA_HTML_URL_ES5)
-from homeassistant.components import websocket_api as wapi
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 
 from tests.common import mock_coro

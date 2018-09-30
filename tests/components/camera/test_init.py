@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.const import ATTR_ENTITY_PICTURE
-from homeassistant.components import camera, http, websocket_api
+from homeassistant.components import camera, http
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.async_ import run_coroutine_threadsafe
