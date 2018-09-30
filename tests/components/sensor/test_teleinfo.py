@@ -84,6 +84,17 @@ class KylinMock(object):
         return Exception()
 
 
+class KylinNoDataMock(KylinMock):
+
+    def __init__(self, port, timeout=0):
+        """Initialize Kylin bject."""
+        self.port = port
+        self.timeout = timeout
+
+    def readframe(self):
+        return None
+
+
 class TestTeleinfoSensor(unittest.TestCase):
     """Test the teleinfo sensor."""
 
@@ -121,3 +132,23 @@ class TestTeleinfoSensor(unittest.TestCase):
         state = self.hass.states.get('sensor.edf')
         self.assertEqual("edf", state.name)
         self._check_teleinfo_values(state)
+
+    @mock.patch('kylin.Kylin', side_effect=KylinSerialErrorMock("UT"))
+    def test_teleinfo_setup_platform_with_error(self, mock_kylin):
+        """Test Teleinfo with Serial exception raised."""
+        add_devices = mock.MagicMock()
+        self.assertIsNone(
+            teleinfo.setup_platform(self.hass, VALID_CONFIG_MINIMAL, add_devices))
+
+    @mock.patch('homeassistant.components.sensor.teleinfo.TeleinfoData.update')
+    def test_teleinfo_no_data_returned(self, mock_teleinfo_data):
+        mock_imports()
+        mock_teleinfo_data.return_value = None
+        add_devices = mock.MagicMock()
+        teleinfo.setup_platform(self.hass, VALID_CONFIG_MINIMAL, add_devices)
+
+    @mock.patch('kylin.Kylin')
+    def test_teleinfo_no_data_returned(self, mock_kylin):
+        mock_kylin.return_value = KylinNoDataMock(80, 10)
+        add_devices = mock.MagicMock()
+        teleinfo.setup_platform(self.hass, VALID_CONFIG_MINIMAL, add_devices)
