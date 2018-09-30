@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-from homeassistant.components import websocket_api as wapi
+from homeassistant.components.websocket_api.const import TYPE_RESULT
 
 
 async def test_deprecated_lovelace_ui(hass, hass_ws_client):
@@ -20,7 +20,7 @@ async def test_deprecated_lovelace_ui(hass, hass_ws_client):
         msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success']
     assert msg['result'] == {'hello': 'world'}
 
@@ -39,7 +39,7 @@ async def test_deprecated_lovelace_ui_not_found(hass, hass_ws_client):
         msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
     assert msg['error']['code'] == 'file_not_found'
 
@@ -58,7 +58,7 @@ async def test_deprecated_lovelace_ui_load_err(hass, hass_ws_client):
         msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
     assert msg['error']['code'] == 'load_error'
 
@@ -77,7 +77,7 @@ async def test_lovelace_ui(hass, hass_ws_client):
         msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success']
     assert msg['result'] == {'hello': 'world'}
 
@@ -96,7 +96,7 @@ async def test_lovelace_ui_not_found(hass, hass_ws_client):
         msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
     assert msg['error']['code'] == 'file_not_found'
 
@@ -115,6 +115,6 @@ async def test_lovelace_ui_load_err(hass, hass_ws_client):
         msg = await client.receive_json()
 
     assert msg['id'] == 5
-    assert msg['type'] == wapi.TYPE_RESULT
+    assert msg['type'] == TYPE_RESULT
     assert msg['success'] is False
     assert msg['error']['code'] == 'load_error'

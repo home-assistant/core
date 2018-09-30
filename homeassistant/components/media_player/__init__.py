@@ -865,8 +865,8 @@ class MediaPlayerImageView(HomeAssistantView):
             body=data, content_type=content_type, headers=headers)
 
 
-@callback
-def websocket_handle_thumbnail(hass, connection, msg):
+@websocket_api.async_response
+async def websocket_handle_thumbnail(hass, connection, msg):
     """Handle get media player cover command.
 
     Async friendly.
@@ -879,20 +879,16 @@ def websocket_handle_thumbnail(hass, connection, msg):
             msg['id'], 'entity_not_found', 'Entity not found'))
         return
 
-    async def send_image():
-        """Send image."""
-        data, content_type = await player.async_get_media_image()
+    data, content_type = await player.async_get_media_image()
 
-        if data is None:
-            connection.send_message_outside(websocket_api.error_message(
-                msg['id'], 'thumbnail_fetch_failed',
-                'Failed to fetch thumbnail'))
-            return
+    if data is None:
+        connection.send_message_outside(websocket_api.error_message(
+            msg['id'], 'thumbnail_fetch_failed',
+            'Failed to fetch thumbnail'))
+        return
 
-        connection.send_message_outside(websocket_api.result_message(
-            msg['id'], {
-                'content_type': content_type,
-                'content': base64.b64encode(data).decode('utf-8')
-            }))
-
-    hass.async_add_job(send_image())
+    connection.send_message_outside(websocket_api.result_message(
+        msg['id'], {
+            'content_type': content_type,
+            'content': base64.b64encode(data).decode('utf-8')
+        }))
