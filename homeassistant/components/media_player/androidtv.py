@@ -15,7 +15,6 @@ https://home-assistant.io/components/media_player.androidtv/
 """
 
 import logging
-from datetime import timedelta
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
@@ -25,11 +24,10 @@ from homeassistant.components.media_player import (
     SUPPORT_TURN_ON, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_STEP)
 
 from homeassistant.const import (
-    ATTR_ENTITY_ID, CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT,
+    ATTR_ENTITY_ID, CONF_HOST, CONF_NAME, CONF_PORT,
     STATE_IDLE, STATE_PAUSED, STATE_PLAYING, STATE_OFF)
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_time_interval
 
 REQUIREMENTS = ['pure-python-adb==0.1.5.dev0']
 
@@ -103,6 +101,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_PORT, default=DEFAULT_PORT): vol.All(cv.port, cv.string),
 })
 
+ACTION_SERVICE = 'androidtv_action'
+INTENT_SERVICE = 'androidtv_intent'
+KEY_SERVICE = 'androidtv_key'
+
 SERVICE_ACTION_SCHEMA = vol.Schema({
     vol.Required(ATTR_ENTITY_ID): cv.entity_ids,
     vol.Required('action'): vol.In(ACTIONS),
@@ -119,6 +121,7 @@ SERVICE_KEY_SCHEMA = vol.Schema({
 })
 
 DATA_KEY = '{}.androidtv'.format(DOMAIN)
+
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the androidtv platform."""
@@ -161,7 +164,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         entity_id = service.data.get(ATTR_ENTITY_ID)
         target_devices = [dev for dev in hass.data[DATA_KEY].values()
-                            if dev.entity_id in entity_id]
+                          if dev.entity_id in entity_id]
 
         for target_device in target_devices:
             target_device.do_action(params['action'])
@@ -173,7 +176,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         entity_id = service.data.get(ATTR_ENTITY_ID)
         target_devices = [dev for dev in hass.data[DATA_KEY].values()
-                            if dev.entity_id in entity_id]
+                          if dev.entity_id in entity_id]
 
         for target_device in target_devices:
             target_device.start_intent(params['intent'])
@@ -185,14 +188,17 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         entity_id = service.data.get(ATTR_ENTITY_ID)
         target_devices = [dev for dev in hass.data[DATA_KEY].values()
-                            if dev.entity_id in entity_id]
+                          if dev.entity_id in entity_id]
 
         for target_device in target_devices:
             target_device.input_key(params['key'])
 
-    hass.services.register(DOMAIN, 'androidtv_action', service_action, schema=SERVICE_ACTION_SCHEMA)
-    hass.services.register(DOMAIN, 'androidtv_intent', service_intent, schema=SERVICE_INTENT_SCHEMA)
-    hass.services.register(DOMAIN, 'androidtv_key', service_key, schema=SERVICE_KEY_SCHEMA)
+    hass.services.register(
+        DOMAIN, ACTION_SERVICE, service_action, schema=SERVICE_ACTION_SCHEMA)
+    hass.services.register(
+        DOMAIN, INTENT_SERVICE, service_intent, schema=SERVICE_INTENT_SCHEMA)
+    hass.services.register(
+        DOMAIN, KEY_SERVICE, service_key, schema=SERVICE_KEY_SCHEMA)
 
 
 class AndroidTv(MediaPlayerDevice):
