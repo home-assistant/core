@@ -106,7 +106,6 @@ class TradfriSwitch(SwitchDevice):
     @callback
     def _async_start_observe(self, exc=None):
         """Start observation of switch."""
-        # pylint: disable=import-error
         from pytradfri.error import PytradfriError
         if exc:
             _LOGGER.warning("Observation failed for %s", self._name,
