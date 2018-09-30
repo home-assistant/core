@@ -171,8 +171,6 @@ class ThermoworksSmokeSensor(Entity):
                         elif key:
                             # add to attrs
                             self._attributes[key] = val
-                # serial number for using with exclude variable
-                self._attributes['serial'] = self.serial
                 # store actual unit because attributes are not converted
                 self._attributes['unit_of_min_max'] = self._unit_of_measurement
 
