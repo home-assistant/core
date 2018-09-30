@@ -164,7 +164,7 @@ async def async_update_items(hass, bridge, async_add_entities,
         api = bridge.api.lights
 
     try:
-        with async_timeout.timeout(4):
+        with async_timeout.timeout(30):
             await api.update()
     except (asyncio.TimeoutError, aiohue.AiohueException):
         if not bridge.available:
