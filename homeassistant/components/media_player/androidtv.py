@@ -420,5 +420,4 @@ class AndroidTv(MediaPlayerDevice):
 
     def do_action(self, action):
         """Input the key corresponding to the action."""
-        if action in ACTIONS:
-            self._adb_device.shell("input keyevent {}".format(ACTIONS[action]))
+        self._adb_device.shell("input keyevent {}".format(ACTIONS[action]))
