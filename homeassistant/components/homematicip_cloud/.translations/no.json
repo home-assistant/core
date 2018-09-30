@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "Tilgangspunktet er allerede konfigurert",
-            "conection_aborted": "Kunne ikke koble til HMIP serveren",
             "connection_aborted": "Kunne ikke koble til HMIP serveren",
             "unknown": "Ukjent feil oppstod."
         },
@@ -22,7 +21,7 @@
                 "title": "Velg HomematicIP tilgangspunkt"
             },
             "link": {
-                "description": "Trykk p\u00e5 den bl\u00e5 knappen p\u00e5 tilgangspunktet og send knappen for \u00e5 registrere HomematicIP med Home Assistant. \n\n![Plassering av knapp p\u00e5 bridge](/static/images/config_flows/config_homematicip_cloud.png)",
+                "description": "Trykk p\u00e5 den bl\u00e5 knappen p\u00e5 tilgangspunktet og p\u00e5 send knappen for \u00e5 registrere HomematicIP med Home Assistant. \n\n![Plassering av knapp p\u00e5 bridge](/static/images/config_flows/config_homematicip_cloud.png)",
                 "title": "Link tilgangspunkt"
             }
         },

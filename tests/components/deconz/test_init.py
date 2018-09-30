@@ -112,17 +112,21 @@ async def test_setup_entry_successful(hass):
     assert hass.data[deconz.DOMAIN]
     assert hass.data[deconz.DATA_DECONZ_ID] == {}
     assert len(hass.data[deconz.DATA_DECONZ_UNSUB]) == 1
-    assert len(mock_add_job.mock_calls) == 5
-    assert len(mock_config_entries.async_forward_entry_setup.mock_calls) == 5
+    assert len(mock_add_job.mock_calls) ==  \
+        len(deconz.SUPPORTED_PLATFORMS)
+    assert len(mock_config_entries.async_forward_entry_setup.mock_calls) == \
+        len(deconz.SUPPORTED_PLATFORMS)
     assert mock_config_entries.async_forward_entry_setup.mock_calls[0][1] == \
         (entry, 'binary_sensor')
     assert mock_config_entries.async_forward_entry_setup.mock_calls[1][1] == \
-        (entry, 'light')
+        (entry, 'cover')
     assert mock_config_entries.async_forward_entry_setup.mock_calls[2][1] == \
-        (entry, 'scene')
+        (entry, 'light')
     assert mock_config_entries.async_forward_entry_setup.mock_calls[3][1] == \
-        (entry, 'sensor')
+        (entry, 'scene')
     assert mock_config_entries.async_forward_entry_setup.mock_calls[4][1] == \
+        (entry, 'sensor')
+    assert mock_config_entries.async_forward_entry_setup.mock_calls[5][1] == \
         (entry, 'switch')
 
 

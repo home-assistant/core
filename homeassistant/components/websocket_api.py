@@ -2,7 +2,7 @@
 Websocket based API for Home Assistant.
 
 For more details about this component, please refer to the documentation at
-https://home-assistant.io/developers/websocket_api/
+https://developers.home-assistant.io/docs/external_api_websocket.html
 """
 import asyncio
 from concurrent import futures
@@ -40,6 +40,7 @@ ERR_ID_REUSE = 1
 ERR_INVALID_FORMAT = 2
 ERR_NOT_FOUND = 3
 ERR_UNKNOWN_COMMAND = 4
+ERR_UNKNOWN_ERROR = 5
 
 TYPE_AUTH = 'auth'
 TYPE_AUTH_INVALID = 'auth_invalid'
@@ -360,6 +361,7 @@ class ActiveConnection:
                     authenticated = refresh_token is not None
                     if authenticated:
                         request['hass_user'] = refresh_token.user
+                        request['refresh_token_id'] = refresh_token.id
 
                 elif ((not self.hass.auth.active or
                        self.hass.auth.support_legacy) and
@@ -404,7 +406,13 @@ class ActiveConnection:
 
                 else:
                     handler, schema = handlers[msg['type']]
-                    handler(self.hass, self, schema(msg))
+                    try:
+                        handler(self.hass, self, schema(msg))
+                    except Exception:  # pylint: disable=broad-except
+                        _LOGGER.exception('Error handling message: %s', msg)
+                        self.to_write.put_nowait(error_message(
+                            cur_id, ERR_UNKNOWN_ERROR,
+                            'Unknown error.'))
 
                 last_id = cur_id
                 msg = await wsock.receive_json()
@@ -479,6 +487,26 @@ class ActiveConnection:
         return wsock
 
 
+def async_response(func):
+    """Decorate an async function to handle WebSocket API messages."""
+    async def handle_msg_response(hass, connection, msg):
+        """Create a response and handle exception."""
+        try:
+            await func(hass, connection, msg)
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Unexpected exception")
+            connection.send_message_outside(error_message(
+                msg['id'], 'unknown', 'Unexpected error occurred'))
+
+    @callback
+    @wraps(func)
+    def schedule_handler(hass, connection, msg):
+        """Schedule the handler."""
+        hass.async_create_task(handle_msg_response(hass, connection, msg))
+
+    return schedule_handler
+
+
 @callback
 def handle_subscribe_events(hass, connection, msg):
     """Handle subscribe events command.
@@ -514,24 +542,20 @@ def handle_unsubscribe_events(hass, connection, msg):
             msg['id'], ERR_NOT_FOUND, 'Subscription not found.'))
 
 
-@callback
-def handle_call_service(hass, connection, msg):
+@async_response
+async def handle_call_service(hass, connection, msg):
     """Handle call service command.
 
     Async friendly.
     """
-    async def call_service_helper(msg):
-        """Call a service and fire complete message."""
-        blocking = True
-        if (msg['domain'] == 'homeassistant' and
-                msg['service'] in ['restart', 'stop']):
-            blocking = False
-        await hass.services.async_call(
-            msg['domain'], msg['service'], msg.get('service_data'), blocking,
-            connection.context(msg))
-        connection.send_message_outside(result_message(msg['id']))
-
-    hass.async_add_job(call_service_helper(msg))
+    blocking = True
+    if (msg['domain'] == 'homeassistant' and
+            msg['service'] in ['restart', 'stop']):
+        blocking = False
+    await hass.services.async_call(
+        msg['domain'], msg['service'], msg.get('service_data'), blocking,
+        connection.context(msg))
+    connection.send_message_outside(result_message(msg['id']))
 
 
 @callback
@@ -544,19 +568,15 @@ def handle_get_states(hass, connection, msg):
         msg['id'], hass.states.async_all()))
 
 
-@callback
-def handle_get_services(hass, connection, msg):
+@async_response
+async def handle_get_services(hass, connection, msg):
     """Handle get services command.
 
     Async friendly.
     """
-    async def get_services_helper(msg):
-        """Get available services and fire complete message."""
-        descriptions = await async_get_all_descriptions(hass)
-        connection.send_message_outside(
-            result_message(msg['id'], descriptions))
-
-    hass.async_add_job(get_services_helper(msg))
+    descriptions = await async_get_all_descriptions(hass)
+    connection.send_message_outside(
+        result_message(msg['id'], descriptions))
 
 
 @callback

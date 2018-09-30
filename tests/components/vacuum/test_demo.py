@@ -15,7 +15,9 @@ from homeassistant.components.vacuum.demo import (
 from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES, CONF_PLATFORM, STATE_OFF, STATE_ON)
 from homeassistant.setup import setup_component
+
 from tests.common import get_test_home_assistant, mock_service
+from tests.components.vacuum import common
 
 
 ENTITY_VACUUM_BASIC = '{}.{}'.format(DOMAIN, DEMO_VACUUM_BASIC).lower()
@@ -108,27 +110,27 @@ class TestVacuumDemo(unittest.TestCase):
         self.hass.block_till_done()
         self.assertFalse(vacuum.is_on(self.hass))
 
-        vacuum.turn_on(self.hass, ENTITY_VACUUM_COMPLETE)
+        common.turn_on(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
-        vacuum.turn_off(self.hass, ENTITY_VACUUM_COMPLETE)
+        common.turn_off(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
-        vacuum.toggle(self.hass, ENTITY_VACUUM_COMPLETE)
+        common.toggle(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
-        vacuum.start_pause(self.hass, ENTITY_VACUUM_COMPLETE)
+        common.start_pause(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
-        vacuum.start_pause(self.hass, ENTITY_VACUUM_COMPLETE)
+        common.start_pause(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
-        vacuum.stop(self.hass, ENTITY_VACUUM_COMPLETE)
+        common.stop(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
@@ -136,39 +138,39 @@ class TestVacuumDemo(unittest.TestCase):
         self.assertLess(state.attributes.get(ATTR_BATTERY_LEVEL), 100)
         self.assertNotEqual("Charging", state.attributes.get(ATTR_STATUS))
 
-        vacuum.locate(self.hass, ENTITY_VACUUM_COMPLETE)
+        common.locate(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
         self.assertIn("I'm over here", state.attributes.get(ATTR_STATUS))
 
-        vacuum.return_to_base(self.hass, ENTITY_VACUUM_COMPLETE)
+        common.return_to_base(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
         self.assertIn("Returning home", state.attributes.get(ATTR_STATUS))
 
-        vacuum.set_fan_speed(self.hass, FAN_SPEEDS[-1],
+        common.set_fan_speed(self.hass, FAN_SPEEDS[-1],
                              entity_id=ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
         self.assertEqual(FAN_SPEEDS[-1], state.attributes.get(ATTR_FAN_SPEED))
 
-        vacuum.clean_spot(self.hass, entity_id=ENTITY_VACUUM_COMPLETE)
+        common.clean_spot(self.hass, entity_id=ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
         self.assertIn("spot", state.attributes.get(ATTR_STATUS))
         self.assertEqual(STATE_ON, state.state)
 
-        vacuum.start(self.hass, ENTITY_VACUUM_STATE)
+        common.start(self.hass, ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertEqual(STATE_CLEANING, state.state)
 
-        vacuum.pause(self.hass, ENTITY_VACUUM_STATE)
+        common.pause(self.hass, ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertEqual(STATE_PAUSED, state.state)
 
-        vacuum.stop(self.hass, ENTITY_VACUUM_STATE)
+        common.stop(self.hass, ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertEqual(STATE_IDLE, state.state)
@@ -177,18 +179,18 @@ class TestVacuumDemo(unittest.TestCase):
         self.assertLess(state.attributes.get(ATTR_BATTERY_LEVEL), 100)
         self.assertNotEqual(STATE_DOCKED, state.state)
 
-        vacuum.return_to_base(self.hass, ENTITY_VACUUM_STATE)
+        common.return_to_base(self.hass, ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertEqual(STATE_RETURNING, state.state)
 
-        vacuum.set_fan_speed(self.hass, FAN_SPEEDS[-1],
+        common.set_fan_speed(self.hass, FAN_SPEEDS[-1],
                              entity_id=ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertEqual(FAN_SPEEDS[-1], state.attributes.get(ATTR_FAN_SPEED))
 
-        vacuum.clean_spot(self.hass, entity_id=ENTITY_VACUUM_STATE)
+        common.clean_spot(self.hass, entity_id=ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertEqual(STATE_CLEANING, state.state)
@@ -199,11 +201,11 @@ class TestVacuumDemo(unittest.TestCase):
         self.hass.block_till_done()
         self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_NONE))
 
-        vacuum.turn_off(self.hass, ENTITY_VACUUM_NONE)
+        common.turn_off(self.hass, ENTITY_VACUUM_NONE)
         self.hass.block_till_done()
         self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_NONE))
 
-        vacuum.stop(self.hass, ENTITY_VACUUM_NONE)
+        common.stop(self.hass, ENTITY_VACUUM_NONE)
         self.hass.block_till_done()
         self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_NONE))
 
@@ -211,37 +213,37 @@ class TestVacuumDemo(unittest.TestCase):
         self.hass.block_till_done()
         self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_NONE))
 
-        vacuum.turn_on(self.hass, ENTITY_VACUUM_NONE)
+        common.turn_on(self.hass, ENTITY_VACUUM_NONE)
         self.hass.block_till_done()
         self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_NONE))
 
-        vacuum.toggle(self.hass, ENTITY_VACUUM_NONE)
+        common.toggle(self.hass, ENTITY_VACUUM_NONE)
         self.hass.block_till_done()
         self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_NONE))
 
         # Non supported methods:
-        vacuum.start_pause(self.hass, ENTITY_VACUUM_NONE)
+        common.start_pause(self.hass, ENTITY_VACUUM_NONE)
         self.hass.block_till_done()
         self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_NONE))
 
-        vacuum.locate(self.hass, ENTITY_VACUUM_NONE)
+        common.locate(self.hass, ENTITY_VACUUM_NONE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_NONE)
         self.assertIsNone(state.attributes.get(ATTR_STATUS))
 
-        vacuum.return_to_base(self.hass, ENTITY_VACUUM_NONE)
+        common.return_to_base(self.hass, ENTITY_VACUUM_NONE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_NONE)
         self.assertIsNone(state.attributes.get(ATTR_STATUS))
 
-        vacuum.set_fan_speed(self.hass, FAN_SPEEDS[-1],
+        common.set_fan_speed(self.hass, FAN_SPEEDS[-1],
                              entity_id=ENTITY_VACUUM_NONE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_NONE)
         self.assertNotEqual(FAN_SPEEDS[-1],
                             state.attributes.get(ATTR_FAN_SPEED))
 
-        vacuum.clean_spot(self.hass, entity_id=ENTITY_VACUUM_BASIC)
+        common.clean_spot(self.hass, entity_id=ENTITY_VACUUM_BASIC)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_BASIC)
         self.assertNotIn("spot", state.attributes.get(ATTR_STATUS))
@@ -252,7 +254,7 @@ class TestVacuumDemo(unittest.TestCase):
         self.hass.block_till_done()
         self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
-        vacuum.pause(self.hass, ENTITY_VACUUM_COMPLETE)
+        common.pause(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         self.assertTrue(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
@@ -260,22 +262,22 @@ class TestVacuumDemo(unittest.TestCase):
         self.hass.block_till_done()
         self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
-        vacuum.start(self.hass, ENTITY_VACUUM_COMPLETE)
+        common.start(self.hass, ENTITY_VACUUM_COMPLETE)
         self.hass.block_till_done()
         self.assertFalse(vacuum.is_on(self.hass, ENTITY_VACUUM_COMPLETE))
 
         # StateVacuumDevice does not support on/off
-        vacuum.turn_on(self.hass, entity_id=ENTITY_VACUUM_STATE)
+        common.turn_on(self.hass, entity_id=ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertNotEqual(STATE_CLEANING, state.state)
 
-        vacuum.turn_off(self.hass, entity_id=ENTITY_VACUUM_STATE)
+        common.turn_off(self.hass, entity_id=ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertNotEqual(STATE_RETURNING, state.state)
 
-        vacuum.toggle(self.hass, entity_id=ENTITY_VACUUM_STATE)
+        common.toggle(self.hass, entity_id=ENTITY_VACUUM_STATE)
         self.hass.block_till_done()
         state = self.hass.states.get(ENTITY_VACUUM_STATE)
         self.assertNotEqual(STATE_CLEANING, state.state)
@@ -287,7 +289,7 @@ class TestVacuumDemo(unittest.TestCase):
             self.hass, DOMAIN, SERVICE_SEND_COMMAND)
 
         params = {"rotate": 150, "speed": 20}
-        vacuum.send_command(
+        common.send_command(
             self.hass, 'test_command', entity_id=ENTITY_VACUUM_BASIC,
             params=params)
 
@@ -305,7 +307,7 @@ class TestVacuumDemo(unittest.TestCase):
         set_fan_speed_calls = mock_service(
             self.hass, DOMAIN, SERVICE_SET_FAN_SPEED)
 
-        vacuum.set_fan_speed(
+        common.set_fan_speed(
             self.hass, FAN_SPEEDS[0], entity_id=ENTITY_VACUUM_COMPLETE)
 
         self.hass.block_till_done()
@@ -326,7 +328,7 @@ class TestVacuumDemo(unittest.TestCase):
         old_state_complete = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
         old_state_state = self.hass.states.get(ENTITY_VACUUM_STATE)
 
-        vacuum.set_fan_speed(
+        common.set_fan_speed(
             self.hass, FAN_SPEEDS[0], entity_id=group_vacuums)
 
         self.hass.block_till_done()
@@ -356,7 +358,7 @@ class TestVacuumDemo(unittest.TestCase):
         old_state_basic = self.hass.states.get(ENTITY_VACUUM_BASIC)
         old_state_complete = self.hass.states.get(ENTITY_VACUUM_COMPLETE)
 
-        vacuum.send_command(
+        common.send_command(
             self.hass, 'test_command', params={"p1": 3},
             entity_id=group_vacuums)
 

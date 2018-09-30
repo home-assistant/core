@@ -46,11 +46,12 @@ async def async_migrator(hass, old_path, store, *,
 class Store:
     """Class to help storing data."""
 
-    def __init__(self, hass, version: int, key: str):
+    def __init__(self, hass, version: int, key: str, private: bool = False):
         """Initialize storage class."""
         self.version = version
         self.key = key
         self.hass = hass
+        self._private = private
         self._data = None
         self._unsub_delay_listener = None
         self._unsub_stop_listener = None
@@ -186,7 +187,7 @@ class Store:
             os.makedirs(os.path.dirname(path))
 
         _LOGGER.debug('Writing data for %s', self.key)
-        json.save_json(path, data)
+        json.save_json(path, data, self._private)
 
     async def _async_migrate_func(self, old_version, old_data):
         """Migrate to the new version."""

@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant.helpers import entity_registry
 
-from tests.common import mock_registry
+from tests.common import mock_registry, flush_store
 
 
 YAML__OPEN_PATH = 'homeassistant.util.yaml.open'
@@ -77,8 +77,7 @@ async def test_loading_saving_data(hass, registry):
 
     # Now load written data in new registry
     registry2 = entity_registry.EntityRegistry(hass)
-    registry2._store = registry._store
-
+    await flush_store(registry._store)
     await registry2.async_load()
 
     # Ensure same order
@@ -184,6 +183,17 @@ async def test_updating_config_entry_id(registry):
         'light', 'hue', '5678', config_entry_id='mock-id-2')
     assert entry.entity_id == entry2.entity_id
     assert entry2.config_entry_id == 'mock-id-2'
+
+
+async def test_removing_config_entry_id(registry):
+    """Test that we update config entry id in registry."""
+    entry = registry.async_get_or_create(
+        'light', 'hue', '5678', config_entry_id='mock-id-1')
+    assert entry.config_entry_id == 'mock-id-1'
+    registry.async_clear_config_entry('mock-id-1')
+
+    entry = registry.entities[entry.entity_id]
+    assert entry.config_entry_id is None
 
 
 async def test_migration(hass):

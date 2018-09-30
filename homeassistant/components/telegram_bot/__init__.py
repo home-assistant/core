@@ -22,7 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
-REQUIREMENTS = ['python-telegram-bot==10.1.0']
+REQUIREMENTS = ['python-telegram-bot==11.0.0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -311,10 +311,11 @@ def initialize_bot(p_config):
     proxy_url = p_config.get(CONF_PROXY_URL)
     proxy_params = p_config.get(CONF_PROXY_PARAMS)
 
-    request = None
     if proxy_url is not None:
-        request = Request(proxy_url=proxy_url,
+        request = Request(con_pool_size=4, proxy_url=proxy_url,
                           urllib3_proxy_kwargs=proxy_params)
+    else:
+        request = Request(con_pool_size=4)
     return Bot(token=api_key, request=request)
 
 
