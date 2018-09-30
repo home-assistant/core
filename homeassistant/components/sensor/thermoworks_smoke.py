@@ -39,6 +39,11 @@ SENSOR_TYPES = {
     PROBE_2_MAX: 'Probe 2 Max',
 }
 
+# exclude these keys from thermoworks
+EXCLUDE_KEYS = [
+    'firmware'
+]
+
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
     vol.Required(CONF_PASSWORD): cv.string,
@@ -145,8 +150,7 @@ class ThermoworksSmokeSensor(Entity):
             self._attributes = {
                 'serial': self.serial,
                 'time': values['time'],
-                'localtime': values['localtime'],
-                'original_unit': self._unit_of_measurement
+                'localtime': values['localtime']
             }
 
             # set extended attributes for main probe sensors
@@ -165,8 +169,10 @@ class ThermoworksSmokeSensor(Entity):
                             # strip probe label and convert to snake_case
                             key = snakecase(key.replace(self.type, ''))
                         # add to attrs
-                        if key:
+                        if key and key not in EXCLUDE_KEYS:
                             self._attributes[key] = val
+                # store actual unit because attributes are not converted
+                self._attributes['unit_of_min_max'] = self._unit_of_measurement
 
         except (RequestException, ValueError, KeyError):
             _LOGGER.warning("Could not update status for %s", self.name)
