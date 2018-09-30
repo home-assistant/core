@@ -1,7 +1,7 @@
 """
 Provide functionality to interact with AndroidT devices on the network.
-Example config:
 
+Example config:
 media_player:
   - platform: androidtv
     devices:
@@ -205,7 +205,7 @@ class AndroidTv(MediaPlayerDevice):
     def update(self):
         """Get the latest details from the device."""
         try:
-            adb_devices = self._client.devices()
+            devices = self._client.devices()
         except RuntimeError:
             # Can't connect to adb server
             if self._available:
@@ -215,7 +215,7 @@ class AndroidTv(MediaPlayerDevice):
                     "Device {} became unavailable.".format(self._name))
                 self._available = False
         else:
-            if any([self._uri in host.get_serial_no() for host in adb_devices]):
+            if any([self._uri in host.get_serial_no() for host in devices]):
                 # Device is connected through the ADB server
                 if not self._available:
                     _LOGGER.info("Device {} reconnected.".format(self._name))
