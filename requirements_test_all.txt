@@ -104,7 +104,7 @@ libpurecoollink==0.4.2
 libsoundtouch==0.7.2
 
 # homeassistant.components.device_tracker.google_maps
-locationsharinglib==3.0.2
+locationsharinglib==3.0.3
 
 # homeassistant.components.sensor.mfi
 # homeassistant.components.switch.mfi
