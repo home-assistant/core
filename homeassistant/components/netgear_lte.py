@@ -6,6 +6,7 @@ https://home-assistant.io/components/netgear_lte/
 """
 import asyncio
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 import attr
@@ -17,7 +18,9 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['eternalegypt==0.0.3']
+REQUIREMENTS = ['eternalegypt==0.0.5']
+
+_LOGGER = logging.getLogger(__name__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=10)
 
@@ -37,17 +40,23 @@ class ModemData:
     """Class for modem state."""
 
     modem = attr.ib()
-    serial_number = attr.ib(init=False)
-    unread_count = attr.ib(init=False)
-    usage = attr.ib(init=False)
+
+    serial_number = attr.ib(init=False, default=None)
+    unread_count = attr.ib(init=False, default=None)
+    usage = attr.ib(init=False, default=None)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self):
         """Call the API to update the data."""
-        information = await self.modem.information()
-        self.serial_number = information.serial_number
-        self.unread_count = sum(1 for x in information.sms if x.unread)
-        self.usage = information.usage
+        import eternalegypt
+        try:
+            information = await self.modem.information()
+            self.serial_number = information.serial_number
+            self.unread_count = sum(1 for x in information.sms if x.unread)
+            self.usage = information.usage
+        except eternalegypt.Error:
+            self.unread_count = None
+            self.usage = None
 
 
 @attr.s
@@ -81,9 +90,12 @@ async def async_setup(hass, config):
     return True
 
 
-async def _setup_lte(hass, lte_config):
+async def _setup_lte(hass, lte_config, delay=0):
     """Set up a Netgear LTE modem."""
     import eternalegypt
+
+    if delay:
+        await asyncio.sleep(delay)
 
     host = lte_config[CONF_HOST]
     password = lte_config[CONF_PASSWORD]
@@ -91,7 +103,14 @@ async def _setup_lte(hass, lte_config):
     websession = hass.data[DATA_KEY].websession
 
     modem = eternalegypt.Modem(hostname=host, websession=websession)
-    await modem.login(password=password)
+
+    try:
+        await modem.login(password=password)
+    except eternalegypt.Error:
+        delay = max(15, min(2*delay, 300))
+        _LOGGER.warning("Retrying %s in %d seconds", host, delay)
+        hass.loop.create_task(_setup_lte(hass, lte_config, delay))
+        return
 
     modem_data = ModemData(modem)
     await modem_data.async_update()

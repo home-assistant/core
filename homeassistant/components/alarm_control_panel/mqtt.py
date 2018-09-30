@@ -18,10 +18,13 @@ from homeassistant.const import (
     STATE_ALARM_PENDING, STATE_ALARM_TRIGGERED, STATE_UNKNOWN,
     CONF_NAME, CONF_CODE)
 from homeassistant.components.mqtt import (
-    CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC, CONF_COMMAND_TOPIC,
-    CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE, CONF_QOS,
-    CONF_RETAIN, MqttAvailability)
+    ATTR_DISCOVERY_HASH, CONF_AVAILABILITY_TOPIC, CONF_STATE_TOPIC,
+    CONF_COMMAND_TOPIC, CONF_PAYLOAD_AVAILABLE, CONF_PAYLOAD_NOT_AVAILABLE,
+    CONF_QOS, CONF_RETAIN, MqttAvailability, MqttDiscoveryUpdate)
+from homeassistant.components.mqtt.discovery import MQTT_DISCOVERY_NEW
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import HomeAssistantType, ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,13 +49,28 @@ PLATFORM_SCHEMA = mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend({
 }).extend(mqtt.MQTT_AVAILABILITY_SCHEMA.schema)
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
-    """Set up the MQTT Alarm Control Panel platform."""
-    if discovery_info is not None:
-        config = PLATFORM_SCHEMA(discovery_info)
+async def async_setup_platform(hass: HomeAssistantType, config: ConfigType,
+                               async_add_entities, discovery_info=None):
+    """Set up MQTT alarm control panel through configuration.yaml."""
+    await _async_setup_entity(hass, config, async_add_entities)
 
+
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up MQTT alarm control panel dynamically through MQTT discovery."""
+    async def async_discover(discovery_payload):
+        """Discover and add an MQTT alarm control panel."""
+        config = PLATFORM_SCHEMA(discovery_payload)
+        await _async_setup_entity(hass, config, async_add_entities,
+                                  discovery_payload[ATTR_DISCOVERY_HASH])
+
+    async_dispatcher_connect(
+        hass, MQTT_DISCOVERY_NEW.format(alarm.DOMAIN, 'mqtt'),
+        async_discover)
+
+
+async def _async_setup_entity(hass, config, async_add_entities,
+                              discovery_hash=None):
+    """Set up the MQTT Alarm Control Panel platform."""
     async_add_entities([MqttAlarm(
         config.get(CONF_NAME),
         config.get(CONF_STATE_TOPIC),
@@ -65,18 +83,22 @@ def async_setup_platform(hass, config, async_add_entities,
         config.get(CONF_CODE),
         config.get(CONF_AVAILABILITY_TOPIC),
         config.get(CONF_PAYLOAD_AVAILABLE),
-        config.get(CONF_PAYLOAD_NOT_AVAILABLE))])
+        config.get(CONF_PAYLOAD_NOT_AVAILABLE),
+        discovery_hash,)])
 
 
-class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
+class MqttAlarm(MqttAvailability, MqttDiscoveryUpdate,
+                alarm.AlarmControlPanel):
     """Representation of a MQTT alarm status."""
 
     def __init__(self, name, state_topic, command_topic, qos, retain,
                  payload_disarm, payload_arm_home, payload_arm_away, code,
-                 availability_topic, payload_available, payload_not_available):
+                 availability_topic, payload_available, payload_not_available,
+                 discovery_hash):
         """Init the MQTT Alarm Control Panel."""
-        super().__init__(availability_topic, qos, payload_available,
-                         payload_not_available)
+        MqttAvailability.__init__(self, availability_topic, qos,
+                                  payload_available, payload_not_available)
+        MqttDiscoveryUpdate.__init__(self, discovery_hash)
         self._state = STATE_UNKNOWN
         self._name = name
         self._state_topic = state_topic
@@ -87,11 +109,13 @@ class MqttAlarm(MqttAvailability, alarm.AlarmControlPanel):
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
         self._code = code
+        self._discovery_hash = discovery_hash
 
     @asyncio.coroutine
     def async_added_to_hass(self):
         """Subscribe mqtt events."""
-        yield from super().async_added_to_hass()
+        yield from MqttAvailability.async_added_to_hass(self)
+        yield from MqttDiscoveryUpdate.async_added_to_hass(self)
 
         @callback
         def message_received(topic, payload, qos):

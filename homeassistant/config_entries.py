@@ -27,9 +27,10 @@ At a minimum, each config flow will have to define a version number and the
 'user' step.
 
     @config_entries.HANDLERS.register(DOMAIN)
-    class ExampleConfigFlow(data_entry_flow.FlowHandler):
+    class ExampleConfigFlow(config_entries.ConfigFlow):
 
         VERSION = 1
+        CONNETION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
         async def async_step_user(self, user_input=None):
             …
@@ -117,7 +118,7 @@ the flow from the config panel.
 
 import logging
 import uuid
-from typing import Set, Optional, List  # noqa pylint: disable=unused-import
+from typing import Set, Optional, List, Dict  # noqa pylint: disable=unused-import
 
 from homeassistant import data_entry_flow
 from homeassistant.core import callback, HomeAssistant
@@ -140,8 +141,13 @@ FLOWS = [
     'deconz',
     'homematicip_cloud',
     'hue',
+    'ifttt',
+    'ios',
+    'mqtt',
     'nest',
+    'openuv',
     'sonos',
+    'tradfri',
     'zone',
     'upnp',
 ]
@@ -168,15 +174,23 @@ DISCOVERY_SOURCES = (
 
 EVENT_FLOW_DISCOVERED = 'config_entry_discovered'
 
+CONN_CLASS_CLOUD_PUSH = 'cloud_push'
+CONN_CLASS_CLOUD_POLL = 'cloud_poll'
+CONN_CLASS_LOCAL_PUSH = 'local_push'
+CONN_CLASS_LOCAL_POLL = 'local_poll'
+CONN_CLASS_ASSUMED = 'assumed'
+CONN_CLASS_UNKNOWN = 'unknown'
+
 
 class ConfigEntry:
     """Hold a configuration entry."""
 
     __slots__ = ('entry_id', 'version', 'domain', 'title', 'data', 'source',
-                 'state')
+                 'connection_class', 'state')
 
     def __init__(self, version: str, domain: str, title: str, data: dict,
-                 source: str, entry_id: Optional[str] = None,
+                 source: str, connection_class: str,
+                 entry_id: Optional[str] = None,
                  state: str = ENTRY_STATE_NOT_LOADED) -> None:
         """Initialize a config entry."""
         # Unique id of the config entry
@@ -196,6 +210,9 @@ class ConfigEntry:
 
         # Source of the configuration (user, discovery, cloud)
         self.source = source
+
+        # Connection class
+        self.connection_class = connection_class
 
         # State of the entry (LOADED, NOT_LOADED)
         self.state = state
@@ -264,6 +281,7 @@ class ConfigEntry:
             'title': self.title,
             'data': self.data,
             'source': self.source,
+            'connection_class': self.connection_class,
         }
 
 
@@ -324,7 +342,18 @@ class ConfigEntries:
         entry = self._entries.pop(found)
         self._async_schedule_save()
 
-        unloaded = await entry.async_unload(self.hass)
+        if entry.state == ENTRY_STATE_LOADED:
+            unloaded = await entry.async_unload(self.hass)
+        else:
+            unloaded = True
+
+        device_registry = await \
+            self.hass.helpers.device_registry.async_get_registry()
+        device_registry.async_clear_config_entry(entry_id)
+
+        entity_registry = await \
+            self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry.async_clear_config_entry(entry_id)
 
         return {
             'require_restart': not unloaded
@@ -342,7 +371,24 @@ class ConfigEntries:
             self._entries = []
             return
 
-        self._entries = [ConfigEntry(**entry) for entry in config['entries']]
+        self._entries = [
+            ConfigEntry(
+                version=entry['version'],
+                domain=entry['domain'],
+                entry_id=entry['entry_id'],
+                data=entry['data'],
+                source=entry['source'],
+                title=entry['title'],
+                # New in 0.79
+                connection_class=entry.get('connection_class',
+                                           CONN_CLASS_UNKNOWN))
+            for entry in config['entries']]
+
+    @callback
+    def async_update_entry(self, entry, *, data):
+        """Update a config entry."""
+        entry.data = data
+        self._async_schedule_save()
 
     async def async_forward_entry_setup(self, entry, component):
         """Forward the setup of an entry to a different component.
@@ -392,6 +438,7 @@ class ConfigEntries:
             title=result['title'],
             data=result['data'],
             source=flow.context['source'],
+            connection_class=flow.CONNECTION_CLASS,
         )
         self._entries.append(entry)
         self._async_schedule_save()
@@ -454,3 +501,21 @@ class ConfigEntries:
 async def _old_conf_migrator(old_config):
     """Migrate the pre-0.73 config format to the latest version."""
     return {'entries': old_config}
+
+
+class ConfigFlow(data_entry_flow.FlowHandler):
+    """Base class for config flows with some helpers."""
+
+    CONNECTION_CLASS = CONN_CLASS_UNKNOWN
+
+    @callback
+    def _async_current_entries(self):
+        """Return current entries."""
+        return self.hass.config_entries.async_entries(self.handler)
+
+    @callback
+    def _async_in_progress(self):
+        """Return other in progress flows for current domain."""
+        return [flw for flw in self.hass.config_entries.flow.async_progress()
+                if flw['handler'] == self.handler and
+                flw['flow_id'] != self.flow_id]

@@ -2,7 +2,6 @@
     "config": {
         "abort": {
             "already_configured": "\u63a5\u5165\u70b9\u5df2\u7ecf\u914d\u7f6e\u5b8c\u6210",
-            "conection_aborted": "\u65e0\u6cd5\u8fde\u63a5\u5230 HMIP \u670d\u52a1\u5668",
             "connection_aborted": "\u65e0\u6cd5\u8fde\u63a5\u5230 HMIP \u670d\u52a1\u5668",
             "unknown": "\u53d1\u751f\u672a\u77e5\u9519\u8bef\u3002"
         },

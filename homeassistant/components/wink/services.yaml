@@ -111,3 +111,44 @@ set_chime_volume:
     volume:
         description: Volume level. One of ["low", "medium", "high"]
         example: "low"
+
+set_nimbus_dial_configuration:
+  description: Set the configuration of an individual nimbus dial
+  fields:
+    entity_id:
+      description: Name of the entity to set.
+      example: 'wink.nimbus_dial_3'
+    rotation:
+      description: Direction dial hand should spin ["cw" or "ccw"]
+      example: 'cw'
+    ticks:
+      description: Number of times the hand should move
+      example: 12
+    scale:
+      description: How the dial should move in response to higher values ["log" or "linear"]
+      example: "linear"
+    min_value:
+      description: The minimum value allowed to be set
+      example: 0
+    max_value:
+      description: The maximum value allowd to be set
+      example: 500
+    min_position:
+      description: The minimum position the dial hand can rotate to generally [0-360]
+      example: 0
+    max_position:
+      description: The maximum position the dial hand can rotate to generally [0-360]
+      example: 360
+
+set_nimbus_dial_state:
+  description: Set the value and lables of an individual nimbus dial
+  fields:
+    entity_id:
+      description: Name fo the entity to set.
+      example: 'wink.nimbus_dial_3'
+    value:
+      description: The value that should be set (Should be between min_value and max_value)
+      example: 250
+    labels:
+      description: The values shown on the dial labels ["Dial 1", "test"] the first value is what is shown by default the second value is shown when the nimbus is pressed
+      example: ["example", "test"]

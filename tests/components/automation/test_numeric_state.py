@@ -4,13 +4,14 @@ import unittest
 from unittest.mock import patch
 
 import homeassistant.components.automation as automation
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 from homeassistant.setup import setup_component
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
     get_test_home_assistant, mock_component, fire_time_changed,
     assert_setup_component)
+from tests.components.automation import common
 
 
 # pylint: disable=invalid-name
@@ -36,6 +37,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_fires_on_entity_change_below(self):
         """Test the firing with changed entity."""
+        context = Context()
         assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
@@ -49,13 +51,14 @@ class TestAutomationNumericState(unittest.TestCase):
             }
         })
         # 9 is below 10
-        self.hass.states.set('test.entity', 9)
+        self.hass.states.set('test.entity', 9, context=context)
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
+        assert self.calls[0].context is context
 
         # Set above 12 so the automation will fire again
         self.hass.states.set('test.entity', 12)
-        automation.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
         self.hass.states.set('test.entity', 9)
         self.hass.block_till_done()
@@ -116,6 +119,7 @@ class TestAutomationNumericState(unittest.TestCase):
 
     def test_if_not_fires_on_entity_change_below_to_below(self):
         """Test the firing with changed entity."""
+        context = Context()
         self.hass.states.set('test.entity', 11)
         self.hass.block_till_done()
 
@@ -133,9 +137,10 @@ class TestAutomationNumericState(unittest.TestCase):
         })
 
         # 9 is below 10 so this should fire
-        self.hass.states.set('test.entity', 9)
+        self.hass.states.set('test.entity', 9, context=context)
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
+        assert self.calls[0].context is context
 
         # already below so should not fire again
         self.hass.states.set('test.entity', 5)
@@ -771,7 +776,7 @@ class TestAutomationNumericState(unittest.TestCase):
         self.hass.states.set('test.entity_1', 9)
         self.hass.states.set('test.entity_2', 9)
         self.hass.block_till_done()
-        automation.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
 
         fire_time_changed(self.hass, dt_util.utcnow() + timedelta(seconds=10))

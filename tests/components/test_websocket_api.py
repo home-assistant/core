@@ -1,6 +1,6 @@
 """Tests for the Home Assistant Websocket API."""
 import asyncio
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from aiohttp import WSMsgType
 from async_timeout import timeout
@@ -539,3 +539,20 @@ async def test_call_service_context_no_user(hass, aiohttp_client):
         assert call.service == 'test_service'
         assert call.data == {'hello': 'world'}
         assert call.context.user_id is None
+
+
+async def test_handler_failing(hass, websocket_client):
+    """Test a command that raises."""
+    hass.components.websocket_api.async_register_command(
+        'bla', Mock(side_effect=TypeError),
+        wapi.BASE_COMMAND_MESSAGE_SCHEMA.extend({'type': 'bla'}))
+    await websocket_client.send_json({
+        'id': 5,
+        'type': 'bla',
+    })
+
+    msg = await websocket_client.receive_json()
+    assert msg['id'] == 5
+    assert msg['type'] == wapi.TYPE_RESULT
+    assert not msg['success']
+    assert msg['error']['code'] == wapi.ERR_UNKNOWN_ERROR

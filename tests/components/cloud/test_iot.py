@@ -6,9 +6,13 @@ from aiohttp import WSMsgType, client_exceptions
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components.cloud import Cloud, iot, auth_api, MODE_DEV
+from homeassistant.components.cloud import (
+    Cloud, iot, auth_api, MODE_DEV, STORAGE_ENABLE_ALEXA,
+    STORAGE_ENABLE_GOOGLE)
 from tests.components.alexa import test_smart_home as test_alexa
 from tests.common import mock_coro
+
+from . import mock_cloud_prefs
 
 
 @pytest.fixture
@@ -284,6 +288,8 @@ def test_handler_alexa(hass):
         })
         assert setup
 
+    mock_cloud_prefs(hass)
+
     resp = yield from iot.async_handle_alexa(
         hass, hass.data['cloud'],
         test_alexa.get_new_request('Alexa.Discovery', 'Discover'))
@@ -297,6 +303,20 @@ def test_handler_alexa(hass):
     assert device['friendlyName'] == 'Config name'
     assert device['displayCategories'] == ['LIGHT']
     assert device['manufacturerName'] == 'Home Assistant'
+
+
+@asyncio.coroutine
+def test_handler_alexa_disabled(hass, mock_cloud_fixture):
+    """Test handler Alexa when user has disabled it."""
+    mock_cloud_fixture[STORAGE_ENABLE_ALEXA] = False
+
+    resp = yield from iot.async_handle_alexa(
+        hass, hass.data['cloud'],
+        test_alexa.get_new_request('Alexa.Discovery', 'Discover'))
+
+    assert resp['event']['header']['namespace'] == 'Alexa'
+    assert resp['event']['header']['name'] == 'ErrorResponse'
+    assert resp['event']['payload']['type'] == 'BRIDGE_UNREACHABLE'
 
 
 @asyncio.coroutine
@@ -327,6 +347,8 @@ def test_handler_google_actions(hass):
         })
         assert setup
 
+    mock_cloud_prefs(hass)
+
     reqid = '5711642932632160983'
     data = {'requestId': reqid, 'inputs': [{'intent': 'action.devices.SYNC'}]}
 
@@ -349,6 +371,24 @@ def test_handler_google_actions(hass):
     assert device['name']['nicknames'] == ['Config alias']
     assert device['type'] == 'action.devices.types.SWITCH'
     assert device['roomHint'] == 'living room'
+
+
+async def test_handler_google_actions_disabled(hass, mock_cloud_fixture):
+    """Test handler Google Actions when user has disabled it."""
+    mock_cloud_fixture[STORAGE_ENABLE_GOOGLE] = False
+
+    with patch('homeassistant.components.cloud.Cloud.async_start',
+               return_value=mock_coro()):
+        assert await async_setup_component(hass, 'cloud', {})
+
+    reqid = '5711642932632160983'
+    data = {'requestId': reqid, 'inputs': [{'intent': 'action.devices.SYNC'}]}
+
+    resp = await iot.async_handle_google_actions(
+        hass, hass.data['cloud'], data)
+
+    assert resp['requestId'] == reqid
+    assert resp['payload']['errorCode'] == 'deviceTurnedOff'
 
 
 async def test_refresh_token_expired(hass):
