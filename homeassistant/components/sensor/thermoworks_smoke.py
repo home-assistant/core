@@ -21,10 +21,6 @@ REQUIREMENTS = ['thermoworks_smoke==0.1.6', 'stringcase==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = 'thermoworks'
-THERMOWORKS_MFG = 'ThermoWorks'
-SMOKE_MODEL = 'Smoke'
-
 PROBE_1 = 'probe1'
 PROBE_2 = 'probe2'
 PROBE_1_MIN = 'probe1_min'
@@ -116,19 +112,6 @@ class ThermoworksSmokeSensor(Entity):
         return self._unique_id
 
     @property
-    def device_info(self):
-        """Return the device info property."""
-        return {
-            'identifiers': {
-                (DOMAIN, self.serial)
-            },
-            'name': self.mgr.name(self.serial),
-            'manufacturer': THERMOWORKS_MFG,
-            'model': SMOKE_MODEL,
-            'sw_version': self.firmware_version
-        }
-
-    @property
     def state(self):
         """Return the state of the sensor."""
         return self._state
@@ -188,8 +171,7 @@ class ThermoworksSmokeSensor(Entity):
                         elif key:
                             # add to attrs
                             self._attributes[key] = val
-                # store serial number as an attribute since device_info
-                # is not visible yet
+                # serial number for using with exclude variable
                 self._attributes['serial'] = self.serial
                 # store actual unit because attributes are not converted
                 self._attributes['unit_of_min_max'] = self._unit_of_measurement
