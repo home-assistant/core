@@ -7,10 +7,7 @@ https://home-assistant.io/components/switch.tradfri/
 import logging
 
 from homeassistant.core import callback
-from homeassistant.components.switch import (
-    SwitchDevice,
-    PLATFORM_SCHEMA
-)
+from homeassistant.components.switch import SwitchDevice
 from homeassistant.components.tradfri import (
     KEY_GATEWAY, KEY_API, DOMAIN as TRADFRI_DOMAIN)
 from homeassistant.components.tradfri.const import (
