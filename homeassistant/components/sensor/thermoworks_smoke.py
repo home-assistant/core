@@ -21,6 +21,10 @@ REQUIREMENTS = ['thermoworks_smoke==0.1.6', 'stringcase==1.2.0']
 
 _LOGGER = logging.getLogger(__name__)
 
+DOMAIN = 'thermoworks'
+THERMOWORKS_MFG = 'ThermoWorks'
+SMOKE_MODEL = 'Smoke'
+
 PROBE_1 = 'probe1'
 PROBE_2 = 'probe2'
 PROBE_1_MIN = 'probe1_min'
@@ -28,6 +32,7 @@ PROBE_1_MAX = 'probe1_max'
 PROBE_2_MIN = 'probe2_min'
 PROBE_2_MAX = 'probe2_max'
 BATTERY_LEVEL = 'battery'
+FIRMWARE = 'firmware'
 
 # map types to labels
 SENSOR_TYPES = {
@@ -38,11 +43,6 @@ SENSOR_TYPES = {
     PROBE_2_MIN: 'Probe 2 Min',
     PROBE_2_MAX: 'Probe 2 Max',
 }
-
-# exclude these keys from thermoworks
-EXCLUDE_KEYS = [
-    'firmware'
-]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_EMAIL): cv.string,
@@ -100,6 +100,7 @@ class ThermoworksSmokeSensor(Entity):
             serial=serial, type=sensor_type)
         self.serial = serial
         self.mgr = mgr
+        self.firmware_version = ''
         self.update_unit()
 
     @property
@@ -111,6 +112,19 @@ class ThermoworksSmokeSensor(Entity):
     def unique_id(self):
         """Return the unique id for the sensor."""
         return self._unique_id
+
+    @property
+    def device_info(self):
+        """Return the device info property."""
+        return {
+            'identifiers': {
+                (DOMAIN, self.serial)
+            },
+            'name': self.mgr.name(self.serial),
+            'manufacturer': THERMOWORKS_MFG,
+            'model': SMOKE_MODEL,
+            'sw_version': self.firmware_version
+        }
 
     @property
     def state(self):
@@ -148,7 +162,6 @@ class ThermoworksSmokeSensor(Entity):
 
             # set basic attributes for all sensors
             self._attributes = {
-                'serial': self.serial,
                 'time': values['time'],
                 'localtime': values['localtime']
             }
@@ -168,9 +181,14 @@ class ThermoworksSmokeSensor(Entity):
                         else:
                             # strip probe label and convert to snake_case
                             key = snakecase(key.replace(self.type, ''))
-                        # add to attrs
-                        if key and key not in EXCLUDE_KEYS:
+                        if key == FIRMWARE:
+                            self.firmware_version = val
+                        elif key:
+                            # add to attrs
                             self._attributes[key] = val
+                # store serial number as an attribute since device_info
+                # is not visible yet
+                self._attributes['serial'] = self.serial
                 # store actual unit because attributes are not converted
                 self._attributes['unit_of_min_max'] = self._unit_of_measurement
 
