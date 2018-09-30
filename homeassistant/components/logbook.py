@@ -8,7 +8,6 @@ from datetime import timedelta
 from itertools import groupby
 import logging
 
-import attr
 import voluptuous as vol
 
 from homeassistant.loader import bind_hass
@@ -140,24 +139,10 @@ class LogbookView(HomeAssistantView):
 
         def json_events():
             """Fetch events and generate JSON."""
-            return self.json([
-                attr.asdict(entry) for entry in
-                _get_events(hass, self.config, start_day, end_day)])
+            return self.json(list(
+                _get_events(hass, self.config, start_day, end_day)))
 
         return await hass.async_add_job(json_events)
-
-
-@attr.s(slots=True, frozen=True)
-class Entry:
-    """A human readable version of the log."""
-
-    when = attr.ib(type=str)
-    name = attr.ib(type=str)
-    message = attr.ib(type=str)
-    domain = attr.ib(type=str)
-    context_id = attr.ib(type=str)
-    entity_id = attr.ib(type=str, default=None)
-    context_user_id = attr.ib(type=str, default=None)
 
 
 def humanify(hass, events):
@@ -221,28 +206,28 @@ def humanify(hass, events):
                    to_state.attributes.get('unit_of_measurement'):
                     continue
 
-                yield Entry(
-                    when=event.time_fired,
-                    name=to_state.name,
-                    message=_entry_message_from_state(domain, to_state),
-                    domain=domain,
-                    entity_id=to_state.entity_id,
-                    context_id=event.context.id,
-                    context_user_id=event.context.user_id
-                )
+                yield {
+                    'when': event.time_fired,
+                    'name': to_state.name,
+                    'message': _entry_message_from_state(domain, to_state),
+                    'domain': domain,
+                    'entity_id': to_state.entity_id,
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
 
             elif event.event_type == EVENT_HOMEASSISTANT_START:
                 if start_stop_events.get(event.time_fired.minute) == 2:
                     continue
 
-                yield Entry(
-                    when=event.time_fired,
-                    name="Home Assistant",
-                    message="started",
-                    domain=HA_DOMAIN,
-                    context_id=event.context.id,
-                    context_user_id=event.context.user_id
-                )
+                yield {
+                    'when': event.time_fired,
+                    'name': "Home Assistant",
+                    'message': "started",
+                    'domain': HA_DOMAIN,
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
 
             elif event.event_type == EVENT_HOMEASSISTANT_STOP:
                 if start_stop_events.get(event.time_fired.minute) == 2:
@@ -250,14 +235,14 @@ def humanify(hass, events):
                 else:
                     action = "stopped"
 
-                yield Entry(
-                    when=event.time_fired,
-                    name="Home Assistant",
-                    message=action,
-                    domain=HA_DOMAIN,
-                    context_id=event.context.id,
-                    context_user_id=event.context.user_id
-                )
+                yield {
+                    'when': event.time_fired,
+                    'name': "Home Assistant",
+                    'message': action,
+                    'domain': HA_DOMAIN,
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
 
             elif event.event_type == EVENT_LOGBOOK_ENTRY:
                 domain = event.data.get(ATTR_DOMAIN)
@@ -268,15 +253,15 @@ def humanify(hass, events):
                     except IndexError:
                         pass
 
-                yield Entry(
-                    when=event.time_fired,
-                    name=event.data.get(ATTR_NAME),
-                    message=event.data.get(ATTR_MESSAGE),
-                    domain=domain,
-                    entity_id=entity_id,
-                    context_id=event.context.id,
-                    context_user_id=event.context.user_id
-                )
+                yield {
+                    'when': event.time_fired,
+                    'name': event.data.get(ATTR_NAME),
+                    'message': event.data.get(ATTR_MESSAGE),
+                    'domain': domain,
+                    'entity_id': entity_id,
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
 
             elif event.event_type == EVENT_ALEXA_SMART_HOME:
                 data = event.data
@@ -291,15 +276,15 @@ def humanify(hass, events):
                     message = "send command {}/{}".format(
                         data['namespace'], data['name'])
 
-                yield Entry(
-                    when=event.time_fired,
-                    name='Amazon Alexa',
-                    message=message,
-                    domain='alexa',
-                    entity_id=entity_id,
-                    context_id=event.context.id,
-                    context_user_id=event.context.user_id
-                )
+                yield {
+                    'when': event.time_fired,
+                    'name': 'Amazon Alexa',
+                    'message': message,
+                    'domain': 'alexa',
+                    'entity_id': entity_id,
+                    'context_id': event.context.id,
+                    'context_user_id': event.context.user_id
+                }
 
 
 def _get_events(hass, config, start_day, end_day):

@@ -516,19 +516,19 @@ class TestComponentLogbook(unittest.TestCase):
                      domain=None, entity_id=None):
         """Assert an entry is what is expected."""
         if when:
-            self.assertEqual(when, entry.when)
+            self.assertEqual(when, entry['when'])
 
         if name:
-            self.assertEqual(name, entry.name)
+            self.assertEqual(name, entry['name'])
 
         if message:
-            self.assertEqual(message, entry.message)
+            self.assertEqual(message, entry['message'])
 
         if domain:
-            self.assertEqual(domain, entry.domain)
+            self.assertEqual(domain, entry['domain'])
 
         if entity_id:
-            self.assertEqual(entity_id, entry.entity_id)
+            self.assertEqual(entity_id, entry['entity_id'])
 
     def create_state_changed_event(self, event_time_fired, entity_id, state,
                                    attributes=None, last_changed=None,
@@ -584,16 +584,16 @@ async def test_humanify_alexa_event(hass):
 
     event1, event2, event3 = results
 
-    assert event1.name == 'Amazon Alexa'
-    assert event1.message == 'send command Alexa.Discovery/Discover'
-    assert event1.entity_id is None
+    assert event1['name'] == 'Amazon Alexa'
+    assert event1['message'] == 'send command Alexa.Discovery/Discover'
+    assert event1['entity_id'] is None
 
-    assert event2.name == 'Amazon Alexa'
-    assert event2.message == \
+    assert event2['name'] == 'Amazon Alexa'
+    assert event2['message'] == \
         'send command Alexa.PowerController/TurnOn for Kitchen Light'
-    assert event2.entity_id == 'light.kitchen'
+    assert event2['entity_id'] == 'light.kitchen'
 
-    assert event3.name == 'Amazon Alexa'
-    assert event3.message == \
+    assert event3['name'] == 'Amazon Alexa'
+    assert event3['message'] == \
         'send command Alexa.PowerController/TurnOn for light.non_existing'
-    assert event3.entity_id == 'light.non_existing'
+    assert event3['entity_id'] == 'light.non_existing'
