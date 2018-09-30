@@ -104,7 +104,6 @@ class TestGeoJsonPlatform(unittest.TestCase):
                 state = self.hass.states.get("geo_location.title_1")
                 self.assertIsNotNone(state)
                 assert state.name == "Title 1"
-                print(state.attributes)
                 assert state.attributes == {
                     ATTR_EXTERNAL_ID: "1234", ATTR_LATITUDE: -31.0,
                     ATTR_LONGITUDE: 150.0, ATTR_FRIENDLY_NAME: "Title 1",
