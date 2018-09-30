@@ -21,7 +21,7 @@ TRADFRI_SWITCH_MANAGER = 'Tradfri Switch Manager'
 
 
 async def async_setup_entry(hass, config_entry, async_add_entities):
-    """Load Tradfri switchs based on a config entry."""
+    """Load Tradfri switches based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
     api = hass.data[KEY_API][config_entry.entry_id]
     gateway = hass.data[KEY_GATEWAY][config_entry.entry_id]
