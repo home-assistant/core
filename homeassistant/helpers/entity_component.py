@@ -104,13 +104,11 @@ class EntityComponent:
 
         key = config_entry.entry_id
 
-        if key in self._platforms:
-            raise ValueError('Config entry has already been setup!')
-
-        self._platforms[key] = self._async_init_entity_platform(
-            platform_type, platform,
-            scan_interval=getattr(platform, 'SCAN_INTERVAL', None),
-        )
+        if key not in self._platforms:
+            self._platforms[key] = self._async_init_entity_platform(
+                platform_type, platform,
+                scan_interval=getattr(platform, 'SCAN_INTERVAL', None),
+            )
 
         return await self._platforms[key].async_setup_entry(config_entry)
 
