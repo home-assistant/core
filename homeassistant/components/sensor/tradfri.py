@@ -26,7 +26,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     devices_commands = await api(gateway.get_devices())
     all_devices = await api(devices_commands)
-    devices = (dev for dev in all_devices if not dev.has_light_control)
+    devices = (dev for dev in all_devices if not dev.has_light_control and
+               not dev.has_socket_control)
     async_add_entities(TradfriDevice(device, api) for device in devices)
 
 
