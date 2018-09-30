@@ -723,6 +723,9 @@ psutil==5.4.7
 # homeassistant.components.wink
 pubnubsub-handler==1.0.2
 
+# homeassistant.components.media_player.androidtv
+pure-python-adb==0.1.5.dev0
+
 # homeassistant.components.notify.pushbullet
 # homeassistant.components.sensor.pushbullet
 pushbullet.py==0.11.0

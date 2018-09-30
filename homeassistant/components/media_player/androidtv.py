@@ -1,3 +1,4 @@
+# /usr/bin/python3
 """
 Provide functionality to interact with AndroidT devices on the network.
 Example config:
@@ -31,7 +32,7 @@ from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
 
-REQUIREMENTS = ['pure-python-adb>=0.1.5.dev0']
+REQUIREMENTS = ['pure-python-adb==0.1.5.dev0']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -128,8 +129,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         uri = host + ':' + port
 
         try:
-            ADBdev = client.device(uri)
-            if ADBdev is None:
+            adb_device = client.device(uri)
+            if adb_device is None:
                 _LOGGER.error(
                     "Can't reach adb server, is it running ?")
                 raise PlatformNotReady
@@ -206,7 +207,7 @@ class AndroidTv(MediaPlayerDevice):
     def update(self):
         """Get the latest details from the device."""
         try:
-            ADBDevices = self._client.devices()
+            adb_devices = self._client.devices()
         except RuntimeError:
             # Can't connect to adb server
             if self._available:
@@ -216,20 +217,20 @@ class AndroidTv(MediaPlayerDevice):
                     "Device {} became unavailable.".format(self._name))
                 self._available = False
         else:
-            if any([self._uri in host.get_serial_no() for host in ADBDevices]):
+            if any([self._uri in host.get_serial_no() for host in adb_devices]):
                 # Device is connected through the ADB server
                 if not self._available:
                     _LOGGER.info("Device {} reconnected.".format(self._name))
                     self._available = True
 
-                powerOutput = self._device.shell('dumpsys power')
-                audioOutput = self._device.shell('dumpsys audio')
-                winOutput = self._device.shell('dumpsys window windows')
+                power_output = self._device.shell('dumpsys power')
+                audio_output = self._device.shell('dumpsys audio')
+                win_output = self._device.shell('dumpsys window windows')
 
-                self._state = self.get_state(powerOutput, audioOutput)
+                self._state = self.get_state(power_output, audio_output)
                 self._muted, self._device, self._volume = self.get_audio(
-                    audioOutput)
-                self._app_id = self.get_app_id(winOutput)
+                    audio_output)
+                self._app_id = self.get_app_id(win_output)
                 self._app_name = self.get_app_name(self._app_id)
 
             elif self._available:
@@ -239,54 +240,55 @@ class AndroidTv(MediaPlayerDevice):
                     "Device {} became unavailable.".format(self._name))
                 self._available = False
 
-    def get_state(self, powerOutput, audioOutput):
-        """Process sys output and return the device state."""
-        if 'Display Power: state=ON' not in powerOutput:
+    def get_state(self, power_output, audio_output):
+        """Process sys outputs and return the device state."""
+        if 'Display Power: state=ON' not in power_output:
             return STATE_OFF
-        elif 'started' in audioOutput:
+        elif 'started' in audio_output:
             state = STATE_PLAYING
-        elif 'paused' in audioOutput:
+        elif 'paused' in audio_output:
             state = STATE_PAUSED
         else:
             state = STATE_IDLE
 
         return state
 
-    def get_audio(self, audioOutput):
+    def get_audio(self, audio_output):
         """Process sys output and return the volume, muted state and device."""
         import re
-        blockPattern = 'STREAM_MUSIC(.*?)- STREAM'
-        streamBlock = re.findall(
-            blockPattern, audioOutput, re.DOTALL | re.MULTILINE)[0]
+        block_pattern = 'STREAM_MUSIC(.*?)- STREAM'
+        stream_block = re.findall(
+            block_pattern, audio_output, re.DOTALL | re.MULTILINE)[0]
 
-        devicePattern = 'Devices: (.*?)\W'
-        device = re.findall(devicePattern, streamBlock,
+        device_pattern = 'Devices: (.*?)\W'
+        device = re.findall(device_pattern, stream_block,
                             re.DOTALL | re.MULTILINE)[0]
 
-        mutedPattern = 'Muted: (.*?)\W'
-        muted = re.findall(mutedPattern, streamBlock,
+        muted_pattern = 'Muted: (.*?)\W'
+        muted = re.findall(muted_pattern, stream_block,
                            re.DOTALL | re.MULTILINE)[0]
 
-        volumePattern = device + '\): (\d{1,})'
-        volumeLevel = re.findall(
-            volumePattern, streamBlock, re.DOTALL | re.MULTILINE)[0]
+        volume_pattern = device + '\): (\d{1,})'
+        volume_level = re.findall(
+            volume_pattern, stream_block, re.DOTALL | re.MULTILINE)[0]
 
         if muted == 'true':
             muted = True
         else:
             muted = False
 
-        volume = round(1/15 * int(volumeLevel), 2)
+        volume = round(1/15 * int(volume_level), 2)
 
         return muted, device, volume
 
-    def get_app_id(self, winOutput):
+    def get_app_id(self, win_output):
         """Process sys output and return the current app id."""
-        winOutput = winOutput.splitlines()
-        for line in winOutput:
+        win_output = win_output.splitlines()
+        for line in win_output:
             if 'mCurrentFocus' in line:
-                currentApp = line.split(' ')[4].split('/')[0]
-                return currentApp
+                current_app = line.split(' ')[4].split('/')[0]
+                return current_app
+        return None
 
     def get_app_name(self, app_id):
         """Return the app name from its id and known apps."""
