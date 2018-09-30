@@ -1,7 +1,7 @@
 # coding: utf-8
 """Constants used by Home Assistant components."""
 MAJOR_VERSION = 0
-MINOR_VERSION = 78
+MINOR_VERSION = 80
 PATCH_VERSION = '0.dev0'
 __short_version__ = '{}.{}'.format(MAJOR_VERSION, MINOR_VERSION)
 __version__ = '{}.{}'.format(__short_version__, PATCH_VERSION)
@@ -172,6 +172,7 @@ DEVICE_CLASS_BATTERY = 'battery'
 DEVICE_CLASS_HUMIDITY = 'humidity'
 DEVICE_CLASS_ILLUMINANCE = 'illuminance'
 DEVICE_CLASS_TEMPERATURE = 'temperature'
+DEVICE_CLASS_PRESSURE = 'pressure'
 
 # #### STATES ####
 STATE_ON = 'on'
@@ -224,6 +225,9 @@ ATTR_ID = 'id'
 
 # Name
 ATTR_NAME = 'name'
+
+# Data for a SERVICE_EXECUTED event
+ATTR_SERVICE_CALL_ID = 'service_call_id'
 
 # Contains one string or a list of strings, each being an entity id
 ATTR_ENTITY_ID = 'entity_id'
@@ -407,7 +411,9 @@ HTTP_UNAUTHORIZED = 401
 HTTP_NOT_FOUND = 404
 HTTP_METHOD_NOT_ALLOWED = 405
 HTTP_UNPROCESSABLE_ENTITY = 422
+HTTP_TOO_MANY_REQUESTS = 429
 HTTP_INTERNAL_SERVER_ERROR = 500
+HTTP_SERVICE_UNAVAILABLE = 503
 
 HTTP_BASIC_AUTHENTICATION = 'basic'
 HTTP_DIGEST_AUTHENTICATION = 'digest'

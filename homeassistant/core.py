@@ -18,8 +18,7 @@ from time import monotonic
 import uuid
 
 from types import MappingProxyType
-# pylint: disable=unused-import
-from typing import (  # NOQA
+from typing import (  # noqa: F401 pylint: disable=unused-import
     Optional, Any, Callable, List, TypeVar, Dict, Coroutine, Set,
     TYPE_CHECKING, Awaitable, Iterator)
 
@@ -30,7 +29,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.const import (
     ATTR_DOMAIN, ATTR_FRIENDLY_NAME, ATTR_NOW, ATTR_SERVICE,
-    ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
+    ATTR_SERVICE_CALL_ID, ATTR_SERVICE_DATA, EVENT_CALL_SERVICE,
     EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP,
     EVENT_SERVICE_EXECUTED, EVENT_SERVICE_REGISTERED, EVENT_STATE_CHANGED,
     EVENT_TIME_CHANGED, MATCH_ALL, EVENT_HOMEASSISTANT_CLOSE,
@@ -130,10 +129,7 @@ class HomeAssistant:
             self,
             loop: Optional[asyncio.events.AbstractEventLoop] = None) -> None:
         """Initialize new Home Assistant object."""
-        if sys.platform == 'win32':
-            self.loop = loop or asyncio.ProactorEventLoop()
-        else:
-            self.loop = loop or asyncio.get_event_loop()
+        self.loop = loop or asyncio.get_event_loop()
 
         executor_opts = {'max_workers': None}  # type: Dict[str, Any]
         if sys.version_info[:2] >= (3, 6):
@@ -155,6 +151,8 @@ class HomeAssistant:
         self.state = CoreState.not_running
         self.exit_code = 0  # type: int
         self.config_entries = None  # type: Optional[ConfigEntries]
+        # If not None, use to signal end-of-loop
+        self._stopped = None  # type: Optional[asyncio.Event]
 
     @property
     def is_running(self) -> bool:
@@ -162,21 +160,43 @@ class HomeAssistant:
         return self.state in (CoreState.starting, CoreState.running)
 
     def start(self) -> int:
-        """Start home assistant."""
+        """Start home assistant.
+
+        Note: This function is only used for testing.
+        For regular use, use "await hass.run()".
+        """
         # Register the async start
         fire_coroutine_threadsafe(self.async_start(), self.loop)
 
-        # Run forever and catch keyboard interrupt
+        # Run forever
         try:
             # Block until stopped
             _LOGGER.info("Starting Home Assistant core loop")
             self.loop.run_forever()
-        except KeyboardInterrupt:
-            self.loop.call_soon_threadsafe(
-                self.loop.create_task, self.async_stop())
-            self.loop.run_forever()
         finally:
             self.loop.close()
+        return self.exit_code
+
+    async def async_run(self, *, attach_signals: bool = True) -> int:
+        """Home Assistant main entry point.
+
+        Start Home Assistant and block until stopped.
+
+        This method is a coroutine.
+        """
+        if self.state != CoreState.not_running:
+            raise RuntimeError("HASS is already running")
+
+        # _async_stop will set this instead of stopping the loop
+        self._stopped = asyncio.Event()
+
+        await self.async_start()
+        if attach_signals:
+            from homeassistant.helpers.signal \
+                    import async_register_signal_handling
+            async_register_signal_handling(self)
+
+        await self._stopped.wait()
         return self.exit_code
 
     async def async_start(self) -> None:
@@ -204,6 +224,13 @@ class HomeAssistant:
 
         # Allow automations to set up the start triggers before changing state
         await asyncio.sleep(0)
+
+        if self.state != CoreState.starting:
+            _LOGGER.warning(
+                'Home Assistant startup has been interrupted. '
+                'Its state may be inconsistent.')
+            return
+
         self.state = CoreState.running
         _async_create_timer(self)
 
@@ -322,13 +349,32 @@ class HomeAssistant:
 
     def stop(self) -> None:
         """Stop Home Assistant and shuts down all threads."""
+        if self.state == CoreState.not_running:  # just ignore
+            return
         fire_coroutine_threadsafe(self.async_stop(), self.loop)
 
-    async def async_stop(self, exit_code: int = 0) -> None:
+    async def async_stop(self, exit_code: int = 0, *,
+                         force: bool = False) -> None:
         """Stop Home Assistant and shuts down all threads.
+
+        The "force" flag commands async_stop to proceed regardless of
+        Home Assistan't current state. You should not set this flag
+        unless you're testing.
 
         This method is a coroutine.
         """
+        if not force:
+            # Some tests require async_stop to run,
+            # regardless of the state of the loop.
+            if self.state == CoreState.not_running:  # just ignore
+                return
+            if self.state == CoreState.stopping:
+                _LOGGER.info("async_stop called twice: ignored")
+                return
+            if self.state == CoreState.starting:
+                # This may not work
+                _LOGGER.warning("async_stop called before startup is complete")
+
         # stage 1
         self.state = CoreState.stopping
         self.async_track_tasks()
@@ -342,7 +388,11 @@ class HomeAssistant:
         self.executor.shutdown()
 
         self.exit_code = exit_code
-        self.loop.stop()
+
+        if self._stopped is not None:
+            self._stopped.set()
+        else:
+            self.loop.stop()
 
 
 @attr.s(slots=True, frozen=True)
@@ -477,7 +527,7 @@ class EventBus:
         event = Event(event_type, event_data, origin, None, context)
 
         if event_type != EVENT_TIME_CHANGED:
-            _LOGGER.info("Bus:Handling %s", event)
+            _LOGGER.debug("Bus:Handling %s", event)
 
         if not listeners:
             return
@@ -1043,10 +1093,12 @@ class ServiceRegistry:
         This method is a coroutine.
         """
         context = context or Context()
+        call_id = uuid.uuid4().hex
         event_data = {
             ATTR_DOMAIN: domain.lower(),
             ATTR_SERVICE: service.lower(),
             ATTR_SERVICE_DATA: service_data,
+            ATTR_SERVICE_CALL_ID: call_id,
         }
 
         if not blocking:
@@ -1059,8 +1111,9 @@ class ServiceRegistry:
         @callback
         def service_executed(event: Event) -> None:
             """Handle an executed service."""
-            if event.context == context:
+            if event.data[ATTR_SERVICE_CALL_ID] == call_id:
                 fut.set_result(True)
+                unsub()
 
         unsub = self._hass.bus.async_listen(
             EVENT_SERVICE_EXECUTED, service_executed)
@@ -1070,7 +1123,8 @@ class ServiceRegistry:
 
         done, _ = await asyncio.wait([fut], timeout=SERVICE_CALL_LIMIT)
         success = bool(done)
-        unsub()
+        if not success:
+            unsub()
         return success
 
     async def _event_to_service_call(self, event: Event) -> None:
@@ -1078,6 +1132,7 @@ class ServiceRegistry:
         service_data = event.data.get(ATTR_SERVICE_DATA) or {}
         domain = event.data.get(ATTR_DOMAIN).lower()  # type: ignore
         service = event.data.get(ATTR_SERVICE).lower()  # type: ignore
+        call_id = event.data.get(ATTR_SERVICE_CALL_ID)
 
         if not self.has_service(domain, service):
             if event.origin == EventOrigin.local:
@@ -1089,12 +1144,17 @@ class ServiceRegistry:
 
         def fire_service_executed() -> None:
             """Fire service executed event."""
+            if not call_id:
+                return
+
+            data = {ATTR_SERVICE_CALL_ID: call_id}
+
             if (service_handler.is_coroutinefunction or
                     service_handler.is_callback):
-                self._hass.bus.async_fire(EVENT_SERVICE_EXECUTED, {},
+                self._hass.bus.async_fire(EVENT_SERVICE_EXECUTED, data,
                                           EventOrigin.local, event.context)
             else:
-                self._hass.bus.fire(EVENT_SERVICE_EXECUTED, {},
+                self._hass.bus.fire(EVENT_SERVICE_EXECUTED, data,
                                     EventOrigin.local, event.context)
 
         try:
@@ -1221,22 +1281,26 @@ def _async_create_timer(hass: HomeAssistant) -> None:
     """Create a timer that will start on HOMEASSISTANT_START."""
     handle = None
 
-    @callback
-    def fire_time_event(nxt: float) -> None:
-        """Fire next time event."""
+    def schedule_tick(now: datetime.datetime) -> None:
+        """Schedule a timer tick when the next second rolls around."""
         nonlocal handle
 
+        slp_seconds = 1 - (now.microsecond / 10**6)
+        target = monotonic() + slp_seconds
+        handle = hass.loop.call_later(slp_seconds, fire_time_event, target)
+
+    @callback
+    def fire_time_event(target: float) -> None:
+        """Fire next time event."""
+        now = dt_util.utcnow()
+
         hass.bus.async_fire(EVENT_TIME_CHANGED,
-                            {ATTR_NOW: dt_util.utcnow()})
-        nxt += 1
-        slp_seconds = nxt - monotonic()
+                            {ATTR_NOW: now})
 
-        if slp_seconds < 0:
+        if monotonic() > target + 1:
             _LOGGER.error('Timer got out of sync. Resetting')
-            nxt = monotonic() + 1
-            slp_seconds = 1
 
-        handle = hass.loop.call_later(slp_seconds, fire_time_event, nxt)
+        schedule_tick(now)
 
     @callback
     def stop_timer(_: Event) -> None:
@@ -1247,4 +1311,4 @@ def _async_create_timer(hass: HomeAssistant) -> None:
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_timer)
 
     _LOGGER.info("Timer:starting")
-    fire_time_event(monotonic())
+    schedule_tick(dt_util.utcnow())

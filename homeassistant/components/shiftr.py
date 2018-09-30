@@ -14,7 +14,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP)
 from homeassistant.helpers import state as state_helper
 
-REQUIREMENTS = ['paho-mqtt==1.3.1']
+REQUIREMENTS = ['paho-mqtt==1.4.0']
 
 _LOGGER = logging.getLogger(__name__)
 

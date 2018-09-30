@@ -12,7 +12,6 @@ import voluptuous as vol
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
     ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, CONF_ICON, CONF_NAME, CONF_MODE)
-from homeassistant.loader import bind_hass
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import async_get_last_state
@@ -72,15 +71,6 @@ CONFIG_SCHEMA = vol.Schema({
         }, _cv_input_text)
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
-
-
-@bind_hass
-def set_value(hass, entity_id, value):
-    """Set input_text to value."""
-    hass.services.call(DOMAIN, SERVICE_SET_VALUE, {
-        ATTR_ENTITY_ID: entity_id,
-        ATTR_VALUE: value,
-    })
 
 
 @asyncio.coroutine

@@ -4,7 +4,7 @@ from homeassistant.helpers import config_entry_flow
 
 
 DOMAIN = 'sonos'
-REQUIREMENTS = ['SoCo==0.16']
+REQUIREMENTS = ['pysonos==0.0.3']
 
 
 async def async_setup(hass, config):
@@ -29,9 +29,10 @@ async def async_setup_entry(hass, entry):
 
 async def _async_has_devices(hass):
     """Return if there are devices that can be discovered."""
-    import soco
+    import pysonos
 
-    return await hass.async_add_executor_job(soco.discover)
+    return await hass.async_add_executor_job(pysonos.discover)
 
 
-config_entry_flow.register_discovery_flow(DOMAIN, 'Sonos', _async_has_devices)
+config_entry_flow.register_discovery_flow(
+    DOMAIN, 'Sonos', _async_has_devices, config_entries.CONN_CLASS_LOCAL_PUSH)

@@ -66,7 +66,7 @@ associate with an credential if "type" set to "link_user" in
     "version": 1
 }
 """
-import aiohttp.web
+from aiohttp import web
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
@@ -95,11 +95,20 @@ class AuthProvidersView(HomeAssistantView):
 
     async def get(self, request):
         """Get available auth providers."""
+        hass = request.app['hass']
+
+        if not hass.components.onboarding.async_is_onboarded():
+            return self.json_message(
+                message='Onboarding not finished',
+                status_code=400,
+                message_code='onboarding_required'
+            )
+
         return self.json([{
             'name': provider.name,
             'id': provider.id,
             'type': provider.type,
-        } for provider in request.app['hass'].auth.auth_providers])
+        } for provider in hass.auth.auth_providers])
 
 
 def _prepare_result_json(result):
@@ -139,7 +148,7 @@ class LoginFlowIndexView(HomeAssistantView):
 
     async def get(self, request):
         """Do not allow index of flows in progress."""
-        return aiohttp.web.Response(status=405)
+        return web.Response(status=405)
 
     @RequestDataValidator(vol.Schema({
         vol.Required('client_id'): str,
@@ -217,8 +226,9 @@ class LoginFlowResourceView(HomeAssistantView):
         if result['type'] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
             # @log_invalid_auth does not work here since it returns HTTP 200
             # need manually log failed login attempts
-            if result['errors'] is not None and \
-                    result['errors'].get('base') == 'invalid_auth':
+            if (result.get('errors') is not None and
+                    result['errors'].get('base') in ['invalid_auth',
+                                                     'invalid_code']):
                 await process_wrong_login(request)
             return self.json(_prepare_result_json(result))
 

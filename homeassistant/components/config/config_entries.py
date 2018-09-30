@@ -7,9 +7,6 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView, FlowManagerResourceView)
 
 
-REQUIREMENTS = ['voluptuous-serialize==2.0.0']
-
-
 @asyncio.coroutine
 def async_setup(hass):
     """Enable the Home Assistant views."""
@@ -57,6 +54,7 @@ class ConfigManagerEntryIndexView(HomeAssistantView):
             'title': entry.title,
             'source': entry.source,
             'state': entry.state,
+            'connection_class': entry.connection_class,
         } for entry in hass.config_entries.async_entries()])
 
 

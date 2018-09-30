@@ -1,12 +1,13 @@
 """The tests for the Template automation."""
 import unittest
 
-from homeassistant.core import callback
+from homeassistant.core import Context, callback
 from homeassistant.setup import setup_component
 import homeassistant.components.automation as automation
 
 from tests.common import (
     get_test_home_assistant, assert_setup_component, mock_component)
+from tests.components.automation import common
 
 
 # pylint: disable=invalid-name
@@ -49,7 +50,7 @@ class TestAutomationTemplate(unittest.TestCase):
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
 
-        automation.turn_off(self.hass)
+        common.turn_off(self.hass)
         self.hass.block_till_done()
 
         self.hass.states.set('test.entity', 'planet')
@@ -232,15 +233,12 @@ class TestAutomationTemplate(unittest.TestCase):
 
     def test_if_fires_on_change_with_template_advanced(self):
         """Test for firing on change with template advanced."""
+        context = Context()
         assert setup_component(self.hass, automation.DOMAIN, {
             automation.DOMAIN: {
                 'trigger': {
                     'platform': 'template',
-                    'value_template': '''{%- if is_state("test.entity", "world") -%}
-                                         true
-                                         {%- else -%}
-                                         false
-                                         {%- endif -%}''',
+                    'value_template': '{{ is_state("test.entity", "world") }}'
                 },
                 'action': {
                     'service': 'test.automation',
@@ -257,9 +255,10 @@ class TestAutomationTemplate(unittest.TestCase):
         self.hass.block_till_done()
         self.calls = []
 
-        self.hass.states.set('test.entity', 'world')
+        self.hass.states.set('test.entity', 'world', context=context)
         self.hass.block_till_done()
         self.assertEqual(1, len(self.calls))
+        assert self.calls[0].context is context
         self.assertEqual(
             'template - test.entity - hello - world',
             self.calls[0].data['some'])

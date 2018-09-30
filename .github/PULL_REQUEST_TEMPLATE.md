@@ -3,7 +3,7 @@
 
 **Related issue (if applicable):** fixes #<home-assistant issue number goes here>
 
-**Pull request in [home-assistant.github.io](https://github.com/home-assistant/home-assistant.github.io) with documentation (if applicable):** home-assistant/home-assistant.github.io#<home-assistant.github.io PR number goes here>
+**Pull request in [home-assistant.io](https://github.com/home-assistant/home-assistant.io) with documentation (if applicable):** home-assistant/home-assistant.io#<home-assistant.io PR number goes here>
 
 ## Example entry for `configuration.yaml` (if applicable):
 ```yaml
@@ -15,7 +15,7 @@
   - [ ] Local tests pass with `tox`. **Your PR cannot be merged unless tests pass**
 
 If user exposed functionality or configuration variables are added/changed:
-  - [ ] Documentation added/updated in [home-assistant.github.io](https://github.com/home-assistant/home-assistant.github.io)
+  - [ ] Documentation added/updated in [home-assistant.io](https://github.com/home-assistant/home-assistant.io)
 
 If the code communicates with devices, web services, or third-party tools:
   - [ ] New dependencies have been added to the `REQUIREMENTS` variable ([example][ex-requir]).
