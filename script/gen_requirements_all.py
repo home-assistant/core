@@ -63,6 +63,7 @@ TEST_REQUIREMENTS = (
     'influxdb',
     'libpurecoollink',
     'libsoundtouch',
+    'locationsharinglib',
     'mficlient',
     'numpy',
     'paho-mqtt',
