@@ -1,5 +1,5 @@
 """
-Support for Verizon FiOS Quantum Gatewaysself.
+Support for Verizon FiOS Quantum Gateways.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/device_tracker.quantum_gateway/
