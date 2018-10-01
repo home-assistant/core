@@ -144,13 +144,13 @@ class Shabbat_Hagg(Entity):
                 self.hebrew_dateDB = json.loads(heb_url.read().decode())
         self.getFullTimeIn()
         self.getFullTimeOut()
-        
+
     def set_days(self):
         weekday = self.set_friday(datetime.date.today().isoweekday())
         self.friday = datetime.date.today()+datetime.timedelta(days=weekday)
         self.saturday = datetime.date.today()+datetime.timedelta(days=weekday+1)
 
-    def set_friday(self,day):
+    def set_friday(self, day):
         switcher = {
             7: 5,
             1: 5,
@@ -161,7 +161,7 @@ class Shabbat_Hagg(Entity):
             6: -1,
         }
         return switcher.get(day)
-    
+
     # get shabbat entrace
     def getTimeIn(self):
         result = ''
@@ -189,7 +189,7 @@ class Shabbat_Hagg(Entity):
                 self.shabbatin = extractData['start']
         if self.shabbatin is not None:
             self.shabbatin = self.shabbatin[:22]+'00' 
-                
+
     # get full time exit shabbat for check if is shabbat now
     def getFullTimeOut(self):
         for extractData in self.shabbatDB:
@@ -229,7 +229,7 @@ class Shabbat_Hagg(Entity):
     # convert to hebrew date
     def getHebrewDate(self):
         return self.hebrew_dateDB['hebrew']
- 
+
     # check if the time is correct
     def isTimeFormat(self, input):
         try:
