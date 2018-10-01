@@ -136,13 +136,14 @@ class Shabbat_Hagg(Entity):
     def updateDB(self):
         self.set_days()
         with urllib.request.urlopen(
-                "https://www.hebcal.com/hebcal/?v=1&cfg=fc&start=" 
-                + str(self.friday) + "&end=" + str(self.saturday) 
-                + "&ss=on&c=on&geo=geoname&geonameid=" + str(self._geoid) 
+                "https://www.hebcal.com/hebcal/?v=1&cfg=fc&start="
+                + str(self.friday) + "&end=" + str(self.saturday)
+                + "&ss=on&c=on&geo=geoname&geonameid=" + str(self._geoid)
                 + "&m=" + str(self._havdalah) + "&s=on") as url:
             self.shabbatDB = json.loads(url.read().decode())
         with urllib.request.urlopen(
-                    "https://www.hebcal.com/converter/?cfg=json&gy=" + str(self.datetoday.year) + "&gm=" + str(self.datetoday.month) 
+                    "https://www.hebcal.com/converter/?cfg=json&gy="
+                    + str(self.datetoday.year) + "&gm=" + str(self.datetoday.month)
                     + "&gd=" + str(self.datetoday.day) + "&g2h=1") as heb_url:
                 self.hebrew_dateDB = json.loads(heb_url.read().decode())
         self.getFullTimeIn()
