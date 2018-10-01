@@ -229,7 +229,7 @@ async def async_setup(hass, config):
 
         # Call API
         try:
-            ret = await hassio.send_command(
+            await hassio.send_command(
                 api_command.format(addon=addon, snapshot=snapshot),
                 payload=payload, timeout=MAP_SERVICE_API[service.service][2]
             )
