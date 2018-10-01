@@ -57,7 +57,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the MeteoSwiss platform."""
-
     postal_code = str(config.get(CONF_POSTAL_CODE))
     if len(postal_code) == 4:
         postal_code = postal_code + "00"
@@ -182,9 +181,8 @@ class MeteoSwissData:
         """Get the latest data from MeteoSwiss."""
         import requests
         url = API_URL.format(self._postal_code)
-        r = requests.get(url)
-        if r.ok:
-            self._meteoswiss = r.json()
+        request = requests.get(url)
+        if request.ok:
+            self._meteoswiss = request.json()
             return True
-        else:
-            return False
+        return False
