@@ -13,7 +13,7 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, ATTR_FRIENDLY_NAME, ATTR_ARMED)
 from homeassistant.helpers import discovery
 
-REQUIREMENTS = ['blinkpy==0.6.0']
+REQUIREMENTS = ['blinkpy==0.9.0']
 
 _LOGGER = logging.getLogger(__name__)
 
