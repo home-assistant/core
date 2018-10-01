@@ -5,7 +5,6 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.fail2ban/
 """
 import os
-import asyncio
 import logging
 
 from datetime import timedelta
@@ -39,9 +38,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the fail2ban sensor."""
     name = config.get(CONF_NAME)
     jails = config.get(CONF_JAILS)
