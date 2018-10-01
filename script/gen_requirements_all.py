@@ -76,6 +76,7 @@ TEST_REQUIREMENTS = (
     'pyblackbird',
     'pydeconz',
     'pydispatcher',
+    'pyhomematic',
     'pylitejet',
     'pymonoprice',
     'pynx584',
