@@ -2,7 +2,8 @@
 import pytest
 
 from homeassistant.setup import async_setup_component
-from homeassistant.components import websocket_api as wapi
+from homeassistant.components.websocket_api.http import URL
+from homeassistant.components.websocket_api.auth import TYPE_AUTH_REQUIRED
 
 from . import API_PASSWORD
 
@@ -24,10 +25,10 @@ def no_auth_websocket_client(hass, loop, aiohttp_client):
         }))
 
     client = loop.run_until_complete(aiohttp_client(hass.http.app))
-    ws = loop.run_until_complete(client.ws_connect(wapi.URL))
+    ws = loop.run_until_complete(client.ws_connect(URL))
 
     auth_ok = loop.run_until_complete(ws.receive_json())
-    assert auth_ok['type'] == wapi.TYPE_AUTH_REQUIRED
+    assert auth_ok['type'] == TYPE_AUTH_REQUIRED
 
     yield ws
 
