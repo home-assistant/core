@@ -195,7 +195,7 @@ class Shabbat_Hagg(Entity):
         for extractData in self.shabbatDB:
             if extractData['className'] == "havdalah":
                 self.shabbatout = extractData['start']
-        if self.shabbatout != None:
+        if self.shabbatout is not None:
             self.shabbatout = self.shabbatout[:22]+'00'
 
     # get parashat hashavo'h
@@ -214,7 +214,7 @@ class Shabbat_Hagg(Entity):
 
     # check if is shabbat now / return true or false
     def isShabbat(self):
-        if self.shabbatin != None and self.shabbatout != None:
+        if self.shabbatin is not None and self.shabbatout is not None:
             is_in = datetime.datetime.strptime(self.shabbatin, '%Y-%m-%dT%H:%M:%S%z')
             is_out = datetime.datetime.strptime(self.shabbatout, '%Y-%m-%dT%H:%M:%S%z')
             is_in = is_in - datetime.timedelta(minutes=int(self._time_before))
