@@ -4,7 +4,6 @@ Provides functionality to turn on lights based on the states.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/device_sun_light_trigger/
 """
-import asyncio
 import logging
 from datetime import timedelta
 
@@ -45,8 +44,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the triggers to control lights based on device presence."""
     logger = logging.getLogger(__name__)
     device_tracker = hass.components.device_tracker

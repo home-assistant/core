@@ -149,16 +149,14 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Set up the IP Webcam component."""
     from pydroid_ipcam import PyDroidIPCam
 
     webcams = hass.data[DATA_IP_WEBCAM] = {}
     websession = async_get_clientsession(hass)
 
-    @asyncio.coroutine
-    def async_setup_ipcamera(cam_config):
+    async def async_setup_ipcamera(cam_config):
         """Set up an IP camera."""
         host = cam_config[CONF_HOST]
         username = cam_config.get(CONF_USERNAME)
@@ -188,16 +186,15 @@ def async_setup(hass, config):
         if motion is None:
             motion = 'motion_active' in cam.enabled_sensors
 
-        @asyncio.coroutine
-        def async_update_data(now):
+        async def async_update_data(now):
             """Update data from IP camera in SCAN_INTERVAL."""
-            yield from cam.update()
+            await cam.update()
             async_dispatcher_send(hass, SIGNAL_UPDATE_DATA, host)
 
             async_track_point_in_utc_time(
                 hass, async_update_data, utcnow() + interval)
 
-        yield from async_update_data(None)
+        await async_update_data(None)
 
         # Load platforms
         webcams[host] = cam
@@ -242,7 +239,7 @@ def async_setup(hass, config):
 
     tasks = [async_setup_ipcamera(conf) for conf in config[DOMAIN]]
     if tasks:
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks, loop=hass.loop)
 
     return True
 
@@ -255,8 +252,7 @@ class AndroidIPCamEntity(Entity):
         self._host = host
         self._ipcam = ipcam
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register update dispatcher."""
         @callback
         def async_ipcam_update(host):
