@@ -10,6 +10,7 @@ from aiohttp.web_exceptions import HTTPServiceUnavailable
 from homeassistant.core import callback
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.helpers.discovery import async_load_platform, async_discover
 
 from .handler import HassioAPIError
 
