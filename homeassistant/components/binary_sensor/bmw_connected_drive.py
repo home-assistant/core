@@ -4,7 +4,6 @@ Reads vehicle status from BMW connected drive portal.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/binary_sensor.bmw_connected_drive/
 """
-import asyncio
 import logging
 
 from homeassistant.components.binary_sensor import BinarySensorDevice
@@ -193,8 +192,7 @@ class BMWConnectedDriveSensor(BinarySensorDevice):
         """Schedule a state update."""
         self.schedule_update_ha_state(True)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Add callback after being added to hass.
 
         Show latest data after startup.
