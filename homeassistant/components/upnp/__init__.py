@@ -4,6 +4,7 @@ Will open a port in your router for Home Assistant and provide statistics.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/upnp/
 """
+# pylint: disable=invalid-name
 import asyncio
 from ipaddress import ip_address
 
@@ -12,9 +13,8 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import discovery
+from homeassistant.helpers import dispatcher
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.typing import HomeAssistantType
 from homeassistant.components.discovery import DOMAIN as DISCOVERY_DOMAIN
@@ -79,16 +79,16 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
         hass.data[DOMAIN]['local_ip'] = upnp_config[CONF_LOCAL_IP]
 
     # determine ports
-    ports = {CONF_HASS: CONF_HASS}  # default, port_forward disabled by default
+    ports = {CONF_HASS: CONF_HASS}  # default, port_mapping disabled by default
     if CONF_PORTS in upnp_config:
         # copy from config
         ports = upnp_config[CONF_PORTS]
 
     hass.data[DOMAIN]['auto_config'] = {
         'active': True,
-        'port_forward': upnp_config[CONF_ENABLE_PORT_MAPPING],
+        'enable_sensors': upnp_config[CONF_ENABLE_SENSORS],
+        'enable_port_mapping': upnp_config[CONF_ENABLE_PORT_MAPPING],
         'ports': ports,
-        'sensors': upnp_config[CONF_ENABLE_SENSORS],
     }
 
     return True
@@ -98,7 +98,6 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
 async def async_setup_entry(hass: HomeAssistantType,
                             config_entry: ConfigEntry):
     """Set up a bridge from a config entry."""
-    _LOGGER.debug('async_setup_entry: %s', config_entry.data)
     ensure_domain_data(hass)
     data = config_entry.data
 
@@ -107,7 +106,8 @@ async def async_setup_entry(hass: HomeAssistantType,
     try:
         device = await Device.async_create_device(hass, ssdp_description)
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        raise PlatformNotReady()
+        _LOGGER.error('Unable to create upnp-device')
+        return
 
     hass.data[DOMAIN]['devices'][device.udn] = device
 
@@ -124,12 +124,10 @@ async def async_setup_entry(hass: HomeAssistantType,
     # sensors
     if data.get(CONF_ENABLE_SENSORS):
         _LOGGER.debug('Enabling sensors')
-        discovery_info = {
-            'udn': device.udn,
-        }
-        hass_config = config_entry.data
-        hass.async_create_task(discovery.async_load_platform(
-            hass, 'sensor', DOMAIN, discovery_info, hass_config))
+
+        # register sensor setup handlers
+        hass.async_create_task(hass.config_entries.async_forward_entry_setup(
+            config_entry, 'sensor'))
 
     async def unload_entry(event):
         """Unload entry on quit."""
@@ -142,7 +140,6 @@ async def async_setup_entry(hass: HomeAssistantType,
 async def async_unload_entry(hass: HomeAssistantType,
                              config_entry: ConfigEntry):
     """Unload a config entry."""
-    _LOGGER.debug('async_unload_entry: %s', config_entry.data)
     data = config_entry.data
     udn = data[CONF_UDN]
 
@@ -156,9 +153,9 @@ async def async_unload_entry(hass: HomeAssistantType,
         await device.async_delete_port_mappings()
 
     # sensors
-    for sensor in hass.data[DOMAIN]['sensors'].get(udn, []):
-        _LOGGER.debug('Deleting sensor: %s', sensor)
-        await sensor.async_remove()
+    if data.get(CONF_ENABLE_SENSORS):
+        _LOGGER.debug('Deleting sensors')
+        dispatcher.async_dispatcher_send(hass, 'upnp_remove_sensor', device)
 
     # clear stored device
     del hass.data[DOMAIN]['devices'][udn]

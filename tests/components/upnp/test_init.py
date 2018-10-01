@@ -53,9 +53,9 @@ async def test_async_setup_no_auto_config(hass):
 
     assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': False,
-        'port_forward': False,
+        'enable_sensors': False,
+        'enable_port_mapping': False,
         'ports': {'hass': 'hass'},
-        'sensors': False,
     }
 
 
@@ -66,27 +66,27 @@ async def test_async_setup_auto_config(hass):
 
     assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': True,
-        'port_forward': False,
+        'enable_sensors': True,
+        'enable_port_mapping': False,
         'ports': {'hass': 'hass'},
-        'sensors': True,
     }
 
 
-async def test_async_setup_auto_config_port_forward(hass):
+async def test_async_setup_auto_config_port_mapping(hass):
     """Test async_setup."""
     # setup component, enable auto_config
     await async_setup_component(hass, 'upnp', {
         'upnp': {
-            'port_forward': True,
+            'port_mapping': True,
             'ports': {'hass': 'hass'},
         },
         'discovery': {}})
 
     assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': True,
-        'port_forward': True,
+        'enable_sensors': True,
+        'enable_port_mapping': True,
         'ports': {'hass': 'hass'},
-        'sensors': True,
     }
 
 
@@ -99,9 +99,9 @@ async def test_async_setup_auto_config_no_sensors(hass):
 
     assert hass.data[upnp.DOMAIN]['auto_config'] == {
         'active': True,
-        'port_forward': False,
+        'enable_sensors': False,
+        'enable_port_mapping': False,
         'ports': {'hass': 'hass'},
-        'sensors': False,
     }
 
 
@@ -112,7 +112,7 @@ async def test_async_setup_entry_default(hass):
         'ssdp_description': 'http://192.168.1.1/desc.xml',
         'udn': udn,
         'sensors': True,
-        'port_forward': False,
+        'port_mapping': False,
     })
 
     # ensure hass.http is available
@@ -144,20 +144,20 @@ async def test_async_setup_entry_default(hass):
     assert len(mock_device.async_delete_port_mappings.mock_calls) == 0
 
 
-async def test_async_setup_entry_port_forward(hass):
+async def test_async_setup_entry_port_mapping(hass):
     """Test async_setup_entry."""
     udn = 'uuid:device_1'
     entry = MockConfigEntry(domain=upnp.DOMAIN, data={
         'ssdp_description': 'http://192.168.1.1/desc.xml',
         'udn': udn,
         'sensors': False,
-        'port_forward': True,
+        'port_mapping': True,
     })
 
     # ensure hass.http is available
     await async_setup_component(hass, 'upnp', {
         'upnp': {
-            'port_forward': True,
+            'port_mapping': True,
             'ports': {'hass': 'hass'},
         },
         'discovery': {},
