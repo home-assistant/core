@@ -117,7 +117,7 @@ async def async_handle_message(hass, message):
     if not handler:
         raise UnknownRequest('Received unknown request {}'.format(req_type))
 
-    return (await handler(hass, message))
+    return await handler(hass, message)
 
 
 @HANDLERS.register('SessionEndedRequest')

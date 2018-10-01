@@ -365,7 +365,7 @@ class RflinkCommand(RflinkDevice):
     @classmethod
     async def send_command(cls, device_id, action):
         """Send device command to Rflink and wait for acknowledgement."""
-        return (await cls._protocol.send_command_ack(device_id, action))
+        return await cls._protocol.send_command_ack(device_id, action)
 
     async def _async_handle_command(self, command, *args):
         """Do bookkeeping for command, send it to rflink and update state."""
