@@ -5,15 +5,14 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/tibber/
 """
 import asyncio
-
 import logging
 
 import aiohttp
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN, CONF_NAME
+from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 REQUIREMENTS = ['pyTibber==0.7.0']
