@@ -2,7 +2,6 @@ import logging
 import urllib
 import json
 import datetime
-import pytz
 import time
 import voluptuous as vol
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -131,12 +130,13 @@ class Shabbat_Hagg(Entity):
             self._state = self.getParasha()
         elif self.type.__eq__('hebrew_date'):
             self._state = self.getHebrewDate()
-                
+
     @Throttle(datetime.timedelta(minutes=5))
     def updateDB(self):
         self.set_days()
         with urllib.request.urlopen(
-                "https://www.hebcal.com/hebcal/?v=1&cfg=fc&start=" + str(self.friday) + "&end=" + str(self.saturday) + "&ss=on&c=on&geo=geoname&geonameid="+ str(self._geoid) + "&m=" + str(self._havdalah) + "&s=on") as url:
+                "https://www.hebcal.com/hebcal/?v=1&cfg=fc&start=" + str(self.friday) + "&end=" + str(self.saturday) + 
+                "&ss=on&c=on&geo=geoname&geonameid=" + str(self._geoid) + "&m=" + str(self._havdalah) + "&s=on") as url:
             self.shabbatDB = json.loads(url.read().decode())
         with urllib.request.urlopen(
                     "https://www.hebcal.com/converter/?cfg=json&gy=" + str(self.datetoday.year) + "&gm=" + str(
