@@ -29,10 +29,11 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request):
         """Handle an incoming websocket connection."""
-        return await WebSocketImpl(request.app['hass'], request).async_handle()
+        return await WebSocketHandler(
+            request.app['hass'], request).async_handle()
 
 
-class WebSocketImpl:
+class WebSocketHandler:
     """Handle an active websocket client connection."""
 
     def __init__(self, hass, request):
