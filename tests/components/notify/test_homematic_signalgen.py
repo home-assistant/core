@@ -19,7 +19,7 @@ class TestHomematicSignalGen(unittest.TestCase):
         self.hass.stop()
 
     def test_setup_full(self):
-        """Test valid configuration"""
+        """Test valid configuration."""
         setup_component(self.hass, 'homematic', {
             'homematic': {
                 'hosts': {
@@ -40,7 +40,7 @@ class TestHomematicSignalGen(unittest.TestCase):
         assert handle_config[notify.DOMAIN]
 
     def test_setup_without_optional(self):
-        """Test valid configuration"""
+        """Test valid configuration without optional."""
         setup_component(self.hass, 'homematic', {
             'homematic': {
                 'hosts': {
@@ -60,7 +60,7 @@ class TestHomematicSignalGen(unittest.TestCase):
         assert handle_config[notify.DOMAIN]
 
     def test_bad_config(self):
-        """Test invalid configuration"""
+        """Test invalid configuration."""
         config = {
             notify.DOMAIN: {
                 'name': 'test',
