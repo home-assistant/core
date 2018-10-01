@@ -39,7 +39,7 @@ class Device:
         from async_upnp_client.igd import IgdDevice
         igd_device = IgdDevice(upnp_device, None)
 
-        return Device(igd_device)
+        return cls(igd_device)
 
     @property
     def udn(self):
@@ -102,6 +102,7 @@ class Device:
     async def _async_delete_port_mapping(self, external_port):
         """Remove a port mapping."""
         from async_upnp_client import UpnpError
+        _LOGGER.info('Deleting port mapping %s (TCP)', external_port)
         try:
             await self._igd_device.async_delete_port_mapping(
                 remote_host=None,

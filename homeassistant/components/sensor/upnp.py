@@ -8,8 +8,10 @@ https://home-assistant.io/components/sensor.upnp/
 from datetime import datetime
 import logging
 
-from homeassistant.components.upnp import DOMAIN
+from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.components.upnp.const import DOMAIN as DATA_UPNP
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,37 +47,65 @@ OUT = 'sent'
 KBYTE = 1024
 
 
-async def async_setup_platform(hass, config, async_add_devices,
+async def async_setup_platform(hass, config, async_add_entities,
                                discovery_info=None):
-    """Set up the UPnP/IGD sensors."""
-    if discovery_info is None:
-        return
-
-    udn = discovery_info['udn']
-    device = hass.data[DOMAIN]['devices'][udn]
-
-    # raw sensors + per-second sensors
-    sensors = [
-        RawUPnPIGDSensor(device, name, sensor_type)
-        for name, sensor_type in SENSOR_TYPES.items()
-    ]
-    sensors += [
-        KBytePerSecondUPnPIGDSensor(device, IN),
-        KBytePerSecondUPnPIGDSensor(device, OUT),
-        PacketsPerSecondUPnPIGDSensor(device, IN),
-        PacketsPerSecondUPnPIGDSensor(device, OUT),
-    ]
-    hass.data[DOMAIN]['sensors'][udn] = sensors
-    async_add_devices(sensors, True)
-    return True
+    """Old way of setting up UPnP/IGD sensors."""
+    _LOGGER.debug('async_setup_platform: config: %s, discovery: %s',
+                  config, discovery_info)
 
 
-class RawUPnPIGDSensor(Entity):
+async def async_setup_entry(hass, config_entry, async_add_entities):
+    """Set up the UPnP/IGD sensor."""
+    @callback
+    def async_add_sensor(device):
+        """Add sensors from UPnP/IGD device."""
+        # raw sensors + per-second sensors
+        sensors = [
+            RawUPnPIGDSensor(device, name, sensor_type)
+            for name, sensor_type in SENSOR_TYPES.items()
+        ]
+        sensors += [
+            KBytePerSecondUPnPIGDSensor(device, IN),
+            KBytePerSecondUPnPIGDSensor(device, OUT),
+            PacketsPerSecondUPnPIGDSensor(device, IN),
+            PacketsPerSecondUPnPIGDSensor(device, OUT),
+        ]
+        async_add_entities(sensors, True)
+
+    data = config_entry.data
+    udn = data['udn']
+    device = hass.data[DATA_UPNP]['devices'][udn]
+    async_add_sensor(device)
+
+
+class UpnpSensor(Entity):
+    """Base class for UPnP/IGD sensors."""
+
+    def __init__(self, device):
+        """Initialize the base sensor."""
+        self._device = device
+
+    async def async_added_to_hass(self):
+        """Subscribe to sensors events."""
+        async_dispatcher_connect(self.hass,
+                                 'upnp_remove_sensor',
+                                 self._upnp_remove_sensor)
+
+    def _upnp_remove_sensor(self, device):
+        """Remove sensor."""
+        if self._device != device:
+            # not for us
+            return
+
+        self.hass.async_create_task(self.async_remove())
+
+
+class RawUPnPIGDSensor(UpnpSensor):
     """Representation of a UPnP/IGD sensor."""
 
     def __init__(self, device, sensor_type_name, sensor_type):
         """Initialize the UPnP/IGD sensor."""
-        self._device = device
+        super().__init__(device)
         self._type_name = sensor_type_name
         self._type = sensor_type
         self._name = '{} {}'.format(device.name, sensor_type['name'])
@@ -94,7 +124,7 @@ class RawUPnPIGDSensor(Entity):
     @property
     def state(self) -> str:
         """Return the state of the device."""
-        return self._state
+        return format(self._state, 'd')
 
     @property
     def icon(self) -> str:
@@ -118,12 +148,12 @@ class RawUPnPIGDSensor(Entity):
             self._state = await self._device.async_get_total_packets_sent()
 
 
-class PerSecondUPnPIGDSensor(Entity):
+class PerSecondUPnPIGDSensor(UpnpSensor):
     """Abstract representation of a X Sent/Received per second sensor."""
 
     def __init__(self, device, direction):
         """Initializer."""
-        self._device = device
+        super().__init__(device)
         self._direction = direction
 
         self._state = None
@@ -205,7 +235,7 @@ class KBytePerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
         return await self._device.async_get_total_bytes_sent()
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         if self._state is None:
             return None
@@ -229,7 +259,7 @@ class PacketsPerSecondUPnPIGDSensor(PerSecondUPnPIGDSensor):
         return await self._device.async_get_total_packets_sent()
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         if self._state is None:
             return None
