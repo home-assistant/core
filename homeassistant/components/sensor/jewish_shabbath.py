@@ -69,7 +69,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 # pylint: disable=abstract-method
 
 class Shabbat(Entity):
-    """Representation of a shabbat and hagg."""
     shabbat_db = None
     hebrew_date_db = None
     shabbatin = None
