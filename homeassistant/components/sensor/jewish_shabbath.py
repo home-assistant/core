@@ -21,7 +21,6 @@ TIME_BEFORE_CHECK = 'time_before_check'
 TIME_AFTER_CHECK = 'time_after_check'
 LATITUDE = 'latitude'
 LONGITUDE = 'longitude'
-
 SENSOR_TYPES = {
     'in': ['כניסת שבת', 'mdi:candle', 'in'],
     'out': ['צאת שבת', 'mdi:exit-to-app', 'out'],
