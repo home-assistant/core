@@ -76,6 +76,15 @@ class HassIO:
         """
         return self.send_command("/homeassistant/info", method="get")
 
+    @_api_data
+    def get_addon_info(self, addon):
+        """Return data for a Add-on.
+
+        This method return a coroutine.
+        """
+        return self.send_command(
+            "/addons/{}/info".format(addon), method="get")
+
     @_api_bool
     def restart_homeassistant(self):
         """Restart Home-Assistant container.
@@ -100,21 +109,20 @@ class HassIO:
         return self.send_command("/homeassistant/check", timeout=300)
 
     @_api_data
-    def retrieve_services_discovery(self):
+    def retrieve_discovery_messages(self):
         """Return all discovery data from Hass.io API.
 
         This method return a coroutine.
         """
-        return self.send_command("/services/discovery", method="get")
+        return self.send_command("/discovery", method="get")
 
     @_api_data
-    def get_services_discovery_entry(self, uuid):
-        """Return a single discovery data entry.
+    def get_discovery_message(self, uuid):
+        """Return a single discovery data message.
 
         This method return a coroutine.
         """
-        return self.send_command(
-            "/services/discovery/{}".format(uuid), method="get")
+        return self.send_command("/discovery/{}".format(uuid), method="get")
 
     @_api_bool
     async def update_hass_api(self, http_config, refresh_token):
