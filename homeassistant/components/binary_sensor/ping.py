@@ -10,6 +10,8 @@ import re
 import sys
 from datetime import timedelta
 
+import asyncio
+
 import voluptuous as vol
 
 import homeassistant.helpers.config_validation as cv
@@ -48,13 +50,14 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the Ping Binary sensor."""
     name = config.get(CONF_NAME)
     host = config.get(CONF_HOST)
     count = config.get(CONF_PING_COUNT)
 
-    add_entities([PingBinarySensor(name, PingData(host, count))], True)
+    async_add_entities([PingBinarySensor(name, PingData(host, count))], True)
 
 
 class PingBinarySensor(BinarySensorDevice):
@@ -91,9 +94,9 @@ class PingBinarySensor(BinarySensorDevice):
                 ATTR_ROUND_TRIP_TIME_MIN: self.ping.data['min'],
             }
 
-    def update(self):
+    async def async_update(self):
         """Get the latest data."""
-        self.ping.update()
+        await self.ping.update()
 
 
 class PingData:
@@ -114,12 +117,14 @@ class PingData:
                 'ping', '-n', '-q', '-c', str(self._count), '-W1',
                 self._ip_address]
 
-    def ping(self):
+    async def ping(self):
         """Send ICMP echo request and return details if success."""
-        pinger = subprocess.Popen(
-            self._ping_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        pinger = await asyncio.create_subprocess_shell(
+            ' '.join(self._ping_cmd),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
         try:
-            out = pinger.communicate()
+            out = await pinger.communicate()
             _LOGGER.debug("Output is %s", str(out))
             if sys.platform == 'win32':
                 match = WIN32_PING_MATCHER.search(str(out).split('\n')[-1])
@@ -147,7 +152,7 @@ class PingData:
         except (subprocess.CalledProcessError, AttributeError):
             return False
 
-    def update(self):
+    async def update(self):
         """Retrieve the latest details from the host."""
-        self.data = self.ping()
+        self.data = await self.ping()
         self.available = bool(self.data)
