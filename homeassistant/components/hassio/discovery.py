@@ -20,12 +20,16 @@ ATTR_ADDON = 'addon'
 ATTR_NAME = 'name'
 ATTR_SERVICE = 'service'
 ATTR_CONFIG = 'config'
+ATTR_COMPONENT = 'component'
+ATTR_PLATFORM = 'platform'
+
+CONFIG_FLOW_SERVICE = ('mqtt,)
 
 
 @callback
-def async_setup_discovery(hass, hassio):
+def async_setup_discovery(hass, hassio, config):
     """Discovery setup."""
-    hassio_discovery = HassIODiscovery(hass, hassio)
+    hassio_discovery = HassIODiscovery(hass, hassio, config)
 
     # Handle exists discovery messages
     async def async_discovery_start_handler(event):
@@ -53,10 +57,11 @@ class HassIODiscovery(HomeAssistantView):
     name = "api:hassio_push:discovery"
     url = "/api/hassio_push/discovery/{uuid}"
 
-    def __init__(self, hass, hassio):
+    def __init__(self, hass, hassio, config):
         """Initialize WebView."""
         self.hass = hass
         self.hassio = hassio
+        self.config = config
 
     async def post(self, request):
         """Handle new discovery requests."""
@@ -81,6 +86,11 @@ class HassIODiscovery(HomeAssistantView):
 
     async def async_process_new(self, data):
         """Process add discovery entry."""
+        service = data[ATTR_SERVICE]
+        component = data[ATTR_COMPONENT]
+        platform = data[ATTR_PLATFORM]
+        config_data = data=data[ATTR_CONFIG]
+
         # Read addinional Add-on info
         try:
             addon_info = await self.hassio.get_addon_info(data[ATTR_ADDON])
@@ -88,11 +98,29 @@ class HassIODiscovery(HomeAssistantView):
             _LOGGER.error("Can't read add-on info: %s", err)
             return
 
-        # Replace Add-on name with ID
-        data[ATTR_ADDON] = addon_info[ATTR_NAME]
+        # Use config flow
+        if service in CONFIG_FLOW_SERVICE:
+            # Replace Add-on name with ID
+            data[ATTR_ADDON] = addon_info[ATTR_NAME]
 
-        await hass.config_entries.flow.async_init(
-            data[ATTR_SERVICE], context={'source': 'hassio'}, data=data[ATTR_CONFIG])
+            await self.hass.config_entries.flow.async_init(
+                service, context={'source': 'hassio'}, data=config_data)
+            return
+
+         # Use discovery
+         if platform is None:
+            await async_discover(
+                self.hass, service, config_data, component, self.config)
+         else:
+            await async_load_platform(
+                self.hass, component, platform, config_data, self.config)
 
     async def async_process_del(self, data):
         """Process remove discovery entry."""
+        service = data[ATTR_SERVICE]
+
+        # Use config flow
+        if service in CONFIG_FLOW_SERVICE:
+            self.hass.config_entries.async_unload(self.hass, component=service)
+        else:
+            _LOGGER.info("Can't unload discovery for %s", service)
