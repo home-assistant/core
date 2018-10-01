@@ -31,7 +31,7 @@ def websocket_list_devices(hass, connection, msg):
     async def retrieve_entities():
         """Get devices from registry."""
         registry = await async_get_registry(hass)
-        connection.send_message_outside(websocket_api.result_message(
+        connection.send_message(websocket_api.result_message(
             msg['id'], [{
                 'config_entries': list(entry.config_entries),
                 'connections': list(entry.connections),

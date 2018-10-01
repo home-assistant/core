@@ -55,7 +55,7 @@ async def websocket_list_entities(hass, connection, msg):
     Async friendly.
     """
     registry = await async_get_registry(hass)
-    connection.send_message_outside(websocket_api.result_message(
+    connection.send_message(websocket_api.result_message(
         msg['id'], [{
             'config_entry_id': entry.config_entry_id,
             'device_id': entry.device_id,
@@ -77,11 +77,11 @@ async def websocket_get_entity(hass, connection, msg):
     entry = registry.entities.get(msg['entity_id'])
 
     if entry is None:
-        connection.send_message_outside(websocket_api.error_message(
+        connection.send_message(websocket_api.error_message(
             msg['id'], ERR_NOT_FOUND, 'Entity not found'))
         return
 
-    connection.send_message_outside(websocket_api.result_message(
+    connection.send_message(websocket_api.result_message(
         msg['id'], _entry_dict(entry)
     ))
 
@@ -95,7 +95,7 @@ async def websocket_update_entity(hass, connection, msg):
     registry = await async_get_registry(hass)
 
     if msg['entity_id'] not in registry.entities:
-        connection.send_message_outside(websocket_api.error_message(
+        connection.send_message(websocket_api.error_message(
             msg['id'], ERR_NOT_FOUND, 'Entity not found'))
         return
 
@@ -112,11 +112,11 @@ async def websocket_update_entity(hass, connection, msg):
             entry = registry.async_update_entity(
                 msg['entity_id'], **changes)
     except ValueError as err:
-        connection.send_message_outside(websocket_api.error_message(
+        connection.send_message(websocket_api.error_message(
             msg['id'], 'invalid_info', str(err)
         ))
     else:
-        connection.send_message_outside(websocket_api.result_message(
+        connection.send_message(websocket_api.result_message(
             msg['id'], _entry_dict(entry)
         ))
 

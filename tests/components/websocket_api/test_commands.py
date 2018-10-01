@@ -4,7 +4,10 @@ from unittest.mock import patch
 from async_timeout import timeout
 
 from homeassistant.core import callback
-from homeassistant.components import websocket_api as wapi
+from homeassistant.components.websocket_api.const import URL
+from homeassistant.components.websocket_api.auth import (
+    TYPE_AUTH, TYPE_AUTH_OK, TYPE_AUTH_REQUIRED
+)
 from homeassistant.components.websocket_api import const, commands
 from homeassistant.setup import async_setup_component
 
@@ -178,19 +181,19 @@ async def test_call_service_context_with_user(hass, aiohttp_client,
     calls = async_mock_service(hass, 'domain_test', 'test_service')
     client = await aiohttp_client(hass.http.app)
 
-    async with client.ws_connect(wapi.URL) as ws:
+    async with client.ws_connect(URL) as ws:
         with patch('homeassistant.auth.AuthManager.active') as auth_active:
             auth_active.return_value = True
             auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+            assert auth_msg['type'] == TYPE_AUTH_REQUIRED
 
             await ws.send_json({
-                'type': wapi.TYPE_AUTH,
+                'type': TYPE_AUTH,
                 'access_token': hass_access_token
             })
 
             auth_msg = await ws.receive_json()
-            assert auth_msg['type'] == wapi.TYPE_AUTH_OK
+            assert auth_msg['type'] == TYPE_AUTH_OK
 
         await ws.send_json({
             'id': 5,
@@ -227,17 +230,17 @@ async def test_call_service_context_no_user(hass, aiohttp_client):
     calls = async_mock_service(hass, 'domain_test', 'test_service')
     client = await aiohttp_client(hass.http.app)
 
-    async with client.ws_connect(wapi.URL) as ws:
+    async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()
-        assert auth_msg['type'] == wapi.TYPE_AUTH_REQUIRED
+        assert auth_msg['type'] == TYPE_AUTH_REQUIRED
 
         await ws.send_json({
-            'type': wapi.TYPE_AUTH,
+            'type': TYPE_AUTH,
             'api_password': API_PASSWORD
         })
 
         auth_msg = await ws.receive_json()
-        assert auth_msg['type'] == wapi.TYPE_AUTH_OK
+        assert auth_msg['type'] == TYPE_AUTH_OK
 
         await ws.send_json({
             'id': 5,

@@ -197,9 +197,9 @@ async def async_setup(hass: HomeAssistant, config: dict) -> Awaitable[bool]:
 
 @callback
 def websocket_get_notifications(
-        hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg):
     """Return a list of persistent_notifications."""
-    connection.to_write.put_nowait(
+    connection.send_message(
         websocket_api.result_message(msg['id'], [
             {
                 key: data[key] for key in (ATTR_NOTIFICATION_ID, ATTR_MESSAGE,
