@@ -103,17 +103,14 @@ def reload_core_config(hass):
     hass.services.call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
 
 
-@asyncio.coroutine
-def async_reload_core_config(hass):
+async def async_reload_core_config(hass):
     """Reload the core config."""
-    yield from hass.services.async_call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
+    await hass.services.async_call(ha.DOMAIN, SERVICE_RELOAD_CORE_CONFIG)
 
 
-@asyncio.coroutine
-def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
+async def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
     """Set up general services related to Home Assistant."""
-    @asyncio.coroutine
-    def async_handle_turn_service(service):
+    async def async_handle_turn_service(service):
         """Handle calls to homeassistant.turn_on/off."""
         entity_ids = extract_entity_ids(hass, service)
 
@@ -148,7 +145,7 @@ def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
             tasks.append(hass.services.async_call(
                 domain, service.service, data, blocking))
 
-        yield from asyncio.wait(tasks, loop=hass.loop)
+        await asyncio.wait(tasks, loop=hass.loop)
 
     hass.services.async_register(
         ha.DOMAIN, SERVICE_TURN_OFF, async_handle_turn_service)
@@ -164,15 +161,14 @@ def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
     hass.helpers.intent.async_register(intent.ServiceIntentHandler(
         intent.INTENT_TOGGLE, ha.DOMAIN, SERVICE_TOGGLE, "Toggled {}"))
 
-    @asyncio.coroutine
-    def async_handle_core_service(call):
+    async def async_handle_core_service(call):
         """Service handler for handling core services."""
         if call.service == SERVICE_HOMEASSISTANT_STOP:
             hass.async_create_task(hass.async_stop())
             return
 
         try:
-            errors = yield from conf_util.async_check_ha_config_file(hass)
+            errors = await conf_util.async_check_ha_config_file(hass)
         except HomeAssistantError:
             return
 
@@ -193,16 +189,15 @@ def async_setup(hass: ha.HomeAssistant, config: dict) -> Awaitable[bool]:
     hass.services.async_register(
         ha.DOMAIN, SERVICE_CHECK_CONFIG, async_handle_core_service)
 
-    @asyncio.coroutine
-    def async_handle_reload_config(call):
+    async def async_handle_reload_config(call):
         """Service handler for reloading core config."""
         try:
-            conf = yield from conf_util.async_hass_config_yaml(hass)
+            conf = await conf_util.async_hass_config_yaml(hass)
         except HomeAssistantError as err:
             _LOGGER.error(err)
             return
 
-        yield from conf_util.async_process_ha_core_config(
+        await conf_util.async_process_ha_core_config(
             hass, conf.get(ha.DOMAIN) or {})
 
     hass.services.async_register(

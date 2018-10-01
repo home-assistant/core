@@ -4,7 +4,6 @@ Support for HomeMatic devices.
 For more details about this component, please refer to the documentation at
 https://home-assistant.io/components/homematic/
 """
-import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
@@ -715,10 +714,9 @@ class HMDevice(Entity):
         if self._state:
             self._state = self._state.upper()
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Load data init callbacks."""
-        yield from self.hass.async_add_job(self.link_homematic)
+        await self.hass.async_add_job(self.link_homematic)
 
     @property
     def unique_id(self):
