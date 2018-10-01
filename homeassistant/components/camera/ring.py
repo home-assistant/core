@@ -110,8 +110,7 @@ class RingCam(Camera):
             'video_url': self._video_url,
         }
 
-    @asyncio.coroutine
-    def async_camera_image(self):
+    async def async_camera_image(self):
         """Return a still image response from the camera."""
         from haffmpeg import ImageFrame, IMAGE_JPEG
         ffmpeg = ImageFrame(self._ffmpeg.binary, loop=self.hass.loop)
@@ -119,13 +118,12 @@ class RingCam(Camera):
         if self._video_url is None:
             return
 
-        image = yield from asyncio.shield(ffmpeg.get_image(
+        image = await asyncio.shield(ffmpeg.get_image(
             self._video_url, output_format=IMAGE_JPEG,
             extra_cmd=self._ffmpeg_arguments), loop=self.hass.loop)
         return image
 
-    @asyncio.coroutine
-    def handle_async_mjpeg_stream(self, request):
+    async def handle_async_mjpeg_stream(self, request):
         """Generate an HTTP MJPEG stream from the camera."""
         from haffmpeg import CameraMjpeg
 
@@ -133,13 +131,13 @@ class RingCam(Camera):
             return
 
         stream = CameraMjpeg(self._ffmpeg.binary, loop=self.hass.loop)
-        yield from stream.open_camera(
+        await stream.open_camera(
             self._video_url, extra_cmd=self._ffmpeg_arguments)
 
-        yield from async_aiohttp_proxy_stream(
+        await async_aiohttp_proxy_stream(
             self.hass, request, stream,
             'multipart/x-mixed-replace;boundary=ffserver')
-        yield from stream.close()
+        await stream.close()
 
     @property
     def should_poll(self):

@@ -24,7 +24,7 @@ from homeassistant.core import callback
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.loader import bind_hass
 
-REQUIREMENTS = ['home-assistant-frontend==20180926.0']
+REQUIREMENTS = ['home-assistant-frontend==20180927.0']
 
 DOMAIN = 'frontend'
 DEPENDENCIES = ['api', 'websocket_api', 'http', 'system_log',
@@ -344,11 +344,12 @@ class AuthorizeView(HomeAssistantView):
             _is_latest(self.js_option, request)
 
         if latest:
-            location = '/frontend_latest/authorize.html'
+            base = 'frontend_latest'
         else:
-            location = '/frontend_es5/authorize.html'
+            base = 'frontend_es5'
 
-        location += '?{}'.format(request.query_string)
+        location = "/{}/authorize.html{}".format(
+            base, str(request.url.relative())[15:])
 
         return web.Response(status=302, headers={
             'location': location

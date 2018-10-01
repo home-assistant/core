@@ -92,8 +92,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Initialize the Home Assistant cloud."""
     if DOMAIN in config:
         kwargs = dict(config[DOMAIN])
@@ -112,7 +111,7 @@ def async_setup(hass, config):
 
     cloud = hass.data[DOMAIN] = Cloud(hass, **kwargs)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, cloud.async_start)
-    yield from http_api.async_setup(hass)
+    await http_api.async_setup(hass)
     return True
 
 
@@ -226,17 +225,16 @@ class Cloud:
                 'authorization': self.id_token
             })
 
-    @asyncio.coroutine
-    def logout(self):
+    async def logout(self):
         """Close connection and remove all credentials."""
-        yield from self.iot.disconnect()
+        await self.iot.disconnect()
 
         self.id_token = None
         self.access_token = None
         self.refresh_token = None
         self._gactions_config = None
 
-        yield from self.hass.async_add_job(
+        await self.hass.async_add_job(
             lambda: os.remove(self.user_info_path))
 
     def write_user_info(self):
@@ -313,8 +311,7 @@ class Cloud:
             self._prefs[STORAGE_ENABLE_ALEXA] = alexa_enabled
         await self._store.async_save(self._prefs)
 
-    @asyncio.coroutine
-    def _fetch_jwt_keyset(self):
+    async def _fetch_jwt_keyset(self):
         """Fetch the JWT keyset for the Cognito instance."""
         session = async_get_clientsession(self.hass)
         url = ("https://cognito-idp.us-east-1.amazonaws.com/"
@@ -322,8 +319,8 @@ class Cloud:
 
         try:
             with async_timeout.timeout(10, loop=self.hass.loop):
-                req = yield from session.get(url)
-                self.jwt_keyset = yield from req.json()
+                req = await session.get(url)
+                self.jwt_keyset = await req.json()
 
             return True
 

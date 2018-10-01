@@ -48,9 +48,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_entities,
-                         discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the DSMR sensor."""
     # Suppress logging
     logging.getLogger('dsmr_parser').setLevel(logging.ERROR)
@@ -182,13 +181,12 @@ def async_setup_platform(hass, config, async_add_entities,
             create_dsmr_reader, config[CONF_PORT], config[CONF_DSMR_VERSION],
             update_entities_telegram, loop=hass.loop)
 
-    @asyncio.coroutine
-    def connect_and_reconnect():
+    async def connect_and_reconnect():
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
         while hass.state != CoreState.stopping:
             # Start DSMR asyncio.Protocol reader
             try:
-                transport, protocol = yield from hass.loop.create_task(
+                transport, protocol = await hass.loop.create_task(
                     reader_factory())
             except (serial.serialutil.SerialException, ConnectionRefusedError,
                     TimeoutError):
@@ -203,7 +201,7 @@ def async_setup_platform(hass, config, async_add_entities,
                     EVENT_HOMEASSISTANT_STOP, transport.close)
 
                 # Wait for reader to close
-                yield from protocol.wait_closed()
+                await protocol.wait_closed()
 
             if hass.state != CoreState.stopping:
                 # Unexpected disconnect
@@ -216,8 +214,8 @@ def async_setup_platform(hass, config, async_add_entities,
                 update_entities_telegram({})
 
                 # throttle reconnect attempts
-                yield from asyncio.sleep(config[CONF_RECONNECT_INTERVAL],
-                                         loop=hass.loop)
+                await asyncio.sleep(config[CONF_RECONNECT_INTERVAL],
+                                    loop=hass.loop)
 
     # Can't be hass.async_add_job because job runs forever
     hass.loop.create_task(connect_and_reconnect())
@@ -309,8 +307,7 @@ class DerivativeDSMREntity(DSMREntity):
         """Return the calculated current hourly rate."""
         return self._state
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Recalculate hourly rate if timestamp has changed.
 
         DSMR updates gas meter reading every hour. Along with the new

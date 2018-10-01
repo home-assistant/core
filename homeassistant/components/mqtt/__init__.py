@@ -321,7 +321,8 @@ async def _async_setup_server(hass: HomeAssistantType, config: ConfigType):
 
 
 async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
-                                 hass_config: ConfigType) -> bool:
+                                 hass_config: ConfigType,
+                                 config_entry) -> bool:
     """Try to start the discovery of MQTT devices.
 
     This method is a coroutine.
@@ -334,7 +335,8 @@ async def _async_setup_discovery(hass: HomeAssistantType, conf: ConfigType,
         return False
 
     success = await discovery.async_start(
-        hass, conf[CONF_DISCOVERY_PREFIX], hass_config)  # type: bool
+        hass, conf[CONF_DISCOVERY_PREFIX], hass_config,
+        config_entry)  # type: bool
 
     return success
 
@@ -424,24 +426,21 @@ async def async_setup_entry(hass, entry):
     keepalive = conf[CONF_KEEPALIVE]
     username = conf.get(CONF_USERNAME)
     password = conf.get(CONF_PASSWORD)
+    certificate = conf.get(CONF_CERTIFICATE)
     client_key = conf.get(CONF_CLIENT_KEY)
     client_cert = conf.get(CONF_CLIENT_CERT)
     tls_insecure = conf.get(CONF_TLS_INSECURE)
     protocol = conf[CONF_PROTOCOL]
 
     # For cloudmqtt.com, secured connection, auto fill in certificate
-    if (conf.get(CONF_CERTIFICATE) is None and
-            19999 < conf[CONF_PORT] < 30000 and
-            conf[CONF_BROKER].endswith('.cloudmqtt.com')):
+    if (certificate is None and 19999 < conf[CONF_PORT] < 30000 and
+            broker.endswith('.cloudmqtt.com')):
         certificate = os.path.join(
             os.path.dirname(__file__), 'addtrustexternalcaroot.crt')
 
     # When the certificate is set to auto, use bundled certs from requests
-    elif conf.get(CONF_CERTIFICATE) == 'auto':
+    elif certificate == 'auto':
         certificate = requests.certs.where()
-
-    else:
-        certificate = None
 
     if CONF_WILL_MESSAGE in conf:
         will_message = Message(**conf[CONF_WILL_MESSAGE])
@@ -525,7 +524,7 @@ async def async_setup_entry(hass, entry):
 
     if conf.get(CONF_DISCOVERY):
         await _async_setup_discovery(
-            hass, conf, hass.data[DATA_MQTT_HASS_CONFIG])
+            hass, conf, hass.data[DATA_MQTT_HASS_CONFIG], entry)
 
     return True
 

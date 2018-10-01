@@ -338,8 +338,9 @@ eternalegypt==0.0.5
 # homeassistant.components.keyboard_remote
 # evdev==0.6.1
 
+# homeassistant.components.evohome
 # homeassistant.components.climate.honeywell
-evohomeclient==0.2.5
+evohomeclient==0.2.7
 
 # homeassistant.components.image_processing.dlib_face_detect
 # homeassistant.components.image_processing.dlib_face_identify
@@ -454,7 +455,7 @@ hole==0.3.0
 holidays==0.9.7
 
 # homeassistant.components.frontend
-home-assistant-frontend==20180926.0
+home-assistant-frontend==20180927.0
 
 # homeassistant.components.homekit_controller
 # homekit==0.10
@@ -467,7 +468,7 @@ homematicip==0.9.8
 httplib2==0.10.3
 
 # homeassistant.components.huawei_lte
-huawei-lte-api==1.0.12
+huawei-lte-api==1.0.16
 
 # homeassistant.components.hydrawise
 hydrawiser==0.1.1
@@ -557,7 +558,7 @@ liveboxplaytv==2.0.2
 lmnotify==0.0.4
 
 # homeassistant.components.device_tracker.google_maps
-locationsharinglib==2.0.11
+locationsharinglib==3.0.3
 
 # homeassistant.components.logi_circle
 logi_circle==0.1.7
@@ -883,7 +884,7 @@ pyflic-homeassistant==0.4.dev0
 pyfnip==0.2
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.3.7
+pyfritzhome==0.4.0
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -1213,7 +1214,7 @@ pytouchline==0.7
 pytrackr==0.0.5
 
 # homeassistant.components.tradfri
-pytradfri[async]==5.5.1
+pytradfri[async]==5.6.0
 
 # homeassistant.components.sensor.trafikverket_weatherstation
 pytrafikverket==0.1.5.8
@@ -1573,4 +1574,4 @@ zigpy-xbee==0.1.1
 zigpy==0.2.0
 
 # homeassistant.components.zoneminder
-zm-py==0.0.3
+zm-py==0.0.4

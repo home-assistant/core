@@ -741,10 +741,9 @@ class WUndergroundSensor(Entity):
         """Return the units of measurement."""
         return self._unit_of_measurement
 
-    @asyncio.coroutine
-    def async_update(self):
+    async def async_update(self):
         """Update current conditions."""
-        yield from self.rest.async_update()
+        await self.rest.async_update()
 
         if not self.rest.data:
             # no data, return

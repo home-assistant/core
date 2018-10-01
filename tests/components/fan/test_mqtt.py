@@ -1,14 +1,14 @@
 """Test MQTT fans."""
 import unittest
 
-from homeassistant.setup import setup_component
+from homeassistant.setup import setup_component, async_setup_component
 from homeassistant.components import fan
 from homeassistant.components.mqtt.discovery import async_start
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNAVAILABLE
 
 from tests.common import (
     mock_mqtt_component, async_fire_mqtt_message, fire_mqtt_message,
-    get_test_home_assistant)
+    get_test_home_assistant, async_mock_mqtt_component)
 
 
 class TestMqttFan(unittest.TestCase):
@@ -125,3 +125,28 @@ async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
     await hass.async_block_till_done()
     state = hass.states.get('fan.beer')
     assert state is None
+
+
+async def test_unique_id(hass):
+    """Test unique_id option only creates one fan per id."""
+    await async_mock_mqtt_component(hass)
+    assert await async_setup_component(hass, fan.DOMAIN, {
+        fan.DOMAIN: [{
+            'platform': 'mqtt',
+            'name': 'Test 1',
+            'state_topic': 'test-topic',
+            'command_topic': 'test-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }, {
+            'platform': 'mqtt',
+            'name': 'Test 2',
+            'state_topic': 'test-topic',
+            'command_topic': 'test-topic',
+            'unique_id': 'TOTALLY_UNIQUE'
+        }]
+    })
+
+    async_fire_mqtt_message(hass, 'test-topic', 'payload')
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(fan.DOMAIN)) == 1

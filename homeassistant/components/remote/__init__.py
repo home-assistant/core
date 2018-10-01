@@ -4,7 +4,6 @@ Component to interface with universal remote control devices.
 For more details about this component, please refer to the documentation
 at https://home-assistant.io/components/remote/
 """
-import asyncio
 from datetime import timedelta
 import functools as ft
 import logging
@@ -70,12 +69,11 @@ def is_on(hass, entity_id=None):
     return hass.states.is_state(entity_id, STATE_ON)
 
 
-@asyncio.coroutine
-def async_setup(hass, config):
+async def async_setup(hass, config):
     """Track states and offer events for remotes."""
     component = EntityComponent(
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL, GROUP_NAME_ALL_REMOTES)
-    yield from component.async_setup(config)
+    await component.async_setup(config)
 
     component.async_register_entity_service(
         SERVICE_TURN_OFF, REMOTE_SERVICE_ACTIVITY_SCHEMA,
