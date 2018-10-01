@@ -1,9 +1,7 @@
 """Implement the serivces discovery feature from Hass.io for Add-ons."""
 import asyncio
 import logging
-import os
 
-import voluptuous as vol
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPServiceUnavailable
 
@@ -39,12 +37,11 @@ def async_setup_discovery(hass, hassio, config):
         try:
             data = await hassio.retrieve_discovery_messages()
         except HassioAPIError as err:
-            _LOGGER.error(
-                "Can't read discover info: %s", err)
+            _LOGGER.error("Can't read discover info: %s", err)
             return
 
         jobs = [hassio_discovery.async_process_new(discovery)
-                for discovery in data[ATTR_DISCOVERY]]  
+                for discovery in data[ATTR_DISCOVERY]]
         if jobs:
             await asyncio.wait(jobs)
 
@@ -68,7 +65,7 @@ class HassIODiscovery(HomeAssistantView):
 
     async def post(self, request):
         """Handle new discovery requests."""
-        uuid = request.match_info.get(uuid)
+        uuid = request.match_info.get(ATTR_UUID)
 
         # Fetch discovery data and prevent injections
         try:
@@ -103,7 +100,7 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         if service in CONFIG_FLOW_SERVICE:
-            # Replace Add-on ID with name 
+            # Replace Add-on ID with name
             data[ATTR_ADDON] = addon_info[ATTR_NAME]
 
             await self.hass.config_entries.flow.async_init(
@@ -129,7 +126,7 @@ class HassIODiscovery(HomeAssistantView):
         except HassioAPIError as err:
             pass
         else:
-            _LOGGER.warning("Retrieve a wrong unload discovery for %s", service)
+            _LOGGER.warning("Retrieve wrong unload for %s", service)
             return
 
         # Use config flow
