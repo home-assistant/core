@@ -103,12 +103,12 @@ def handle_subscribe_events(hass, connection, msg):
         if event.event_type == EVENT_TIME_CHANGED:
             return
 
-        connection.send_message_outside(event_message(msg['id'], event))
+        connection.send_message(event_message(msg['id'], event))
 
     connection.event_listeners[msg['id']] = hass.bus.async_listen(
         msg['event_type'], forward_events)
 
-    connection.to_write.put_nowait(messages.result_message(msg['id']))
+    connection.send_message(messages.result_message(msg['id']))
 
 
 @callback
@@ -121,9 +121,9 @@ def handle_unsubscribe_events(hass, connection, msg):
 
     if subscription in connection.event_listeners:
         connection.event_listeners.pop(subscription)()
-        connection.to_write.put_nowait(messages.result_message(msg['id']))
+        connection.send_message(messages.result_message(msg['id']))
     else:
-        connection.to_write.put_nowait(messages.error_message(
+        connection.send_message(messages.error_message(
             msg['id'], const.ERR_NOT_FOUND, 'Subscription not found.'))
 
 
@@ -140,7 +140,7 @@ async def handle_call_service(hass, connection, msg):
     await hass.services.async_call(
         msg['domain'], msg['service'], msg.get('service_data'), blocking,
         connection.context(msg))
-    connection.send_message_outside(messages.result_message(msg['id']))
+    connection.send_message(messages.result_message(msg['id']))
 
 
 @callback
@@ -149,7 +149,7 @@ def handle_get_states(hass, connection, msg):
 
     Async friendly.
     """
-    connection.to_write.put_nowait(messages.result_message(
+    connection.send_message(messages.result_message(
         msg['id'], hass.states.async_all()))
 
 
@@ -160,7 +160,7 @@ async def handle_get_services(hass, connection, msg):
     Async friendly.
     """
     descriptions = await async_get_all_descriptions(hass)
-    connection.send_message_outside(
+    connection.send_message(
         messages.result_message(msg['id'], descriptions))
 
 
@@ -170,7 +170,7 @@ def handle_get_config(hass, connection, msg):
 
     Async friendly.
     """
-    connection.to_write.put_nowait(messages.result_message(
+    connection.send_message(messages.result_message(
         msg['id'], hass.config.as_dict()))
 
 
@@ -180,4 +180,4 @@ def handle_ping(hass, connection, msg):
 
     Async friendly.
     """
-    connection.to_write.put_nowait(pong_message(msg['id']))
+    connection.send_message(pong_message(msg['id']))
