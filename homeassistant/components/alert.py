@@ -10,7 +10,6 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.core import callback
 from homeassistant.const import (
     CONF_ENTITY_ID, STATE_IDLE, CONF_NAME, CONF_STATE, STATE_ON, STATE_OFF,
     SERVICE_TURN_ON, SERVICE_TURN_OFF, SERVICE_TOGGLE, ATTR_ENTITY_ID)
@@ -57,45 +56,6 @@ ALERT_SERVICE_SCHEMA = vol.Schema({
 def is_on(hass, entity_id):
     """Return if the alert is firing and not acknowledged."""
     return hass.states.is_state(entity_id, STATE_ON)
-
-
-def turn_on(hass, entity_id):
-    """Reset the alert."""
-    hass.add_job(async_turn_on, hass, entity_id)
-
-
-@callback
-def async_turn_on(hass, entity_id):
-    """Async reset the alert."""
-    data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_TURN_ON, data))
-
-
-def turn_off(hass, entity_id):
-    """Acknowledge alert."""
-    hass.add_job(async_turn_off, hass, entity_id)
-
-
-@callback
-def async_turn_off(hass, entity_id):
-    """Async acknowledge the alert."""
-    data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_TURN_OFF, data))
-
-
-def toggle(hass, entity_id):
-    """Toggle acknowledgement of alert."""
-    hass.add_job(async_toggle, hass, entity_id)
-
-
-@callback
-def async_toggle(hass, entity_id):
-    """Async toggle acknowledgement of alert."""
-    data = {ATTR_ENTITY_ID: entity_id}
-    hass.async_create_task(
-        hass.services.async_call(DOMAIN, SERVICE_TOGGLE, data))
 
 
 async def async_setup(hass, config):
