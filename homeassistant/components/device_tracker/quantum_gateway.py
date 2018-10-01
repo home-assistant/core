@@ -40,7 +40,7 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
 
         self.host = config[CONF_HOST]
         self.password = config[CONF_PASSWORD]
-        _LOGGER.debug("Initializing")
+        _LOGGER.debug('Initializing')
 
         self.quantum = QuantumGatewayScanner(self.host, self.password)
 
