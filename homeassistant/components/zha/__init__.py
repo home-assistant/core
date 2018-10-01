@@ -128,6 +128,24 @@ async def async_setup_entry(hass, config_entry):
     )
     hass.data[DISCOVERY_KEY][BRIDGE_ID_KEY] = str(APPLICATION_CONTROLLER.ieee)
 
+    for component in COMPONENTS:
+        hass.async_create_task(
+            hass.config_entries.async_forward_entry_setup(
+                config_entry, component)
+        )
+
+    device_registry = await \
+        hass.helpers.device_registry.async_get_registry()
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(CONNECTION_ZIGBEE, str(APPLICATION_CONTROLLER.ieee))},
+        identifiers={(DOMAIN, str(APPLICATION_CONTROLLER.ieee))},
+        name="Zigbee Coordinator",
+        manufacturer="ZHA",
+        model=radio_description,
+    )
+    hass.data[DISCOVERY_KEY][BRIDGE_ID_KEY] = str(APPLICATION_CONTROLLER.ieee)
+
     async def permit(service):
         """Allow devices to join this network."""
         duration = service.data.get(ATTR_DURATION)
@@ -147,6 +165,19 @@ async def async_setup_entry(hass, config_entry):
 
     hass.services.async_register(DOMAIN, SERVICE_REMOVE, remove,
                                  schema=SERVICE_SCHEMAS[SERVICE_REMOVE])
+
+    return True
+
+
+async def async_unload_entry(hass, config_entry):
+    """Unload ZHA config entry."""
+    del hass.data[DISCOVERY_KEY]
+    hass.services.async_remove(DOMAIN, SERVICE_PERMIT)
+    hass.services.async_remove(DOMAIN, SERVICE_REMOVE)
+
+    for component in COMPONENTS:
+        await hass.config_entries.async_forward_entry_unload(
+            config_entry, component)
 
     return True
 
