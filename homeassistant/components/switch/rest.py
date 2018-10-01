@@ -170,7 +170,8 @@ class RestSwitch(SwitchDevice):
         websession = async_get_clientsession(hass)
 
         with async_timeout.timeout(self._timeout, loop=hass.loop):
-            req = await websession.get(self._resource, auth=self._auth)
+            req = await websession.get(self._resource, auth=self._auth,
+                                       headers=self._headers)
             text = await req.text()
 
         if self._is_on_template is not None:
