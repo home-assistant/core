@@ -74,6 +74,10 @@ class MjpegCamera(Camera):
         self._mjpeg_url = device_info[CONF_MJPEG_URL]
         self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
 
+        logging.getLogger("urllib3.connectionpool").addFilter(
+            NoHeaderErrorFilter()
+        )
+
         self._auth = None
         if self._username and self._password:
             if self._authentication == HTTP_BASIC_AUTHENTICATION:
@@ -139,3 +143,11 @@ class MjpegCamera(Camera):
     def name(self):
         """Return the name of this camera."""
         return self._name
+
+
+class NoHeaderErrorFilter(logging.Filter):
+    """Filter out urllib3 Header Parsing Errors due to a urllib3 bug."""
+
+    def filter(self, record):
+        """Filter out Header Parsing Errors."""
+        return "Failed to parse headers" not in record.getMessage()
