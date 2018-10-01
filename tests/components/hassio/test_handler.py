@@ -2,6 +2,9 @@
 import asyncio
 
 import aiohttp
+import pytest
+
+from homeassistant.components.hassio.handler import HassioAPIError
 
 
 @asyncio.coroutine
@@ -53,9 +56,10 @@ def test_api_homeassistant_info_error(hassio_handler, aioclient_mock):
         "http://127.0.0.1/homeassistant/info", json={
             'result': 'error', 'message': None})
 
-    data = yield from hassio_handler.get_homeassistant_info()
+    with pytest.raises(HassioAPIError):
+        data = yield from hassio_handler.get_homeassistant_info()
+
     assert aioclient_mock.call_count == 1
-    assert data is None
 
 
 @asyncio.coroutine
