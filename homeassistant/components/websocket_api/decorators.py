@@ -18,7 +18,7 @@ def async_response(func):
             await func(hass, connection, msg)
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Unexpected exception")
-            connection.send_message_outside(messages.error_message(
+            connection.send_message(messages.error_message(
                 msg['id'], 'unknown', 'Unexpected error occurred'))
 
     @callback
@@ -35,10 +35,10 @@ def require_owner(func):
     @wraps(func)
     def with_owner(hass, connection, msg):
         """Check owner and call function."""
-        user = connection.request.get('hass_user')
+        user = connection.user
 
         if user is None or not user.is_owner:
-            connection.to_write.put_nowait(messages.error_message(
+            connection.send_message(messages.error_message(
                 msg['id'], 'unauthorized', 'This command is for owners only.'))
             return
 
@@ -61,7 +61,7 @@ def ws_require_user(
             """Check current user."""
             def output_error(message_id, message):
                 """Output error message."""
-                connection.send_message_outside(messages.error_message(
+                connection.send_message(messages.error_message(
                     msg['id'], message_id, message))
 
             if connection.user is None:
