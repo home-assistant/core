@@ -160,6 +160,7 @@ def async_setup(hass, config):
         _LOGGER.error("Missing %s environment variable.", env)
         return False
 
+    host = os.environ['HASSIO']
     websession = hass.helpers.aiohttp_client.async_get_clientsession()
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
