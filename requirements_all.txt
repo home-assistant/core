@@ -884,7 +884,7 @@ pyflic-homeassistant==0.4.dev0
 pyfnip==0.2
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.3.7
+pyfritzhome==0.4.0
 
 # homeassistant.components.ifttt
 pyfttt==0.3
