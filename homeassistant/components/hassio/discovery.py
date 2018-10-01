@@ -110,11 +110,11 @@ class HassIODiscovery(HomeAssistantView):
                 service, context={'source': 'hass.io'}, data=config_data)
             return
 
-         # Use discovery
-         if platform is None:
+        # Use discovery
+        if platform is None:
             await async_discover(
                 self.hass, service, config_data, component, self.config)
-         else:
+        else:
             await async_load_platform(
                 self.hass, component, platform, config_data, self.config)
 
