@@ -60,8 +60,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     radius_in_km = config[CONF_RADIUS]
     categories = config.get(CONF_CATEGORIES)
     # Initialize the entity manager.
-    NswRuralFireServiceFeedManager(hass, add_entities, scan_interval,
-                                   radius_in_km, categories)
+    feed = NswRuralFireServiceFeedManager(hass, add_entities, scan_interval,
+                                          radius_in_km, categories)
+
+    def start_feed_manager(event):
+        """Start feed manager."""
+        feed.startup()
+
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START, start_feed_manager)
 
 
 class NswRuralFireServiceFeedManager:
@@ -81,8 +87,10 @@ class NswRuralFireServiceFeedManager:
         self._scan_interval = scan_interval
         self._feed_entries = []
         self._managed_entities = []
-        hass.bus.listen_once(
-            EVENT_HOMEASSISTANT_START, lambda _: self._update())
+
+    def startup(self):
+        """Start up this manager."""
+        self._update()
         self._init_regular_updates()
 
     def _init_regular_updates(self):
