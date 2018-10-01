@@ -47,7 +47,7 @@ async def async_setup_platform(hass, config, async_add_entities,
     """Set up the FFmpeg noise binary sensor."""
     manager = hass.data[DATA_FFMPEG]
 
-    if not manager.async_run_test(config.get(CONF_INPUT)):
+    if not await manager.async_run_test(config.get(CONF_INPUT)):
         return
 
     entity = FFmpegNoise(hass, manager, config)
