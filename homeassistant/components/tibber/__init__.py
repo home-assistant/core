@@ -15,7 +15,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP, CONF_ACCESS_TOKEN, CON
 from homeassistant.helpers import discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-REQUIREMENTS = ['pyTibber==0.7.0']
+REQUIREMENTS = ['pyTibber==0.7.1']
 
 DOMAIN = 'tibber'
 
