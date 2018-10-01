@@ -18,8 +18,6 @@ ATTR_ADDON = 'addon'
 ATTR_NAME = 'name'
 ATTR_SERVICE = 'service'
 ATTR_CONFIG = 'config'
-ATTR_COMPONENT = 'component'
-ATTR_PLATFORM = 'platform'
 ATTR_UUID = 'uuid'
 
 
@@ -82,8 +80,6 @@ class HassIODiscovery(HomeAssistantView):
     async def async_process_new(self, data):
         """Process add discovery entry."""
         service = data[ATTR_SERVICE]
-        component = data[ATTR_COMPONENT]
-        platform = data[ATTR_PLATFORM]
         config_data = data[ATTR_CONFIG]
 
         # Read addinional Add-on info
@@ -92,10 +88,9 @@ class HassIODiscovery(HomeAssistantView):
         except HassioAPIError as err:
             _LOGGER.error("Can't read add-on info: %s", err)
             return
-
-        # Use config flow
         data[ATTR_ADDON] = addon_info[ATTR_NAME]
 
+        # Use config flow
         await self.hass.config_entries.flow.async_init(
             service, context={'source': 'hass.io'}, data=config_data)
 
