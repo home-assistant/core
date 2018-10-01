@@ -8,7 +8,7 @@ import logging
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanel
 from homeassistant.components.blink import (
-    DOMAIN, DEFAULT_ATTRIBUTION)
+    BLINK_DATA, DEFAULT_ATTRIBUTION)
 from homeassistant.const import (
     ATTR_ATTRIBUTION, STATE_ALARM_DISARMED, STATE_ALARM_ARMED_AWAY)
 
@@ -21,7 +21,9 @@ ICON = 'mdi:security'
 
 def setup_platform(hass, config, add_entities, discovery_info=None):
     """Set up the Arlo Alarm Control Panels."""
-    data = hass.data[DOMAIN]
+    if discovery_info is None:
+        return
+    data = hass.data[BLINK_DATA]
 
     # Current version of blinkpy API only supports one sync module.  When
     # support for additional models is added, the sync module name should
@@ -54,14 +56,13 @@ class BlinkSyncModule(AlarmControlPanel):
     @property
     def name(self):
         """Return the name of the panel."""
-        return "{} {}".format(DOMAIN, self._name)
+        return "{} {}".format(BLINK_DATA, self._name)
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_ATTRIBUTION: DEFAULT_ATTRIBUTION,
-            'device_id': 'not implemented yet'
         }
 
     def update(self):
@@ -80,11 +81,6 @@ class BlinkSyncModule(AlarmControlPanel):
         self.sync.refresh()
 
     def alarm_arm_away(self, code=None):
-        """Send arm command."""
-        self.sync.arm = True
-        self.sync.refresh()
-
-    def alarm_arm_home(self, code=None):
         """Send arm command."""
         self.sync.arm = True
         self.sync.refresh()
