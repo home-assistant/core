@@ -1,4 +1,6 @@
 """Config flow for UPNP."""
+from collections import OrderedDict
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,12 +17,11 @@ def ensure_domain_data(hass):
     """Ensure hass.data is filled properly."""
     hass.data[DOMAIN] = hass.data.get(DOMAIN, {})
     hass.data[DOMAIN]['devices'] = hass.data[DOMAIN].get('devices', {})
-    hass.data[DOMAIN]['sensors'] = hass.data[DOMAIN].get('sensors', {})
     hass.data[DOMAIN]['discovered'] = hass.data[DOMAIN].get('discovered', {})
     hass.data[DOMAIN]['auto_config'] = hass.data[DOMAIN].get('auto_config', {
         'active': False,
-        'port_forward': False,
-        'sensors': False,
+        'enable_sensors': False,
+        'enable_port_mapping': False,
         'ports': {'hass': 'hass'},
     })
 
@@ -30,6 +31,7 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
     """Handle a Hue config flow."""
 
     VERSION = 1
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     @property
     def _configured_upnp_igds(self):
@@ -79,8 +81,8 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
         if auto_config['active']:
             import_info = {
                 'name': discovery_info['friendly_name'],
-                'sensors': auto_config['sensors'],
-                'port_forward': auto_config['port_forward'],
+                'enable_sensors': auto_config['enable_sensors'],
+                'enable_port_mapping': auto_config['enable_port_mapping'],
             }
 
             return await self._async_save_entry(import_info)
@@ -94,8 +96,9 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
         # if user input given, handle it
         user_input = user_input or {}
         if 'name' in user_input:
-            if not user_input['sensors'] and not user_input['port_forward']:
-                return self.async_abort(reason='no_sensors_or_port_forward')
+            if not user_input['enable_sensors'] and \
+               not user_input['enable_port_mapping']:
+                return self.async_abort(reason='no_sensors_or_port_mapping')
 
             # ensure not already configured
             configured_names = [
@@ -119,12 +122,13 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
 
         return self.async_show_form(
             step_id='user',
-            data_schema=vol.Schema({
-                vol.Required('name'): vol.In(names),
-                vol.Optional('sensors', default=False): bool,
-                vol.Optional('port_forward', default=False): bool,
-            })
-        )
+            data_schema=vol.Schema(
+                OrderedDict([
+                    (vol.Required('name'), vol.In(names)),
+                    (vol.Optional('enable_sensors', default=False), bool),
+                    (vol.Optional('enable_port_mapping', default=False), bool),
+                ])
+            ))
 
     async def async_step_import(self, import_info):
         """Import a new UPnP/IGD as a config entry."""
@@ -150,7 +154,7 @@ class UpnpFlowHandler(data_entry_flow.FlowHandler):
             data={
                 CONF_SSDP_DESCRIPTION: discovery_info['ssdp_description'],
                 CONF_UDN: discovery_info['udn'],
-                CONF_ENABLE_SENSORS: import_info['sensors'],
-                CONF_ENABLE_PORT_MAPPING: import_info['port_forward'],
+                CONF_ENABLE_SENSORS: import_info['enable_sensors'],
+                CONF_ENABLE_PORT_MAPPING: import_info['enable_port_mapping'],
             },
         )

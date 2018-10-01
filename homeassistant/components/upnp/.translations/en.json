@@ -9,8 +9,8 @@
                 "title": "Configuration options for the UPnP/IGD",
                 "data":{
                     "igd": "UPnP/IGD",
-                    "sensors": "Add traffic sensors",
-                    "port_forward": "Enable port forward for Home Assistant"
+                    "enable_sensors": "Add traffic sensors",
+                    "enable_port_mapping": "Enable port mapping for Home Assistant"
                 }
             }
         },
@@ -19,7 +19,7 @@
         "abort": {
             "no_devices_discovered": "No UPnP/IGDs discovered",
             "already_configured": "UPnP/IGD is already configured",
-            "no_sensors_or_port_forward": "Enable at least sensors or port forward"
+            "no_sensors_or_port_mapping": "Enable at least sensors or port mapping"
         }
     }
 }

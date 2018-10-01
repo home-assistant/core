@@ -44,15 +44,15 @@ async def test_flow_already_configured(hass):
 
     result = await flow.async_step_user({
         'name': '192.168.1.1 (Test device)',
-        'sensors': True,
-        'port_forward': False,
+        'enable_sensors': True,
+        'enable_port_mapping': False,
     })
     assert result['type'] == 'abort'
     assert result['reason'] == 'already_configured'
 
 
-async def test_flow_no_sensors_no_port_forward(hass):
-    """Test single device, no sensors, no port_forward."""
+async def test_flow_no_sensors_no_port_mapping(hass):
+    """Test single device, no sensors, no port_mapping."""
     flow = upnp_config_flow.UpnpFlowHandler()
     flow.hass = hass
 
@@ -76,11 +76,11 @@ async def test_flow_no_sensors_no_port_forward(hass):
 
     result = await flow.async_step_user({
         'name': '192.168.1.1 (Test device)',
-        'sensors': False,
-        'port_forward': False,
+        'enable_sensors': False,
+        'enable_port_mapping': False,
     })
     assert result['type'] == 'abort'
-    assert result['reason'] == 'no_sensors_or_port_forward'
+    assert result['reason'] == 'no_sensors_or_port_mapping'
 
 
 async def test_flow_discovered_form(hass):
@@ -106,7 +106,7 @@ async def test_flow_discovered_form(hass):
 
 
 async def test_flow_two_discovered_form(hass):
-    """Test single device discovered, show form flow."""
+    """Test two devices discovered, show form flow with two devices."""
     flow = upnp_config_flow.UpnpFlowHandler()
     flow.hass = hass
 
@@ -133,13 +133,13 @@ async def test_flow_two_discovered_form(hass):
     assert result['step_id'] == 'user'
     assert result['data_schema']({
         'name': '192.168.1.1 (Test device)',
-        'sensors': True,
-        'port_forward': False,
+        'enable_sensors': True,
+        'enable_port_mapping': False,
     })
     assert result['data_schema']({
-        'name': '192.168.1.1 (Test device)',
-        'sensors': True,
-        'port_forward': False,
+        'name': '192.168.2.1 (Test device)',
+        'enable_sensors': True,
+        'enable_port_mapping': False,
     })
 
 
@@ -163,15 +163,15 @@ async def test_config_entry_created(hass):
 
     result = await flow.async_step_user({
         'name': '192.168.1.1 (Test device)',
-        'sensors': True,
-        'port_forward': False,
+        'enable_sensors': True,
+        'enable_port_mapping': False,
     })
     assert result['type'] == 'create_entry'
     assert result['data'] == {
-        'port_forward': False,
-        'sensors': True,
         'ssdp_description': 'http://192.168.1.1/desc.xml',
         'udn': 'uuid:device_1',
+        'port_mapping': False,
+        'sensors': True,
     }
     assert result['title'] == 'Test device 1'
 
@@ -185,8 +185,8 @@ async def test_flow_discovery_auto_config_sensors(hass):
     hass.data[upnp.DOMAIN] = {
         'auto_config': {
             'active': True,
-            'port_forward': False,
-            'sensors': True,
+            'enable_port_mapping': False,
+            'enable_sensors': True,
         },
     }
 
@@ -200,25 +200,25 @@ async def test_flow_discovery_auto_config_sensors(hass):
 
     assert result['type'] == 'create_entry'
     assert result['data'] == {
-        'port_forward': False,
-        'sensors': True,
         'ssdp_description': 'http://192.168.1.1/desc.xml',
         'udn': 'uuid:device_1',
+        'sensors': True,
+        'port_mapping': False,
     }
     assert result['title'] == 'Test device 1'
 
 
-async def test_flow_discovery_auto_config_sensors_port_forward(hass):
-    """Test creation of device with auto_config, with port forward."""
+async def test_flow_discovery_auto_config_sensors_port_mapping(hass):
+    """Test creation of device with auto_config, with port mapping."""
     flow = upnp_config_flow.UpnpFlowHandler()
     flow.hass = hass
 
-    # auto_config active, with port_forward
+    # auto_config active, with port_mapping
     hass.data[upnp.DOMAIN] = {
         'auto_config': {
             'active': True,
-            'port_forward': True,
-            'sensors': True,
+            'enable_port_mapping': True,
+            'enable_sensors': True,
         },
     }
 
@@ -232,9 +232,9 @@ async def test_flow_discovery_auto_config_sensors_port_forward(hass):
 
     assert result['type'] == 'create_entry'
     assert result['data'] == {
-        'port_forward': True,
-        'sensors': True,
-        'ssdp_description': 'http://192.168.1.1/desc.xml',
         'udn': 'uuid:device_1',
+        'ssdp_description': 'http://192.168.1.1/desc.xml',
+        'sensors': True,
+        'port_mapping': True,
     }
     assert result['title'] == 'Test device 1'
