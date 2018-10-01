@@ -69,43 +69,6 @@ SCHEMA_TRAIN_SERVICE = vol.Schema({
 })
 
 
-def create_group(hass, name):
-    """Create a new person group."""
-    data = {ATTR_NAME: name}
-    hass.services.call(DOMAIN, SERVICE_CREATE_GROUP, data)
-
-
-def delete_group(hass, name):
-    """Delete a person group."""
-    data = {ATTR_NAME: name}
-    hass.services.call(DOMAIN, SERVICE_DELETE_GROUP, data)
-
-
-def train_group(hass, group):
-    """Train a person group."""
-    data = {ATTR_GROUP: group}
-    hass.services.call(DOMAIN, SERVICE_TRAIN_GROUP, data)
-
-
-def create_person(hass, group, name):
-    """Create a person in a group."""
-    data = {ATTR_GROUP: group, ATTR_NAME: name}
-    hass.services.call(DOMAIN, SERVICE_CREATE_PERSON, data)
-
-
-def delete_person(hass, group, name):
-    """Delete a person in a group."""
-    data = {ATTR_GROUP: group, ATTR_NAME: name}
-    hass.services.call(DOMAIN, SERVICE_DELETE_PERSON, data)
-
-
-def face_person(hass, group, person, camera_entity):
-    """Add a new face picture to a person."""
-    data = {ATTR_GROUP: group, ATTR_PERSON: person,
-            ATTR_CAMERA_ENTITY: camera_entity}
-    hass.services.call(DOMAIN, SERVICE_FACE_PERSON, data)
-
-
 async def async_setup(hass, config):
     """Set up Microsoft Face."""
     entities = {}
