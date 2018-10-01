@@ -88,9 +88,15 @@ class FlowHandler(config_entries.ConfigFlow):
             )
 
             if can_connect:
-                data.update(user_input)
                 return self.async_create_entry(
-                    title=data['addon'], data=data)
+                    title=data['addon'], data={
+                        CONF_BROKER: data[CONF_BROKER],
+                        CONF_PORT: data[CONF_PORT],
+                        CONF_USERNAME: data.get(CONF_USERNAME),
+                        CONF_PASSWORD: data.get(CONF_PASSWORD),
+                        CONF_PROTOCOL: data.get(CONF_PROTOCOL),
+                        CONF_DISCOVERY: user_input[CONF_DISCOVERY],
+                    })
 
             errors['base'] = 'cannot_connect'
 

@@ -410,11 +410,8 @@ async def async_setup_entry(hass, entry):
 
     # If user didn't have configuration.yaml config, generate defaults
     if conf is None:
-        data = dict(entry.data)
-        # Entry data that is not valid config
-        data.pop('addon', None)
         conf = CONFIG_SCHEMA({
-            DOMAIN: data,
+            DOMAIN: entry.data,
         })[DOMAIN]
     elif any(key in conf for key in entry.data):
         _LOGGER.warning(

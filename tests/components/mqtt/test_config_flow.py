@@ -141,7 +141,6 @@ async def test_hassio_confirm(hass, mock_try_connection,
 
     assert result['type'] == 'create_entry'
     assert result['result'].data == {
-        'addon': 'Mock Addon',
         'broker': 'mock-broker',
         'port': 1883,
         'username': 'mock-user',
