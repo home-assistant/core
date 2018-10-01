@@ -322,7 +322,7 @@ class KodiDevice(MediaPlayerDevice):
 
             def on_hass_stop(event):
                 """Close websocket connection when hass stops."""
-                self.hass.async_add_job(self._ws_server.close())
+                self.hass.async_create_task(self._ws_server.close())
 
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, on_hass_stop)
@@ -387,7 +387,7 @@ class KodiDevice(MediaPlayerDevice):
         self._properties = {}
         self._item = {}
         self._app_properties = {}
-        self.hass.async_add_job(self._ws_server.close())
+        self.hass.async_create_task(self._ws_server.close())
 
     async def _get_players(self):
         """Return the active player objects or None."""
@@ -456,7 +456,7 @@ class KodiDevice(MediaPlayerDevice):
             return
 
         if self._enable_websocket and not self._ws_server.connected:
-            self.hass.async_add_job(self.async_ws_connect())
+            self.hass.async_create_task(self.async_ws_connect())
 
         self._app_properties = \
             await self.server.Application.GetProperties(
