@@ -874,19 +874,19 @@ async def websocket_handle_thumbnail(hass, connection, msg):
     player = component.get_entity(msg['entity_id'])
 
     if player is None:
-        connection.send_message_outside(websocket_api.error_message(
+        connection.send_message(websocket_api.error_message(
             msg['id'], 'entity_not_found', 'Entity not found'))
         return
 
     data, content_type = await player.async_get_media_image()
 
     if data is None:
-        connection.send_message_outside(websocket_api.error_message(
+        connection.send_message(websocket_api.error_message(
             msg['id'], 'thumbnail_fetch_failed',
             'Failed to fetch thumbnail'))
         return
 
-    connection.send_message_outside(websocket_api.result_message(
+    connection.send_message(websocket_api.result_message(
         msg['id'], {
             'content_type': content_type,
             'content': base64.b64encode(data).decode('utf-8')
