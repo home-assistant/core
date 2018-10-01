@@ -103,7 +103,7 @@ class HassIODiscovery(HomeAssistantView):
 
         # Use config flow
         if service in CONFIG_FLOW_SERVICE:
-            # Replace Add-on name with ID
+            # Replace Add-on ID with name 
             data[ATTR_ADDON] = addon_info[ATTR_NAME]
 
             await self.hass.config_entries.flow.async_init(
