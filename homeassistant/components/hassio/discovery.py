@@ -23,7 +23,7 @@ ATTR_CONFIG = 'config'
 ATTR_COMPONENT = 'component'
 ATTR_PLATFORM = 'platform'
 
-CONFIG_FLOW_SERVICE = ('mqtt,)
+CONFIG_FLOW_SERVICE = ('mqtt',)
 
 
 @callback
