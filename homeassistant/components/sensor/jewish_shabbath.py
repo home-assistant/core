@@ -60,7 +60,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             SENSOR_TYPES[sensor_type] = [
                 sensor_type.title(), '', 'mdi:flash']
 
-        entities.append(Shabbat_Hagg(sensor_type, geoid, latitude, longitude, havdalah, time_before, time_after))
+        entities.append(Shabbat_Hagg(sensor_type, geoid, latitude, longitude, 
+                                     havdalah, time_before, time_after))
 
     add_entities(entities)
 
@@ -135,12 +136,15 @@ class Shabbat_Hagg(Entity):
     def updateDB(self):
         self.set_days()
         with urllib.request.urlopen(
-                "https://www.hebcal.com/hebcal/?v=1&cfg=fc&start=" + str(self.friday) + "&end=" + str(self.saturday) + 
-                "&ss=on&c=on&geo=geoname&geonameid=" + str(self._geoid) + "&m=" + str(self._havdalah) + "&s=on") as url:
+                "https://www.hebcal.com/hebcal/?v=1&cfg=fc&start=" 
+                + str(self.friday) + "&end=" + str(self.saturday) 
+                + "&ss=on&c=on&geo=geoname&geonameid=" + str(self._geoid) 
+                + "&m=" + str(self._havdalah) + "&s=on") as url:
             self.shabbatDB = json.loads(url.read().decode())
         with urllib.request.urlopen(
-                    "https://www.hebcal.com/converter/?cfg=json&gy=" + str(self.datetoday.year) + "&gm=" + str(
-                        self.datetoday.month) + "&gd=" + str(self.datetoday.day) + "&g2h=1") as heb_url:
+                    "https://www.hebcal.com/converter/?cfg=json&gy=" 
+                    + str(self.datetoday.year) + "&gm=" + str(self.datetoday.month) 
+                    + "&gd=" + str(self.datetoday.day) + "&g2h=1") as heb_url:
                 self.hebrew_dateDB = json.loads(heb_url.read().decode())
         self.getFullTimeIn()
         self.getFullTimeOut()
