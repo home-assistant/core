@@ -5,7 +5,6 @@ import datetime
 import pytz
 import time
 import voluptuous as vol
-
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
 from homeassistant.const import (
@@ -182,13 +181,13 @@ class Shabbat_Hagg(Entity):
         if self.isTimeFormat(result):
             return result
         return 'Error'
-        
+
     # get full time entrace shabbat for check if is shabbat now
     def getFullTimeIn(self):
         for extractData in self.shabbatDB:
             if extractData['className'] == "candles":
                 self.shabbatin = extractData['start']
-        if self.shabbatin != None:
+        if self.shabbatin is not None:
             self.shabbatin = self.shabbatin[:22]+'00' 
                 
     # get full time exit shabbat for check if is shabbat now
@@ -226,16 +225,15 @@ class Shabbat_Hagg(Entity):
                 return 'False'
         else:
             return 'False'
-    
+
     # convert to hebrew date
     def getHebrewDate(self):
         return self.hebrew_dateDB['hebrew']
-    
+ 
     # check if the time is correct
-    def isTimeFormat(self,input):
+    def isTimeFormat(self, input):
         try:
             time.strptime(input, '%H:%M')
             return True
         except ValueError:
             return False
-        
