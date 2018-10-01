@@ -6,6 +6,7 @@ https://home-assistant.io/components/device_tracker.quantum_gateway/
 """
 import logging
 
+from requests.exceptions import RequestException
 import voluptuous as vol
 
 from homeassistant.components.device_tracker import (DOMAIN, PLATFORM_SCHEMA,
@@ -45,10 +46,9 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
         try:
             self.quantum = QuantumGatewayScanner(self.host, self.password)
             self.success_init = self.quantum.success_init
-        except:
+        except RequestException:
             self.success_init = False
             _LOGGER.error("Unable to connect to gateway. Check host.")
-
 
         if not self.success_init:
             _LOGGER.error("Unable to login to gateway. Check password and "
@@ -59,10 +59,9 @@ class QuantumGatewayDeviceScanner(DeviceScanner):
         connected_devices = []
         try:
             connected_devices = self.quantum.scan_devices()
-        except:
+        except RequestException:
             _LOGGER.error("Unable to scan devices. Check connection to router")
         return connected_devices
-
 
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
