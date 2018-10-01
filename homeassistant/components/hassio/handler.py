@@ -120,15 +120,15 @@ class HassIO:
             'timezone': core_config.get(CONF_TIME_ZONE)
         })
 
-    @asyncio.coroutine
-    def send_command(self, command, method="post", payload=None, timeout=10):
+    async def send_command(self, command, method="post", payload=None,
+                           timeout=10):
         """Send API command to Hass.io.
 
         This method is a coroutine.
         """
         try:
             with async_timeout.timeout(timeout, loop=self.loop):
-                request = yield from self.websession.request(
+                request = await self.websession.request(
                     method, "http://{}{}".format(self._ip, command),
                     json=payload, headers={
                         X_HASSIO: os.environ.get('HASSIO_TOKEN', "")
@@ -139,7 +139,7 @@ class HassIO:
                         "%s return code %d.", command, request.status)
                     return None
 
-                answer = yield from request.json()
+                answer = await request.json()
                 return answer
 
         except asyncio.TimeoutError:
