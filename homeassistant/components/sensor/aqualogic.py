@@ -4,7 +4,6 @@ Support for AquaLogic sensors.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.aqualogic/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -47,24 +46,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the sensor platform."""
     sensors = []
 
-    component = hass.data[aq.DOMAIN]
+    processor = hass.data[aq.DOMAIN]
     for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        sensors.append(AquaLogicSensor(component, sensor_type))
+        sensors.append(AquaLogicSensor(processor, sensor_type))
 
-    async_add_devices(sensors)
+    async_add_entities(sensors)
 
 
 class AquaLogicSensor(Entity):
     """Sensor implementation for the AquaLogic component."""
 
-    def __init__(self, component, sensor_type):
+    def __init__(self, processor, sensor_type):
         """Initialize sensor."""
-        self._component = component
+        self._processor = processor
         self._type = sensor_type
         self._state = None
 
@@ -81,7 +80,7 @@ class AquaLogicSensor(Entity):
     @property
     def unit_of_measurement(self):
         """Return the unit of measurement the value is expressed in."""
-        panel = self._component.panel
+        panel = self._processor.panel
         if panel is None:
             return None
         if panel.is_metric:
@@ -98,8 +97,7 @@ class AquaLogicSensor(Entity):
         """Icon to use in the frontend, if any."""
         return SENSOR_TYPES[self._type][2]
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             aq.UPDATE_TOPIC, self.async_update_callback)
@@ -107,7 +105,7 @@ class AquaLogicSensor(Entity):
     @callback
     def async_update_callback(self):
         """Update callback."""
-        panel = self._component.panel
+        panel = self._processor.panel
         if panel is not None:
             self._state = getattr(panel, self._type)
             self.async_schedule_update_ha_state()

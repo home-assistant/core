@@ -33,12 +33,17 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 
-def setup(hass, base_config):
+def setup(hass, config):
     """Set up AquaLogic platform."""
-    config = base_config.get(DOMAIN)
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    hass.data[DOMAIN] = AquaLogicProcessor(hass, host, port)
+    host = config[DOMAIN][CONF_HOST]
+    port = config[DOMAIN][CONF_PORT]
+    processor = AquaLogicProcessor(hass, host, port)
+    hass.data[DOMAIN] = processor
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
+                         processor.start_listen)
+    hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
+                         processor.shutdown)
+    _LOGGER.debug("AquaLogicProcessor %s:%i initialized", host, port)
     return True
 
 
@@ -53,13 +58,6 @@ class AquaLogicProcessor(threading.Thread):
         self._port = port
         self._shutdown = False
         self._panel = None
-
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_START,
-                             self.start_listen)
-        hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP,
-                             self.shutdown)
-        _LOGGER.debug("AquaLogicProcessor %s:%i initialized",
-                      self._host, self._port)
 
     def start_listen(self, event):
         """Start event-processing thread."""

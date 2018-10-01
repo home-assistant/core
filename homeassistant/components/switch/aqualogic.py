@@ -4,7 +4,6 @@ Support for AquaLogic switches.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/switch.aqualogic/
 """
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -38,25 +37,25 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-@asyncio.coroutine
-def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
+async def async_setup_platform(hass, config, async_add_entities,
+                               discovery_info=None):
     """Set up the switch platform."""
     switches = []
 
-    component = hass.data[aq.DOMAIN]
+    processor = hass.data[aq.DOMAIN]
     for switch_type in config.get(CONF_MONITORED_CONDITIONS):
-        switches.append(AquaLogicSwitch(component, switch_type))
+        switches.append(AquaLogicSwitch(processor, switch_type))
 
-    async_add_devices(switches)
+    async_add_entities(switches)
 
 
 class AquaLogicSwitch(SwitchDevice):
     """Switch implementation for the AquaLogic component."""
 
-    def __init__(self, component, switch_type):
+    def __init__(self, processor, switch_type):
         """Initialize switch."""
         from aqualogic.core import States
-        self._component = component
+        self._processor = processor
         self._type = switch_type
         self._state_name = {
             'lights': States.LIGHTS,
@@ -84,7 +83,7 @@ class AquaLogicSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if device is on."""
-        panel = self._component.panel
+        panel = self._processor.panel
         if panel is None:
             return False
         state = panel.get_state(self._state_name)
@@ -92,24 +91,19 @@ class AquaLogicSwitch(SwitchDevice):
 
     def turn_on(self, **kwargs):
         """Turn the device on."""
-        if self.is_on:
-            return
-        panel = self._component.panel
+        panel = self._processor.panel
         if panel is None:
             return
         panel.set_state(self._state_name, True)
 
     def turn_off(self, **kwargs):
         """Turn the device off."""
-        if not self.is_on:
-            return
-        panel = self._component.panel
+        panel = self._processor.panel
         if panel is None:
             return
         panel.set_state(self._state_name, False)
 
-    @asyncio.coroutine
-    def async_added_to_hass(self):
+    async def async_added_to_hass(self):
         """Register callbacks."""
         self.hass.helpers.dispatcher.async_dispatcher_connect(
             aq.UPDATE_TOPIC, self.async_update_callback)
