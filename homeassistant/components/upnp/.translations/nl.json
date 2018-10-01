@@ -9,8 +9,8 @@
                 "title": "Extra configuratie options voor UPnP/IGD",
                 "data":{
                     "igd": "UPnP/IGD",
-                    "sensors": "Verkeer sensors toevoegen",
-                    "port_forward": "Maak port forward voor Home Assistant"
+                    "enable_sensors": "Verkeer sensors toevoegen",
+                    "enable_port_mapping": "Maak port mapping voor Home Assistant"
                 }
             }
         },
@@ -19,7 +19,7 @@
         "abort": {
             "no_devices_discovered": "Geen UPnP/IGDs gevonden",
             "already_configured": "UPnP/IGD is reeds geconfigureerd",
-            "no_sensors_or_port_forward": "Kies ten minste sensors of port forward"
+            "no_sensors_or_port_mapping": "Kies ten minste sensors of port mapping"
         }
     }
 }
